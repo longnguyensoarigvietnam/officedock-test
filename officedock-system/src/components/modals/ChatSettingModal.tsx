@@ -16,11 +16,10 @@ import Input from '@components/common/Input';
 
 import { apiRouters } from '@constants/routers';
 
-import { ChatDashboardMember, ChatParticipant } from '@interfaces/chat';
+import { ChatDashboardMember, ChatParticipant, ChatRoomDetail } from '@interfaces/chat';
 import { OptionDropdownType } from '@interfaces/common';
 
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
-import useChatRoomDetail from '@hooks/useChatRoomDetail';
 import { useErrorToast } from '@hooks/useErrorToast';
 
 import { NO_OPTIONS } from '@constants';
@@ -40,6 +39,7 @@ export type ChatSettingModalProps = {
   onClose: () => void;
   openAddMemberModal: () => void;
   openConfirmRemoveModal: (id: number) => void;
+  chatRoomDetail: ChatRoomDetail | undefined
   code: string;
   dashboardMembers: ChatDashboardMember[];
 };
@@ -48,6 +48,7 @@ const ChatSettingModal = memo(
   ({
     open,
     onClose,
+    chatRoomDetail,
     code,
     openAddMemberModal,
     openConfirmRemoveModal,
@@ -55,9 +56,7 @@ const ChatSettingModal = memo(
   }: ChatSettingModalProps) => {
     const { data: session } = useSession();
     const { dashboardMemberList } = useDashboardMemberList();
-    const { chatRoomDetail } = useChatRoomDetail({
-      code,
-    });
+    
     const [searchName, setSearchName] = useState<string>('');
     const { showToast } = useToast();
     const showErrorToast = useErrorToast();

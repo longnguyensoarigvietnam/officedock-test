@@ -5,11 +5,12 @@ import { PermissionsSystem } from './enums';
 export const SETTING_MENU: SettingMenuItem[] = [
   {
     name: 'プロフィール',
-    showModal: true
+    showModal: true,
   },
   {
     name: '設定',
     href: pageRouters.SETTING.href,
+    disable: true
   },
   {
     name: 'ログアウト',
@@ -162,6 +163,16 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     current: false,
     companyMenu: false,
     requiredPermission: PermissionsSystem.LIST_MEMBER_VIEW,
+  },
+  {
+    ...pageRouters.LOCATION_MANAGEMENT,
+    name: pageRouters.LOCATION_MANAGEMENT.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/team-active.svg' : '/icons/team.svg';
+    },
+    current: false,
+    companyMenu: true,
+    requiredPermission: PermissionsSystem.VIEW_ALL,
   },
 ];
 export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [

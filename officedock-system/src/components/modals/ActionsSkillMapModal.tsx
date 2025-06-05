@@ -42,7 +42,7 @@ import {
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
 import { OptionDropdownType } from '@interfaces/common';
-import { StepKey } from '@interfaces/skill-map';
+import { RawCategoryItem, StepKey } from '@interfaces/skill-map';
 import {
   CategoryStructure,
   OrganizationSkillMapDetail,
@@ -295,7 +295,7 @@ const ActionsSkillMapModal = ({
 
             if (!selectedMedium) return [];
 
-            return selectedMedium.SMALL.map((small) => ({
+            return selectedMedium.SMALL && selectedMedium.SMALL.map((small) => ({
               label: small.name,
               value: small.id,
             }));
@@ -408,12 +408,37 @@ const ActionsSkillMapModal = ({
 
       return duplicates;
     };
+    // Validate complete full information category with raw
+    const checkIncompleteFields = (
+      rawCategories: RawCategoryItem[] | undefined | null,
+    ): number[] => {
+      if (!Array.isArray(rawCategories)) return [];
+
+      const inCompletes: number[] = [];
+
+      rawCategories.forEach((item, idx) => {
+        const large = item.LARGE?.value;
+        const medium = item.MEDIUM?.value;
+        const small = item.SMALL?.value;
+
+        const filledCount = [large, medium, small].filter(Boolean).length;
+
+        if (filledCount > 0 && filledCount < 3) {
+          inCompletes.push(idx);
+        }
+      });
+
+      return inCompletes;
+    };
 
     const steps = ['step1', 'step2', 'step3'] as const;
     let hasError = false;
 
     for (const stepKey of steps) {
+      const stepData = data[stepKey];
+      const rawCategories = stepData?.rawCategories || [];
       const duplicates = checkDuplicates(data[stepKey]);
+      const inCompletes = checkIncompleteFields(rawCategories);
 
       if (duplicates.length > 0) {
         hasError = true;
@@ -430,6 +455,19 @@ const ActionsSkillMapModal = ({
           });
         });
       }
+      inCompletes.forEach((idx) => {
+        hasError = true;
+        [
+          EventWorkCategory.LARGE,
+          EventWorkCategory.MEDIUM,
+          EventWorkCategory.SMALL,
+        ].forEach((size) => {
+          setError(`${stepKey}.rawCategories.${idx}.${size}` as any, {
+            type: 'incomplete',
+            message: 'incomplete',
+          });
+        });
+      });
     }
 
     if (hasError) {

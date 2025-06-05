@@ -182,11 +182,13 @@ export enum ActionsEvent {
   EDIT = 'EDIT',
   CREATE = 'CREATE',
   DELETE = 'DELETE',
+  COPY = 'COPY'
 }
 
 export enum EventCalendarType {
   TASK = 'TASK',
   SCHEDULE = 'SCHEDULE',
+  HOLIDAY = 'HOLIDAY'
 }
 
 export enum EventWorkCategory {
@@ -531,4 +533,12 @@ export enum SkillMapTypeInterval {
 export enum MenuPlacementType {
   TOP = 'top',
   BOTTOM = 'bottom'
+}
+export enum SortingType{
+  ASC = 'asc',
+  DESC = 'desc'
+}
+export enum SelectedEventOpenType { 
+  MODAL = 'MODAL',
+  POPUP = 'POPUP'
 }

@@ -68,6 +68,7 @@ _ERROR_MESSAGES = {
         "skill_not_exists": _("The skill does not exists."),
         "unique_category_name": _("This category name is existed."),
         "unique_skill_name": _("This skill name is existed."),
+        "unique_event_location_name": _("This event location name is existed."),
         "skill_not_exists_in_organization": _(
             "The skill '{names}' does not belong to the selected organization."
         ),
@@ -99,6 +100,9 @@ _ERROR_MESSAGES = {
         "schedule_not_in_the_past": _("Can not choose schedule in the past"),
         "cannot_select_category_other_team": _(
             "Cannot select categories from other team."
+        ),
+        "password_not_same": _(
+            "New password must not be the same as the old password."
         ),
     },
     "ja": {
@@ -148,6 +152,7 @@ _ERROR_MESSAGES = {
         "skill_not_exists": _("このスキルが存在しません。"),
         "unique_category_name": _("このカテゴリー名はすでに存在しています。"),
         "unique_skill_name": _("スキル名はすでに存在しています。"),
+        "unique_event_location_name": _("場所名が既に存在しています。"),
         "skill_not_exists_in_organization": _("「{names}」スキルは選択した組織に所属していません。"),
         "submit_level_exists": "このレベルアップ申請がすでに存在しています。",
         "cannot_delete_system_role": "システムロールは削除できません。",
@@ -172,6 +177,7 @@ _ERROR_MESSAGES = {
         "organization_team_not_hierarchy": _("プロジェクトチームの階層を作成できません。"),
         "schedule_not_in_the_past": _("実施予定日時は未来の日時を選択してください。"),
         "cannot_select_category_other_team": _("他のチームのカテゴリーを選択できません。"),
+        "password_not_same": _("現在のパスワードと同じパスワードは使用できません。"),
     },
 }
 

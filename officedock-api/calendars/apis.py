@@ -1,8 +1,10 @@
 from datetime import datetime, time, timedelta
 
+from dateutil import rrule
 from django.db import transaction
 from django.db.models import Q, QuerySet
 from django.utils import timezone
+from django.utils.timezone import make_aware, now
 from drf_spectacular.utils import (
     extend_schema,
     OpenApiParameter,
@@ -13,14 +15,18 @@ from rest_framework.decorators import action
 
 from base.apis import BaseAPIViewSet
 from calendars.constants import ScheduleFields, CalendarTypes
-from calendars.models import Schedule
+from calendars.models import EventLocation, Schedule, RepeatSchedule
 from calendars.filters import TaskScheduleForCalendarFilter
 from calendars.serializers import (
+    CheckScheduleOverlapSerializer,
+    EventLocationSerializer,
     ScheduleSerializer,
     BaseScheduleSerializer,
     ScheduleTeamdockSerializer,
     TaskScheduleForCalendarSerializer,
+    ScheduleDetailSerializer,
 )
+from calendars.utils import is_event_overlapping
 from chat.constants import ChatRoomTypes, ChatMessageTypes, WebSocketEventType
 from chat.models import ChatRoom
 from chat.serializers import (
@@ -32,12 +38,13 @@ from common.utils import (
     create_categories_by_model,
     get_common_categories,
     split_id_from_string,
+    check_task_overtime,
 )
 from tasks.models import TaskSchedule, TaskDuration, Task
 from base.permissions import ActionPermission
 from roles.constants import Screens
 from common.serializers import CreationDataUserSerializer
-from tasks.constants import TaskStatus
+from tasks.constants import TaskStatus, FrequencyMap, LIMIT_DAY
 
 
 @extend_schema(tags=["System > Schedule"])
@@ -63,14 +70,17 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         user = self.request.user
         queryset = super().get_queryset().filter(company=user.company)
 
-        return queryset.order_by("start_date")
+        return queryset.order_by("created_at")
 
     def get_serializer(self, *args, **kwargs):
         """
         Handle get serializer.
         """
         if self.action == "list":
-            return BaseScheduleSerializer(*args, **kwargs)
+            return BaseScheduleSerializer(
+                *args, **kwargs, context={"request": self.request}
+            )
+
         return super().get_serializer(*args, **kwargs)
 
     def get_serializer_context(self):
@@ -95,12 +105,32 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         categories = serializer_data.pop("category_ids", None)
         user = self.request.user
         company = user.company
+        # Item for loop schedule
+        start_date = serializer_data.pop("start_date", None)
+        end_date = serializer_data.pop("end_date", None)
+        repeat_type = serializer_data.pop("repeat_type", None)
+        repeat_interval = serializer_data.pop("repeat_interval", None)
+        week_day = serializer_data.pop("week_day", None)
+        month_day = serializer_data.pop("month_day", None)
+        month = serializer_data.pop("month", None)
+
+        if repeat_type:
+            serializer_data["recurring"] = {
+                "repeat_type": repeat_type,
+                "start_date": start_date.isoformat() if start_date else None,
+                "end_date": end_date.isoformat() if end_date else None,
+                "repeat_interval": repeat_interval,
+                "week_day": week_day,
+                "month_day": month_day,
+                "month": month,
+            }
+        # Set default calendar organization
+        serializer_data["organization"] = company.get_calendar_organization()
         schedule = serializer.save(company=company, creator_id=user.id)
 
         if participants is not None:
             data = self._generate_chat_data(
-                serializer_data.get("start_date").isoformat(),
-                serializer_data.get("end_date").isoformat(),
+                schedule.recurring,
                 participants,
                 user.id,
             )
@@ -136,6 +166,112 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         if categories is not None:
             create_categories_by_model(schedule, categories)
+
+        # Create repeat schedule base on repeat type
+        if repeat_type:
+            self._generate_repeat_schedules(
+                schedule,
+                start_date,
+                repeat_type,
+                repeat_interval,
+                week_day,
+                month_day,
+                end_date,
+                month,
+            )
+
+    def _generate_repeat_schedules(
+        self,
+        schedule,
+        start_date,
+        repeat_type,
+        repeat_interval=1,
+        weekday=None,
+        month_day=None,
+        end_date=None,
+        month=None,
+        old_recurring=None,
+    ):
+        """
+        Handle loop task and store in task schedule
+        """
+        start_date = (
+            make_aware(start_date)
+            if isinstance(start_date, datetime)
+            else now()
+        )
+
+        if schedule.repeat_schedules.exists() or not old_recurring:
+            schedule.repeat_schedules.all().delete()
+
+        if repeat_type == FrequencyMap.ONCE.value:
+            RepeatSchedule.objects.create(
+                schedule=schedule,
+                company=schedule.company,
+                plan_start_date=start_date,
+                plan_end_date=end_date,
+            )
+            return
+        end_time = end_date.timetz()
+
+        # Make rule repeat
+        rule_params = {
+            "freq": FrequencyMap.to_rrule(FrequencyMap[repeat_type]),
+            "interval": repeat_interval,
+            "dtstart": start_date,
+        }
+
+        if repeat_type == FrequencyMap.WEEKLY.value and weekday is not None:
+            rule_params["byweekday"] = weekday
+            days_ahead = (weekday - start_date.weekday()) % 7
+            rule_params["dtstart"] = start_date + timedelta(days=days_ahead)
+        elif (
+            repeat_type == FrequencyMap.MONTHLY.value and month_day is not None
+        ):
+            rule_params["bymonthday"] = month_day
+            if month_day >= start_date.day:
+                rule_params["dtstart"] = start_date.replace(day=month_day)
+            else:
+                rule_params["dtstart"] = start_date.replace(
+                    day=month_day
+                ) + timedelta(days=30)
+        elif (
+            repeat_type == FrequencyMap.YEARLY.value
+            and month is not None
+            and month_day is not None
+        ):
+            rule_params["bymonth"] = month
+            if month >= start_date.month:
+                rule_params["dtstart"] = start_date.replace(
+                    day=month_day, month=month
+                )
+            else:
+                rule_params["dtstart"] = start_date.replace(
+                    day=month_day, month=month
+                ) + timedelta(days=LIMIT_DAY + 1)
+
+        rule_params["until"] = (
+            rule_params["dtstart"] + timedelta(days=LIMIT_DAY)
+            if repeat_type != FrequencyMap.YEARLY.value
+            else rule_params["dtstart"]
+        )  # Set default end_date is 1 year
+        rule = rrule.rrule(**rule_params)
+        schedules = []
+
+        for occurrence in rule:
+            plan_end_date = datetime.combine(
+                occurrence.date(), end_time, occurrence.tzinfo
+            )
+            schedules.append(
+                RepeatSchedule(
+                    schedule=schedule,
+                    company=schedule.company,
+                    plan_start_date=occurrence,
+                    plan_end_date=plan_end_date,
+                )
+            )
+
+        RepeatSchedule.objects.bulk_create(schedules)
 
     def _create_or_update_tag(self, schedule, tags):
         """
@@ -194,17 +330,19 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         return categories_list_sorted == other_list_sorted
 
     def _get_field_changes(
-        self, instance, validated_data, participants, tags, categories
+        self,
+        instance,
+        validated_data,
+        participants,
+        tags,
+        categories,
+        recurring_change=False,
     ):
         """
         Handle get field changes between instance and validated data.
         """
         changes = []
-        new_start_date = validated_data.get("start_date", None)
-        new_end_date = validated_data.get("end_date", None)
-        if new_start_date != getattr(
-            instance, "start_date"
-        ) or new_end_date != getattr(instance, "end_date"):
+        if recurring_change:
             changes.append(ScheduleFields.DURATION.value)
 
         if not self._compare_objects(participants, instance.participants.all()):
@@ -222,6 +360,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 new_value != old_value
                 and field_name != "start_date"
                 and field_name != "end_date"
+                and field_name != "recurring"
                 and field_name != "select_organizations"
             ):
                 changes.append(
@@ -234,6 +373,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     def perform_update(self, serializer):
         instance = serializer.instance
         user = self.request.user
+        screen = self.request.query_params.get("current_screen")
         company = user.company
         serializer_data = serializer.validated_data
         send_to_chat = serializer_data.pop("send_to_chat", None)
@@ -242,26 +382,46 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         tags = serializer_data.pop("tag_ids", None)
         categories = serializer_data.pop("category_ids", None)
         client_id = self.request.data.pop("client_id", None)
+        # Item for loop schedule
+        start_date = serializer_data.pop("start_date", None)
+        end_date = serializer_data.pop("end_date", None)
+        repeat_type = serializer_data.pop("repeat_type", None)
+        repeat_interval = serializer_data.pop("repeat_interval", None)
+        week_day = serializer_data.pop("week_day", None)
+        month_day = serializer_data.pop("month_day", None)
+        month = serializer_data.pop("month", None)
+        old_recurring = instance.recurring
+        recurring = None
+        if repeat_type:
+            recurring = {
+                "repeat_type": repeat_type,
+                "start_date": start_date.isoformat() if start_date else None,
+                "end_date": end_date.isoformat() if end_date else None,
+                "repeat_interval": repeat_interval,
+                "week_day": week_day,
+                "month_day": month_day,
+                "month": month,
+            }
+
+        if recurring != old_recurring and screen != Screens.STATISTIC.value:
+            serializer_data["recurring"] = recurring
 
         if participants and send_to_chat:
             data = self._generate_chat_data(
-                serializer_data.get("start_date").isoformat(),
-                serializer_data.get("end_date").isoformat(),
+                recurring,
                 participants,
                 instance.creator_id if instance.creator_id else user.id,
             )
             data["field_changes"] = self._get_field_changes(
-                instance, serializer_data, participants, tags, categories
+                instance,
+                serializer_data,
+                participants,
+                tags,
+                categories,
+                recurring_change=recurring != old_recurring,
             )
-            if serializer_data.get("start_date") != getattr(
-                instance, "start_date"
-            ) or serializer_data.get("end_date") != getattr(
-                instance, "end_date"
-            ):
-                data["old"] = {
-                    "start_date": instance.start_date.isoformat(),
-                    "end_date": instance.end_date.isoformat(),
-                }
+            if recurring != old_recurring:
+                data["old"] = old_recurring
         schedule = serializer.save()
 
         if participants is not None:
@@ -307,18 +467,37 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             schedule=schedule,
         ).first()
         if task_duration:
-            for user in schedule.participants.all():
-                send_web_socket_event(
-                    {
-                        "id": schedule.id,
-                        "task_duration_running_uuid": str(task_duration.uuid),
-                        "is_over_estimate": timedelta(minutes=30)
-                        <= timezone.now() - schedule.end_date,
-                        "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
-                        "type": CalendarTypes.SCHEDULE.value,
-                    },
-                    user=user,
-                )
+            is_send_sk, is_over_estimate = check_task_overtime(
+                schedule, task_duration
+            )
+            if is_send_sk:
+                for user in schedule.participants.all():
+                    send_web_socket_event(
+                        {
+                            "id": schedule.id,
+                            "task_duration_running_uuid": str(
+                                task_duration.uuid
+                            ),
+                            "is_over_estimate": is_over_estimate,
+                            "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
+                            "type": CalendarTypes.SCHEDULE.value,
+                        },
+                        user=user,
+                    )
+
+        # Create repeat schedule base on repeat type
+        if repeat_type and old_recurring != recurring:
+            self._generate_repeat_schedules(
+                schedule,
+                start_date,
+                repeat_type,
+                repeat_interval,
+                week_day,
+                month_day,
+                end_date,
+                month,
+                old_recurring,
+            )
 
     @transaction.atomic()
     @extend_schema(
@@ -338,8 +517,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         if send_to_chat:
             data = self._generate_chat_data(
-                instance.start_date.isoformat(),
-                instance.end_date.isoformat(),
+                instance.recurring,
                 participants,
                 instance.creator_id if instance.creator_id else user.id,
             )
@@ -372,15 +550,12 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         return self.response(status_code=status.HTTP_204_NO_CONTENT)
 
-    def _generate_chat_data(self, start_date, end_date, users, creator_id=None):
+    def _generate_chat_data(self, recurring, users, creator_id=None):
         """
         Generate chat data for sending messages on schedule changes.
         """
         return {
-            "new": {
-                "start_date": start_date,
-                "end_date": end_date,
-            },
+            "new": recurring,
             "participants": [
                 {
                     "id": user.id,
@@ -563,11 +738,13 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         if start_date:
             queryset = queryset.filter(
-                Q(start_date__gte=start_date) | Q(end_date__gte=start_date)
+                Q(repeat_schedules__plan_start_date__gte=start_date)
+                | Q(repeat_schedules__plan_end_date__gte=start_date)
             )
         if end_date:
             queryset = queryset.filter(
-                Q(start_date__lte=end_date) | Q(end_date__lte=end_date)
+                Q(repeat_schedules__plan_start_date__lte=end_date)
+                | Q(repeat_schedules__plan_end_date__lte=end_date)
             )
 
         if user_ids:
@@ -580,6 +757,115 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             BaseScheduleSerializer(
                 queryset, many=True, context={"request": request}
             ).data
+        )
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("repeat_schedule_id", type=int, required=False),
+        ]
+    )
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Handle updating the count of task usage by the user.
+        """
+        schedule = self.get_object()
+
+        return self.response_ok(
+            ScheduleDetailSerializer(
+                schedule,
+                context={
+                    "request": request,
+                },
+            ).data
+        )
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("repeat_schedule_id", type=int),
+            OpenApiParameter("send_to_chat", type=int),
+            OpenApiParameter("message", type=int),
+        ],
+    )
+    @action(
+        methods=["DELETE"],
+        detail=True,
+        url_path="delete-repeat-schedule",
+    )
+    def delete_repeat_schedule(self, request, pk, *args, **kwargs):
+        """
+        Handle delete repeat schedule
+        """
+        instance = self.get_object()
+        user = request.user
+        repeat_schedule_id = request.query_params.get("repeat_schedule_id")
+        send_to_chat = self.request.query_params.get("send_to_chat", None)
+        schedule_message = self.request.query_params.get("message", None)
+        participants = instance.participants.all()
+        client_id = self.request.data.pop("client_id", None)
+
+        if send_to_chat:
+            data = self._generate_chat_data(
+                instance.recurring,
+                participants,
+                instance.creator_id if instance.creator_id else user.id,
+            )
+
+        if participants is not None:
+            for participant in participants:
+                if send_to_chat and user != participant:
+                    self._send_chat_message(
+                        user,
+                        participant,
+                        user.company,
+                        instance,
+                        data,
+                        schedule_message,
+                        client_id,
+                        ChatMessageTypes.REMOVE_SCHEDULE.value,
+                    )
+                if send_to_chat:
+                    self._send_to_calendar_room(
+                        user,
+                        participant,
+                        instance,
+                        data,
+                        schedule_message,
+                        client_id,
+                        ChatMessageTypes.REMOVE_SCHEDULE.value,
+                    )
+
+        if repeat_schedule_id:
+            instance.repeat_schedules.filter(id=repeat_schedule_id).delete()
+
+        return self.response(status_code=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="check-overlapping",
+        serializer_class=CheckScheduleOverlapSerializer,
+    )
+    def check_event_overlapping(self, request):
+        """
+        Check if a schedule overlaps with existing events at a given location and time period.
+        """
+        # Validate and deserialize the incoming request data
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+
+        # Extract validated parameters from the request
+        schedule = validated_data.pop("schedule", None)
+        location = validated_data.pop("location")
+        plan_start_date = validated_data.pop("plan_start_date")
+        plan_end_date = validated_data.pop("plan_end_date")
+
+        return self.response_ok(
+            {
+                "is_event_overlapping": is_event_overlapping(
+                    schedule, location, plan_start_date, plan_end_date
+                )
+            }
         )
 
 
@@ -617,30 +903,39 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
         """
         Get list plan of schedules + tasks in teamdock.
         """
+        company = request.user.company
+        calendar_org = company.get_calendar_organization()
         organization_id = request.query_params.get("organization_id")
-        user_ids = request.query_params.get("user_ids")
         start_date = request.query_params.get("start_date")
         end_date = request.query_params.get("end_date")
         search = request.query_params.get("search")
 
         # Query data tasks and schedules
-        schedules = Schedule.objects.filter(organization_id=organization_id)
+        plan_schedules = RepeatSchedule.objects.select_related(
+            "schedule"
+        ).filter(
+            schedule__organization_id=calendar_org.id if calendar_org else None,
+            company=company,
+        )
         task_schedules = (
             TaskSchedule.objects.select_related("task")
-            .filter(task__organization_id=organization_id)
+            .filter(task__organization_id=organization_id, company=company)
             .exclude(task__status__name=TaskStatus.MY_ROUTINE.value)
         )
 
         # Handle filter search
         if search:
-            schedules = schedules.filter(title__icontains=search)
+            plan_schedules = plan_schedules.filter(
+                schedules__title__icontains=search
+            )
             task_schedules = task_schedules.filter(
                 task__title__icontains=search
             )
 
         if start_date:
-            schedules = schedules.filter(
-                Q(start_date__gte=start_date) | Q(end_date__gte=start_date)
+            plan_schedules = plan_schedules.filter(
+                Q(plan_start_date__gte=start_date)
+                | Q(plan_end_date__gte=start_date)
             )
             task_schedules = task_schedules.filter(
                 Q(plan_start_date__gte=start_date)
@@ -648,8 +943,9 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
             )
 
         if end_date:
-            schedules = schedules.filter(
-                Q(start_date__lte=end_date) | Q(end_date__lte=end_date)
+            plan_schedules = plan_schedules.filter(
+                Q(plan_start_date__lte=end_date)
+                | Q(plan_end_date__lte=end_date)
             )
             task_schedules = task_schedules.filter(
                 Q(plan_start_date__lte=end_date)
@@ -659,8 +955,8 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
         # Handle filter data
         if user_ids := self.request.query_params.get("user_ids"):
             if ids := split_id_from_string(user_ids):
-                schedules = schedules.filter(
-                    participants__id__in=ids
+                plan_schedules = plan_schedules.filter(
+                    schedule__participants__id__in=ids
                 ).distinct()
                 task_schedules = task_schedules.filter(
                     task__people_in_charge__id__in=ids
@@ -668,15 +964,17 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
 
         if tag_ids := request.query_params.get("tag_ids"):
             if ids := split_id_from_string(tag_ids):
-                schedules = schedules.filter(tags__in=ids).distinct()
+                plan_schedules = plan_schedules.filter(
+                    schedule__tags__in=ids
+                ).distinct()
                 task_schedules = task_schedules.filter(
                     task__tags__in=ids
                 ).distinct()
 
         if category_ids := request.query_params.get("category_ids"):
             if ids := split_id_from_string(category_ids):
-                schedules = schedules.filter(
-                    categories__large_statistic_category__in=ids
+                plan_schedules = plan_schedules.filter(
+                    schedule__categories__large_statistic_category__in=ids
                 ).distinct()
                 task_schedules = task_schedules.filter(
                     task__categories__large_statistic_category__in=ids
@@ -684,13 +982,14 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
 
         if organization_ids := request.query_params.get("organization_ids"):
             if ids := split_id_from_string(organization_ids):
-                schedules = schedules.filter(organization__in=ids).distinct()
+                plan_schedules = plan_schedules.filter(
+                    schedule__organization__in=ids
+                ).distinct()
                 task_schedules = task_schedules.filter(
                     task__organization__in=ids
                 ).distinct()
 
         results = []
-        tasks_result = []
         for task_schedule in task_schedules:
             item = {
                 "id": task_schedule.id,
@@ -710,14 +1009,28 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
                     task_schedule.task.categories.first(), task_schedule.task
                 ),
             }
-            tasks_result.append(item)
+            results.append(item)
 
-        schedules_result = ScheduleTeamdockSerializer(
-            schedules, many=True, context={"request": request}
-        ).data
-
-        # Merge schedules_result and tasks_result lists
-        results = tasks_result + schedules_result
+        for plan in plan_schedules:
+            item = {
+                "id": plan.id,
+                "title": plan.schedule.title,
+                "start_date": plan.plan_start_date,
+                "end_date": plan.plan_end_date,
+                "is_all_day": None,
+                "is_start": plan.schedule.is_start,
+                "type": CalendarTypes.TASK.value,
+                "participants": CreationDataUserSerializer(
+                    plan.schedule.participants.all(), many=True
+                ).data,
+                "event_type": plan.schedule.type,
+                "categories": []
+                if not plan.schedule.categories.exists()
+                else get_common_categories(
+                    plan.schedule.categories.first(), plan.schedule
+                ),
+            }
+            results.append(item)
 
         return self.response_ok(results)
 
@@ -749,6 +1062,8 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
         """
         Get list actual of schedules in teamdock.
         """
+        company = request.user.company
+        calendar_org = company.get_calendar_organization()
         organization_id = request.query_params.get("organization_id")
         start_date = request.query_params.get("start_date")
         end_date = request.query_params.get("end_date")
@@ -757,7 +1072,11 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
         durations = (
             TaskDuration.objects.filter(
                 Q(task__organization_id=organization_id)
-                | Q(schedule__organization_id=organization_id)
+                | Q(
+                    schedule__organization_id=calendar_org.id
+                    if calendar_org
+                    else None
+                )
             )
             .exclude(task__status__name=TaskStatus.MY_ROUTINE.value)
             .all()
@@ -820,11 +1139,6 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
             if not model:
                 continue
 
-            users = (
-                model.participants.all()
-                if isinstance(model, Schedule)
-                else model.people_in_charge.all()
-            )
             item = {
                 "id": duration.id,
                 "task_id": model.id if isinstance(model, Task) else None,
@@ -838,7 +1152,7 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
                 if isinstance(model, Schedule)
                 else CalendarTypes.TASK.value,
                 "participants": CreationDataUserSerializer(
-                    users, many=True
+                    [duration.user], many=True
                 ).data,
                 "is_start": duration.paused_at is None
                 or not duration.paused_at,
@@ -874,3 +1188,35 @@ class CalendarViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             queryset = queryset.none()
 
         return queryset.filter(company=user.company)
+
+
+@extend_schema(tags=["System > Event Locations"])
+class EventLocationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
+    """
+    API endpoint for managing event locations in the system.
+
+    This viewset provides CRUD operations for event locations, allowing users to:
+    - Create new event locations
+    - List all event locations for their company
+    - Retrieve specific event location details
+    - Update existing event locations
+    - Delete event locations
+    """
+
+    queryset = EventLocation.objects.order_by("-created_at")
+    serializer_class = EventLocationSerializer
+    permission_classes = [ActionPermission]
+    screen_name = Screens.CALENDAR.value
+    lookup_field = "uuid"
+
+    def get_queryset(self):
+        """
+        Filter the queryset to only return event locations belonging to the user's company.
+        """
+        return super().get_queryset().filter(company=self.request.user.company)
+
+    def perform_create(self, serializer):
+        """
+        Create a new event location and associate it with the user's company.
+        """
+        serializer.save(company=self.request.user.company)

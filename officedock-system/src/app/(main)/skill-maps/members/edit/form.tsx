@@ -138,6 +138,7 @@ export const EditSkillMapByMemberForm = ({
     [setSelectedSkillByUserToUpdate, setDataSkillMapsByMembers],
   );
 
+  // Declare fixed columns
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const fixedColumns: ColumnDef<DynamicRow, any>[] = [
     {
@@ -161,6 +162,7 @@ export const EditSkillMapByMemberForm = ({
     },
   ];
 
+  // Declare dynamic columns
   const dynamicColumns: ColumnDef<DynamicRow>[] = useMemo(() => {
     if (!skillMapByMembers || skillMapByMembers.users.length === 0) return [];
 
@@ -328,6 +330,8 @@ export const EditSkillMapByMemberForm = ({
           </tbody>
         </Table>
       </div>
+
+      {/* Warning popup when uncheck skill */}
       {warningUncheckSkillModalOpen && pendingChangeSkillByUser && (
         <WarningUncheckSkillModal
           open={warningUncheckSkillModalOpen}

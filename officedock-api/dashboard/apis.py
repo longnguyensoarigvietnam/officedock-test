@@ -17,7 +17,7 @@ from base.apis import BaseAPIViewSet
 from base.filters import FilterByPermission
 from base.messages import ERROR_MESSAGES
 from calendars.constants import CalendarTypes
-from calendars.models import Schedule
+from calendars.models import Schedule, RepeatSchedule
 from calendars.serializers import BaseScheduleSerializer
 from common.constants import BASE_DATETIME_FORMAT
 from common.serializers import (
@@ -108,8 +108,8 @@ class DashboardViewSet(BaseAPIViewSet):
         user = request.user
 
         for ele in list:
-            if isinstance(ele, Schedule):
-                model = ele
+            if isinstance(ele, RepeatSchedule):
+                model = ele.schedule
                 model_type = CalendarTypes.SCHEDULE.value
             else:
                 model = ele.task or ele.schedule
@@ -205,12 +205,12 @@ class DashboardViewSet(BaseAPIViewSet):
         data = self._append_data_to_cards(data, task_durations, request)
 
         # Get data event in schedule
-        events = Schedule.objects.filter(
-            Q(start_date__lte=end_date)
-            & Q(end_date__gte=start_date)
-            & Q(participants_schedules__user=request.user)
+        repeat_schedules = RepeatSchedule.objects.filter(
+            plan_end_date__gte=start_date,
+            plan_start_date__lte=end_date,
+            schedule__participants_schedules__user=request.user,
         ).all()
-        data = self._append_data_to_cards(data, events, request)
+        data = self._append_data_to_cards(data, repeat_schedules, request)
 
         # Get actual duration of event
         event_durations = (
@@ -219,7 +219,12 @@ class DashboardViewSet(BaseAPIViewSet):
                 & Q(Q(paused_at__lte=end_date) | Q(paused_at__isnull=True))
                 & Q(schedule__participants_schedules__user=request.user)
             )
-            .exclude(schedule__in=[event for event in events])
+            .exclude(
+                schedule__in=[
+                    repeat_schedule.schedule
+                    for repeat_schedule in repeat_schedules
+                ]
+            )
             .all()
         )
         data = self._append_data_to_cards(data, event_durations, request)
@@ -232,7 +237,7 @@ class DashboardViewSet(BaseAPIViewSet):
             OpenApiParameter("end_date", type=datetime, required=True),
         ],
     )
-    @action(methods=["GET"], detail=False, url_path="kanban_schedules")
+    @action(methods=["GET"], detail=False, url_path="kanban-schedules")
     def kanban_schedules(self, request):
         """
         Get all schedule in kanban
@@ -253,12 +258,11 @@ class DashboardViewSet(BaseAPIViewSet):
                 task_schedules__plan_start_date__lte=end_date,
                 people_in_charge=user,
             ).distinct()
-            # FIXME: Change conditional when implement repeat schedule of event
             schedules = Schedule.objects.filter(
-                start_date__gte=start_date,
-                end_date__lte=end_date,
+                repeat_schedules__plan_start_date__lte=end_date,
+                repeat_schedules__plan_end_date__gte=start_date,
                 participants=user,
-            )
+            ).distinct()
             data = (
                 TaskCalendarSerializer(
                     tasks, many=True, context={"request": request}
@@ -309,36 +313,41 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         paused_at = paused_at or instance.paused_at or now()
         started_at = started_at or instance.started_at
         user = request.user
-        for user in instance.task.people_in_charge.all():
-            # Minus duration to skill map actual measure time
-            calculate_progress_skill_map(
-                instance.task,
-                user,
-                duration_time=-(instance.paused_at - instance.started_at),
-            )
+        is_edit_task_duration = bool(instance.task)
+        if is_edit_task_duration:
+            for user in instance.task.people_in_charge.all():
+                # Minus duration to skill map actual measure time
+                calculate_progress_skill_map(
+                    instance.task,
+                    user,
+                    duration_time=-(instance.paused_at - instance.started_at),
+                )
         if started_at.date() != paused_at.date():
             # Call separate_duration to handle multi-day durations
             new_durations = separate_duration(
                 instance, paused_at, is_get_new_durations=True, user=user
             )
-            # Calculate total duration
-            total_duration = timedelta()
-            for new_duration in new_durations:
-                if new_duration.paused_at:
-                    total_duration += (
-                        new_duration.paused_at - new_duration.started_at
+            if is_edit_task_duration:
+                # Calculate total duration
+                total_duration = timedelta()
+                for new_duration in new_durations:
+                    if new_duration.paused_at:
+                        total_duration += (
+                            new_duration.paused_at - new_duration.started_at
+                        )
+                for user in instance.task.people_in_charge.all():
+                    # Plus total duration to skill map actual measure time
+                    calculate_progress_skill_map(
+                        instance.task, user, duration_time=total_duration
                     )
-            for user in instance.task.people_in_charge.all():
-                # Plus total duration to skill map actual measure time
-                calculate_progress_skill_map(
-                    instance.task, user, duration_time=total_duration
-                )
             return DurationSerializer(
                 new_durations, many=True, context={"request": request}
             ).data
         else:
-            if validated_data.get("started_at") and validated_data.get(
-                "paused_at"
+            if (
+                validated_data.get("started_at")
+                and validated_data.get("paused_at")
+                and is_edit_task_duration
             ):
                 total_duration = instance.paused_at - instance.started_at
                 for user in instance.task.people_in_charge.all():
@@ -360,12 +369,13 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         if model and model.is_start:
             model.is_start = False
             model.save()
-        total_duration = instance.paused_at - instance.started_at
-        for user in instance.task.people_in_charge.all():
-            # Minus total duration to skill map actual measure time
-            calculate_progress_skill_map(
-                instance.task, user, duration_time=-total_duration
-            )
+        if instance.task:
+            total_duration = instance.paused_at - instance.started_at
+            for user in instance.task.people_in_charge.all():
+                # Minus total duration to skill map actual measure time
+                calculate_progress_skill_map(
+                    instance.task, user, duration_time=-total_duration
+                )
 
         instance.delete()
 
@@ -568,6 +578,8 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                     user=user,
                     is_get_new_durations=True,
                 )
+                if not duration.task:
+                    continue
                 # Calculate total duration
                 total_duration = timedelta()
                 for new_duration in new_durations:
@@ -729,17 +741,9 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                     started_at__gte=start_of_today,
                     paused_at__isnull=True,
                 ).first()
-                if isinstance(current_duration_start, Task):
-                    is_send_sk, is_over_estimate = check_task_overtime(
-                        current_duration_start, task_running
-                    )
-                elif isinstance(current_duration_start, Schedule):
-                    if (
-                        timezone.now() - current_duration_start.end_date
-                        >= timedelta(minutes=30)
-                        and task_running.is_cancel_alert is False
-                    ):
-                        is_over_estimate = True
+                is_send_sk, is_over_estimate = check_task_overtime(
+                    current_duration_start, task_running
+                )
 
             categories = None
             if current_duration_start.categories.exists():
@@ -985,12 +989,13 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             user=user,
             uuid=uuid,
         )
-        total_duration = duration.paused_at - duration.started_at
-        for user in duration.task.people_in_charge.all():
-            # Plus total duration to skill map actual measure time
-            calculate_progress_skill_map(
-                duration.task, user, duration_time=total_duration
-            )
+        if duration.task:
+            total_duration = duration.paused_at - duration.started_at
+            for user in duration.task.people_in_charge.all():
+                # Plus total duration to skill map actual measure time
+                calculate_progress_skill_map(
+                    duration.task, user, duration_time=total_duration
+                )
         if started_at.date() != paused_at.date():
             separate_duration(duration, duration.paused_at, user=user)
 
@@ -1038,13 +1043,13 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if isinstance(model, Schedule) and schedule_type:
             model.type = schedule_type
             model.save()
-
-        total_duration = instance.paused_at - instance.started_at
-        for user in instance.task.people_in_charge.all():
-            # Minus total duration to skill map actual measure time
-            calculate_progress_skill_map(
-                instance.task, user, duration_time=-total_duration
-            )
+        if instance.task:
+            total_duration = instance.paused_at - instance.started_at
+            for user in instance.task.people_in_charge.all():
+                # Minus total duration to skill map actual measure time
+                calculate_progress_skill_map(
+                    instance.task, user, duration_time=-total_duration
+                )
 
         # Update actual duration
         if started_at:
@@ -1052,13 +1057,13 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if paused_at:
             instance.paused_at = paused_at
         instance.save()
-
-        total_duration = instance.paused_at - instance.started_at
-        for user in instance.task.people_in_charge.all():
-            # Plus total duration to skill map actual measure time
-            calculate_progress_skill_map(
-                instance.task, user, duration_time=total_duration
-            )
+        if instance.task:
+            total_duration = instance.paused_at - instance.started_at
+            for user in instance.task.people_in_charge.all():
+                # Plus total duration to skill map actual measure time
+                calculate_progress_skill_map(
+                    instance.task, user, duration_time=total_duration
+                )
         paused_at = paused_at or instance.paused_at or now()
         started_at = started_at or instance.started_at
         if started_at.date() != paused_at.date():
@@ -1073,12 +1078,12 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if model and model.is_start:
             model.is_start = False
             model.save()
-
-        total_duration = instance.paused_at - instance.started_at
-        for user in instance.task.people_in_charge.all():
-            # Minus total duration to skill map actual measure time
-            calculate_progress_skill_map(
-                instance.task, user, duration_time=-total_duration
-            )
+        if instance.task:
+            total_duration = instance.paused_at - instance.started_at
+            for user in instance.task.people_in_charge.all():
+                # Minus total duration to skill map actual measure time
+                calculate_progress_skill_map(
+                    instance.task, user, duration_time=-total_duration
+                )
 
         instance.delete()

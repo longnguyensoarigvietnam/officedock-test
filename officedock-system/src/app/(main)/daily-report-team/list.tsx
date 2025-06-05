@@ -253,7 +253,7 @@ const ListData = () => {
                   boxShadow: '0px 4px 10px 0px #0000000D',
                 }}
                 className="p-[30px] rounded-[14px] bg-[#F8FAFC] w-full h-fit">
-                <p className="text-base font-medium text-[#77858F] line-clamp-3 mb-[30px]">
+                <p className="text-base max-w-full break-all font-medium text-[#77858F] line-clamp-3 mb-[30px]">
                   {item.organization.name}
                 </p>
                 <div className="grid grid-cols-2 gap-[10px]">

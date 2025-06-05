@@ -12,6 +12,7 @@ import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
 interface PieChartProps {
+  id?: string;
   data: number[];
   labels: string[];
   colors?: string[];
@@ -19,13 +20,16 @@ interface PieChartProps {
   className?: string;
   showLegend?: boolean;
   showTooltip?: boolean;
+  colorLabel?: string;
 }
 
 const PieChart = ({
+  id,
   data,
   labels,
   colors,
   className,
+  colorLabel = '#fff',
   actualValues,
   showLegend = false,
   showTooltip = true,
@@ -59,10 +63,13 @@ const PieChart = ({
         backgroundColor: filteredData.map(
           (item) => item.color || defaultColors[0],
         ),
-        borderColor: filteredData.map((item) =>
-          (item.color || defaultColors[0]).replace('1', '1'),
-        ),
-        borderWidth: 1,
+        borderColor:
+          colorLabel !== '#fff'
+            ? colorLabel
+            : filteredData.map((item) =>
+                (item.color || defaultColors[0]).replace('1', '1'),
+              ),
+        borderWidth: 0.5,
         hoverOffset: 0,
       },
     ],
@@ -107,7 +114,7 @@ const PieChart = ({
 
           return `${truncatedLabel}\n${value}%`;
         },
-        color: '#fff',
+        color: colorLabel,
         font: {
           weight: 'bold',
           size: 10,
@@ -123,7 +130,7 @@ const PieChart = ({
   };
 
   return (
-    <div className={`w-96 h-96 my-0 mx-auto ${className}`}>
+    <div id={id} className={`w-96 h-96 my-0 mx-auto ${className}`}>
       <Pie data={chartData} options={options} />
     </div>
   );

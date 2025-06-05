@@ -232,7 +232,7 @@ const CategoryStepRaw = ({
                       <div className="w-[175px] h-[30px] ">
                         <Dropdown
                           className={` h-full !py-1 text-xs !bg-[#EBF1F7] border border-[#EBF1F7] rounded-md ${fieldState.error ? 'border border-red-500' : '!border-transparent'}`}
-                          classNameTextData="!text-xs min-h-3 !py-0"
+                          classNameTextData="!text-xs min-h-3 !py-3 !px-3"
                           classNameOption="!text-xs !py-0"
                           classNameError="!text-xs !py-0"
                           options={optionsData}
@@ -335,21 +335,22 @@ const CategoryStepRaw = ({
                                   },
                                 ];
                               if (selectedMediumCategoryOption) {
-                                selectedMediumCategoryOption.SMALL.map(
-                                  (smallCategory) => {
-                                    if (
-                                      !initialSmallCategory.find(
-                                        (item) =>
-                                          item.value == smallCategory.id,
-                                      )
-                                    ) {
-                                      initialSmallCategory.push({
-                                        label: smallCategory.name,
-                                        value: smallCategory.id,
-                                      });
-                                    }
-                                  },
-                                );
+                                selectedMediumCategoryOption.SMALL &&
+                                  selectedMediumCategoryOption.SMALL.map(
+                                    (smallCategory) => {
+                                      if (
+                                        !initialSmallCategory.find(
+                                          (item) =>
+                                            item.value == smallCategory.id,
+                                        )
+                                      ) {
+                                        initialSmallCategory.push({
+                                          label: smallCategory.name,
+                                          value: smallCategory.id,
+                                        });
+                                      }
+                                    },
+                                  );
                               }
 
                               setDataOptionsCategorySmall((prev) => ({

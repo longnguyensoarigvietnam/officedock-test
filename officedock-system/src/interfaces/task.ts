@@ -279,6 +279,7 @@ export interface TaskTimeSchedule {
   uuid?: string;
   taskId?: number;
   scheduleId?: number;
+  eventSchedule?: number;
   title: string;
   type: string;
   isStart: boolean;
@@ -358,6 +359,8 @@ export interface DataDetailTaskType {
 }
 export interface DataDetailEventType {
   id: string;
+  scheduleId: string;
+  eventSchedule: string;
   title: string;
   start: string;
   end: string;

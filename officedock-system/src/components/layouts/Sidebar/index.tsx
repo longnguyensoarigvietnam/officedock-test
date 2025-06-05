@@ -324,6 +324,7 @@ const Sidebar = ({ className }: Props) => {
           }
         }
         params.set('tabId', '1');
+        params.delete('room');
 
         router.push(`${href}?${params.toString()}`);
       }

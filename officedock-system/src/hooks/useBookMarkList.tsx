@@ -11,6 +11,7 @@ import { ChatMessageResponse } from '@interfaces/chat';
 
 interface UseBookMarkListHooksProps {
   page: number;
+  setLoadingState: () => void
   onSuccess?: (success: BasePagination<ChatMessageResponse[]>) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
@@ -18,6 +19,7 @@ interface UseBookMarkListHooksProps {
 
 const useBookMarkList = ({
   page,
+  setLoadingState,
   onSuccess,
   onError,
   onSettled,
@@ -27,6 +29,7 @@ const useBookMarkList = ({
 
   // Handle call API get Bookmark
   const getBookMarkList = async () => {
+    setLoadingState()
     const apiUrl = `${apiRouters.BOOKMARK_LIST}?is_bookmark=true&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}&page=${page}`;
 
     const { data } =

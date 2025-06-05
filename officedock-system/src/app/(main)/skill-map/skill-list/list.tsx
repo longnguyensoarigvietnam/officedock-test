@@ -59,6 +59,8 @@ const SkillList = () => {
 
   // Hooks
   const { creationDataTaskData } = useCreationDataTask({});
+
+  // Get skill list
   useListSkillsInSkillMap({
     organizationId: String(selectedOrganizationOption.value),
     onSuccess: (data) => {
@@ -66,6 +68,7 @@ const SkillList = () => {
     },
   });
 
+  // Get organization options for pulldown
   useEffect(() => {
     if (creationDataTaskData) {
       const organizationList = creationDataTaskData.organizations.map((org) => {
@@ -84,6 +87,7 @@ const SkillList = () => {
     }
   }, [creationDataTaskData]);
 
+  // Get skill map detail
   useSkillMapUserDetail({
     skillId: Number(selectedSkillMapId),
     onError: (error: AxiosError) => {
@@ -186,6 +190,7 @@ const SkillList = () => {
           ))}
       </div>
 
+      {/* Open skill map detail modal */}
       {openSkillMapDetailModal && (
         <ActionsSkillMapDetailModal
           step={selectedStep}

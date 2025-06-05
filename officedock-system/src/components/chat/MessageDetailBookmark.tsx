@@ -24,8 +24,12 @@ import {
   REMOVE_MEMBER_TASK_MESSAGE,
   TASK_DELETED,
 } from '@constants';
-import { ChatRoomType, MessageType, SubmitLevelStatus } from '@constants/enums';
-import { MENTION_NAME_REGEX } from '@constants/regex';
+import {
+  ChatRoomType,
+  MessageType,
+  SubmitLevelStatus,
+  TaskRepetitiveValue,
+} from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 
 import {
@@ -35,15 +39,18 @@ import {
 } from '@interfaces/chat';
 import { Profile } from '@interfaces/user';
 
-import { formatWithParagraphTags, getFileURL } from '@utils';
+import {
+  displayRepetitiveEventTime,
+  formatWithParagraphTags,
+  getFileURL,
+  renderEventDatetimeInChat,
+} from '@utils';
 import {
   convertToCurrentTimezone,
-  convertToTimeString,
   formatCheckDate,
   formatHoursAndMinutesForDateTime,
   formatShowDeadline,
   getFormattedDateTime,
-  getJapaneseDayName,
 } from '@utils/date';
 
 export type MessageDetailProps = {
@@ -60,6 +67,7 @@ export type MessageDetailProps = {
         participants: ChatParticipant;
       }
     | undefined;
+  handleActionEditTask: (id: number) => void;
   handleConfirmGetDataDetailEvent: (id: string) => void;
   onGotoMessage: () => void;
   handleRemoveItemBookmark: (uuid: string) => void;
@@ -69,8 +77,8 @@ export const MessageDetailBookmark = ({
   isLastItem,
   messageDetail,
   dashboardMembers,
-  dashboardMemberList,
   chatRoomInfo,
+  handleActionEditTask,
   handleConfirmGetDataDetailEvent,
   onGotoMessage,
   handleRemoveItemBookmark,
@@ -78,6 +86,7 @@ export const MessageDetailBookmark = ({
   const { data: session } = useSession();
   const router = useRouter();
 
+  // Render user avatar
   const renderAvatar = (senderId: number) => {
     const memberInfo = dashboardMembers.find(
       (member) => member.id === senderId,
@@ -123,52 +132,123 @@ export const MessageDetailBookmark = ({
     return div.innerHTML;
   };
 
+  // Highlight mentions
   const highlightMentions = (message: string, mentions: number[]) => {
     if (!mentions || mentions.length === 0)
       return parseReactionsToImages(message);
 
-    let processedHtml = '';
-    let i = 0;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(message, 'text/html');
 
-    while (i < message.length) {
-      if (message[i] === '@') {
-        let j = i + 1;
-        while (j < message.length && MENTION_NAME_REGEX.test(message[j])) j++;
+    doc.querySelectorAll('.mention').forEach((mention) => {
+      let mentionName = mention.textContent?.trim() || '';
 
-        const mentionName = message.substring(i + 1, j).trim();
-        if (
-          mentionName === MENTION_ALL_MEMBERS &&
-          dashboardMemberList.every((participant) =>
-            [...mentions, Number(session?.user.id)].includes(
-              Number(participant.id),
-            ),
-          )
-        ) {
-          processedHtml += `<span style="color: #0068B7;">@${mentionName}</span>`;
-          i = j;
-          continue;
-        }
-
-        const matchedUser = dashboardMembers.find(
-          (member) => member.fullName === mentionName,
-        );
-
-        if (matchedUser) {
-          const color =
-            matchedUser.id == session?.user.id ? '#0068B7' : '#77858F';
-          processedHtml += `<span style="color: ${color};">@${mentionName}</span>`;
-          i = j;
-          continue;
-        }
+      if (mentionName.startsWith('@')) {
+        mentionName = mentionName.slice(1);
       }
 
-      processedHtml += message[i];
-      i++;
-    }
+      const matchedUser = dashboardMembers.find(
+        (member) => member.fullName === mentionName,
+      );
 
-    return parseReactionsToImages(processedHtml);
+      const color =
+        matchedUser?.id === session?.user.id ||
+        mentionName === MENTION_ALL_MEMBERS
+          ? '#0068B7'
+          : '#77858F';
+      mention.setAttribute('style', `color: ${color};`);
+    });
+
+    return parseReactionsToImages(doc.body.innerHTML);
   };
 
+  const processMessage = (message: string, mentions: number[]) => {
+    const highlightedMessage = highlightMentions(message, mentions);
+
+    const dom = new DOMParser().parseFromString(
+      highlightedMessage,
+      'text/html',
+    );
+
+    const nodes = Array.from(dom.body.childNodes);
+
+    const processNode = (node: ChildNode, index: number) => {
+      if (node.nodeType === 1) {
+        const element = node as HTMLElement;
+
+        if (element.tagName === 'P') {
+          const taskQuote = element.querySelector('span[data-task-id]');
+
+          if (taskQuote) {
+            const taskId = taskQuote.getAttribute('data-task-id');
+            const restOfContent = element.innerHTML.replace(
+              taskQuote.outerHTML,
+              '',
+            );
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(
+              taskQuote.innerHTML,
+              'text/html',
+            );
+
+            const spans = doc.querySelectorAll('span');
+
+            const targetSpan = spans[1]?.outerHTML || '';
+
+            return (
+              <>
+                <div
+                  key={`${index}-quote`}
+                  id={taskId || undefined}
+                  onClick={() => {
+                    if (taskId) {
+                      handleActionEditTask(Number(taskId));
+                    }
+                  }}
+                  className="flex mb-2 items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer">
+                  <ImageRound
+                    className="w-[14px] h-[14px]"
+                    name="Task icon"
+                    src="/icons/gray-checkbox.svg"
+                  />
+                  <span
+                    className="text-sm font-medium"
+                    dangerouslySetInnerHTML={{ __html: targetSpan }}
+                  />
+                </div>
+
+                {restOfContent.trim() && (
+                  <p
+                    key={`${index}-rest`}
+                    className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px]"
+                    dangerouslySetInnerHTML={{ __html: restOfContent }}
+                  />
+                )}
+              </>
+            );
+          }
+
+          return (
+            <p
+              key={index}
+              className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px]">
+              <span dangerouslySetInnerHTML={{ __html: element.innerHTML }} />
+            </p>
+          );
+        }
+      } else if (node.nodeType === 3) {
+        return node.textContent?.trim() ? (
+          <span key={index}>{node.textContent}</span>
+        ) : null;
+      }
+      return null;
+    };
+
+    return nodes.map((node, index) => processNode(node, index));
+  };
+
+  // Render submit level message
   const renderSubmitLevelMessage = (
     type: string,
     status: string,
@@ -205,23 +285,58 @@ export const MessageDetailBookmark = ({
     }
   };
 
+  const renderParticipantsContent = (messageDetail: ChatMessageResponse) => {
+    return (
+      <>
+        <p>
+          {
+            messageDetail.scheduleChanges?.participants?.find(
+              (participant) => participant.isCreator,
+            )?.name
+          }{' '}
+          {messageDetail.scheduleChanges?.participants?.find(
+            (participant) => participant.isCreator,
+          ) && '-主催者'}
+        </p>
+        {messageDetail.scheduleChanges?.participants?.find(
+          (participant) => participant.isCreator,
+        )
+          ? messageDetail.scheduleChanges?.participants
+              ?.filter((participant) => !participant.isCreator)
+              ?.slice(0, 3)
+              .map((participant) => (
+                <p key={participant.id}>{participant.name} </p>
+              ))
+          : messageDetail.scheduleChanges?.participants
+              ?.slice(0, 4)
+              .map((participant) => (
+                <p key={participant.id}>{participant.name} </p>
+              ))}
+        {messageDetail.scheduleChanges?.participants &&
+          messageDetail.scheduleChanges?.participants?.length > 4 && (
+            <p>その他</p>
+          )}
+      </>
+    );
+  };
+
   return (
     <Fragment>
-      <div className="group">
+      <div className="group my-2">
         {(chatRoomInfo?.type === ChatRoomType.PRIVATE ||
           chatRoomInfo?.type === ChatRoomType.GROUP ||
           chatRoomInfo?.type === ChatRoomType.SELF) && (
           <div
-            className={`flex !box-border border-b border-[#D2DBE1] py-[14px] group-hover:bg-[#FFFFFF] ml-[30px] mr-3 group-hover:rounded-md`}>
+            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
             {renderAvatar(messageDetail.sender.id)}
-            <div className={`ml-[10px] w-full pr-5 pt-2`}>
-              <div className="flex justify-between items-center gap-2 pb-2">
-                <div className="flex gap-2 font-semibold items-center text-sm ">
-                  <p className="text-[15px] font-medium text-black">
-                    {messageDetail.sender.fullName}
-                  </p>
-                  <p className="font-medium text-xs truncate min-w-10 flex-shrink-0 max-w-[400px] text-[#77858F]">
-                    {messageDetail.sender?.organizations?.name}
+            <div className={`ml-3 !w-full`}>
+              <div className="flex justify-between items-baseline pb-2">
+                <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
+                  <p className="max-w-full break-all">
+                    {messageDetail.sender.fullName}{' '}
+                    <span className="font-medium text-xs text-[#77858F]">
+                      {messageDetail.sender?.organizations?.name}
+                    </span>
                   </p>
                   <ImageRound
                     name="Save"
@@ -230,7 +345,7 @@ export const MessageDetailBookmark = ({
                   />
                 </div>
                 <div className={`flex items-start`}>
-                  <p className="font-medium text-xs text-[#77858F] min-w-24 flex-shrink-0">
+                  <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
                     {messageDetail.createdAt &&
                       formatCheckDate(
                         getFormattedDateTime(
@@ -238,19 +353,9 @@ export const MessageDetailBookmark = ({
                         ),
                       )}
                   </p>
-                  {messageDetail.isEdited && !messageDetail.deletedAt && (
-                    <div className="flex items-center w-fit flex-shrink-0">
-                      <ImageRound
-                        name="Dot"
-                        src={'/icons/dot.svg'}
-                        className="w-[4px] h-[4px] hover:cursor-pointer ml-2"
-                      />
-                      <p className="font-normal text-xs ml-2">編集済</p>
-                    </div>
-                  )}
                 </div>
               </div>
-              <div className="relative">
+              <div className="relative !box-border">
                 <div>
                   <div className="flex flex-col">
                     {messageDetail.deletedAt ? (
@@ -261,15 +366,11 @@ export const MessageDetailBookmark = ({
                     ) : (
                       <div>
                         {messageDetail.type === MessageType.MESSAGE && (
-                          <div className="!w-[100%]">
-                            <p
-                              className={`text-chat-box font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px]  `}
-                              dangerouslySetInnerHTML={{
-                                __html: highlightMentions(
-                                  messageDetail.message,
-                                  messageDetail.mentions || [],
-                                ),
-                              }}></p>
+                          <div className="!w-[100%] break-all">
+                            {processMessage(
+                              messageDetail.message,
+                              messageDetail.mentions || [],
+                            )}
                             {messageDetail?.chatFiles &&
                               messageDetail?.chatFiles.length > 0 && (
                                 <div className="flex flex-col gap-2 !w-[100%]">
@@ -299,7 +400,7 @@ export const MessageDetailBookmark = ({
                                                 </div>
                                               )}
                                               <p
-                                                className={`text-[#0068B6] font-medium text-[14px] break-words break-all max-w-full ${
+                                                className={`text-[#0068B6] font-medium text-[14px] break-all max-w-full ${
                                                   file.fileType.includes(
                                                     'image',
                                                   )
@@ -332,83 +433,22 @@ export const MessageDetailBookmark = ({
                                   {EVENT_DELETED}
                                 </p>
                                 <p className="font-semibold mt-2">日時</p>
-                                <p>
-                                  {messageDetail.scheduleChanges?.new &&
-                                    `${format(
-                                      messageDetail.scheduleChanges?.new
-                                        .startDate as string,
-                                      DATE_FORMAT,
-                                    )}(${getJapaneseDayName(
-                                      messageDetail.scheduleChanges?.new
-                                        .startDate as string,
-                                    )})`}{' '}
-                                  {messageDetail.scheduleChanges?.new &&
-                                    convertToTimeString(
-                                      `${messageDetail.scheduleChanges?.new.startDate}`,
-                                    )}{' '}
-                                  ~{' '}
-                                  {messageDetail.scheduleChanges?.new &&
-                                    String(
-                                      format(
-                                        messageDetail.scheduleChanges?.new
-                                          .startDate as string,
-                                        DATE_FORMAT,
-                                      ),
-                                    ) !==
-                                      String(
-                                        format(
-                                          messageDetail.scheduleChanges?.new
-                                            .endDate as string,
-                                          DATE_FORMAT,
-                                        ),
-                                      ) &&
-                                    `${format(
-                                      messageDetail.scheduleChanges?.new
-                                        .endDate as string,
-                                      DATE_FORMAT,
-                                    )}(${getJapaneseDayName(
-                                      messageDetail.scheduleChanges?.new
-                                        .endDate as string,
-                                    )})`}{' '}
-                                  {messageDetail.scheduleChanges?.new &&
-                                    convertToTimeString(
-                                      `${messageDetail.scheduleChanges?.new.endDate}`,
-                                    )}
-                                </p>
+                                <div className={`text-left`}>
+                                  <p>
+                                    {' '}
+                                    {messageDetail.scheduleChanges?.new &&
+                                      (messageDetail.scheduleChanges?.new
+                                        .repeatType == TaskRepetitiveValue.ONCE
+                                        ? renderEventDatetimeInChat(
+                                            messageDetail.scheduleChanges?.new,
+                                          )
+                                        : displayRepetitiveEventTime(
+                                            messageDetail.scheduleChanges?.new,
+                                          ))}
+                                  </p>
+                                </div>
                                 <p className="font-semibold mt-2">参加者</p>
-                                <p>
-                                  {
-                                    messageDetail.scheduleChanges?.participants?.find(
-                                      (participant) => participant.isCreator,
-                                    )?.name
-                                  }{' '}
-                                  {messageDetail.scheduleChanges?.participants?.find(
-                                    (participant) => participant.isCreator,
-                                  ) && '-主催者'}
-                                </p>
-                                {messageDetail.scheduleChanges?.participants?.find(
-                                  (participant) => participant.isCreator,
-                                )
-                                  ? messageDetail.scheduleChanges?.participants
-                                      ?.filter(
-                                        (participant) => !participant.isCreator,
-                                      )
-                                      ?.slice(0, 3)
-                                      .map((participant) => (
-                                        <p key={participant.id}>
-                                          {participant.name}{' '}
-                                        </p>
-                                      ))
-                                  : messageDetail.scheduleChanges?.participants
-                                      ?.slice(0, 4)
-                                      .map((participant) => (
-                                        <p key={participant.id}>
-                                          {participant.name}{' '}
-                                        </p>
-                                      ))}
-                                {messageDetail.scheduleChanges?.participants &&
-                                  messageDetail.scheduleChanges?.participants
-                                    ?.length > 4 && <p>その他</p>}
+                                {renderParticipantsContent(messageDetail)}
                                 <p
                                   className={`mt-2 text-left`}
                                   dangerouslySetInnerHTML={{
@@ -425,7 +465,7 @@ export const MessageDetailBookmark = ({
                             <div
                               className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                               <div className={`flex flex-col items-start`}>
-                                <p className="w-fit font-semibold text-black">
+                                <p className="w-fit font-semibold max-w-full break-all text-black">
                                   {messageDetail.sender.fullName} {EVENT_EDITED}
                                 </p>
                                 <p className="mt-2">
@@ -451,132 +491,54 @@ export const MessageDetailBookmark = ({
                                 <p className="font-semibold mt-2">日時</p>
                                 <div className={`text-left`}>
                                   <p>
+                                    {' '}
                                     {messageDetail.scheduleChanges?.new &&
-                                      `${format(
-                                        messageDetail.scheduleChanges?.new
-                                          .startDate as string,
-                                        DATE_FORMAT,
-                                      )}(${getJapaneseDayName(
-                                        messageDetail.scheduleChanges?.new
-                                          .startDate as string,
-                                      )})`}{' '}
-                                    {messageDetail.scheduleChanges?.new &&
-                                      convertToTimeString(
-                                        `${messageDetail.scheduleChanges?.new.startDate}`,
-                                      )}{' '}
-                                    ~{' '}
-                                    {messageDetail.scheduleChanges?.new &&
-                                      String(
-                                        format(
-                                          messageDetail.scheduleChanges?.new
-                                            .startDate as string,
-                                          DATE_FORMAT,
-                                        ),
-                                      ) !==
-                                        String(
-                                          format(
-                                            messageDetail.scheduleChanges?.new
-                                              .endDate as string,
-                                            DATE_FORMAT,
-                                          ),
-                                        ) &&
-                                      `${format(
-                                        messageDetail.scheduleChanges?.new
-                                          .endDate as string,
-                                        DATE_FORMAT,
-                                      )}(${getJapaneseDayName(
-                                        messageDetail.scheduleChanges?.new
-                                          .endDate as string,
-                                      )})`}{' '}
-                                    {messageDetail.scheduleChanges?.new &&
-                                      convertToTimeString(
-                                        `${messageDetail.scheduleChanges?.new.endDate}`,
-                                      )}
+                                      (messageDetail.scheduleChanges?.new
+                                        .repeatType == TaskRepetitiveValue.ONCE
+                                        ? renderEventDatetimeInChat(
+                                            messageDetail.scheduleChanges?.new,
+                                          )
+                                        : displayRepetitiveEventTime(
+                                            messageDetail.scheduleChanges?.new,
+                                          ))}
                                   </p>
                                   {messageDetail.scheduleChanges?.old && (
                                     <p>
                                       {'('}
                                       {EVENT_BEFORE_EDITED}
                                       {messageDetail.scheduleChanges?.old &&
-                                        `${format(
-                                          messageDetail.scheduleChanges?.old
-                                            .startDate as string,
-                                          DATE_FORMAT,
-                                        )}(${getJapaneseDayName(
-                                          messageDetail.scheduleChanges?.old
-                                            .startDate as string,
-                                        )})`}{' '}
-                                      {messageDetail.scheduleChanges?.old &&
-                                        convertToTimeString(
-                                          `${messageDetail.scheduleChanges?.old.startDate}`,
-                                        )}{' '}
-                                      ~{' '}
-                                      {messageDetail.scheduleChanges?.old &&
-                                        String(
-                                          format(
-                                            messageDetail.scheduleChanges?.old
-                                              .startDate as string,
-                                            DATE_FORMAT,
-                                          ),
-                                        ) !==
-                                          String(
-                                            format(
-                                              messageDetail.scheduleChanges?.old
-                                                .endDate as string,
-                                              DATE_FORMAT,
-                                            ),
-                                          ) &&
-                                        `${format(
-                                          messageDetail.scheduleChanges?.old
-                                            .endDate as string,
-                                          DATE_FORMAT,
-                                        )}(${getJapaneseDayName(
-                                          messageDetail.scheduleChanges?.old
-                                            .endDate as string,
-                                        )})`}{' '}
-                                      {messageDetail.scheduleChanges?.old &&
-                                        convertToTimeString(
-                                          `${messageDetail.scheduleChanges?.old.endDate}`,
-                                        )}
+                                        (messageDetail.scheduleChanges?.old
+                                          .repeatType ==
+                                        TaskRepetitiveValue.ONCE
+                                          ? renderEventDatetimeInChat(
+                                              messageDetail.scheduleChanges
+                                                ?.old,
+                                            )
+                                          : displayRepetitiveEventTime(
+                                              messageDetail.scheduleChanges
+                                                ?.old,
+                                            ))}
                                       {')'}
                                     </p>
                                   )}
                                 </div>
                                 <p className="font-semibold mt-2">参加者</p>
-                                <p>
-                                  {
-                                    messageDetail.scheduleChanges?.participants?.find(
-                                      (participant) => participant.isCreator,
-                                    )?.name
-                                  }{' '}
-                                  {messageDetail.scheduleChanges?.participants?.find(
-                                    (participant) => participant.isCreator,
-                                  ) && '-主催者'}
-                                </p>
-                                {messageDetail.scheduleChanges?.participants?.find(
-                                  (participant) => participant.isCreator,
-                                )
-                                  ? messageDetail.scheduleChanges?.participants
-                                      ?.filter(
-                                        (participant) => !participant.isCreator,
+                                {renderParticipantsContent(messageDetail)}
+                                {messageDetail.schedule?.id ? (
+                                  <p
+                                    className="hover:cursor-pointer mt-2"
+                                    onClick={() =>
+                                      handleConfirmGetDataDetailEvent(
+                                        `${messageDetail.schedule?.id}`,
                                       )
-                                      ?.slice(0, 3)
-                                      .map((participant) => (
-                                        <p key={participant.id}>
-                                          {participant.name}{' '}
-                                        </p>
-                                      ))
-                                  : messageDetail.scheduleChanges?.participants
-                                      ?.slice(0, 4)
-                                      .map((participant) => (
-                                        <p key={participant.id}>
-                                          {participant.name}{' '}
-                                        </p>
-                                      ))}
-                                {messageDetail.scheduleChanges?.participants &&
-                                  messageDetail.scheduleChanges?.participants
-                                    ?.length > 4 && <p>その他</p>}
-
+                                    }>
+                                    予定を確認する
+                                  </p>
+                                ) : (
+                                  <p className="mt-2 italic text-gray-600">
+                                    {EVENT_DELETED}
+                                  </p>
+                                )}
                                 <p
                                   className={`mt-2 text-left`}
                                   dangerouslySetInnerHTML={{
@@ -594,88 +556,25 @@ export const MessageDetailBookmark = ({
                             <div
                               className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                               <div className={`flex flex-col items-start`}>
-                                <p className="w-fit font-semibold text-black">
+                                <p className="font-semibold text-black max-w-full break-all">
                                   {messageDetail.sender.fullName}
                                   {EVENT_CREATED}
                                 </p>
                                 <p className="font-semibold mt-2">日時</p>
                                 <p>
+                                  {' '}
                                   {messageDetail.scheduleChanges?.new &&
-                                    `${format(
-                                      messageDetail.scheduleChanges?.new
-                                        .startDate as string,
-                                      DATE_FORMAT,
-                                    )}(${getJapaneseDayName(
-                                      messageDetail.scheduleChanges?.new
-                                        .startDate as string,
-                                    )})`}{' '}
-                                  {messageDetail.scheduleChanges?.new &&
-                                    convertToTimeString(
-                                      `${messageDetail.scheduleChanges?.new.startDate}`,
-                                    )}{' '}
-                                  ~{' '}
-                                  {messageDetail.scheduleChanges?.new &&
-                                    String(
-                                      format(
-                                        messageDetail.scheduleChanges?.new
-                                          .startDate as string,
-                                        DATE_FORMAT,
-                                      ),
-                                    ) !==
-                                      String(
-                                        format(
-                                          messageDetail.scheduleChanges?.new
-                                            .endDate as string,
-                                          DATE_FORMAT,
-                                        ),
-                                      ) &&
-                                    `${format(
-                                      messageDetail.scheduleChanges?.new
-                                        .endDate as string,
-                                      DATE_FORMAT,
-                                    )}(${getJapaneseDayName(
-                                      messageDetail.scheduleChanges?.new
-                                        .endDate as string,
-                                    )})`}{' '}
-                                  {messageDetail.scheduleChanges?.new &&
-                                    convertToTimeString(
-                                      `${messageDetail.scheduleChanges?.new.endDate}`,
-                                    )}
+                                    (messageDetail.scheduleChanges?.new
+                                      .repeatType == TaskRepetitiveValue.ONCE
+                                      ? renderEventDatetimeInChat(
+                                          messageDetail.scheduleChanges?.new,
+                                        )
+                                      : displayRepetitiveEventTime(
+                                          messageDetail.scheduleChanges?.new,
+                                        ))}
                                 </p>
                                 <p className="font-semibold mt-2">参加者</p>
-                                <p>
-                                  {
-                                    messageDetail.scheduleChanges?.participants?.find(
-                                      (participant) => participant.isCreator,
-                                    )?.name
-                                  }{' '}
-                                  {messageDetail.scheduleChanges?.participants?.find(
-                                    (participant) => participant.isCreator,
-                                  ) && '-主催者'}
-                                </p>
-                                {messageDetail.scheduleChanges?.participants?.find(
-                                  (participant) => participant.isCreator,
-                                )
-                                  ? messageDetail.scheduleChanges?.participants
-                                      ?.filter(
-                                        (participant) => !participant.isCreator,
-                                      )
-                                      ?.slice(0, 3)
-                                      .map((participant) => (
-                                        <p key={participant.id}>
-                                          {participant.name}{' '}
-                                        </p>
-                                      ))
-                                  : messageDetail.scheduleChanges?.participants
-                                      ?.slice(0, 4)
-                                      .map((participant) => (
-                                        <p key={participant.id}>
-                                          {participant.name}{' '}
-                                        </p>
-                                      ))}
-                                {messageDetail.scheduleChanges?.participants &&
-                                  messageDetail.scheduleChanges?.participants
-                                    ?.length > 4 && <p>その他</p>}
+                                {renderParticipantsContent(messageDetail)}
                               </div>
                             </div>
                           </div>
@@ -689,7 +588,7 @@ export const MessageDetailBookmark = ({
                               <div
                                 className={`text-xs font-normal bg-[#eaf8ff] w-[750px] p-4 `}>
                                 <div className={`flex flex-col items-start`}>
-                                  <h4 className="text-sm w-fit font-medium text-black h-5">
+                                  <h4 className="text-sm w-fit font-medium text-black h-5 max-w-full break-all">
                                     {messageDetail.type ==
                                     MessageType.CREATION_TASK
                                       ? CREATION_TASK_MESSAGE
@@ -749,7 +648,7 @@ export const MessageDetailBookmark = ({
         )}
         {chatRoomInfo?.type === ChatRoomType.TASK && (
           <div
-            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-[14px] ml-5 mr-3 group-hover:rounded-md`}>
+            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
             {messageDetail.type !== MessageType.MESSAGE ? (
               <ImageRound
                 className="w-10 h-10"
@@ -760,32 +659,28 @@ export const MessageDetailBookmark = ({
             ) : (
               <div>{renderAvatar(messageDetail.sender.id)}</div>
             )}
-            <div className={`ml-3 w-full pr-5`}>
-              <div className="flex justify-between items-center">
-                {messageDetail.type !== MessageType.MESSAGE ? (
-                  <div className="flex gap-2 !items-center font-semibold text-[15px] pb-2">
+            <div className={`ml-3 !w-full`}>
+              <div className="flex justify-between items-baseline pb-2">
+                <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
+                  {messageDetail.type !== MessageType.MESSAGE ? (
                     <p className="font-semibold text-sm">タスクカード</p>
-                    <ImageRound
-                      name="Save"
-                      src="/icons/save-active.svg"
-                      className="w-[10px] h-[12px] hover:cursor-pointer"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 font-semibold text-sm pb-2">
-                    <p>{messageDetail.sender.fullName}</p>
-                    <p className="font-normal text-[10px] truncate min-w-10 w-fit flex-shrink-0 max-w-[400px] text-[#77858F]">
-                      {messageDetail.sender?.organizations?.name}
+                  ) : (
+                    <p className="max-w-full break-all">
+                      {messageDetail.sender.fullName}{' '}
+                      <span className="font-medium text-xs text-[#77858F]">
+                        {messageDetail.sender?.organizations?.name}
+                      </span>
                     </p>
-                    <ImageRound
-                      name="Save"
-                      src={`/icons/save-active.svg`}
-                      className="w-[10px] h-[12px] hover:cursor-pointer"
-                    />
-                  </div>
-                )}
-                <div className={`flex items-start w-[240px] flex-shrink-0`}>
-                  <p className="font-medium text-xs text-[#77858F] w-full">
+                  )}
+
+                  <ImageRound
+                    name="Save"
+                    src="/icons/save-active.svg"
+                    className="w-[10px] h-[12px] hover:cursor-pointer"
+                  />
+                </div>
+                <div className={`flex items-start`}>
+                  <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
                     {messageDetail.createdAt &&
                       formatCheckDate(
                         getFormattedDateTime(
@@ -793,16 +688,6 @@ export const MessageDetailBookmark = ({
                         ),
                       )}
                   </p>
-                  {messageDetail.isEdited && !messageDetail.deletedAt && (
-                    <div className="flex items-center">
-                      <ImageRound
-                        name="Dot"
-                        src={'/icons/dot.svg'}
-                        className="w-[4px] h-[4px] hover:cursor-pointer ml-2"
-                      />
-                      <p className="font-normal text-xs ml-2">編集済</p>
-                    </div>
-                  )}
                 </div>
               </div>
               <div className="relative">
@@ -828,7 +713,7 @@ export const MessageDetailBookmark = ({
                               <div
                                 className={`text-xs font-normal bg-[#eaf8ff] w-[750px] p-4 `}>
                                 <div className={`flex flex-col items-start`}>
-                                  <h4 className="text-sm w-fit font-medium text-black h-5">
+                                  <h4 className="text-sm w-fit font-medium text-black h-5 max-w-full break-all">
                                     {messageDetail.type ==
                                     MessageType.CREATION_TASK
                                       ? CREATION_TASK_MESSAGE
@@ -888,23 +773,26 @@ export const MessageDetailBookmark = ({
         )}
         {chatRoomInfo?.type === ChatRoomType.SKILL && (
           <div
-            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-[14px] ml-5 mr-3 group-hover:rounded-md`}>
+            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
             <div>{renderAvatar(messageDetail.sender.id)}</div>
-            <div className={`ml-3 w-full pr-5`}>
-              <div className="flex justify-between items-center">
-                <div className="flex gap-2 items-center font-semibold text-sm pb-2">
-                  <p>{messageDetail.sender.fullName}</p>
-                  <p className="font-normal text-[10px] truncate min-w-10 w-fit flex-shrink-0 max-w-[400px] text-[#77858F]">
-                    {messageDetail.sender?.organizations?.name}
+            <div className={`ml-3 w-full`}>
+              <div className="flex justify-between items-baseline pb-2">
+                <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
+                  <p className="max-w-full break-all">
+                    {messageDetail.sender.fullName}{' '}
+                    <span className="font-medium text-xs text-[#77858F]">
+                      {messageDetail.sender?.organizations?.name}
+                    </span>
                   </p>
+
                   <ImageRound
                     name="Save"
-                    src={`/icons/save-active.svg`}
+                    src="/icons/save-active.svg"
                     className="w-[10px] h-[12px] hover:cursor-pointer"
                   />
                 </div>
-                <div className={`flex items-start w-[240px] flex-shrink-0`}>
-                  <p className="font-medium text-xs text-[#77858F] w-full">
+                <div className={`flex items-start`}>
+                  <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
                     {messageDetail.createdAt &&
                       formatCheckDate(
                         getFormattedDateTime(
@@ -912,16 +800,6 @@ export const MessageDetailBookmark = ({
                         ),
                       )}
                   </p>
-                  {messageDetail.isEdited && !messageDetail.deletedAt && (
-                    <div className="flex items-center">
-                      <ImageRound
-                        name="Dot"
-                        src={'/icons/dot.svg'}
-                        className="w-[4px] h-[4px] hover:cursor-pointer ml-2"
-                      />
-                      <p className="font-normal text-xs ml-2">編集済</p>
-                    </div>
-                  )}
                 </div>
               </div>
               <div className="relative">
@@ -948,7 +826,7 @@ export const MessageDetailBookmark = ({
                           <div className="w-full flex justify-start">
                             <div className={`text-xs font-normal !w-[100%] `}>
                               <div className={`flex gap-5 items-center`}>
-                                <h4 className="text-sm w-fit text-black h-5">
+                                <h4 className="text-sm w-fit text-black h-5 max-w-full break-all">
                                   {renderSubmitLevelMessage(
                                     messageDetail.type,
                                     messageDetail.submitLevel?.status || '',
@@ -991,23 +869,26 @@ export const MessageDetailBookmark = ({
         )}
         {chatRoomInfo?.type === ChatRoomType.CALENDAR && (
           <div
-            className={`flex !box-border ${!isLastItem && 'border-b border-[#D2DBE1]'} group-hover:bg-[#FFFFFF] py-[14px] ml-5 mr-3 group-hover:rounded-md`}>
+            className={`flex !box-border ${!isLastItem && 'border-b border-[#D2DBE1]'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
             <div>{renderAvatar(messageDetail.sender.id)}</div>
-            <div className={`ml-3 w-full pr-5`}>
-              <div className="flex justify-between items-center gap-2 pb-2">
-                <div className="flex items-center gap-2 font-semibold text-sm ">
-                  <p>{messageDetail.sender.fullName}</p>
-                  <p className="font-normal text-[10px] min-w-10 flex-shrink-0 truncate max-w-[400px] text-[#77858F]">
-                    {messageDetail.sender?.organizations?.name}
+            <div className={`ml-3 w-full`}>
+              <div className="flex justify-between items-baseline pb-2">
+                <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
+                  <p className="max-w-full break-all">
+                    {messageDetail.sender.fullName}{' '}
+                    <span className="font-medium text-xs text-[#77858F]">
+                      {messageDetail.sender?.organizations?.name}
+                    </span>
                   </p>
+
                   <ImageRound
                     name="Save"
-                    src={`/icons/save-active.svg`}
+                    src="/icons/save-active.svg"
                     className="w-[10px] h-[12px] hover:cursor-pointer"
                   />
                 </div>
-                <div className={`flex items-start min-w-24 flex-shrink-0`}>
-                  <p className="font-medium text-xs text-[#77858F] w-full">
+                <div className={`flex items-start`}>
+                  <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
                     {messageDetail.createdAt &&
                       formatCheckDate(
                         getFormattedDateTime(
@@ -1038,15 +919,15 @@ export const MessageDetailBookmark = ({
                     </div>
                     <div className="flex gap-3 w-full">
                       <div className="flex flex-row  gap-3 text-sm font-medium">
-                        <p className="text-[#0068B6] flex-grow break-all">
+                        <p className="text-[#0068B6] max-w-full break-all">
                           {messageDetail.sender.fullName}
-                        </p>
-                        <p className="w-fit flex-shrink-0">
-                          {messageDetail.type === MessageType.REMOVE_SCHEDULE
-                            ? EVENT_DELETED
-                            : messageDetail.type === MessageType.EDIT_SCHEDULE
-                              ? EVENT_EDITED
-                              : EVENT_CREATED}
+                          <span className="text-black">
+                            {messageDetail.type === MessageType.REMOVE_SCHEDULE
+                              ? EVENT_DELETED
+                              : messageDetail.type === MessageType.EDIT_SCHEDULE
+                                ? EVENT_EDITED
+                                : EVENT_CREATED}
+                          </span>
                         </p>
                       </div>
                     </div>

@@ -138,6 +138,7 @@ INSTALLED_APPS = [
     "stat_data",
     "submit_levels",
     "roles",
+    "statistics",
 ]
 
 # Get REDIS_URL from environment variable or install directly

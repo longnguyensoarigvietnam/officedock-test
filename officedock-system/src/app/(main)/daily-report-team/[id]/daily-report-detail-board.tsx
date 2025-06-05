@@ -16,6 +16,7 @@ import Image from 'next/image';
 import jaLocale from '@fullcalendar/core/locales/ja';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import Link from 'next/link';
 
 import {
   useReactTable,
@@ -42,7 +43,8 @@ import Input from '@components/common/Input';
 import ActionDetailDaily from '@components/daily/ActionDetailDaily';
 import SingleSelect from '@components/common/SingleSelect';
 import ResizeTextArea from '@components/custom/resizeTextArea';
-import Dropdown from '@components/common/Dropdown';
+import Checkbox from '@components/common/Checkbox';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import DetailActualItemDailyModal from '@components/daily/DetailActualItemDailyModal';
 import TaskDailyCard from '../../../../components/daily/taskDailyCard';
 
@@ -65,8 +67,8 @@ import {
 
 import './../styles/daily-report.css';
 import useDataStatistic from '@hooks/useDataStatistic';
-import useCreationDataTask from '@hooks/useCreationDataTask';
 import { useErrorToast } from '@hooks/useErrorToast';
+import useDataStatisticPDF from '@hooks/useDataStatisticPdf';
 
 import {
   ChildTask,
@@ -89,28 +91,29 @@ import {
   convertToJapaneseTime,
   convertToJapaneseValue,
   convertToMinutesNumber,
+  convertToTimeString,
   formatCurrentDay,
   formatDateServer,
-  formatShowDateJapanese,
   formatTimeInput,
+  getDateInfoFull,
   isTimeEarlier,
   isTodaySchedule,
   isYesterdaySchedule,
 } from '@utils/date';
 import {
   adjustPositionForViewportSchedule,
+  calculateTotalMinutes,
   hasPermissionInArray,
+  secondsToTimeString,
+  timeStringToSeconds,
   transformDataTaskDailyToTable,
 } from '@utils';
 import { useWebSocket } from '@providers/WebSocketProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
-import api from '@base/api';
-import Checkbox from '@components/common/Checkbox';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import Link from 'next/link';
-import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { TeamDailyStateContext } from '@providers/TeamDailyReportProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import api from '@base/api';
 
 const DailyReportDetailBoard = () => {
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
@@ -153,6 +156,18 @@ const DailyReportDetailBoard = () => {
       router.back();
     },
   });
+  const [isLoadingDownload, setIsLoadingDownload] = useState(false);
+
+  const { dataStatisticPDF, refetchDataStatisticPDF } = useDataStatisticPDF({
+    date: formatDateServer(dataDatePicker),
+    userId: `${userId}`,
+    organizationId: `${organization}`,
+    onSettled: () => {
+      setTimeout(() => {
+        setIsLoadingDownload(true);
+      }, 2000);
+    },
+  });
 
   const [taskTimeStatisticList, setTaskTimeStatisticList] = useState<
     TaskTimeStatistic[]
@@ -164,8 +179,6 @@ const DailyReportDetailBoard = () => {
 
   const [popoverInfo, setPopoverInfo] = useState<DataActualDetail | null>(null);
 
-  const { creationDataTaskData } = useCreationDataTask({});
-
   const [chartData, setChartData] = useState<{
     colors: string[];
     labels: string[];
@@ -174,10 +187,20 @@ const DailyReportDetailBoard = () => {
   }>();
   const [dataCategory, setDataCategory] = useState<dataTotalCategory[]>([]);
 
-  const [dataTagsList, setDataTagsList] = useState<OptionDropdownType[]>([]);
   const [dataTaskDailyList, setDataTaskDailyList] = useState<
     dataTaskDailyTable[]
   >([]);
+
+  // PDF
+  const [dataCategoryPDF, setDataCategoryPDF] = useState<dataTotalCategory[]>(
+    [],
+  );
+  const [chartDataPDF, setChartDataPDF] = useState<{
+    colors: string[];
+    labels: string[];
+    data: number[];
+    actualValue: string[];
+  }>();
 
   const memberInfo = dashboardMembersWithAvatars.find(
     (member) => member.id == userId,
@@ -253,20 +276,7 @@ const DailyReportDetailBoard = () => {
   };
 
   useEffect(() => {
-    if (creationDataTaskData) {
-      setDataTagsList(
-        creationDataTaskData.tags.map((org) => ({
-          label: String(org.name),
-          value: String(org.id),
-        })),
-      );
-    }
-  }, [creationDataTaskData]);
-
-  useEffect(() => {
     if (dataStatistic) {
-      // Generate color
-
       // Add color for item
       const dataAddColor = dataStatistic.categories.map((item) => ({
         color: item.categoryColor,
@@ -325,6 +335,81 @@ const DailyReportDetailBoard = () => {
     }
   }, [dataStatistic]);
 
+  useEffect(() => {
+    if (dataStatisticPDF) {
+      // Sort categories by percentage descending
+      const sortedCategories = [...dataStatisticPDF.categories].sort(
+        (a, b) => b.percent - a.percent,
+      );
+
+      // Get the 4 largest ones
+      const top4Items = sortedCategories.slice(0, 4);
+      const otherItems = sortedCategories.slice(4);
+
+      // Calculate total time and percentage of remaining items
+      const totalDurationOther = otherItems.reduce(
+        (sum, item) => sum + timeStringToSeconds(item.duration),
+        0,
+      );
+      const totalPercentOther = otherItems.reduce(
+        (sum, item) => sum + item.percent,
+        0,
+      );
+
+      // Create "その他" item if there is remaining data
+      const otherItem =
+        otherItems.length > 0
+          ? {
+              categoryColor: '#D1D7DC',
+              categoryName: 'その他',
+              duration: secondsToTimeString(totalDurationOther),
+              percent: totalPercentOther,
+              id: 'その他',
+              isOfMainOrganization: false,
+            }
+          : null;
+
+      // Combine
+      const mergedCategories = [
+        ...top4Items,
+        ...(otherItem ? [otherItem] : []),
+      ];
+
+      // Prepare colored data
+      const dataAddColor = mergedCategories.map((item) => ({
+        color: item.isOfMainOrganization ? 'white' : '#83919E',
+        categoryName: item.categoryName || '未設定',
+        duration: item.duration,
+        percent: item.percent,
+        id: item.id,
+      }));
+
+      // Prepare chart data
+      const listColor = mergedCategories.map((item) =>
+        item.isOfMainOrganization
+          ? 'white'
+          : item.id === 'その他'
+            ? '#D1D7DC'
+            : '#83919E',
+      );
+      const listLabelChart = mergedCategories.map(
+        (item) => item.categoryName || '未設定',
+      );
+      const listValueChart = mergedCategories.map((item) => item.percent);
+      const listValueActualChart = mergedCategories.map((item) =>
+        convertToJapaneseTime(item.duration),
+      );
+
+      setDataCategoryPDF(dataAddColor);
+      setChartDataPDF({
+        colors: listColor,
+        labels: listLabelChart,
+        data: listValueChart,
+        actualValue: listValueActualChart,
+      });
+    }
+  }, [dataStatisticPDF]);
+
   //  Handle call api edit duration
   const handleEditDuration = async (data: {
     id: string;
@@ -347,6 +432,7 @@ const DailyReportDetailBoard = () => {
     {
       onSuccess: async () => {
         refetchDataStatistic();
+        refetchDataStatisticPDF();
       },
       onError: (data, variant) => {
         if (variant.pausedAt) {
@@ -362,6 +448,7 @@ const DailyReportDetailBoard = () => {
           description: ERROR_UPDATE_MESSAGE,
         });
         refetchDataStatistic();
+        refetchDataStatisticPDF();
       },
       onSettled: () => {},
     },
@@ -389,6 +476,7 @@ const DailyReportDetailBoard = () => {
     {
       onSuccess: async () => {
         refetchDataStatistic();
+        refetchDataStatisticPDF();
       },
       onError: (error: AxiosError<any>) => {
         setIsLoading(false);
@@ -420,6 +508,7 @@ const DailyReportDetailBoard = () => {
     {
       onSuccess: async () => {
         refetchDataStatistic();
+        refetchDataStatisticPDF();
       },
       onError: (error: AxiosError<any>) => {
         setIsLoading(false);
@@ -447,6 +536,7 @@ const DailyReportDetailBoard = () => {
           description: SUCCESS_DELETE_MESSAGE,
         });
         refetchDataStatistic();
+        refetchDataStatisticPDF();
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_DELETE_MESSAGE);
@@ -921,7 +1011,7 @@ const DailyReportDetailBoard = () => {
           <div
             className={`daily-custom text-left custom-statistic mt-[12px] ${isHasChild && '!mt-[19px] mb-[18px]'}`}>
             <div className="flex justify-between h-full relative  rounded-md gap-1">
-              <div className="">
+              <div className="w-full">
                 <SingleSelect
                   className="border-none h-6 text-xs min-w-[162px]  rounded-md  !py-0  !pl-0 !shadow-none !text-left bg-[#EBF1F7]"
                   defaultValue={optionMedium.find(
@@ -1389,352 +1479,22 @@ const DailyReportDetailBoard = () => {
       row.children && row.children?.length > 1 ? row.children : [],
   });
 
-  const columnsDownload: ColumnDef<dataTaskDailyTable>[] = [
-    {
-      id: 'expand',
-      header: 'タスクカード名',
-      size: 20,
-      cell: ({ row }: { row: Row<dataTaskDailyTable> }) =>
-        row.getCanExpand() && (
-          <button
-            className="border border-solid rounded-full w-7 h-7 ml-3 text-xs flex justify-center items-center"
-            onClick={row.getToggleExpandedHandler()}>
-            <p className="-translate-y-[120%]">
-              {row.getIsExpanded()
-                ? row.original.children?.length
-                : row.original.children?.length}
-            </p>
-          </button>
-        ),
-    },
-    {
-      accessorKey: 'LARGE',
-      header: '',
-      cell: (info) => {
-        const organizationKey = info.row.original.organization?.toString();
-        const organizationCategory =
-          organizationKey && dataOrganizationCategories
-            ? dataOrganizationCategories[organizationKey]
-            : undefined;
-        const optionData = [
-          {
-            label: NO_OPTION_CATEGORY,
-            value: NO_OPTION_CATEGORY,
-          },
-          ...getLargeCategories(organizationCategory ?? []),
-        ];
-
-        return (
-          <div className="text-left">
-            <div className="flex justify-between ">
-              <Dropdown
-                isShowIconDrop={false}
-                labelClass="h-5 -translate-y-[30%]"
-                className="border-none h-5 text-xs !py-0 !pl-0 !shadow-none !text-left !bg-transparent"
-                classNameOption="!text-xs"
-                selectedOption={optionData.find(
-                  (element) =>
-                    element.value ===
-                    (info.row.original.LARGE.id
-                      ? info.row.original.LARGE.id
-                      : NO_OPTION_CATEGORY),
-                )}
-                options={optionData}
-              />
-              <ImageRound
-                className={`w-5 h-5 pt-2`}
-                src="/icons/chevron-right.svg"
-                name="icon chevron right"
-              />
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: 'MEDIUM',
-      header: '',
-      cell: (info) => {
-        const organizationKey = info.row.original.organization?.toString();
-        const organizationCategory =
-          organizationKey && dataOrganizationCategories
-            ? dataOrganizationCategories[organizationKey]
-            : undefined;
-        const result =
-          organizationCategory && info.row.original.LARGE.id !== ''
-            ? organizationCategory
-                .filter((largeCategory) =>
-                  largeCategory.LARGE && largeCategory.LARGE.id
-                    ? largeCategory.LARGE.id === info.row.original.LARGE.id
-                    : info.row.original.LARGE.id,
-                )
-                .flatMap((largeCategory) => largeCategory.MEDIUM)
-            : [];
-
-        const optionMedium =
-          info.row.original.LARGE.id !== ''
-            ? [
-                {
-                  label: NO_OPTION_CATEGORY,
-                  value: NO_OPTION_CATEGORY,
-                },
-                ...getMediumCategories(result),
-              ]
-            : info.row.original.MEDIUM.id !== ''
-              ? [
-                  {
-                    label: NO_OPTION_CATEGORY,
-                    value: NO_OPTION_CATEGORY,
-                  },
-                  {
-                    value: info.row.original.MEDIUM.id,
-                    label: info.row.original.MEDIUM.name,
-                  },
-                ]
-              : [
-                  {
-                    label: NO_OPTION_CATEGORY,
-                    value: NO_OPTION_CATEGORY,
-                  },
-                ];
-
-        return (
-          <div className="text-left">
-            <div className="flex justify-between ">
-              <Dropdown
-                labelClass="h-5 -translate-y-[30%]"
-                isShowIconDrop={false}
-                className="border-none h-6 text-xs !py-0 !pl-0 !shadow-none !text-left !bg-transparent"
-                classNameOption="!text-xs"
-                selectedOption={optionMedium.find(
-                  (element) =>
-                    element.value ===
-                    (info.row.original.MEDIUM.id
-                      ? info.row.original.MEDIUM.id
-                      : NO_OPTION_CATEGORY),
-                )}
-                options={optionMedium}
-              />
-              <ImageRound
-                className={`w-5 h-5 pt-2`}
-                src="/icons/chevron-right.svg"
-                name="icon chevron right"
-              />
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: 'SMALL',
-      header: '',
-      cell: (info) => {
-        const organizationKey = info.row.original.organization?.toString();
-        const organizationCategory =
-          organizationKey && dataOrganizationCategories
-            ? dataOrganizationCategories[organizationKey]
-            : undefined;
-        const result =
-          organizationCategory && info.row.original.LARGE
-            ? organizationCategory
-                .filter((largeCategory) =>
-                  largeCategory.LARGE && largeCategory.LARGE.id
-                    ? largeCategory.LARGE.id === info.row.original.LARGE.id
-                    : info.row.original.LARGE.id,
-                )
-                .flatMap((largeCategory) => largeCategory.MEDIUM)
-            : [];
-        const smallResult =
-          info.row.original.MEDIUM.id !== '' && Array.isArray(result)
-            ? result.flatMap((mediumCategory) =>
-                Array.isArray(mediumCategory.SMALL)
-                  ? mediumCategory.SMALL.filter(
-                      () =>
-                        mediumCategory.MEDIUM?.id ===
-                        info.row.original.MEDIUM.id,
-                    )
-                  : [],
-              )
-            : [];
-        const optionSmall =
-          info.row.original.MEDIUM.id !== ''
-            ? [
-                {
-                  label: NO_OPTION_CATEGORY,
-                  value: NO_OPTION_CATEGORY,
-                },
-                ...getSmallCategories(smallResult),
-              ]
-            : info.row.original.SMALL.id !== ''
-              ? [
-                  {
-                    label: NO_OPTION_CATEGORY,
-                    value: NO_OPTION_CATEGORY,
-                  },
-                  {
-                    value: info.row.original.SMALL.id,
-                    label: info.row.original.SMALL.name,
-                  },
-                ]
-              : [
-                  {
-                    label: NO_OPTION_CATEGORY,
-                    value: NO_OPTION_CATEGORY,
-                  },
-                ];
-
-        return (
-          <div className="text-left h-6">
-            <Dropdown
-              isShowIconDrop={false}
-              labelClass="h-5 -translate-y-[30%]"
-              className="border-none h-6 text-xs !py-0 !pl-0 !shadow-none !text-left !bg-transparent"
-              classNameOption="!text-xs"
-              selectedOption={optionSmall.find(
-                (element) =>
-                  element.value ===
-                  (info.row.original.SMALL.id
-                    ? info.row.original.SMALL.id
-                    : NO_OPTION_CATEGORY),
-              )}
-              options={optionSmall}
-            />
-          </div>
-        );
-      },
-    },
-    {
-      id: 'actions',
-      header: () => null,
-      size: 80,
-      cell: ({ row }: { row: Row<dataTaskDailyTable> }) => {
-        return (
-          <ActionDetailDaily
-            row={row}
-            dataTagsList={dataTagsList}
-            setDataTaskDailyList={setDataTaskDailyList}
-          />
-        );
-      },
-    },
-    {
-      accessorKey: 'totalDuration',
-      header: ({ column }) => (
-        <div
-          className="flex gap-1 items-center justify-center"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          <p className="-translate-y-[20%]">計測時間</p>
-          <div className="ml-1 relative flex flex-col">
-            <Image
-              src="/icons/small-arrow-left.svg"
-              alt="Add"
-              width={15}
-              height={14}
-              className="rotate-90 cursor-pointer justify-self-end w-1.5"
-            />
-            <Image
-              src="/icons/small-arrow-left.svg"
-              alt="Add"
-              width={15}
-              height={14}
-              className="-rotate-90 cursor-pointer justify-self-start w-1.5"
-            />
-          </div>
-        </div>
-      ),
-      cell: ({ row, getValue }) => {
-        const rowData = row.original as ChildTask;
-        return (
-          <div className="font-bold text-xs">
-            {row.subRows?.length > 1 ? (
-              ''
-            ) : (
-              <div className="flex text-[10px] w-full justify-center items-center">
-                <div className=" p-1 h-5 ">
-                  <p className="-translate-y-[100%] text-[10px] w-16">
-                    {rowData.startedAt}
-                  </p>
-                </div>
-                <p className="w-3">
-                  <ImageRound
-                    className=" w-3 h-3 -translate-y-[90%] "
-                    src="/icons/arrow-right.svg"
-                    name="icon arrow right"
-                  />
-                </p>
-                <div className="bg-transparent p-1">
-                  <p className="-translate-y-[90%] text-[10px] w-16">
-                    {rowData.pausedAt}
-                  </p>
-                </div>
-              </div>
-            )}
-            <div className="-translate-y-[100%]">
-              {convertToJapaneseTime(getValue() as string)}
-            </div>
-          </div>
-        );
-      },
-      sortingFn: sortDuration,
-    },
-    {
-      accessorKey: 'status',
-      header: ({ column }) => (
-        <div
-          className="flex gap-1 items-center justify-center cursor-pointer"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          <p className="-translate-y-[30%]">ステータス</p>
-          <div className="ml-1 relative flex flex-col">
-            <Image
-              src="/icons/small-arrow-left.svg"
-              alt="Add"
-              width={15}
-              height={14}
-              className="rotate-90 cursor-pointer justify-self-end w-1.5"
-            />
-            <Image
-              src="/icons/small-arrow-left.svg"
-              alt="Add"
-              width={15}
-              height={14}
-              className="-rotate-90 cursor-pointer justify-self-start w-1.5"
-            />
-          </div>
-        </div>
-      ),
-      cell: (info) => (
-        <div className="w-full flex justify-center">
-          <div
-            className={`text-xs -translate-y-[100%] h-[21px] flex items-center justify-center rounded  ${info.row.original.status && info.row.original.status.id === StatusValueTask.MY_ROUTINE ? 'w-[86px]' : 'w-20'}  ${info.row.original.status && info.row.original.status.name && statusStyles.find((item) => item.value === info.row.original.status.id)?.color}`}>
-            <span className="-translate-y-[30%]">
-              {' '}
-              {info.row.original.status && info.row.original.status.name}
-            </span>
-          </div>
-        </div>
-      ),
-      sortingFn: sortStatusById,
-    },
-  ];
-
-  const tableDownload = useReactTable<dataTaskDailyTable>({
-    data: dataTaskDailyList,
-    columns: columnsDownload,
-    state: {
-      expanded: expandedState,
-      sorting: sortState,
-    },
-    onExpandedChange: setExpandedState,
-    getCoreRowModel: getCoreRowModel(),
-    getExpandedRowModel: getExpandedRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getSubRows: (row) =>
-      row.children && row.children?.length > 1 ? row.children : [],
-  });
-
   const { hoursConvert, minutesConvert } = convertToJapaneseValue(
     `${dataStatistic?.totalDuration}`,
   );
+  const {
+    hoursConvert: hoursConvertDifferent,
+    minutesConvert: minutesConvertDifferent,
+  } = convertToJapaneseValue(`${dataStatisticPDF?.subOrganization.duration}`);
+
+  let mainHours = hoursConvert - hoursConvertDifferent;
+  let mainMinute = minutesConvert - minutesConvertDifferent;
+
+  if (mainMinute < 0) {
+    mainMinute += 60;
+    mainHours -= 1;
+  }
+
   const statusStyles = [
     {
       value: StatusValueTask.NOT_STARTED,
@@ -1889,63 +1649,125 @@ const DailyReportDetailBoard = () => {
   };
 
   // Handle download UI with PDF
+  const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
+
   const divRef = useRef<HTMLDivElement | null>(null);
+
   const handleDownloadPDF = async () => {
-    if (divRef.current) {
-      try {
-        divRef.current.style.visibility = 'visible';
-        divRef.current.style.position = 'absolute';
-        divRef.current.style.left = '-9999px';
+    if (!divRef.current) return;
 
-        const canvas = await html2canvas(divRef.current, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: false,
-          windowWidth: divRef.current.scrollWidth,
-          windowHeight: divRef.current.scrollHeight,
-        });
+    // Display div to render
+    divRef.current.style.visibility = 'visible';
+    divRef.current.style.position = 'absolute';
+    divRef.current.style.left = '-9999px';
+    divRef.current.style.top = '0';
 
-        const imgData = canvas.toDataURL('image/jpeg', 1.0);
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgWidth = 210;
-        const pageHeight = 297;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    // ===== 1. Capture separate PieChart =====
+    const chartElem = document.getElementById('chart-to-pdf');
+    let chartImgData = '';
+    if (chartElem) {
+      const chartCanvas = await html2canvas(chartElem, {
+        scale: 2,
+        useCORS: true,
+      });
+      chartImgData = chartCanvas.toDataURL('image/png');
+    }
 
-        if (dataTaskDailyList && dataTaskDailyList.length > 0) {
-          let position = 0;
-          while (position < imgHeight) {
-            pdf.addImage(imgData, 'JPEG', 0, -position, imgWidth, imgHeight);
-            position += pageHeight;
-            if (position < imgHeight) pdf.addPage();
-          }
-        } else {
-          pdf.addImage(
-            imgData,
-            'JPEG',
-            0,
-            0,
-            imgWidth,
-            Math.min(imgHeight, pageHeight),
-          );
-        }
+    // ===== 2. Prepare PDF =====
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
+    const marginTop = 10;
+    const marginBottom = 10;
+    const usableHeightMm = pdfHeight - marginTop - marginBottom;
+    const usableHeightPx = usableHeightMm / 0.264583; // mm to px
 
-        pdf.save('集計.pdf');
+    const headerElem = divRef.current.querySelector(
+      '.pdf-header',
+    ) as HTMLElement;
+    const headerHeightPx = headerElem?.getBoundingClientRect().height || 0;
+    const theadHeightPx = 50;
 
-        divRef.current.style.visibility = 'hidden';
-        divRef.current.style.position = 'absolute';
-        divRef.current.style.left = '-9999px';
-      } catch (error) {
-        // Handle error
+    const headerHeight = headerHeightPx + theadHeightPx;
+
+    let currentHeight = headerHeight;
+    const currentRows: number[][] = [[]];
+    let page = 0;
+
+    /// ===== 3. Paginate table rows =====
+    for (let i = 0; i < rowRefs.current.length; i++) {
+      const row = rowRefs.current[i];
+      if (!row) continue;
+
+      const rowHeight = row.getBoundingClientRect().height;
+
+      if (currentHeight + rowHeight > usableHeightPx) {
+        page++;
+        currentRows[page] = [i];
+        currentHeight = headerHeight + rowHeight;
+      } else {
+        currentRows[page].push(i);
+        currentHeight += rowHeight;
       }
     }
-  };
 
-  const handleRenderEventDownLoad = (eventInfo: EventContentArg) => {
-    return (
-      <>
-        <TaskDailyCard event={eventInfo} isDownload={true} />
-      </>
-    );
+    // ===== 4. Render each PDF page =====
+    for (let i = 0; i < currentRows.length; i++) {
+      const clone = divRef.current.cloneNode(true) as HTMLElement;
+      clone.style.position = 'static';
+      clone.style.left = '0';
+
+      // Hide lines not on the current page
+      const allTrs = clone.querySelectorAll('tr.custom-tr');
+      allTrs.forEach((tr, index) => {
+        if (!currentRows[i].includes(index)) {
+          tr.remove();
+        }
+      });
+      // ⚠️ Remove header on following pages
+      if (i > 0) {
+        const headerElem = clone.querySelector('.pdf-header');
+        if (headerElem) {
+          headerElem.remove();
+        }
+      }
+
+      // ===== 5. Re-insert the chart image into the clone =====
+      if (chartImgData) {
+        const chartContainer = clone.querySelector('#chart-to-pdf');
+        if (chartContainer) {
+          const img = document.createElement('img');
+          img.src = chartImgData;
+          img.style.width = '180px';
+          img.style.height = '180px';
+          chartContainer.innerHTML = ''; // clear original content (canvas/svg)
+          chartContainer.appendChild(img);
+        }
+      }
+
+      // ===== 6. Add clone to DOM temporarily for html2canvas to work =====
+      document.body.appendChild(clone);
+
+      const canvas = await html2canvas(clone, {
+        scale: 2,
+        useCORS: true,
+      });
+
+      document.body.removeChild(clone);
+
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      const imgWidth = pdf.internal.pageSize.getWidth();
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      if (i > 0) pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, marginTop, imgWidth, imgHeight);
+    }
+
+    pdf.save('集計.pdf');
+
+    // ===== 7. Reset the original div =====
+    divRef.current.style.visibility = 'hidden';
+    divRef.current.style.position = 'absolute';
+    divRef.current.style.left = '-9999px';
   };
 
   function getMinDateOfYear(year: number): Date {
@@ -2000,6 +1822,8 @@ const DailyReportDetailBoard = () => {
       );
     }
   };
+
+  const detailDateInfo = getDateInfoFull(dataDatePicker);
 
   return (
     <div className="flex  flex-col ">
@@ -2136,6 +1960,7 @@ const DailyReportDetailBoard = () => {
                 <Button
                   className="flex gap-2 px-0 py-0 w-[138px] h-[34px]"
                   onClick={() => {
+                    if (!isLoadingDownload) return;
                     handleDownloadPDF();
                   }}>
                   <span className="break-all">PDF書き出し</span>
@@ -2188,7 +2013,7 @@ const DailyReportDetailBoard = () => {
             />
           </div>
           <div className="w-[calc(100%_-_260px)] h-[calc(100vh_-_260px)] font-medium overflow-y-auto mr-5 bg-[#F8FAFC] p-[30px] rounded-[14px]">
-            <div className="h-[325px] overflow-y-auto">
+            <div className="overflow-y-auto">
               <p className="text-base">カテゴリーの割合</p>
               <div className="flex pt-5">
                 <section className="flex-1  max-w-[360px]">
@@ -2305,6 +2130,7 @@ const DailyReportDetailBoard = () => {
                             .map((cell, cellIndex) => (
                               <td
                                 key={cell.id}
+                                style={{ width: '20%' }}
                                 className={`!pt-0 !pb-1 !pl-0 ${cellIndex !== 2 ? '!pr-0' : '!pr-[14px]'}`}>
                                 {flexRender(
                                   cell.column.columnDef.cell,
@@ -2360,7 +2186,12 @@ const DailyReportDetailBoard = () => {
                               <div className="text-left !pt-0 !pl-2">
                                 <ActionDetailDaily
                                   row={row}
-                                  dataTagsList={dataTagsList}
+                                  dataTagsList={row.original.tags.map(
+                                    (org) => ({
+                                      label: String(org.name),
+                                      value: String(org.id),
+                                    }),
+                                  )}
                                   setDataTaskDailyList={setDataTaskDailyList}
                                 />
                               </div>
@@ -2392,235 +2223,260 @@ const DailyReportDetailBoard = () => {
       <div className="max-w-[1440px]">
         <div
           ref={divRef}
-          className=" max-w-[1440px]"
+          className="w-[794px]"
           style={{
             visibility: 'hidden',
             position: 'absolute',
             left: '-9999px',
           }}>
-          <div className="flex gap-3">
-            <div className="w-[262px] h-fit pl-2 bg-[#F8FAFC] rounded-[14px] daily-custom">
-              <p className="">スケジュール実績</p>
-              <FullCalendar
-                ref={calendarDownloadRef}
-                plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-                height="auto"
-                editable={false}
-                firstDay={1}
-                nowIndicator={true}
-                droppable={false}
-                initialView={'timeGridDay'}
-                eventContent={handleRenderEventDownLoad}
-                events={taskTimeStatisticList}
-                headerToolbar={false}
-                initialDate={dataDatePicker}
-                slotLabelFormat={{
-                  hour: 'numeric',
-                  minute: '2-digit',
-                  omitZeroMinute: false,
-                  hour12: false,
-                }}
-                slotMinTime="09:00:00"
-                slotMaxTime="19:00:00"
-                eventOverlap={true}
-                slotEventOverlap={true}
-                selectMirror={true}
-                locales={[jaLocale]}
-                locale="ja"
-              />
-            </div>
-            <div className="w-[calc(100%_-_260px)]  overflow-y-auto ">
-              <div className="w-full text-center text-[36px]">
-                {formatShowDateJapanese(`${dataDatePicker}`)}
+          <div className="w-full overflow-y-auto px-5">
+            <div className="pdf-header">
+              <div className="flex items-center  py-1 justify-between text-lg border-b border-b-gray-400 border-l-[2px] border-l-black pl-[2px]">
+                <div className="w-full flex items-end gap-3 -translate-y-[20%]">
+                  <span className="text-[30px] font-medium -translate-y-[10%]">
+                    日報
+                  </span>
+                  <div className="flex items-end gap-2 font-medium  relative top-[2px]">
+                    <span>{detailDateInfo.year}</span>
+                    <span className="">年</span>
+                    <span>{detailDateInfo.month}</span>
+                    <span className="">月</span>
+                    <span>{detailDateInfo.day}</span>
+                    <span className="">日</span>
+                    <span className="">({detailDateInfo.weekday})</span>
+                  </div>
+                </div>
+                <div className="flex text-lg items-center gap-1 h-full basis-1/2 py-1 justify-end">
+                  <p className=" max-w-[200px] flex-shrink-0 w-fit font-medium break-all py-1 min-h-5">
+                    {dataStatisticPDF?.remark?.user.organizations.name}
+                  </p>
+                  <span className=" max-w-[200px] w-fit min-h-5 break-all ">
+                    {session?.user.profile.fullName}
+                  </span>
+                </div>
               </div>
-              <div className="h-[371px] overflow-y-auto">
-                <p>カテゴリーの割合</p>
-                <div className="flex">
-                  <section className="flex-1 flex flex-col items-center gap-4 justify-end">
-                    <div className="w-fit bg-white px-4 h-14 flex items-center justify-center gap-1 text-[36px] border border-solid rounded-md">
-                      <span className="-translate-y-[30%]">{hoursConvert}</span>
-                      <span className="text-sm pt-6 mr-2 -translate-y-[30%]">
-                        時間
-                      </span>
-                      <span className="-translate-y-[30%]">
-                        {minutesConvert}
-                      </span>
-                      <span className="text-sm pt-6 -translate-y-[30%]">
-                        分
-                      </span>
-                    </div>
-                    <Table className=" border-[1px]">
-                      <TableBody className="">
-                        {dataCategory.map((item, index) => {
-                          return (
-                            <tr key={index}>
-                              <td>
-                                <div className="h-full w-full flex items-center justify-center">
-                                  <div
-                                    style={{
-                                      backgroundColor: item.color,
-                                    }}
-                                    className={`w-3 h-3`}></div>
-                                </div>
-                              </td>
-                              <td className="-translate-y-[20%]">
-                                {item.categoryName}
-                              </td>
-                              <td className="-translate-y-[20%]">
-                                {convertToJapaneseTime(item.duration)}
-                              </td>
-                              <td className="-translate-y-[20%]">
-                                {item.percent}%
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </section>
-                  <section className="flex-1">
-                    {chartData?.data && (
+
+              <div className="mt-5">
+                <div className="flex gap-2">
+                  <section className="w-[180px]">
+                    {chartDataPDF?.data && (
                       <PieChart
-                        colors={chartData.colors}
-                        data={chartData?.data}
-                        labels={chartData?.labels}
-                        actualValues={chartData?.actualValue}
-                        className="w-[290px] h-[290px]"
+                        id="chart-to-pdf"
+                        colors={chartDataPDF.colors}
+                        data={chartDataPDF?.data}
+                        labels={chartDataPDF?.labels}
+                        actualValues={chartDataPDF?.actualValue}
+                        colorLabel="black"
+                        className="w-[180px] h-[180px] rounded-full "
                       />
                     )}
                   </section>
-                </div>
-              </div>
-              <div className="mt-5 ">
-                <p className="mb-3">タスクカード</p>
-                <Table className=" bg-white  border-[1px] !pt-0 overflow-y-auto py-0 mt-2">
-                  <thead className="bg-gray-100  z-[2]">
-                    {tableDownload.getHeaderGroups().map((headerGroup) => (
-                      <tr
-                        key={headerGroup.id}
-                        className="[&>th]:text-gray-700 sticky top-0 bg-gray-100 z-40 [&>th]:font-medium [&>th]:text-base [&>th]:py-3 ">
-                        {headerGroup.headers.map((header, index) =>
-                          index === 0 ? (
-                            <th
-                              key={header.id}
-                              colSpan={2}
-                              className=" p-2 text-left -translate-y-[20%] ">
-                              {flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                            </th>
-                          ) : (
-                            index > 1 && (
-                              <th
-                                key={header.id}
-                                style={{ width: header.column.getSize() }}
-                                className={`${
-                                  index === 4 || index === 5
-                                    ? 'border-r border-gray-200'
-                                    : ''
-                                }`}>
-                                {flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext(),
-                                )}
-                              </th>
-                            )
-                          ),
-                        )}
-                      </tr>
-                    ))}
-                  </thead>
-                  <TableBody className="![&>tr>td]:pr-0 ![&>tr>td]:pl-0 ![&>tr>td]:pl-1 ">
-                    {tableDownload.getRowModel().rows.map((row, index) => (
-                      <React.Fragment key={row.id}>
-                        <tr
-                          className={`${row.depth > 0 ? 'bg-gray-100' : 'bg-white'} `}>
-                          <td
-                            rowSpan={2}
-                            className={`${index === 4 || index === 5 ? '' : ''} border-b-[1px] -translate-y-[0.1%]`}>
-                            {row.original.children &&
-                            row.original.children?.length > 1 ? (
-                              <button
-                                className="border border-solid rounded-full w-7 h-7 text-xs cursor-pointer"
-                                onClick={row.getToggleExpandedHandler()}>
-                                <p className="-translate-y-[40%]">
-                                  {row.original.children?.length}
-                                </p>
-                              </button>
-                            ) : (
-                              <div className="w-7 h-7"></div>
-                            )}
-                          </td>
-                          {row
-                            .getVisibleCells()
-                            .slice(1, 5)
-                            .map((cell) => (
-                              <td key={cell.id} className={`pt-2 !pb-1 !pl-0`}>
-                                {flexRender(
-                                  cell.column.columnDef.cell,
-                                  cell.getContext(),
-                                )}
-                              </td>
-                            ))}
-
-                          {row
-                            .getVisibleCells()
-                            .slice(5)
-                            .map((cell) => (
-                              <td
-                                key={cell.id}
-                                rowSpan={2}
-                                className="p-2 !pl-2 border-l-[1px] border-b-[1px] border-gray-200 -translate-y-[0.1%]">
-                                {flexRender(
-                                  cell.column.columnDef.cell,
-                                  cell.getContext(),
-                                )}
-                              </td>
-                            ))}
-                        </tr>
-                        {/* The sub row with the title cell takes up 4 columns */}
-                        <tr
-                          className={`${row.depth > 0 ? 'bg-gray-100' : 'bg-white'} !border-none`}>
-                          <td
-                            colSpan={4}
-                            className="text-left border-b !pt-0 !pl-0">
-                            <div className="text-xl w-full break-all">
-                              {row.original.title || '-'}
-                            </div>
-                          </td>
-                        </tr>
-                        {row.original.todoList &&
-                          row.original.todoList.map((item, index) => {
+                  <section className="flex-1 flex flex-col  gap-1 pt-1 ml-4">
+                    <div className="w-full max-w-[95%]  bg-white h-fit pb-2 font-normal border-b border-black flex gap-1 items-center  text-sm ">
+                      <span className="mr-2 text-base">合計時間</span>
+                      <span className="text-lg font-medium -translate-y-[5%]">
+                        {hoursConvert}
+                      </span>
+                      <span className=" ">時間</span>
+                      <span className="text-lg font-medium -translate-y-[5%]">
+                        {minutesConvert}
+                      </span>
+                      <span className="mr-4">分</span>
+                      <div>
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="">メインチーム</span>
+                          <span className="">
+                            {dataStatisticPDF?.subOrganization?.percent &&
+                              100 - dataStatisticPDF?.subOrganization?.percent}
+                            %
+                          </span>
+                          <div className="flex items-center gap-1">
+                            (<span className="">{mainHours}</span>
+                            <span>時間</span>
+                            <span className="">{mainMinute}</span>
+                            <span>分</span>)
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="">サブチーム</span>
+                          <span className="">
+                            {dataStatisticPDF?.subOrganization?.percent}%
+                          </span>
+                          <div className="flex items-center gap-1">
+                            (<span className="">{hoursConvertDifferent}</span>
+                            <span>時間</span>
+                            <span className="">{minutesConvertDifferent}</span>
+                            <span>分</span>)
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex">
+                      <div className="basis-1/2 px-[2px]">
+                        {dataCategoryPDF
+                          .filter((cate) => cate.id !== 'その他')
+                          .map((item, index) => {
                             return (
-                              <tr
+                              <div
                                 key={index}
-                                className={`${row.depth > 0 ? 'bg-gray-100' : 'bg-white'} !border-none`}>
-                                <td
-                                  colSpan={7}
-                                  className="text-left border-b !pt-0 !pl-0 ">
-                                  <div className="text-xl break-all  px-2">
-                                    {item.checkedAt ? '[完了] ' : '[未完了] '}
-                                    {item.content}
-                                  </div>
-                                </td>
-                              </tr>
+                                className="flex items-center gap-[6px] mt-1 w-full text-xs">
+                                <div
+                                  style={{
+                                    backgroundColor: item.color,
+                                  }}
+                                  className={`w-3 h-3 border border-black  relative top-[5px] `}></div>
+                                <p className=" break-all h-5 max-w-[150px] w-fit line-clamp-3">
+                                  {item.categoryName}
+                                </p>
+                                <p className=" w-fit h-5 mr-1">
+                                  {item.percent}%
+                                </p>
+
+                                <p className=" w-fit h-5">
+                                  {convertToJapaneseTime(item.duration)}
+                                </p>
+                              </div>
                             );
                           })}
-                      </React.Fragment>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <div className="mt-5">
-                <p>備考</p>
-                <div className="py-3 pr-3">
-                  <div
-                    className="rounded-sm border p-3"
-                    dangerouslySetInnerHTML={{
-                      __html: (remarkData ?? '').replace(/\n/g, '<br/>'),
-                    }}></div>
+                      </div>
+                      <div className="basis-1/2 ">
+                        {dataCategoryPDF
+                          .filter((cate) => cate.id === 'その他')
+                          .map((item, index) => {
+                            return (
+                              <div
+                                key={index}
+                                className="flex items-center gap-[2px] w-full text-xs">
+                                <div
+                                  style={{
+                                    backgroundColor: '#D1D7DC',
+                                  }}
+                                  className={`w-3 h-3 border border-black relative top-[5px] `}></div>
+                                <p className=" break-all h-5 max-w-[150px] w-fit line-clamp-3">
+                                  {item.categoryName}
+                                </p>
+                                <p className=" w-fit h-5 mr-1">
+                                  {item.percent}%
+                                </p>
+
+                                <p className=" w-fit h-5">
+                                  {convertToJapaneseTime(item.duration)}
+                                </p>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  </section>
                 </div>
+              </div>
+            </div>
+            <div className="mt-5">
+              <table className="bg-white rounded-none w-full">
+                <colgroup>
+                  <col style={{ width: '10%' }} />
+                  <col style={{ width: '10%' }} />
+                  <col style={{ width: '10%' }} />
+                  <col style={{ width: '10%' }} />
+                  <col style={{ width: '10%' }} />
+                  <col style={{ width: '10%' }} />
+                  <col style={{ width: '10%' }} />
+                  <col style={{ width: '10%' }} />
+                  <col style={{ width: '10%' }} />
+                  <col style={{ width: '10%' }} />
+                </colgroup>
+                <thead className="bg-gray-100">
+                  <tr className="[&>th]:font-medium border border-black">
+                    <th
+                      className="!py-2 !px-2 border-r border-b border-b-black border-r-black"
+                      colSpan={2}>
+                      <div className="flex -translate-y-[30%]  text-xs items-center justify-center gap-2 ">
+                        <span>実</span>
+                        <span>施</span>
+                        <span>時</span>
+                        <span>間</span>
+                      </div>
+                    </th>
+                    <th
+                      className="!py-2 text-xs  !px-2 border-r border-b border-b-black border-r-black"
+                      colSpan={1}>
+                      <div className="flex -translate-y-[30%]  text-xs items-center justify-center gap-2 ">
+                        <span>時</span>
+                        <span>間</span>
+                      </div>
+                    </th>
+                    <th
+                      className="!py-2 !px-2 border-b border-b-black"
+                      colSpan={7}>
+                      <div className="flex text-xs -translate-y-[30%] items-center justify-center gap-2">
+                        <span>タ</span>
+                        <span>ス</span>
+                        <span>ク</span>
+                        <span>カ</span>
+                        <span>ー</span>
+                        <span>ド</span>
+                        <span>名</span>
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dataStatisticPDF?.taskDurations.map((item, index) => (
+                    <tr
+                      ref={(el) => {
+                        rowRefs.current[index] = el;
+                      }}
+                      className={`border-b border-l border-r border-black custom-tr`}
+                      key={index}>
+                      <td
+                        colSpan={2}
+                        className="border-r border-black text-center text-xs py-2">
+                        <div className="-translate-y-[25%] flex gap-2 justify-center">
+                          <span>
+                            {' '}
+                            {item.startedAt &&
+                              convertToTimeString(item.startedAt)}
+                          </span>
+                          ~
+                          <span>
+                            {item.pausedAt
+                              ? convertToTimeString(item.pausedAt)
+                              : '計測中'}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="border-r border-black text-center text-xs">
+                        <div className="-translate-y-[25%]">
+                          {item.startedAt &&
+                            item.pausedAt &&
+                            calculateTotalMinutes(
+                              item.startedAt,
+                              item.pausedAt,
+                            )}
+                          分
+                        </div>
+                      </td>
+                      <td className=" text-xs px-1" colSpan={7}>
+                        <div className="break-all -translate-y-[10%] w-full max-w-[450px] py-2">
+                          {item.title}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-[60px] min-h-[200px] border border-gray-500">
+              <p className="text-center py-2 border-b border-gray-500 -translate-y-[25%]">
+                備考
+              </p>
+              <div className="py-1 pr-3">
+                <div
+                  className="rounded-sm break-all p-1"
+                  dangerouslySetInnerHTML={{
+                    __html: (remarkData ?? '').replace(/\n/g, '<br/>'),
+                  }}></div>
               </div>
             </div>
           </div>

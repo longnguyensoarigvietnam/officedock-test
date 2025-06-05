@@ -126,7 +126,7 @@ export interface ChildCategory {
 
 export interface NestedCategory {
   MEDIUM: ChildCategory;
-  SMALL: ChildCategory[];
+  SMALL?: ChildCategory[];
 }
 
 export interface CategoryStructure {

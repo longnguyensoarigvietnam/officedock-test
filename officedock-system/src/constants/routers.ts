@@ -301,21 +301,37 @@ export const pageRouters = {
   },
 
   // HIERARCHY
-  HIERARCHY_MANAGEMENT: {
-    name: '集計カテゴリー階層',
-    href: '/categories/hierarchies',
+  TEAM_CATEGORY_MANAGEMENT: {
+    name: 'チームカテゴリー階層',
+    href: '/categories/team',
   },
-  EDIT_HIERARCHY: {
-    name: '集計カテゴリー階層編集',
-    href: '/categories/hierarchies/edit',
+  EDIT_TEAM_CATEGORY: {
+    name: 'チームカテゴリー階層編集',
+    href: '/categories/team/edit',
   },
-  CREATE_HIERARCHY: {
-    name: '集計カテゴリー階層作成',
-    href: (id: string) => `/categories/hierarchies/${id}/create`,
+  CREATE_TEAM_CATEGORY: {
+    name: 'チームカテゴリー階層作成',
+    href: (id: string) => `/categories/team/${id}/create`,
   },
-  DETAIL_HIERARCHY: {
-    name: '集計カテゴリー階層詳細',
-    href: (id: string) => `/categories/hierarchies/${id}`,
+  DETAIL_TEAM_CATEGORY: {
+    name: 'チームカテゴリー階層詳細',
+    href: (id: string) => `/categories/team/${id}`,
+  },
+  CALENDAR_CATEGORY_MANAGEMENT: {
+    name: 'カレンダーカテゴリー階層',
+    href: '/categories/calendar',
+  },
+  EDIT_CALENDAR_CATEGORY: {
+    name: 'カレンダーカテゴリー階層編集',
+    href: '/categories/calendar/edit',
+  },
+  CREATE_CALENDAR_CATEGORY: {
+    name: 'カレンダーカテゴリー階層作成',
+    href: (id: string) => `/categories/calendar/${id}/create`,
+  },
+  DETAIL_CALENDAR_CATEGORY: {
+    name: 'カレンダーカテゴリー階層詳細',
+    href: (id: string) => `/categories/calendar/${id}`,
   },
 
   // ACTUAL_DURATIONS MANAGEMENT
@@ -340,6 +356,10 @@ export const pageRouters = {
   MEMBER_MANAGEMENT: {
     name: 'メンバー一覧',
     href: `/member`,
+  },
+  LOCATION_MANAGEMENT: {
+    name: 'カレンダー設定',
+    href: `/location`,
   },
 };
 
@@ -457,8 +477,12 @@ export const apiRouters = {
   // SCHEDULE
   SCHEDULES: '/schedules/',
   SCHEDULE_DETAIL: (id: string) => `/schedules/${id}/`,
+  DELETE_REPEAT_SCHEDULE: (id: string) =>
+    `/schedules/${id}/delete-repeat-schedule/`,
   TASK_CALENDAR: '/calendars/',
   USER_SETTING: '/users/setting/',
+  EVENT_KANBAN_SCHEDULE: '/dashboard/kanban-schedules/',
+  CHECK_OVERLAPPING_LOCATION: '/schedules/check-overlapping/',
 
   // TERM
   READ_TERM: (id: string) => `/terms/${id}/read/`,
@@ -467,6 +491,7 @@ export const apiRouters = {
   // DAILY REPORT
   DATA_DAILY_STATISTIC: '/stat-data/daily-report/',
   DATA_REMARK_DAILY: '/users/daily-report/',
+  DATA_DAILY_STATISTIC_PDF: '/stat-data/daily-report-pdf/',
 
   // SKILL
   SKILL_LIST: '/skills/',
@@ -484,7 +509,8 @@ export const apiRouters = {
   MANAGE_SKILL_MAPS: '/manage-skill-maps/',
   SKILL_MAPS_COMMENT: (id: string) => `/skill-maps/${id}/comments`,
   SKILL_MAPS_LEVEL_UP: (id: string) => `/skill-maps/${id}/level-up`,
-  SAVE_SKILL_MAPS_LEVEL_UP_DRAFT: (id: string) => `/skill-maps/${id}/skill-map-level/`,
+  SAVE_SKILL_MAPS_LEVEL_UP_DRAFT: (id: string) =>
+    `/skill-maps/${id}/skill-map-level/`,
 
   // SUBMIT LEVELS
   SUBMIT_LEVELS_LIST: '/submit-levels/',
@@ -519,7 +545,7 @@ export const apiRouters = {
   STATISTICS_CATEGORIES: '/statistics/categories/',
   STATISTICS_TASKS: '/statistics/tasks/',
   STATISTICS_TAGS: '/statistics/tags/',
-  STATISTICS_TASK_DURATIONS: '/statistics/task_durations/',
+  STATISTICS_TASK_DURATIONS: '/statistics/task-durations/',
 
   // STATISTICS TEAM
   STATISTICS_CATEGORIES_TEAM: (id: number) =>
@@ -530,4 +556,11 @@ export const apiRouters = {
   ORGANIZATION_CATEGORY_HIERARCHY_DETAIL: (id: number) =>
     `/organization-category-hierarchies/${id}/`,
   ORGANIZATION_CATEGORY_HIERARCHY_LIST: '/organization-category-hierarchies/',
+
+  // LOCATION
+  LOCATION_LIST: '/event-locations/',
+  LOCATION_DETAIL: (uuid: string) => `/event-locations/${uuid}/`,
+
+  // COMPANY
+  COMPANY_SETTINGS: 'companies/settings/'
 };

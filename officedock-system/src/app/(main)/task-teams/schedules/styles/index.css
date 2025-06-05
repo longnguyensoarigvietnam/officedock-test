@@ -106,7 +106,7 @@
   font-weight: 500;
 }
 .calendar-team-custom .fc-timegrid-event .fc-event-main {
-  border-radius: 6px !important;
+  padding: 0 5px 0 !important;
 }
 .calendar-team-custom .event-type-task.fc-v-event {
   background-color: white !important;
@@ -148,7 +148,7 @@
   max-width: 150px !important;
 }
 .calendar-team-custom .fc-event {
-  border-color: transparent;
+  border: none !important;
 }
 .calendar-team-custom .fc-timegrid-axis-cushion {
   font-size: 12px;
@@ -298,9 +298,10 @@
 .calendar-team-custom .custom-day-view.fc-event {
   min-height: 20px;
 }
-.calendar-team-custom .fc-timeGridWeek-view .fc-event-main {
+.calendar-team-custom.week .fc-event-main,
+.calendar-team-custom.day .fc-event-main {
   width: 100% !important;
-  border-radius: 8px !important;
+  border-radius: 6px !important;
   overflow: hidden;
 }
 /* Month */
@@ -342,7 +343,7 @@
   background-color: transparent !important;
   margin-top: 10px;
   height: 100%;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 .calendar-team-custom .fc-timegrid-event-harness-inset .fc-timegrid-event,
 .fc-timegrid-event.fc-event-mirror,

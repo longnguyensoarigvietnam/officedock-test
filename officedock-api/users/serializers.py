@@ -660,6 +660,14 @@ class SystemUserInviteSerializer(BaseUserSerializer):
         """
         if value:
             password_validation.validate_password(value)
+
+            if self.instance and authenticate(
+                None,
+                username_alias=self.instance.username_alias,
+                password=value,
+            ):
+                raise ValidationError(ERROR_MESSAGES["password_not_same"])
+
         return value
 
     def validate_email(self, value):

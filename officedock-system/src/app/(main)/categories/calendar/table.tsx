@@ -6,58 +6,34 @@ import {
 
 import { Table } from '@components/common/Table';
 
-import { OptionDropdownType } from '@interfaces/common';
-import { NO_OPTION_CATEGORY } from '@constants';
+import { CalendarCategoryRow } from '@interfaces/hierarchy';
 
-interface rowDataType {
-  id: number | string;
-  large: {
-    value: string | number;
-    label: string;
-    showBy: string;
-  };
-  medium: {
-    value: string | number;
-    label: string;
-    showBy: string;
-  };
-  small: {
-    value: string | number;
-    label: string;
-    showBy: string;
-  };
-  skills: OptionDropdownType[];
-  color: string;
-}
+import { NO_OPTION_CATEGORY } from '@constants';
+import { HierarchyType } from '@constants/enums';
 
 interface HierarchyDetail {
   id: number | string;
   name: string;
-  statisticCategories: rowDataType[];
+  statisticCategories: CalendarCategoryRow[];
 }
 
 const HierarchyTable = ({
-  hierarchyList,
-  organizationName,
+  hierarchyDetail,
 }: {
-  hierarchyList: HierarchyDetail;
-  organizationName: string;
+  hierarchyDetail: HierarchyDetail;
 }) => {
   const uniqueLargeCount = new Set(
-    hierarchyList.statisticCategories.map((item) => item.large.value),
+    hierarchyDetail.statisticCategories.map((item) => item.large.value),
   ).size;
   const uniqueMediumCount = new Set(
-    hierarchyList.statisticCategories.map(
+    hierarchyDetail.statisticCategories.map(
       (item) => `${item.large.value}-${item.medium.value}`,
     ),
   ).size;
-  const uniqueSmallCount = hierarchyList.statisticCategories.filter(
-    (hierarchy) => hierarchy.small.showBy,
-  ).length;
 
   const columns = [
     {
-      accessorKey: 'large',
+      accessorKey: HierarchyType.LARGE,
       header: () => (
         <div className="flex justify-between px-5">
           <p>大カテゴリー</p>
@@ -66,7 +42,7 @@ const HierarchyTable = ({
       ),
     },
     {
-      accessorKey: 'medium',
+      accessorKey: HierarchyType.MEDIUM,
       header: () => (
         <div className="flex justify-between px-5">
           <p>中カテゴリー</p>
@@ -74,35 +50,17 @@ const HierarchyTable = ({
         </div>
       ),
     },
-    {
-      accessorKey: 'small',
-      header: () => (
-        <div className="flex justify-between px-5">
-          <p>小カテゴリー</p>
-          <p>{uniqueSmallCount}</p>
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'skills',
-      header: () => (
-        <p className="font-medium text-xs text-[#77858F] text-left px-5">
-          スキルの紐付け
-        </p>
-      ),
-      cell: ({ row }: { row: any }) => row.original.skills.join(', '),
-    },
   ];
 
   const table = useReactTable({
-    data: hierarchyList.statisticCategories,
+    data: hierarchyDetail.statisticCategories,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
   const processRowspan = (
-    data: rowDataType[],
-    key: 'large' | 'medium',
+    data: CalendarCategoryRow[],
+    key: HierarchyType.LARGE | HierarchyType.MEDIUM,
   ): Record<number, number> => {
     const rowspanMap: Record<number, number> = {};
     const countMap: Record<string, number> = {}; // Stores counts per (large, medium/small) group
@@ -133,15 +91,15 @@ const HierarchyTable = ({
   };
 
   const largeRowspan = processRowspan(
-    hierarchyList.statisticCategories,
-    'large',
+    hierarchyDetail.statisticCategories,
+    HierarchyType.LARGE,
   );
   const mediumRowspan = processRowspan(
-    hierarchyList.statisticCategories,
-    'medium',
+    hierarchyDetail.statisticCategories,
+    HierarchyType.MEDIUM,
   );
 
-  const findLastUniqueMediumIndexes = (data: rowDataType[]): number[] => {
+  const findLastUniqueMediumIndexes = (data: CalendarCategoryRow[]): number[] => {
     const lastIndexes: number[] = [];
     let currentLargeValue: number | string | null = null;
     let mediumIndexes: Record<number | string, number> = {}; // Tracks first occurrence of each medium value
@@ -171,51 +129,23 @@ const HierarchyTable = ({
     return lastIndexes;
   };
 
-  const findLastUniqueLargeIndexes = (data: rowDataType[]): number[] => {
-    const lastIndexes: number[] = [];
-    let lastLargeIndex: number | null = null;
-    let currentLargeValue: number | string | null = null;
-
-    for (let i = 0; i < data.length; i++) {
-      const { large } = data[i];
-
-      // If the large category changes, store the last large index
-      if (large.value !== currentLargeValue) {
-        if (lastLargeIndex !== null) lastIndexes.push(lastLargeIndex);
-        currentLargeValue = large.value;
-      }
-
-      lastLargeIndex = i; // Always update with the last index of the large group
-    }
-
-    // Push the last tracked index of the final large group
-    if (lastLargeIndex !== null) lastIndexes.push(lastLargeIndex);
-
-    return lastIndexes;
-  };
-
-  // Call the function
-  const lastLargeIndexes = findLastUniqueLargeIndexes(
-    hierarchyList.statisticCategories,
-  );
-
   const lastMediumIndexes = findLastUniqueMediumIndexes(
-    hierarchyList.statisticCategories,
+    hierarchyDetail.statisticCategories,
   );
 
   return (
     <div className="w-full p-5 bg-[#F8FAFC] rounded-[14px]" style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
       <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
-        {organizationName}
+        {hierarchyDetail.name}
       </p>
       <Table className="w-full h-full bg-white !rounded-[6px]">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header, index) => (
+              {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className={`text-[#77858F] ${headerGroup.headers.length - 1 != index && 'border-r-[1px]'} w-1/4 font-medium text-xs py-3`}>
+                  className={`text-[#77858F] border-[1px] w-1/2 font-medium text-xs py-3`}>
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext(),
@@ -231,7 +161,7 @@ const HierarchyTable = ({
               <tr key={row.id} className="h-[1px]">
                 {largeRowspan[rowIndex] > 0 && (
                   <td
-                    className={`${table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px]'} border-r-[1px] w-[25%] max-w-[25%] break-all border-[#D2DBE1] h-full`}
+                    className={`border-[1px] w-1/2 max-w-1/2 break-all border-[#D2DBE1] h-full`}
                     style={{ height: 'inherit' }}
                     rowSpan={largeRowspan[rowIndex]}>
                     <div className="p-3 h-full flex items-center gap-3">
@@ -249,7 +179,7 @@ const HierarchyTable = ({
                 )}
                 {mediumRowspan[rowIndex] > 0 && (
                   <td
-                    className={`w-[25%] max-w-[25%] break-all px-3 ${lastMediumIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px] border-[#D2DBE1]'} border-r-[1px] h-full`}
+                    className={`w-1/2 max-w-1/2 break-all px-3 border-[#D2DBE1] ${lastMediumIndexes.includes(rowIndex) ? 'border-b-[1px] border-x-[1px]' : 'border-x-[1px]'} h-full`}
                     style={{ height: 'inherit' }}
                     rowSpan={mediumRowspan[rowIndex]}>
                     <p
@@ -258,36 +188,6 @@ const HierarchyTable = ({
                     </p>
                   </td>
                 )}
-                <td
-                  className={`w-[25%] max-w-[25%] break-all px-3 ${lastLargeIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px] border-[#D2DBE1]'} border-r-[1px] h-full`}
-                  style={{ height: 'inherit' }}>
-                  <p
-                    className={`text-sm h-full flex justify-left items-center font-medium py-4 ${!lastLargeIndexes.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} `}>
-                    {row.original.small.label || NO_OPTION_CATEGORY}
-                  </p>
-                </td>
-                <td
-                  className={`h-full px-3 w-[25%] max-w-[25%] break-all ${lastLargeIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px]'} border-l-[1px] border-[#D2DBE1]`}
-                  style={{ height: 'inherit' }}>
-                  <div
-                    className={`flex gap-2 flex-wrap py-4 ${!lastLargeIndexes.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'}`}>
-                    {row.original.skills.length > 0 ? (
-                      row.original.skills.map((skill) => {
-                        return (
-                          <div
-                            key={skill.value}
-                            className="flex items-center justify-center bg-[#77858F] px-[10px] !py-[5px] rounded-[20px]">
-                            <p className="text-white text-xs font-medium">
-                              {skill.label}
-                            </p>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <div className="py-[5px]"></div>
-                    )}
-                  </div>
-                </td>
               </tr>
             );
           })}

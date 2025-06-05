@@ -14,7 +14,7 @@ import {
   DATE_TIME_FORMAT,
   DATE_TIME_LOCAL,
 } from '@constants';
-import { OptionDropdownType } from '@interfaces/common';
+import { DateInfo, OptionDropdownType } from '@interfaces/common';
 import { StatisticCategoryInfo } from '@interfaces/statistic';
 import {
   ItemStartType,
@@ -76,6 +76,22 @@ export const formatQueryEndDateForCalendar = (inputDate: Date) => {
   const day = adjustedDate.getDate().toString().padStart(2, '0');
   const hours = adjustedDate.getHours().toString().padStart(2, '0');
   const minutes = adjustedDate.getMinutes().toString().padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+};
+// Format end date for calendar with isWeek
+export const formatQueryEndDateForCalendarCustom = (
+  inputDate: Date,
+  isWeek: boolean = false,
+) => {
+  const adjustedDate = new Date(inputDate);
+  adjustedDate.setDate(adjustedDate.getDate() + (isWeek ? 6 : 1));
+
+  const year = adjustedDate.getFullYear();
+  const month = (adjustedDate.getMonth() + 1).toString().padStart(2, '0');
+  const day = adjustedDate.getDate().toString().padStart(2, '0');
+  const hours = '00';
+  const minutes = '00';
 
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 };
@@ -1070,7 +1086,7 @@ export const getFullFormattedDate = (date: Date) => {
   const hours = date.getHours().toString().padStart(2, '0');
   const minutes = date.getMinutes().toString().padStart(2, '0');
 
-  const year = date.getFullYear()
+  const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}年${month}月${day}日 ${hours}:${minutes}`;
@@ -1521,6 +1537,7 @@ export const isOverlappingWithOthers = ({
   itemCompare: {
     uuid: string;
     taskId: number;
+    scheduleId: number;
     start: Date;
     end: Date;
   };
@@ -1534,9 +1551,64 @@ export const isOverlappingWithOthers = ({
     ) {
       return false;
     }
+    if (
+      item.scheduleId !== itemCompare.scheduleId &&
+      itemCompare.scheduleId !== null
+    ) {
+      return false;
+    }
+
     return (
       itemCompare.start < new Date(item.planEndDate as string) &&
       itemCompare.end > new Date(item.planStartDate as string)
     );
   });
 };
+
+// Convert duration to total minutes
+export const convertDurationToTotalMinutes = (duration: string) => {
+  const [hours, minutes, seconds] = duration.split(':').map(Number);
+  return hours * 60 + minutes + seconds / 60; // Convert to total minutes
+};
+
+// Check whether current time within event
+export const isCurrentTimeWithinEvent = (event: {
+  start: Date | null;
+  end: Date | null;
+}): boolean => {
+  const now = new Date();
+
+  const eventStart = event.start;
+  const eventEnd = event.end;
+
+  if (!(eventStart instanceof Date) || isNaN(eventStart.getTime())) {
+    return false;
+  }
+
+  const startTime = eventStart.getTime();
+  const endTime =
+    eventEnd instanceof Date && !isNaN(eventEnd.getTime())
+      ? eventEnd.getTime()
+      : startTime; // fallback to startTime if end is invalid
+
+  const nowTime = now.getTime();
+
+  return nowTime >= startTime && nowTime <= endTime;
+};
+
+// Get date info with detail
+export function getDateInfoFull(date: Date): DateInfo {
+  const year: number = date.getFullYear();
+  const month: number = date.getMonth() + 1;
+  const day: number = date.getDate();
+
+  const weekdaysJapanese: string[] = ['日', '月', '火', '水', '木', '金', '土'];
+  const weekday: string = weekdaysJapanese[date.getDay()];
+
+  return {
+    year,
+    month,
+    day,
+    weekday,
+  };
+}

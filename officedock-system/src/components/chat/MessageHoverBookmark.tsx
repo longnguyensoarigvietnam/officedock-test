@@ -45,7 +45,7 @@ export const MessageHoverBookmark = ({
     <div
       className={`bg-white group-hover:flex hidden rounded-3xl px-3 py-1.5 shadow-md absolute left-1/2 transform -translate-x-1/2 items-center gap-2`}>
       <DynamicTooltip
-        content={'リアクション'}
+        content={'メッセージに移動'}
         placement="top">
         <div
           onClick={onGotoMessage}

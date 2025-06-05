@@ -5,7 +5,6 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 import {
@@ -23,12 +22,19 @@ import {
 import ImageRound from '@components/common/ImageRound';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Dropdown from '@components/common/Dropdown';
+import { Table, TableBody } from '@components/common/Table';
+import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 import { StatisticsCategories } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
-import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
 import {
+  SortingType,
+  StatisticViewLabels,
+  StatisticViewOptions,
+} from '@constants/enums';
+import {
+  convertDurationToTotalMinutes,
   convertFromNumberToJapaneseTime,
   convertTimeToDecimal,
   convertToJapaneseDateRange,
@@ -41,8 +47,6 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 import useStatisticTagTaskDurations from '@hooks/useStatisticTagTaskDurations';
-import { Table, TableBody } from '@components/common/Table';
-import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 ChartJS.register(
   CategoryScale,
@@ -129,6 +133,12 @@ const LineChart = ({
     }[]
   >([]);
   const { expanded } = useContext(GlobalStateContext);
+
+  // Sorting
+  const [percentageSortingStatus, setPercentageSortingStatus] =
+    useState<string>('');
+  const [durationSortingStatus, setDurationSortingStatus] =
+    useState<string>('');
 
   const viewOptions = [
     {
@@ -562,6 +572,48 @@ const LineChart = ({
     totalDurationCategory,
   ]);
 
+  const sortByPercentDifference = (
+    data: {
+      tagId: number;
+      tagName: string;
+      tagDuration: string;
+      tagPercent: string;
+      tagColor: string;
+    }[],
+    sortingType: string,
+  ) => {
+    const sortedArr = data.slice().sort((rowA, rowB) => {
+      const rowAPercentage = Number(rowA.tagPercent || 0);
+      const rowBPercentage = Number(rowB.tagPercent || 0);
+
+      return sortingType == SortingType.ASC
+        ? rowAPercentage - rowBPercentage
+        : rowBPercentage - rowAPercentage;
+    });
+    setTableData(sortedArr);
+  };
+
+  const sortByDurationDifference = (
+    data: {
+      tagId: number;
+      tagName: string;
+      tagDuration: string;
+      tagPercent: string;
+      tagColor: string;
+    }[],
+    sortingType: string,
+  ) => {
+    const sortedArr = data.slice().sort((rowA, rowB) => {
+      const rowADuration = convertDurationToTotalMinutes(rowA.tagDuration || '00:00:00');
+      const rowBDuration = convertDurationToTotalMinutes(rowB.tagDuration || '00:00:00');
+
+      return sortingType == SortingType.ASC
+        ? rowADuration - rowBDuration
+        : rowBDuration - rowADuration;
+    });
+    setTableData(sortedArr);
+  };
+
   const columns: ColumnDef<{
     tagId: number;
     tagName: string;
@@ -611,12 +663,22 @@ const LineChart = ({
     {
       accessorKey: 'tagDuration',
       size: 40,
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
+      header: () => {
         return (
           <div
             className="flex gap-1 items-center justify-center"
-            onClick={column.getToggleSortingHandler()}>
+            onClick={() => {
+              if (
+                !durationSortingStatus ||
+                durationSortingStatus == SortingType.DESC
+              ) {
+                setDurationSortingStatus(SortingType.ASC);
+                sortByDurationDifference(tableData, SortingType.ASC);
+              } else {
+                setDurationSortingStatus(SortingType.DESC);
+                sortByDurationDifference(tableData, SortingType.DESC);
+              }
+            }}>
             <p className="!text-xs font-medium !text-[#77858F]">計測時間</p>
             <div>
               <Image
@@ -624,13 +686,13 @@ const LineChart = ({
                 alt="Sort down"
                 width={9}
                 height={10}
-                className={`cursor-pointer justify-self-end ${isSorted == 'asc' && 'rotate-180'} `}
+                className={`cursor-pointer justify-self-end ${durationSortingStatus == SortingType.ASC && 'rotate-180'} `}
               />
             </div>
           </div>
         );
       },
-      enableSorting: true,
+      enableSorting: false,
       cell: (info) => {
         const value = info.getValue() as string;
         return (
@@ -644,12 +706,22 @@ const LineChart = ({
     {
       accessorKey: 'tagPercent',
       size: 20,
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
+      header: () => {
         return (
           <div
             className="flex gap-1 items-center justify-center"
-            onClick={column.getToggleSortingHandler()}>
+            onClick={() => {
+              if (
+                !percentageSortingStatus ||
+                percentageSortingStatus == SortingType.DESC
+              ) {
+                setPercentageSortingStatus(SortingType.ASC);
+                sortByPercentDifference(tableData, SortingType.ASC);
+              } else {
+                setPercentageSortingStatus(SortingType.DESC);
+                sortByPercentDifference(tableData, SortingType.DESC);
+              }
+            }}>
             <p className="!text-xs font-medium !text-[#77858F]">割合</p>
             <div>
               <Image
@@ -657,13 +729,13 @@ const LineChart = ({
                 alt="Sort down"
                 width={9}
                 height={10}
-                className={`cursor-pointer justify-self-end ${isSorted == 'asc' && 'rotate-180'} `}
+                className={`cursor-pointer justify-self-end ${percentageSortingStatus == SortingType.ASC && 'rotate-180'} `}
               />
             </div>
           </div>
         );
       },
-      enableSorting: true,
+      enableSorting: false,
       cell: (info) => {
         const value = info.getValue() as string;
         return (
@@ -684,7 +756,6 @@ const LineChart = ({
     data: tableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
   });
 
   const getDisableViews = () => {

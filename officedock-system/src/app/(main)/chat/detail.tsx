@@ -11,6 +11,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { debounce } from 'lodash';
 import { useSession } from 'next-auth/react';
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -20,7 +21,6 @@ import { Paragraph } from '@tiptap/extension-paragraph';
 import { Text } from '@tiptap/extension-text';
 import { EditorContent, useEditor, Editor } from '@tiptap/react';
 import { Placeholder } from '@tiptap/extension-placeholder';
-
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 
@@ -88,6 +88,7 @@ import useChatRoomDetail from '@hooks/useChatRoomDetail';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
+
 import { addTimeToDate, getCurrentTimeInJapan } from '@utils/date';
 import {
   getFileURL,
@@ -95,6 +96,7 @@ import {
   hasPermissionInArray,
   trimUnnecessaryLineBreaks,
 } from '@utils';
+
 import {
   ChatDashboardMember,
   ChatMessageResponse,
@@ -104,19 +106,20 @@ import {
 } from '@interfaces/chat';
 import { BasePagination, OptionDropdownType } from '@interfaces/common';
 import { EventEditFormData, EventRequest } from '@interfaces/calendar';
-import { Profile, User } from '@interfaces/user';
+import { Profile } from '@interfaces/user';
 import {
   CreationDataTask,
   Task,
   TaskFormData,
   TaskRequest,
 } from '@interfaces/task';
+
 import { ChatContext } from '@providers/ChatProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+
 import api from '@base/api';
-import { debounce } from 'lodash';
 
 interface dataProps {
   clientId: string;
@@ -132,7 +135,6 @@ interface dataProps {
   setHasMoreDetail: React.Dispatch<React.SetStateAction<boolean>>;
   setHasMoreDetailOnScrollDown: React.Dispatch<React.SetStateAction<boolean>>;
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
-  hasMore: boolean;
   handleRemoveChatRoomParam: () => void;
   chatRoomCode: string;
   dataChatList: ChatRoomItem[];
@@ -143,10 +145,13 @@ interface dataProps {
 const ChatDetail = ({
   clientId,
   lastItemId,
-  creationDataTaskData,
+  dataChatList,
   hasMoreDetail,
+  chatRoomCode,
   dashboardMemberList,
   dashboardMembers,
+  creationDataTaskData,
+  searchChatMsg,
   hasMoreDetailOnScrollDown,
   setHasMoreDetailOnScrollDown,
   setFilteredChatList,
@@ -154,24 +159,26 @@ const ChatDetail = ({
   setLastItemId,
   setDataChatList,
   handleRemoveChatRoomParam,
-  chatRoomCode,
-  dataChatList,
-  searchChatMsg,
   setSearchChatMsg,
 }: dataProps) => {
   const { data: session } = useSession();
 
+  // Params
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
-
   const messageBookmarkId = searchParams.get('messageId');
+
   const queryClient = useQueryClient();
 
   const optionIconRef = useRef<HTMLDivElement | null>(null);
 
   const router = useRouter();
-  const showErrorToast = useErrorToast();
 
+  // Toasts
+  const showErrorToast = useErrorToast();
+  const { showToast } = useToast();
+
+  // Room actions
   const [openSettingBox, setOpenSettingBox] = useState<boolean>(false);
   const [openConfirmRemoveMemberModal, setOpenConfirmRemoveMemberModal] =
     useState<boolean>(false);
@@ -180,13 +187,14 @@ const ChatDetail = ({
     useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
   const [page, _setPage] = useState<number>(1);
-  const [isShowModalTask, setShowModalTask] = useState<boolean>(false);
   const [actionsEventMessage, setActionsEventMessage] = useState<string>('');
   const [dataMessageDetail, setDataMessageDetail] = useState<
     ChatMessageResponse[]
   >([]);
   const [selectedRemoveMemberId, setSelectedRemoveMemberId] =
     useState<number>();
+
+  // Context
   const {
     chatList,
     chatRoomNameEditing,
@@ -202,28 +210,34 @@ const ChatDetail = ({
     setIsChatFilesUploading,
     setTotalNotifications,
   } = useContext(GlobalStateContext);
-  const { showToast } = useToast();
 
-  const [msgIdDeleted, setMsgIdDeleted] = useState<string>();
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
-  const [msgIdUpdated, setMsgIdUpdated] = useState<string>();
-  const [msgEditing, setMsgEditing] = useState<string | undefined>();
-  const [dataEventEdit, setDataEventEdit] = useState<EventEditFormData>();
+
+  // Events
   const [openEditEventModal, setOpenEditEventModal] = useState<boolean>(false);
   const [openConfirmEditEventModal, setOpenConfirmEditEventModal] =
     useState(false);
   const [openConfirmDeleteEventModal, setOpenConfirmDeleteEventModal] =
     useState(false);
+  const [dataEventEdit, setDataEventEdit] = useState<EventEditFormData>();
+  const [backToEditing, setBackToEditing] = useState(false);
+  const { creationDataEventCalendar } = useCreationDataEventCalendar({});
   const [confirmEventDataToEdit, setConfirmEventDataToEdit] =
     useState<EventEditFormData>();
-  const [backToEditing, setBackToEditing] = useState(false);
-  const [initialLoad, setInitialLoad] = useState<boolean>(false);
-  const { creationDataEventCalendar } = useCreationDataEventCalendar({});
-  const { chatRoomDetail } = useChatRoomDetail({
+
+  // Delete / update messages
+  const [msgIdDeleted, setMsgIdDeleted] = useState<string>();
+  const [msgIdUpdated, setMsgIdUpdated] = useState<string>();
+  const [msgEditing, setMsgEditing] = useState<string | undefined>();
+  const { refetchChatRoomDetail, chatRoomDetail } = useChatRoomDetail({
     code: `${chatRoomCode}`,
   });
+
+  // User info
   const { authenticatedUser } = useAuthenticatedUser({});
-  const [loggedInUser, setLoggedInUser] = useState<User>();
+
+  // Loading messages
+  const [initialLoad, setInitialLoad] = useState<boolean>(false);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [isLoadingNewer, setIsLoadingNewer] = useState(false);
 
@@ -233,12 +247,12 @@ const ChatDetail = ({
 
   // Jump to message
   const [lastGotoMessageId, setLastGotoMessageId] = useState<number | null>();
-
   const [gotoMessageId, setGotoMessageId] = useState<number | null>();
   const gotoMessageRef = useRef<HTMLDivElement | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<
     string | null
   >(null);
+  const isJumpingMessagesRef = useRef(false);
 
   // Quote task
   const [quoteTaskList, setQuoteTaskList] = useState<
@@ -287,8 +301,10 @@ const ChatDetail = ({
     results: ChatMessageResponse[];
     hasNext?: boolean;
   }>();
+  const isSearchingMessagesRef = useRef(false);
 
   //Task
+  const [isShowModalTask, setShowModalTask] = useState<boolean>(false);
   const [dataTaskEdit, setDataTaskEdit] = useState<Task | null>(null);
   const [openWarningCloseModal, setOpenWarningCloseModal] =
     useState<boolean>(false);
@@ -304,6 +320,28 @@ const ChatDetail = ({
 
   const controllerRef = useRef<AbortController | null>(null);
 
+  // Scroll to selected message
+  useEffect(() => {
+    if (gotoMessageId) {
+      const timer = setTimeout(() => {
+        const targetElement = document.querySelector(
+          `[data-message-id="${gotoMessageId}"]`,
+        );
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'end',
+          });
+          setHighlightedMessageId(String(gotoMessageId));
+          setGotoMessageId(null);
+          setTimeout(() => setHighlightedMessageId(null), 5000);
+        }
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [gotoMessageId, dataMessageDetail]);
+
+  // Get message list
   const handleGetDataMessages = async (pageNumber: number) => {
     if (chatRoomCode) {
       setInitialLoad(true);
@@ -329,35 +367,13 @@ const ChatDetail = ({
     }
   };
 
-  useEffect(() => {
-    if (gotoMessageId) {
-      const timer = setTimeout(() => {
-        const targetElement = document.querySelector(
-          `[data-message-id="${gotoMessageId}"]`,
-        );
-        if (targetElement) {
-          targetElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'end',
-          });
-          setHighlightedMessageId(String(gotoMessageId));
-          setGotoMessageId(null);
-          setTimeout(() => setHighlightedMessageId(null), 5000);
-        }
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [gotoMessageId, dataMessageDetail]);
-
   const { mutate: getDataListMessages } = useMutation(
     'getDataListMessages',
     handleGetDataMessages,
     {
       onSuccess: (variables) => {
         if (variables) {
-          if (variables.data.results.length <= 0 || !variables.data.hasNext) {
-            setHasMoreDetail(false);
-          }
+          setHasMoreDetail(Boolean(variables.data.hasNext));
           setDataMessageDetail((prev) => {
             const newMessages = variables.data.results.filter(
               (newMsg) =>
@@ -391,18 +407,17 @@ const ChatDetail = ({
           }
         }
         setIsLoadingOlder(false);
+        setInitialLoad(false);
       },
       onError: ({ response }: AxiosError) => {
         if (response?.status === ServerStatusCode.NOT_FOUND) {
           handleRemoveChatRoomParam();
         }
       },
-      onSettled: () => {
-        setInitialLoad(false);
-      },
     },
   );
 
+  // Jump to selected message
   const handleGotoSelectedMessage = async (data: {
     bookmarkMessageId?: number;
   }) => {
@@ -418,11 +433,12 @@ const ChatDetail = ({
     'gotoSelectedMessage',
     handleGotoSelectedMessage,
     {
-      onSuccess: (data) => {
+      onMutate: () => {
+        isJumpingMessagesRef.current = true;
+      },
+      onSuccess: (data, variables) => {
         if (data) {
-          if (data.data.results.length <= 0 || !data.data.hasNext) {
-            setHasMoreDetail(false);
-          }
+          setHasMoreDetail(Boolean(data.data?.hasNext));
           setHasMoreDetailOnScrollDown(true);
           setDataMessageDetail(() => {
             const uniqueMessages = [...data.data.results].filter(
@@ -434,6 +450,7 @@ const ChatDetail = ({
           });
 
           setLastGotoMessageId(data.data.results[0].id);
+          setGotoMessageId(Number(variables.bookmarkMessageId));
 
           if (
             data.data.results.length > 0 &&
@@ -445,11 +462,13 @@ const ChatDetail = ({
             setLastItemId(null);
           }
         }
+        isJumpingMessagesRef.current = false;
       },
       onError: ({ response }: AxiosError) => {
         if (response?.status === ServerStatusCode.NOT_FOUND) {
           handleRemoveChatRoomParam();
         }
+        isJumpingMessagesRef.current = false;
       },
       onSettled: () => {
         setInitialLoad(false);
@@ -457,6 +476,7 @@ const ChatDetail = ({
     },
   );
 
+  // Get message list on scroll down
   const handleGetDataMessagesOnScrollDown = async (data: {
     pageNumber: number;
     sorting?: boolean;
@@ -514,6 +534,7 @@ const ChatDetail = ({
     },
   );
 
+  // Search messages
   const handleSearchMessagesInChatRoom = async (data: {
     searchChatMsg: string;
     pageNumber: number;
@@ -534,6 +555,9 @@ const ChatDetail = ({
     'searchMessagesInChatRoom',
     handleSearchMessagesInChatRoom,
     {
+      onMutate: () => {
+        isSearchingMessagesRef.current = true;
+      },
       onSuccess: (data) => {
         if (data) {
           setSearchMessageResults((prev) => {
@@ -545,7 +569,11 @@ const ChatDetail = ({
             };
           });
           setHasMoreSearchResultDetail(data.data.hasNext || false);
+          isSearchingMessagesRef.current = false;
         }
+      },
+      onError: () => {
+        isSearchingMessagesRef.current = false;
       },
       onSettled: () => {
         setIsLoading(false);
@@ -569,11 +597,13 @@ const ChatDetail = ({
 
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
+  // Handle call API when scroll to top / bottom
   useEffect(() => {
     const chatContainer = chatContainerRef.current;
 
     const handleScroll = debounce(() => {
       if (!chatContainer) return;
+      if (isJumpingMessagesRef.current) return;
 
       const isAtTop =
         Math.round(
@@ -620,6 +650,7 @@ const ChatDetail = ({
     };
   }, [isLoadingOlder, isLoadingNewer]);
 
+  // Text editor declaration
   const editor = useEditor({
     extensions: [
       Document,
@@ -661,13 +692,21 @@ const ChatDetail = ({
     onUpdate: ({ editor }: { editor: Editor }) => {
       setMessage(editor.getHTML());
     },
-  });
+    editorProps: {
+      handlePaste(_view, event) {
+        const clipboardData = event.clipboardData;
+        const text = clipboardData?.getData('text/plain');
 
-  useEffect(() => {
-    if (authenticatedUser) {
-      setLoggedInUser(authenticatedUser);
-    }
-  }, [authenticatedUser]);
+        if (text) {
+          // Insert only plain text, no formatting
+          editor && editor.commands.insertContent(text);
+          return true; // prevent default paste
+        }
+
+        return false; // let Tiptap handle it if no plain text
+      },
+    },
+  });
 
   useEffect(() => {
     if (!chatRoomNotifications) {
@@ -718,6 +757,7 @@ const ChatDetail = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatRoomCode, setLastItemId]);
 
+  // Delete message (local)
   const handleDeleteMessageLocal = useCallback(
     (data: WebSocketMessageData) => {
       setDataMessageDetail((prevDataMessageDetail) => {
@@ -738,6 +778,7 @@ const ChatDetail = ({
     [setDataMessageDetail],
   );
 
+  // Update message (local)
   const handleUpdateMessageLocal = useCallback(
     (data: WebSocketMessageData) => {
       const chatFileList = data.chatMessage.chatFiles.map((file) => {
@@ -770,6 +811,7 @@ const ChatDetail = ({
     [setDataMessageDetail],
   );
 
+  // Delete task (local)
   const handleDeleteTaskLocal = useCallback(
     (data: ChatMessageResponse) => {
       setDataMessageDetail((prevDataMessageDetail) => {
@@ -790,6 +832,7 @@ const ChatDetail = ({
     [setDataMessageDetail],
   );
 
+  // Update group (local)
   const handleUpdateGroupLocal = useCallback(
     (data: WebSocketMessageData, dataChatList: ChatRoomItem[]) => {
       setChatRoomNameEditing((prevChatRoomNameEditing) => {
@@ -860,6 +903,7 @@ const ChatDetail = ({
     [setChatRoomNameEditing, setChatRoomParticipantsEditing, setDataChatList],
   );
 
+  // Remove participants (local)
   const handleRemoveParticipantsLocal = useCallback(
     (data: WebSocketMessageData) => {
       // Update dataChatList if user is removed from participants list
@@ -1148,11 +1192,11 @@ const ChatDetail = ({
           id: session?.user.id as number,
           organizations: {
             id:
-              loggedInUser?.organizations.find(
+              authenticatedUser?.organizations.find(
                 (organization) => organization.isMain,
               )?.id || 0,
             name:
-              loggedInUser?.organizations.find(
+              authenticatedUser?.organizations.find(
                 (organization) => organization.isMain,
               )?.name || '',
           },
@@ -1322,6 +1366,7 @@ const ChatDetail = ({
     }
   };
 
+  // Edit task
   const handleEditTask = async (data: TaskRequest) => {
     setIsLoading(true);
     return await api.patch(apiRouters.TASK_DETAIL(`${data.id}`), data);
@@ -1447,6 +1492,7 @@ const ChatDetail = ({
     });
   };
 
+  // Edit event
   const handleConfirmEditEventCalendar = (
     data: EventEditFormData,
     sendToChat: boolean,
@@ -1480,39 +1526,33 @@ const ChatDetail = ({
         type: EventWorkCategory.MEDIUM,
       });
     }
-    if (data.smallCategory && data.smallCategory?.value !== 'undefined') {
-      newWorkCategories.push({
-        categoryId:
-          `${data.smallCategory.value}` == NO_OPTION_CATEGORY
-            ? null
-            : `${data.smallCategory.value}`,
-        type: EventWorkCategory.SMALL,
-      });
-    }
     if (data.type) {
       newType = (data.type as OptionDropdownType).value as string;
     }
-    if (data.startDate) {
-      if (data.isAllDay) {
+    if (data.isAllDay) {
+      newStartDate = addTimeToDate(
+        (data.startDate as Date) || new Date(),
+        DEFAULT_START_TIME,
+      );
+      newEndDate = addTimeToDate(
+        (data.endDate as Date) || new Date(),
+        DEFAULT_END_TIME,
+      );
+    } else {
+      if (data.startTime) {
         newStartDate = addTimeToDate(
-          data.startDate as Date,
-          DEFAULT_START_TIME,
+          (data.startDate as Date) || new Date(),
+          data.startTime,
         );
-      } else {
-        if (data.startTime) {
-          newStartDate = addTimeToDate(data.startDate as Date, data.startTime);
-        }
+      }
+      if (data.endTime) {
+        newEndDate = addTimeToDate(
+          (data.endDate as Date) || new Date(),
+          data.endTime,
+        );
       }
     }
-    if (data.endDate) {
-      if (data.isAllDay) {
-        newEndDate = addTimeToDate(data.endDate as Date, DEFAULT_END_TIME);
-      } else {
-        if (data.endTime) {
-          newEndDate = addTimeToDate(data.endDate as Date, data.endTime);
-        }
-      }
-    }
+
     editEventCalendar({
       id: data.id,
       title: data.title || '',
@@ -1521,15 +1561,33 @@ const ChatDetail = ({
       isAllDay: data.isAllDay || false,
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
-      address: data.address || '',
+      selectOrganizations: data.selectOrganizations || [],
+      locationId: data.location
+        ? String((data.location as OptionDropdownType).value)
+        : '',
       memo: data.memo || '',
       type: newType,
       sendToChat,
       message: actionsEventMessage,
       categoryIds: newWorkCategories,
-      organizationId: data.organization
-        ? Number((data.organization as OptionDropdownType).value)
-        : null,
+      repeatType:
+        data.repeatType && (data.repeatType as OptionDropdownType).value
+          ? String((data.repeatType as OptionDropdownType).value)
+          : null,
+      repeatInterval:
+        data.repeatInterval && data.repeatInterval.value
+          ? Number(data.repeatInterval.value)
+          : null,
+      weekDay:
+        data.weekDay && data.weekDay.label != ''
+          ? Number(data.weekDay.value)
+          : null,
+      monthDay:
+        data.monthDay && data.monthDay.value != ''
+          ? Number(data.monthDay.value)
+          : null,
+      month:
+        data.month && data.month.value != '' ? Number(data.month.value) : null,
     });
   };
 
@@ -1559,6 +1617,7 @@ const ChatDetail = ({
     },
   );
 
+  // Get event info
   const handleGetDataDetailEvent = async (id: string) => {
     setIsLoading(true);
     const { data: response } = await api.get(apiRouters.SCHEDULE_DETAIL(id));
@@ -1591,6 +1650,7 @@ const ChatDetail = ({
     getDataDetailEvent(id);
   };
 
+  // Delete event
   const handleConfirmDeleteEventCalendar = (sendToChat: boolean) => {
     if (dataEventEdit) {
       deleteEventCalendar({ id: `${dataEventEdit.id}`, sendToChat });
@@ -1629,6 +1689,7 @@ const ChatDetail = ({
     },
   );
 
+  // Get chat room detail
   const handleGetChatRoomDetail = async (params: {
     code: string;
     isRead: boolean;
@@ -1650,6 +1711,7 @@ const ChatDetail = ({
     },
   );
 
+  // Handle click to checkbox to select member to mention
   const handleCheckboxClick = (
     editor: Editor,
     member: ChatParticipant,
@@ -1682,6 +1744,7 @@ const ChatDetail = ({
     }
   };
 
+  // Remove param
   const handleRemoveParam = () => {
     const params = new URLSearchParams(searchParams);
     params.delete('task');
@@ -1692,6 +1755,7 @@ const ChatDetail = ({
     setShowModalTask(false);
   };
 
+  // Render avatar
   const renderImageRound = (type = '', participants: ChatParticipant[]) => {
     switch (type) {
       case ChatRoomType.GROUP:
@@ -1766,6 +1830,7 @@ const ChatDetail = ({
     );
   };
 
+  // Get room avatar
   const getParticipantAvatars = (participants: any, isEditing: boolean) => {
     const slicedParticipants = participants.slice(0, 3);
     const remainingCount =
@@ -1800,6 +1865,7 @@ const ChatDetail = ({
     );
   };
 
+  // Remove chat member
   const handleRemoveChatMember = async (editedParticipantList: number[]) => {
     setIsLoading(true);
     const response = await api.patch(apiRouters.CHAT_DETAIL(chatRoomCode), {
@@ -1816,6 +1882,7 @@ const ChatDetail = ({
         showToast({
           description: SUCCESS_UPDATE_MESSAGE,
         });
+        refetchChatRoomDetail();
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
@@ -1824,7 +1891,6 @@ const ChatDetail = ({
         setSelectedRemoveMemberId(undefined);
         setIsLoading(false);
         setOpenConfirmRemoveMemberModal(false);
-        setOpenSettingBox(true);
       },
     },
   );
@@ -1863,6 +1929,7 @@ const ChatDetail = ({
       ]
     : [];
 
+  // Update bookmark message
   const handleUpdateBookmark = (dataUuid: string) => {
     setDataMessageDetail((prevMessages) =>
       prevMessages.map((item) =>
@@ -1874,6 +1941,7 @@ const ChatDetail = ({
     handleResetChatRoomNotification();
   };
 
+  // Bookmark message
   const handleBookMarkMsg = async (data: {
     uuid: string;
     isBookmark: boolean;
@@ -1910,6 +1978,7 @@ const ChatDetail = ({
     },
   );
 
+  // Quote task
   const handleQuoteTaskUser = (data: { id: number; title: string }[]) => {
     if (!editor) return;
 
@@ -1949,6 +2018,7 @@ const ChatDetail = ({
     router.push(`?${params.toString()}`);
   };
 
+  // Edit task
   const handleActionEditTask = (id: number) => {
     handleSetParam({
       id: `${id}`,
@@ -1956,6 +2026,7 @@ const ChatDetail = ({
     });
   };
 
+  // Get task info
   const handleGetDataDetailTask = async (id: number) => {
     setIsLoading(true);
     const { data: response } = await api.get(apiRouters.TASK_DETAIL(`${id}`));
@@ -2003,6 +2074,7 @@ const ChatDetail = ({
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Handle file change
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
@@ -2029,6 +2101,7 @@ const ChatDetail = ({
     setOpenUploadFilesModal(true);
   };
 
+  // Handle drop file
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -2096,6 +2169,7 @@ const ChatDetail = ({
     };
   }, [uploadFiles]);
 
+  // Reaction message
   const handleReactionClick = (msgUuid: string, icon: string) => {
     setDataMessageDetail((prev) =>
       prev.map((message) =>
@@ -2131,6 +2205,7 @@ const ChatDetail = ({
     });
   };
 
+  // Remove reactions
   const handleRemoveReactionClick = (msgUuid: string, icon: string) => {
     setDataMessageDetail((prev) =>
       prev.map((message) =>
@@ -2155,6 +2230,7 @@ const ChatDetail = ({
     );
   };
 
+  // Reset room notification
   const handleResetChatRoomNotification = () => {
     if (chatRoomNotifications && chatRoomNotifications?.notifications > 0) {
       getChatRoomDetail({ code: chatRoomCode, isRead: true });
@@ -2210,6 +2286,7 @@ const ChatDetail = ({
       roomCode: chatRoomCode,
     });
   };
+
   // Function to insert reaction into editor
   const insertReaction = (reaction: {
     name: string;
@@ -2251,6 +2328,7 @@ const ChatDetail = ({
         <div
           className="flex flex-col flex-grow w-[calc(100vw_-_600px)] !bg-[#F8FAFC] !h-[100vh]"
           onClick={handleResetChatRoomNotification}>
+          {/* Header */}
           <div
             className="flex justify-between items-center px-4 py-2 min-h-[78px] !w-full border-b-[2px] text-white"
             style={{
@@ -2409,6 +2487,7 @@ const ChatDetail = ({
                 )}
             </div>
           </div>
+          {/* Message list */}
           <div
             ref={chatContainerRef}
             className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || chatRoomDetail?.type == ChatRoomType.CALENDAR ? 'h-[calc(100vh_-_170px)]' : 'h-[calc(100vh_-_380px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex flex-col-reverse scroll-smooth`}>
@@ -2539,6 +2618,7 @@ const ChatDetail = ({
               </div>
             )}
           </div>
+          {/* Options and text editor */}
           {chatRoomDetail ? (
             <>
               {[
@@ -2622,16 +2702,20 @@ const ChatDetail = ({
                                 className="w-[190px] h-[44px] absolute after:content-[''] after:absolute  after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white rounded-lg top-[-54px] bg-white flex items-center gap-3 justify-center left-[-81px]">
                                 {REACTION_LIST.map((icon) => {
                                   return (
-                                    <div
-                                      onClick={() => insertReaction(icon)}
+                                    <DynamicTooltip
+                                      content={icon.tooltipContent}
                                       key={icon.name}
-                                      className={` rounded-ful`}>
-                                      <ImageRound
-                                        name={icon.name}
-                                        src={icon.src}
-                                        className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
-                                      />
-                                    </div>
+                                      placement="top">
+                                      <div
+                                        onClick={() => insertReaction(icon)}
+                                        className={` rounded-ful`}>
+                                        <ImageRound
+                                          name={icon.name}
+                                          src={icon.src}
+                                          className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
+                                        />
+                                      </div>
+                                    </DynamicTooltip>
                                   );
                                 })}
                               </div>
@@ -2797,6 +2881,7 @@ const ChatDetail = ({
       {openSearchMessagesModal && (
         <SearchMessagesModal
           open={true}
+          isSearchingMessagesRef={isSearchingMessagesRef}
           dashboardMembers={dashboardMembers}
           searchMessageResults={searchMessageResults}
           searchChatMsg={searchChatMsg}
@@ -2824,7 +2909,6 @@ const ChatDetail = ({
             chatRoomCode: string;
           }) => {
             setOpenSearchMessagesModal(false);
-            setGotoMessageId(Number(data.messageId));
             gotoSelectedMessage({
               bookmarkMessageId: Number(data.messageId),
             });
@@ -2838,6 +2922,7 @@ const ChatDetail = ({
         <ChatSettingModal
           open={true}
           onClose={() => setOpenSettingBox(false)}
+          chatRoomDetail={chatRoomDetail}
           code={`${chatRoomCode}`}
           dashboardMembers={dashboardMembers}
           openAddMemberModal={() => {
@@ -2846,7 +2931,6 @@ const ChatDetail = ({
             setOpenAddMembersBoxFromSetting(true);
           }}
           openConfirmRemoveModal={(id: number) => {
-            setOpenSettingBox(false);
             setOpenConfirmRemoveMemberModal(true);
             setSelectedRemoveMemberId(id);
           }}
@@ -2891,6 +2975,7 @@ const ChatDetail = ({
                 )
           }
           code={`${chatRoomCode}`}
+          refetchChatRoomDetail={refetchChatRoomDetail}
         />
       )}
       {openConfirmDeleteModal && (
@@ -2996,7 +3081,7 @@ const ChatDetail = ({
           type={typeDetail || ItemStartType.TASK}
           action={ActionTask.CREATE}
           dataTask={dataTaskEdit}
-          authenticatedUser={loggedInUser}
+          authenticatedUser={authenticatedUser}
           peopleDefaultId={`${session?.user.id}`}
           disableDeleteAction={true}
           onClose={() => {

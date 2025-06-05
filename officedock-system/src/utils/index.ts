@@ -1,18 +1,11 @@
 import { jwtDecode } from 'jwt-decode';
+import moment from 'moment';
+import { format } from 'date-fns';
 
 import { JwtDecode } from '@interfaces/auth';
 import { Organizations } from '@interfaces/organization';
 import { PASSWORD_REGEX } from '@constants/regex';
 import { dataTaskDaily, dataTaskDailyTable } from '@interfaces/statistic';
-import {
-  EventWorkCategory,
-  PermissionsSystem,
-  PermissionType,
-  ScreenName,
-  StatisticViewOptions,
-  StatusTask,
-} from '@constants/enums';
-import { formatTime24h } from './date';
 import {
   ResultTeam,
   StatusSummary,
@@ -20,10 +13,27 @@ import {
   TransformedUser,
   UserTotalStatus,
 } from '@interfaces/task';
-import { MAX_HEX_COLOR_VALUE, SKILL_MAP_STEPS } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
 import { UserRoleType } from '@interfaces/user';
-import moment from 'moment';
+
+import {
+  EventWorkCategory,
+  PermissionsSystem,
+  PermissionType,
+  ScreenName,
+  StatisticViewOptions,
+  StatusTask,
+  TaskRepetitiveValue,
+} from '@constants/enums';
+import { DATE_FORMAT, MAX_HEX_COLOR_VALUE, SKILL_MAP_STEPS } from '@constants';
+
+import {
+  convertToTimeString,
+  formatHoursAndMinutesForDateTime,
+  formatTime24h,
+  getJapaneseDayName,
+  getJapaneseWeekDay,
+} from './date';
 
 export function hasPermissionInArray(
   requiredPermissions: PermissionsSystem[],
@@ -371,44 +381,6 @@ export function getRandomColor() {
     .padStart(6, '0')}`;
 }
 // Adjust position for view port
-export const adjustPositionForViewport = (
-  position: { top: number; left: number },
-  numberOfEvents: number,
-) => {
-  let { top, left } = position;
-  const popupWidth = 320;
-  let popupHeight = 300;
-  switch (true) {
-    case numberOfEvents >= 10:
-      popupHeight = 600;
-      break;
-    case numberOfEvents > 5:
-      popupHeight = 500;
-      break;
-    case numberOfEvents > 3:
-      popupHeight = 400;
-      break;
-    default:
-      popupHeight = 300;
-      break;
-  }
-  const padding = 10;
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
-  if (left + popupWidth + padding > viewportWidth) {
-    left = viewportWidth - popupWidth - padding;
-  }
-  if (top + popupHeight + padding > viewportHeight) {
-    top = viewportHeight - popupHeight - padding;
-  }
-  if (left < padding) {
-    left = padding;
-  }
-  if (top < padding) {
-    top = padding;
-  }
-  return { top, left };
-};
 export const adjustPositionForViewportSchedule = (position: {
   top: number;
   left: number;
@@ -814,3 +786,154 @@ export function timeStringToHours(timeStr: string): number {
 
   return hours;
 }
+// Convert time to second
+export function timeStringToSeconds(time: string): number {
+  const [hh, mm, ss] = time.split(':').map(Number);
+  return hh * 3600 + mm * 60 + ss;
+}
+// Convert second to string
+export function secondsToTimeString(totalSeconds: number): string {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return [hours, minutes, seconds]
+    .map((v) => String(v).padStart(2, '0'))
+    .join(':');
+}
+
+// Calculate total
+export function calculateTotalMinutes(
+  startedAt: string,
+  pausedAt: string,
+): number {
+  const startDate = new Date(startedAt);
+  const pauseDate = new Date(pausedAt);
+
+  const diffMs = pauseDate.getTime() - startDate.getTime(); // milliseconds
+  const diffMinutes = Math.floor(diffMs / (1000 * 60)); // convert to minutes
+
+  return diffMinutes;
+}
+
+// Calculate popup position
+export const calculatePopupPosition = (
+  popupRect: DOMRect,
+  currentPosition: {
+    top: number;
+    left: number;
+  },
+  padding = 20,
+): {
+  top: number;
+  left: number;
+} => {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+
+  let newTop = currentPosition.top;
+  let newLeft = currentPosition.left;
+
+  // Flip upward if bottom overflows
+  if (popupRect.bottom + padding > viewportHeight) {
+    newTop = currentPosition.top - popupRect.height - padding;
+  }
+
+  // Push left if right overflows
+  if (popupRect.right + padding > viewportWidth) {
+    newLeft =
+      currentPosition.left - (popupRect.right + padding - viewportWidth);
+  }
+
+  // Push right if left overflows
+  if (popupRect.left - padding < 0) {
+    newLeft = currentPosition.left + (padding - popupRect.left);
+  }
+
+  return { top: newTop, left: newLeft };
+};
+
+// Render event datetime in chat
+export const renderEventDatetimeInChat = (
+  eventInfo:
+    | {
+        endDate?: Date | string;
+        startDate?: Date | string;
+        repeatType?: string | null;
+        repeatInterval?: number | null;
+        monthDay?: number | null;
+        month?: number | null;
+        weekDay?: number | null;
+      }
+    | undefined,
+) => {
+  if (!eventInfo || !eventInfo.startDate) return '';
+
+  const startDate = eventInfo.startDate;
+  const endDate = eventInfo?.endDate || null;
+
+  const isSameDay =
+    endDate && format(startDate, DATE_FORMAT) === format(endDate, DATE_FORMAT);
+
+  const startDateStr = `${format(startDate, DATE_FORMAT)}(${getJapaneseDayName(
+    startDate as string,
+  )}) ${convertToTimeString(startDate as string)}`;
+  const endDateStr = endDate
+    ? `${!isSameDay ? `${format(endDate, DATE_FORMAT)}(${getJapaneseDayName(endDate as string)}) ` : ''}${convertToTimeString(endDate as string)}`
+    : '';
+
+  return `${startDateStr} ~ ${endDateStr}`;
+};
+
+// Render repetitive event time in chat
+export const displayRepetitiveEventTime = (eventInfo: {
+  endDate?: Date | string;
+  startDate?: Date | string;
+  repeatType?: string | null;
+  repeatInterval?: number | null;
+  monthDay?: number | null;
+  month?: number | null;
+  weekDay?: number | null;
+}) => {
+  let title = '';
+  const repeatStartTime = eventInfo.startDate
+    ? formatHoursAndMinutesForDateTime(new Date(eventInfo.startDate))
+    : '';
+  const repeatEndTime = eventInfo.endDate
+    ? formatHoursAndMinutesForDateTime(new Date(eventInfo.endDate))
+    : '';
+  switch (eventInfo?.repeatType as string) {
+    case TaskRepetitiveValue.DAILY:
+      title = '毎日' + repeatStartTime + '~' + repeatEndTime;
+      break;
+    case TaskRepetitiveValue.WEEKLY:
+      title =
+        '毎週' +
+        getJapaneseWeekDay(Number(eventInfo.weekDay || 0)) +
+        '曜日' +
+        repeatStartTime +
+        '~' +
+        repeatEndTime;
+      break;
+    case TaskRepetitiveValue.MONTHLY:
+      title =
+        '毎月' +
+        eventInfo.monthDay +
+        '日' +
+        repeatStartTime +
+        '~' +
+        repeatEndTime;
+      break;
+    case TaskRepetitiveValue.YEARLY:
+      title =
+        '毎年' +
+        eventInfo.month +
+        '月' +
+        eventInfo.monthDay +
+        '日' +
+        repeatStartTime +
+        '~' +
+        repeatEndTime;
+      break;
+  }
+  return title;
+};

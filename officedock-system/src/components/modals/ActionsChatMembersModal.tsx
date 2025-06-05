@@ -1,6 +1,11 @@
 'use client';
 import { memo, useContext, useState } from 'react';
-import { useMutation } from 'react-query';
+import {
+  QueryObserverResult,
+  RefetchOptions,
+  RefetchQueryFilters,
+  useMutation,
+} from 'react-query';
 import { useSession } from 'next-auth/react';
 import { AxiosError } from 'axios';
 import { Controller, useForm } from 'react-hook-form';
@@ -26,7 +31,7 @@ import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 
 import { hasPermissionInArray } from '@utils';
-import { ChatDashboardMember } from '@interfaces/chat';
+import { ChatDashboardMember, ChatRoomDetail } from '@interfaces/chat';
 import api from '@base/api';
 
 export type ActionsChatMembersModalProps = {
@@ -35,6 +40,9 @@ export type ActionsChatMembersModalProps = {
   participantsList: number[] | undefined;
   dashboardMembers: ChatDashboardMember[];
   code: string;
+  refetchChatRoomDetail: <TPageData>(
+    options?: (RefetchOptions & RefetchQueryFilters<TPageData>) | undefined,
+  ) => Promise<QueryObserverResult<ChatRoomDetail, AxiosError<unknown, any>>>;
 };
 
 const ActionsChatMembersModal = memo(
@@ -44,6 +52,7 @@ const ActionsChatMembersModal = memo(
     participantsList,
     code,
     dashboardMembers,
+    refetchChatRoomDetail
   }: ActionsChatMembersModalProps) => {
     const [searchName, setSearchName] = useState<string>('');
     const { dashboardMemberList } = useDashboardMemberList();
@@ -76,12 +85,13 @@ const ActionsChatMembersModal = memo(
           showToast({
             description: SUCCESS_UPDATE_MESSAGE,
           });
+          onClose();
+          refetchChatRoomDetail();
         },
         onError: (error: AxiosError<any>) => {
           showErrorToast(error, ERROR_UPDATE_MESSAGE);
         },
         onSettled: () => {
-          onClose();
           setIsLoading(false);
         },
       },

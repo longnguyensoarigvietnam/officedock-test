@@ -72,6 +72,7 @@ import {
   isMoreThanThirtyMinutes,
   isTodaySchedule,
 } from '@utils/date';
+import { OptionDropdownType } from '@interfaces/common';
 
 const ScheduleTeamBoard = () => {
   // Context
@@ -323,6 +324,7 @@ const ScheduleTeamBoard = () => {
                   : largeColor
                     ? largeColor
                     : '#A7B9C2',
+              boxShadow: '0px 2px 8px 0px #0000001A',
             }}
             className={`h-full mx-1 ${eventContent.event.extendedProps.isStart && selectedOptionShow === ItemScheduleTitleType.ACTUAL && '!bg-custom-gradient'} px-[10px]   ${selectedOptionShow === ItemScheduleTitleType.PLANS ? 'border-l-2 text-black' : 'text-white'} rounded-tr-md rounded-br-md rounded-tl-md rounded-bl-md `}>
             <div className="overflow-hidden">
@@ -592,7 +594,10 @@ const ScheduleTeamBoard = () => {
                 isStart: event.isStart,
                 type: event.type,
                 participants: event.participants || [],
-                address: event.address || '',
+                locationId: data.location
+                  ? String((data.location as OptionDropdownType)?.value)
+                  : '',
+
                 largeColor: largeColor,
                 planStartDate: `${event.startDate}`,
                 planEndDate: event.endDate
@@ -684,7 +689,9 @@ const ScheduleTeamBoard = () => {
                 id: `${event.id}`,
                 type: event.type,
                 participants: event.participants || [],
-                address: event.address || '',
+                locationId: data.location
+                  ? String((data.location as OptionDropdownType)?.value)
+                  : '',
                 largeColor: largeColor,
                 resourceIds: [
                   ...(event.participants?.map(
@@ -1222,7 +1229,7 @@ const ScheduleTeamBoard = () => {
           headerToolbar={false}
           datesSet={handleDatesSet}
           locale={'ja-JP'}
-          height={'75vh'}
+          height={'70vh'}
           dayMinWidth={250}
           stickyFooterScrollbar={true}
           events={modifyEvents(events)}
@@ -1306,7 +1313,7 @@ const ScheduleTeamBoard = () => {
 
       {/* Option select value zoom */}
       <div
-        className={`w-[180px] px-3 z-20 h-[38px] absolute  rounded-md right-[70px] bottom-[5px] bg-white flex items-center `}>
+        className={`w-[180px] px-3 z-20 h-[38px] absolute  rounded-md right-[70px] bottom-[35px] bg-white flex items-center `}>
         <RangeSlider
           min={18}
           max={100}

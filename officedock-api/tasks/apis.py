@@ -15,7 +15,6 @@ from django.db.models import (
     Max,
 )
 from django.db.models.functions import Coalesce
-import re
 from django.utils import timezone
 from django.utils.timezone import make_aware, now
 from django_filters.rest_framework import DjangoFilterBackend
@@ -43,7 +42,7 @@ from chat.serializers import (
     ChatMessageSerializer,
     ChatRoomsParticipantsWebSocketSerializer,
 )
-from common.constants import DATE_REGEX, BASE_DATE_FORMAT, BASE_DATETIME_FORMAT
+from common.constants import BASE_DATETIME_FORMAT, BASE_DATE_FORMAT
 from common.filters import CustomOrderFilter
 from common.utils import (
     filter_task_index_team,
@@ -52,6 +51,7 @@ from common.utils import (
     check_task_overtime,
     split_id_from_string,
 )
+from stat_data.utils import validate_date_format_using_regex
 from tasks.constants import (
     DEFAULT_PAGE_SIZE,
     INITIAL_INDEX_VALUE,
@@ -697,14 +697,10 @@ class TaskViewSet(
         task_schedule_end_date = request.query_params.get(
             "task_schedule_end_date"
         )
-        # Validate date format using regex
-        if (
-            task_schedule_from_date
-            and task_schedule_end_date
-            and not re.match(DATE_REGEX, task_schedule_from_date)
-            and not re.match(DATE_REGEX, task_schedule_end_date)
-        ):
-            raise ValidationError({"detail": ERROR_MESSAGES["date_invalid"]})
+        if task_schedule_from_date and task_schedule_end_date:
+            validate_date_format_using_regex(task_schedule_from_date)
+            validate_date_format_using_regex(task_schedule_end_date)
+
         task_schedule_from_date = (
             datetime.strptime(task_schedule_from_date, BASE_DATE_FORMAT).date()
             if task_schedule_from_date

@@ -12,6 +12,7 @@ export interface Tags {
     delete: boolean;
     updateName?: boolean;
   };
+  isCalendarOrganizationCheck?: boolean
 }
 
 export interface TagFilterFormData {
@@ -28,12 +29,14 @@ export interface TagId {
 export interface TagRequest {
   name: string;
   organizationIds: number[];
+  calendarOrganizationCheck: boolean
 }
 
 export interface TagFormData {
   name: string;
   organizations: OptionDropdownType[];
   isHidden?: boolean;
+  calendarOrganizationCheck: boolean;
 }
 export interface TagCreationStatisticType {
   id: number;

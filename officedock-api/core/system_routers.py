@@ -1,18 +1,20 @@
 from rest_framework import routers
 
 from calendars.apis import (
+    EventLocationViewSet,
     CalendarViewSet,
     ScheduleViewSet,
     ScheduleTeamdockViewSet,
 )
+from companies.apis import SystemCompanyViewSet
+from stat_data.apis import StatDataViewSet
 from skills.apis import (
     StatisticCategoryViewSet,
     ManageSkillMapViewSet,
     SkillViewSet,
     SkillMapViewSet,
 )
-from stat_data.apis import (
-    StatDataViewSet,
+from statistics.apis import (
     StatisticViewSet,
     OrganizationStatisticViewSet,
 )
@@ -53,6 +55,9 @@ api_router = routers.DefaultRouter()
 # Register router view set
 api_router.register("auth", SystemAuthViewSet, basename="system_auth")
 api_router.register(
+    "companies", SystemCompanyViewSet, basename="system_company"
+)
+api_router.register(
     "organizations", OrganizationViewSet, basename="organizations_by_uuid"
 )
 api_router.register(
@@ -90,6 +95,9 @@ api_router.register(
     basename="org_category_hierarchies",
 )
 api_router.register("schedules", ScheduleViewSet, basename="schedules")
+api_router.register(
+    "event-locations", EventLocationViewSet, basename="event-locations"
+)
 api_router.register(
     "teamdock/schedules", ScheduleTeamdockViewSet, basename="teamdock-schedules"
 )

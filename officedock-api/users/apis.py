@@ -11,7 +11,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -33,6 +33,8 @@ from common.utils import (
     send_web_socket_event,
 )
 from companies.models import Company, Contract
+from organizations.constants import OrganizationTypes
+from organizations.models import Organization
 from submit_levels.models import SubmitLevelHistory
 from users.constants import (
     RoleTypes,
@@ -512,6 +514,18 @@ class SystemAuthViewSet(BaseAPIViewSet):
         # Set default role System Admin when register
         user.roles.add(role, through_defaults={"company": company})
 
+        # Set default calendar organization
+        calendar_org = Organization.all_objects.filter(
+            type=OrganizationTypes.CALENDAR.value, company=company
+        ).first()
+        user.organizations.add(
+            calendar_org,
+            through_defaults={
+                "company": company,
+                "is_main": False,
+            },
+        )
+
         profile = Profile.objects.create(
             **serializer_data, user=user, company=company
         )
@@ -872,7 +886,19 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 },
             )
 
-        # Save data to Users Organizations
+        # Save calendar organization
+        calendar_org = Organization.all_objects.filter(
+            type=OrganizationTypes.CALENDAR.value, company=company
+        ).first()
+        user.organizations.add(
+            calendar_org,
+            through_defaults={
+                "company": company,
+                "is_main": False,
+            },
+        )
+
+        # Add roles to user role
         for role in roles_data:
             user.roles.add(role, through_defaults={"company": company})
 

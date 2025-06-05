@@ -83,8 +83,11 @@ const ListUsers = () => {
 
   const [userEditId, setUserEditId] = useState<number | null>(null);
   const [userEditDetail, setUserEditDetail] = useState<User | null>(null);
+
+  // Error messages
   const [emailErrorMessage, setEmailErrorMessage] = useState<string>('');
   const [usernameErrorMessage, setUsernameErrorMessage] = useState<string>('');
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState<string>('')
 
   // Set ID user for delete
   const [selectedUserToDelete, setSelectedUserToDelete] = useState<User | null>(
@@ -92,6 +95,7 @@ const ListUsers = () => {
   );
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
 
+  // Params
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
   const [userIdParam, setUserIdParam] = useState<string | null>(
@@ -313,12 +317,15 @@ const ListUsers = () => {
     },
     onError: ({
       response,
-    }: ResponseError<{ username: string; email: string }>) => {
+    }: ResponseError<{ username: string[]; email: string[]; password: string[] }>) => {
       if (response?.data.username) {
         setUsernameErrorMessage(ERROR_ID_AVAILABLE_MESSAGE);
       }
       if (response?.data.email) {
         setEmailErrorMessage(ERROR_EMAIL_AVAILABLE_MESSAGE);
+      }
+      if (response?.data.password[0]) {
+        setPasswordErrorMessage(response?.data.password[0]);
       }
       if (response?.status === ServerStatusCode.NOT_FOUND) {
         showToast({
@@ -778,6 +785,7 @@ const ListUsers = () => {
             roleUserOptions={roleUserOptions.filter((role) => role.value)}
             emailErrorMessage={emailErrorMessage}
             usernameErrorMessage={usernameErrorMessage}
+            passwordErrorMessage={passwordErrorMessage}
             onClose={() => {
               handleRemoveParam();
               setOpenActionsUserModal(false);

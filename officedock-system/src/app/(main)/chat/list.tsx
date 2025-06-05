@@ -42,9 +42,11 @@ import { BOOKMARK_ROUTER_NAME, PAGINATION_PAGE_SIZE_MEDIUM } from '@constants';
 
 import { encodeFormatDateISO } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
+
 import { ChatContext } from '@providers/ChatProvider';
 import { useWebSocket } from '@providers/WebSocketProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+
 import {
   ChatDashboardMember,
   ChatRoomItem,
@@ -52,6 +54,7 @@ import {
 } from '@interfaces/chat';
 import { BasePagination } from '@interfaces/common';
 import { Profile } from '@interfaces/user';
+
 import api from '@base/api';
 
 interface dataProps {
@@ -96,18 +99,18 @@ const ListChatUsers = ({
   });
 
   const router = useRouter();
-
   const searchParams = useSearchParams();
-
   const room = searchParams.get('room');
 
   const { data: session } = useSession();
 
+  // Load items
   const [hasMoreSearch, setHasMoreSearch] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [initialLoad, setInitialLoad] = useState<boolean>(false);
   const [initialLoadSearch, setInitialLoadSearch] = useState<boolean>(false);
 
+  // Search
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [searchRoomType, setSearchRoomType] = useState<string>('');
   const [lastPinAt, setLastPinAt] = useState<string | null>();
@@ -119,6 +122,8 @@ const ListChatUsers = ({
     useState(false);
   const [pendingRoomChange, setPendingRoomChange] =
     useState<ChatRoomItem | null>(null);
+
+  // Context
   const {
     setChatList,
     chatRoomNameEditing,
@@ -127,6 +132,7 @@ const ListChatUsers = ({
   } = useContext(ChatContext);
   const { isChatFilesUploading, cancelUploadChatFiles } =
     useContext(GlobalStateContext);
+
   const socket = useWebSocket();
 
   // Handle get list and more data room chat
@@ -192,6 +198,7 @@ const ListChatUsers = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inViewListRoom]);
 
+  // Pin chat room
   const handleUpdateDatePin = useCallback(
     (data: ChatRoomItem) => {
       if (data.pinAt) {
@@ -302,6 +309,8 @@ const ListChatUsers = ({
       setFilteredChatList,
     ],
   );
+
+  // Hide chat room
   const handleUpdateDataHide = useCallback(
     (data: ChatRoomItem) => {
       setDataChatList((prevDataChatList) => {
@@ -335,6 +344,7 @@ const ListChatUsers = ({
     [setDataChatList, chatRoomCode],
   );
 
+  // Create chat room
   const handleCreateChatRoomLocal = useCallback(
     (data: WebSocketMessageData, hasMoreData: boolean) => {
       setSearchChatMsg('');
@@ -522,6 +532,7 @@ const ListChatUsers = ({
     [setDataChatList],
   );
 
+  // Add participant
   const handleAddParticipantLocal = useCallback(
     (data: WebSocketMessageData) => {
       setDataChatList((prevDataChatList) => {
@@ -582,6 +593,7 @@ const ListChatUsers = ({
     },
   );
 
+  // Reset chat room unread messages
   const handleResetChatRoomUnreadMessages = (chatRoom: ChatRoomItem) => {
     const newDataChatList = [...dataChatList];
     const newFilterChatList = [...filteredChatList];
@@ -769,6 +781,7 @@ const ListChatUsers = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inViewListSearchRoom]);
 
+  // Render avatar based on chat room type
   const renderAvatar = (item: ChatRoomItem) => {
     if (!item) return null;
 
@@ -840,6 +853,7 @@ const ListChatUsers = ({
     );
   };
 
+  // Go to bookmark room
   const goToBookmark = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('room', 'bookmark');
@@ -847,6 +861,7 @@ const ListChatUsers = ({
     router.push(`/chat?${params.toString()}`, { scroll: false });
   };
 
+  // Handle change room
   const handleRoomChange = (roomDetail: ChatRoomItem) => {
     if (isChatFilesUploading) {
       setPendingRoomChange(roomDetail);
@@ -896,7 +911,7 @@ const ListChatUsers = ({
         </div>
         <div className="flex items-center w-1/5 justify-between">
           <Popover className="relative">
-            {({ open }) => {
+            {({ open, close }) => {
               return (
                 <>
                   <DynamicTooltip
@@ -925,6 +940,7 @@ const ListChatUsers = ({
                           className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == '' && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             setSearchRoomType('');
+                            close()
                           }}>
                           すべてのチャット
                         </p>
@@ -932,6 +948,7 @@ const ListChatUsers = ({
                           className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.UNREAD && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             setSearchRoomType(ChatRoomType.UNREAD);
+                            close()
                           }}>
                           未読があるチャット
                         </p>
@@ -939,6 +956,7 @@ const ListChatUsers = ({
                           className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.GROUP && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             setSearchRoomType(ChatRoomType.GROUP);
+                            close()
                           }}>
                           グループチャット
                         </p>
@@ -946,6 +964,7 @@ const ListChatUsers = ({
                           className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.PRIVATE && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             setSearchRoomType(ChatRoomType.PRIVATE);
+                            close()
                           }}>
                           個人チャット
                         </p>
@@ -1016,7 +1035,7 @@ const ListChatUsers = ({
 
                   <div className="relative">{renderAvatar(item)}</div>
                   <div className="ml-2 flex gap-1 items-center">
-                    <p className={`text-sm break-words w-[260px] font-medium `}>
+                    <p className={`text-sm break-all w-[250px] font-medium `}>
                       {item.code &&
                       chatRoomNameEditing.find(
                         (room) => room.roomCode === item.code,
@@ -1086,7 +1105,7 @@ const ListChatUsers = ({
                   </div>
                   <div className="relative">{renderAvatar(item)}</div>
                   <div className="ml-2 flex gap-1 items-center">
-                    <p className="text-sm break-words w-[260px] font-medium">
+                    <p className="text-sm break-all w-[250px] font-medium">
                       {item.code &&
                       chatRoomNameEditing.find(
                         (room) => room.roomCode === item.code,

@@ -17,6 +17,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import resourceTimeGridPlugin from '@fullcalendar/resource-timegrid';
 import resourcePlugin from '@fullcalendar/resource';
 import scrollgridPlugin from '@fullcalendar/scrollgrid';
+import { getHolidaysOf } from 'japanese-holidays';
 import './styles/calendar.css';
 
 import ImageRound from '@components/common/ImageRound';
@@ -30,7 +31,7 @@ import EventInfoModal from '@components/modals/EventInfoModal';
 import Button from '@components/common/Button';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import { CalendarSidebar } from '@components/calendar/Sidebar';
-import { TaskAndEventListModal } from '@components/modals/TaskAndEventListModal';
+import { EventListModal } from '@components/modals/EventListModal';
 import RangeSlider from '@components/common/RangeSlider';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
@@ -40,22 +41,25 @@ import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
-import { adjustPositionForViewport, hasPermissionInArray } from '@utils';
+
+import { hasPermissionInArray } from '@utils';
 import {
   addTimeToDate,
+  convertToTimeString,
   formatHoursAndMinutesForDateTime,
   formatQueryEndDateForCalendar,
   formatQueryStartDateForCalendar,
   formatShowDeadlineAllDayEvent,
   getJapaneseDayName,
+  isCurrentTimeWithinEvent,
   isMidnight,
   isMoreThanThirtyMinutes,
   removeTimeAndCompareDates,
   subtractOneDay,
 } from '@utils/date';
+
 import {
   CalendarPopoverInfo,
-  EventCalendarDayRange,
   EventCalendarDetail,
   EventCalendarProps,
   EventEditFormData,
@@ -86,6 +90,7 @@ import {
   EventParticipantType,
   EventWorkCategory,
   PermissionsSystem,
+  SelectedEventOpenType,
   ServerStatusCode,
   ViewOptions,
 } from '@constants/enums';
@@ -98,27 +103,30 @@ import {
 import api from '@base/api';
 
 const EventCalendar = () => {
+  // Refs
   const calendarRef = useRef<FullCalendar | null>(null);
-  const popoverRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef(null);
+
+  // Session
+  const { data: session } = useSession();
+
+  // Open modals
   const [openCreateEventModal, setOpenCreateEventModal] =
     useState<boolean>(false);
-  const [currentRange, setCurrentRange] = useState<EventCalendarDayRange>({
-    start: '',
-    end: '',
-  });
-  const { data: session } = useSession();
-  const [events, setEvents] = useState<EventCalendarDetail[]>([]);
-  const [selectedScheduleUserIds, setSelectedScheduleUserIds] =
-    useState<string>(`${Number(session?.user.id)}`);
-  const [selectedScheduleOrgIds, setSelectedScheduleOrgIds] =
-    useState<string>('');
-  const [actionsEventMessage, setActionsEventMessage] = useState<string>('');
   const [openConfirmDeleteEventModal, setOpenConfirmDeleteEventModal] =
     useState(false);
   const [openConfirmCreateEventModal, setOpenConfirmCreateEventModal] =
     useState(false);
   const [openConfirmEditEventModal, setOpenConfirmEditEventModal] =
     useState(false);
+  const [openEventInfoModal, setOpenEventInfoModal] = useState<boolean>(false);
+
+  // Event list
+  const [events, setEvents] = useState<EventCalendarDetail[]>([]);
+  const [showHolidayEvents, setShowHolidayEvents] = useState<boolean>(false);
+
+  // Event actions (edit, delete, click, filter)
+  const [actionsEventMessage, setActionsEventMessage] = useState<string>('');
   const [confirmEventDataToCreate, setConfirmEventDataToCreate] =
     useState<EventFormData>();
   const [confirmEventDataToEdit, setConfirmEventDataToEdit] =
@@ -128,32 +136,89 @@ const EventCalendar = () => {
   const [actionEventClick, setActionEventClick] = useState<string>(
     ActionsEvent.CREATE,
   );
+  const [selectedScheduleUserIds, setSelectedScheduleUserIds] =
+    useState<string>(`${Number(session?.user.id)}`);
+  const [selectedScheduleOrgIds, setSelectedScheduleOrgIds] =
+    useState<string>('');
   const [searchName, setSearchName] = useState<string>('');
   const [removeMyselfOption, setRemoveMyselfOption] = useState(false);
+  const [selectedEventInfo, setSelectedEventInfo] = useState<{
+    eventId: number | string;
+    repeatScheduleId: number | string;
+    openType: SelectedEventOpenType;
+  } | null>(null);
+
+  // Display title
   const [displayYear, setDisplayYear] = useState<number>();
   const [displayMonth, setDisplayMonth] = useState<number>();
   const [displayDay, setDisplayDay] = useState<number>();
+
   const [showSidebar, setShowSidebar] = useState(false);
   const { creationDataEventCalendar } = useCreationDataEventCalendar({});
   const { dashboardMemberList } = useDashboardMemberList();
+
+  // Toasts
   const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
+
+  // Context
+  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+
+  // Loading
   const { setIsLoading } = useContext(LoadingContext);
+  const [calendarLoading, setIsCalendarLoading] = useState(false);
+  const [isEventRendering, setIsEventRendering] = useState(false);
+  const [popoverInfoLoading, setEventListModalInfoLoading] =
+    useState<boolean>(false);
+
+  // Params
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
   const router = useRouter();
   const actionType = searchParams.get('action');
   const eventIdURL = searchParams.get('event');
   const views = searchParams.get('view');
-
   const eventDetailId = eventIdURL?.replace('event', '');
-  const containerRef = useRef(null);
-  const [popoverInfo, setPopoverInfo] = useState<CalendarPopoverInfo | null>(
-    null,
-  );
-  const [openEventInfoModal, setOpenEventInfoModal] = useState<boolean>(false);
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+
+  // Popup
+  const [eventListModalInfo, setEventListModalInfo] =
+    useState<CalendarPopoverInfo | null>(null);
+  const [infoModalPosition, setInfoModalPosition] = useState<{
+    top: number;
+    left: number;
+  }>({
+    top: 0,
+    left: 0,
+  });
+
+  // Resources
+  const [currentResources, setCurrentResources] = useState<
+    {
+      id: string;
+      title: string;
+    }[]
+  >([]);
+
+  // Date range
+  const [defaultCreateStartDate, setDefaultCreateStartDate] = useState<
+    Date | undefined
+  >();
+
+  // Zoom
+  const screenHeight = window.innerHeight;
+
+  const baseHeight = Math.round(43 * (screenHeight / 717));
+  const baseSlider = Math.round(43 * (screenHeight / 717));
+  const [resetTrigger, _setResetTrigger] = useState(0);
+  const [isOptionZoomSchedule, setIsOptionZoomSchedule] = useState('00:15:00');
+
+  const [sliderValue, setSliderValue] = useState(baseSlider);
+  const [slotHeight, setSlotHeight] = useState(baseHeight);
+
+  // Get authenticated user
   const { authenticatedUser } = useAuthenticatedUser({
     onSuccess: (data) => {
+      setShowHolidayEvents(data.company.isShowHolidaysCalendar);
       setCurrentResources((prevCurrentResources) => {
         const existedResource = prevCurrentResources.find(
           (resource) => resource.id == String(data.id),
@@ -186,27 +251,7 @@ const EventCalendar = () => {
     },
   });
 
-  const [infoModalPosition, setInfoModalPosition] = useState<{
-    top: number;
-    left: number;
-  }>({
-    top: 0,
-    left: 0,
-  });
-  const [currentResources, setCurrentResources] = useState<
-    {
-      id: string;
-      title: string;
-    }[]
-  >([]);
-  const [calendarLoading, setIsCalendarLoading] = useState(false);
-  const [isEventRendering, setIsEventRendering] = useState(false);
-  const [defaultCreateStartDate, setDefaultCreateStartDate] = useState<
-    Date | undefined
-  >();
-  const [popoverInfoLoading, setPopoverInfoLoading] = useState<boolean>(false);
-  const showErrorToast = useErrorToast();
-
+  // Check whether current screen is day or week view
   const isDayOrWeekView = () => {
     return (
       watch('calendarView') &&
@@ -215,6 +260,7 @@ const EventCalendar = () => {
     );
   };
 
+  // Fetch calendar data using debounce
   const debouncedFetchCalendarData = useRef(
     debounce(
       async ({
@@ -223,8 +269,8 @@ const EventCalendar = () => {
         keySearch,
         selectedScheduleUserIds,
         date,
-        clientX,
-        clientY,
+        pageX,
+        pageY,
         isYearView,
       }: {
         startDate: string;
@@ -232,8 +278,8 @@ const EventCalendar = () => {
         keySearch: string;
         selectedScheduleUserIds: any;
         date?: Date;
-        clientX?: number;
-        clientY?: number;
+        pageX?: number;
+        pageY?: number;
         isYearView?: boolean;
       }) => {
         const updatedUserIds: string[] = selectedScheduleUserIds
@@ -246,17 +292,19 @@ const EventCalendar = () => {
           endDate,
           isYearView,
           date,
-          clientX,
-          clientY,
+          pageX,
+          pageY,
           keySearch,
         });
-        setPopoverInfoLoading(false);
+
+        setEventListModalInfoLoading(false);
         setIsEventRendering(false);
       },
       1000,
     ),
   ).current;
 
+  // Handle prev
   const handlePrev = () => {
     if (calendarRef.current) {
       setIsEventRendering(true);
@@ -281,6 +329,7 @@ const EventCalendar = () => {
     }
   };
 
+  // Handle next
   const handleNext = () => {
     if (calendarRef.current) {
       setIsEventRendering(true);
@@ -305,6 +354,7 @@ const EventCalendar = () => {
     }
   };
 
+  // Handle navigate to today view
   const handleNavigateToTodayView = () => {
     if (calendarRef.current) {
       setIsEventRendering(true);
@@ -317,6 +367,7 @@ const EventCalendar = () => {
       const endDateISOString = formatQueryEndDateForCalendar(
         calendarApi.view.activeEnd,
       );
+
       debouncedFetchCalendarData({
         startDate: startDateISOString,
         endDate: endDateISOString,
@@ -327,6 +378,7 @@ const EventCalendar = () => {
     }
   };
 
+  // Handle navigate to specific day
   const handleNavigateToSpecificDay = (date: Date) => {
     if (calendarRef.current) {
       setIsEventRendering(true);
@@ -349,51 +401,27 @@ const EventCalendar = () => {
       if (isDayOrWeekView()) scrollToCurrentTime();
     }
   };
-
+  // Show events in year view
   const handleShowEventsInYearView = (
     date: Date,
-    clientX: number,
-    clientY: number,
+    pageX: number,
+    pageY: number,
   ) => {
     if (calendarRef.current) {
       const startDateISOString = formatQueryStartDateForCalendar(date);
       const nextDay = new Date(date);
       nextDay.setDate(nextDay.getDate() + 1);
       const endDateISOString = formatQueryEndDateForCalendar(nextDay);
-      setPopoverInfoLoading(true);
-      setPopoverInfo({
+      setEventListModalInfoLoading(true);
+      setEventListModalInfo({
         date: date as Date,
         events: [],
-        left: adjustPositionForViewport(
-          {
-            top: Number(clientY),
-            left: Number(clientX),
-          },
-          0,
-        ).left,
-        top: adjustPositionForViewport(
-          {
-            top: Number(clientY),
-            left: Number(clientX),
-          },
-          0,
-        ).top,
+        left: pageX,
+        top: pageY,
       });
       setInfoModalPosition({
-        left: adjustPositionForViewport(
-          {
-            top: Number(clientY),
-            left: Number(clientX),
-          },
-          3,
-        ).left,
-        top: adjustPositionForViewport(
-          {
-            top: Number(clientY),
-            left: Number(clientX),
-          },
-          3,
-        ).top,
+        left: pageX,
+        top: pageY,
       });
 
       debouncedFetchCalendarData({
@@ -402,13 +430,14 @@ const EventCalendar = () => {
         selectedScheduleUserIds: selectedScheduleUserIds,
         keySearch: keySearch,
         date: date,
-        clientX: clientX,
-        clientY: clientY,
+        pageX: pageX,
+        pageY: pageY,
         isYearView: true,
       });
     }
   };
 
+  // Handle view change
   const handleViewChange = async (calendarView: string) => {
     if (calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
@@ -437,7 +466,7 @@ const EventCalendar = () => {
           ? selectedScheduleUserIds.split(',').filter(Boolean)
           : [];
 
-        getEventCalendarByUsers({
+        await getEventCalendarByUsers({
           userId: updatedUserIds.join(','),
           startDate: startDateISOString,
           endDate: endDateISOString,
@@ -465,6 +494,7 @@ const EventCalendar = () => {
     return () => resizeObserver.disconnect();
   }, [calendarRef, containerRef]);
 
+  // Scroll to current time
   const scrollToCurrentTime = () => {
     setTimeout(() => {
       const nowIndicator = document.querySelector(
@@ -486,6 +516,7 @@ const EventCalendar = () => {
     }, 500);
   };
 
+  // Check to show user's avatar
   const checkShowUserAvatar = (
     type?: EventCalendarType,
     participants?: EventParticipant[],
@@ -506,6 +537,7 @@ const EventCalendar = () => {
     );
   };
 
+  // Show user's avatar
   const showUserAvatars = (
     participantList: EventParticipant[],
     avatarSize: number,
@@ -625,6 +657,21 @@ const EventCalendar = () => {
 
       if (currentView === CalendarViewOptions.VIEW_BY_WEEK) {
         if (eventContent.event.allDay) {
+          if (
+            eventContent.event.extendedProps.type == EventCalendarType.HOLIDAY
+          ) {
+            return (
+              <div className="rounded-sm hover:cursor-pointer mb-1 overflow-hidden">
+                <p
+                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-error font-semibold px-1 text-[12px]`}>
+                  {eventContent.event.title != 'null'
+                    ? eventContent.event.title
+                    : ''}
+                </p>
+              </div>
+            );
+          }
+
           return (
             <div className="mb-1 hover:cursor-pointer">
               <div
@@ -660,7 +707,8 @@ const EventCalendar = () => {
           );
         }
         return (
-          <div className="overflow-hidden p-1.5">
+          <div
+            className={`overflow-hidden p-1.5 ${isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
             {checkShowUserAvatar(
               eventContent.event.extendedProps.type,
               eventContent.event.extendedProps.participants,
@@ -680,16 +728,20 @@ const EventCalendar = () => {
               </p>
             </div>
             <div className={` text-black text-[12px] font-normal px-1`}>
-              {new Date(eventContent.event.start).getDate() !=
-              new Date(eventContent.event.end).getDate() ? (
+              {new Date(
+                new Date(eventContent.event.start).setHours(0, 0, 0, 0),
+              ).getTime() !==
+              new Date(
+                new Date(eventContent.event.end).setHours(0, 0, 0, 0),
+              ).getTime() ? (
                 <>
                   <p className="whitespace-nowrap">
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
                     ~{' '}
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                   </p>
-                  <p className={` text-black text-[12px] font-normal px-1`}>
-                    {eventContent.event.extendedProps.address}
+                  <p className={` text-black text-[12px] font-normal`}>
+                    {eventContent.event.extendedProps.location.name}
                   </p>
                 </>
               ) : (
@@ -697,8 +749,8 @@ const EventCalendar = () => {
                   {isMoreThanThirtyMinutes(eventContent.timeText) && (
                     <>
                       <p>{eventContent.timeText}</p>
-                      <p className={` text-black text-[12px] font-normal px-1`}>
-                        {eventContent.event.extendedProps.address}
+                      <p className={` text-black text-[12px] font-normal`}>
+                        {eventContent.event.extendedProps.location.name}
                       </p>
                     </>
                   )}
@@ -709,6 +761,21 @@ const EventCalendar = () => {
         );
       } else if (currentView === CalendarViewOptions.VIEW_BY_DAY) {
         if (eventContent.event.allDay) {
+          if (
+            eventContent.event.extendedProps.type == EventCalendarType.HOLIDAY
+          ) {
+            return (
+              <div className="rounded-sm hover:cursor-pointer mb-1 overflow-hidden">
+                <p
+                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-error font-semibold px-1 text-[12px]`}>
+                  {eventContent.event.title != 'null'
+                    ? eventContent.event.title
+                    : ''}
+                </p>
+              </div>
+            );
+          }
+
           const end = new Date(eventContent.event?.end);
           const start = new Date(eventContent.event?.start);
           if (start.toDateString() !== end.toDateString()) {
@@ -732,32 +799,38 @@ const EventCalendar = () => {
             </div>
           );
         }
+
         return (
-          <div className="overflow-hidden">
-            <div className={` text-black font-medium px-1 pt-1 text-[14px]`}>
+          <div
+            className={`overflow-hidden ${isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
+            <div className={` text-black font-medium px-2 pt-1 text-[14px]`}>
               <p className="truncate max-w-[calc(100%)] font-semibold min-h-5">
                 {eventContent.event.title != 'null'
                   ? eventContent.event.title
                   : ''}
               </p>
             </div>{' '}
-            <div className={` text-black text-[12px] font-normal px-1`}>
-              {new Date(eventContent.event.start).getDate() !=
-              new Date(eventContent.event.end).getDate() ? (
+            <div className={` text-black text-[12px] font-normal px-2`}>
+              {new Date(
+                new Date(eventContent.event.start).setHours(0, 0, 0, 0),
+              ).getTime() !==
+              new Date(
+                new Date(eventContent.event.end).setHours(0, 0, 0, 0),
+              ).getTime() ? (
                 <>
                   <p className="whitespace-nowrap">
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
                     ~{' '}
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                   </p>
-                  <p>{eventContent.event.extendedProps.address}</p>
+                  <p>{eventContent.event.extendedProps.location.name}</p>
                 </>
               ) : (
                 <>
                   {isMoreThanThirtyMinutes(eventContent.timeText) && (
-                    <div className="text-black text-[12px] font-normal px-1">
+                    <div className="text-black text-[12px] font-normal">
                       <p>{eventContent.timeText}</p>
-                      <p>{eventContent.event.extendedProps.address}</p>
+                      <p>{eventContent.event.extendedProps.location.name}</p>
                     </div>
                   )}
                 </>
@@ -768,9 +841,28 @@ const EventCalendar = () => {
       } else if (currentView === CalendarViewOptions.VIEW_BY_MONTH) {
         if (
           eventContent.event.allDay ||
-          new Date(eventContent.event.start).getDate() !=
-            new Date(eventContent.event.end).getDate()
+          new Date(
+            new Date(eventContent.event.start).setHours(0, 0, 0, 0),
+          ).getTime() !==
+            new Date(
+              new Date(eventContent.event.end).setHours(0, 0, 0, 0),
+            ).getTime()
         ) {
+          if (
+            eventContent.event.extendedProps.type == EventCalendarType.HOLIDAY
+          ) {
+            return (
+              <div className="rounded-sm hover:cursor-pointer mb-1 overflow-hidden">
+                <p
+                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-error font-semibold px-1 text-[12px]`}>
+                  {eventContent.event.title != 'null'
+                    ? eventContent.event.title
+                    : ''}
+                </p>
+              </div>
+            );
+          }
+
           return (
             <div
               className={`fc-daygrid-event mb-1 ${eventContent.event.allDay && 'hover:cursor-pointer'}`}>
@@ -829,6 +921,7 @@ const EventCalendar = () => {
     }
   };
 
+  // Handle click to more link button
   const handleMoreLinkClick = (clickInfo: any) => {
     const clickInfoEvents = clickInfo.allSegs.map((seg: any) => {
       return seg.event.id;
@@ -861,88 +954,51 @@ const EventCalendar = () => {
               ) {
                 if (event.allDay) {
                   filterEvents.push({
-                    id: `${event.id}`,
+                    eventId: `${event.eventId}`,
+                    repeatScheduleId: `${event.id}`,
                     title: event.title,
                     start: event.start,
                     end: adjustedEndISOString,
                     type: event.type,
                     participants: event.participants || [],
-                    address: event.address || '',
+                    location: event.location || '',
                   });
                 }
               } else {
                 filterEvents.push({
-                  id: `${event.id}`,
+                  eventId: `${event.eventId}`,
+                  repeatScheduleId: `${event.id}`,
                   title: event.title,
                   start: event.start,
                   end: adjustedEndISOString,
                   type: event.type,
                   participants: event.participants || [],
-                  address: event.address || '',
+                  location: event.location || '',
                 });
               }
             }
           }
         });
-      setPopoverInfo({
+      setEventListModalInfo({
         date: clickInfo.date,
         events: filterEvents,
-        left: adjustPositionForViewport(
-          {
-            top: clickInfo.jsEvent.clientY,
-            left: clickInfo.jsEvent.clientX,
-          },
-          filterEvents.length,
-        ).left,
-        top: adjustPositionForViewport(
-          {
-            top: clickInfo.jsEvent.clientY,
-            left: clickInfo.jsEvent.clientX,
-          },
-          filterEvents.length,
-        ).top,
+        left: clickInfo.jsEvent.pageX,
+        top: clickInfo.jsEvent.pageY,
       });
       setInfoModalPosition({
-        left: adjustPositionForViewport(
-          {
-            top: clickInfo.jsEvent.clientY,
-            left: clickInfo.jsEvent.clientX,
-          },
-          3,
-        ).left,
-        top: adjustPositionForViewport(
-          {
-            top: clickInfo.jsEvent.clientY,
-            left: clickInfo.jsEvent.clientX,
-          },
-          3,
-        ).top,
+        left: clickInfo.jsEvent.pageX,
+        top: clickInfo.jsEvent.pageY,
       });
     }
     clickInfo.jsEvent.preventDefault();
   };
 
-  const handlePopoverClose = () => {
-    setPopoverInfo(null);
-  };
-
-  const handleDatesSet = (arg: any) => {
-    const startDate = new Date(arg.startStr);
-
-    const endDate = new Date(arg.endStr);
-    const startDateISOString = formatQueryStartDateForCalendar(startDate);
-    const endDateISOString = formatQueryEndDateForCalendar(endDate);
-    setCurrentRange({
-      start: startDateISOString,
-      end: endDateISOString,
-    });
-  };
-
+  // Show events in modal
   const handleShowEventsInModal = (
     eventList: any[],
     date: Date,
-    clientX: number,
-    clientY: number,
+    pageX: number,
+    pageY: number,
   ) => {
     const filterEvents: any[] = [];
     eventList.forEach((event) => {
@@ -963,7 +1019,8 @@ const EventCalendar = () => {
           : event.end;
         if (removeTimeAndCompareDates(eventStart, adjustedEnd, clickDate)) {
           filterEvents.push({
-            id: `${event.id}`,
+            eventId: `${event.eventId}`,
+            repeatScheduleId: `${event.id}`,
             title: event.title,
             start: event.start,
             end: adjustedEndISOString,
@@ -971,61 +1028,89 @@ const EventCalendar = () => {
             participants: event.participants || [],
             address: event.address || '',
             allDay: event.allDay,
+            location: event.location || '',
           });
         }
       }
     });
-    setPopoverInfo({
+    setEventListModalInfo({
       date: date as Date,
       events: filterEvents,
-      left: adjustPositionForViewport(
-        {
-          top: Number(clientY),
-          left: Number(clientX),
-        },
-        filterEvents.length,
-      ).left,
-      top: adjustPositionForViewport(
-        {
-          top: Number(clientY),
-          left: Number(clientX),
-        },
-        filterEvents.length,
-      ).top,
+      left: pageX,
+      top: pageY,
     });
     setInfoModalPosition({
-      left: adjustPositionForViewport(
-        {
-          top: Number(clientY),
-          left: Number(clientX),
-        },
-        5,
-      ).left,
-      top: adjustPositionForViewport(
-        {
-          top: Number(clientY),
-          left: Number(clientX),
-        },
-        6,
-      ).top,
+      left: pageX,
+      top: pageY,
     });
   };
 
+  // Get holiday events
+  const getHolidayEvents = (startDate: string, endDate: string) => {
+    if (showHolidayEvents && calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      const currentYear = calendarApi.view.currentStart.getFullYear();
+      const holidayList = getHolidaysOf(Number(currentYear));
+      const holidayEvents = holidayList
+        .filter((holiday) => {
+          const holidayDate = `${currentYear}-${String(holiday.month).padStart(2, '0')}-${String(
+            holiday.date,
+          ).padStart(2, '0')}T00:00:00`;
+
+          return removeTimeAndCompareDates(
+            new Date(startDate),
+            new Date(endDate),
+            new Date(holidayDate),
+          );
+        })
+        .map((holiday) => {
+          return {
+            title: holiday.name,
+            start: `${currentYear}-${String(holiday.month).padStart(2, '0')}-${String(
+              holiday.date,
+            ).padStart(2, '0')}T00:00:00`,
+            end: `${currentYear}-${String(holiday.month).padStart(2, '0')}-${String(
+              holiday.date,
+            ).padStart(2, '0')}T23:59:59`,
+            allDay: true,
+            id: `holiday-${holiday.month}-${holiday.date}`,
+            type: EventCalendarType.HOLIDAY,
+            participants: dashboardMembersWithAvatars.map((member) => {
+              return {
+                id: member.id,
+                fullName: member.fullName,
+                avatar: member?.avatar || '',
+                avatarColor: member?.avatarColor || '',
+              };
+            }),
+            address: '',
+            resourceIds: dashboardMembersWithAvatars.map((member) =>
+              String(member.id),
+            ),
+          };
+        });
+
+      return holidayEvents || [];
+    }
+    return [];
+  };
+
+  // Get events by users
   const handleGetEventCalendarByUsers = async ({
     userId,
     startDate,
     endDate,
   }: {
     userId: string;
-    startDate?: string;
-    endDate?: string;
+    startDate: string;
+    endDate: string;
     isYearView?: boolean;
     date?: Date;
-    clientX?: number;
-    clientY?: number;
+    pageX?: number;
+    pageY?: number;
     keySearch: string;
   }) => {
-    const apiUrl = `${apiRouters.SCHEDULES}?${userId ? `&user_ids=${userId}` : ''}${startDate ? `&start_date=${startDate}` : `&start_date=${currentRange.start}`}${endDate ? `&end_date=${endDate}` : `&end_date=${currentRange.end}`}${keySearch ? `&search=${keySearch}` : ''}`;
+    const apiUrl = `${apiRouters.SCHEDULES}?${userId ? `&user_ids=${userId}` : ''}${startDate && `&start_date=${startDate}`}${endDate && `&end_date=${endDate}`}${keySearch ? `&search=${keySearch}` : ''}`;
     const { data } = await api.get(apiUrl);
     return data;
   };
@@ -1036,33 +1121,36 @@ const EventCalendar = () => {
     {
       onSuccess: (data, variables) => {
         if (data) {
-          const eventList: EventCalendarDetail[] = data.map(
-            (event: EventCalendarProps) => {
-              const checkShowMyEventResource =
-                event.participants?.find(
-                  (participant) => participant.id == session?.user.id,
-                ) && variables.userId.includes(String(session?.user.id));
-              return {
-                title: event.title,
-                start: `${event.startDate}`,
-                end: `${event.endDate}`,
-                allDay: event.isAllDay || false,
-                id: `${event.id}`,
-                type: EventCalendarType.SCHEDULE,
-                participants: event.participants || [],
-                address: event.address || '',
-                resourceIds: [
-                  ...(event.participants
-                    ?.filter(
-                      (participant) => participant.id !== session?.user.id,
-                    )
-                    ?.map((participant) => participant.id) ?? []),
-                  ...(checkShowMyEventResource
-                    ? [Number(session?.user.id)]
-                    : []),
-                ],
-              };
-            },
+          const eventList: EventCalendarDetail[] = data.flatMap(
+            (event: EventCalendarProps) =>
+              event.repeatSchedules &&
+              event.repeatSchedules.map((schedule) => {
+                const checkShowMyEventResource =
+                  event.participants?.find(
+                    (participant) => participant.id == session?.user.id,
+                  ) && variables.userId.includes(String(session?.user.id));
+                return {
+                  title: event.title,
+                  start: `${schedule.planStartDate}`,
+                  end: `${schedule.planEndDate}`,
+                  allDay: event.isAllDay || false,
+                  id: `${schedule.id}`,
+                  eventId: event.id,
+                  type: EventCalendarType.SCHEDULE,
+                  participants: event.participants || [],
+                  location: event.location || '',
+                  resourceIds: [
+                    ...(event.participants
+                      ?.filter(
+                        (participant) => participant.id !== session?.user.id,
+                      )
+                      ?.map((participant) => participant.id) ?? []),
+                    ...(checkShowMyEventResource
+                      ? [Number(session?.user.id)]
+                      : []),
+                  ],
+                };
+              }),
           );
           const newEvents = eventList.map((event) => {
             const start = new Date(event.start);
@@ -1079,16 +1167,23 @@ const EventCalendar = () => {
             }
             return event;
           });
+
+          // Holiday list
+          const holidayList = getHolidayEvents(
+            variables.startDate as string,
+            variables.endDate as string,
+          );
+
           setEvents(() => {
             if (variables.isYearView) {
               handleShowEventsInModal(
                 [...newEvents],
                 variables.date as Date,
-                Number(variables.clientX),
-                Number(variables.clientY),
+                Number(variables.pageX),
+                Number(variables.pageY),
               );
             }
-            return [...newEvents];
+            return [...newEvents, ...holidayList];
           });
         }
       },
@@ -1098,6 +1193,7 @@ const EventCalendar = () => {
     },
   );
 
+  // Filter events by users
   const handleFilterScheduleByUserIds = (
     member: EventParticipant,
     dataOptionsParticipants: EventParticipant[],
@@ -1191,13 +1287,24 @@ const EventCalendar = () => {
 
     setSelectedScheduleUserIds(updatedUserIds.join(','));
     setSelectedScheduleOrgIds(updatedOrgIds.join(','));
-    getEventCalendarByUsers({
-      userId:
-        `${updatedUserIds.join(',')}`.length > 0
-          ? `${updatedUserIds.join(',')}`
-          : ``,
-      keySearch: keySearch,
-    });
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      const startDateISOString = formatQueryStartDateForCalendar(
+        calendarApi.view.activeStart,
+      );
+      const endDateISOString = formatQueryEndDateForCalendar(
+        calendarApi.view.activeEnd,
+      );
+      getEventCalendarByUsers({
+        userId:
+          `${updatedUserIds.join(',')}`.length > 0
+            ? `${updatedUserIds.join(',')}`
+            : ``,
+        startDate: startDateISOString,
+        endDate: endDateISOString,
+        keySearch: keySearch,
+      });
+    }
     setCurrentResources(() => {
       return updatedUserIds.map((userId) => {
         return {
@@ -1211,6 +1318,7 @@ const EventCalendar = () => {
     });
   };
 
+  // Handle get all member events
   const handleGetAllMemberSchedules = (
     dataOptionsParticipants: EventParticipant[],
   ) => {
@@ -1259,13 +1367,25 @@ const EventCalendar = () => {
       ].join(','),
     );
 
-    getEventCalendarByUsers({
-      userId:
-        `${updatedParticipantIds.join(',')}`.length > 0
-          ? `${updatedParticipantIds.join(',')}`
-          : ``,
-      keySearch: keySearch,
-    });
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      const startDateISOString = formatQueryStartDateForCalendar(
+        calendarApi.view.activeStart,
+      );
+      const endDateISOString = formatQueryEndDateForCalendar(
+        calendarApi.view.activeEnd,
+      );
+
+      getEventCalendarByUsers({
+        userId:
+          `${updatedParticipantIds.join(',')}`.length > 0
+            ? `${updatedParticipantIds.join(',')}`
+            : ``,
+        startDate: startDateISOString,
+        endDate: endDateISOString,
+        keySearch: keySearch,
+      });
+    }
     setCurrentResources(() => {
       const updatedResources: { id: string; title: string }[] = [];
 
@@ -1283,6 +1403,7 @@ const EventCalendar = () => {
     });
   };
 
+  // Handle remove all member events
   const handleRemoveAllMemberSchedules = (
     dataOptionsParticipants: EventParticipant[],
   ) => {
@@ -1315,10 +1436,22 @@ const EventCalendar = () => {
     setSelectedScheduleUserIds(filteredParticipantIds.join(','));
     setSelectedScheduleOrgIds(filteredOrganizationIds.join(','));
 
-    getEventCalendarByUsers({
-      userId: filteredParticipantIds.join(','),
-      keySearch: keySearch,
-    });
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      const startDateISOString = formatQueryStartDateForCalendar(
+        calendarApi.view.activeStart,
+      );
+      const endDateISOString = formatQueryEndDateForCalendar(
+        calendarApi.view.activeEnd,
+      );
+
+      getEventCalendarByUsers({
+        userId: filteredParticipantIds.join(','),
+        startDate: startDateISOString,
+        endDate: endDateISOString,
+        keySearch: keySearch,
+      });
+    }
 
     setCurrentResources(() => {
       const updatedResources: { id: string; title: string }[] = [];
@@ -1337,8 +1470,14 @@ const EventCalendar = () => {
     });
   };
 
-  const handleGetDataDetailEvent = async (id: string) => {
-    const { data: response } = await api.get(apiRouters.SCHEDULE_DETAIL(id));
+  // Get event detail
+  const handleGetDataDetailEvent = async (data: {
+    eventId: string;
+    repeatScheduleId: string;
+  }) => {
+    const { data: response } = await api.get(
+      `${apiRouters.SCHEDULE_DETAIL(data.eventId)}${data.repeatScheduleId ? `?repeat_schedule_id=${data.repeatScheduleId}` : ''}`,
+    );
     return response;
   };
 
@@ -1363,8 +1502,11 @@ const EventCalendar = () => {
     },
   );
 
-  const handleConfirmGetDataDetailEvent = (id: string) => {
-    getDataDetailEvent(id);
+  const handleConfirmGetDataDetailEvent = (
+    eventId: string,
+    repeatScheduleId: string,
+  ) => {
+    getDataDetailEvent({ eventId, repeatScheduleId });
   };
 
   const { mutate: getDataEventInfo } = useMutation(
@@ -1373,7 +1515,11 @@ const EventCalendar = () => {
     {
       onSuccess: async (data) => {
         setOpenEventInfoModal(true);
-        setDataEventEdit(data);
+        setDataEventEdit({
+          ...data,
+          startDate: data.repeatSchedules.planStartDate,
+          endDate: data.repeatSchedules.planEndDate,
+        });
       },
       onError: (error: AxiosError) => {
         if (error.response?.status === ServerStatusCode.NOT_FOUND) {
@@ -1388,59 +1534,70 @@ const EventCalendar = () => {
     },
   );
 
-  const handleConfirmGetDataEventInfo = (id: string) => {
-    getDataEventInfo(id);
+  const handleConfirmGetDataEventInfo = (
+    eventId: string,
+    repeatScheduleId: string,
+  ) => {
+    getDataEventInfo({ eventId, repeatScheduleId });
   };
 
+  // Handle click in event
   const handleEventClick = (clickInfo: EventClickArg) => {
+    const eventId = clickInfo.event?.extendedProps?.eventId || '';
+    const repeatScheduleId = clickInfo.event?.id || '';
+
+    setSelectedEventInfo({
+      eventId,
+      repeatScheduleId,
+      openType: SelectedEventOpenType.POPUP,
+    });
+
     if (
       searchParams.get('view') == ViewOptions.DAY ||
       searchParams.get('view') == ViewOptions.WEEK ||
       searchParams.get('view') == ViewOptions.MONTH
     ) {
       if (clickInfo.event.extendedProps.type === EventCalendarType.SCHEDULE) {
-        handleConfirmGetDataEventInfo(`${clickInfo.event.id}`);
+        handleConfirmGetDataEventInfo(eventId, repeatScheduleId);
       }
       setInfoModalPosition({
-        left: adjustPositionForViewport(
-          {
-            top: Number(clickInfo.jsEvent.clientY),
-            left: Number(clickInfo.jsEvent.clientX),
-          },
-          5,
-        ).left,
-        top: adjustPositionForViewport(
-          {
-            top: Number(clickInfo.jsEvent.clientY),
-            left: Number(clickInfo.jsEvent.clientX),
-          },
-          6,
-        ).top,
+        left: clickInfo.jsEvent.pageX,
+        top: clickInfo.jsEvent.pageY,
       });
     } else {
-      setPopoverInfo(null);
+      setEventListModalInfo(null);
       if (clickInfo.event.extendedProps.type === EventCalendarType.SCHEDULE) {
         handleSetEventParam({
           id: `${clickInfo.event.id}`,
           action: ActionsEvent.EDIT,
         });
-        handleConfirmGetDataDetailEvent(`${clickInfo.event.id}`);
+        handleConfirmGetDataDetailEvent(eventId, repeatScheduleId);
       }
       setActionEventClick(ActionsEvent.EDIT);
     }
   };
 
-  const handleEventClickInPopup = (eventType: string, eventId: string) => {
-    if (eventType === EventCalendarType.SCHEDULE) {
-      handleConfirmGetDataEventInfo(`${eventId}`);
-    }
+  // Handle click in popup
+  const handleEventClickInPopup = (
+    eventId: string,
+    repeatScheduleId: string,
+  ) => {
+    setSelectedEventInfo({
+      eventId,
+      repeatScheduleId,
+      openType: SelectedEventOpenType.POPUP,
+    });
+    handleConfirmGetDataEventInfo(eventId, repeatScheduleId);
   };
 
   useEffect(() => {
     if (eventDetailId && dataEventEdit === undefined && actionType) {
       setActionEventClick(actionType);
 
-      getDataDetailEvent(eventDetailId.replace('event', ''));
+      getDataDetailEvent({
+        eventId: eventDetailId.replace('event', ''),
+        repeatScheduleId: '',
+      });
     }
     if (actionType === ActionsEvent.CREATE) {
       setOpenCreateEventModal(true);
@@ -1489,6 +1646,7 @@ const EventCalendar = () => {
     },
   ];
 
+  // Get calendar initial view
   const getCalendarInitialView = () => {
     const currentView = searchParams.get('view');
     if (currentView) {
@@ -1505,13 +1663,14 @@ const EventCalendar = () => {
     }
   };
 
+  // Handle date click
   const handleDateClick = (clickInfo?: any) => {
     setDefaultCreateStartDate(clickInfo.date);
     if (searchParams.get('view') == ViewOptions.YEAR) {
       handleShowEventsInYearView(
         clickInfo.date,
-        clickInfo.jsEvent.clientX,
-        clickInfo.jsEvent.clientY,
+        clickInfo.jsEvent.pageX,
+        clickInfo.jsEvent.pageY,
       );
       return;
     }
@@ -1519,8 +1678,8 @@ const EventCalendar = () => {
       handleShowEventsInModal(
         events,
         clickInfo.date,
-        clickInfo.jsEvent.clientX,
-        clickInfo.jsEvent.clientY,
+        clickInfo.jsEvent.pageX,
+        clickInfo.jsEvent.pageY,
       );
     } else {
       if (
@@ -1541,6 +1700,7 @@ const EventCalendar = () => {
     }
   };
 
+  // Create new event from popup
   const handleCreateNewEventFromPopup = () => {
     setActionEventClick(ActionsEvent.CREATE);
     setDataEventEdit(undefined);
@@ -1551,6 +1711,7 @@ const EventCalendar = () => {
     setOpenCreateEventModal(true);
   };
 
+  // Create event
   const handleConfirmCreateEventCalendar = (
     data: EventFormData,
     sendToChat: boolean,
@@ -1586,15 +1747,6 @@ const EventCalendar = () => {
         type: EventWorkCategory.MEDIUM,
       });
     }
-    if (data.smallCategory?.value) {
-      newWorkCategories.push({
-        categoryId:
-          `${data.smallCategory.value}` == NO_OPTION_CATEGORY
-            ? null
-            : `${data.smallCategory.value}`,
-        type: EventWorkCategory.SMALL,
-      });
-    }
     if (data.startDate) {
       if (data.isAllDay) {
         newStartDate = addTimeToDate(
@@ -1624,20 +1776,38 @@ const EventCalendar = () => {
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
       selectOrganizations: data.selectOrganizations || [],
-      address: data.address || '',
+      locationId: data.location
+        ? String((data.location as OptionDropdownType)?.value)
+        : '',
       memo: data.memo || '',
       type: newType,
       sendToChat,
       categoryIds: newWorkCategories,
-      organizationId: data.organization
-        ? Number(data.organization.value)
-        : null,
+      repeatType:
+        data.repeatType && data.repeatType.value
+          ? String(data.repeatType.value)
+          : null,
+      repeatInterval:
+        data.repeatInterval && data.repeatInterval.value
+          ? Number(data.repeatInterval.value)
+          : null,
+      weekDay:
+        data.weekDay && data.weekDay.label != ''
+          ? Number(data.weekDay.value)
+          : null,
+      monthDay:
+        data.monthDay && data.monthDay.value != ''
+          ? Number(data.monthDay.value)
+          : null,
+      month:
+        data.month && data.month.value != '' ? Number(data.month.value) : null,
     });
   };
 
   const handleCreateEventCalendar = async (data: EventRequest) => {
     return await api.post(apiRouters.SCHEDULES, data);
   };
+
   const { mutate: createEventCalendar } = useMutation(
     'postCreateEventCalendar',
     handleCreateEventCalendar,
@@ -1672,40 +1842,56 @@ const EventCalendar = () => {
                 participant.id == session?.user.id,
             ) && selectedScheduleUserIds.includes(String(session?.user.id));
           setEvents((prevEvents) => {
-            const dataEndDate =
-              data.startDate &&
-              data.endDate &&
-              ((new Date(data.startDate).toDateString() !==
-                new Date(data.endDate).toDateString() &&
-                data.isAllDay) ||
-                isMidnight(new Date(data.endDate)))
-                ? new Date(data.endDate).setDate(
-                    new Date(data.endDate).getDate() + 1,
-                  )
-                : data.endDate;
-            const newEventData = {
-              id: `${data.id}`,
-              title: data.title,
-              start: data.startDate as Date,
-              end: dataEndDate as Date,
-              allDay: data.isAllDay,
-              type: EventCalendarType.SCHEDULE,
-              isMyEvent: isMyEvent,
-              address: data.address,
-              participants: data.participants,
-              resourceIds: [
-                ...(data.participants
-                  ?.filter(
-                    (participant: EventParticipant) =>
-                      participant.id !== session?.user.id,
-                  )
-                  ?.map((participant: EventParticipant) => participant.id) ??
-                  []),
-                ...(checkShowMyEventResource ? [Number(session?.user.id)] : []),
-              ],
-            };
+            const newEventData =
+              data.repeatSchedules &&
+              data.repeatSchedules.map(
+                (schedule: {
+                  id: number;
+                  planEndDate: Date | null;
+                  planStartDate: Date | null;
+                  schedule: number;
+                  uuid: string;
+                }) => {
+                  const dataEndDate =
+                    schedule.planStartDate &&
+                    schedule.planEndDate &&
+                    ((new Date(schedule.planStartDate).toDateString() !==
+                      new Date(schedule.planEndDate).toDateString() &&
+                      data.isAllDay) ||
+                      isMidnight(new Date(schedule.planEndDate)))
+                      ? new Date(schedule.planEndDate).setDate(
+                          new Date(schedule.planEndDate).getDate() + 1,
+                        )
+                      : schedule.planEndDate;
+                  return {
+                    id: `${schedule.id}`,
+                    eventId: data.id,
+                    title: data.title,
+                    start: schedule.planStartDate,
+                    end: dataEndDate,
+                    allDay: data.isAllDay,
+                    type: EventCalendarType.SCHEDULE,
+                    isMyEvent: isMyEvent,
+                    location: data.location,
+                    participants: data.participants,
+                    resourceIds: [
+                      ...(data.participants
+                        ?.filter(
+                          (participant: EventParticipant) =>
+                            participant.id !== session?.user.id,
+                        )
+                        ?.map(
+                          (participant: EventParticipant) => participant.id,
+                        ) ?? []),
+                      ...(checkShowMyEventResource
+                        ? [Number(session?.user.id)]
+                        : []),
+                    ],
+                  };
+                },
+              );
 
-            const updatedEvents = [...prevEvents, newEventData];
+            const updatedEvents = [...prevEvents, ...newEventData];
             return updatedEvents;
           });
         }
@@ -1722,6 +1908,7 @@ const EventCalendar = () => {
     },
   );
 
+  // Edit event
   const handleConfirmEditEventCalendar = (
     data: EventEditFormData,
     sendToChat: boolean,
@@ -1755,39 +1942,33 @@ const EventCalendar = () => {
         type: EventWorkCategory.MEDIUM,
       });
     }
-    if (data.smallCategory && data.smallCategory?.value !== 'undefined') {
-      newWorkCategories.push({
-        categoryId:
-          `${data.smallCategory.value}` == NO_OPTION_CATEGORY
-            ? null
-            : `${data.smallCategory.value}`,
-        type: EventWorkCategory.SMALL,
-      });
-    }
     if (data.type) {
       newType = (data.type as OptionDropdownType).value as string;
     }
-    if (data.startDate) {
-      if (data.isAllDay) {
+    if (data.isAllDay) {
+      newStartDate = addTimeToDate(
+        (data.startDate as Date) || new Date(),
+        DEFAULT_START_TIME,
+      );
+      newEndDate = addTimeToDate(
+        (data.endDate as Date) || new Date(),
+        DEFAULT_END_TIME,
+      );
+    } else {
+      if (data.startTime) {
         newStartDate = addTimeToDate(
-          data.startDate as Date,
-          DEFAULT_START_TIME,
+          (data.startDate as Date) || new Date(),
+          data.startTime,
         );
-      } else {
-        if (data.startTime) {
-          newStartDate = addTimeToDate(data.startDate as Date, data.startTime);
-        }
+      }
+      if (data.endTime) {
+        newEndDate = addTimeToDate(
+          (data.endDate as Date) || new Date(),
+          data.endTime,
+        );
       }
     }
-    if (data.endDate) {
-      if (data.isAllDay) {
-        newEndDate = addTimeToDate(data.endDate as Date, DEFAULT_END_TIME);
-      } else {
-        if (data.endTime) {
-          newEndDate = addTimeToDate(data.endDate as Date, data.endTime);
-        }
-      }
-    }
+
     editEventCalendar({
       id: data.id,
       title: data.title || '',
@@ -1797,15 +1978,32 @@ const EventCalendar = () => {
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
       selectOrganizations: data.selectOrganizations || [],
-      address: data.address || '',
+      locationId: data.location
+        ? String((data.location as OptionDropdownType).value)
+        : '',
       memo: data.memo || '',
       type: newType,
       sendToChat,
       message: actionsEventMessage,
       categoryIds: newWorkCategories,
-      organizationId: data.organization
-        ? Number((data.organization as OptionDropdownType).value)
-        : null,
+      repeatType:
+        data.repeatType && (data.repeatType as OptionDropdownType).value
+          ? String((data.repeatType as OptionDropdownType).value)
+          : null,
+      repeatInterval:
+        data.repeatInterval && data.repeatInterval.value
+          ? Number(data.repeatInterval.value)
+          : null,
+      weekDay:
+        data.weekDay && data.weekDay.label != ''
+          ? Number(data.weekDay.value)
+          : null,
+      monthDay:
+        data.monthDay && data.monthDay.value != ''
+          ? Number(data.monthDay.value)
+          : null,
+      month:
+        data.month && data.month.value != '' ? Number(data.month.value) : null,
     });
   };
 
@@ -1845,49 +2043,64 @@ const EventCalendar = () => {
             ) && selectedScheduleUserIds.includes(String(session?.user.id));
           setEvents((prevEvents) => {
             const updatedEvents = [...prevEvents];
-            const foundEventIndex = updatedEvents.findIndex(
-              (event) =>
-                String(event.id) == String(data.id) &&
-                event.type == EventCalendarType.SCHEDULE,
+            const exceptUpdatedEventList = updatedEvents.filter(
+              (event) => String(event.eventId) != String(data.id),
             );
-            const dataEndDate =
-              data.startDate &&
-              data.endDate &&
-              ((new Date(data.startDate).toDateString() !==
-                new Date(data.endDate).toDateString() &&
-                data.isAllDay) ||
-                isMidnight(new Date(data.endDate)))
-                ? new Date(data.endDate).setDate(
-                    new Date(data.endDate).getDate() + 1,
-                  )
-                : data.endDate;
-            updatedEvents[foundEventIndex] = {
-              ...updatedEvents[foundEventIndex],
-              title: data.title,
-              start: data.startDate,
-              end: dataEndDate,
-              allDay: data.isAllDay,
-              isMyEvent: true,
-              participants: data.participants,
-              address: data.address,
-              resourceIds: [
-                ...(data.participants
-                  ?.filter(
-                    (participant: EventParticipant) =>
-                      participant.id !== session?.user.id,
-                  )
-                  ?.map((participant: EventParticipant) => participant.id) ??
-                  []),
-                ...(checkShowMyEventResource ? [Number(session?.user.id)] : []),
-              ],
-            };
-            return updatedEvents;
+            const newEventData =
+              data.repeatSchedules &&
+              data.repeatSchedules.map(
+                (schedule: {
+                  id: number;
+                  planEndDate: Date | null;
+                  planStartDate: Date | null;
+                  schedule: number;
+                  uuid: string;
+                }) => {
+                  const dataEndDate =
+                    schedule.planStartDate &&
+                    schedule.planEndDate &&
+                    ((new Date(schedule.planStartDate).toDateString() !==
+                      new Date(schedule.planEndDate).toDateString() &&
+                      data.isAllDay) ||
+                      isMidnight(new Date(schedule.planEndDate)))
+                      ? new Date(schedule.planEndDate).setDate(
+                          new Date(schedule.planEndDate).getDate() + 1,
+                        )
+                      : schedule.planEndDate;
+                  return {
+                    id: `${schedule.id}`,
+                    eventId: data.id,
+                    title: data.title,
+                    start: schedule.planStartDate,
+                    end: dataEndDate,
+                    allDay: data.isAllDay,
+                    type: EventCalendarType.SCHEDULE,
+                    isMyEvent: true,
+                    location: data.location,
+                    participants: data.participants,
+                    resourceIds: [
+                      ...(data.participants
+                        ?.filter(
+                          (participant: EventParticipant) =>
+                            participant.id !== session?.user.id,
+                        )
+                        ?.map(
+                          (participant: EventParticipant) => participant.id,
+                        ) ?? []),
+                      ...(checkShowMyEventResource
+                        ? [Number(session?.user.id)]
+                        : []),
+                    ],
+                  };
+                },
+              );
+            return [...exceptUpdatedEventList, ...newEventData];
           });
         } else {
           setEvents((prevEvents) => {
             const updatedEvents = [...prevEvents];
             const filteredEvents = updatedEvents.filter(
-              (event) => String(event.id) !== String(data.id),
+              (event) => String(event.eventId) !== String(data.id),
             );
             return filteredEvents;
           });
@@ -1903,25 +2116,42 @@ const EventCalendar = () => {
     },
   );
 
+  // Delete specific event in popup
   const handleConfirmDeleteEventCalendar = (sendToChat: boolean) => {
-    if (eventDetailId) {
-      deleteEventCalendar({ id: eventDetailId, sendToChat });
-      return;
+    if (selectedEventInfo?.eventId && selectedEventInfo.repeatScheduleId) {
+      if (selectedEventInfo.openType == SelectedEventOpenType.MODAL) {
+        deleteEventInModal({
+          eventId: String(selectedEventInfo?.eventId),
+          sendToChat,
+        });
+      } else {
+        deleteSpecificEventInPopup({
+          eventId: String(selectedEventInfo?.eventId),
+          repeatScheduleId: selectedEventInfo.repeatScheduleId,
+          sendToChat,
+        });
+      }
+    } else {
+      deleteEventInModal({
+        eventId: String(eventIdURL),
+        sendToChat,
+      });
     }
   };
 
-  const handleDeleteEventCalendar = async (data: {
-    id: string;
+  const handleDeleteSpecificEventInPopup = async (data: {
+    eventId: number | string;
+    repeatScheduleId: number | string;
     sendToChat: boolean;
   }) => {
     return await api.delete(
-      `${apiRouters.SCHEDULE_DETAIL(data.id)}?message=${encodeURIComponent(actionsEventMessage)}${data.sendToChat ? '&send_to_chat=true' : ''}`,
+      `${apiRouters.DELETE_REPEAT_SCHEDULE(`${data.eventId}`)}?message=${encodeURIComponent(actionsEventMessage)}${data.sendToChat ? '&send_to_chat=true' : ''}${data.repeatScheduleId ? `&repeat_schedule_id=${data.repeatScheduleId}` : ''}`,
     );
   };
 
-  const { mutate: deleteEventCalendar } = useMutation(
-    'deleteEventCalendar',
-    handleDeleteEventCalendar,
+  const { mutate: deleteSpecificEventInPopup } = useMutation(
+    'deleteSpecificEventInPopup',
+    handleDeleteSpecificEventInPopup,
     {
       onSuccess: () => {
         handleRemoveEventParam();
@@ -1936,13 +2166,16 @@ const EventCalendar = () => {
         setEvents((prevEvents) => {
           const updatedEvents = [...prevEvents];
           const filteredEvents = updatedEvents.filter(
-            (event) => String(event.id) !== String(eventDetailId),
+            (event) =>
+              String(event.id) !== String(selectedEventInfo?.repeatScheduleId),
           );
           return filteredEvents;
         });
+        setSelectedEventInfo(null);
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_DELETE_MESSAGE);
+        setSelectedEventInfo(null);
       },
       onSettled: () => {
         setIsLoading(false);
@@ -1950,6 +2183,49 @@ const EventCalendar = () => {
     },
   );
 
+  const handleDeleteEventInModal = async (data: {
+    eventId: string;
+    sendToChat: boolean;
+  }) => {
+    return await api.delete(
+      `${apiRouters.SCHEDULE_DETAIL(data.eventId)}?message=${encodeURIComponent(actionsEventMessage)}${data.sendToChat ? '&send_to_chat=true' : ''}`,
+    );
+  };
+
+  const { mutate: deleteEventInModal } = useMutation(
+    'deleteEventInModal',
+    handleDeleteEventInModal,
+    {
+      onSuccess: () => {
+        setOpenConfirmDeleteEventModal(false);
+        setConfirmEventDataToEdit(undefined);
+        setBackToEditing(false);
+        setOpenEventInfoModal(false);
+        setActionsEventMessage('');
+        showToast({
+          description: SUCCESS_DELETE_MESSAGE,
+        });
+        setEvents((prevEvents) => {
+          const updatedEvents = [...prevEvents];
+          const filteredEvents = updatedEvents.filter(
+            (event) =>
+              String(event.eventId) !== String(eventIdURL),
+          );
+          return filteredEvents;
+        });
+        setSelectedEventInfo(null);
+        handleRemoveEventParam();
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_DELETE_MESSAGE);
+        setSelectedEventInfo(null);
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+  // Modify events before rendering them
   const modifyEvents = (events: EventCalendarDetail[]) => {
     if (isEventRendering) {
       if (
@@ -1993,6 +2269,7 @@ const EventCalendar = () => {
     }
   };
 
+  // Set params
   const handleSetEventParam = ({
     id,
     action,
@@ -2009,14 +2286,17 @@ const EventCalendar = () => {
     router.push(`?${params.toString()}`);
   };
 
+  // Remove params
   const handleRemoveEventParam = () => {
     const params = new URLSearchParams(searchParams);
     params.delete('event');
     params.delete('type');
     params.delete('action');
+    params.delete('repeat-schedule');
     router.replace(`?${params.toString()}`);
   };
 
+  // Get default calendar view
   const getDefaultCalendarView = () => {
     let defaultView = calendarViewOptions[2];
     switch (searchParams.get('view')) {
@@ -2037,22 +2317,6 @@ const EventCalendar = () => {
     }
     return defaultView;
   };
-
-  const handleClosePopover = (event: MouseEvent) => {
-    if (
-      popoverRef.current &&
-      !popoverRef.current.contains(event.target as Node)
-    ) {
-      setPopoverInfo(null);
-      setDefaultCreateStartDate(undefined);
-    }
-  };
-  useEffect(() => {
-    document.addEventListener('click', handleClosePopover, true);
-    return () => {
-      document.removeEventListener('click', handleClosePopover, true);
-    };
-  }, []);
 
   const showCurrentViewButtonContent = () => {
     switch (searchParams.get('view')) {
@@ -2081,16 +2345,6 @@ const EventCalendar = () => {
   };
 
   // Zoom calendar
-  const screenHeight = window.innerHeight;
-
-  const baseHeight = Math.round(43 * (screenHeight / 717));
-  const baseSlider = Math.round(43 * (screenHeight / 717));
-  const [resetTrigger, _setResetTrigger] = useState(0);
-  const [isOptionZoomSchedule, setIsOptionZoomSchedule] = useState('00:15:00');
-
-  const [sliderValue, setSliderValue] = useState(baseSlider);
-  const [slotHeight, setSlotHeight] = useState(baseHeight);
-
   const calculateSlotHeight = (value: number): number => {
     if (value < 38) {
       return 93 - (38 - value);
@@ -2326,7 +2580,7 @@ const EventCalendar = () => {
           </div>
 
           <div
-            className={`w-full ${!isDayOrWeekView() && 'pl-6'} relative calendar-custom ${searchParams.get('view') || ''} ${getAllDayEventCountText(events)} ${showSidebar ? '' : 'pr-8'}`}
+            className={`w-full ${!isDayOrWeekView() && 'pl-6'} relative calendar-custom ${searchParams.get('view') || ''} ${getAllDayEventCountText(events)} !overflow-hidden ${showSidebar ? '' : 'pr-8'}`}
             style={{ overflowX: 'auto', width: '100%' }}>
             {calendarLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-[#ebf1f4] z-10"></div>
@@ -2391,7 +2645,6 @@ const EventCalendar = () => {
               }}
               datesAboveResources={true}
               headerToolbar={false}
-              datesSet={handleDatesSet}
               locale={'ja-JP'}
               height={'80vh'}
               dayMinWidth={
@@ -2558,23 +2811,10 @@ const EventCalendar = () => {
               )}
           </div>
         </div>
-        {popoverInfo && (
-          <div className="z-30 flex items-center justify-center">
-            <TaskAndEventListModal
-              checkShowUserAvatar={checkShowUserAvatar}
-              handleCreateNewEventFromPopup={handleCreateNewEventFromPopup}
-              handleEventClickInPopup={handleEventClickInPopup}
-              handlePopoverClose={handlePopoverClose}
-              popoverInfo={popoverInfo}
-              popoverInfoLoading={popoverInfoLoading}
-              popoverRef={popoverRef}
-              setDefaultCreateStartDate={setDefaultCreateStartDate}
-            />
-          </div>
-        )}
         <div
           className={`${showSidebar ? 'w-[24%] relative py-6 px-4 h-[1000px] shadow-lg shadow-slate-900/20 shadow-l-2 bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
           <CalendarSidebar
+            calendarRef={calendarRef}
             keySearch={keySearch}
             getEventCalendarByUsers={getEventCalendarByUsers}
             handleFilterScheduleByUserIds={handleFilterScheduleByUserIds}
@@ -2593,6 +2833,17 @@ const EventCalendar = () => {
           />
         </div>
       </div>
+      {eventListModalInfo && (
+        <EventListModal
+          checkShowUserAvatar={checkShowUserAvatar}
+          handleCreateNewEventFromPopup={handleCreateNewEventFromPopup}
+          handleEventClickInPopup={handleEventClickInPopup}
+          eventListModalInfo={eventListModalInfo}
+          popoverInfoLoading={popoverInfoLoading}
+          setEventListModalInfo={setEventListModalInfo}
+          setDefaultCreateStartDate={setDefaultCreateStartDate}
+        />
+      )}
       {openCreateEventModal && (
         <ActionsEventModal
           open={openCreateEventModal}
@@ -2604,6 +2855,7 @@ const EventCalendar = () => {
           onClose={() => {
             handleRemoveEventParam();
             setDataEventEdit(undefined);
+            setSelectedEventInfo(null);
             setOpenCreateEventModal(false);
             setBackToEditing(false);
             setDefaultCreateStartDate(undefined);
@@ -2649,6 +2901,7 @@ const EventCalendar = () => {
           onClose={() => {
             handleRemoveEventParam();
             setDataEventEdit(undefined);
+            setSelectedEventInfo(null);
             setConfirmEventDataToCreate(undefined);
             setOpenConfirmCreateEventModal(false);
             setBackToEditing(false);
@@ -2656,7 +2909,17 @@ const EventCalendar = () => {
           onBackToEditModal={() => {
             setOpenCreateEventModal(true);
             setOpenConfirmCreateEventModal(false);
-            setDataEventEdit(confirmEventDataToCreate);
+            if (confirmEventDataToCreate) {
+              setDataEventEdit({
+                ...confirmEventDataToCreate,
+                repeatType: confirmEventDataToCreate.repeatType ?? undefined,
+                repeatInterval:
+                  confirmEventDataToCreate.repeatInterval ?? undefined,
+                weekDay: confirmEventDataToCreate.weekDay ?? undefined,
+                monthDay: confirmEventDataToCreate.monthDay ?? undefined,
+                month: confirmEventDataToCreate.month ?? undefined,
+              });
+            }
             setBackToEditing(true);
           }}
         />
@@ -2683,6 +2946,7 @@ const EventCalendar = () => {
           onClose={() => {
             handleRemoveEventParam();
             setDataEventEdit(undefined);
+            setSelectedEventInfo(null);
             setConfirmEventDataToEdit(undefined);
             setOpenConfirmEditEventModal(false);
             setBackToEditing(false);
@@ -2713,6 +2977,7 @@ const EventCalendar = () => {
           onClose={() => {
             handleRemoveEventParam();
             setDataEventEdit(undefined);
+            setSelectedEventInfo(null);
             setConfirmEventDataToEdit(undefined);
             setOpenConfirmDeleteEventModal(false);
             setBackToEditing(false);
@@ -2743,6 +3008,7 @@ const EventCalendar = () => {
           selectedScheduleUserIds={selectedScheduleUserIds}
           onClose={() => {
             setDataEventEdit(undefined);
+            setSelectedEventInfo(null);
             setOpenEventInfoModal(false);
             setDefaultCreateStartDate(undefined);
             setInfoModalPosition({
@@ -2756,6 +3022,31 @@ const EventCalendar = () => {
               action: ActionsEvent.EDIT,
             });
             setActionEventClick(ActionsEvent.EDIT);
+            setSelectedEventInfo((prev) => {
+              if (!prev) return null;
+              return {
+                ...prev,
+                openType: SelectedEventOpenType.MODAL,
+              };
+            });
+
+            setOpenCreateEventModal(true);
+            setOpenEventInfoModal(false);
+            setOpenConfirmEditEventModal(false);
+          }}
+          onCopy={(data) => {
+            handleSetEventParam({
+              id: `${data.id}`,
+              action: ActionsEvent.COPY,
+            });
+            setActionEventClick(ActionsEvent.COPY);
+            setSelectedEventInfo((prev) => {
+              if (!prev) return null;
+              return {
+                ...prev,
+                openType: SelectedEventOpenType.MODAL,
+              };
+            });
             setOpenCreateEventModal(true);
             setOpenEventInfoModal(false);
             setOpenConfirmEditEventModal(false);
@@ -2782,7 +3073,7 @@ const EventCalendar = () => {
               ...data,
               type: { label: `${data.type}`, value: `${data.type}` },
               largeCategory: {
-                value: `${data.categories && data.categories.find((cat) => cat.type == EventWorkCategory.LARGE)?.name}`,
+                value: `${data.categories && data.categories.find((cat) => cat.type == EventWorkCategory.LARGE)?.id}`,
                 label: `${
                   data.categories &&
                   (data.categories.find(
@@ -2791,7 +3082,7 @@ const EventCalendar = () => {
                 }`,
               },
               mediumCategory: {
-                value: `${data.categories && data.categories.find((cat) => cat.type == EventWorkCategory.MEDIUM)?.name}`,
+                value: `${data.categories && data.categories.find((cat) => cat.type == EventWorkCategory.MEDIUM)?.id}`,
                 label: `${
                   data.categories &&
                   (data.categories.find(
@@ -2799,33 +3090,12 @@ const EventCalendar = () => {
                   )?.name as string)
                 }`,
               },
-              smallCategory: {
-                value: `${data.categories && data.categories.find((cat) => cat.type == EventWorkCategory.SMALL)?.name}`,
-                label: `${
-                  data.categories &&
-                  (data.categories.find(
-                    (cat) => cat.type == EventWorkCategory.SMALL,
-                  )?.name as string)
-                }`,
-              },
               participantIds: newParticipantIds,
               tagIds: newTagIds,
               endDate: new Date(`${data.endDate}`),
-              endTime: new Date(`${data.endDate}`)
-                .toLocaleTimeString([], {
-                  hour: 'numeric',
-                  minute: 'numeric',
-                  hour12: true,
-                })
-                .replace(':', ' :'),
+              endTime: convertToTimeString(`${data.endDate}`),
               startDate: new Date(`${data.startDate}`),
-              startTime: new Date(`${data.startDate}`)
-                .toLocaleTimeString([], {
-                  hour: 'numeric',
-                  minute: 'numeric',
-                  hour12: true,
-                })
-                .replace(':', ' :'),
+              startTime: convertToTimeString(`${data.startDate}`),
             });
             setOpenCreateEventModal(false);
             setOpenConfirmDeleteEventModal(true);

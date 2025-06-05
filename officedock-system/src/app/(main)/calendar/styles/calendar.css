@@ -106,6 +106,7 @@
   font-weight: 500;
 }
 .calendar-custom .fc-timegrid-event .fc-event-main {
+  padding: 0 !important;
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.05),
     0 -2px 4px rgba(0, 0, 0, 0.05),
@@ -151,7 +152,7 @@
   max-width: 150px !important;
 }
 .calendar-custom .fc-event {
-  border-color: transparent;
+  border: none !important
 }
 .calendar-custom .fc-timegrid-axis-cushion {
   font-size: 12px;
@@ -294,9 +295,9 @@
 .calendar-custom .custom-day-view.fc-event {
   min-height: 20px;
 }
-.calendar-custom .fc-timeGridWeek-view .fc-event-main {
+.calendar-custom.week .fc-event-main, .calendar-custom.day .fc-event-main {
   width: 100% !important;
-  border-radius: 8px !important;
+  border-radius: 6px !important;
   overflow: hidden;
 }
 /* Month */
@@ -336,9 +337,14 @@
 }
 .calendar-custom .fc-v-event {
   background-color: #fff;
-  margin-top: 10px;
   height: 100%;
-  border-radius: 8px;
+  border-radius: 6px;
+}
+.calendar-custom.day .fc-v-event {
+  margin-top: 4px;
+}
+.calendar-custom.week .fc-v-event {
+  margin-top: 15px;
 }
 .calendar-custom .fc-timegrid-event-harness-inset .fc-timegrid-event,
 .fc-timegrid-event.fc-event-mirror,
@@ -484,6 +490,11 @@
 .calendar-custom .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
   position: relative;
   top: -9px;
+}
+.calendar-custom.week .event-has-now-indicator, .calendar-custom.day .event-has-now-indicator {
+  border: 1px solid #0068B6 !important;
+  height: 100% !important;
+  border-radius: 6px;
 }
 /* RESOURCE */
 .calendar-custom

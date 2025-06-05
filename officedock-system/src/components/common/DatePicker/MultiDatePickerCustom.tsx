@@ -38,6 +38,7 @@ export type DatePickerProps = Omit<ReactDatePickerProps, 'onChange'> & {
   onChange?: (startDate: Date, endDate: Date | null) => void;
   resetEndClick?: () => void;
   resetStartClick?: () => void;
+  clickStartButton?: () => void;
 };
 
 const MultiDatePickerCustom = ({
@@ -60,6 +61,7 @@ const MultiDatePickerCustom = ({
   onChange,
   resetEndClick,
   resetStartClick,
+  clickStartButton,
   dateFormat = DATE_FORMAT,
   ...props
 }: DatePickerProps) => {
@@ -130,6 +132,7 @@ const MultiDatePickerCustom = ({
           setEndDate(adjustedEnd);
           onChange && onChange(start, adjustedEnd);
           resetEndClick && resetEndClick();
+          clickStartButton && clickStartButton();
         } else {
           if (initialStartDate && start) {
             const endNew = compareAndSetDate(initialStartDate, start);
@@ -246,7 +249,15 @@ const MultiDatePickerCustom = ({
           startDate={startDate}
           endDate={endDate}
           selectsRange
-          minDate={null}
+          minDate={
+            isTypeTime === TimeOptionsType.MORE &&
+            endDate &&
+            !isStartButtonClicked
+              ? endDate
+              : isEndButtonClicked
+                ? startDate
+                : null
+          }
           locale={customLocale}
           dateFormat={dateFormat}
           className={`w-full px-3.5 py-2.5 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} leading-5.5 placeholder-gray-300 border rounded-lg focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 ${errorClasses} ${className}`}

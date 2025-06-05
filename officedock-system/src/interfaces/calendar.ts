@@ -1,25 +1,29 @@
 import { Tags } from './tag';
 import { Organizations } from './organization';
 import { OptionDropdownType } from './common';
+import { LocationEventType } from './location';
+import { CategoryStructure } from './skills';
+
 import { EventCalendarType, EventParticipantType } from '@constants/enums';
 
 export interface EventCalendarDetail {
   id?: string;
   title: string;
-  start: Date;
-  end?: Date;
+  start: Date | string;
+  end?: Date | string;
   allDay?: boolean;
   type?: string;
   isMyEvent?: boolean;
   participants?: EventParticipant[];
   resourceIds?: string[];
-  address?: string;
+  location?: LocationEventType;
   largeColor?: string;
   isStart?: boolean;
   planStartDate?: string;
   planEndDate?: string;
   scheduleId?: number | null;
   taskId?: number | null;
+  eventId?: string;
 }
 
 export interface EventCalendarDayRange {
@@ -37,13 +41,16 @@ export interface EventFormData {
   tagIds?: OptionDropdownType[];
   participantIds?: number[];
   selectOrganizations?: number[];
-  address?: string;
+  location?: OptionDropdownType;
   memo?: string;
   type?: OptionDropdownType;
   largeCategory?: OptionDropdownType;
   mediumCategory?: OptionDropdownType;
-  smallCategory?: OptionDropdownType;
-  organization?: OptionDropdownType;
+  repeatType?: OptionDropdownType | null;
+  repeatInterval?: OptionDropdownType | null;
+  weekDay?: OptionDropdownType | null;
+  monthDay?: OptionDropdownType | null;
+  month?: OptionDropdownType | null;
 }
 
 export interface EventEditFormData {
@@ -59,15 +66,21 @@ export interface EventEditFormData {
   participants?: EventParticipant[];
   participantIds?: number[];
   selectOrganizations?: number[];
-  address?: string;
+  location?: OptionDropdownType | LocationEventType | null;
   memo?: string;
   type?: string | OptionDropdownType;
   largeCategory?: OptionDropdownType;
   mediumCategory?: OptionDropdownType;
-  smallCategory?: OptionDropdownType;
   categories?: { id: string; name: string; type: string }[];
-  organization?: OptionDropdownType | Organizations;
   createdAt?: Date;
+  repeatType?: OptionDropdownType | string;
+  repeatInterval?: OptionDropdownType;
+  weekDay?: OptionDropdownType;
+  monthDay?: OptionDropdownType;
+  month?: OptionDropdownType;
+  scheduleId?: string; // id event delete with popup detail event in kanban schedule
+  eventSchedule?: string; // id repeat event delete with popup detail event in kanban schedule
+  isEventOverlapping?: boolean;
 }
 
 export interface EventRequest {
@@ -78,7 +91,7 @@ export interface EventRequest {
   isAllDay?: boolean;
   tagIds?: number[];
   participantIds?: number[];
-  address?: string;
+  locationId?: string;
   memo?: string;
   type?: string;
   sendToChat?: boolean;
@@ -90,27 +103,33 @@ export interface EventRequest {
         type: string;
       }[]
     | null;
-  organizationId?: number | null;
   selectOrganizations?: number[];
+  repeatType?: string | null;
+  repeatInterval?: number | null;
+  weekDay?: number | null;
+  monthDay?: number | null;
+  month?: number | null;
 }
 
 export interface CreationDataEventCalendar {
   tags: Omit<Tags, 'responsiblePerson'>[];
   types: string[];
   members: EventParticipant[];
-  categories: EventWorkCategory;
+  categories: CategoryStructure[];
   organizations: {
     id: number;
     name: string;
     superior: { id: number; name: string } | null;
     tags: { id: number; name: string }[];
   }[];
-}
-
-export interface EventWorkCategory {
-  LARGE: string[];
-  MEDIUM: string[];
-  SMALL: string[];
+  eventLocations: LocationEventType[];
+  organization: {
+    id: number;
+    name: string;
+    uuid: string;
+    icon: string | null;
+    iconColor: string;
+  };
 }
 
 export interface EventParticipant {
@@ -142,7 +161,7 @@ export interface EventCalendarProps {
   isMySchedule?: boolean;
   isStart: boolean;
   participants?: EventParticipant[];
-  address?: string;
+  location?: LocationEventType;
   categories?: {
     name: string;
     type: string;
@@ -151,6 +170,13 @@ export interface EventCalendarProps {
   }[];
   taskId: number | null;
   scheduleId: number | null;
+  repeatSchedules?: {
+    id: number;
+    planEndDate: Date | null;
+    planStartDate: Date | null;
+    schedule: number;
+    uuid: string;
+  }[];
 }
 
 export interface TaskCalendarProps {
@@ -177,14 +203,14 @@ export interface EventWorkCategoryOption {
 export interface CalendarPopoverInfo {
   date: Date;
   events: Array<{
-    id: string;
+    eventId: string;
+    repeatScheduleId: string;
     title: string;
     start?: Date;
     end?: Date;
     type?: EventCalendarType;
     participants?: EventParticipant[];
-    taskId?: string;
-    address?: string;
+    location?: LocationEventType;
     allDay?: boolean;
   }>;
   left?: number;

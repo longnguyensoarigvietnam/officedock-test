@@ -135,6 +135,7 @@ import {
   convertToCurrentTimezone,
   convertToMinutesNumber,
   formatQueryEndDateForCalendar,
+  formatQueryEndDateForCalendarCustom,
   formatQueryStartDateForCalendar,
   formatTimeInput,
   getDateInfo,
@@ -310,6 +311,10 @@ const TimeSchedule = memo(
       useState(false);
     const [openConfirmDeleteEventModal, setOpenConfirmDeleteEventModal] =
       useState(false);
+    const [
+      openConfirmDeleteEventRepeatModal,
+      setOpenConfirmDeleteEventRepeatModal,
+    ] = useState(false);
     const [openCreateEventModal, setOpenCreateEventModal] =
       useState<boolean>(false);
     const [confirmEventDataToEdit, setConfirmEventDataToEdit] =
@@ -397,16 +402,14 @@ const TimeSchedule = memo(
       }
     };
     const handleGetEventCalendarByUsers = async ({
-      userId,
       startDate,
       endDate,
     }: {
-      userId: string;
       startDate?: string;
       endDate?: string;
     }) => {
       setIsLoadingSchedule(true);
-      const apiUrl = `${apiRouters.SCHEDULES}?${userId ? `&user_ids=${userId}` : ''}${startDate && `&start_date=${startDate}`}${endDate && `&end_date=${endDate}`}&current_screen=${ScreenName.MY_TASK}`;
+      const apiUrl = `${apiRouters.EVENT_KANBAN_SCHEDULE}?${startDate && `start_date=${startDate}`}${endDate && `&end_date=${endDate}`}&current_screen=${ScreenName.MY_TASK}`;
       const { data } = await api.get<EventCalendarProps[]>(apiUrl);
       return data;
     };
@@ -418,29 +421,24 @@ const TimeSchedule = memo(
         onSuccess: (data) => {
           if (data) {
             const splitMultiDayEvent = (event: TaskTimeSchedule) => {
-              const startDate = parseISO(String(event.startDate));
-              let endDate = parseISO(String(event.endDate));
-
+              const startDate = parseISO(String(event.planStartDate));
+              let endDate = parseISO(String(event.planEndDate));
               if (getHours(endDate) === 0 && getMinutes(endDate) === 0) {
                 endDate = subSeconds(endDate, 1);
               }
-
               if (isSameDay(startDate, endDate)) {
                 return [{ ...event }];
               }
               if (event.isAllDay) {
                 return [{ ...event, uuid: uuidv4() }];
               }
-
               const days = eachDayOfInterval({
                 start: startDate,
                 end: endDate,
               });
-
               return days.map((day, index) => {
                 const start = index === 0 ? startDate : startOfDay(day);
                 const end = index === days.length - 1 ? endDate : endOfDay(day);
-
                 return {
                   ...event,
                   start,
@@ -450,43 +448,56 @@ const TimeSchedule = memo(
                 };
               });
             };
+            const eventsTimeSchedule = data.flatMap((event) => {
+              // Check validity of recurring schedules
+              if (!event.repeatSchedules || event.repeatSchedules.length === 0)
+                return [];
 
-            const eventsTimeSchedule = data
-              .filter((event) => event.startDate && event.endDate)
-              .flatMap((event) => {
-                const startDate = parseISO(`${event.startDate}`);
-                const endDate = parseISO(`${event.endDate}`);
+              return event.repeatSchedules.flatMap((schedule, index) => {
+                const startDate = schedule.planStartDate
+                  ? parseISO(String(schedule.planStartDate))
+                  : null;
+                const endDate = schedule.planEndDate
+                  ? parseISO(String(schedule.planEndDate))
+                  : null;
+
+                // Skip if no valid time
+                if (!startDate || !endDate) return [];
+
                 const adjustedEndDate =
                   isSameDay(startDate, endDate) || isMidnight(endDate)
                     ? endDate
                     : addDays(endDate, 1);
-                const largeColor =
-                  event.categories &&
-                  event.categories.find(
-                    (item) => item.type === EventWorkCategory.LARGE,
-                  )?.color;
+
+                const largeColor = event.categories?.find(
+                  (item) => item.type === EventWorkCategory.LARGE,
+                )?.color;
 
                 const newEvent = {
                   ...event,
                   start: startDate,
-                  // Fake show data allday
                   end: event.isAllDay
                     ? new Date(
-                        new Date(String(event.endDate)).setHours(24, 0, 0, 0),
+                        new Date(String(schedule.planEndDate)).setHours(
+                          24,
+                          0,
+                          0,
+                          0,
+                        ),
                       )
                     : adjustedEndDate,
-
-                  id: `${event.id}event`,
+                  id: `${event.id}-${schedule.id}-${index}`,
                   peopleInCharge: [],
                   status: {
                     name: '',
                     id: null,
                   },
                   taskId: event.taskId as number,
-                  scheduleId: parseInt(`${event.id}`),
+                  eventSchedule: schedule.id,
+                  scheduleId: schedule.schedule || (event.id as number),
                   uuid: uuidv4(),
-                  planStartDate: `${event.startDate}`,
-                  planEndDate: `${event.endDate}`,
+                  planStartDate: String(schedule.planStartDate),
+                  planEndDate: String(schedule.planEndDate),
                   isStart: event.isStart,
                   isMyTask: event.isMySchedule,
                   type: `${event.type}`,
@@ -494,20 +505,20 @@ const TimeSchedule = memo(
                   startEditable: false,
                   resourceId: ItemScheduleType.PLANS,
                   largeColor: largeColor,
-                  address: event.address,
+                  location: event.location?.name,
                   isAllDay: event.isAllDay,
                   participants: event.participants,
                 };
 
                 return splitMultiDayEvent(newEvent);
               });
+            });
 
             setTaskTimeScheduleList((prevEvents) => {
               const updatedEvents = [...prevEvents];
               const myTasks = updatedEvents.filter(
                 (event) => event.type == EventCalendarType.TASK,
               );
-
               return [...myTasks, ...eventsTimeSchedule];
             });
           }
@@ -952,7 +963,6 @@ const TimeSchedule = memo(
       endDateISOString: string,
     ) => {
       await getEventCalendarByUsers({
-        userId: String(session?.user.id),
         startDate: startDateISOString,
         endDate: endDateISOString,
       }),
@@ -1279,8 +1289,9 @@ const TimeSchedule = memo(
         const startDateISOString = formatQueryStartDateForCalendar(
           calendarApi.view.activeStart,
         );
-        const endDateISOString = formatQueryEndDateForCalendar(
+        const endDateISOString = formatQueryEndDateForCalendarCustom(
           calendarApi.view.activeEnd,
+          calendarView === CalendarViewOptions.VIEW_BY_WEEK,
         );
         setDisplayHeaderDayStart(new Date(startDateISOString));
         setDisplayHeaderDayEnd(new Date(endDateISOString));
@@ -1459,7 +1470,7 @@ const TimeSchedule = memo(
                 setDataEventEditLocal(data);
                 setConfirmEventDataToEdit(data);
                 setOpenCreateEventModal(false);
-                setOpenConfirmDeleteEventModal(true);
+                setOpenConfirmDeleteEventRepeatModal(true);
                 setIdBackToEvent(data.id as string);
               }}
             />
@@ -2398,6 +2409,8 @@ const TimeSchedule = memo(
         isAllDay: data.isAllDay,
         participants: data.participants,
         type: data.type,
+        scheduleId: '',
+        eventSchedule: '',
       });
     };
 
@@ -2586,40 +2599,30 @@ const TimeSchedule = memo(
           type: EventWorkCategory.MEDIUM,
         });
       }
-      if (data.smallCategory && data.smallCategory?.value !== 'undefined') {
-        newWorkCategories.push({
-          categoryId:
-            `${data.smallCategory.value}` == NO_OPTION_CATEGORY
-              ? null
-              : `${data.smallCategory.value}`,
-          type: EventWorkCategory.SMALL,
-        });
-      }
       if (data.type) {
         newType = (data.type as OptionDropdownType).value as string;
       }
-      if (data.startDate) {
-        if (data.isAllDay) {
+      if (data.isAllDay) {
+        newStartDate = addTimeToDate(
+          (data.startDate as Date) || new Date(),
+          DEFAULT_START_TIME,
+        );
+        newEndDate = addTimeToDate(
+          (data.endDate as Date) || new Date(),
+          DEFAULT_END_TIME,
+        );
+      } else {
+        if (data.startTime) {
           newStartDate = addTimeToDate(
-            data.startDate as Date,
-            DEFAULT_START_TIME,
+            (data.startDate as Date) || new Date(),
+            data.startTime,
           );
-        } else {
-          if (data.startTime) {
-            newStartDate = addTimeToDate(
-              data.startDate as Date,
-              data.startTime,
-            );
-          }
         }
-      }
-      if (data.endDate) {
-        if (data.isAllDay) {
-          newEndDate = addTimeToDate(data.endDate as Date, DEFAULT_END_TIME);
-        } else {
-          if (data.endTime) {
-            newEndDate = addTimeToDate(data.endDate as Date, data.endTime);
-          }
+        if (data.endTime) {
+          newEndDate = addTimeToDate(
+            (data.endDate as Date) || new Date(),
+            data.endTime,
+          );
         }
       }
       setTaskTimeScheduleList((prevEvents) =>
@@ -2658,15 +2661,35 @@ const TimeSchedule = memo(
         isAllDay: data.isAllDay || false,
         tagIds: newTagIds,
         participantIds: data.participantIds || [],
-        address: data.address || '',
+        selectOrganizations: data.selectOrganizations || [],
+        locationId: data.location
+          ? String((data.location as OptionDropdownType).value)
+          : '',
         memo: data.memo || '',
         type: newType,
         sendToChat,
         message: actionsEventMessage,
         categoryIds: newWorkCategories,
-        organizationId: data.organization
-          ? Number((data.organization as OptionDropdownType).value)
-          : null,
+        repeatType:
+          data.repeatType && (data.repeatType as OptionDropdownType).value
+            ? String((data.repeatType as OptionDropdownType).value)
+            : null,
+        repeatInterval:
+          data.repeatInterval && data.repeatInterval.value
+            ? Number(data.repeatInterval.value)
+            : null,
+        weekDay:
+          data.weekDay && data.weekDay.label != ''
+            ? Number(data.weekDay.value)
+            : null,
+        monthDay:
+          data.monthDay && data.monthDay.value != ''
+            ? Number(data.monthDay.value)
+            : null,
+        month:
+          data.month && data.month.value != ''
+            ? Number(data.month.value)
+            : null,
       });
     };
 
@@ -2783,7 +2806,55 @@ const TimeSchedule = memo(
         },
       },
     );
+    // Delete Event Repeat
+    const handleConfirmDeleteEventRepeatCalendar = (sendToChat: boolean) => {
+      if (dataEventEdit) {
+        deleteEventRepeatCalendar({
+          eventId: `${dataEventEdit.eventSchedule}`,
+          repeatScheduleId: dataEventEdit.scheduleId as string,
+          sendToChat,
+        });
+        return;
+      }
+    };
 
+    const handleDeleteEventRepeatCalendar = async (data: {
+      eventId: number | string;
+      repeatScheduleId: number | string;
+      sendToChat: boolean;
+    }) => {
+      return await api.delete(
+        `${apiRouters.DELETE_REPEAT_SCHEDULE(`${data.repeatScheduleId}`)}?message=${encodeURIComponent(actionsEventMessage)}${data.sendToChat ? '&send_to_chat=true' : ''}${data.eventId ? `&repeat_schedule_id=${data.eventId}` : ''}`,
+      );
+    };
+    const { mutate: deleteEventRepeatCalendar } = useMutation(
+      'deleteEventRepeatCalendar',
+      handleDeleteEventRepeatCalendar,
+      {
+        onSuccess: (data, task) => {
+          handleRemoveEventParam();
+          setOpenConfirmDeleteEventRepeatModal(false);
+          setConfirmEventDataToEdit(undefined);
+          setBackToEditing(false);
+          setActionsEventMessage('');
+          const updatedTaskList = taskTimeScheduleList.filter(
+            (item) => item.eventSchedule !== Number(task.eventId),
+          );
+          setTaskTimeScheduleList(updatedTaskList);
+          showToast({
+            description: SUCCESS_DELETE_MESSAGE,
+          });
+        },
+        onError: (error: AxiosError<any>) => {
+          showErrorToast(error, ERROR_DELETE_MESSAGE);
+        },
+        onSettled: () => {
+          setIsLoading(false);
+          setDataEventEditLocal(undefined);
+        },
+      },
+    );
+    // Delete event
     const handleConfirmDeleteEventCalendar = (sendToChat: boolean) => {
       if (dataEventEdit) {
         deleteEventCalendar({ id: `${dataEventEdit.id}`, sendToChat });
@@ -3479,6 +3550,7 @@ const TimeSchedule = memo(
                       scheduleZoom: value,
                     });
                   }
+                  scrollToNowIndicator();
                 }}
               />
             </div>
@@ -3588,6 +3660,36 @@ const TimeSchedule = memo(
             onRejectSend={() => {
               setIsLoading(true);
               handleConfirmDeleteEventCalendar(false);
+            }}
+            onClose={() => {
+              handleRemoveEventParam();
+              setDataEventEditLocal(undefined);
+              setConfirmEventDataToEdit(undefined);
+              setOpenConfirmDeleteEventModal(false);
+              setBackToEditing(false);
+              setActionsEventMessage('');
+            }}
+            onBackToEditModal={() => {
+              router.push(
+                `${pageRouters.CALENDAR_MANAGEMENT.href}?event=${`${idBackToEvent}`.replace('event', '')}&type=${ItemStartType.SCHEDULE}&action=${ActionsEvent.EDIT}`,
+              );
+            }}
+          />
+        )}
+
+        {/* Confirm delete with popup detail */}
+        {openConfirmDeleteEventRepeatModal && (
+          <ConfirmActionsEventModal
+            open={openConfirmDeleteEventRepeatModal}
+            type={ActionsEvent.DELETE}
+            setActionsEventMessage={setActionsEventMessage}
+            onSend={() => {
+              setIsLoading(true);
+              handleConfirmDeleteEventRepeatCalendar(true);
+            }}
+            onRejectSend={() => {
+              setIsLoading(true);
+              handleConfirmDeleteEventRepeatCalendar(false);
             }}
             onClose={() => {
               handleRemoveEventParam();

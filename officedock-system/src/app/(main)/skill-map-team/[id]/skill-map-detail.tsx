@@ -15,6 +15,8 @@ import {
 
 import { getLastChar } from '@utils';
 
+import { SKILL_MAP_LEVEL_COUNT } from '@constants'
+
 import useSkillMapComment from '@hooks/useSkillMapComment';
 
 interface SkillMapDetailByUserProps {
@@ -24,8 +26,6 @@ interface SkillMapDetailByUserProps {
 export const SkillMapDetailByUser = ({
   detailSkillData,
 }: SkillMapDetailByUserProps) => {
-  const MAX_LEVEL = 3;
-
   // View comment
   const [openSkillMapCommentModal, setOpenSkillMapCommentModal] =
     useState<boolean>(false);
@@ -83,7 +83,7 @@ export const SkillMapDetailByUser = ({
         case 1:
           return (
             <div className="flex justify-center pt-1 gap-1">
-              {Array.from({ length: MAX_LEVEL }).map((_, i) => (
+              {Array.from({ length: SKILL_MAP_LEVEL_COUNT }).map((_, i) => (
                 <ImageRound
                   key={i}
                   name="Coin"
@@ -96,7 +96,7 @@ export const SkillMapDetailByUser = ({
         case 2:
           return (
             <div className="flex justify-center pt-1 gap-1">
-              {Array.from({ length: MAX_LEVEL }).map((_, i) => (
+              {Array.from({ length: SKILL_MAP_LEVEL_COUNT }).map((_, i) => (
                 <ImageRound
                   key={i}
                   name="Diamond"
@@ -111,7 +111,7 @@ export const SkillMapDetailByUser = ({
         case 3:
           return (
             <div className="flex justify-center pt-1 gap-1">
-              {Array.from({ length: MAX_LEVEL }).map((_, i) => (
+              {Array.from({ length: SKILL_MAP_LEVEL_COUNT }).map((_, i) => (
                 <ImageRound
                   key={i}
                   name="Crown"

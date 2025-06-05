@@ -243,26 +243,31 @@ export const REACTION_LIST = [
     name: 'OK',
     src: '/icons/ok-reaction.svg',
     value: ReactionIconValue.OK,
+    tooltipContent: '了解'
   },
   {
     name: 'LIKE',
     src: '/icons/like-reaction.svg',
     value: ReactionIconValue.LIKE,
+    tooltipContent: 'グッド'
   },
   {
     name: 'THANK',
     src: '/icons/thank-reaction.svg',
     value: ReactionIconValue.THANK,
+    tooltipContent: '感謝'
   },
   {
     name: 'HAND',
     src: '/icons/hand-reaction.svg',
     value: ReactionIconValue.HAND,
+    tooltipContent: '拍手'
   },
   {
     name: 'SMILE',
     src: '/icons/smile-reaction.svg',
     value: ReactionIconValue.SMILE,
+    tooltipContent: '笑顔'
   },
 ];
 export const REACTION_LIST_SMALL = [

@@ -2,11 +2,13 @@ import { UseMutateAsyncFunction } from 'react-query';
 import { useSession } from 'next-auth/react';
 import {
   Dispatch,
+  MutableRefObject,
   SetStateAction,
   useContext,
   useEffect,
   useState,
 } from 'react';
+import FullCalendar from '@fullcalendar/react';
 
 import Checkbox from '@components/common/Checkbox';
 import ImageRound from '@components/common/ImageRound';
@@ -15,13 +17,20 @@ import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+
 import { EventParticipant } from '@interfaces/calendar';
+
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 
 import { EventParticipantType } from '@constants/enums';
 import { NO_DATA_AVAILABLE } from '@constants';
+import {
+  formatQueryEndDateForCalendar,
+  formatQueryStartDateForCalendar,
+} from '@utils/date';
 
 export type CalendarSidebarProps = {
+  calendarRef: MutableRefObject<FullCalendar | null>;
   selectedScheduleUserIds: string;
   selectedScheduleOrgIds: string;
   removeMyselfOption: boolean;
@@ -29,7 +38,7 @@ export type CalendarSidebarProps = {
   setShowSidebar: Dispatch<SetStateAction<boolean>>;
   setSearchName: Dispatch<SetStateAction<string>>;
   setSelectedScheduleUserIds: Dispatch<SetStateAction<string>>;
-  setSelectedScheduleOrgIds: Dispatch<SetStateAction<string>>
+  setSelectedScheduleOrgIds: Dispatch<SetStateAction<string>>;
   setRemoveMyselfOption: Dispatch<SetStateAction<boolean>>;
   setCurrentResources: Dispatch<
     SetStateAction<
@@ -55,8 +64,8 @@ export type CalendarSidebarProps = {
     {
       userId: string;
       keySearch: string;
-      startDate?: string;
-      endDate?: string;
+      startDate: string;
+      endDate: string;
       filterMyTask?: boolean;
       isYearView?: boolean;
       date?: Date;
@@ -69,6 +78,7 @@ export type CalendarSidebarProps = {
 };
 
 export const CalendarSidebar = ({
+  calendarRef,
   removeMyselfOption,
   selectedScheduleUserIds,
   selectedScheduleOrgIds,
@@ -87,6 +97,7 @@ export const CalendarSidebar = ({
 }: CalendarSidebarProps) => {
   const { data: session } = useSession();
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
   const [dataOptionsParticipants, setDataOptionsParticipants] = useState<
     EventParticipant[]
@@ -153,6 +164,7 @@ export const CalendarSidebar = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Check is participant selected
   const checkIsParticipantSelected = (member: EventParticipant) => {
     const updatedUserIds: string[] = selectedScheduleUserIds
       ? selectedScheduleUserIds.split(',').filter(Boolean)
@@ -178,6 +190,7 @@ export const CalendarSidebar = ({
     }
   };
 
+  // Render user's avatar
   const renderAvatar = (memberId: number) => {
     const memberInfo = dashboardMembersWithAvatars.find(
       (memberWithAvatar) => memberWithAvatar.id === memberId,
@@ -378,14 +391,25 @@ export const CalendarSidebar = ({
             }
             setSelectedScheduleOrgIds(updatedOrgIds.join(','));
             setSelectedScheduleUserIds(updatedUserIds.join(','));
-            getEventCalendarByUsers({
-              userId:
-                `${updatedUserIds.join(',')}`.length > 0
-                  ? `${updatedUserIds.join(',')}`
-                  : ``,
-              keySearch: keySearch,
-            });
+            if (calendarRef.current) {
+              const calendarApi = calendarRef.current.getApi();
+              const startDateISOString = formatQueryStartDateForCalendar(
+                calendarApi.view.activeStart,
+              );
+              const endDateISOString = formatQueryEndDateForCalendar(
+                calendarApi.view.activeEnd,
+              );
 
+              getEventCalendarByUsers({
+                userId:
+                  `${updatedUserIds.join(',')}`.length > 0
+                    ? `${updatedUserIds.join(',')}`
+                    : ``,
+                startDate: startDateISOString,
+                endDate: endDateISOString,
+                keySearch: keySearch,
+              });
+            }
             setCurrentResources(() => {
               return updatedUserIds.map((userId) => {
                 return {

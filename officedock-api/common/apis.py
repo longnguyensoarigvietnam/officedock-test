@@ -15,7 +15,9 @@ from calendars.constants import (
     CalendarTypes,
 )
 from calendars.models import Schedule
+from calendars.serializers import EventLocationSerializer
 from chat.constants import WebSocketEventType
+from organizations.constants import OrganizationTypes
 from skills.models import StatisticCategory, Skill, SkillMapSkillLevel
 from organizations.serializers import (
     BaseStatisticCategorySerializer,
@@ -25,7 +27,7 @@ from skills.serializers import SkillSerializer
 from tags.serializers import BaseTagSerializer
 
 from users.serializers import RoleSerializer
-from users.models import Role, RoleDetail, User
+from users.models import Role, RoleDetail
 from tasks.models import TaskStatus, Task, TaskDuration
 from tasks.constants import (
     TaskTypes,
@@ -202,37 +204,6 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
     @action(
         methods=["GET"],
         detail=False,
-        url_path="people-in-charge",
-        serializer_class=CreationDataUserSerializer,
-    )
-    def people_in_charge(self, request):
-        """
-        Get creation data for people in charge
-        """
-
-        if organization_id := request.query_params.get("organization_id"):
-            users = (
-                User.objects.filter(organizations__id=organization_id)
-                .order_by("created_at")
-                .all()
-            )
-        else:
-            users = (
-                User.objects.filter(company=request.user.company)
-                .order_by("created_at")
-                .all()
-            )
-
-        return self.response_ok(self.get_serializer(users, many=True).data)
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter("organization_id", type=str, required=False),
-        ],
-    )
-    @action(
-        methods=["GET"],
-        detail=False,
         url_path="task",
         serializer_class=CreationDataTaskSerializer,
     )
@@ -358,19 +329,24 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         Get creation data for Schedule
         """
         users = request.user.company.users.order_by("created_at").all()
-        organizations = request.user.company.organizations.order_by(
-            "-created_at"
-        )
-
+        calendar_org = request.user.company.get_calendar_organization()
+        event_locations = request.user.company.event_locations.order_by(
+            "created_at"
+        ).all()
         tags = (
             request.user.company.tags.filter(
                 is_hidden=False,
-                organizations__in=organizations,
+                organizations=calendar_org,
             )
             .order_by("created_at")
             .all()
             .distinct()
         )
+
+        organization_categories = OrganizationDetailSerializer(
+            calendar_org
+        ).data["statistic_categories"]
+        categories = transform_statistic_categories(organization_categories)
 
         data = {
             "members": CreationDataUserWithOrganizationSerializer(
@@ -378,8 +354,12 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             ).data,
             "tags": BaseTagSerializer(tags, many=True).data,
             "types": [item.value for item in ScheduleTypes],
-            "organizations": CreationDataOrganizationWithTagSerializer(
-                organizations, many=True
+            "event_locations": EventLocationSerializer(
+                event_locations, many=True
+            ).data,
+            "categories": categories,
+            "organization": CreationDataOrganizationSerializer(
+                calendar_org
             ).data,
         }
 
@@ -476,11 +456,20 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         organizations = []
         if not organization_id:
             organizations = user.organizations.all()
-        elif organization := Organization.objects.filter(
+        elif organization := Organization.all_objects.filter(
             id=organization_id
         ).first():
             organizations = [organization]
         data = {}
+        tags = (
+            request.user.company.tags.filter(
+                is_hidden=False,
+                organizations__in=organizations,
+            )
+            .order_by("created_at")
+            .all()
+            .distinct()
+        )
         if not is_calendar_page:
             if organization_id:
                 data[
@@ -488,9 +477,14 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 ] = CreationDataOrganizationWithStructCategorySerializer(
                     organizations[0], context={"user": user}
                 ).data
-                data["members"] = CreationDataUserSerializer(
-                    organizations[0].users.order_by("created_at"), many=True
-                ).data
+                # Return organization without list members if is Calendar organization
+                if organizations[0].type != OrganizationTypes.CALENDAR.value:
+                    data["members"] = CreationDataUserSerializer(
+                        organizations[0].users.order_by("created_at"), many=True
+                    ).data
+                else:
+                    return self.response_ok(data)
+
             else:
                 list_org = []
                 for organization in organizations:
@@ -514,6 +508,8 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                         ] = add_default_entries_to_categories(
                             org["statistic_categories"]
                         )
+            data["tags"] = BaseTagSerializer(tags, many=True).data
+
         if is_calendar_page and not organization_id:
             list_org = []
             for organization in organizations:
@@ -523,18 +519,14 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     ).data
                 )
             data["organizations"] = list_org
-
-        tags = (
-            request.user.company.tags.filter(
-                is_hidden=False,
-                organizations__in=organizations,
-            )
-            .order_by("created_at")
-            .all()
-            .distinct()
-        )
-        data["tags"] = BaseTagSerializer(tags, many=True).data
-
+            data[
+                "calendar_organization"
+            ] = CreationDataOrganizationWithStructCategorySerializer(
+                user.company.get_calendar_organization(), context={"user": user}
+            ).data
+            data["locations"] = EventLocationSerializer(
+                user.company.event_locations.all(), many=True
+            ).data
         return self.response_ok(data)
 
 
@@ -601,8 +593,6 @@ class CronJobViewSet(BaseAPIViewSet):
             started_at__gte=start_of_today, paused_at__isnull=True
         ).all()
         for task_duration in task_durations:
-            is_over_estimate = False
-            is_send_sk = False
             users = []
             related_obj = (
                 task_duration.task
@@ -611,18 +601,15 @@ class CronJobViewSet(BaseAPIViewSet):
             )
             if isinstance(related_obj, Task):
                 users = related_obj.people_in_charge.all()
-                is_send_sk, is_over_estimate = check_task_overtime(
-                    related_obj, task_duration, timedelta(minutes=35)
-                )
             elif (
                 isinstance(related_obj, Schedule)
                 and task_duration.is_cancel_alert is False
             ):
                 users = related_obj.participants.all()
-                diff_time = timezone.now() - related_obj.end_date
-                if timedelta(minutes=30) <= diff_time <= timedelta(minutes=35):
-                    is_send_sk = True
-                    is_over_estimate = True
+
+            is_send_sk, is_over_estimate = check_task_overtime(
+                related_obj, task_duration, timedelta(minutes=35)
+            )
 
             if is_send_sk:
                 for user in users:

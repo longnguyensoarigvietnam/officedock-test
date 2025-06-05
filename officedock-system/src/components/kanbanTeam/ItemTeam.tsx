@@ -306,7 +306,7 @@ const ItemTeam = ({
             {!content.isStart && (
               <div
                 className={`absolute left-[-1px] h-[98.5%] top-1/2 -translate-y-1/2 w-[2.5px] overflow-hidden rounded-l-md`}
-                style={{ backgroundColor: largeColor }}></div>
+                style={{ backgroundColor: largeColor || 'white' }}></div>
             )}
             <div className="relative w-[100%] h-full">
               <>

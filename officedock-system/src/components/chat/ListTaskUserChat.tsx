@@ -195,9 +195,7 @@ const ListTaskUserChat = ({
   };
   return (
     <div className="relative z-20">
-      <DynamicTooltip
-        content={'タスクを引用'}
-        placement="top">
+      <DynamicTooltip content={'タスクを引用'} placement="top">
         <div
           className="hover:bg-[#77858F26] relative rounded-full p-[7px] hover:cursor-pointer"
           onClick={() => {
@@ -216,7 +214,7 @@ const ListTaskUserChat = ({
         style={{
           boxShadow: '0px 4px 8px 0px #0000000F',
         }}
-        className={`${!isShowList && '!hidden'} absolute after:content-[''] after:absolute  after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white  left-[-158px] p-[10px] top-[-479px] w-[350px] h-[470px] rounded-lg bg-white`}>
+        className={`${!isShowList && '!hidden'} absolute after:content-[''] after:absolute  after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white  left-[-158px] p-[10px] bottom-10 w-[350px] h-[calc(100vh_-_491px)] min-h-[315px] rounded-lg bg-white`}>
         <div className="flex justify-center items-center gap-2 py-5">
           <Button
             onClick={() => {
@@ -255,7 +253,7 @@ const ListTaskUserChat = ({
         {searchTask && (
           <div
             ref={listTaskUerSearchRef}
-            className="h-[282px] overflow-y-auto scroll-smooth flex flex-col gap-[6px]">
+            className="h-[calc(100vh_-_679px)] min-h-[135px] overflow-y-auto scroll-smooth flex flex-col gap-[6px]">
             {dataTaskSearch.length > 0
               ? dataTaskSearch.map((item) => {
                   const isSelected = quoteTaskList.some(
@@ -289,7 +287,7 @@ const ListTaskUserChat = ({
         {!searchTask && (
           <div
             ref={listTaskUerRef}
-            className="h-[282px] overflow-y-auto scroll-smooth flex flex-col gap-[6px]">
+            className="h-[calc(100vh_-_679px)] min-h-[135px] overflow-y-auto scroll-smooth flex flex-col gap-[6px]">
             {dataTaskList.length > 0 ? (
               dataTaskList.map((item) => {
                 const isSelected = quoteTaskList.some(

@@ -3,37 +3,48 @@ import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
-import ListChatUsers from './list';
-import ChatDetail from './detail';
-import BookmarkList from './bookmark';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 
 import { ChatRoomType, SocketActions } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 import { APP_NAME_METADATA, BOOKMARK_ROUTER_NAME } from '@constants';
+
 import {
   ChatDashboardMember,
   ChatRoomItem,
   WebSocketMessageData,
 } from '@interfaces/chat';
+
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataTask from '@hooks/useCreationDataTask';
+
 import { generateUniqueId } from '@utils';
+
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { ChatContext } from '@providers/ChatProvider';
 
+import ListChatUsers from './list';
+import ChatDetail from './detail';
+import BookmarkList from './bookmark';
+
 const BoardChat = () => {
+  // Router
   const searchParams = useSearchParams();
   const router = useRouter();
   const params = useMemo(
     () => new URLSearchParams(searchParams),
     [searchParams],
   );
+  const chatRoomCode = searchParams.get('room');
+
+  // Context
   const { setChatRoomNotifications } = useContext(ChatContext);
+  const { totalNotifications } = useContext(GlobalStateContext);
+
+  // Custom hooks
   const { dashboardMemberList = [] } = useDashboardMemberList();
   const { creationDataTaskData } = useCreationDataTask({});
-  const { totalNotifications } = useContext(GlobalStateContext);
-  const chatRoomCode = searchParams.get('room');
+
   const [lastItemId, setLastItemId] = useState<number | null>();
   const [hasMoreDetail, setHasMoreDetail] = useState<boolean>(true);
   const [hasMore, setHasMore] = useState<boolean>(true);
@@ -46,7 +57,6 @@ const BoardChat = () => {
   const [dashboardMembers, setDashboardMembers] = useState<
     ChatDashboardMember[]
   >([]);
-
   const [clientId] = useState(() => generateUniqueId());
 
   // Update last item when change param
@@ -368,7 +378,6 @@ const BoardChat = () => {
           lastItemId={lastItemId}
           dataChatList={dataChatList}
           hasMoreDetail={hasMoreDetail}
-          hasMore={hasMore}
           chatRoomCode={chatRoomCode}
           dashboardMemberList={dashboardMemberList}
           dashboardMembers={dashboardMembers}
@@ -389,6 +398,7 @@ const BoardChat = () => {
           searchChatMsg={searchChatMsg}
           dashboardMembers={dashboardMembers}
           dashboardMemberList={dashboardMemberList}
+          creationDataTaskData={creationDataTaskData}
           setSearchChatMsg={setSearchChatMsg}
         />
       )}

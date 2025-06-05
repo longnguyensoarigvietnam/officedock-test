@@ -12,7 +12,7 @@ const ListDailyReportPage = () => {
     <MainLayout
       title={pageRouters.DAILY_REPORT_TEAM.name}
       permission={PermissionsSystem.TEAM_DAILY_REPORT_VIEW}
-      className="!py-0 pl-10 pr-0 "
+      className="!py-0 px-10"
       showFooter={false}>
       <ListData />
     </MainLayout>

@@ -15,6 +15,7 @@ import { ALLOWED_IMAGE_TYPES, MAX_AVATAR_IMAGE_FILE_SIZE } from '@constants';
 
 export type EditProfileModalProps = {
   open: boolean;
+  editPasswordErrorMessage: string
   onClose: () => void;
   authenticatedUser: User | undefined;
   onEdit: (data: UserProfileFormData) => void;
@@ -22,13 +23,12 @@ export type EditProfileModalProps = {
 };
 
 const EditProfileModal = memo(
-  ({ open, onClose, authenticatedUser, onEdit, setOpenErrorUploadFileModal }: EditProfileModalProps) => {
+  ({ open, editPasswordErrorMessage, onClose, authenticatedUser, onEdit, setOpenErrorUploadFileModal }: EditProfileModalProps) => {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const {
       reset,
       handleSubmit,
       register,
-      formState: { errors },
     } = useForm<UserProfileFormData>();
     const [previewAvatarUrl, setPreviewAvatarUrl] = useState<string | null>(
       null,
@@ -151,14 +151,14 @@ const EditProfileModal = memo(
               </p>
               <div className="flex flex-col !w-full">
                 <Input
-                  className="shadow-none text-sm leading-[56px] font-normal !pl-3 flex items-center !py-0 h-[34px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
+                  className={`shadow-none text-sm leading-[56px] font-normal !pl-3 flex items-center !py-0 h-[34px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md ${editPasswordErrorMessage && '!border-error'}`}
                   register={register('password', {
                     ...passwordRegisterRules(false),
                   })}
                 />
-                {errors?.password?.message && (
+                {editPasswordErrorMessage && (
                   <ErrorMessage
-                    error={errors?.password?.message}
+                    error={editPasswordErrorMessage}
                     className="mt-[5px] mb-[5px] text-xs"
                   />
                 )}

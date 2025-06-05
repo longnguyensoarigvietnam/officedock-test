@@ -11,6 +11,7 @@ from common.utils import (
     get_common_categories,
     time_str_to_timedelta,
 )
+from dashboard.serializers import ActualDurationListSerializer
 from tags.serializers import BaseTagSerializer
 from tasks.models import TaskDuration, Task
 from tasks.serializers import TaskCommonSerializer, TodoListSerializer
@@ -378,3 +379,16 @@ class BaseStatisticEventSerializer(StatisticEventSerializer):
     class Meta:
         model = Schedule
         fields = ["id", "title", "type"]
+
+
+class DurationDetailForPDFSerializer(ActualDurationListSerializer):
+    """Actual duration detail serializer"""
+
+    class Meta:
+        model = TaskDuration
+        fields = [
+            "id",
+            "title",
+            "started_at",
+            "paused_at",
+        ]

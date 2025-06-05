@@ -11,6 +11,7 @@ interface useCreationDataStatisticHooksProps {
   condition?: boolean[];
   is_statistic?: boolean;
   is_calendar_page?: boolean;
+  organization_id?: number;
   onSuccess?: (success: DataResponseStatisticCreationType) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
@@ -20,6 +21,7 @@ const useCreationDataStatistic = ({
   condition,
   is_statistic,
   is_calendar_page,
+  organization_id,
   onSuccess,
   onError,
   onSettled,
@@ -29,7 +31,7 @@ const useCreationDataStatistic = ({
 
   // Handle call API get creation Statistic data
   const getCreationDataStatistic = async () => {
-    const apiUrl = `${apiRouters.STATISTIC_CREATION}${is_statistic ? `?is_statistic=true` : ''}${is_calendar_page ? `?is_calendar_page=true` : ''}`;
+    const apiUrl = `${apiRouters.STATISTIC_CREATION}${is_statistic ? `?is_statistic=true` : ''}${is_calendar_page ? `?is_calendar_page=true` : ''}${organization_id ? `?organization_id=${organization_id}` : ''}`;
 
     const { data } = await api.get<DataResponseStatisticCreationType>(apiUrl);
     return data;

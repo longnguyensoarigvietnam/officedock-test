@@ -576,7 +576,7 @@
 }
 .schedule-custom .fc-resourceTimeGridDay-view .fc-timegrid-col-frame {
   position: relative;
-  top: -3px;
+  top: 4px;
 }
 .schedule-custom .fc-timeGridWeek-view .fc-timegrid-col-frame {
   position: relative;

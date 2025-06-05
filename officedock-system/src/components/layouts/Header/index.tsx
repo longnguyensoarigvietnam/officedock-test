@@ -192,6 +192,8 @@ const Header = ({ className }: HeaderProps) => {
   const [openRewardModal, setOpenRewardModal] = useState(false);
   const [dataRewardSkill, setDataRewardSkill] =
     useState<WebSocketMessageData>();
+  const [editPasswordErrorMessage, setEditPasswordErrorMessage] =
+    useState<string>('');
 
   const { showToast } = useToast();
   const { authenticatedUser } = useAuthenticatedUser({});
@@ -681,37 +683,30 @@ const Header = ({ className }: HeaderProps) => {
         type: EventWorkCategory.MEDIUM,
       });
     }
-    if (data.smallCategory && data.smallCategory?.value !== 'undefined') {
-      newWorkCategories.push({
-        categoryId:
-          `${data.smallCategory.value}` == NO_OPTION_CATEGORY
-            ? null
-            : `${data.smallCategory.value}`,
-        type: EventWorkCategory.SMALL,
-      });
-    }
     if (data.type) {
       newType = (data.type as OptionDropdownType).value as string;
     }
-    if (data.startDate) {
-      if (data.isAllDay) {
+    if (data.isAllDay) {
+      newStartDate = addTimeToDate(
+        (data.startDate as Date) || new Date(),
+        DEFAULT_START_TIME,
+      );
+      newEndDate = addTimeToDate(
+        (data.endDate as Date) || new Date(),
+        DEFAULT_END_TIME,
+      );
+    } else {
+      if (data.startTime) {
         newStartDate = addTimeToDate(
-          data.startDate as Date,
-          DEFAULT_START_TIME,
+          (data.startDate as Date) || new Date(),
+          data.startTime,
         );
-      } else {
-        if (data.startTime) {
-          newStartDate = addTimeToDate(data.startDate as Date, data.startTime);
-        }
       }
-    }
-    if (data.endDate) {
-      if (data.isAllDay) {
-        newEndDate = addTimeToDate(data.endDate as Date, DEFAULT_END_TIME);
-      } else {
-        if (data.endTime) {
-          newEndDate = addTimeToDate(data.endDate as Date, data.endTime);
-        }
+      if (data.endTime) {
+        newEndDate = addTimeToDate(
+          (data.endDate as Date) || new Date(),
+          data.endTime,
+        );
       }
     }
 
@@ -727,15 +722,33 @@ const Header = ({ className }: HeaderProps) => {
       isAllDay: data.isAllDay || false,
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
-      address: data.address || '',
+      selectOrganizations: data.selectOrganizations || [],
+      locationId: data.location
+        ? String((data.location as OptionDropdownType).value)
+        : '',
       memo: data.memo || '',
       type: newType,
       sendToChat,
       message: actionsEventMessage,
       categoryIds: newWorkCategories,
-      organizationId: data.organization
-        ? Number((data.organization as OptionDropdownType).value)
-        : null,
+      repeatType:
+        data.repeatType && (data.repeatType as OptionDropdownType).value
+          ? String((data.repeatType as OptionDropdownType).value)
+          : null,
+      repeatInterval:
+        data.repeatInterval && data.repeatInterval.value
+          ? Number(data.repeatInterval.value)
+          : null,
+      weekDay:
+        data.weekDay && data.weekDay.label != ''
+          ? Number(data.weekDay.value)
+          : null,
+      monthDay:
+        data.monthDay && data.monthDay.value != ''
+          ? Number(data.monthDay.value)
+          : null,
+      month:
+        data.month && data.month.value != '' ? Number(data.month.value) : null,
     });
   };
   const handleEditEventCalendar = async (data: EventRequest) => {
@@ -876,6 +889,10 @@ const Header = ({ className }: HeaderProps) => {
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
+        if (error.response) {
+          const errorDetail = error.response.data;
+          setEditPasswordErrorMessage(errorDetail?.password[0]);
+        }
       },
       onSettled: () => {
         setIsLoading(false);
@@ -913,7 +930,7 @@ const Header = ({ className }: HeaderProps) => {
   return (
     <>
       <header
-        className={`sticky 2xl:fixed top-0 z-[22] bg-white w-full h-[76px]  p-3 flex justify-between item-center ${className}`}
+        className={`sticky 2xl:fixed top-0 z-30 bg-white w-full h-[76px]  p-3 flex justify-between item-center ${className}`}
         style={{ boxShadow: '0px 4px 8px 0px #1D2D3F0A' }}>
         <div className="flex gap-8 justify-between w-full">
           <div className="flex flex-grow items-center gap-8">
@@ -933,18 +950,11 @@ const Header = ({ className }: HeaderProps) => {
                       className={`flex w-full px-3 py-2 items-center rounded-full focus:outline-none
                 ${open ? 'text-primary ' : ''}
                 `}>
-                      {authenticatedUser ? (
+                      {authenticatedUser && (
                         <CustomUserAvatar
                           avatarUrl={authenticatedUser?.avatar || ''}
                           avatarColor={authenticatedUser?.avatarColor || ''}
                           size={40}
-                        />
-                      ) : (
-                        <ImageRound
-                          className="w-10 h-10 hover:opacity-70"
-                          src="/images/avatar-default.svg"
-                          border="full"
-                          name="Avatar user"
                         />
                       )}
                     </PopoverButton>
@@ -967,6 +977,7 @@ const Header = ({ className }: HeaderProps) => {
                                 key={item.name}
                                 className={`flex px-4 py-2 hover:bg-[#7D8A94] ${pathname == item.href && 'bg-[#7D8A94]'}`}
                                 onClick={() => {
+                                  if (item.disable) return;
                                   if (isChatFilesUploading) {
                                     setPendingPageChange(item.href as string);
                                     setShowWarningChatUploadingModal(true);
@@ -1096,6 +1107,7 @@ const Header = ({ className }: HeaderProps) => {
           }}
           onEdit={handleConfirmEditProfile}
           setOpenErrorUploadFileModal={setOpenErrorUploadFileModal}
+          editPasswordErrorMessage={editPasswordErrorMessage}
           authenticatedUser={authenticatedUser}
         />
       )}

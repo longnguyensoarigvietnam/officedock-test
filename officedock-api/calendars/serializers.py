@@ -1,17 +1,19 @@
+from django.db.models import Q
 from rest_framework import serializers
 
 from base.messages import ERROR_MESSAGES
-from calendars.models import Schedule
+from calendars.models import EventLocation, Schedule, RepeatSchedule
 from common.serializers import CreationDataUserSerializer
 from common.utils import get_common_categories
-from organizations.models import Organization
 from organizations.serializers import OrganizationSerializer
 from skills.models import StatisticCategory
 from tags.models import Tag
 from tags.serializers import BaseTagSerializer
+from tasks.constants import FrequencyMap
 from users.models import User
 from tasks.models import PeopleInChargeTasks, TaskSchedule
 from calendars.constants import CalendarTypes, ScheduleCategoryTypes
+from calendars.utils import is_event_overlapping
 
 
 class CategoryForCreationTaskSerializer(serializers.Serializer):
@@ -27,6 +29,80 @@ class CategoryForCreationTaskSerializer(serializers.Serializer):
     type = serializers.ChoiceField(
         choices=ScheduleCategoryTypes.choices(), required=True
     )
+
+
+class RepeatScheduleSerializer(serializers.ModelSerializer):
+    """ "
+    Serializer of repeat schedule
+    """
+
+    class Meta:
+        model = RepeatSchedule
+        fields = [
+            "id",
+            "uuid",
+            "schedule",
+            "plan_start_date",
+            "plan_end_date",
+        ]
+
+
+class CheckScheduleOverlapSerializer(serializers.Serializer):
+    """ "
+    Serializer for check overlap time and location with another event
+    """
+
+    schedule_id = serializers.PrimaryKeyRelatedField(
+        source="schedule",
+        queryset=Schedule.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    location_id = serializers.PrimaryKeyRelatedField(
+        source="location",
+        queryset=EventLocation.objects.all(),
+        write_only=True,
+    )
+    plan_start_date = serializers.DateTimeField()
+    plan_end_date = serializers.DateTimeField()
+
+
+class EventLocationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for event location
+    """
+
+    uuid = serializers.UUIDField(required=False, allow_null=True)
+
+    class Meta:
+        model = EventLocation
+        fields = [
+            "id",
+            "uuid",
+            "name",
+        ]
+
+    def validate(self, attrs):
+        """
+        Handle validate unique name in company
+        """
+        instance = self.instance
+        request = self.context.get("request")
+        company = request.user.company if not instance else instance.company
+        name = attrs.get("name")
+
+        queryset = EventLocation.objects.filter(company=company, name=name)
+
+        if instance:
+            queryset = queryset.exclude(id=instance.id)
+
+        if queryset.exists():
+            raise serializers.ValidationError(
+                {"detail": ERROR_MESSAGES["unique_event_location_name"]}
+            )
+
+        return attrs
 
 
 class ScheduleSerializer(serializers.ModelSerializer):
@@ -58,11 +134,33 @@ class ScheduleSerializer(serializers.ModelSerializer):
         write_only=True, required=False, allow_blank=True
     )
     organization = OrganizationSerializer(read_only=True)
-    organization_id = serializers.PrimaryKeyRelatedField(
-        source="organization",
-        queryset=Organization.objects.all(),
+    location_id = serializers.PrimaryKeyRelatedField(
+        source="location",
+        queryset=EventLocation.objects.all(),
         write_only=True,
+        required=False,
+        allow_null=True,
     )
+    location = EventLocationSerializer(read_only=True)
+    start_date = serializers.DateTimeField(allow_null=True, required=False)
+    end_date = serializers.DateTimeField(allow_null=True, required=False)
+    repeat_type = serializers.ChoiceField(
+        choices=FrequencyMap.choices(),
+        allow_null=True,
+        required=False,
+        default=FrequencyMap.ONCE.value,
+    )
+    repeat_interval = serializers.IntegerField(allow_null=True, required=False)
+    week_day = serializers.IntegerField(
+        min_value=0, max_value=6, required=False, allow_null=True
+    )
+    month_day = serializers.IntegerField(
+        min_value=1, max_value=31, required=False, allow_null=True
+    )
+    month = serializers.IntegerField(
+        min_value=1, max_value=12, required=False, allow_null=True
+    )
+    repeat_schedules = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Schedule
@@ -70,7 +168,6 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "organization",
-            "organization_id",
             "start_date",
             "end_date",
             "is_all_day",
@@ -80,13 +177,20 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "tag_ids",
             "participants",
             "participant_ids",
-            "address",
+            "location",
+            "location_id",
             "memo",
             "type",
             "send_to_chat",
             "message",
             "is_start",
             "select_organizations",
+            "repeat_interval",
+            "repeat_type",
+            "week_day",
+            "month_day",
+            "month",
+            "repeat_schedules",
         ]
         read_only_fields = ["id"]
 
@@ -102,20 +206,22 @@ class ScheduleSerializer(serializers.ModelSerializer):
         Validation data
         """
         request = self.context.get("request")
-        participants = data.get("participant_ids")
+        participants = data.get("participant_ids", [])
+        tags = data.get("tag_ids", [])
 
-        if participants:
-            for participant in participants:
-                if participant.company != request.user.company:
-                    raise serializers.ValidationError(
-                        {
-                            "participant_ids": {
-                                participant.id: ERROR_MESSAGES[
-                                    "company_not_match"
-                                ]
-                            }
+        for tag in tags:
+            if not tag.get_calendar_organization():
+                raise serializers.ValidationError()
+
+        for participant in participants:
+            if participant.company != request.user.company:
+                raise serializers.ValidationError(
+                    {
+                        "participant_ids": {
+                            participant.id: ERROR_MESSAGES["company_not_match"]
                         }
-                    )
+                    }
+                )
 
         return data
 
@@ -134,6 +240,25 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "participants_schedules__id"
         )
         return CreationDataUserSerializer(sorted_participants, many=True).data
+
+    def get_repeat_schedules(self, obj):
+        """
+        Handle get repeat schedules
+        """
+        request = self.context.get("request")
+        if request.query_params.get("start_date") and request.query_params.get(
+            "end_date"
+        ):
+            start_date = request.query_params.get("start_date")
+            end_date = request.query_params.get("end_date")
+            repeat_schedules = obj.repeat_schedules.filter(
+                Q(plan_start_date__lte=end_date)
+                & Q(plan_end_date__gte=start_date)
+            ).all()
+        else:
+            repeat_schedules = obj.repeat_schedules.all()
+
+        return RepeatScheduleSerializer(repeat_schedules, many=True).data
 
 
 class BaseScheduleSerializer(ScheduleSerializer):
@@ -154,7 +279,7 @@ class BaseScheduleSerializer(ScheduleSerializer):
             "start_date",
             "end_date",
             "is_all_day",
-            "address",
+            "location",
             "type",
             "is_my_schedule",
             "participants",
@@ -162,6 +287,7 @@ class BaseScheduleSerializer(ScheduleSerializer):
             "event_type",
             "categories",
             "select_organizations",
+            "repeat_schedules",
         ]
 
     def get_categories(self, obj):
@@ -339,3 +465,90 @@ class ScheduleTeamdockSerializer(BaseScheduleSerializer):
             "event_type",
             "categories",
         ]
+
+
+class ScheduleDetailSerializer(ScheduleSerializer):
+    """
+    Serializer for schedule detail
+    """
+
+    repeat_schedules = serializers.SerializerMethodField(read_only=True)
+    is_event_overlapping = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Schedule
+        fields = [
+            "id",
+            "title",
+            "organization",
+            "start_date",
+            "end_date",
+            "is_all_day",
+            "location",
+            "type",
+            "participants",
+            "is_start",
+            "categories",
+            "select_organizations",
+            "memo",
+            "repeat_schedules",
+            "is_event_overlapping",
+            "tags",
+            "created_at",
+        ]
+
+    def to_representation(self, instance):
+        """
+        Custom data before return
+        """
+        representation = super().to_representation(instance)
+
+        if recurring := instance.recurring:
+            fields = [
+                "start_date",
+                "end_date",
+                "repeat_type",
+                "repeat_interval",
+                "week_day",
+                "month_day",
+                "month",
+            ]
+            for field in fields:
+                representation[field] = recurring.get(field)
+        return representation
+
+    def get_repeat_schedules(self, obj):
+        """
+        Handle get repeat schedules
+        """
+        request = self.context.get("request")
+        if repeat_id := request.query_params.get("repeat_schedule_id"):
+            repeat_schedule = obj.repeat_schedules.filter(id=repeat_id).first()
+            return RepeatScheduleSerializer(repeat_schedule).data
+        return None
+
+    def get_is_event_overlapping(self, obj: Schedule) -> bool:
+        """
+        Check if a schedule overlaps with existing events at a given location and time period.x
+        """
+        if not obj.location:
+            return False
+
+        request = self.context.get("request")
+        if not request:
+            return False
+
+        # Handle recurring event case
+        if repeat_id := request.query_params.get("repeat_schedule_id"):
+            repeat_schedule = obj.repeat_schedules.filter(id=repeat_id).first()
+            if not repeat_schedule:
+                return False
+
+            return is_event_overlapping(
+                instance=obj,
+                location=obj.location,
+                start_date=repeat_schedule.plan_start_date,
+                end_date=repeat_schedule.plan_end_date,
+            )
+
+        return False

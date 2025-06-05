@@ -36,3 +36,4 @@ class OrganizationTypes(EnumChoices):
 
     NORMAL = "NORMAL"
     PROJECT = "PROJECT"
+    CALENDAR = "CALENDAR"

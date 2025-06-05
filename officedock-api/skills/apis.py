@@ -203,51 +203,7 @@ class ManageSkillMapViewSet(
             staff = data.get("staff", None)
             is_checked = data.get("is_checked", False)
             if skill_map is None and skill and staff:
-                """
-                Handle create skill map
-                """
-                skill_map, created = SkillMap.objects.get_or_create(
-                    company=staff.company,
-                    skill=skill,
-                    step=skill.step,
-                    skill_parent=skill.parent,
-                    staff=staff,
-                    organization=skill.organization,
-                    is_valid=is_checked,
-                    is_complete=False,
-                )
-                if skill.parent is None and created:
-                    # Get skill level 1 of parent skill
-                    skill_level = skill.skill_levels.filter(
-                        level=SkillLevelConstants.LEVEL_1.value
-                    ).first()
-                    user_org = UsersOrganizations.objects.filter(
-                        user=staff,
-                        organization=skill.organization,
-                    ).first()
-                    # Set next_submit_at if skill level has look back
-                    next_submit_at, start_lookback_at = get_lookback_time(
-                        skill_level.look_back_type,
-                        skill_level.look_back_interval,
-                        user_organization=user_org,
-                    )
-                    data = []
-                    for item in skill_level.items:
-                        data.append({"item": item, "is_checked": False})
-                    SkillMapSkillLevel.objects.create(
-                        skill_level=skill_level,
-                        skill=skill,
-                        level=skill_level.level,
-                        skill_map=skill_map,
-                        company=staff.company,
-                        start_lookback_at=start_lookback_at,
-                        next_submit_at=next_submit_at,
-                        measure_count=skill_level.measure_count,
-                        measure_time=skill_level.measure_time,
-                        look_back_type=skill_level.look_back_type,
-                        look_back_interval=skill_level.look_back_interval,
-                        items=data,
-                    )
+                self._handle_create_skill_map(skill, staff, is_checked)
             elif skill_map:
                 # Update skill map and child of skill map
                 while skill_map:
@@ -260,6 +216,53 @@ class ManageSkillMapViewSet(
                     ).first()
 
         return self.response_ok()
+
+    def _handle_create_skill_map(self, skill, staff, is_checked):
+        """
+        Handle create skill map when have new staff added to organization
+        """
+        skill_map, created = SkillMap.objects.get_or_create(
+            company=staff.company,
+            skill=skill,
+            step=skill.step,
+            skill_parent=skill.parent,
+            staff=staff,
+            organization=skill.organization,
+            is_valid=is_checked,
+            is_complete=False,
+        )
+        if skill.parent is None and created:
+            # Get skill level 1 of parent skill
+            skill_level = skill.skill_levels.filter(
+                level=SkillLevelConstants.LEVEL_1.value
+            ).first()
+            user_org = UsersOrganizations.objects.filter(
+                user=staff,
+                organization=skill.organization,
+            ).first()
+            # Set next_submit_at if skill level has look back
+            next_submit_at, start_lookback_at = get_lookback_time(
+                skill_level.look_back_type,
+                skill_level.look_back_interval,
+                user_organization=user_org,
+            )
+            data = []
+            for item in skill_level.items:
+                data.append({"item": item, "is_checked": False})
+            SkillMapSkillLevel.objects.create(
+                skill_level=skill_level,
+                skill=skill,
+                level=skill_level.level,
+                skill_map=skill_map,
+                company=staff.company,
+                start_lookback_at=start_lookback_at,
+                next_submit_at=next_submit_at,
+                measure_count=skill_level.measure_count,
+                measure_time=skill_level.measure_time,
+                look_back_type=skill_level.look_back_type,
+                look_back_interval=skill_level.look_back_interval,
+                items=data,
+            )
 
     @extend_schema(parameters=[OpenApiParameter("organization_id", type=int)])
     def list(self, request, *args, **kwargs):
@@ -281,20 +284,6 @@ class ManageSkillMapViewSet(
             )
 
         return self.response_ok(data)
-
-    @action(detail=True, methods=["GET"], url_path="check_delete")
-    def check_delete(self, request, *args, **kwargs):
-        """
-        Check skill map is have
-        """
-        skill_map = self.get_object()
-        is_can_delete = skill_map.skill_map_skill_levels.filter(
-            actual_measure_count__isnull=True,
-            actual_measure_time__isnull=True,
-            next_submit_at__isnull=True,
-            level=SkillLevelConstants.LEVEL_1.value,
-        ).exists()
-        return self.response_ok({"is_can_delete": is_can_delete})
 
 
 @extend_schema(tags=["System > Skill Map"])
@@ -416,7 +405,7 @@ class SkillMapViewSet(
         user = request.user
         organization_id = request.query_params.get("organization_id", None)
 
-        organizations = user.organizations.all()
+        organizations = user.organizations.all().order_by("-created_at")
         if organization_id:
             organizations = organizations.filter(id=organization_id)
         data = []
