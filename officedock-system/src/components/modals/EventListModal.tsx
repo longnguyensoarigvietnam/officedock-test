@@ -228,80 +228,89 @@ export const EventListModal = ({
 
         <ul className="list-disc max-h-[195px] overflow-y-auto">
           {eventListModalInfo &&
-            eventListModalInfo?.events.map((event) => {
-              return (
-                <li
-                  key={event.eventId}
-                  className={`text-xs list-none mb-1 bg-[#EBF1F7] text-[#444546] !rounded-[8px] pl-1.5 pt-1 ${event.repeatScheduleId.includes('holiday') && 'hover:cursor-not-allowed'}`}
-                  onClick={() => {
-                    if (!event.repeatScheduleId.includes('holiday')) {
-                      setEventListModalInfo(null);
-                      handleEventClickInPopup(
-                        event.eventId,
-                        event.repeatScheduleId,
-                      );
-                    }
-                  }}>
-                  <div className="flex items-center gap-2">
-                    {checkShowUserAvatar(event.type, event.participants) &&
-                      showUserAvatars(event.participants || [])}
-                    <div className="mb-2">
-                      <div
-                        className={`font-semibold max-w-[200px] min-h-4 truncate ${event.repeatScheduleId.includes('holiday') && 'text-error'}`}>
-                        {event.title || ''}
-                      </div>
-                      <div className="flex gap-1">
-                        <div className="flex">
-                          {event && event.allDay && (
-                            <p className="text-[11px] mr-1">終日</p>
-                          )}
-                          <p
-                            className={`text-[11px] ${
-                              event?.start &&
-                              event?.end &&
-                              !isSameDay(
-                                new Date(event?.start),
-                                new Date(event?.end),
-                              ) &&
-                              'mr-1'
-                            }`}>
-                            {event?.start &&
-                              event?.end &&
-                              (isSameDay(
-                                new Date(event?.start),
-                                new Date(event?.end),
-                              )
-                                ? ''
-                                : `${formatShowDeadline(event?.start)} ~ ${formatShowDeadline(event?.end)}`)}{' '}
-                          </p>
-                          {event &&
-                            !event.allDay &&
-                            event.start &&
-                            event.end && (
-                              <div className="flex gap-1 items-center text-[11px]">
-                                <p>
-                                  {formatHoursAndMinutesForDateTime(
-                                    new Date(event.start),
-                                  )}
-                                </p>
-                                <p className="text-[11px]">~</p>
-                                <p>
-                                  {formatHoursAndMinutesForDateTime(
-                                    new Date(event.end),
-                                  )}
-                                </p>
-                              </div>
-                            )}
+            eventListModalInfo?.events
+              ?.sort((preEvent, nextEvent) => {
+                // Put allDay: true first
+                return preEvent.allDay == nextEvent.allDay
+                  ? 0
+                  : preEvent.allDay
+                    ? -1
+                    : 1;
+              })
+              .map((event) => {
+                return (
+                  <li
+                    key={event.eventId}
+                    className={`text-xs list-none mb-1 bg-[#EBF1F7] text-[#444546] !rounded-[8px] pl-1.5 pt-1 ${event.repeatScheduleId.includes('holiday') && 'hover:cursor-not-allowed'}`}
+                    onClick={() => {
+                      if (!event.repeatScheduleId.includes('holiday')) {
+                        setEventListModalInfo(null);
+                        handleEventClickInPopup(
+                          event.eventId,
+                          event.repeatScheduleId,
+                        );
+                      }
+                    }}>
+                    <div className="flex items-center gap-2">
+                      {checkShowUserAvatar(event.type, event.participants) &&
+                        showUserAvatars(event.participants || [])}
+                      <div className="mb-2">
+                        <div
+                          className={`font-semibold max-w-[200px] min-h-4 truncate ${event.repeatScheduleId.includes('holiday') && 'text-error'}`}>
+                          {event.title || ''}
                         </div>
-                        <p className="text-[11px] truncate max-w-[100px]">
-                          {event.location?.name}
-                        </p>
+                        <div className="flex gap-1">
+                          <div className="flex">
+                            {event && event.allDay && (
+                              <p className="text-[11px] mr-1">終日</p>
+                            )}
+                            <p
+                              className={`text-[11px] ${
+                                event?.start &&
+                                event?.end &&
+                                !isSameDay(
+                                  new Date(event?.start),
+                                  new Date(event?.end),
+                                ) &&
+                                'mr-1'
+                              }`}>
+                              {event?.start &&
+                                event?.end &&
+                                (isSameDay(
+                                  new Date(event?.start),
+                                  new Date(event?.end),
+                                )
+                                  ? ''
+                                  : `${formatShowDeadline(event?.start)} ~ ${formatShowDeadline(event?.end)}`)}{' '}
+                            </p>
+                            {event &&
+                              !event.allDay &&
+                              event.start &&
+                              event.end && (
+                                <div className="flex gap-1 items-center text-[11px]">
+                                  <p>
+                                    {formatHoursAndMinutesForDateTime(
+                                      new Date(event.start),
+                                    )}
+                                  </p>
+                                  <p className="text-[11px]">~</p>
+                                  <p>
+                                    {formatHoursAndMinutesForDateTime(
+                                      new Date(event.end),
+                                    )}
+                                  </p>
+                                </div>
+                              )}
+                          </div>
+                          <p className="text-[11px] truncate max-w-[100px]">
+                            {event.location?.name}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </li>
-              );
-            })}
+                  </li>
+                );
+              })}
         </ul>
         {popoverInfoLoading && (
           <Spinner className="!h-fit py-3" iconClassName="h-6 w-6" />

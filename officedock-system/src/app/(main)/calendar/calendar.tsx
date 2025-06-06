@@ -654,6 +654,17 @@ const EventCalendar = () => {
     } else {
       const calendarApi = eventContent.view.calendar;
       const currentView = calendarApi.view.type;
+      const isMySchedule =
+        eventContent.event.extendedProps?.participants.length > 0
+          ? eventContent.event.extendedProps?.participants.find(
+              (participant: {
+                id: number;
+                fullName: string;
+                avatarColor: string;
+                avatar: string | null;
+              }) => participant.id == session?.user.id,
+            )
+          : false;
 
       if (currentView === CalendarViewOptions.VIEW_BY_WEEK) {
         if (eventContent.event.allDay) {
@@ -708,7 +719,7 @@ const EventCalendar = () => {
         }
         return (
           <div
-            className={`overflow-hidden p-1.5 ${isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
+            className={`overflow-hidden p-1.5 ${isMySchedule && isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
             {checkShowUserAvatar(
               eventContent.event.extendedProps.type,
               eventContent.event.extendedProps.participants,
@@ -741,7 +752,7 @@ const EventCalendar = () => {
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                   </p>
                   <p className={` text-black text-[12px] font-normal`}>
-                    {eventContent.event.extendedProps.location.name}
+                    {eventContent.event.extendedProps.location?.name}
                   </p>
                 </>
               ) : (
@@ -750,7 +761,7 @@ const EventCalendar = () => {
                     <>
                       <p>{eventContent.timeText}</p>
                       <p className={` text-black text-[12px] font-normal`}>
-                        {eventContent.event.extendedProps.location.name}
+                        {eventContent.event.extendedProps.location?.name}
                       </p>
                     </>
                   )}
@@ -802,7 +813,7 @@ const EventCalendar = () => {
 
         return (
           <div
-            className={`overflow-hidden ${isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
+            className={`overflow-hidden ${isMySchedule && isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
             <div className={` text-black font-medium px-2 pt-1 text-[14px]`}>
               <p className="truncate max-w-[calc(100%)] font-semibold min-h-5">
                 {eventContent.event.title != 'null'
@@ -830,7 +841,7 @@ const EventCalendar = () => {
                   {isMoreThanThirtyMinutes(eventContent.timeText) && (
                     <div className="text-black text-[12px] font-normal">
                       <p>{eventContent.timeText}</p>
-                      <p>{eventContent.event.extendedProps.location.name}</p>
+                      <p>{eventContent.event.extendedProps?.location?.name}</p>
                     </div>
                   )}
                 </>
@@ -2208,8 +2219,7 @@ const EventCalendar = () => {
         setEvents((prevEvents) => {
           const updatedEvents = [...prevEvents];
           const filteredEvents = updatedEvents.filter(
-            (event) =>
-              String(event.eventId) !== String(eventIdURL),
+            (event) => String(event.eventId) !== String(eventIdURL),
           );
           return filteredEvents;
         });
@@ -2842,7 +2852,11 @@ const EventCalendar = () => {
           popoverInfoLoading={popoverInfoLoading}
           setEventListModalInfo={setEventListModalInfo}
           setDefaultCreateStartDate={setDefaultCreateStartDate}
-          calendarView={watch('calendarView') ? watch('calendarView')?.value : CalendarViewOptions.VIEW_BY_MONTH}
+          calendarView={
+            watch('calendarView')
+              ? watch('calendarView')?.value
+              : CalendarViewOptions.VIEW_BY_MONTH
+          }
         />
       )}
       {openCreateEventModal && (

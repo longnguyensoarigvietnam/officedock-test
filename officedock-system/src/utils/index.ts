@@ -1,6 +1,6 @@
 import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 
 import { JwtDecode } from '@interfaces/auth';
 import { Organizations } from '@interfaces/organization';
@@ -31,10 +31,12 @@ import { DATE_FORMAT, MAX_HEX_COLOR_VALUE, SKILL_MAP_STEPS } from '@constants';
 import {
   convertToTimeString,
   formatHoursAndMinutesForDateTime,
+  formatShowDeadline,
   formatTime24h,
   getJapaneseDayName,
   getJapaneseWeekDay,
 } from './date';
+import { ChatMessageResponse } from '@interfaces/chat';
 
 export function hasPermissionInArray(
   requiredPermissions: PermissionsSystem[],
@@ -889,6 +891,31 @@ export const renderEventDatetimeInChat = (
 
   return `${startDateStr} ~ ${endDateStr}`;
 };
+
+// Render schedule date in chat (calendar room)
+export const renderScheduleChangeInCalendarRoom = (messageDetail: ChatMessageResponse): string => {
+  const start = messageDetail.scheduleChanges?.new?.startDate;
+  const end = messageDetail.scheduleChanges?.new?.endDate;
+  const isAllDay = messageDetail.schedule?.isAllDay;
+
+  if (!start || !end) return '';
+
+  const sameDay = isSameDay(new Date(start), new Date(end));
+
+  if (sameDay) {
+    const base = `${formatShowDeadline(start)} `;
+    return isAllDay
+      ? `${base}終日`
+      : `${base}${formatHoursAndMinutesForDateTime(new Date(start))} ~ ${formatHoursAndMinutesForDateTime(new Date(end))}`;
+  } else {
+    if (isAllDay) {
+      return `${formatShowDeadline(start)} ~ ${formatShowDeadline(end)} 終日`;
+    } else {
+      return `${formatShowDeadline(start)} ${formatHoursAndMinutesForDateTime(new Date(start))} ~ ${formatShowDeadline(end)} ${formatHoursAndMinutesForDateTime(new Date(end))}`;
+    }
+  }
+};
+
 
 // Render repetitive event time in chat
 export const displayRepetitiveEventTime = (eventInfo: {
