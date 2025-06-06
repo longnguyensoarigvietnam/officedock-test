@@ -456,6 +456,20 @@ const TaskCard = ({
     }
   }, [isShiftPressed]);
 
+  const [isTooSmall, setIsTooSmall] = useState(false);
+
+  useEffect(() => {
+    const checkWidth = () => {
+      if (containerRef.current) {
+        const width = containerRef.current.offsetWidth;
+        setIsTooSmall(width < 50);
+      }
+    };
+    checkWidth();
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
+  }, []);
+
   return (
     <>
       <div
@@ -594,7 +608,7 @@ const TaskCard = ({
                   style={{
                     bottom: `${(slotHeight / baseHeight) * 13}px`,
                   }}
-                  className="absolute w-3 h-3 bottom-1 right-9 "
+                  className={`absolute w-3 h-3 bottom-1 right-9 ${isTooSmall && 'hidden'}`}
                 />
               )}
               <ImageRound

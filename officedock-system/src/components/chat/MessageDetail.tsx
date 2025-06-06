@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { format, isSameDay } from 'date-fns';
+import { format } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Dispatch, Fragment, MutableRefObject, SetStateAction } from 'react';
@@ -45,12 +45,11 @@ import {
   formatWithParagraphTags,
   getFileURL,
   renderEventDatetimeInChat,
+  renderScheduleChangeInCalendarRoom,
 } from '@utils';
 import {
   convertToCurrentTimezone,
   formatCheckDate,
-  formatHoursAndMinutesForDateTime,
-  formatShowDeadline,
   getFormattedDateTime,
 } from '@utils/date';
 
@@ -713,7 +712,8 @@ export const MessageDetail = ({
                                     </p>
                                   ) : (
                                     <p className="mt-2 italic text-gray-600">
-                                      {messageDetail.sender.fullName}{' '}{EVENT_DELETED}
+                                      {messageDetail.sender.fullName}{' '}
+                                      {EVENT_DELETED}
                                     </p>
                                   )}
                                   <p
@@ -764,7 +764,8 @@ export const MessageDetail = ({
                                     </p>
                                   ) : (
                                     <p className="mt-2 italic text-gray-600">
-                                      {messageDetail.sender.fullName}{' '}{EVENT_DELETED}
+                                      {messageDetail.sender.fullName}{' '}
+                                      {EVENT_DELETED}
                                     </p>
                                   )}
                                 </div>
@@ -1203,78 +1204,15 @@ export const MessageDetail = ({
                       </div>
                       <div className="text-[#5B6770] font-normal text-sm">
                         <p>
-                          {messageDetail.scheduleChanges?.new?.startDate &&
-                            messageDetail.scheduleChanges?.new?.endDate &&
-                            (isSameDay(
-                              new Date(
-                                messageDetail.scheduleChanges?.new?.startDate,
-                              ),
-                              new Date(
-                                messageDetail.scheduleChanges?.new?.endDate,
-                              ),
-                            ) ? (
-                              <p>
-                                {formatShowDeadline(
-                                  messageDetail.scheduleChanges?.new?.startDate,
-                                )}{' '}
-                                {messageDetail.schedule?.isAllDay ? (
-                                  '終日'
-                                ) : (
-                                  <>
-                                    {formatHoursAndMinutesForDateTime(
-                                      new Date(
-                                        messageDetail.scheduleChanges?.new?.startDate,
-                                      ),
-                                    )}{' '}
-                                    ~{' '}
-                                    {formatHoursAndMinutesForDateTime(
-                                      new Date(
-                                        messageDetail.scheduleChanges?.new?.endDate,
-                                      ),
-                                    )}
-                                  </>
-                                )}
-                              </p>
-                            ) : (
-                              <p>
-                                {messageDetail.schedule?.isAllDay ? (
-                                  <>
-                                    {formatShowDeadline(
-                                      messageDetail.scheduleChanges?.new
-                                        ?.startDate,
-                                    )}{' '}
-                                    ~{' '}
-                                    {formatShowDeadline(
-                                      messageDetail.scheduleChanges?.new
-                                        ?.endDate,
-                                    )}{' '}
-                                    終日
-                                  </>
-                                ) : (
-                                  <>
-                                    {formatShowDeadline(
-                                      messageDetail.scheduleChanges?.new
-                                        ?.startDate,
-                                    )}{' '}
-                                    {formatHoursAndMinutesForDateTime(
-                                      new Date(
-                                        messageDetail.scheduleChanges?.new?.startDate,
-                                      ),
-                                    )}{' '}
-                                    ~{' '}
-                                    {formatShowDeadline(
-                                      messageDetail.scheduleChanges?.new
-                                        ?.endDate,
-                                    )}{' '}
-                                    {formatHoursAndMinutesForDateTime(
-                                      new Date(
-                                        messageDetail.scheduleChanges?.new?.endDate,
-                                      ),
-                                    )}
-                                  </>
-                                )}
-                              </p>
-                            ))}
+                          {messageDetail.scheduleChanges?.new &&
+                            (messageDetail.scheduleChanges?.new.repeatType ==
+                            TaskRepetitiveValue.ONCE
+                              ? renderScheduleChangeInCalendarRoom(
+                                  messageDetail,
+                                )
+                              : displayRepetitiveEventTime(
+                                  messageDetail.scheduleChanges?.new,
+                                ))}
                         </p>
                       </div>
                       <p className="text-[#5B6770] font-normal text-sm">

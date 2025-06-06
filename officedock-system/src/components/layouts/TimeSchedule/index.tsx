@@ -2846,6 +2846,8 @@ const TimeSchedule = memo(
           showToast({
             description: SUCCESS_DELETE_MESSAGE,
           });
+          queryClient.refetchQueries(['getDataTaskHeaderList']);
+          queryClient.refetchQueries(['getTaskHeaderStart']);
         },
         onError: (error: AxiosError<any>) => {
           showErrorToast(error, ERROR_DELETE_MESSAGE);
@@ -3481,22 +3483,31 @@ const TimeSchedule = memo(
                     ) as HTMLElement;
                     if (!resizer) return;
 
-                    resizer.style.display = 'none';
-
                     info.el.addEventListener('mousemove', (e) => {
                       const rect = info.el.getBoundingClientRect();
                       const offsetY = e.clientY - rect.top;
                       const height = rect.height;
 
-                      if (offsetY > height - 30) {
-                        resizer.style.display = 'block';
+                      if (
+                        offsetY > height - 30 &&
+                        info.event.extendedProps.type !==
+                          EventCalendarType.SCHEDULE
+                      ) {
+                        info.el.classList.add('resizable-disabled');
                       } else {
-                        resizer.style.display = 'none';
+                        if (
+                          offsetY > height - 30 &&
+                          resourceId === ItemScheduleType.ACTUAL
+                        ) {
+                          info.el.classList.add('resizable-disabled');
+                        } else {
+                          info.el.classList.remove('resizable-disabled');
+                        }
                       }
                     });
 
                     info.el.addEventListener('mouseleave', () => {
-                      resizer.style.display = 'none';
+                      info.el.classList.remove('resizable-disabled');
                     });
                   }}
                   eventDragStop={handleEventDragStop}

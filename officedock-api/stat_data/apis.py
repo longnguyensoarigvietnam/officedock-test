@@ -251,9 +251,17 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 .first()
             )
             filter_durations = durations.filter(
-                Q(task__categories__large_statistic_category__id=category_id)
-                | Q(
-                    schedule__categories__large_statistic_category__id=category_id
+                Q(
+                    Q(
+                        task__categories__large_statistic_category__id=category_id
+                    )
+                    | Q(
+                        schedule__categories__large_statistic_category__id=category_id
+                    )
+                )
+                & Q(
+                    Q(task__organization__id=organization_id)
+                    | Q(schedule__organization__id=organization_id)
                 )
             )
             duration = annotate_duration(
@@ -401,6 +409,8 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     confirm_report = user.reported_confirmations.filter(
                         date=date, confirm_by=request_user
                     ).first()
+                    if user.id == 184:
+                        print(confirm_report.is_confirmed)
                     user_serializer = CreationDataUserSerializer(user).data
                     user_serializer["total_duration"] = format_duration(
                         total_duration
@@ -582,9 +592,12 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     "id",
                     "none_organization",
                 )
-                duration = (
-                    filter_duration.paused_at - filter_duration.started_at
+                paused_at = (
+                    filter_duration.paused_at
+                    if filter_duration.paused_at
+                    else now()
                 )
+                duration = paused_at - filter_duration.started_at
 
                 org_data = organization_dict.setdefault(org_id, {})
                 empty_cat = org_data.setdefault(
