@@ -536,6 +536,7 @@ export const MessageDetailBookmark = ({
                                   </p>
                                 ) : (
                                   <p className="mt-2 italic text-gray-600">
+                                    {messageDetail.sender.fullName}
                                     {EVENT_DELETED}
                                   </p>
                                 )}
@@ -575,6 +576,22 @@ export const MessageDetailBookmark = ({
                                 </p>
                                 <p className="font-semibold mt-2">参加者</p>
                                 {renderParticipantsContent(messageDetail)}
+                                {messageDetail.schedule?.id ? (
+                                  <p
+                                    className="hover:cursor-pointer mt-2"
+                                    onClick={() =>
+                                      handleConfirmGetDataDetailEvent(
+                                        `${messageDetail.schedule?.id}`,
+                                      )
+                                    }>
+                                    予定を確認する
+                                  </p>
+                                ) : (
+                                  <p className="mt-2 italic text-gray-600">
+                                    {messageDetail.sender.fullName}{' '}
+                                    {EVENT_DELETED}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </div>

@@ -35,21 +35,29 @@ import {
   TASK_DELETED,
 } from '@constants';
 import { HIGHLIGHT_SEARCH_TERM_REGEX } from '@constants/regex';
-import { ChatRoomType, MessageType, SubmitLevelStatus, TaskRepetitiveValue } from '@constants/enums';
+import {
+  ChatRoomType,
+  MessageType,
+  SubmitLevelStatus,
+  TaskRepetitiveValue,
+} from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 
 import { ChatDashboardMember, ChatMessageResponse } from '@interfaces/chat';
 
 import {
   convertToCurrentTimezone,
-  convertToTimeString,
   formatCheckDate,
   formatHoursAndMinutesForDateTime,
   formatShowDeadline,
   getFormattedDateTime,
-  getJapaneseDayName,
 } from '@utils/date';
-import { displayRepetitiveEventTime, formatWithParagraphTags, getFileURL, renderEventDatetimeInChat } from '@utils';
+import {
+  displayRepetitiveEventTime,
+  formatWithParagraphTags,
+  getFileURL,
+  renderEventDatetimeInChat,
+} from '@utils';
 
 interface SearchMessagesModalProps {
   open: boolean;
@@ -284,6 +292,41 @@ export const SearchMessagesModal = ({
     );
   };
 
+  const renderParticipantsContent = (messageDetail: ChatMessageResponse) => {
+    return (
+      <>
+        <p>
+          {
+            messageDetail.scheduleChanges?.participants?.find(
+              (participant) => participant.isCreator,
+            )?.name
+          }{' '}
+          {messageDetail.scheduleChanges?.participants?.find(
+            (participant) => participant.isCreator,
+          ) && '-主催者'}
+        </p>
+        {messageDetail.scheduleChanges?.participants?.find(
+          (participant) => participant.isCreator,
+        )
+          ? messageDetail.scheduleChanges?.participants
+              ?.filter((participant) => !participant.isCreator)
+              ?.slice(0, 3)
+              .map((participant) => (
+                <p key={participant.id}>{participant.name} </p>
+              ))
+          : messageDetail.scheduleChanges?.participants
+              ?.slice(0, 4)
+              .map((participant) => (
+                <p key={participant.id}>{participant.name} </p>
+              ))}
+        {messageDetail.scheduleChanges?.participants &&
+          messageDetail.scheduleChanges?.participants?.length > 4 && (
+            <p>その他</p>
+          )}
+      </>
+    );
+  };
+
   return (
     <Modal
       open={open}
@@ -485,91 +528,27 @@ export const SearchMessagesModal = ({
                                         {EVENT_DELETED}
                                       </p>
                                       <p className="font-semibold mt-2">日時</p>
-                                      <p>
-                                        {messageDetail.scheduleChanges?.new &&
-                                          `${format(
-                                            messageDetail.scheduleChanges?.new
-                                              .startDate as string,
-                                            DATE_FORMAT,
-                                          )}(${getJapaneseDayName(
-                                            messageDetail.scheduleChanges?.new
-                                              .startDate as string,
-                                          )})`}{' '}
-                                        {messageDetail.scheduleChanges?.new &&
-                                          convertToTimeString(
-                                            `${messageDetail.scheduleChanges?.new.startDate}`,
-                                          )}{' '}
-                                        ~{' '}
-                                        {messageDetail.scheduleChanges?.new &&
-                                          String(
-                                            format(
-                                              messageDetail.scheduleChanges?.new
-                                                .startDate as string,
-                                              DATE_FORMAT,
-                                            ),
-                                          ) !==
-                                            String(
-                                              format(
-                                                messageDetail.scheduleChanges
-                                                  ?.new.endDate as string,
-                                                DATE_FORMAT,
-                                              ),
-                                            ) &&
-                                          `${format(
-                                            messageDetail.scheduleChanges?.new
-                                              .endDate as string,
-                                            DATE_FORMAT,
-                                          )}(${getJapaneseDayName(
-                                            messageDetail.scheduleChanges?.new
-                                              .endDate as string,
-                                          )})`}{' '}
-                                        {messageDetail.scheduleChanges?.new &&
-                                          convertToTimeString(
-                                            `${messageDetail.scheduleChanges?.new.endDate}`,
-                                          )}
-                                      </p>
+                                      <div className={`text-left`}>
+                                        <p>
+                                          {' '}
+                                          {messageDetail.scheduleChanges?.new &&
+                                            (messageDetail.scheduleChanges?.new
+                                              .repeatType ==
+                                            TaskRepetitiveValue.ONCE
+                                              ? renderEventDatetimeInChat(
+                                                  messageDetail.scheduleChanges
+                                                    ?.new,
+                                                )
+                                              : displayRepetitiveEventTime(
+                                                  messageDetail.scheduleChanges
+                                                    ?.new,
+                                                ))}
+                                        </p>
+                                      </div>
                                       <p className="font-semibold mt-2">
                                         参加者
                                       </p>
-                                      <p>
-                                        {
-                                          messageDetail.scheduleChanges?.participants?.find(
-                                            (participant) =>
-                                              participant.isCreator,
-                                          )?.name
-                                        }{' '}
-                                        {messageDetail.scheduleChanges?.participants?.find(
-                                          (participant) =>
-                                            participant.isCreator,
-                                        ) && '-主催者'}
-                                      </p>
-                                      {messageDetail.scheduleChanges?.participants?.find(
-                                        (participant) => participant.isCreator,
-                                      )
-                                        ? messageDetail.scheduleChanges?.participants
-                                            ?.filter(
-                                              (participant) =>
-                                                !participant.isCreator,
-                                            )
-                                            ?.slice(0, 3)
-                                            .map((participant) => (
-                                              <p key={participant.id}>
-                                                {participant.name}{' '}
-                                              </p>
-                                            ))
-                                        : messageDetail.scheduleChanges?.participants
-                                            ?.slice(0, 4)
-                                            .map((participant) => (
-                                              <p key={participant.id}>
-                                                {participant.name}{' '}
-                                              </p>
-                                            ))}
-                                      {messageDetail.scheduleChanges
-                                        ?.participants &&
-                                        messageDetail.scheduleChanges
-                                          ?.participants?.length > 4 && (
-                                          <p>その他</p>
-                                        )}
+                                      {renderParticipantsContent(messageDetail)}
                                       <p
                                         className={`mt-2 text-left`}
                                         dangerouslySetInnerHTML={{
@@ -589,6 +568,7 @@ export const SearchMessagesModal = ({
                                     <div
                                       className={`flex flex-col items-start`}>
                                       <p className="w-fit font-semibold text-black">
+                                        {messageDetail.sender.fullName}{' '}
                                         {EVENT_EDITED}
                                       </p>
                                       <p className="mt-2">
@@ -653,45 +633,7 @@ export const SearchMessagesModal = ({
                                       <p className="font-semibold mt-2">
                                         参加者
                                       </p>
-                                      <p>
-                                        {
-                                          messageDetail.scheduleChanges?.participants?.find(
-                                            (participant) =>
-                                              participant.isCreator,
-                                          )?.name
-                                        }{' '}
-                                        {messageDetail.scheduleChanges?.participants?.find(
-                                          (participant) =>
-                                            participant.isCreator,
-                                        ) && '-主催者'}
-                                      </p>
-                                      {messageDetail.scheduleChanges?.participants?.find(
-                                        (participant) => participant.isCreator,
-                                      )
-                                        ? messageDetail.scheduleChanges?.participants
-                                            ?.filter(
-                                              (participant) =>
-                                                !participant.isCreator,
-                                            )
-                                            ?.slice(0, 3)
-                                            .map((participant) => (
-                                              <p key={participant.id}>
-                                                {participant.name}{' '}
-                                              </p>
-                                            ))
-                                        : messageDetail.scheduleChanges?.participants
-                                            ?.slice(0, 4)
-                                            .map((participant) => (
-                                              <p key={participant.id}>
-                                                {participant.name}{' '}
-                                              </p>
-                                            ))}
-                                      {messageDetail.scheduleChanges
-                                        ?.participants &&
-                                        messageDetail.scheduleChanges
-                                          ?.participants?.length > 4 && (
-                                          <p>その他</p>
-                                        )}
+                                      {renderParticipantsContent(messageDetail)}
                                       {messageDetail.schedule?.id ? (
                                         <p
                                           className="hover:cursor-pointer mt-2"
@@ -704,6 +646,7 @@ export const SearchMessagesModal = ({
                                         </p>
                                       ) : (
                                         <p className="mt-2 italic text-gray-600">
+                                          {messageDetail.sender.fullName}{' '}
                                           {EVENT_DELETED}
                                         </p>
                                       )}
@@ -731,90 +674,24 @@ export const SearchMessagesModal = ({
                                       </p>
                                       <p className="font-semibold mt-2">日時</p>
                                       <p>
+                                        {' '}
                                         {messageDetail.scheduleChanges?.new &&
-                                          `${format(
-                                            messageDetail.scheduleChanges?.new
-                                              .startDate as string,
-                                            DATE_FORMAT,
-                                          )}(${getJapaneseDayName(
-                                            messageDetail.scheduleChanges?.new
-                                              .startDate as string,
-                                          )})`}{' '}
-                                        {messageDetail.scheduleChanges?.new &&
-                                          convertToTimeString(
-                                            `${messageDetail.scheduleChanges?.new.startDate}`,
-                                          )}{' '}
-                                        ~{' '}
-                                        {messageDetail.scheduleChanges?.new &&
-                                          String(
-                                            format(
-                                              messageDetail.scheduleChanges?.new
-                                                .startDate as string,
-                                              DATE_FORMAT,
-                                            ),
-                                          ) !==
-                                            String(
-                                              format(
+                                          (messageDetail.scheduleChanges?.new
+                                            .repeatType ==
+                                          TaskRepetitiveValue.ONCE
+                                            ? renderEventDatetimeInChat(
                                                 messageDetail.scheduleChanges
-                                                  ?.new.endDate as string,
-                                                DATE_FORMAT,
-                                              ),
-                                            ) &&
-                                          `${format(
-                                            messageDetail.scheduleChanges?.new
-                                              .endDate as string,
-                                            DATE_FORMAT,
-                                          )}(${getJapaneseDayName(
-                                            messageDetail.scheduleChanges?.new
-                                              .endDate as string,
-                                          )})`}{' '}
-                                        {messageDetail.scheduleChanges?.new &&
-                                          convertToTimeString(
-                                            `${messageDetail.scheduleChanges?.new.endDate}`,
-                                          )}
+                                                  ?.new,
+                                              )
+                                            : displayRepetitiveEventTime(
+                                                messageDetail.scheduleChanges
+                                                  ?.new,
+                                              ))}
                                       </p>
                                       <p className="font-semibold mt-2">
                                         参加者
                                       </p>
-                                      <p>
-                                        {
-                                          messageDetail.scheduleChanges?.participants?.find(
-                                            (participant) =>
-                                              participant.isCreator,
-                                          )?.name
-                                        }{' '}
-                                        {messageDetail.scheduleChanges?.participants?.find(
-                                          (participant) =>
-                                            participant.isCreator,
-                                        ) && '-主催者'}
-                                      </p>
-                                      {messageDetail.scheduleChanges?.participants?.find(
-                                        (participant) => participant.isCreator,
-                                      )
-                                        ? messageDetail.scheduleChanges?.participants
-                                            ?.filter(
-                                              (participant) =>
-                                                !participant.isCreator,
-                                            )
-                                            ?.slice(0, 3)
-                                            .map((participant) => (
-                                              <p key={participant.id}>
-                                                {participant.name}{' '}
-                                              </p>
-                                            ))
-                                        : messageDetail.scheduleChanges?.participants
-                                            ?.slice(0, 4)
-                                            .map((participant) => (
-                                              <p key={participant.id}>
-                                                {participant.name}{' '}
-                                              </p>
-                                            ))}
-                                      {messageDetail.scheduleChanges
-                                        ?.participants &&
-                                        messageDetail.scheduleChanges
-                                          ?.participants?.length > 4 && (
-                                          <p>その他</p>
-                                        )}
+                                      {renderParticipantsContent(messageDetail)}
                                       {messageDetail.schedule?.id ? (
                                         <p
                                           className="hover:cursor-pointer mt-2"
@@ -827,6 +704,7 @@ export const SearchMessagesModal = ({
                                         </p>
                                       ) : (
                                         <p className="mt-2 italic text-gray-600">
+                                          {messageDetail.sender.fullName}{' '}
                                           {EVENT_DELETED}
                                         </p>
                                       )}
