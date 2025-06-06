@@ -242,7 +242,7 @@ const DailyReportDetailBoard = () => {
         ? clickInfo.event.extendedProps.uuid
         : '',
       start: clickInfo.event.start,
-      end: clickInfo.event.end,
+      end: clickInfo.event.extendedProps.pausedAt,
       eventList: taskTimeStatisticList,
       clientX: clickInfo.jsEvent.clientX,
       clientY: clickInfo.jsEvent.clientY,

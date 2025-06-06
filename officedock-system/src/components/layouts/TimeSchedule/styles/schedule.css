@@ -686,3 +686,9 @@
 .schedule-custom .fc-timeGridWeek-view .fc-timegrid-col-events {
   top: 4px !important;
 }
+.schedule-custom .fc-event .fc-event-resizer-end {
+  display: none !important;
+}
+.schedule-custom .fc-event.resizable-disabled .fc-event-resizer-end {
+  display: block !important;
+}

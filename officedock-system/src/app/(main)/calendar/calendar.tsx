@@ -11,7 +11,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { EventClickArg } from '@fullcalendar/core';
 import multiMonthPlugin from '@fullcalendar/multimonth';
 import { Controller, useForm } from 'react-hook-form';
-import { useMutation } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import resourceTimeGridPlugin from '@fullcalendar/resource-timegrid';
@@ -106,6 +106,7 @@ const EventCalendar = () => {
   // Refs
   const calendarRef = useRef<FullCalendar | null>(null);
   const containerRef = useRef(null);
+  const queryClient = useQueryClient();
 
   // Session
   const { data: session } = useSession();
@@ -2172,6 +2173,8 @@ const EventCalendar = () => {
           return filteredEvents;
         });
         setSelectedEventInfo(null);
+        queryClient.refetchQueries(['getDataTaskHeaderList']);
+        queryClient.refetchQueries(['getTaskHeaderStart']);
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_DELETE_MESSAGE);
@@ -2208,13 +2211,14 @@ const EventCalendar = () => {
         setEvents((prevEvents) => {
           const updatedEvents = [...prevEvents];
           const filteredEvents = updatedEvents.filter(
-            (event) =>
-              String(event.eventId) !== String(eventIdURL),
+            (event) => String(event.eventId) !== String(eventIdURL),
           );
           return filteredEvents;
         });
         setSelectedEventInfo(null);
         handleRemoveEventParam();
+        queryClient.refetchQueries(['getDataTaskHeaderList']);
+        queryClient.refetchQueries(['getTaskHeaderStart']);
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_DELETE_MESSAGE);

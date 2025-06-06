@@ -136,6 +136,8 @@ const DailyReportBoard = () => {
   const { dataStatisticPDF, refetchDataStatisticPDF } = useDataStatisticPDF({
     date: formatDateServer(currentDate),
     onSettled: () => {
+      setIsLoading(false);
+
       setTimeout(() => {
         setIsLoadingDownload(true);
       }, 2000);
@@ -2334,16 +2336,18 @@ const DailyReportBoard = () => {
                 </tbody>
               </table>
             </div>
-            <div className="mt-[60px] min-h-[200px] border border-gray-500">
-              <p className="text-center py-2 border-b border-gray-500 -translate-y-[25%]">
-                備考
-              </p>
-              <div className="py-1 pr-3">
-                <div
-                  className="rounded-sm break-all p-1"
-                  dangerouslySetInnerHTML={{
-                    __html: (remarkData ?? '').replace(/\n/g, '<br/>'),
-                  }}></div>
+            <div className="pdf-remark">
+              <div className="my-[60px] min-h-[200px] border border-gray-500">
+                <p className="remark-title text-center py-2 border-b border-gray-500 -translate-y-[25%]">
+                  備考
+                </p>
+                <div className="remark-content py-1 pr-3">
+                  <div
+                    className="rounded-sm break-all p-1"
+                    dangerouslySetInnerHTML={{
+                      __html: (remarkData ?? '').replace(/\n/g, '<br/>'),
+                    }}></div>
+                </div>
               </div>
             </div>
           </div>
