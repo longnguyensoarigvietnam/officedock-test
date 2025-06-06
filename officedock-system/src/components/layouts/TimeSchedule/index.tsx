@@ -1289,8 +1289,9 @@ const TimeSchedule = memo(
         const startDateISOString = formatQueryStartDateForCalendar(
           calendarApi.view.activeStart,
         );
+
         const endDateISOString = formatQueryEndDateForCalendarCustom(
-          calendarApi.view.activeEnd,
+          calendarApi.view.activeStart,
           calendarView === CalendarViewOptions.VIEW_BY_WEEK,
         );
         setDisplayHeaderDayStart(new Date(startDateISOString));
@@ -1299,6 +1300,7 @@ const TimeSchedule = memo(
         setTimeout(() => {
           calendarApi.refetchEvents();
         }, 300);
+        scrollToDate();
       }
     };
 
