@@ -73,7 +73,7 @@ const ListLocation = () => {
     },
   });
 
-  useEventLocationList({
+  const { refetchEventLocationList } = useEventLocationList({
     pagination: {
       page: debouncedParams.page,
       pageSize,
@@ -95,6 +95,7 @@ const ListLocation = () => {
     uuid: string;
     name: string;
   }) => {
+    setIsLoading(true);
     return await api.post(apiRouters.LOCATION_LIST, data);
   };
 
@@ -103,6 +104,12 @@ const ListLocation = () => {
     handleCreateEventLocation,
     {
       onSuccess: () => {
+        refetchEventLocationList();
+        setEditingId(null);
+        setEditText('');
+        setIsCreating(false);
+        setIsEditing(false);
+
         showToast({
           description: SUCCESS_CREATE_MESSAGE,
         });
@@ -153,9 +160,15 @@ const ListLocation = () => {
     handleDeleteEventLocation,
     {
       onSuccess: () => {
-        setDataLocation((prev) =>
-          prev.filter((item) => item.uuid !== selectedLocationToDelete?.uuid),
-        );
+        if (dataLocation?.length === 1 && debouncedParams.page > 1) {
+          // If change current page, useLocationList auto recall, just don't need using refetchLocationList
+          setDebouncedParams((prev) => ({
+            ...prev,
+            page: debouncedParams.page - 1,
+          }));
+        } else {
+          refetchEventLocationList();
+        }
         showToast({
           description: SUCCESS_DELETE_MESSAGE,
         });
@@ -461,7 +474,7 @@ const ListLocation = () => {
                 }}
               />
             </div>
-            <p className="text-sm">人ずつ表示</p>
+            <p className="text-sm">件ずつ表示</p>
           </div>
         </div>
       </div>

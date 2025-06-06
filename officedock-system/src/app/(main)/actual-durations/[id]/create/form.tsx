@@ -600,7 +600,7 @@ const CreateActualDurationsForm = () => {
   const handleRemoveSelectedTagId = useCallback(
     (option: OptionDropdownType, index: number) => {
       setSelectedTagIdsOptions((prevState) =>
-        prevState.filter((item) => item.value !== option.value),
+        prevState.filter((item) => item.value != option.value),
       );
       removeProject(index);
     },
