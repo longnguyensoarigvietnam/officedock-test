@@ -160,6 +160,9 @@ const ListLocation = () => {
     handleDeleteEventLocation,
     {
       onSuccess: () => {
+        setDataLocation((prev) =>
+          prev.filter((item) => item.uuid !== selectedLocationToDelete?.uuid),
+        );
         if (dataLocation?.length === 1 && debouncedParams.page > 1) {
           // If change current page, useLocationList auto recall, just don't need using refetchLocationList
           setDebouncedParams((prev) => ({
