@@ -80,7 +80,7 @@ const ListData = () => {
       `${apiRouters.CONFIRM_USER_DAILY(dataUser.id)}`,
       {
         isConfirmed: dataUser.isConfirmed,
-        date: formatDateServer(new Date()),
+        date: formatDateServer(dataDatePicker),
       },
     );
     return data;

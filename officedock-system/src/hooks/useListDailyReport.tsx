@@ -47,7 +47,7 @@ const useListDailyReport = ({
     queryKey: ['getListDailyReport', date, organization_ids],
     queryFn: getListDailyReport,
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && organization_ids?.length !== 0,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (response: DataListDailyType[]) => {

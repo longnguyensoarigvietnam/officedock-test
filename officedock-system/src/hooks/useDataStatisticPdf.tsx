@@ -35,6 +35,7 @@ const useDataStatisticPDF = ({
 
   // Handle call API get task calendar
   const getDataStatistic = async () => {
+    setIsLoading(true);
     const apiUrl = `${apiRouters.DATA_DAILY_STATISTIC_PDF}?${date ? `date=${date}` : ''}${userId ? `&user_id=${userId}` : ''}${organizationId ? `&organization_id=${organizationId}` : ''}`;
     const { data } = await api.get<dataStatisticResponsePDF>(apiUrl);
     return data;
