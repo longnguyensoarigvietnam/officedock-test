@@ -405,7 +405,11 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         if recurring != old_recurring and screen != Screens.STATISTIC.value:
             serializer_data["recurring"] = recurring
-
+        if not instance.organization:
+            # Set default calendar organization
+            serializer_data[
+                "organization"
+            ] = company.get_calendar_organization()
         if participants and send_to_chat:
             data = self._generate_chat_data(
                 recurring,
@@ -836,6 +840,8 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         if repeat_schedule_id:
             instance.repeat_schedules.filter(id=repeat_schedule_id).delete()
+        if not instance.repeat_schedules.exists():
+            self.perform_destroy(instance)
 
         return self.response(status_code=status.HTTP_204_NO_CONTENT)
 
