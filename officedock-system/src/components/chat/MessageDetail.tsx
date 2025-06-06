@@ -713,7 +713,7 @@ export const MessageDetail = ({
                                     </p>
                                   ) : (
                                     <p className="mt-2 italic text-gray-600">
-                                      {EVENT_DELETED}
+                                      {messageDetail.sender.fullName}{' '}{EVENT_DELETED}
                                     </p>
                                   )}
                                   <p
@@ -764,7 +764,7 @@ export const MessageDetail = ({
                                     </p>
                                   ) : (
                                     <p className="mt-2 italic text-gray-600">
-                                      {EVENT_DELETED}
+                                      {messageDetail.sender.fullName}{' '}{EVENT_DELETED}
                                     </p>
                                   )}
                                 </div>

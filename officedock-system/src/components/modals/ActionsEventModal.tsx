@@ -515,14 +515,14 @@ const ActionsEventModal = ({
 
   // Check overlapping location
   const handleConfirmCheckOverlappingLocation = () => {
-    if (
-      !watch('startTime') ||
-      !watch('endTime') ||
-      !watch('startDate') ||
-      !watch('endDate') ||
-      !watch('location.value')
-    )
-      return;
+    const isMissingRequiredFields = watch('isAllDay')
+      ? !watch('startDate') || !watch('endDate') || !watch('location.value')
+      : !watch('startDate') ||
+        !watch('endDate') ||
+        !watch('startTime') ||
+        !watch('endTime') ||
+        !watch('location.value');
+    if (isMissingRequiredFields) return;
     let planStartDate = '';
     let planEndDate = '';
     if (watch('isAllDay')) {
@@ -1148,7 +1148,10 @@ const ActionsEventModal = ({
                     <div className="!w-[68px] mr-5">
                       <Checkbox
                         label="終日"
-                        onChange={(state) => setValue('isAllDay', state)}
+                        onChange={(state) => {
+                          setValue('isAllDay', state);
+                          handleConfirmCheckOverlappingLocation();
+                        }}
                         isChecked={defaultValues.isAllDay}
                         disable={isDisabled}
                       />
