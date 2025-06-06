@@ -513,7 +513,6 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             get_category_durations(events)
         )
 
-        organization_durations = {}
         for card in combine_cards:
             category_name = card["categories__large_statistic_category__name"]
             category_id = card["categories__large_statistic_category__id"]
@@ -531,21 +530,22 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
             # Filter durations for the category
             filter_durations = durations.filter(
-                Q(task__categories__large_statistic_category__id=category_id)
-                | Q(
-                    schedule__categories__large_statistic_category__id=category_id
+                Q(
+                    Q(
+                        task__categories__large_statistic_category__id=category_id
+                    )
+                    | Q(
+                        schedule__categories__large_statistic_category__id=category_id
+                    )
+                )
+                & Q(
+                    Q(task__organization__id=organization_id)
+                    | Q(schedule__organization__id=organization_id)
                 )
             )
             duration = annotate_duration(
                 filter_durations, start_of_day, end_of_day
             )["total_duration"]
-
-            # Update total duration per organization
-            organization_durations.setdefault(
-                organization_id,
-                {"id": organization_id, "duration": timedelta(0)},
-            )
-            organization_durations[organization_id]["duration"] += duration
 
             # Update duration per category per organization
             org_data = organization_dict.setdefault(organization_id, {})
@@ -597,7 +597,6 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                         "duration": timedelta(0),
                     },
                 )
-
                 empty_cat["duration"] += duration
 
         sub_duration = timedelta(0)
