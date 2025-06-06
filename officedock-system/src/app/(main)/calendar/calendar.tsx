@@ -2842,6 +2842,7 @@ const EventCalendar = () => {
           popoverInfoLoading={popoverInfoLoading}
           setEventListModalInfo={setEventListModalInfo}
           setDefaultCreateStartDate={setDefaultCreateStartDate}
+          calendarView={watch('calendarView') ? watch('calendarView')?.value : CalendarViewOptions.VIEW_BY_MONTH}
         />
       )}
       {openCreateEventModal && (

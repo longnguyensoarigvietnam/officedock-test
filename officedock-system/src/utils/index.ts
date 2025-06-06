@@ -17,6 +17,7 @@ import { OptionDropdownType } from '@interfaces/common';
 import { UserRoleType } from '@interfaces/user';
 
 import {
+  CalendarViewOptions,
   EventWorkCategory,
   PermissionsSystem,
   PermissionType,
@@ -816,37 +817,42 @@ export function calculateTotalMinutes(
 }
 
 // Calculate popup position
-export const calculatePopupPosition = (
-  popupRect: DOMRect,
+export const calculatePopupPosition = (data: {
+  calendarView?: CalendarViewOptions;
+  popupRect: DOMRect;
   currentPosition: {
     top: number;
     left: number;
-  },
-  padding = 20,
-): {
+  };
+  padding: number;
+}): {
   top: number;
   left: number;
 } => {
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
 
-  let newTop = currentPosition.top;
-  let newLeft = currentPosition.left;
+  let newTop = data.currentPosition.top;
+  let newLeft = data.currentPosition.left;
 
   // Flip upward if bottom overflows
-  if (popupRect.bottom + padding > viewportHeight) {
-    newTop = currentPosition.top - popupRect.height - padding;
+  if (data.popupRect.bottom + data.padding > viewportHeight) {
+    newTop =
+      data.calendarView == CalendarViewOptions.VIEW_BY_YEAR
+        ? data.currentPosition.top - 200 - data.padding
+        : data.currentPosition.top - data.popupRect.height - data.padding;
   }
 
   // Push left if right overflows
-  if (popupRect.right + padding > viewportWidth) {
+  if (data.popupRect.right + data.padding > viewportWidth) {
     newLeft =
-      currentPosition.left - (popupRect.right + padding - viewportWidth);
+      data.currentPosition.left -
+      (data.popupRect.right + data.padding - viewportWidth);
   }
 
   // Push right if left overflows
-  if (popupRect.left - padding < 0) {
-    newLeft = currentPosition.left + (padding - popupRect.left);
+  if (data.popupRect.left - data.padding < 0) {
+    newLeft = data.currentPosition.left + (data.padding - data.popupRect.left);
   }
 
   return { top: newTop, left: newLeft };

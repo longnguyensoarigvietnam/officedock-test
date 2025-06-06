@@ -14,7 +14,11 @@ import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import Spinner from '@components/common/Spinner';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
-import { EventCalendarType, PermissionsSystem } from '@constants/enums';
+import {
+  CalendarViewOptions,
+  EventCalendarType,
+  PermissionsSystem,
+} from '@constants/enums';
 
 import { CalendarPopoverInfo, EventParticipant } from '@interfaces/calendar';
 
@@ -38,6 +42,7 @@ interface EventListModalProps {
     type?: EventCalendarType,
     participants?: EventParticipant[],
   ) => boolean;
+  calendarView: CalendarViewOptions;
 }
 
 export const EventListModal = ({
@@ -48,6 +53,7 @@ export const EventListModal = ({
   handleCreateNewEventFromPopup,
   handleEventClickInPopup,
   checkShowUserAvatar,
+  calendarView,
 }: EventListModalProps) => {
   const popoverRef = useRef<HTMLDivElement | null>(null);
   const { data: session } = useSession();
@@ -84,11 +90,16 @@ export const EventListModal = ({
   useEffect(() => {
     if (popoverRef.current) {
       const popupRect = popoverRef.current.getBoundingClientRect();
-      const adjustedPosition = calculatePopupPosition(popupRect, popupPosition);
+      const adjustedPosition = calculatePopupPosition({
+        calendarView,
+        popupRect,
+        currentPosition: popupPosition,
+        padding: 20,
+      });
 
       setPopupPosition(adjustedPosition);
     }
-  }, [popupPosition]);
+  }, [popupPosition, calendarView]);
 
   const showUserAvatars = (participantList: EventParticipant[]) => {
     if (participantList && participantList.length > 0) {
@@ -177,7 +188,7 @@ export const EventListModal = ({
   return (
     <div className="z-50">
       <div
-        className={`p-4 bg-white border custom-popover w-[330px] border-gray-200 shadow-lg font-primary max-h-[500px] overflow-y-auto !rounded-2xl py-4`}
+        className={`p-4 bg-white border custom-popover w-[330px] border-gray-200 shadow-lg font-primary max-h-[330px] overflow-y-auto !rounded-2xl py-4`}
         ref={popoverRef}
         style={{
           position: 'absolute',
@@ -215,7 +226,7 @@ export const EventListModal = ({
           </h3>
         )}
 
-        <ul className="list-disc max-h-[250px] overflow-y-auto">
+        <ul className="list-disc max-h-[195px] overflow-y-auto">
           {eventListModalInfo &&
             eventListModalInfo?.events.map((event) => {
               return (

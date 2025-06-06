@@ -67,10 +67,11 @@ const EventInfoModal = memo(
     useEffect(() => {
       if (popoverRef.current) {
         const popupRect = popoverRef.current.getBoundingClientRect();
-        const adjustedPosition = calculatePopupPosition(
+        const adjustedPosition = calculatePopupPosition({
           popupRect,
-          popupPosition,
-        );
+          currentPosition: popupPosition,
+          padding: 20,
+        });
 
         setPopupPosition(adjustedPosition);
       }
