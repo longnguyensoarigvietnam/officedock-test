@@ -752,7 +752,7 @@ const EventCalendar = () => {
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                   </p>
                   <p className={` text-black text-[12px] font-normal`}>
-                    {eventContent.event.extendedProps.location?.name}
+                    {eventContent.event.extendedProps?.location?.name}
                   </p>
                 </>
               ) : (
@@ -761,7 +761,7 @@ const EventCalendar = () => {
                     <>
                       <p>{eventContent.timeText}</p>
                       <p className={` text-black text-[12px] font-normal`}>
-                        {eventContent.event.extendedProps.location?.name}
+                        {eventContent.event.extendedProps?.location?.name}
                       </p>
                     </>
                   )}
@@ -834,7 +834,7 @@ const EventCalendar = () => {
                     ~{' '}
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                   </p>
-                  <p>{eventContent.event.extendedProps.location.name}</p>
+                  <p>{eventContent.event.extendedProps?.location?.name}</p>
                 </>
               ) : (
                 <>
