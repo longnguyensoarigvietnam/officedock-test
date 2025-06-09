@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import timedelta
+from datetime import timedelta, datetime
 import re
 
 from django.db.models import (
@@ -17,7 +17,7 @@ from rest_framework.exceptions import ValidationError
 
 from base.messages import ERROR_MESSAGES
 from calendars.models import Schedule
-from common.constants import DATE_REGEX
+from common.constants import DATE_REGEX, BASE_DATE_FORMAT
 from common.serializers import CreationDataUserSerializer
 from common.utils import (
     format_duration,
@@ -362,6 +362,7 @@ def process_categories(
     is_with_tasks=False,
     users=None,
     durations=None,
+    is_user_param=False,
 ):
     """Processes category durations, calculates percentages, and returns structured data."""
     percent = 100
@@ -447,40 +448,33 @@ def process_categories(
                         **{filter_key: category_id},
                     )
                 else:
+                    # Mapping category types to their corresponding field paths
+                    null_filters = {
+                        TaskCategoryTypes.LARGE.value: [
+                            "task__categories__large_statistic_category__isnull",
+                            "schedule__categories__large_statistic_category__isnull",
+                        ],
+                        TaskCategoryTypes.MEDIUM.value: [
+                            "task__categories__medium_statistic_category__isnull",
+                            "schedule__categories__medium_statistic_category__isnull",
+                        ],
+                        TaskCategoryTypes.SMALL.value: [
+                            "task__categories__small_statistic_category__isnull",
+                            "schedule__categories__small_statistic_category__isnull",
+                        ],
+                    }
+
                     filter_duration = Q()
-                    if category_type == TaskCategoryTypes.LARGE.value:
-                        filter_duration &= Q(
-                            Q(
-                                task__categories__large_statistic_category__isnull=True
-                            )
-                            & Q(
-                                schedule__categories__large_statistic_category__isnull=True
-                            )
-                        )
-                    elif category_type == TaskCategoryTypes.MEDIUM.value:
-                        filter_duration &= Q(
-                            Q(
-                                task__categories__medium_statistic_category__isnull=True
-                            )
-                            & Q(
-                                schedule__categories__medium_statistic_category__isnull=True
-                            )
-                        )
-                    elif category_type == TaskCategoryTypes.SMALL.value:
-                        filter_duration &= Q(
-                            Q(
-                                task__categories__small_statistic_category__isnull=True
-                            )
-                            & Q(
-                                schedule__categories__small_statistic_category__isnull=True
-                            )
-                        )
+                    for field in null_filters.get(category_type, []):
+                        filter_duration &= Q(**{field: True})
+
                     filter_durations = durations.filter(filter_duration)
 
                 data["users"] = process_users(
                     time_str_to_timedelta(category_duration),
                     filter_durations,
                     users,
+                    is_user_param,
                 )
 
         # Calculate the percentage of the total duration
@@ -512,9 +506,7 @@ def process_categories(
 
 
 def process_users(
-    total_duration,
-    durations=None,
-    users=None,
+    total_duration, durations=None, users=None, is_user_param=False
 ):
     """Processes users durations, calculates percentages, and returns structured data."""
     user_data = []
@@ -542,13 +534,21 @@ def process_users(
             else:
                 percent_per_total_duration = percent
 
-        user_data.append(
-            {
-                "user": user_serializer,
-                "duration": format_duration(duration),
-                "percent": min(round(percent_per_total_duration), 100),
-            }
-        )
+            user_data.append(
+                {
+                    "user": user_serializer,
+                    "duration": format_duration(duration),
+                    "percent": min(round(percent_per_total_duration), 100),
+                }
+            )
+        elif is_user_param:
+            user_data.append(
+                {
+                    "user": user_serializer,
+                    "duration": format_duration(duration),
+                    "percent": min(round(percent_per_total_duration), 100),
+                }
+            )
 
     return user_data
 
@@ -563,6 +563,7 @@ def process_tags(
     is_with_tasks=False,
     users=None,
     durations=None,
+    is_user_param=False,
 ):
     """Processes category durations, calculates percentages, and returns structured data."""
     percent = 100
@@ -611,6 +612,7 @@ def process_tags(
                         time_str_to_timedelta(tag_duration),
                         filter_durations,
                         users,
+                        is_user_param,
                     )
 
         # Calculate the percentage of the total duration
@@ -949,12 +951,14 @@ def get_list_id_category_of_organization(organization_ids):
     )
 
 
-def validate_date_format_using_regex(date):
+def validate_date_by_regex_and_reformat(date):
     """
-    Validate date format using default regex YYYY-MM-DD
+    Validate date format using default regex YYYY-MM-DD and return date
     """
     if not date or not re.match(DATE_REGEX, date):
         raise ValidationError({"detail": ERROR_MESSAGES["date_invalid"]})
+
+    return datetime.strptime(date, BASE_DATE_FORMAT).date()
 
 
 def percentage_calculation_of_duration(total_sec, duration_sec):
