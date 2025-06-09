@@ -1044,7 +1044,8 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             model.type = schedule_type
             model.save()
         if instance.task:
-            total_duration = instance.paused_at - instance.started_at
+            paused_at = instance.paused_at or now()
+            total_duration = paused_at - instance.started_at
             for user in instance.task.people_in_charge.all():
                 # Minus total duration to skill map actual measure time
                 calculate_progress_skill_map(
@@ -1058,7 +1059,8 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             instance.paused_at = paused_at
         instance.save()
         if instance.task:
-            total_duration = instance.paused_at - instance.started_at
+            paused_at = instance.paused_at or now()
+            total_duration = paused_at - instance.started_at
             for user in instance.task.people_in_charge.all():
                 # Plus total duration to skill map actual measure time
                 calculate_progress_skill_map(
