@@ -2,14 +2,12 @@
 import { AxiosError } from 'axios';
 import { useSession } from 'next-auth/react';
 import { useQuery } from 'react-query';
-import { useContext } from 'react';
 
 import { apiRouters } from '@constants/routers';
 
 import { dataStatisticResponse } from '@interfaces/statistic';
 
 import api from '@base/api';
-import { LoadingContext } from '@providers/LoadingProvider';
 
 interface useDataStatisticProps {
   date?: string;
@@ -27,7 +25,6 @@ const useDataStatistic = ({
   onError,
 }: useDataStatisticProps) => {
   const { data: session } = useSession();
-  const { setIsLoading } = useContext(LoadingContext);
 
   const token = session?.accessToken;
 
@@ -53,9 +50,7 @@ const useDataStatistic = ({
     onError: (error: AxiosError) => {
       onError && onError(error);
     },
-    onSettled: () => {
-      setIsLoading(false);
-    },
+    onSettled: () => {},
   });
 
   return { dataStatistic, refetchDataStatistic, isFetchedDataStatistic };

@@ -57,7 +57,6 @@ const useDataStatisticPDF = ({
       onError && onError(error);
     },
     onSettled: () => {
-      setIsLoading(false);
       onSettled && onSettled();
     },
   });

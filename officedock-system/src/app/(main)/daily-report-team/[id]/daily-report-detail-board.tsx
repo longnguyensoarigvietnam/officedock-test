@@ -164,8 +164,9 @@ const DailyReportDetailBoard = () => {
     organizationId: `${organization}`,
     onSettled: () => {
       setTimeout(() => {
+        setIsLoading(false);
         setIsLoadingDownload(true);
-      }, 2000);
+      }, 1000);
     },
   });
 
@@ -421,6 +422,8 @@ const DailyReportDetailBoard = () => {
     scheduleId?: number;
   }) => {
     setIsLoading(true);
+    setIsLoadingDownload(false);
+
     return await api.patch(
       apiRouters.ACTUAL_DURATION_DETAIL(parseInt(data.id)),
       data,
@@ -432,6 +435,7 @@ const DailyReportDetailBoard = () => {
     {
       onSuccess: async () => {
         refetchDataStatistic();
+
         refetchDataStatisticPDF();
       },
       onError: (data, variant) => {
@@ -463,6 +467,7 @@ const DailyReportDetailBoard = () => {
     }[];
   }) => {
     setIsLoading(true);
+    setIsLoadingDownload(false);
 
     const { data } = await api.patch(
       `${apiRouters.TASK_DETAIL(`${dataTask.id}`)}?current_screen=${ScreenName.STATISTIC}`,
@@ -495,6 +500,7 @@ const DailyReportDetailBoard = () => {
     }[];
   }) => {
     setIsLoading(true);
+    setIsLoadingDownload(false);
 
     const { data } = await api.patch(
       `${apiRouters.SCHEDULE_DETAIL(`${dataTask.id}`)}?current_screen=${ScreenName.STATISTIC}`,
