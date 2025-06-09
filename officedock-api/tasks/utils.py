@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, time
 
+from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
 from chat.constants import WebSocketEventType
@@ -13,7 +14,7 @@ from organizations.models import (
     OrganizationsStatisticCategoriesSkills,
 )
 from skills.constants import DEFAULT_TIME
-from skills.models import SkillMap
+from skills.models import SkillMap, SkillMapSkillLevel
 from tasks.constants import DatetimeUnitTypes, TaskStatus
 from tasks.models import Task, TaskSchedule, TodoList, TaskDuration
 from tasks.serializers import TaskScheduleSerializer, TodoListSerializer
@@ -160,6 +161,7 @@ def calculate_new_time(start_time, delta_value, delta_unit):
     return start_time - delta
 
 
+@transaction.atomic()
 def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
     """
     Handle calculate progress skill map by task
@@ -203,11 +205,15 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
             # Get all time durations of task
             total_duration_of_task = None
             if not duration_time:
+                count = 0
                 # Update skill map skill level actual measure count
                 if task.status.name == TaskStatus.COMPLETED.value:
                     count = 1
                     total_duration_of_task = get_total_hours_of_task(task)
-                else:
+                elif (
+                    current_skill_level.measure_task_ids
+                    and task.id in current_skill_level.measure_task_ids
+                ):
                     count = -1
                     total_duration_of_task = -get_total_hours_of_task(task)
 
@@ -242,7 +248,6 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
                     if new_actual_measure_time > timedelta(0)
                     else DEFAULT_TIME
                 )
-                print(user, actual_measure_time)
                 # Compare with current measure time and send socket to show pop-up
                 hours, _, _ = map(int, actual_measure_time.split(":"))
                 if (
@@ -257,7 +262,9 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
                         user,
                         skill_map_level=current_skill_level,
                     )
-
+            measure_task_ids = current_skill_level.measure_task_ids or []
+            if task.id not in measure_task_ids:
+                measure_task_ids.append(task.id)
             # Update skill map level
             skill_map.skill_map_skill_levels.filter(
                 id=current_skill_level.id
@@ -266,7 +273,43 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
                 if actual_measure_count > 0
                 else 0,
                 actual_measure_time=actual_measure_time,
+                measure_task_ids=measure_task_ids,
             )
+    # Update old level up contain task
+    skill_map_levels = SkillMapSkillLevel.objects.filter(
+        measure_task_ids__contains=[task.id], is_complete=True
+    ).all()
+    for skill_map_level in skill_map_levels:
+        # Check task status for minus or plus count and duration
+        if task.status.name == TaskStatus.COMPLETED.value:
+            count = 1
+            total_duration_of_task = get_total_hours_of_task(task)
+        else:
+            count = -1
+            total_duration_of_task = -get_total_hours_of_task(task)
+        # Calculate actual measure count
+        actual_measure_count = skill_map_level.actual_measure_count + count
+        # Calculate actual measure time
+        try:
+            new_actual_measure_time = (
+                time_str_to_timedelta(skill_map_level.actual_measure_time)
+                + total_duration_of_task
+            )
+        except:
+            raise ValidationError()
+        # Formatted timedelta to string
+        actual_measure_time = (
+            format_duration(new_actual_measure_time)
+            if new_actual_measure_time > timedelta(0)
+            else DEFAULT_TIME
+        )
+        # Update skill map level
+        SkillMapSkillLevel.objects.filter(id=skill_map_level.id).update(
+            actual_measure_count=actual_measure_count
+            if actual_measure_count > 0
+            else 0,
+            actual_measure_time=actual_measure_time,
+        )
 
 
 def _send_socket_show_popup_complete(
