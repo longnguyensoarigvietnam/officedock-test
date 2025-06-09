@@ -46,7 +46,6 @@ const useSkillMapInfo = ({
     const queryString =
       queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
 
-    // TODO: Confirm with BE about how many and how to use param
     const apiUrl = `${apiRouters.SKILL_MAPS_LIST}${queryString}`;
 
     const { data } = await api.get<SkillMapInfo>(apiUrl);

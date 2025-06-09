@@ -62,7 +62,7 @@ const PercentageCategoryTeam = ({
     remainingCountUser,
     remainingCountTag,
     firstThreeUser,
-    allLabelUer,
+    allLabelUser,
     allLabelTag,
     firstThreeTag,
     listMemberTeam,
@@ -351,7 +351,7 @@ const PercentageCategoryTeam = ({
                         </div>
                       );
                     })}
-                    {allLabelUer.length > 3 && (
+                    {allLabelUser.length > 3 && (
                       <p className=" h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
                         +{remainingCountUser}
                       </p>

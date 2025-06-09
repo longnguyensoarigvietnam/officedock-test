@@ -37,7 +37,6 @@ import { OptionDropdownType } from '@interfaces/common';
 import {
   SortingType,
   StatisticChartType,
-  StatisticViewLabels,
   StatisticViewOptions,
 } from '@constants/enums';
 
@@ -60,6 +59,7 @@ import {
   getRandomColor,
   lightenColor,
 } from '@utils';
+import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 
 ChartJS.register(
   CategoryScale,
@@ -181,21 +181,6 @@ const LineChartCompare = ({
   const [durationSortingStatus, setDurationSortingStatus] =
     useState<string>('');
 
-  const viewOptions = [
-    {
-      value: StatisticViewOptions.DAY,
-      label: StatisticViewLabels.DAY,
-    },
-    {
-      value: StatisticViewOptions.WEEK,
-      label: StatisticViewLabels.WEEK,
-    },
-    {
-      value: StatisticViewOptions.MONTH,
-      label: StatisticViewLabels.MONTH,
-    },
-  ];
-
   const tooltipRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -211,6 +196,7 @@ const LineChartCompare = ({
   const externalTooltipHandler = (context: any) => {
     const tooltipModel = context.tooltip;
     const tooltipEl = tooltipRef.current;
+    
     if (!tooltipEl || !tooltipModel) return;
 
     if (!tooltipModel.dataPoints || tooltipModel.dataPoints.length === 0) {
@@ -1366,8 +1352,8 @@ const LineChartCompare = ({
               </div>
               <div>
                 <Dropdown
-                  options={viewOptions}
-                  selectedOption={viewOptions.find(
+                  options={STATISTIC_CHART_VIEW_OPTIONS}
+                  selectedOption={STATISTIC_CHART_VIEW_OPTIONS.find(
                     (element) => element.value === lineChartViewBy?.value,
                   )}
                   className="h-[34px] !w-[54px] !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
@@ -1412,7 +1398,7 @@ const LineChartCompare = ({
             {isFetchedStatisticTaskDurationsList &&
               isFetchedStatisticTaskDurationsCompareList && (
                 <>
-                  <div className="flex gap-8 items-center justify-end flex-wrap">
+                  <div className="flex gap-8 items-center justify-end flex-wrap mb-3">
                     <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
                       基準
                     </p>

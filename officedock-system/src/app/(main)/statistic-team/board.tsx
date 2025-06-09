@@ -1,6 +1,12 @@
 'use client';
 import React, { Fragment, useContext, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
 
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
@@ -10,6 +16,9 @@ import PercentageTeamCategory from '@components/statisticTeam/category/Percentag
 import PercentageTeamCategoryCompare from '@components/statisticTeam/category/compare/PercentageCategoryCompare';
 import TaskListTeamStatistic from '@components/statisticTeam/category/TaskList';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
+import LineChartByTeam from '@components/statisticTeam/category/LineChartByTeam';
+import LineChartByTeamCompare from '@components/statisticTeam/category/compare/LineChartByTeamCompare';
 
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { pageRouters } from '@constants/routers';
@@ -19,18 +28,12 @@ import useStatisticCategoriesTeamCompare from '@hooks/useStatisticCategoriesTeam
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 
 import { OptionDropdownType } from '@interfaces/common';
+
 import { formatDateToYMD, sumDurations } from '@utils/date';
 
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition,
-} from '@headlessui/react';
-import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
 
 const StatisticTeamBoard = () => {
   const {
@@ -52,7 +55,7 @@ const StatisticTeamBoard = () => {
     remainingCountUser,
     remainingCountTag,
     firstThreeUser,
-    allLabelUer,
+    allLabelUser,
     allLabelTag,
     firstThreeTag,
     setOrderingOptions,
@@ -680,7 +683,7 @@ const StatisticTeamBoard = () => {
                     </div>
                   );
                 })}
-                {allLabelUer.length > 3 && (
+                {allLabelUser.length > 3 && (
                   <p className=" h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
                     +{remainingCountUser}
                   </p>
@@ -725,35 +728,63 @@ const StatisticTeamBoard = () => {
           </div>
         </div>
       </div>
-      {/* Percentage of categories */}
+
       {isCheckCompare ? (
-        <PercentageTeamCategoryCompare
-          startDate={startDate}
-          endDate={endDate}
-          startDateCompare={startDateCompare}
-          endDateCompare={endDateCompare}
-          statisticTeamCategoryList={statisticCategoryListTeam}
-          statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
-          handleSelectOrganization={handleSelectOrganization}
-          handleSelectOrganizationCustom={handleSelectOrganizationCustom}
-          handleSelectLarge={handleSelectLarge}
-          handleSelectMedium={handleSelectMedium}
-          removeTag={removeTag}
-          removeUser={removeUser}
-          handleSelectSmall={handleSelectSmall}
-        />
+        <>
+          {/* Compare percentage of categories */}
+          <PercentageTeamCategoryCompare
+            startDate={startDate}
+            endDate={endDate}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            statisticTeamCategoryList={statisticCategoryListTeam}
+            statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectOrganizationCustom={handleSelectOrganizationCustom}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            removeTag={removeTag}
+            removeUser={removeUser}
+            handleSelectSmall={handleSelectSmall}
+          />
+          {/* Compare line chart */}
+          <LineChartByTeamCompare
+            startDate={startDate}
+            endDate={endDate}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            removeTag={removeTag}
+            removeUser={removeUser}
+          />
+        </>
       ) : (
-        <PercentageTeamCategory
-          startDate={startDate}
-          endDate={endDate}
-          statisticTeamCategoryList={statisticCategoryListTeam}
-          handleSelectOrganization={handleSelectOrganization}
-          handleSelectOrganizationCustom={handleSelectOrganizationCustom}
-          handleSelectLarge={handleSelectLarge}
-          handleSelectMedium={handleSelectMedium}
-          removeTag={removeTag}
-          removeUser={removeUser}
-        />
+        <>
+          {/* Percentage of category */}
+          <PercentageTeamCategory
+            startDate={startDate}
+            endDate={endDate}
+            statisticTeamCategoryList={statisticCategoryListTeam}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectOrganizationCustom={handleSelectOrganizationCustom}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            removeTag={removeTag}
+            removeUser={removeUser}
+          />
+          {/* Line chart */}
+          <LineChartByTeam
+            startDate={startDate}
+            endDate={endDate}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            removeTag={removeTag}
+            removeUser={removeUser}
+          />
+        </>
       )}
       {/* Task list */}
       {creationDataStatisticData && (
