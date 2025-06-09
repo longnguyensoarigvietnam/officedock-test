@@ -169,11 +169,11 @@ const PercentageCategoryTeam = ({
     // Get list options
     const listDataOptions = filteredCategories.map(
       (item) =>
-        item.users?.slice(0, 6).map((user) => ({
+        item.users?.map((user) => ({
           label: user.user.fullName,
           avatarColor: user.user.avatarColor,
           percent: user.percent,
-          avatarUrl: user.user?.avatar || ''
+          avatarUrl: user.user?.avatar || '',
         })) || [],
     );
     // Get list id

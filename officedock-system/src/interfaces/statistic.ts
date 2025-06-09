@@ -278,6 +278,13 @@ export interface CreationStatisticType {
     avatarColor: string;
   }[];
   iconColor?: string;
+  tags: TagCreationStatisticType[];
+  members: {
+    id: number;
+    fullName: string;
+    avatarColor: string;
+    avatar: string;
+  }[];
 }
 export interface DataResponseStatisticCreationType {
   organizations: CreationStatisticType[];
@@ -299,7 +306,7 @@ export interface DataResponseStatisticCreationType {
   tags: TagCreationStatisticType[];
 }
 export interface DataResponseStatisticCreationTeamType {
-  organization: CreationStatisticType;
+  organizations: CreationStatisticType[];
   tags: TagCreationStatisticType[];
   members: {
     id: number;
@@ -358,6 +365,29 @@ export interface StatisticsTagTaskDuration {
   durations: {
     startDate: string;
     endDate: string;
+    duration: string;
+    percent: number;
+  }[];
+}
+export interface StatisticsPercentChart {
+  endDate: string;
+  startDate: string;
+  totalDuration: string;
+  categories: {
+    categoryColor: string;
+    categoryId: number;
+    categoryName: string;
+    duration: string;
+    percent: number;
+  }[];
+}
+export interface StatisticsTagPercentChart {
+  endDate: string;
+  startDate: string;
+  totalDuration: string;
+  tags: {
+    tagId: number;
+    tagName: string;
     duration: string;
     percent: number;
   }[];

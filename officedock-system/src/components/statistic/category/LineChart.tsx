@@ -122,6 +122,7 @@ const LineChart = ({
       categoryColor: string;
     }[]
   >([]);
+
   const [standardLabelsInfo, setStandardLabelsInfo] = useState<
     {
       color: string;
@@ -570,8 +571,12 @@ const LineChart = ({
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
-      const rowADuration = convertDurationToTotalMinutes(rowA.categoryDuration || '00:00:00');
-      const rowBDuration = convertDurationToTotalMinutes(rowB.categoryDuration || '00:00:00');
+      const rowADuration = convertDurationToTotalMinutes(
+        rowA.categoryDuration || '00:00:00',
+      );
+      const rowBDuration = convertDurationToTotalMinutes(
+        rowB.categoryDuration || '00:00:00',
+      );
 
       return sortingType == SortingType.ASC
         ? rowADuration - rowBDuration

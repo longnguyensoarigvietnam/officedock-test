@@ -23,6 +23,7 @@ import { pageRouters } from '@constants/routers';
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
+import StackedAreaChart from '@components/statistic/tag/StackedAreaChart';
 
 const StatisticTagBoard = () => {
   const {
@@ -132,20 +133,19 @@ const StatisticTagBoard = () => {
         const mainItem =
           data.organizations.find((item) => item.isMain) ||
           data.organizations[0];
+        const optionsTagList = mainItem.tags.map((item) => ({
+          label: item.name,
+          value: item.id,
+        }));
+        setTagsOptions(optionsTagList);
+        setSelectedTags(optionsTagList);
+
         return {
           label: mainItem.name,
           value: mainItem.id,
         };
       })();
-
-      const optionsTagList = data.tags.map((item) => ({
-        label: item.name,
-        value: item.id,
-      }));
-
       setSelectedOrganization(result);
-      setTagsOptions(optionsTagList);
-      setSelectedTags(optionsTagList);
       setListOptionsOrganization([
         ...data.organizations.map((org) => ({
           value: org.id || '',
@@ -188,6 +188,15 @@ const StatisticTagBoard = () => {
         value: stat.LARGE.id,
         label: stat.LARGE.name,
       }));
+      const optionsTagList = organization.tags.map((item) => ({
+        label: item.name,
+        value: item.id,
+      }));
+      setCurrentPage(1);
+
+      setSelectedTags([]);
+      setTagsOptions(optionsTagList);
+      setSelectedTags(optionsTagList);
       setLargeOptions(largeCategories);
     } else {
       setLargeOptions([]);
@@ -427,6 +436,16 @@ const StatisticTagBoard = () => {
           />
           {/* Line chart */}
           <LineChart
+            startDate={startDate}
+            endDate={endDate}
+            removeTag={removeTag}
+            statisticTagsList={statisticTagsList}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+          <StackedAreaChart
             startDate={startDate}
             endDate={endDate}
             removeTag={removeTag}
