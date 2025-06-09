@@ -34,7 +34,7 @@ type Props = {
   endDate: Date | null;
   startDateCompare: Date;
   endDateCompare: Date | null;
-  creationDataStatisticData: CreationStatisticType;
+  creationDataStatisticData: CreationStatisticType | undefined;
   statisticCategoryListTeam: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;

@@ -1055,13 +1055,34 @@ export function formatTimeToJapanese(time: string): string {
 
   return `${resultHours}時間${String(resultMinutes).padStart(2, '0')}分`;
 }
-
+// Sum duration
 export function sumDurations(data: StatisticCategoryInfo[]): string {
   if (data.length === 0) return '00:00:00';
   let totalSeconds = 0;
 
   data.forEach((item) => {
     const [hours, minutes, seconds] = item.duration.split(':').map(Number);
+    totalSeconds += hours * 3600 + minutes * 60 + seconds;
+  });
+
+  const totalHours = Math.floor(totalSeconds / 3600);
+  const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
+  const totalSecondsLeft = totalSeconds % 60;
+
+  const formattedHours = String(totalHours).padStart(2, '0');
+  const formattedMinutes = String(totalMinutes).padStart(2, '0');
+  const formattedSeconds = String(totalSecondsLeft).padStart(2, '0');
+
+  return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+}
+// Sum total duration with statistic
+export function sumDurationsChart(durations: string[]): string {
+  if (durations.length === 0) return '00:00:00';
+
+  let totalSeconds = 0;
+
+  durations.forEach((duration) => {
+    const [hours, minutes, seconds] = duration.split(':').map(Number);
     totalSeconds += hours * 3600 + minutes * 60 + seconds;
   });
 

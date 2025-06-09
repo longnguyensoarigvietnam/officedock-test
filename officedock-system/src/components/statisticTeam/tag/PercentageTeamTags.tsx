@@ -168,7 +168,7 @@ const PercentageTeamTags = ({
     // Get list options
     const listDataOptions = categories.map(
       (item) =>
-        item.users?.slice(0, 6).map((user) => ({
+        item.users?.map((user) => ({
           label: user.user.fullName,
           percent: user.percent,
           avatarColor: user.user.avatarColor,

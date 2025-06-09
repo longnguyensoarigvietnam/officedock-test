@@ -540,12 +540,12 @@ export const apiRouters = {
   CONFIRM_USER_DAILY: (id: number) => `/users/${id}/report/`,
 
   // STATISTICS
-  // ROLES
   TEAM_LIST: '/teams/',
   STATISTICS_CATEGORIES: '/statistics/categories/',
   STATISTICS_TASKS: '/statistics/tasks/',
   STATISTICS_TAGS: '/statistics/tags/',
   STATISTICS_TASK_DURATIONS: '/statistics/task-durations/',
+  STATISTICS_PERCENT_CHART: '/statistics/percent-change/',
 
   // STATISTICS TEAM
   STATISTICS_CATEGORIES_TEAM: (id: number) =>

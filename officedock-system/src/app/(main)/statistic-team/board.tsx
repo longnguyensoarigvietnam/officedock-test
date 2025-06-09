@@ -110,7 +110,13 @@ const StatisticTeamBoard = () => {
       orderingOptions: orderingOptions,
     },
     onSuccess: (data) => {
-      const organization = creationDataStatisticData?.organization;
+      if (creationDataStatisticData?.organizations.length === 0) {
+        return;
+      }
+
+      const organization =
+        creationDataStatisticData?.organizations.find((item) => item.isMain) ||
+        creationDataStatisticData?.organizations[0];
 
       if (organization) {
         const largeCategories = organization.statisticCategories.map(
@@ -235,33 +241,42 @@ const StatisticTeamBoard = () => {
     is_statistic: true,
     onSuccess: (data) => {
       if (!data) return;
-      if (data.organization) {
-        setListOptionsOrganization([
-          {
-            label: data.organization.name,
-            value: data.organization.id,
-          },
-        ]);
 
-        handleSelectOrganization({
-          label: data.organization.name,
-          value: data.organization.id,
-        });
-      }
-      const optionsTagList = data.tags.map((item) => ({
-        label: item.name,
-        value: item.id,
-      }));
-      setTagsOptions(optionsTagList);
+      const result = (() => {
+        if (data.organizations.length === 0) {
+          return { label: '', value: '' };
+        }
 
-      setListMemberTeam(
-        data.members.map((member) => ({
-          id: member.id,
-          fullName: member.fullName,
-          color: member?.avatarColor || '',
-          avatarUrl: member?.avatar || '',
+        const mainItem =
+          data.organizations.find((item) => item.isMain) ||
+          data.organizations[0];
+        const optionsTagList = mainItem.tags.map((item) => ({
+          label: item.name,
+          value: item.id,
+        }));
+        setTagsOptions(optionsTagList);
+        setListMemberTeam(
+          mainItem.members.map((member) => ({
+            id: member.id,
+            fullName: member.fullName,
+            color: member?.avatarColor || '',
+            avatarUrl: member?.avatar || '',
+          })),
+        );
+
+        return {
+          label: mainItem.name,
+          value: mainItem.id,
+        };
+      })();
+
+      handleSelectOrganization(result);
+      setListOptionsOrganization([
+        ...data.organizations.map((org) => ({
+          value: org.id || '',
+          label: org.name,
         })),
-      );
+      ]);
     },
   });
 
@@ -279,12 +294,32 @@ const StatisticTeamBoard = () => {
     setSelectedMedium(null);
     setSelectedSmall(null);
 
-    const organization = creationDataStatisticData?.organization;
+    const organization = creationDataStatisticData?.organizations?.find(
+      (org) => org.id === data.value,
+    );
     if (organization) {
       const largeCategories = organization.statisticCategories.map((stat) => ({
         value: stat.LARGE.id,
         label: stat.LARGE.name,
       }));
+      const optionsTagList = organization.tags.map((item) => ({
+        label: item.name,
+        value: item.id,
+      }));
+      setTagsOptions(optionsTagList);
+      setListMemberTeam(
+        organization.members.map((member) => ({
+          id: member.id,
+          fullName: member.fullName,
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
+        })),
+      );
+      setCurrentPage(1);
+      setOrderingOptions({
+        tag_ids: [],
+        user_ids: [],
+      });
       setLargeOptions(largeCategories);
     } else {
       setLargeOptions([]);
@@ -301,12 +336,32 @@ const StatisticTeamBoard = () => {
     setSelectedMedium(null);
     setSelectedSmall(null);
 
-    const organization = creationDataStatisticData?.organization;
+    const organization = creationDataStatisticData?.organizations?.find(
+      (org) => org.id === data.value,
+    );
     if (organization) {
       const largeCategories = organization.statisticCategories.map((stat) => ({
         value: stat.LARGE.id,
         label: stat.LARGE.name,
       }));
+      const optionsTagList = organization.tags.map((item) => ({
+        label: item.name,
+        value: item.id,
+      }));
+      setTagsOptions(optionsTagList);
+      setListMemberTeam(
+        organization.members.map((member) => ({
+          id: member.id,
+          fullName: member.fullName,
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
+        })),
+      );
+      setCurrentPage(1);
+      setOrderingOptions({
+        tag_ids: [],
+        user_ids: [],
+      });
       setLargeOptions(largeCategories);
     } else {
       setLargeOptions([]);
@@ -328,7 +383,9 @@ const StatisticTeamBoard = () => {
     setSelectedMedium(null);
     setSelectedSmall(null);
 
-    const organization = creationDataStatisticData?.organization;
+    const organization = creationDataStatisticData?.organizations?.find(
+      (org) => org.id === data.value,
+    );
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === data.value,
     );
@@ -358,7 +415,9 @@ const StatisticTeamBoard = () => {
     setSelectedMedium(data);
     setSelectedSmall(null);
 
-    const organization = creationDataStatisticData?.organization;
+    const organization = creationDataStatisticData?.organizations?.find(
+      (org) => org.id === data.value,
+    );
 
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === selectedLarge?.value,
@@ -711,7 +770,9 @@ const StatisticTeamBoard = () => {
           handleSelectSmall={handleSelectSmall}
           removeTag={removeTag}
           removeUser={removeUser}
-          creationDataStatisticData={creationDataStatisticData?.organization}
+          creationDataStatisticData={creationDataStatisticData?.organizations?.find(
+            (org) => org.id === selectedOrganization?.value,
+          )}
         />
       )}
     </div>

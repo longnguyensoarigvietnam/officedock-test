@@ -62,7 +62,7 @@ interface TableChartProps {
   totalDuration: string;
   taskList: DataTaskListStatisticListType[];
   listOptionsOrganization: OptionDropdownType[];
-  creationDataStatisticData: CreationStatisticType;
+  creationDataStatisticData: CreationStatisticType | undefined;
   setOrdering: (ord: string) => void;
 }
 
