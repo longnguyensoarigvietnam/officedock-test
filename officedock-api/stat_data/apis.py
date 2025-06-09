@@ -409,8 +409,6 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     confirm_report = user.reported_confirmations.filter(
                         date=date, confirm_by=request_user
                     ).first()
-                    if user.id == 184:
-                        print(confirm_report.is_confirmed)
                     user_serializer = CreationDataUserSerializer(user).data
                     user_serializer["total_duration"] = format_duration(
                         total_duration

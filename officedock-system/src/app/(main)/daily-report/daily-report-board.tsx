@@ -136,11 +136,10 @@ const DailyReportBoard = () => {
   const { dataStatisticPDF, refetchDataStatisticPDF } = useDataStatisticPDF({
     date: formatDateServer(currentDate),
     onSettled: () => {
-      setIsLoading(false);
-
       setTimeout(() => {
+        setIsLoading(false);
         setIsLoadingDownload(true);
-      }, 2000);
+      }, 1000);
     },
   });
 
@@ -382,6 +381,8 @@ const DailyReportBoard = () => {
     scheduleId?: number;
   }) => {
     setIsLoading(true);
+    setIsLoadingDownload(false);
+
     return await api.patch(
       apiRouters.ACTUAL_DURATION_DETAIL(parseInt(data.id)),
       data,
@@ -424,6 +425,7 @@ const DailyReportBoard = () => {
     }[];
   }) => {
     setIsLoading(true);
+    setIsLoadingDownload(false);
 
     const { data } = await api.patch(
       `${apiRouters.TASK_DETAIL(`${dataTask.id}`)}?current_screen=${ScreenName.STATISTIC}`,
@@ -456,6 +458,7 @@ const DailyReportBoard = () => {
     }[];
   }) => {
     setIsLoading(true);
+    setIsLoadingDownload(false);
 
     const { data } = await api.patch(
       `${apiRouters.SCHEDULE_DETAIL(`${dataTask.id}`)}?current_screen=${ScreenName.STATISTIC}`,
@@ -481,6 +484,8 @@ const DailyReportBoard = () => {
 
   // Handle delete Actual task
   const handleDeleteActualTask = async (uuid: string) => {
+    setIsLoadingDownload(false);
+
     const { data: response } = await api.delete(
       apiRouters.UPDATE_TASK_ACTUAL(uuid),
     );
