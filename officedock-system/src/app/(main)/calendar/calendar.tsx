@@ -2344,7 +2344,7 @@ const EventCalendar = () => {
       case ViewOptions.YEAR:
         return '今年';
       default:
-        return '';
+        return '今月';
     }
   };
 

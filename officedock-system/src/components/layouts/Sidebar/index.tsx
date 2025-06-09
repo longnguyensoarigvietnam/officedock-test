@@ -251,6 +251,7 @@ const Sidebar = ({ className }: Props) => {
   }
 
   const handleNavigateToMyDockPage = (href: string) => {
+    if(pathname == href) return;
     const params = new URLSearchParams(searchParams.toString());
     params.delete('organization');
     params.delete('tabId');
@@ -260,12 +261,6 @@ const Sidebar = ({ className }: Props) => {
       router.push(`${href}?view=day`);
     } else {
       params.delete('view');
-      if (
-        pathname === pageRouters.CHAT_MANAGEMENT.href &&
-        href === pageRouters.CHAT_MANAGEMENT.href
-      ) {
-        return;
-      }
       {
         router.push(`${href}?${params.toString()}`);
       }
