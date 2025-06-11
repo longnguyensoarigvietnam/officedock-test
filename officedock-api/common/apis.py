@@ -514,6 +514,12 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             ] = CreationDataOrganizationWithStructCategorySerializer(
                 organizations, many=True, context={"user": user}
             ).data
+            # Add calendar organization
+            data["organizations"].append(
+                CreationDataOrganizationWithStructCategorySerializer(
+                    calendar_org, context={"user": user}
+                ).data
+            )
             for org in data["organizations"]:
                 org["statistic_categories"] = add_default_entries_to_categories(
                     org["statistic_categories"]
