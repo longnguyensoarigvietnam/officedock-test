@@ -26,10 +26,12 @@ interface FilterProps {
 
 const useStatisticUserTaskDurationsCompare = ({
   filter,
+  condition,
   onSuccess,
   onError,
 }: {
   filter?: FilterProps;
+  condition?: boolean[];
   onSuccess?: (data: StatisticsUserTaskDuration[]) => void;
   onError?: (error: AxiosError) => void;
 }) => {
@@ -38,10 +40,7 @@ const useStatisticUserTaskDurationsCompare = ({
 
   // Handle call API get statistic task duration list
   const getStatisticUserTaskDurationsCompare = async () => {
-    if (
-      !filter?.selectedOrganization
-    )
-      return [];
+    if (!filter?.selectedOrganization || !filter.userIds) return [];
     const queryParams = [];
     if (filter.fromDate) {
       queryParams.push(`from_date=${filter.fromDate}`);
@@ -87,12 +86,12 @@ const useStatisticUserTaskDurationsCompare = ({
   const {
     data: statisticUserTaskDurationsCompareList,
     refetch: refetchStatisticUserTaskDurationsCompareList,
-    isLoading: isLoadingStatisticUserTaskDurationsCompareList
+    isLoading: isLoadingStatisticUserTaskDurationsCompareList,
   } = useQuery({
     queryKey: ['getStatisticUserTaskDurationsCompare', [filter]],
     queryFn: getStatisticUserTaskDurationsCompare,
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (data: StatisticsUserTaskDuration[]) => {
@@ -107,7 +106,7 @@ const useStatisticUserTaskDurationsCompare = ({
   return {
     statisticUserTaskDurationsCompareList,
     refetchStatisticUserTaskDurationsCompareList,
-    isLoadingStatisticUserTaskDurationsCompareList
+    isLoadingStatisticUserTaskDurationsCompareList,
   };
 };
 

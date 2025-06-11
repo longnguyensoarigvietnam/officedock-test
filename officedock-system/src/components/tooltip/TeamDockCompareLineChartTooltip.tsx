@@ -1,14 +1,16 @@
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
+
 import { StatisticChartType } from '@constants/enums';
+
 import { convertToJapaneseDateRange, subtractDurations } from '@utils/date';
 
 export const TeamDockCompareLineChartTooltip = ({
   data,
-  categoryName,
+  selectedOptionName,
 }: {
   data: any[];
-  categoryName: string;
+  selectedOptionName: string;
 }) => {
   return (
     <div
@@ -76,8 +78,8 @@ export const TeamDockCompareLineChartTooltip = ({
                 {point.user.fullName}
               </p>
             </div>
-            <p className="text-[16px] font-normal max-w-full break-all line-clamp-2 border-b-[1px] border-b-[#D2DBE1] pb-[8px]">
-              {categoryName}
+            <p className="text-[16px] font-normal max-w-full break-all border-b-[1px] border-b-[#D2DBE1] pb-[8px]">
+              {selectedOptionName}
             </p>
             <div>
               <div className="flex justify-between items-center mb-[8px]">

@@ -20,16 +20,17 @@ interface FilterProps {
   userIds?: string;
   tagIds?: OptionDropdownType[];
   statisticBy?: string;
-  isTagPage?: boolean;
   selectedOrganization?: string;
 }
 
 const useStatisticUserTaskDurations = ({
   filter,
+  condition,
   onSuccess,
   onError,
 }: {
   filter?: FilterProps;
+  condition?: boolean[];
   onSuccess?: (data: StatisticsUserTaskDuration[]) => void;
   onError?: (error: AxiosError) => void;
 }) => {
@@ -38,10 +39,7 @@ const useStatisticUserTaskDurations = ({
 
   // Handle call API get statistic task duration list
   const getStatisticUserTaskDurations = async () => {
-    if (
-      !filter?.selectedOrganization
-    )
-      return [];
+    if (!filter?.selectedOrganization || !filter.userIds) return [];
     const queryParams = [];
     if (filter.fromDate) {
       queryParams.push(`from_date=${filter.fromDate}`);
@@ -66,9 +64,6 @@ const useStatisticUserTaskDurations = ({
     } else {
       queryParams.push('statistic_by=WEEK');
     }
-    if (filter.isTagPage) {
-      queryParams.push(`is_tag_page=${filter.isTagPage}`);
-    }
     if (filter.tagIds && filter.tagIds?.length > 0) {
       queryParams.push(
         `tag_ids=${filter.tagIds.map((item) => item.value).join(',')}`,
@@ -87,12 +82,12 @@ const useStatisticUserTaskDurations = ({
   const {
     data: statisticUserTaskDurationsList,
     refetch: refetchStatisticUserTaskDurationsList,
-    isLoading: isLoadingStatisticUserTaskDurationsList
+    isLoading: isLoadingStatisticUserTaskDurationsList,
   } = useQuery({
     queryKey: ['getStatisticUserTaskDurations', [filter]],
     queryFn: getStatisticUserTaskDurations,
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (data: StatisticsUserTaskDuration[]) => {
@@ -107,7 +102,7 @@ const useStatisticUserTaskDurations = ({
   return {
     statisticUserTaskDurationsList,
     refetchStatisticUserTaskDurationsList,
-    isLoadingStatisticUserTaskDurationsList
+    isLoadingStatisticUserTaskDurationsList,
   };
 };
 

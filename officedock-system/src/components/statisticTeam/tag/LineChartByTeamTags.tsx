@@ -36,14 +36,15 @@ import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
 import { Table, TableBody } from '@components/common/Table';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
-import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
 import { TeamDockLineChartTooltip } from '@components/tooltip/TeamDockLineChartTooltip';
 import RadioButton from '@components/common/RadioButton';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import CustomStatisticUserCheckbox from '@components/common/Checkbox/CustomStatisticUserCheckbox';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import ActionFilterTeamTagStatistic from '@components/modals/ActionFilterTeamTagStatistic';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
+import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
@@ -91,10 +92,11 @@ type Props = {
   endDate: Date | null;
   removeTag: (selected: OptionDropdownType) => void;
   removeUser: (selected: OptionDropdownType) => void;
-  statisticTeamCategoryList: StatisticsCategories | undefined;
+  statisticTagsListTeam: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
+  handleSelectSmall: (data: OptionDropdownType) => void;
 };
 
 interface TooltipDiv extends HTMLDivElement {
@@ -102,10 +104,10 @@ interface TooltipDiv extends HTMLDivElement {
 }
 
 interface TableRowDetail {
-  categoryId: number;
-  categoryName: string;
-  categoryDuration: string;
-  categoryPercent: number;
+  tagId: number;
+  tagName: string;
+  tagDuration: string;
+  tagPercent: number;
   userList: {
     userId: number;
     userName: string;
@@ -116,49 +118,66 @@ interface TableRowDetail {
   }[];
 }
 
-const LineChartByTeam = ({
+const LineChartByTeamTags = ({
   startDate,
   endDate,
   removeTag,
   removeUser,
-  statisticTeamCategoryList,
+  statisticTagsListTeam,
   handleSelectOrganization,
   handleSelectLarge,
   handleSelectMedium,
+  handleSelectSmall,
 }: Props) => {
   // Context
   const {
     totalDurationLarge,
     totalDurationMedium,
     totalDurationSmall,
-    totalDurationTask,
+    totalDurationCategory,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
+    smallOptions,
     selectedLarge,
     selectedMedium,
     selectedOrganization,
     selectedSmall,
+    selectedTags,
     tagsOptions,
+    listMemberTeam,
+    lineChartViewBy,
+    remainingCountUser,
     firstThreeUser,
     allLabelUser,
-    remainingCountUser,
-    firstThreeTag,
-    allLabelTag,
-    remainingCountTag,
-    listMemberTeam,
-    orderingOptions,
-    lineChartViewBy,
     setLineChartViewBy,
-  } = useContext(StatisticTeamStateContext);
+    setSelectedTags,
+  } = useContext(StatisticTeamTagsStateContext);
   const { expanded } = useContext(GlobalStateContext);
+
+  const getTotalDuration = () => {
+    if (selectedOrganization?.value) {
+      if (selectedLarge?.value) {
+        if (selectedMedium?.value) {
+          if (selectedSmall?.value) {
+            return totalDurationCategory;
+          }
+          return totalDurationSmall;
+        }
+        return totalDurationMedium;
+      }
+      return totalDurationLarge;
+    }
+    return '00:00:00';
+  };
 
   // Selected members and category
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<{
+  const [selectedTag, setSelectedTag] = useState<{
     id: number;
     name: string;
   } | null>(null);
+
   // Filter options
   const [filter, setFilter] = useState({
     fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -169,7 +188,7 @@ const LineChartByTeam = ({
     smallCategoryId: selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
     selectedOrganization: `${selectedOrganization?.value}`,
-    tagIds: orderingOptions?.tag_ids || []
+    tagIds: selectedTags || [],
   });
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const [memberOptions, setMemberOptions] = useState<
@@ -210,9 +229,9 @@ const LineChartByTeam = ({
   });
 
   // Collapse statuses
-  const [categoryCollapseStatuses, setCategoryCollapseStatuses] = useState<
+  const [tagCollapseStatuses, setTagCollapseStatuses] = useState<
     {
-      categoryId: number;
+      tagId: number;
       status: boolean;
     }[]
   >([]);
@@ -232,9 +251,9 @@ const LineChartByTeam = ({
   const tooltipRef = useRef<HTMLDivElement | null>(null);
 
   const buildTableDetail = (
-    categories: {
-      categoryId: number;
-      categoryName: string;
+    tags: {
+      tagId?: number;
+      tagName?: string;
       percent: number;
       duration: string;
       users?: {
@@ -249,14 +268,14 @@ const LineChartByTeam = ({
       }[];
     }[] = [],
   ) =>
-    categories.map((category) => ({
-      categoryId: category.categoryId,
-      categoryName: category.categoryName,
-      categoryPercent: category.percent,
-      categoryDuration: category.duration,
+    tags.map((tag) => ({
+      tagId: Number(tag.tagId),
+      tagName: String(tag.tagName),
+      tagPercent: tag.percent,
+      tagDuration: tag.duration,
       userList:
-        category.users && category.users.length > 0
-          ? category.users.map((user) => {
+        tag.users && tag.users.length > 0
+          ? tag.users.map((user) => {
               return {
                 userId: user.user.id,
                 userName: user.user.fullName,
@@ -269,17 +288,15 @@ const LineChartByTeam = ({
           : [],
     }));
 
-  const handleCategorySelection = (
-    categoryList: StatisticCategoryInfo[] | undefined,
-  ) => {
-    if (categoryList?.length) {
-      const [firstCategory] = categoryList;
-      setSelectedCategory({
-        id: firstCategory.categoryId,
-        name: firstCategory.categoryName,
+  const handleTagSelection = (tagList: StatisticCategoryInfo[] | undefined) => {
+    if (tagList?.length) {
+      const [firstTag] = tagList;
+      setSelectedTag({
+        id: Number(firstTag.tagId),
+        name: String(firstTag.tagName),
       });
     } else {
-      setSelectedCategory(null);
+      setSelectedTag(null);
     }
   };
 
@@ -287,33 +304,53 @@ const LineChartByTeam = ({
   const {
     statisticUserTaskDurationsList,
     isLoadingStatisticUserTaskDurationsList,
-  } = useStatisticUserTaskDurations({ filter });
+  } = useStatisticUserTaskDurations({
+    filter,
+    condition: [Boolean(filter.tagIds?.length > 0)],
+  });
 
-  // Get table info (statistic team categories)
   useEffect(() => {
-    if (statisticTeamCategoryList) {
+    if (statisticTagsListTeam) {
       let tableDetail: TableRowDetail[] = [];
-      if (selectedOrganization && !selectedLarge && !selectedMedium) {
-        tableDetail = buildTableDetail(
-          statisticTeamCategoryList.largeCategories,
-        );
-        handleCategorySelection(statisticTeamCategoryList.largeCategories);
-      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
-        tableDetail = buildTableDetail(
-          statisticTeamCategoryList.mediumCategories,
-        );
-        handleCategorySelection(statisticTeamCategoryList.mediumCategories);
-      } else if (selectedOrganization && selectedLarge && selectedMedium) {
-        tableDetail = buildTableDetail(
-          statisticTeamCategoryList.smallCategories,
-        );
-        handleCategorySelection(statisticTeamCategoryList.smallCategories);
+
+      if (
+        selectedOrganization &&
+        !selectedLarge &&
+        !selectedMedium &&
+        !selectedSmall
+      ) {
+        tableDetail = buildTableDetail(statisticTagsListTeam.largeCategories);
+        handleTagSelection(statisticTagsListTeam.largeCategories);
+      } else if (
+        selectedOrganization &&
+        selectedLarge &&
+        !selectedMedium &&
+        !selectedSmall
+      ) {
+        tableDetail = buildTableDetail(statisticTagsListTeam.mediumCategories);
+        handleTagSelection(statisticTagsListTeam.mediumCategories);
+      } else if (
+        selectedOrganization &&
+        selectedLarge &&
+        selectedMedium &&
+        !selectedSmall
+      ) {
+        tableDetail = buildTableDetail(statisticTagsListTeam.smallCategories);
+        handleTagSelection(statisticTagsListTeam.smallCategories);
+      } else if (
+        selectedOrganization &&
+        selectedLarge &&
+        selectedMedium &&
+        selectedSmall
+      ) {
+        tableDetail = buildTableDetail(statisticTagsListTeam.smallCategories);
+        handleTagSelection(statisticTagsListTeam.category);
       }
 
-      setCategoryCollapseStatuses(
-        tableDetail.map((category) => {
+      setTagCollapseStatuses(
+        tableDetail.map((tag) => {
           return {
-            categoryId: category.categoryId,
+            tagId: tag.tagId,
             status: false,
           };
         }),
@@ -323,10 +360,11 @@ const LineChartByTeam = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    statisticTeamCategoryList,
-    selectedOrganization,
+    statisticTagsListTeam,
     selectedLarge,
+    selectedOrganization,
     selectedMedium,
+    selectedSmall,
   ]);
 
   // Get initial member options
@@ -364,7 +402,7 @@ const LineChartByTeam = ({
       smallCategoryId: selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
-      tagIds: orderingOptions?.tag_ids || []
+      tagIds: selectedTags || [],
     });
   }, [
     startDate,
@@ -375,7 +413,7 @@ const LineChartByTeam = ({
     selectedLarge?.value,
     selectedMedium?.value,
     selectedSmall?.value,
-    orderingOptions
+    selectedTags,
   ]);
 
   // Hide tooltip when mouse leave over 150px
@@ -442,7 +480,7 @@ const LineChartByTeam = ({
     const tooltipModel = context.tooltip;
     const tooltipEl = tooltipRef.current as TooltipDiv;
 
-    if (!tooltipEl || !tooltipModel || !selectedCategory) return;
+    if (!tooltipEl || !tooltipModel || !selectedTag) return;
 
     if (!tooltipModel.dataPoints || tooltipModel.dataPoints.length === 0) {
       tooltipEl.style.display = 'none';
@@ -456,6 +494,7 @@ const LineChartByTeam = ({
 
     if (!dataset?.data || dataIndex === undefined) {
       tooltipEl.style.display = 'none';
+
       return;
     }
 
@@ -502,7 +541,7 @@ const LineChartByTeam = ({
     tooltipEl._reactRoot.render(
       <TeamDockLineChartTooltip
         data={matchingDataPoints}
-        selectedOptionName={selectedCategory?.name || ''}
+        selectedOptionName={selectedTag?.name || ''}
       />,
     );
 
@@ -618,10 +657,6 @@ const LineChartByTeam = ({
       statisticUserTaskDurationsList.length > 0
     ) {
       const loadImages = async () => {
-        if (statisticUserTaskDurationsList.length === 0) {
-          return;
-        }
-
         const imagePromises = statisticUserTaskDurationsList.map(
           async (userTaskDuration) => {
             const { user } = userTaskDuration;
@@ -693,7 +728,6 @@ const LineChartByTeam = ({
           }
         }
       });
-
       statisticUserTaskDurationsList.forEach((userTaskDuration) => {
         legendList.push({
           color: userTaskDuration.user.avatarColor || getRandomColor(),
@@ -772,8 +806,8 @@ const LineChartByTeam = ({
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
-      const rowAPercentage = Number(rowA.categoryPercent || 0);
-      const rowBPercentage = Number(rowB.categoryPercent || 0);
+      const rowAPercentage = Number(rowA.tagPercent || 0);
+      const rowBPercentage = Number(rowB.tagPercent || 0);
 
       return sortingType == SortingType.ASC
         ? rowAPercentage - rowBPercentage
@@ -789,10 +823,10 @@ const LineChartByTeam = ({
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
       const rowADuration = convertDurationToTotalMinutes(
-        rowA.categoryDuration || '00:00:00',
+        rowA.tagDuration || '00:00:00',
       );
       const rowBDuration = convertDurationToTotalMinutes(
-        rowB.categoryDuration || '00:00:00',
+        rowB.tagDuration || '00:00:00',
       );
 
       return sortingType == SortingType.ASC
@@ -805,7 +839,7 @@ const LineChartByTeam = ({
   // Columns definition
   const columns: ColumnDef<TableRowDetail>[] = [
     {
-      accessorKey: 'categoryName',
+      accessorKey: 'tagName',
       header: () => {
         return (
           <p className="text-[#77858F] font-medium text-xs text-left px-[40px]">
@@ -816,55 +850,33 @@ const LineChartByTeam = ({
       cell: (info) => {
         const value = info.getValue() as string;
         const collapseStatus =
-          categoryCollapseStatuses.find(
-            (categoryCollapseStatus) =>
-              categoryCollapseStatus.categoryId == info.row.original.categoryId,
+          tagCollapseStatuses.find(
+            (tagCollapseStatus) =>
+              tagCollapseStatus.tagId == info.row.original.tagId,
           )?.status || false;
+
         return (
           <div className="flex items-start px-[18px]">
             <RadioButton
-              name="categoryName"
-              isChecked={info.row.original.categoryId == selectedCategory?.id}
+              name="tagName"
+              isChecked={info.row.original.tagId == selectedTag?.id}
               onChange={(e: any) => {
                 if (e) {
-                  setSelectedCategory({
-                    id: info.row.original.categoryId,
-                    name: info.row.original.categoryName,
+                  setSelectedTag({
+                    id: info.row.original.tagId,
+                    name: info.row.original.tagName,
                   });
-                  if (
-                    selectedOrganization &&
-                    !selectedLarge &&
-                    !selectedMedium
-                  ) {
-                    setFilter((prev) => {
-                      return {
-                        ...prev,
-                        largeCategoryId: info.row.original.categoryId,
-                      };
-                    });
-                  } else if (
-                    selectedOrganization &&
-                    selectedLarge &&
-                    !selectedMedium
-                  ) {
-                    setFilter((prev) => {
-                      return {
-                        ...prev,
-                        mediumCategoryId: info.row.original.categoryId,
-                      };
-                    });
-                  } else if (
-                    selectedOrganization &&
-                    selectedLarge &&
-                    selectedMedium
-                  ) {
-                    setFilter((prev) => {
-                      return {
-                        ...prev,
-                        smallCategoryId: info.row.original.categoryId,
-                      };
-                    });
-                  }
+                  setFilter((prev) => {
+                    return {
+                      ...prev,
+                      tagIds: [
+                        {
+                          label: info.row.original.tagName,
+                          value: info.row.original.tagId,
+                        },
+                      ],
+                    };
+                  });
                 }
               }}
             />
@@ -890,9 +902,9 @@ const LineChartByTeam = ({
                       height: `12px`,
                     }}
                     onClick={() => {
-                      setCategoryCollapseStatuses((prev) => {
+                      setTagCollapseStatuses((prev) => {
                         return prev.map((item) =>
-                          item.categoryId == info.row.original.categoryId
+                          item.tagId == info.row.original.tagId
                             ? { ...item, status: !item.status }
                             : item,
                         );
@@ -932,7 +944,7 @@ const LineChartByTeam = ({
       enableSorting: false,
     },
     {
-      accessorKey: 'categoryDuration',
+      accessorKey: 'tagDuration',
       size: 40,
       header: () => {
         return (
@@ -967,9 +979,9 @@ const LineChartByTeam = ({
       cell: (info) => {
         const value = info.getValue() as string;
         const collapseStatus =
-          categoryCollapseStatuses.find(
-            (categoryCollapseStatus) =>
-              categoryCollapseStatus.categoryId == info.row.original.categoryId,
+          tagCollapseStatuses.find(
+            (tagCollapseStatus) =>
+              tagCollapseStatus.tagId == info.row.original.tagId,
           )?.status || false;
 
         return (
@@ -1008,7 +1020,7 @@ const LineChartByTeam = ({
       },
     },
     {
-      accessorKey: 'categoryPercent',
+      accessorKey: 'tagPercent',
       size: 20,
       header: () => {
         return (
@@ -1045,9 +1057,9 @@ const LineChartByTeam = ({
       cell: (info) => {
         const value = Number(info.getValue()) || 0;
         const collapseStatus =
-          categoryCollapseStatuses.find(
-            (categoryCollapseStatus) =>
-              categoryCollapseStatus.categoryId == info.row.original.categoryId,
+          tagCollapseStatuses.find(
+            (tagCollapseStatus) =>
+              tagCollapseStatus.tagId == info.row.original.tagId,
           )?.status || false;
 
         return (
@@ -1155,8 +1167,7 @@ const LineChartByTeam = ({
                       leaveFrom="opacity-100 translate-y-0"
                       leaveTo="opacity-0 translate-y-1">
                       <PopoverPanel className="absolute left-[30px] top-[-5px] z-[1] w-[400px] transform">
-                        <ActionFilterStatisticTeam
-                          tagsOptions={tagsOptions}
+                        <ActionFilterTeamTagStatistic
                           handleClose={() => setIsOpenModalFilter(false)}
                           listMemberTeam={listMemberTeam}
                         />
@@ -1203,41 +1214,6 @@ const LineChartByTeam = ({
                     </p>
                   )}
                 </>
-                <>
-                  {firstThreeTag.map((item, index) => {
-                    return (
-                      <div
-                        key={item.value}
-                        className="flex gap-[6px] items-center">
-                        {index === 0 && (
-                          <ImageRound
-                            src={`/icons/tag-white.svg`}
-                            name="close"
-                            className="w-fit h-fit cursor-pointer"
-                          />
-                        )}
-                        <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                          <span className="min-w-[32px] max-w-[118px]  truncate">
-                            {item.label}
-                          </span>
-                          <ImageRound
-                            onClick={() => {
-                              removeTag(item);
-                            }}
-                            src={`/icons/close-white.svg`}
-                            name="close"
-                            className="w-fit h-fit cursor-pointer"
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {allLabelTag.length > 3 && (
-                    <p className="pr-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
-                      +{remainingCountTag}
-                    </p>
-                  )}
-                </>
               </div>
             </div>
           </div>
@@ -1258,12 +1234,64 @@ const LineChartByTeam = ({
           {/* Line */}
           <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
           <div>
-            <div className="flex  justify-between px-[30px] text-sm font-medium">
+            {/* List tags  */}
+            <div>
+              <div className="flex justify-between w-full mb-[30px] px-[30px]">
+                <div className="flex items-center gap-2">
+                  <div className="w-[240px]">
+                    <MultiSelectDropdown
+                      options={tagsOptions}
+                      placeholder="集計対象のタグを選択"
+                      className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
+                      labelOptionClass="break-words w-[190px]"
+                      selectedOptions={selectedTags || []}
+                      onChange={(selected) => {
+                        let updatedTagIds = [];
+                        const currentTagIds = selectedTags || [];
+                        const foundItemIndex = currentTagIds.findIndex(
+                          (tag) => tag.value == selected.value,
+                        );
+                        if (foundItemIndex == -1) {
+                          updatedTagIds = [...currentTagIds, selected];
+                        } else {
+                          updatedTagIds = currentTagIds.filter(
+                            (tag) => tag.value != selected.value,
+                          );
+                        }
+                        setSelectedTags(updatedTagIds);
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <div className="flex gap-2 flex-wrap ">
+                      {selectedTags.map((item) => {
+                        return (
+                          <div
+                            key={item.value}
+                            className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                            <span className=" truncate">{item.label}</span>
+                            <ImageRound
+                              onClick={() => {
+                                removeTag(item);
+                              }}
+                              src={`/icons/close-white.svg`}
+                              name="close"
+                              className="w-fit h-fit cursor-pointer"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-between items-end px-[30px] text-sm font-medium">
               {/* Column Chart 1 */}
-              <div className="w-[300px] flex flex-col items-center">
+              <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && !selectedLarge && !selectedMedium ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
-                  大カテゴリー
+                  className={`${selectedOrganization && !selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  チーム
                 </div>
                 <div className="mt-4 w-full">
                   <Dropdown
@@ -1279,11 +1307,23 @@ const LineChartByTeam = ({
                   />
                 </div>
               </div>
+              {selectedLarge ? (
+                <div className="w-[18px]">
+                  <ImageRound
+                    className={`w-fit h-fit`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                </div>
+              ) : (
+                <div className="w-[18px]"></div>
+              )}
+
               {/* Column Chart 2 */}
-              <div className="w-[300px] flex flex-col items-center">
+              <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && !selectedMedium ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
-                  中カテゴリー
+                  className={`${selectedOrganization && selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  大カテゴリー
                 </div>
                 <div className="mt-4 w-full">
                   <Dropdown
@@ -1300,11 +1340,22 @@ const LineChartByTeam = ({
                   />
                 </div>
               </div>
+              {selectedMedium ? (
+                <div className="w-[18px]">
+                  <ImageRound
+                    className={`w-fit h-fit`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                </div>
+              ) : (
+                <div className="w-[18px]"></div>
+              )}
               {/* Column Chart 3 */}
-              <div className="w-[300px] flex flex-col items-center">
+              <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && selectedMedium ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
-                  小カテゴリー
+                  className={`${selectedOrganization && selectedLarge && selectedMedium && !selectedSmall ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  中カテゴリー
                 </div>
                 <div className="mt-4 w-full">
                   <Dropdown
@@ -1321,6 +1372,38 @@ const LineChartByTeam = ({
                   />
                 </div>
               </div>
+              {selectedSmall ? (
+                <div className="w-[18px]">
+                  <ImageRound
+                    className={`w-fit h-fit`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                </div>
+              ) : (
+                <div className="w-[18px]"></div>
+              )}
+              {/* Column Chart 4 */}
+              <div className="w-[220px] flex flex-col items-center">
+                <div
+                  className={`${selectedOrganization && selectedLarge && selectedMedium && selectedSmall ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  小カテゴリー
+                </div>
+                <div className="mt-4 w-full">
+                  <Dropdown
+                    label="小カテゴリー選択"
+                    placeholder="-"
+                    placeholderClass="!text-black text-sm font-normal"
+                    className="!h-[34px] !rounded-md text-sm font-normal !py-0 !border !border-[#77858F]"
+                    labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                    classNameOption="!text-sm"
+                    options={smallOptions}
+                    selectedOption={selectedSmall || undefined}
+                    onChange={(data) => handleSelectSmall(data)}
+                    disabled={!selectedMedium}
+                  />
+                </div>
+              </div>
             </div>
           </div>
           <div className="mt-5 px-[30px]">
@@ -1329,13 +1412,13 @@ const LineChartByTeam = ({
                 <p>合計時間</p>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-[34px] leading-none">
-                    {totalDurationTask?.split(':')[0]}
+                    {getTotalDuration()?.split(':')[0]}
                   </p>
                   <p className="text-[25px] leading-none">時間</p>
                 </div>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-[34px] leading-none">
-                    {totalDurationTask?.split(':')[1]}
+                    {getTotalDuration()?.split(':')[1]}
                   </p>
                   <p className="text-[25px] leading-none">分</p>
                 </div>
@@ -1518,4 +1601,4 @@ const LineChartByTeam = ({
     </div>
   );
 };
-export default LineChartByTeam;
+export default LineChartByTeamTags;
