@@ -392,3 +392,19 @@ export interface StatisticsTagPercentChart {
     percent: number;
   }[];
 }
+
+export interface StatisticsUserTaskDuration {
+  user: {
+    id: number;
+    fullName: string;
+    avatarColor: string;
+    avatar: string | null
+  }
+  totalDuration: string;
+  durations: {
+    startDate: string;
+    endDate: string;
+    duration: string;
+    percentPerRange: number;
+  }[];
+}

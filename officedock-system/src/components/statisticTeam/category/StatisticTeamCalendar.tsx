@@ -6,12 +6,15 @@ import MultiDatePickerCustom from '@components/common/DatePicker/MultiDatePicker
 import ImageRound from '@components/common/ImageRound';
 
 import { TimeOptionsType } from '@constants/enums';
+
 import {
   formatShowDateJapanese,
   getDaysFromTimeOption,
   handleSetStartDateAfter,
   handleSetStartDateBefore,
 } from '@utils/date';
+import { getCompareLineChartEnableViews, getLineChartEnableViews } from '@utils';
+
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 
 function StatisticTeamCalendar() {
@@ -32,6 +35,7 @@ function StatisticTeamCalendar() {
     setIsLoadingLargeCompare,
     setIsLoadingMediumCompare,
     setIsLoadingOrganizationCompare,
+    setLineChartViewBy,
   } = useContext(StatisticTeamStateContext);
   const modalRef = useRef<HTMLDivElement | null>(null);
   const buttonPrev = useRef<HTMLDivElement | null>(null);
@@ -267,6 +271,21 @@ function StatisticTeamCalendar() {
     setStartDate(dataStartDate);
     setEndDate(dataEndDate);
     setIsCheckCompare(isDataCheckCompare);
+    const enableViews = getLineChartEnableViews(
+      dataStartDate,
+      dataEndDate as Date,
+    ) as string[];
+    if (enableViews.length > 0) {
+      setLineChartViewBy({
+        value: enableViews[0],
+        label: enableViews[0],
+      });
+    } else {
+      setLineChartViewBy({
+        value: '',
+        label: '',
+      });
+    }
   };
 
   // Change data time calendar compare
@@ -337,6 +356,24 @@ function StatisticTeamCalendar() {
     setEndDateCompare(dataEndDateCompare);
     setIsCheckCompare(isDataCheckCompare);
     setIsOpenModal(false);
+
+    const enableViews = getCompareLineChartEnableViews(
+      dataStartDate,
+      dataEndDate as Date,
+      dataStartDateCompare,
+      dataEndDateCompare as Date,
+    ) as string[];
+    if (enableViews.length > 0) {
+      setLineChartViewBy({
+        value: enableViews[0],
+        label: enableViews[0],
+      });
+    } else {
+      setLineChartViewBy({
+        value: '',
+        label: '',
+      });
+    }
   };
   const handleReset = () => {
     setIsOpenModal(false);

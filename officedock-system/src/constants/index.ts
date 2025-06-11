@@ -2,6 +2,8 @@ import {
   ItemStartType,
   PermissionType,
   ReactionIconValue,
+  StatisticViewLabels,
+  StatisticViewOptions,
   TaskRepetitiveType,
   WorkItemType,
 } from './enums';
@@ -243,31 +245,31 @@ export const REACTION_LIST = [
     name: 'OK',
     src: '/icons/ok-reaction.svg',
     value: ReactionIconValue.OK,
-    tooltipContent: '了解'
+    tooltipContent: '了解',
   },
   {
     name: 'LIKE',
     src: '/icons/like-reaction.svg',
     value: ReactionIconValue.LIKE,
-    tooltipContent: 'グッド'
+    tooltipContent: 'グッド',
   },
   {
     name: 'THANK',
     src: '/icons/thank-reaction.svg',
     value: ReactionIconValue.THANK,
-    tooltipContent: '感謝'
+    tooltipContent: '感謝',
   },
   {
     name: 'HAND',
     src: '/icons/hand-reaction.svg',
     value: ReactionIconValue.HAND,
-    tooltipContent: '拍手'
+    tooltipContent: '拍手',
   },
   {
     name: 'SMILE',
     src: '/icons/smile-reaction.svg',
     value: ReactionIconValue.SMILE,
-    tooltipContent: '笑顔'
+    tooltipContent: '笑顔',
   },
 ];
 export const REACTION_LIST_SMALL = [
@@ -392,21 +394,21 @@ export const ALLOWED_IMAGE_TYPES = [
 export const LEVEL_UP_PERIOD_OPTIONS = [
   {
     label: '日',
-    value: 'DAY'
+    value: 'DAY',
   },
   {
     label: '週間',
-    value: 'WEEK'
+    value: 'WEEK',
   },
   {
     label: 'ヶ月',
-    value: 'MONTH'
+    value: 'MONTH',
   },
   {
     label: '年',
-    value: 'YEAR'
+    value: 'YEAR',
   },
-]
+];
 
 export const SKILL_MAP_STEP_COUNT = 3;
 
@@ -417,3 +419,20 @@ export const SKILL_MAP_STEPS = [
   { label: 'STEP 2', color: '#0068B6' },
   { label: 'STEP 3', color: '#424EC1' },
 ];
+
+export const STATISTIC_CHART_VIEW_OPTIONS = [
+  {
+    value: StatisticViewOptions.DAY,
+    label: StatisticViewLabels.DAY,
+  },
+  {
+    value: StatisticViewOptions.WEEK,
+    label: StatisticViewLabels.WEEK,
+  },
+  {
+    value: StatisticViewOptions.MONTH,
+    label: StatisticViewLabels.MONTH,
+  },
+];
+
+export const EVERYONE_OPTION_LABEL = '全員を選択'

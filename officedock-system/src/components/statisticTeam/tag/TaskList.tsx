@@ -321,7 +321,7 @@ const TaskListStatisticTeamTags = ({
                       size={30}
                     />
                   </div>
-                  <span className="break-all w-full max-w-[800px] truncate">
+                  <span className="break-all w-full max-w-[800px] truncate text-sm">
                     {member.fullName}
                   </span>
                 </div>

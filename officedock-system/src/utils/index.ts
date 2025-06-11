@@ -893,7 +893,9 @@ export const renderEventDatetimeInChat = (
 };
 
 // Render schedule date in chat (calendar room)
-export const renderScheduleChangeInCalendarRoom = (messageDetail: ChatMessageResponse): string => {
+export const renderScheduleChangeInCalendarRoom = (
+  messageDetail: ChatMessageResponse,
+): string => {
   const start = messageDetail.scheduleChanges?.new?.startDate;
   const end = messageDetail.scheduleChanges?.new?.endDate;
   const isAllDay = messageDetail.schedule?.isAllDay;
@@ -915,7 +917,6 @@ export const renderScheduleChangeInCalendarRoom = (messageDetail: ChatMessageRes
     }
   }
 };
-
 
 // Render repetitive event time in chat
 export const displayRepetitiveEventTime = (eventInfo: {
@@ -970,3 +971,113 @@ export const displayRepetitiveEventTime = (eventInfo: {
   }
   return title;
 };
+// Get avatar icon svg in line chart
+export const getAvatarIconSvg = (color: string, size: number) => {
+  const clipId = `clip-${Math.random()}`; // unique clipId
+  return `
+    <svg
+      width="${size}"
+      height="${size}"
+      viewBox="0 0 ${size} ${size}"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <!-- Circle background -->
+      <rect width="${size}" height="${size}" rx="${size / 2}" fill="${color}" />
+      <!-- Define a circular clipPath -->
+      <defs>
+        <clipPath id="${clipId}">
+          <rect width="${size}" height="${size}" rx="${size / 2}" />
+        </clipPath>
+      </defs>
+      <!-- Group clipped by the circular path -->
+      <g clip-path="url(#${clipId})">
+        <!-- Bottom rectangle (mouth?) -->
+        <rect
+          x="${size * 0.19}"
+          y="${size * 0.57}"
+          width="${size * 0.62}"
+          height="${size * 0.62}"
+          rx="${size * 0.31}"
+          fill="#F3F3F3"
+        />
+        <!-- Top rectangle -->
+        <rect
+          x="${size * 0.33}"
+          y="${size * 0.17}"
+          width="${size * 0.33}"
+          height="${size * 0.33}"
+          rx="${size * 0.17}"
+          fill="#F3F3F3"
+        />
+      </g>
+    </svg>
+  `;
+};
+
+// Create styled avatar with margin
+export const createStyledAvatarWithMargin = (
+  url: string,
+  displaySize = 24,
+  marginRight: number,
+): Promise<HTMLCanvasElement> => {
+  return new Promise((resolve) => {
+    const scale = 1;
+    const totalWidth = displaySize + marginRight;
+    const actualSize = totalWidth * scale;
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = actualSize;
+      canvas.height = displaySize * scale;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.scale(scale, scale);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      // Clip to circle
+      ctx.beginPath();
+      ctx.arc(
+        displaySize / 2,
+        displaySize / 2,
+        displaySize / 2,
+        0,
+        Math.PI * 2,
+      );
+      ctx.closePath();
+      ctx.clip();
+      // Fill background
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, displaySize, displaySize);
+      // Draw image in the left side of the larger canvas
+      ctx.drawImage(img, 0, 0, displaySize, displaySize);
+      resolve(canvas);
+    };
+    img.src = url;
+  });
+};
+
+// Helper to convert hex or rgb to rgba with custom alpha
+export const toRGBA = (color: string, alpha: number): string => {
+  if (color.startsWith('#')) {
+    // Convert hex to RGB
+    const hex = color.replace('#', '');
+    const bigint = parseInt(hex, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  if (color.startsWith('rgb(')) {
+    return color.replace('rgb(', 'rgba(').replace(')', `, ${alpha})`);
+  }
+
+  if (color.startsWith('rgba(')) {
+    return color.replace(/rgba\(([^,]+),([^,]+),([^,]+),[^)]+\)/, `rgba($1,$2,$3,${alpha})`);
+  }
+
+  // fallback to original if format unknown
+  return color;
+}
