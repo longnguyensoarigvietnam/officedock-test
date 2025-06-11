@@ -1176,7 +1176,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             OpenApiParameter(name="medium_category_id", type=str),
             OpenApiParameter(name="tag_ids", type=str),
             OpenApiParameter(name="user_ids", type=str),
-            OpenApiParameter(name="is_line_chart", type=bool, default=False),
         ]
     )
     @action(
@@ -1197,20 +1196,16 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         )
 
         tag_ids_param = request.query_params.get("tag_ids")
-        is_line_chart = request.query_params.get("is_line_chart")
         user_ids_param = request.query_params.get("user_ids")
         large_category_id = request.query_params.get("large_category_id")
         medium_category_id = request.query_params.get("medium_category_id")
         instance = self.get_object()
-        is_user_param = False
         if user_ids_param:
             users = instance.users.filter(
                 id__in=split_id_from_string(user_ids_param)
             )
-            is_user_param = True
         else:
             users = instance.users.all()
-        org_users = instance.users.all() if is_line_chart else users
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
         data = {}
@@ -1219,14 +1214,14 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         durations = get_list_durations_by_users(
             start_of_day,
             end_of_day,
-            org_users,
+            users,
             organizations=[instance],
             tags=tag_ids,
         )
 
         tasks, events = get_list_models(durations)
         total_duration, category_list = process_per_user(
-            org_users,
+            users,
             tasks,
             events,
             start_of_day,
@@ -1247,7 +1242,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             TaskCategoryTypes.LARGE.value,
             users=users,
             durations=durations,
-            is_user_param=is_user_param,
         )
         # Process medium categories if large_category_id is provided
         if large_category_id:
@@ -1263,7 +1257,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 small_category_id=None,
                 type_total_duration="medium_total_duration",
                 type_category="medium_categories",
-                is_user_param=is_user_param,
             )
             # Process small categories if medium_category_id is provided
             if medium_category_id:
@@ -1279,7 +1272,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                     small_category_id=None,
                     type_total_duration="small_total_duration",
                     type_category="small_categories",
-                    is_user_param=is_user_param,
                 )
 
         return self.response_ok(data)
@@ -1297,7 +1289,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         small_category_id=None,
         type_total_duration=None,
         type_category=None,
-        is_user_param=False,
     ):
         """
         Return data of statistic category by type of category
@@ -1330,7 +1321,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             task_category_type,
             users=users,
             durations=durations,
-            is_user_param=is_user_param,
         )
 
         return data
@@ -1344,7 +1334,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             OpenApiParameter(name="small_category_id", type=str),
             OpenApiParameter(name="tag_ids", type=str),
             OpenApiParameter(name="user_ids", type=str),
-            OpenApiParameter(name="is_line_chart", type=bool, default=False),
         ]
     )
     @action(
@@ -1360,7 +1349,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         large_category_id = request.query_params.get("large_category_id")
         medium_category_id = request.query_params.get("medium_category_id")
         small_category_id = request.query_params.get("small_category_id")
-        is_line_chart = request.query_params.get("is_line_chart")
         tag_ids_param = request.query_params.get("tag_ids")
         from_date = validate_date_by_regex_and_reformat(
             request.query_params.get("from_date")
@@ -1371,15 +1359,12 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
 
         instance = self.get_object()
         user_ids_param = request.query_params.get("user_ids")
-        is_user_param = (False,)
         if user_ids_param:
             users = instance.users.filter(
                 id__in=split_id_from_string(user_ids_param)
             )
-            is_user_param = True
         else:
             users = instance.users.all()
-        org_users = instance.users.all() if is_line_chart else users
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
 
@@ -1392,7 +1377,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         durations = get_list_durations_by_users(
             start_of_day,
             end_of_day,
-            org_users,
+            users,
             [instance],
             tags=tag_ids,
         )
@@ -1421,7 +1406,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             end_of_day,
             users=users,
             durations=durations,
-            is_user_param=is_user_param,
         )
 
         if large_category_id:
@@ -1437,7 +1421,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 small_category_id=None,
                 type_total_duration="medium_total_duration",
                 type_category="medium_categories",
-                is_user_param=is_user_param,
             )
 
             if medium_category_id:
@@ -1453,7 +1436,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                     small_category_id=None,
                     type_total_duration="small_total_duration",
                     type_category="small_categories",
-                    is_user_param=is_user_param,
                 )
 
                 if small_category_id:
@@ -1469,7 +1451,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                         small_category_id=small_category_id,
                         type_total_duration="category_total_duration",
                         type_category="category",
-                        is_user_param=is_user_param,
                     )
 
         return self.response_ok(data)
@@ -1487,7 +1468,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         small_category_id=None,
         type_total_duration=None,
         type_category=None,
-        is_user_param=False,
     ):
         """
         Return data of statistic tag by category
@@ -1519,7 +1499,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             end_of_day,
             durations=durations,
             users=users,
-            is_user_param=is_user_param,
         )
 
         return data
