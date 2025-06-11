@@ -280,8 +280,10 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         Get task list of the option
         """
 
-        tasks = Task.objects.exclude(type=TaskTypes.MY_TEMPLATE.value).order_by(
-            "-created_at"
+        tasks = (
+            Task.objects.filter(deleted_at__isnull=True)
+            .exclude(type=TaskTypes.MY_TEMPLATE.value)
+            .order_by("-created_at")
         )
 
         # Get list of tasks by room code
@@ -473,9 +475,9 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
 
         def _handle_get_data_organization_of_task(data):
             data[
-                "organization"
+                "organizations"
             ] = CreationDataOrganizationWithStructCategorySerializer(
-                organizations[0], context={"user": user}
+                organizations, many=True, context={"user": user}
             ).data
             data["members"] = CreationDataUserSerializer(
                 organizations[0].users.order_by("created_at"), many=True
