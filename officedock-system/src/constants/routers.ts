@@ -450,7 +450,6 @@ export const apiRouters = {
 
   // DURATION
   TASK_DURATION: `/durations/`,
-  TASK_CHECK_START: () => `/durations/another-started/`,
   TASK_DURATION_DETAIL: () => `/durations/running/`,
   TASK_HEADER_START: '/durations/running/',
   TASK_CALCULATE_DURATION: () => `/durations/calculate/`,
@@ -466,6 +465,7 @@ export const apiRouters = {
   SOCKET_ACTION: (token: string) => `/system/ws/chat/?token=${token}`,
   CHAT_SETTING: '/users/chat-setting/',
   CHAT_UPLOAD_CHUNK: '/chat/chunk-files/',
+  MEMO_CHAT_ACTION: (code: string) => `/chat/${code}/memo/`,
 
   // BOOKMARK
   BOOKMARK_LIST: '/messages/',
@@ -563,5 +563,5 @@ export const apiRouters = {
   LOCATION_DETAIL: (uuid: string) => `/event-locations/${uuid}/`,
 
   // COMPANY
-  COMPANY_SETTINGS: 'companies/settings/'
+  COMPANY_SETTINGS: 'companies/settings/',
 };

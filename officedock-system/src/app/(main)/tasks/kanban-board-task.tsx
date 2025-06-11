@@ -1388,6 +1388,7 @@ const KanbanBoardTask = () => {
       handleStartNewTask({
         id: `${taskSelectedToStart.id}`.replace('event', ''),
         type: `${taskSelectedToStart.type}`,
+        isStart: true,
       });
     setShowWarningStartTaskModal(false);
     taskSelectedToStart &&

@@ -20,6 +20,7 @@ import useStatisticTask from '@hooks/useStatisticTask';
 import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 type Props = {
   isCheckCompare: boolean;
@@ -76,6 +77,9 @@ const TaskListStatisticTeamTags = ({
     currentPage,
     setCurrentPage,
   } = useContext(StatisticTeamTagsStateContext);
+
+  const { selectedOrganization: selectedOrganizationTeamList } =
+    useContext(GlobalStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
 
@@ -436,7 +440,11 @@ const TaskListStatisticTeamTags = ({
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
-                    disabled={!selectedMedium}
+                    disabled={
+                      !selectedMedium ||
+                      selectedOrganization?.value !==
+                        selectedOrganizationTeamList?.value
+                    }
                   />
                 </div>
               </div>

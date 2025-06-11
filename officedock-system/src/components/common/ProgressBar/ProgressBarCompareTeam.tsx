@@ -97,17 +97,17 @@ const PercentageBarCompareTeam = ({
                     style={{
                       boxShadow: '0px 2px 8px 0px #0000001A',
                     }}
-                    className={`absolute top-0 ${isLast ? 'left-[-100px]' : 'left-[70%]'}  w-[250px]  rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
+                    className={`absolute top-0 ${isLast ? 'left-[-100px]' : 'left-[70%]'}  w-[288px]  rounded-md py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
                     {item.mergedItems.length > 0 ? (
                       <>
-                        <p className="text-xs text-start font-medium text-[#77858F] mb-5">
+                        <p className="text-xs text-start font-medium text-[#77858F] mb-5 px-5">
                           その他
                         </p>
 
                         {item.mergedItems.map((mergeItem, indexMerge) => {
                           return (
                             <div key={mergeItem.categoryId}>
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1 px-5">
                                 <div
                                   style={{
                                     backgroundColor: mergeItem.categoryColor,
@@ -117,7 +117,7 @@ const PercentageBarCompareTeam = ({
                                   {mergeItem.categoryName}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-[10px] font-normal text-base mt-4">
+                              <div className="flex items-center gap-[10px] font-normal text-base mt-4 px-5">
                                 <span className="text-black">
                                   {mergeItem.percent}%
                                 </span>
@@ -126,48 +126,50 @@ const PercentageBarCompareTeam = ({
                                     formatTimeToJapanese(mergeItem.duration)}
                                 </span>
                               </div>
-                              <ul className="mt-2">
-                                {mergeItem.users &&
-                                  mergeItem.users.map((item, index) => {
-                                    return (
-                                      <li
-                                        key={index}
-                                        className="flex items-center justify-between mb-2">
-                                        <div className="flex items-center gap-2">
-                                          <div>
-                                            <CustomUserAvatar
-                                              avatarUrl={
-                                                item.user?.avatar || ''
-                                              }
-                                              avatarColor={
-                                                item.user?.avatarColor || ''
-                                              }
-                                              size={30}
-                                            />
+                              <div className="max-h-[250px] overflow-y-auto px-5">
+                                <ul className="mt-2">
+                                  {mergeItem.users &&
+                                    mergeItem.users.map((item, index) => {
+                                      return (
+                                        <li
+                                          key={index}
+                                          className="flex items-center justify-between mb-2">
+                                          <div className="flex items-center gap-2">
+                                            <div>
+                                              <CustomUserAvatar
+                                                avatarUrl={
+                                                  item.user?.avatar || ''
+                                                }
+                                                avatarColor={
+                                                  item.user?.avatarColor || ''
+                                                }
+                                                size={30}
+                                              />
+                                            </div>
+                                            <span className="inline-block w-20 text-black overflow-hidden whitespace-nowrap text-ellipsis">
+                                              {item.user.fullName}
+                                            </span>
                                           </div>
-                                          <span className="inline-block w-20 text-black overflow-hidden whitespace-nowrap text-ellipsis">
-                                            {item.user.fullName}
-                                          </span>
-                                        </div>
-                                        <span>{item.percent}%</span>
-                                      </li>
-                                    );
-                                  })}
-                              </ul>
+                                          <span>{item.percent}%</span>
+                                        </li>
+                                      );
+                                    })}
+                                </ul>
+                              </div>
 
                               <div
-                                className={`${indexMerge === item.mergedItems.length - 1 && 'hidden'} w-full my-5  border-b border-[#D2DBE1]`}></div>
+                                className={`${indexMerge === item.mergedItems.length - 1 && 'hidden'} w-full my-5  border-b px-5 border-[#D2DBE1]`}></div>
                             </div>
                           );
                         })}
                       </>
                     ) : (
                       <>
-                        <div className="flex items-center ">
+                        <div className="flex items-center gap-1 px-5">
                           <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
                             基準期間
                           </p>
-                          <div className="text-black text-xs font-normal flex items-center gap-[1px]">
+                          <div className="text-[#77858F] text-sm font-normal flex items-center gap-[1px]">
                             <p>
                               {startDate && formatShowStatisticTask(startDate)}(
                               {getJapaneseDayName(String(startDate))})
@@ -179,7 +181,7 @@ const PercentageBarCompareTeam = ({
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 mt-[10px] px-5">
                           <div
                             style={{
                               backgroundColor: item.color,
@@ -189,37 +191,39 @@ const PercentageBarCompareTeam = ({
                             {item.label}
                           </span>
                         </div>
-                        <div className="flex items-center gap-[10px] font-normal text-base mt-4">
+                        <div className="flex items-center gap-[10px] font-normal text-base mt-[10px] px-5">
                           <span className="text-black">{item.percentage}%</span>
                           <span className="text-black">
                             {item.totalDuration &&
                               formatTimeToJapanese(item.totalDuration)}
                           </span>
                         </div>
-                        <ul>
-                          {item.optionData.map((item, index) => (
-                            <li
-                              key={index}
-                              className="break-all text-start flex items-center gap-2 line-clamp-3 text-[#77858F] text-sm font-normal mb-2">
-                              <CustomUserAvatar
-                                avatarUrl={item?.avatarUrl || ''}
-                                avatarColor={item?.avatarColor || ''}
-                                size={30}
-                              />
-                              <span className="relative top-[-3px]">
-                                {' '}
-                                {item.label}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
+                        <div className="max-h-[250px] overflow-y-auto px-5">
+                          <ul>
+                            {item.optionData.map((item, index) => (
+                              <li
+                                key={index}
+                                className="break-all text-start flex items-center gap-2 line-clamp-3 text-[#77858F] text-sm font-normal mb-2">
+                                <CustomUserAvatar
+                                  avatarUrl={item?.avatarUrl || ''}
+                                  avatarColor={item?.avatarColor || ''}
+                                  size={30}
+                                />
+                                <span className="relative top-[-3px]">
+                                  {' '}
+                                  {item.label}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       </>
                     )}
                   </div>
                 </div>
               ))
             ) : (
-              <div className="w-full h-full bg-[#EBF1F7]"></div>
+              <div className="w-full h-full bg-[#EBF1F7] px-5"></div>
             )}
           </div>
         </>
@@ -261,17 +265,17 @@ const PercentageBarCompareTeam = ({
                     style={{
                       boxShadow: '0px 2px 8px 0px #0000001A',
                     }}
-                    className={`absolute top-0 ${isLast ? 'left-[-100px]' : 'left-[70%]'}  w-[250px]  rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
+                    className={`absolute top-0 ${isLast ? 'left-[-100px]' : 'left-[70%]'}  w-[288px]  rounded-md py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
                     {item.mergedItems.length > 0 ? (
                       <>
-                        <p className="text-xs text-start font-medium text-[#77858F] mb-5">
+                        <p className="text-xs text-start font-medium text-[#77858F] mb-5 px-5">
                           その他
                         </p>
 
                         {item.mergedItems.map((mergeItem, indexMerge) => {
                           return (
                             <div key={mergeItem.categoryId}>
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1 px-5">
                                 <div
                                   style={{
                                     backgroundColor: mergeItem.categoryColor,
@@ -281,7 +285,7 @@ const PercentageBarCompareTeam = ({
                                   {mergeItem.categoryName}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-[10px] font-normal text-base mt-4">
+                              <div className="flex items-center gap-[10px] font-normal text-base mt-4 px-5">
                                 <span className="text-black">
                                   {mergeItem.percent}%
                                 </span>
@@ -290,48 +294,50 @@ const PercentageBarCompareTeam = ({
                                     formatTimeToJapanese(mergeItem.duration)}
                                 </span>
                               </div>
-                              <ul className="mt-2">
-                                {mergeItem.users &&
-                                  mergeItem.users.map((item, index) => {
-                                    return (
-                                      <li
-                                        key={index}
-                                        className="flex items-center justify-between mb-2">
-                                        <div className="flex items-center gap-2">
-                                          <div>
-                                            <CustomUserAvatar
-                                              avatarUrl={
-                                                item.user?.avatar || ''
-                                              }
-                                              avatarColor={
-                                                item?.user.avatarColor || ''
-                                              }
-                                              size={30}
-                                            />
+                              <div className="max-h-[250px] overflow-y-auto px-5">
+                                <ul className="mt-2">
+                                  {mergeItem.users &&
+                                    mergeItem.users.map((item, index) => {
+                                      return (
+                                        <li
+                                          key={index}
+                                          className="flex items-center justify-between mb-2">
+                                          <div className="flex items-center gap-2">
+                                            <div>
+                                              <CustomUserAvatar
+                                                avatarUrl={
+                                                  item.user?.avatar || ''
+                                                }
+                                                avatarColor={
+                                                  item?.user.avatarColor || ''
+                                                }
+                                                size={30}
+                                              />
+                                            </div>
+                                            <span className="inline-block text-black w-20 overflow-hidden whitespace-nowrap text-ellipsis">
+                                              {item.user.fullName}
+                                            </span>
                                           </div>
-                                          <span className="inline-block text-black w-20 overflow-hidden whitespace-nowrap text-ellipsis">
-                                            {item.user.fullName}
-                                          </span>
-                                        </div>
-                                        <span>{item.percent}%</span>
-                                      </li>
-                                    );
-                                  })}
-                              </ul>
+                                          <span>{item.percent}%</span>
+                                        </li>
+                                      );
+                                    })}
+                                </ul>
+                              </div>
 
                               <div
-                                className={`${indexMerge === item.mergedItems.length - 1 && 'hidden'} w-full my-5  border-b border-[#D2DBE1]`}></div>
+                                className={`${indexMerge === item.mergedItems.length - 1 && 'hidden'} px-5 w-full my-5  border-b border-[#D2DBE1]`}></div>
                             </div>
                           );
                         })}
                       </>
                     ) : (
                       <>
-                        <div className="flex items-center ">
+                        <div className="flex items-center gap-1 px-5">
                           <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
                             比較期間
                           </p>
-                          <div className="text-black text-xs font-normal flex items-center gap-[1px]">
+                          <div className="text-[#77858F] text-sm  font-normal flex items-center gap-[1px]">
                             <p>
                               {startDateCompare &&
                                 formatShowStatisticTask(startDateCompare)}
@@ -345,7 +351,7 @@ const PercentageBarCompareTeam = ({
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 mt-[10px] px-5">
                           <div
                             style={{
                               backgroundColor: item.color,
@@ -355,30 +361,32 @@ const PercentageBarCompareTeam = ({
                             {item.label}
                           </span>
                         </div>
-                        <div className="flex items-center gap-[10px] font-normal text-base mt-4">
+                        <div className="flex items-center gap-[10px] font-normal text-base mt-[10px] px-5">
                           <span className="text-black">{item.percentage}%</span>
                           <span className="text-black">
                             {item.totalDuration &&
                               formatTimeToJapanese(item.totalDuration)}
                           </span>
                         </div>
-                        <ul>
-                          {item.optionData.map((item, index) => (
-                            <li
-                              key={index}
-                              className="break-all text-start flex items-center gap-2 line-clamp-3 text-[#77858F] text-sm font-normal">
-                              <CustomUserAvatar
-                                avatarUrl={item?.avatarUrl || ''}
-                                avatarColor={item?.avatarColor || ''}
-                                size={30}
-                              />
-                              <span className="relative top-[-3px]">
-                                {' '}
-                                {item.label}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
+                        <div className="max-h-[250px] overflow-y-auto px-5">
+                          <ul>
+                            {item.optionData.map((item, index) => (
+                              <li
+                                key={index}
+                                className="break-all text-start flex items-center gap-2 line-clamp-3 text-[#77858F] text-sm font-normal">
+                                <CustomUserAvatar
+                                  avatarUrl={item?.avatarUrl || ''}
+                                  avatarColor={item?.avatarColor || ''}
+                                  size={30}
+                                />
+                                <span className="relative top-[-3px]">
+                                  {' '}
+                                  {item.label}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       </>
                     )}
                   </div>
@@ -389,11 +397,11 @@ const PercentageBarCompareTeam = ({
             )}
           </div>
           <div className={`mt-[14px] ${!isTag && 'flex justify-between'}`}>
-            <div className="flex items-center ">
+            <div className="flex items-center gap-1">
               <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
                 比較
               </p>
-              <div className="text-black text-xs font-normal flex items-center gap-[2px]">
+              <div className="text-[#77858F] text-sm  font-normal flex items-center gap-[2px]">
                 <p>
                   {startDateCompare &&
                     formatShowStatisticTask(startDateCompare)}

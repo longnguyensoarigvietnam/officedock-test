@@ -53,7 +53,7 @@ const ModalCustomTooltip = ({
     <div className="py-5">
       {id == -1 ? (
         <div>
-          <p className="text-xs font-medium text-[#77858F] mb-5">その他</p>
+          <p className="text-xs font-medium text-[#77858F] mb-5 px-5">その他</p>
           {mergedItems.map((item, index) => {
             return (
               <div key={item.categoryId}>
@@ -93,7 +93,7 @@ const ModalCustomTooltip = ({
                                     customClassName={`${!user.user?.avatar && '!mt-0'}`}
                                   />
                                 </div>
-                                <span className="inline-block w-[170px] overflow-hidden whitespace-nowrap text-ellipsis">
+                                <span className="inline-block w-[130px] overflow-hidden whitespace-nowrap text-ellipsis">
                                   {user.user.fullName}
                                 </span>
                               </div>
@@ -168,13 +168,11 @@ const ModalCustomTooltip = ({
                                 size={30}
                               />
                             </div>
-                            <span className="inline-block w-[170px] overflow-hidden whitespace-nowrap text-ellipsis">
+                            <span className="inline-block w-[130px] overflow-hidden whitespace-nowrap text-ellipsis">
                               {opt.label}
                             </span>
                           </div>
-                          <div className="flex-shrink-0 w-[20px]">
-                            {opt.percent}%
-                          </div>
+                          <div className="flex-shrink-0">{opt.percent}%</div>
                         </div>
                       );
                     })

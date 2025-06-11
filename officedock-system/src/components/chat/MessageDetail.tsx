@@ -474,7 +474,7 @@ export const MessageDetail = ({
               <div className={`ml-3 !w-full`}>
                 <div className="flex w-full justify-between items-baseline pb-2">
                   <div className="flex flex-grow  gap-2 items-baseline font-semibold text-[15px] pr-2">
-                    <div className="flex-grow min-w-0 break-words whitespace-normal line-clamp-3">
+                    <div className="flex-grow min-w-0 max-w-[200px] break-words whitespace-normal line-clamp-3">
                       {messageDetail.sender.fullName}
                     </div>
                     <div className="font-medium max-w-[200px] line-clamp-3 w-fit flex-shrink-0 break-all text-xs text-[#77858F]">

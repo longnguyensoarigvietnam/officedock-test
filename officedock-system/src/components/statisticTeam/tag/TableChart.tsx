@@ -150,6 +150,7 @@ const TableChart = ({
   const queryClient = useQueryClient();
   const {
     isCheckCompare,
+    selectedOrganization,
     setIsLoadingLarge,
     setIsLoadingLargeCompare,
     setIsLoadingMedium,
@@ -449,7 +450,13 @@ const TableChart = ({
                 }
                 placeholder=""
                 showArrow
-                options={listOptionsOrganization}
+                options={
+                  selectedOrganization
+                    ? listOptionsOrganization.filter(
+                        (item) => item.value === selectedOrganization.value,
+                      )
+                    : []
+                }
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({

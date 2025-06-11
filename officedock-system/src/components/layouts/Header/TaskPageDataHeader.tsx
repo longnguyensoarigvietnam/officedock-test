@@ -332,8 +332,26 @@ const TaskPageDataHeader = () => {
 
   // Handle start and stop task
   const { calculateDurationTask } = useCalculateDurationTask({
-    onSuccess: (response) => {
+    onSuccess: (response, task) => {
       const data = response.data;
+
+      if (data.isAnotherTaskStarted) {
+        setIdTaskStarting({
+          id: data.id,
+          type: data.type,
+        });
+        setDataClickTask({
+          id: task.id,
+          type: task.type,
+        });
+        setShowWarningStartTaskModal(true);
+        return;
+      }
+
+      setDataRunning({
+        id: `${taskSelected.value}`,
+        type: `${taskSelected.type}`,
+      });
       setTaskSelectedAction({
         id:
           taskSelected.type === ItemStartType.TASK
@@ -372,52 +390,7 @@ const TaskPageDataHeader = () => {
       }
     },
   });
-  // Handle call API check start task
-  const handleCheckStartTask = async ({
-    id,
-    type,
-  }: {
-    id: string;
-    type: string;
-  }) => {
-    return await api.post(apiRouters.TASK_CHECK_START(), {
-      id,
-      type,
-    });
-  };
-  // Function call API  check start task
-  const { mutate: checkTask } = useMutation(
-    'postCheckStartTaskSchedule',
-    handleCheckStartTask,
-    {
-      onSuccess: async (response, task) => {
-        const items = response.data;
 
-        if (!items.isAnotherTaskStarted) {
-          calculateDurationTask({
-            id: `${taskSelected.value}`.replace('event', ''),
-            type: `${taskSelected.type}`,
-          });
-          setDataRunning({
-            id: `${taskSelected.value}`,
-            type: `${taskSelected.type}`,
-          });
-        } else {
-          setIdTaskStarting({
-            id: items.id,
-            type: items.type,
-          });
-          setDataClickTask({
-            id: task.id,
-            type: task.type,
-          });
-          setShowWarningStartTaskModal(true);
-        }
-      },
-      onError: () => {},
-      onSettled: () => {},
-    },
-  );
   const handleSetParam = ({
     id,
     action,
@@ -460,6 +433,7 @@ const TaskPageDataHeader = () => {
       calculateDurationTask({
         id: `${taskSelectedToStart.id}`.replace('event', ''),
         type: `${taskSelectedToStart.type}`,
+        isStart: true,
       });
     setShowWarningStartTaskModal(false);
     taskSelectedToStart &&
@@ -577,7 +551,7 @@ const TaskPageDataHeader = () => {
                                 type: taskSelected.type as string,
                               });
 
-                              checkTask({
+                              calculateDurationTask({
                                 id: `${selectedTask}`.replace('event', ''),
                                 type: `${taskSelected.type}`,
                               });

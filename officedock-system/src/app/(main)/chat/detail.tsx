@@ -48,6 +48,7 @@ import { TaskQuote } from '@components/chat/CustomTaskQuote';
 import { CustomReaction } from '@components/chat/CustomIcon';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import ErrorUploadFileValidationModal from '@components/modals/ErrorUploadFileValidationModal';
+import MemoDataChat from '@components/chat/MemoDataChat';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -2897,33 +2898,41 @@ const ChatDetail = ({
                 style={{
                   boxShadow: '-4px 0px 8px 0px #0000000F',
                 }}
-                className={`transition-all duration-500 ease-in-out ${
+                className={`transition-all flex-shrink-0 duration-500 ease-in-out ${
                   isExtendMoreData
                     ? 'w-[320px] opacity-100 translate-x-0'
-                    : 'w-0 opacity-0 translate-x-4'
-                } bg-[#F5F8FB]`}></div>
+                    : 'w-0 opacity-0 max-w-0 translate-x-4'
+                } bg-[#F5F8FB] rounded-tl-xl  rounded-bl-xl`}>
+                {isExtendMoreData && (
+                  <MemoDataChat
+                    chatRoomCode={chatRoomCode}
+                    chatRoomDetail={chatRoomDetail}
+                    onClose={() => setExtendMoreData(false)}
+                  />
+                )}
+              </div>
             </div>
+            {/* Menu chat more data */}
+            {!isExtendMoreData && (
+              <div
+                onClick={() => setExtendMoreData(true)}
+                style={{
+                  boxShadow: '0px 2px 8px 0px #0000001A',
+                }}
+                className="absolute top-[87px] flex gap-2 items-center right-0 rounded-tl-full rounded-bl-full w-[60px] px-[6px] py-[5px] bg-white">
+                <ImageRound
+                  name="Save"
+                  src={`/icons/chat-more.svg`}
+                  className="w-9 h-9 hover:cursor-pointer"
+                />
+                <ImageRound
+                  src="/icons/chat-right.svg"
+                  name="right"
+                  className="!text-transparent h-fit w-fit cursor-pointer"
+                />
+              </div>
+            )}
           </div>
-          {/* Menu chat more data */}
-          {!isExtendMoreData && (
-            <div
-              onClick={() => setExtendMoreData(true)}
-              style={{
-                boxShadow: '0px 2px 8px 0px #0000001A',
-              }}
-              className="absolute top-[87px] flex gap-2 items-center right-0 rounded-tl-full rounded-bl-full w-[60px] px-[6px] py-[5px] bg-white">
-              <ImageRound
-                name="Save"
-                src={`/icons/chat-more.svg`}
-                className="w-9 h-9 hover:cursor-pointer"
-              />
-              <ImageRound
-                src="/icons/chat-right.svg"
-                name="right"
-                className="!text-transparent h-fit w-fit cursor-pointer"
-              />
-            </div>
-          )}
         </>
       )}
       {openErrorUploadFileModal && (
