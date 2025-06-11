@@ -25,6 +25,7 @@ class DurationCalculatorSerializer(serializers.Serializer):
     type = serializers.ChoiceField(
         required=True, choices=CalendarTypes.choices()
     )
+    is_start = serializers.BooleanField(default=False)
 
 
 class DurationSerializer(serializers.ModelSerializer):

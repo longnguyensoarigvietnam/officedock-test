@@ -902,7 +902,6 @@ class ChatMessageViewSet(
         if instance.reactions.filter(user=user, icon=icon).exists():
             instance.reactions.filter(user=user, icon=icon).delete()
         else:
-            instance.reactions.filter(user=user).delete()
             instance.reactions.create(
                 company=user.company, user=user, icon=icon
             )
