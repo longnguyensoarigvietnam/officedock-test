@@ -780,6 +780,8 @@ const StackedAreaChart = ({
     return allViews.filter((view) => !enabledViews.includes(view));
   };
 
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
   return (
     <div
       style={{
@@ -1027,13 +1029,94 @@ const StackedAreaChart = ({
               </div>
             </div>
           </div>
-          <div className="">
+          <div className="relative">
             <Chart
               options={options as any}
               series={dataChart}
               type="area"
               height={380}
             />
+            <div className="w-full pl-[45px] pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent">
+              {timeRange.slice(1).map((item, idx) => {
+                const actualIndex = idx + 1;
+                const isHovered = hoveredIndex === actualIndex;
+
+                const dataDetail =
+                  statisticTagPercentChartList &&
+                  statisticTagPercentChartList[idx + 1];
+                const dataDetailDate =
+                  statisticTagPercentChartList &&
+                  statisticTagPercentChartList[idx];
+
+                return (
+                  <div
+                    key={actualIndex}
+                    onMouseEnter={() => setHoveredIndex(actualIndex)}
+                    onMouseLeave={() => setHoveredIndex(null)}
+                    style={{
+                      flex: 1,
+                      textAlign: 'center',
+                      backgroundColor:
+                        hoveredIndex === null
+                          ? 'transparent'
+                          : isHovered
+                            ? 'transparent'
+                            : '#F8FAFCA6',
+                      transition: 'background-color 0.2s',
+                    }}
+                    className="group relative">
+                    {statisticTagPercentChartList && (
+                      <div
+                        style={{
+                          boxShadow: '0px 2px 8px 0px #0000001A',
+                        }}
+                        className={`bg-white absolute p-5 top-1/2 left-1/2 hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                        <p className="text-sm font-normal text-[#77858F] mb-1 text-start w-full block">
+                          {convertToStatisticJapaneseLabels(
+                            dataDetailDate?.startDate as string,
+                            lineChartViewBy?.value as string,
+                            true,
+                          )}{' '}
+                          ~
+                          {convertToStatisticJapaneseLabels(
+                            dataDetailDate?.endDate as string,
+                            lineChartViewBy?.value as string,
+                            true,
+                          )}
+                          tableData
+                        </p>
+                        {dataDetail?.tags.map((tag, cateIndex) => {
+                          const tagItem = tableData.find(
+                            (itemFind) => itemFind.tagId === tag.tagId,
+                          );
+                          return (
+                            <div
+                              key={cateIndex}
+                              className="flex items-center gap-1.5">
+                              <div
+                                className="w-3 h-3 rounded-sm"
+                                style={{
+                                  backgroundColor: lightenColor(
+                                    '#2E9267' as string,
+                                    Number(tagItem?.tagPercent || 0),
+                                  ),
+                                }}
+                              />
+                              <div className="flex flex-grow items-center justify-between text-base font-medium">
+                                <div className=" text-black w-fit  max-w-[180px] line-clamp-3 break-words">
+                                  {tag.tagName}
+                                </div>
+                                <div>{tag.percent}%</div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           <div className="px-[30px]">

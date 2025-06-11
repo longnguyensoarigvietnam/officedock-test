@@ -105,7 +105,6 @@ const StackedAreaChart = ({
       data: number[];
     }[]
   >([]);
-
   const viewOptions = [
     {
       value: StatisticViewOptions.DAY,
@@ -133,14 +132,12 @@ const StackedAreaChart = ({
   };
 
   const [timeRange, setTimeRange] = useState<string[]>([]);
-  const [timeRangeLabel, setTimeRangeLabel] = useState<string[]>([]);
 
   const [colorList, setColorList] = useState<string[]>([]);
 
   useEffect(() => {
     if (!statisticPercentChartList || statisticPercentChartList.length === 0) {
       setTimeRange([]);
-      setTimeRangeLabel([]);
       setDataChart([]);
       setTableData([]);
       return;
@@ -167,7 +164,6 @@ const StackedAreaChart = ({
         isEdge,
       );
     });
-    setTimeRangeLabel(uniqueSortedDates);
 
     setTimeRange(transformedDates);
 
@@ -293,9 +289,7 @@ const StackedAreaChart = ({
 
     setColorList(
       finalTableData.map((color) => {
-        return color.categoryColor || colorChild !== ''
-          ? lightenColor(colorChild as string, Number(color.categoryPercent))
-          : '';
+        return color.categoryColor;
       }),
     );
 
@@ -440,58 +434,9 @@ const StackedAreaChart = ({
       enabled: true,
       intersect: false,
       shared: true,
-      custom: function ({
-        series,
-        dataPointIndex,
-        w,
-      }: {
-        series: any;
-        dataPointIndex: any;
-        w: any;
-      }) {
-        const hoverIndex =
-          dataPointIndex === timeRange.length - 1
-            ? dataPointIndex - 1
-            : dataPointIndex;
-        const productNames = dataChart.map((name) => name.name);
-        const hoverDate = timeRangeLabel[hoverIndex + 1];
-        const hoverStartDate = timeRangeLabel[hoverIndex];
+      custom: function () {
         return `
-          <div style="background: white; padding: 8px; border-radius: 6px;width: 250px">
-            <span style="font-size : 14px ; color : #77858F;font-weight :400 ; margin-bottom : 4px ;text-align: center;width : 100%;  display: block;
- ">${convertToStatisticJapaneseLabels(
-   hoverStartDate,
-   lineChartViewBy?.value as string,
-   true,
- )} ~ ${convertToStatisticJapaneseLabels(
-   hoverDate,
-   lineChartViewBy?.value as string,
-   true,
- )}</span>
-            ${series
-              .map((value: any, index: any) => {
-                const color = w.globals.colors[index];
-                return `<div style="display: flex; align-items: center; gap: 5px;">
-                        <div style="width: 12px; height: 12px; background: ${color};"></div>
-            <span style="
-                      display: -webkit-box;
-                     -webkit-line-clamp: 3;
-                      -webkit-box-orient: vertical;
-                     overflow: hidden;
-                     text-overflow: ellipsis;
-                     max-width: 180px;
-                     word-break: break-word;
-                      white-space: normal;
-                      line-height: 1.2em;
-                    max-height: 3.6em; /* 3 lines * 1.2 line-height */
-">
-  ${productNames[index]}:
-</span>
-                        <span>${value[dataPointIndex]}%</span>
-                      </div>`;
-              })
-              .join('')}
-          </div>
+         
         `;
       },
     },
@@ -689,6 +634,7 @@ const StackedAreaChart = ({
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
     <div
@@ -884,13 +830,82 @@ const StackedAreaChart = ({
               </div>
             </div>
           </div>
-          <div className="">
+          <div className="relative">
             <Chart
               options={options as any}
               series={dataChart}
               type="area"
               height={380}
             />
+            <div className="w-full pl-[45px] pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent">
+              {timeRange.slice(1).map((item, idx) => {
+                const actualIndex = idx + 1;
+                const isHovered = hoveredIndex === actualIndex;
+
+                const dataDetail =
+                  statisticPercentChartList &&
+                  statisticPercentChartList[idx + 1];
+                const dataDetailDate =
+                  statisticPercentChartList && statisticPercentChartList[idx];
+
+                return (
+                  <div
+                    key={actualIndex}
+                    onMouseEnter={() => setHoveredIndex(actualIndex)}
+                    onMouseLeave={() => setHoveredIndex(null)}
+                    style={{
+                      flex: 1,
+                      textAlign: 'center',
+                      backgroundColor:
+                        hoveredIndex === null
+                          ? 'transparent'
+                          : isHovered
+                            ? 'transparent'
+                            : '#F8FAFCA6',
+                      transition: 'background-color 0.2s',
+                    }}
+                    className="group relative">
+                    {statisticPercentChartList && (
+                      <div
+                        style={{
+                          boxShadow: '0px 2px 8px 0px #0000001A',
+                        }}
+                        className={`bg-white absolute p-5 top-1/2 left-1/2 hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                        <p className="text-sm font-normal text-[#77858F] mb-1 text-start w-full block">
+                          {convertToStatisticJapaneseLabels(
+                            dataDetailDate?.startDate as string,
+                            lineChartViewBy?.value as string,
+                            true,
+                          )}{' '}
+                          ~
+                          {convertToStatisticJapaneseLabels(
+                            dataDetailDate?.endDate as string,
+                            lineChartViewBy?.value as string,
+                            true,
+                          )}
+                        </p>
+                        {dataDetail?.categories.map((cate, cateIndex) => (
+                          <div
+                            key={cateIndex}
+                            className="flex items-center gap-1.5">
+                            <div
+                              className="w-3 h-3 rounded-sm"
+                              style={{ backgroundColor: cate.categoryColor }}
+                            />
+                            <div className="flex flex-grow items-center justify-between text-base font-medium">
+                              <div className=" text-black w-fit  max-w-[180px] line-clamp-3 break-words">
+                                {cate.categoryName}
+                              </div>
+                              <div>{cate.percent}%</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
           <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
             <thead>

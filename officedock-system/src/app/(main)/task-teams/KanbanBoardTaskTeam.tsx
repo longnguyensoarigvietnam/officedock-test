@@ -9,7 +9,7 @@ import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
-import { useMutation, useQueryClient } from 'react-query';
+import { useMutation } from 'react-query';
 import { AxiosError } from 'axios';
 
 import Button from '@components/common/Button';
@@ -24,14 +24,12 @@ import ActionsTaskModalTeam from '@components/modals/ActionsTaskModalTeam';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 import NoSettingColumn from '@components/kanbanTeam/NoSettingColumn';
-import WarningStartTaskModal from '@components/modals/WarningStartTaskModal';
 
 import { useErrorToast } from '@hooks/useErrorToast';
 import useTaskNoSettingTeam from '@hooks/useTaskNoSettingTeam';
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useTaskBoardTeam from '@hooks/useTaskBoardTeam';
-import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 
 import { pageRouters, apiRouters } from '@constants/routers';
 import {
@@ -102,8 +100,6 @@ const KanbanBoardTaskTeam = () => {
     setDataTotalStatus,
     listDataKanbanTeam,
     setListDataKanbanTeam,
-    showWarningStartTaskModalTeam,
-    setShowWarningStartTaskModalTeam,
     listTaskNoSetting,
     setListTaskNoSetting,
   } = useContext(TaskTeamStateContext);
@@ -115,7 +111,6 @@ const KanbanBoardTaskTeam = () => {
   const showErrorToast = useErrorToast();
 
   const { data: session } = useSession();
-  const queryClient = useQueryClient();
 
   // Param
   const searchParams = useSearchParams();
@@ -2154,53 +2149,8 @@ const KanbanBoardTaskTeam = () => {
   const remainingCount = allLabels.length - firstThree.length;
 
   // Handle start and stop task
-  const {
-    idTaskStarting,
-    taskSelected,
-    taskSelectedToStart,
-    statusTaskSelected,
-    setDataRunning,
-    setTaskSelectedAction,
-  } = useContext(TaskContext);
+  const { taskSelected, statusTaskSelected } = useContext(TaskContext);
 
-  const { calculateDurationTask } = useCalculateDurationTask({
-    onSuccess: () => {
-      queryClient.refetchQueries(['getDataTaskHeaderList']);
-      taskSelectedToStart &&
-        queryClient.refetchQueries([
-          'getTaskDurationDetail',
-          {
-            id: `${taskSelectedToStart.id}`,
-            type: ItemStartType.TASK,
-          },
-        ]);
-      queryClient.refetchQueries(['getTaskHeaderStart']);
-
-      setTaskSelectedAction({
-        id:
-          taskSelected.type === ItemStartType.TASK
-            ? `${taskSelected.value}`
-            : `${`${taskSelected.value}`.replace('event', '')}event`,
-        isStart: !statusTaskSelected?.isStart,
-        type: `${taskSelected.type}`,
-      });
-      taskSelectedToStart &&
-        updateTaskIsStart(taskSelectedToStart.id as number);
-    },
-  });
-  const handleConfirmStartNewTask = async () => {
-    taskSelectedToStart &&
-      calculateDurationTask({
-        id: `${taskSelectedToStart.id}`.replace('event', ''),
-        type: `${taskSelectedToStart.type}`,
-      });
-    setShowWarningStartTaskModalTeam(false);
-    taskSelectedToStart &&
-      setDataRunning({
-        id: `${taskSelectedToStart.id}`,
-        type: `${taskSelectedToStart.type}`,
-      });
-  };
   const updateTaskIsStart = (taskId: number, isPause: boolean = false) => {
     setListDataKanbanTeam((prevData) =>
       prevData.map((user) => ({
@@ -2598,16 +2548,6 @@ const KanbanBoardTaskTeam = () => {
               handleConfirmCreateTask(pendingTaskData as TaskFormData);
             }
           }}
-        />
-      )}
-      {showWarningStartTaskModalTeam && (
-        <WarningStartTaskModal
-          open={showWarningStartTaskModalTeam}
-          type={idTaskStarting.type === ItemStartType.TASK ? 'タスク' : '予定'}
-          onClose={() => {
-            setShowWarningStartTaskModalTeam(false);
-          }}
-          onConfirm={handleConfirmStartNewTask}
         />
       )}
     </>

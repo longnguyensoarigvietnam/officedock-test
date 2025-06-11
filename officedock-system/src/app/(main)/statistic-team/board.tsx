@@ -19,6 +19,8 @@ import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
 import LineChartByTeam from '@components/statisticTeam/category/LineChartByTeam';
 import LineChartByTeamCompare from '@components/statisticTeam/category/compare/LineChartByTeamCompare';
+import AllocationTeamCategoryCompare from '@components/statisticTeam/category/compare/AllocationTeamCategoryCompare';
+import AllocationTeamCategory from '@components/statisticTeam/category/AllocationTeamCategory';
 
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { pageRouters } from '@constants/routers';
@@ -118,8 +120,13 @@ const StatisticTeamBoard = () => {
       }
 
       const organization =
-        creationDataStatisticData?.organizations.find((item) => item.isMain) ||
-        creationDataStatisticData?.organizations[0];
+        selectedOrganization && selectedOrganization.value
+          ? creationDataStatisticData?.organizations.find(
+              (item) => item.id === selectedOrganization?.value,
+            )
+          : creationDataStatisticData?.organizations.find(
+              (item) => item.isMain === true,
+            ) || creationDataStatisticData?.organizations[0];
 
       if (organization) {
         const largeCategories = organization.statisticCategories.map(
@@ -539,7 +546,7 @@ const StatisticTeamBoard = () => {
             <Button
               onClick={() => {
                 router.push(
-                  `${pageRouters.STATISTIC_TEAM_TAG_MANAGEMENT.href}?organization=${selectedOrganization?.value}&tabId=1`,
+                  `${pageRouters.STATISTIC_TEAM_TAG_MANAGEMENT.href}?organization=${organizationId}&tabId=1`,
                 );
               }}
               variant={'outline'}
@@ -747,6 +754,21 @@ const StatisticTeamBoard = () => {
             removeUser={removeUser}
             handleSelectSmall={handleSelectSmall}
           />
+          {/* Progress bar */}
+          <AllocationTeamCategoryCompare
+            startDate={startDate}
+            endDate={endDate}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            statisticTeamCategoryList={statisticCategoryListTeam}
+            statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
+            removeTag={removeTag}
+            removeUser={removeUser}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
           {/* Compare line chart */}
           <LineChartByTeamCompare
             startDate={startDate}
@@ -773,6 +795,18 @@ const StatisticTeamBoard = () => {
             handleSelectMedium={handleSelectMedium}
             removeTag={removeTag}
             removeUser={removeUser}
+          />
+          {/* Progress bar */}
+          <AllocationTeamCategory
+            startDate={startDate}
+            endDate={endDate}
+            statisticTeamCategoryList={statisticCategoryListTeam}
+            removeTag={removeTag}
+            removeUser={removeUser}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
           />
           {/* Line chart */}
           <LineChartByTeam

@@ -143,8 +143,13 @@ const StatisticTeamTagBoard = () => {
       }
 
       const organization =
-        creationDataStatisticData?.organizations.find((item) => item.isMain) ||
-        creationDataStatisticData?.organizations[0];
+        selectedOrganization && selectedOrganization.value
+          ? creationDataStatisticData?.organizations.find(
+              (item) => item.id === selectedOrganization?.value,
+            )
+          : creationDataStatisticData?.organizations.find(
+              (item) => item.isMain === true,
+            ) || creationDataStatisticData?.organizations[0];
 
       if (organization) {
         const largeCategories = organization.statisticCategories.map(
@@ -396,7 +401,7 @@ const StatisticTeamTagBoard = () => {
               variant={'outline'}
               onClick={() => {
                 router.push(
-                  `${pageRouters.STATISTIC_TEAM_MANAGEMENT.href}?organization=${selectedOrganization?.value}&tabId=1`,
+                  `${pageRouters.STATISTIC_TEAM_MANAGEMENT.href}?organization=${organizationId}&tabId=1`,
                 );
               }}
               className={`!py-0 !px-0 font-bold w-[80px] h-7 

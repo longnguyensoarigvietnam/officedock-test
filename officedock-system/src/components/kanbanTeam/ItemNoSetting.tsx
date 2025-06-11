@@ -2,7 +2,7 @@
 import { Draggable } from '@hello-pangea/dnd';
 import { useForm } from 'react-hook-form';
 import { formatISO } from 'date-fns';
-import { UseMutateFunction, useMutation, useQueryClient } from 'react-query';
+import { UseMutateFunction } from 'react-query';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Tippy from '@tippyjs/react';
@@ -12,13 +12,11 @@ import ImageRound from '@components/common/ImageRound';
 
 import {
   EventWorkCategory,
-  ItemScheduleType,
   ItemStartType,
   TaskRepetitiveType,
   TaskRepetitiveValue,
 } from '@constants/enums';
 import { TASK_REPETITIVE_OPTIONS } from '@constants';
-import { apiRouters } from '@constants/routers';
 import {
   CreationDataTask,
   Task,
@@ -28,15 +26,9 @@ import {
 } from '@interfaces/task';
 import { ResponseError } from '@interfaces/response';
 
-import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
-
-import { TaskContext } from '@providers/TaskProvider';
-
-import api from '@base/api';
 import {
   addMinutesToDate,
   compareWithCurrentDate,
-  convertToCurrentTimezone,
   convertToTimeString,
   formatShowDeadlineTask,
   getJapaneseWeekDay,
@@ -67,20 +59,9 @@ const ItemNoSetting = ({
   index,
   content,
   handlePinItem,
-  handleUpdateItemInline,
   handleActionEditTask,
   disableDraggable = false,
 }: ItemProps) => {
-  const queryClient = useQueryClient();
-
-  const {
-    setDataClickTask,
-    setDataRunning,
-    setIdTaskStarting,
-    setTaskSelectedToStart,
-    setShowWarningStartTaskModal,
-    setDataActualAddSchedule,
-  } = useContext(TaskContext);
   const { columnWidth, selectedOptionZoom } = useContext(TaskTeamStateContext);
 
   const { reset } = useForm<TaskFormData>({
@@ -175,100 +156,6 @@ const ItemNoSetting = ({
     }
   }, [content]);
 
-  //  Handle call api delete task
-  const { calculateDurationTask } = useCalculateDurationTask({
-    onSuccess: (response) => {
-      const data = response.data;
-
-      handleUpdateItemInline({
-        ...content,
-        id: content.id,
-        isStart: !content.isStart,
-        status: content.status,
-      });
-      queryClient.refetchQueries(['getDataTaskHeaderList']);
-      queryClient.refetchQueries([
-        'getTaskDurationDetail',
-        {
-          id: `${content.id}`,
-          type: ItemStartType.TASK,
-        },
-      ]);
-      queryClient.refetchQueries(['getTaskHeaderStart']);
-      if (data) {
-        const startDateActual = new Date(
-          convertToCurrentTimezone(`${data.planStartDate}`),
-        );
-        const endDateActual = new Date(
-          convertToCurrentTimezone(`${data.planEndDate}`),
-        );
-        setDataActualAddSchedule({
-          ...data,
-          start: startDateActual,
-          end: endDateActual,
-          id: data.id.toString(),
-          startEditable: false,
-          resourceId: ItemScheduleType.ACTUAL,
-          type: ItemStartType.TASK,
-          isMyTask: false,
-        });
-        if (!data.isStart) {
-          queryClient.refetchQueries(['getDataTaskHeaderList']);
-        }
-      }
-    },
-  });
-  // Handle call API check start task
-  const handleCheckStartTask = async ({
-    id,
-    type,
-  }: {
-    id: string;
-    type: string;
-  }) => {
-    return await api.post(apiRouters.TASK_CHECK_START(), {
-      id,
-      type,
-    });
-  };
-  // Function call API  check start task
-  const { mutate: checkTask } = useMutation(
-    'postCheckStartTaskSchedule',
-    handleCheckStartTask,
-    {
-      onSuccess: async ({ data }, task) => {
-        if (!data.isAnotherTaskStarted) {
-          calculateDurationTask({
-            id: `${content.id}`,
-            type: ItemStartType.TASK,
-          });
-          setDataRunning({
-            id: `${content.id}`,
-            type: ItemStartType.TASK,
-          });
-        } else {
-          setIdTaskStarting({
-            id: data.id,
-            type: data.type,
-          });
-          setDataClickTask({
-            id: task.id,
-            type: task.type,
-          });
-          setShowWarningStartTaskModal(true);
-        }
-      },
-      onError: () => {},
-      onSettled: () => {},
-    },
-  );
-  // Action call API check start task
-  const handleConfirmCheckStartTask = (id: string) => {
-    checkTask({
-      id: id,
-      type: ItemStartType.TASK,
-    });
-  };
   const isShowSchedule = content.isScheduleInToday || false;
   const now = new Date();
 
@@ -361,10 +248,10 @@ const ItemNoSetting = ({
               }}
               className={`relative ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
               {!content.isStart && (
-              <div
-                className={`absolute left-[-1px] h-[98.5%] top-1/2 -translate-y-1/2 w-[2.5px] overflow-hidden rounded-l-md`}
-                style={{ backgroundColor: largeColor }}></div>
-            )}
+                <div
+                  className={`absolute left-[-1px] h-[98.5%] top-1/2 -translate-y-1/2 w-[2.5px] overflow-hidden rounded-l-md`}
+                  style={{ backgroundColor: largeColor }}></div>
+              )}
               <div className="relative w-[100%]   h-full">
                 <>
                   <Tippy
@@ -492,47 +379,6 @@ const ItemNoSetting = ({
                     className="font-normal ">
                     {displayRoutineTaskScheduleTitle(content)}
                   </div>
-                  <Tippy
-                    content={content.isStart ? '計測停止' : '計測開始'}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 5]}>
-                    <div
-                      className=""
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}>
-                      {content.isMyTask && (
-                        <ImageRound
-                          src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
-                          name="Start task"
-                          style={{
-                            width:
-                              (selectedOptionZoom.value as number) > 75
-                                ? '26px'
-                                : (selectedOptionZoom.value as number) == 75
-                                  ? '20px'
-                                  : '16px',
-                            height:
-                              (selectedOptionZoom.value as number) > 75
-                                ? '26px'
-                                : (selectedOptionZoom.value as number) == 75
-                                  ? '20px'
-                                  : '16px',
-                          }}
-                          className={`hover:cursor-pointer `}
-                          onClick={async () => {
-                            await new Promise<void>((resolve) => {
-                              setTaskSelectedToStart(content);
-                              resolve();
-                            });
-                            handleConfirmCheckStartTask(`${content.id}`);
-                          }}
-                        />
-                      )}
-                    </div>
-                  </Tippy>
                 </div>
               </div>
             </div>
@@ -602,37 +448,6 @@ const ItemNoSetting = ({
                     className={`!border-none leading-[1.4] break-all line-clamp-1 cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
                     {content.title}
                   </p>
-                  <Tippy
-                    content={content.isStart ? '計測停止' : '計測開始'}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 5]}>
-                    <div
-                      className=""
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}>
-                      {content.isMyTask && (
-                        <ImageRound
-                          src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
-                          name="Start task"
-                          style={{
-                            width: `16px`,
-                            height: `16px`,
-                          }}
-                          className={`hover:cursor-pointer `}
-                          onClick={async () => {
-                            await new Promise<void>((resolve) => {
-                              setTaskSelectedToStart(content);
-                              resolve();
-                            });
-                            handleConfirmCheckStartTask(`${content.id}`);
-                          }}
-                        />
-                      )}
-                    </div>
-                  </Tippy>
                 </div>
               </div>
             </div>

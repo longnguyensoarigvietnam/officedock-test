@@ -8,9 +8,13 @@ import { useToast } from '@providers/ToastProvider';
 import { ERROR_UPDATE_MESSAGE } from '@constants/message';
 
 interface UseCalculateDurationTaskProps {
-  onSuccess?: (success: AxiosResponse) => void;
+  onSuccess?: (success: AxiosResponse, variant: variantType) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
+}
+interface variantType {
+  id: string;
+  type: string;
 }
 
 const useCalculateDurationTask = ({
@@ -23,13 +27,16 @@ const useCalculateDurationTask = ({
   const handleSwitchTaskState = async ({
     id,
     type,
+    isStart,
   }: {
     id: string;
     type: string;
+    isStart?: boolean;
   }) => {
     return await api.post(apiRouters.TASK_CALCULATE_DURATION(), {
       id,
       type,
+      isStart,
     });
   };
 
@@ -41,8 +48,8 @@ const useCalculateDurationTask = ({
     data,
     error,
   } = useMutation(handleSwitchTaskState, {
-    onSuccess: async (response) => {
-      onSuccess && onSuccess(response);
+    onSuccess: async (response, variant) => {
+      onSuccess && onSuccess(response, variant);
     },
     onError: (error: AxiosError<{ task: string }>) => {
       showToast({
