@@ -53,7 +53,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     Endpoint API of Schedule
     """
 
-    queryset = Schedule.objects.all()
+    queryset = Schedule.objects.filter(deleted_at__isnull=True).all()
     serializer_class = ScheduleSerializer
     permission_classes = [
         ActionPermission,
@@ -549,8 +549,15 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         client_id,
                         ChatMessageTypes.REMOVE_SCHEDULE.value,
                     )
-
-        self.perform_destroy(instance)
+        if instance.task_durations.exists():
+            instance.task_durations.filter(paused_at__isnull=True).update(
+                paused_at=now()
+            )
+            instance.is_start = False
+            instance.save()
+            instance.soft_delete()
+        else:
+            self.perform_destroy(instance)
 
         return self.response(status_code=status.HTTP_204_NO_CONTENT)
 
@@ -841,7 +848,15 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if repeat_schedule_id:
             instance.repeat_schedules.filter(id=repeat_schedule_id).delete()
         if not instance.repeat_schedules.exists():
-            self.perform_destroy(instance)
+            if instance.task_durations.exists():
+                instance.task_durations.filter(paused_at__isnull=True).update(
+                    paused_at=now()
+                )
+                instance.is_start = False
+                instance.save()
+                instance.soft_delete()
+            else:
+                self.perform_destroy(instance)
 
         return self.response(status_code=status.HTTP_204_NO_CONTENT)
 

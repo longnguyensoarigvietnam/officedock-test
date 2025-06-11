@@ -864,7 +864,9 @@ class TaskTeamdockSerializer(BaseUserSerializer):
 
         for status in statuses:
             tasks = obj.in_charge_tasks.filter(
-                status=status, organization_id=organization_id
+                status=status,
+                organization_id=organization_id,
+                deleted_at__isnull=True,
             ).exclude(type=TaskTypes.MY_TEMPLATE.value)
             tasks_total = tasks.count()
 

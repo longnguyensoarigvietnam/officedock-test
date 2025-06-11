@@ -256,11 +256,13 @@ class DashboardViewSet(BaseAPIViewSet):
             tasks = Task.objects.filter(
                 task_schedules__plan_start_date__gte=start_date,
                 task_schedules__plan_start_date__lte=end_date,
+                deleted_at__isnull=True,
                 people_in_charge=user,
             ).distinct()
             schedules = Schedule.objects.filter(
                 repeat_schedules__plan_start_date__lte=end_date,
                 repeat_schedules__plan_end_date__gte=start_date,
+                deleted_at__isnull=True,
                 participants=user,
             ).distinct()
             data = (

@@ -1171,22 +1171,22 @@ class TaskViewSet(
 
     def destroy(self, request, *args, **kwargs):
         """
-        Handle destroying the task with send message realtime.
+        Handle destroying the task
         """
         instance = self.get_object()
-        if instance.chat_messages.count() != 0:
-            message = instance.chat_messages.first()
-            send_web_socket_event(
-                {
-                    "action": WebSocketEventType.DELETE_TASK.value,
-                    "chat_room": {"code": message.chat_room.code},
-                    "chat_message": ChatMessageSerializer(message).data,
-                },
-                chat_room=message.chat_room,
+
+        if instance.task_durations.exists():
+            instance.task_durations.filter(paused_at__isnull=True).update(
+                paused_at=now()
             )
+            instance.is_start = False
+            instance.save()
+            instance.soft_delete()
+        else:
+            instance.delete()
         reset_sort_task(request.user)
 
-        return super().destroy(request, *args, **kwargs)
+        return self.response(status_code=status.HTTP_204_NO_CONTENT)
 
     @extend_schema(
         parameters=[OpenApiParameter("page_size", type=int)],
@@ -1664,7 +1664,11 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     API endpoint to show Tasks to the Board.
     """
 
-    queryset = Task.objects.exclude(type=TaskTypes.MY_TEMPLATE.value).all()
+    queryset = (
+        Task.objects.filter(deleted_at__isnull=True)
+        .exclude(type=TaskTypes.MY_TEMPLATE.value)
+        .all()
+    )
     serializer_class = TaskBoardSerializer
     permission_classes = [ActionPermission]
     screen_name = Screens.MY_TASK.value
@@ -2043,7 +2047,8 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         ordering = request.query_params.get("ordering")
         tasks = (
             Task.objects.filter(
-                organization_id=organization_id, people_in_charge__isnull=True
+                organization_id=organization_id,
+                people_in_charge__isnull=True,
             )
             .exclude(
                 Q(type=TaskTypes.MY_TEMPLATE.value)
