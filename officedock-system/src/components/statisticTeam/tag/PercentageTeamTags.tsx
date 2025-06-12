@@ -473,11 +473,15 @@ const PercentageTeamTags = ({
                       onChange={(data) => handleSelectLarge(data)}
                       disabled={!selectedOrganization}
                     />
-                    <p className="text-sm text-black my-[26px]">
-                      合計{' '}
-                      {totalDurationMedium &&
-                        formatTimeToJapanese(totalDurationMedium)}
-                    </p>
+                    {dataChartMedium.data.length > 0 ? (
+                      <p className="text-sm text-black my-[26px]">
+                        合計{' '}
+                        {totalDurationMedium &&
+                          formatTimeToJapanese(totalDurationMedium)}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-black my-[26px]">-</p>
+                    )}
                     <div className="flex justify-center">
                       {isLoadingLarge ? (
                         <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
@@ -526,11 +530,15 @@ const PercentageTeamTags = ({
                       onChange={(data) => handleSelectMedium(data)}
                       disabled={!selectedLarge}
                     />
-                    <p className="text-sm text-black my-[26px]">
-                      合計{' '}
-                      {totalDurationSmall &&
-                        formatTimeToJapanese(totalDurationSmall)}
-                    </p>
+                    {dataChartSmall.data.length > 0 ? (
+                      <p className="text-sm text-black my-[26px]">
+                        合計{' '}
+                        {totalDurationSmall &&
+                          formatTimeToJapanese(totalDurationSmall)}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-black my-[26px]">-</p>
+                    )}
                     <div className="flex justify-center">
                       {isLoadingMedium ? (
                         <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
@@ -582,11 +590,15 @@ const PercentageTeamTags = ({
                           selectedOrganizationTeamList?.value
                       }
                     />
-                    <p className="text-sm text-black my-[26px]">
-                      合計{' '}
-                      {totalDurationCategory &&
-                        formatTimeToJapanese(totalDurationCategory)}
-                    </p>
+                    {dataChartCategory.data.length > 0 ? (
+                      <p className="text-sm text-black my-[26px]">
+                        合計{' '}
+                        {totalDurationCategory &&
+                          formatTimeToJapanese(totalDurationCategory)}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-black my-[26px]">-</p>
+                    )}
                     <div className="flex justify-center">
                       {isLoadingSmall ? (
                         <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />

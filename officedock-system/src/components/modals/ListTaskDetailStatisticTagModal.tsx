@@ -27,6 +27,7 @@ type Props = {
     id: number | null;
     totalDuration: string;
     type: string;
+    userId?: number;
   } | null;
   selectedOrganization: OptionDropdownType | null;
   statisticTagsListTeam: StatisticsCategories | undefined;
@@ -94,6 +95,7 @@ const ListTaskDetailStatisticTagModal = ({
           value: detailCategory?.id as number,
         },
       ],
+      user_id: detailCategory?.userId,
     },
     cursor_id: String(lastItem?.id),
     cursor: lastItem?.totalDuration,

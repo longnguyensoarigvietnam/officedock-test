@@ -1045,7 +1045,7 @@ export function formatTimeToJapanese(time: string): string {
     minutes >= 60 ||
     seconds >= 60
   ) {
-    // Handle Error
+    return `0時間0分`;
   }
 
   const totalMinutes = hours * 60 + minutes + Math.floor(seconds / 60);

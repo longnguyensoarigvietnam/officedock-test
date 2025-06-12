@@ -28,6 +28,7 @@ type Props = {
     id: number | null;
     totalDuration: string;
     type: string;
+    userId?: number;
   } | null;
   selectedOrganization: OptionDropdownType | null;
   statisticCategoryList: StatisticsCategories | undefined;
@@ -102,6 +103,7 @@ const ListTaskDetailStatisticModal = ({
       ordering: ordering,
       pageSize: PAGINATION_PAGE_SIZE_SMALL,
       tagIds: selectedTags,
+      user_id: detailCategory?.userId,
     },
     cursor_id: String(lastItem?.id),
     cursor: lastItem?.totalDuration,

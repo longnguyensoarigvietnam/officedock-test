@@ -14,6 +14,11 @@ export interface TaskTimeStatistic {
 export interface UserListStatisticType {
   duration: string;
   percent: number;
+  tasks: {
+    id: number;
+    title: string;
+    type: string;
+  }[];
   user: {
     id: number;
     fullName: string;
@@ -398,8 +403,8 @@ export interface StatisticsUserTaskDuration {
     id: number;
     fullName: string;
     avatarColor: string;
-    avatar: string | null
-  }
+    avatar: string | null;
+  };
   totalDuration: string;
   durations: {
     startDate: string;
