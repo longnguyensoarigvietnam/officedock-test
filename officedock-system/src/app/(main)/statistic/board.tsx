@@ -240,6 +240,7 @@ const StatisticBoard = () => {
         label: item.name,
         value: item.id,
       }));
+
       setCurrentPage(1);
 
       setSelectedTags([]);

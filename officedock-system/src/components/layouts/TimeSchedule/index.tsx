@@ -111,6 +111,7 @@ import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 import api from '@base/api';
 import {
+  CombinedEventTask,
   DataDetailEventType,
   DataDetailTaskType,
   Task,
@@ -119,7 +120,6 @@ import {
   TaskTimeSchedule,
 } from '@interfaces/task';
 import {
-  EventCalendarProps,
   EventEditFormData,
   EventParticipant,
   EventRequest,
@@ -410,12 +410,12 @@ const TimeSchedule = memo(
     }) => {
       setIsLoadingSchedule(true);
       const apiUrl = `${apiRouters.EVENT_KANBAN_SCHEDULE}?${startDate && `start_date=${startDate}`}${endDate && `&end_date=${endDate}`}&current_screen=${ScreenName.MY_TASK}`;
-      const { data } = await api.get<EventCalendarProps[]>(apiUrl);
+      const { data } = await api.get<CombinedEventTask[]>(apiUrl);
       return data;
     };
 
-    const { mutateAsync: getEventCalendarByUsers } = useMutation(
-      'getEventCalendarByUsers',
+    const { mutateAsync: getTaskAndEventCalendarByUsers } = useMutation(
+      'getTaskAndEventCalendarByUsers',
       handleGetEventCalendarByUsers,
       {
         onSuccess: (data) => {
@@ -448,109 +448,83 @@ const TimeSchedule = memo(
                 };
               });
             };
-            const eventsTimeSchedule = data.flatMap((event) => {
-              // Check validity of recurring schedules
-              if (!event.repeatSchedules || event.repeatSchedules.length === 0)
-                return [];
+            const eventsTimeSchedule = data
+              .filter((fil) => fil.type !== EventCalendarType.TASK)
+              .flatMap((event) => {
+                // Check validity of recurring schedules
+                if (
+                  !event.repeatSchedules ||
+                  event.repeatSchedules.length === 0
+                )
+                  return [];
 
-              return event.repeatSchedules.flatMap((schedule, index) => {
-                const startDate = schedule.planStartDate
-                  ? parseISO(String(schedule.planStartDate))
-                  : null;
-                const endDate = schedule.planEndDate
-                  ? parseISO(String(schedule.planEndDate))
-                  : null;
+                return event.repeatSchedules.flatMap((schedule, index) => {
+                  const startDate = schedule.planStartDate
+                    ? parseISO(String(schedule.planStartDate))
+                    : null;
+                  const endDate = schedule.planEndDate
+                    ? parseISO(String(schedule.planEndDate))
+                    : null;
 
-                // Skip if no valid time
-                if (!startDate || !endDate) return [];
+                  // Skip if no valid time
+                  if (!startDate || !endDate) return [];
 
-                const adjustedEndDate =
-                  isSameDay(startDate, endDate) || isMidnight(endDate)
-                    ? endDate
-                    : addDays(endDate, 1);
+                  const adjustedEndDate =
+                    isSameDay(startDate, endDate) || isMidnight(endDate)
+                      ? endDate
+                      : addDays(endDate, 1);
 
-                const largeColor = event.categories?.find(
-                  (item) => item.type === EventWorkCategory.LARGE,
-                )?.color;
+                  const largeColor = event.categories?.find(
+                    (item) => item.type === EventWorkCategory.LARGE,
+                  )?.color;
 
-                const newEvent = {
-                  ...event,
-                  start: startDate,
-                  end: event.isAllDay
-                    ? new Date(
-                        new Date(String(schedule.planEndDate)).setHours(
-                          24,
-                          0,
-                          0,
-                          0,
-                        ),
-                      )
-                    : adjustedEndDate,
-                  id: `${event.id}-${schedule.id}-${index}`,
-                  peopleInCharge: [],
-                  status: {
-                    name: '',
-                    id: null,
-                  },
-                  taskId: event.taskId as number,
-                  eventSchedule: schedule.id,
-                  scheduleId: schedule.schedule || (event.id as number),
-                  uuid: uuidv4(),
-                  planStartDate: String(schedule.planStartDate),
-                  planEndDate: String(schedule.planEndDate),
-                  isStart: event.isStart,
-                  isMyTask: event.isMySchedule,
-                  type: `${event.type}`,
-                  taskSchedules: [],
-                  startEditable: false,
-                  resourceId: ItemScheduleType.PLANS,
-                  largeColor: largeColor,
-                  location: event.location?.name,
-                  isAllDay: event.isAllDay,
-                  participants: event.participants,
-                };
+                  const newEvent = {
+                    ...event,
+                    start: startDate,
+                    end: event.isAllDay
+                      ? new Date(
+                          new Date(String(schedule.planEndDate)).setHours(
+                            24,
+                            0,
+                            0,
+                            0,
+                          ),
+                        )
+                      : adjustedEndDate,
+                    id: `${event.id}-${schedule.id}-${index}`,
+                    peopleInCharge: [],
+                    status: {
+                      name: '',
+                      id: null,
+                    },
+                    taskId: event.taskId as number,
+                    eventSchedule: schedule.id,
+                    scheduleId: schedule.schedule || (event.id as number),
+                    uuid: uuidv4(),
+                    planStartDate: String(schedule.planStartDate),
+                    planEndDate: String(schedule.planEndDate),
+                    isStart: event.isStart,
+                    isMyTask: event.isMySchedule,
+                    type: `${event.type}`,
+                    taskSchedules: [],
+                    startEditable: false,
+                    resourceId: ItemScheduleType.PLANS,
+                    largeColor: largeColor,
+                    location: event.location?.name,
+                    isAllDay: event.isAllDay,
+                    participants: event.participants,
+                  };
 
-                return splitMultiDayEvent(newEvent);
+                  return splitMultiDayEvent(newEvent);
+                });
               });
-            });
-
-            setTaskTimeScheduleList((prevEvents) => {
-              const updatedEvents = [...prevEvents];
-              const myTasks = updatedEvents.filter(
-                (event) => event.type == EventCalendarType.TASK,
-              );
-              return [...myTasks, ...eventsTimeSchedule];
-            });
-          }
-        },
-        onSettled: () => {},
-      },
-    );
-
-    const handleGetTaskCalendarByUsers = async ({
-      userId,
-      startDate,
-      endDate,
-    }: {
-      userId: string;
-      startDate?: string;
-      endDate?: string;
-    }) => {
-      setIsLoadingSchedule(true);
-
-      const apiUrl = `${apiRouters.TASK_CALENDAR_LIST}?${userId ? `&user_id=${userId}` : ''}${startDate && `&start_date=${startDate}`}${endDate && `&end_date=${endDate}`}`;
-      const { data } = await api.get<Task[]>(apiUrl);
-      return data;
-    };
-
-    const { mutateAsync: getMyTaskCalendar } = useMutation(
-      'getMyTaskCalendar',
-      handleGetTaskCalendarByUsers,
-      {
-        onSuccess: (data) => {
-          if (data) {
             const tasksTimeSchedule = data
-              .filter((task) => task.taskSchedules && task.taskSchedules.length)
+              .filter(
+                (task) =>
+                  task.type !== EventCalendarType.SCHEDULE &&
+                  task.taskSchedules &&
+                  task.taskSchedules.length,
+              )
               .flatMap((item) =>
                 item.taskSchedules.map((taskSchedule) => {
                   const startDate = parseISO(`${taskSchedule.planStartDate}`);
@@ -587,11 +561,10 @@ const TimeSchedule = memo(
 
             setTaskTimeScheduleList((prevEvents) => {
               const updatedEvents = [...prevEvents];
-              const mySchedule = updatedEvents.filter(
-                (event) => event.type == EventCalendarType.SCHEDULE,
+              const myTasks = updatedEvents.filter(
+                (event) => event.type == EventCalendarType.TASK,
               );
-
-              return [...mySchedule, ...tasksTimeSchedule];
+              return [...myTasks, ...eventsTimeSchedule, ...tasksTimeSchedule];
             });
           }
         },
@@ -962,20 +935,15 @@ const TimeSchedule = memo(
       startDateISOString: string,
       endDateISOString: string,
     ) => {
-      await getEventCalendarByUsers({
+      await getTaskAndEventCalendarByUsers({
         startDate: startDateISOString,
         endDate: endDateISOString,
       }),
-        await getMyTaskCalendar({
+        await getMyTaskActualCalendar({
           userId: `${memberSelected}` || `${session?.user.id}`,
           startDate: startDateISOString,
           endDate: endDateISOString,
         });
-      await getMyTaskActualCalendar({
-        userId: `${memberSelected}` || `${session?.user.id}`,
-        startDate: startDateISOString,
-        endDate: endDateISOString,
-      });
     };
 
     // Update data when edit in modal edit
@@ -1078,7 +1046,9 @@ const TimeSchedule = memo(
     useEffect(() => {
       if (idTaskDelete) {
         const updatedTaskList = taskTimeScheduleList.filter(
-          (item) => `${item.taskId}` !== `${idTaskDelete}`,
+          (item) =>
+            `${item.taskId}` !== `${idTaskDelete}` ||
+            item.resourceId !== ItemScheduleType.PLANS,
         );
         setTaskTimeScheduleList(updatedTaskList);
         setIdTaskDelete('');
@@ -1438,8 +1408,8 @@ const TimeSchedule = memo(
                 const newDataTimeList = taskTimeScheduleList.filter(
                   (item) => item.uuid !== uuid,
                 );
-                deletePlanTask(uuid);
                 setTaskTimeScheduleList(newDataTimeList);
+                deletePlanTask(uuid);
                 const hasMatchingItem = newDataTimeList.some(
                   (item) =>
                     item.taskId === taskId &&

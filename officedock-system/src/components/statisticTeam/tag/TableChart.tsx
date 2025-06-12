@@ -632,8 +632,7 @@ const TableChart = ({
                   )
                 }
                 placeholder=""
-                showArrow
-                options={smallCategories}
+                showArrow={info.row.original.type === EventCalendarType.TASK}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
@@ -691,6 +690,7 @@ const TableChart = ({
                     });
                   }
                 }}
+                isDisabled={info.row.original.type !== EventCalendarType.TASK}
               />
             </div>
             <div className="ml-auto">
