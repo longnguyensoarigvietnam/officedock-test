@@ -7,10 +7,10 @@ import {
 
 export const TeamDockLineChartTooltip = ({
   data,
-  categoryName,
+  selectedOptionName,
 }: {
   data: any[];
-  categoryName: string;
+  selectedOptionName: string
 }) => {
   return (
     <div
@@ -41,8 +41,8 @@ export const TeamDockLineChartTooltip = ({
                 {point.label}
               </p>
             </div>
-            <p className="text-[16px] font-normal max-w-full break-all line-clamp-2">
-              {categoryName}
+            <p className="text-[16px] font-normal max-w-full break-all">
+              {selectedOptionName}
             </p>
             <p className="font-normal text-[16px] mb-[8px]">
               {convertFromNumberToJapaneseTime(point.y).formattedHours}時間

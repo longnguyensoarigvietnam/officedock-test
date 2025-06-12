@@ -549,8 +549,8 @@ export const apiRouters = {
 
   // STATISTICS TEAM
   STATISTICS_CATEGORIES_TEAM: (id: number) =>
-    `/organization-statistics/${id}/categories`,
-  STATISTICS_TAGS_TEAM: (id: number) => `/organization-statistics/${id}/tags`,
+    `/organization-statistics/${id}/categories/`,
+  STATISTICS_TAGS_TEAM: (id: number) => `/organization-statistics/${id}/tags/`,
   STATISTICS_USER_TASK_DURATIONS: (id: number) => `/organization-statistics/${id}/user-task-durations/`,
 
   // ORGANIZATION CATEGORY HIERARCHIES

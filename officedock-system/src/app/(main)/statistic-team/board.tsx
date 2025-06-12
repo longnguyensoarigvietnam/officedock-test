@@ -273,6 +273,15 @@ const StatisticTeamBoard = () => {
             avatarUrl: member?.avatar || '',
           })),
         );
+        setOrderingOptions({
+          tag_ids: [],
+          user_ids: mainItem.members.map((member) => ({
+            value: member.id,
+            label: member.fullName,
+            color: member?.avatarColor || '',
+            avatarUrl: member?.avatar || '',
+          })),
+        });
 
         return {
           label: mainItem.name,
@@ -328,7 +337,12 @@ const StatisticTeamBoard = () => {
       setCurrentPage(1);
       setOrderingOptions({
         tag_ids: [],
-        user_ids: [],
+        user_ids: organization.members.map((member) => ({
+          value: member.id,
+          label: member.fullName,
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
+        })),
       });
       setLargeOptions(largeCategories);
     } else {
@@ -775,6 +789,8 @@ const StatisticTeamBoard = () => {
             endDate={endDate}
             startDateCompare={startDateCompare}
             endDateCompare={endDateCompare}
+            statisticTeamCategoryList={statisticCategoryListTeam}
+            statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -812,6 +828,7 @@ const StatisticTeamBoard = () => {
           <LineChartByTeam
             startDate={startDate}
             endDate={endDate}
+            statisticTeamCategoryList={statisticCategoryListTeam}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}

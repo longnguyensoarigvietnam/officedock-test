@@ -9,6 +9,9 @@ import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import PercentageTeamTags from '@components/statisticTeam/tag/PercentageTeamTags';
 import PercentageTeamTagsCompare from '@components/statisticTeam/tag/compare/PercentageTeamTagsCompare';
 import TaskListStatisticTeamTags from '@components/statisticTeam/tag/TaskList';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import LineChartByTeamTags from '@components/statisticTeam/tag/LineChartByTeamTags';
+import LineChartByTeamTagsCompare from '@components/statisticTeam/tag/compare/LineChartByTeamTagsCompare';
 
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
@@ -22,8 +25,8 @@ import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import { OptionDropdownType } from '@interfaces/common';
+
 import { formatDateToYMD, sumDurations } from '@utils/date';
-import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 const StatisticTeamTagBoard = () => {
   const {
@@ -39,6 +42,8 @@ const StatisticTeamTagBoard = () => {
     selectedTags,
     tagsOptions,
     selectedSmall,
+    orderingOptions,
+    setOrderingOptions,
     setTagsOptions,
     setSelectedTags,
     setSelectedLarge,
@@ -110,6 +115,14 @@ const StatisticTeamTagBoard = () => {
             avatarUrl: member?.avatar || '',
           })),
         );
+        setOrderingOptions({
+          user_ids: mainItem.members.map((member) => ({
+            value: member.id,
+            label: member.fullName,
+            color: member?.avatarColor || '',
+            avatarUrl: member?.avatar || '',
+          })),
+        });
 
         return {
           label: mainItem.name,
@@ -251,6 +264,14 @@ const StatisticTeamTagBoard = () => {
           avatarUrl: member?.avatar || '',
         })),
       );
+      setOrderingOptions({
+        user_ids: organization.members.map((member) => ({
+          value: member.id,
+          label: member.fullName,
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
+        })),
+      });
       setCurrentPage(1);
       setLargeOptions(largeCategories);
     } else {
@@ -378,6 +399,18 @@ const StatisticTeamTagBoard = () => {
     );
   };
 
+  // Remove user
+  const removeUser = (selected: OptionDropdownType) => {
+    const currentUserIds = orderingOptions?.user_ids || [];
+    const updatedUserIds = currentUserIds.filter(
+      (tag) => tag.value !== selected.value,
+    );
+    setCurrentPage(1);
+    setOrderingOptions({
+      user_ids: updatedUserIds,
+    });
+  };
+
   return (
     <div className="pt-[30px] pr-10  font-medium ">
       <div className="mb-[33px] flex items-start justify-between">
@@ -475,32 +508,65 @@ const StatisticTeamTagBoard = () => {
           </div>
         </div>
       </div>
-      {/* Percentage of categories */}
+
       {isCheckCompare ? (
-        <PercentageTeamTagsCompare
-          startDate={startDate}
-          endDate={endDate}
-          startDateCompare={startDateCompare}
-          endDateCompare={endDateCompare}
-          statisticTagsListTeam={statisticTagsListTeam}
-          statisticTagsListTeamCompare={statisticTagsListTeamCompare}
-          removeTag={removeTag}
-          handleSelectOrganization={handleSelectOrganization}
-          handleSelectLarge={handleSelectLarge}
-          handleSelectMedium={handleSelectMedium}
-          handleSelectSmall={handleSelectSmall}
-        />
+        <>
+          {/* Percentage of categories */}
+          <PercentageTeamTagsCompare
+            startDate={startDate}
+            endDate={endDate}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            statisticTagsListTeam={statisticTagsListTeam}
+            statisticTagsListTeamCompare={statisticTagsListTeamCompare}
+            removeTag={removeTag}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+          {/* Line chart */}
+          <LineChartByTeamTagsCompare
+            startDate={startDate}
+            endDate={endDate}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            removeUser={removeUser}
+            removeTag={removeTag}
+            statisticTagsListTeam={statisticTagsListTeam}
+            statisticTagsListTeamCompare={statisticTagsListTeamCompare}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+        </>
       ) : (
-        <PercentageTeamTags
-          startDate={startDate}
-          endDate={endDate}
-          statisticTagsListTeam={statisticTagsListTeam}
-          removeTag={removeTag}
-          handleSelectOrganization={handleSelectOrganization}
-          handleSelectLarge={handleSelectLarge}
-          handleSelectMedium={handleSelectMedium}
-          handleSelectSmall={handleSelectSmall}
-        />
+        <>
+          {/* Percentage of category */}
+          <PercentageTeamTags
+            startDate={startDate}
+            endDate={endDate}
+            statisticTagsListTeam={statisticTagsListTeam}
+            removeTag={removeTag}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+          {/* Line chart */}
+          <LineChartByTeamTags
+            startDate={startDate}
+            endDate={endDate}
+            removeUser={removeUser}
+            removeTag={removeTag}
+            statisticTagsListTeam={statisticTagsListTeam}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+        </>
       )}
 
       {/* Task list */}

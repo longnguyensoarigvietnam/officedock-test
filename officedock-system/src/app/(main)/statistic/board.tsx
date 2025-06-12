@@ -13,6 +13,7 @@ import AllocationCategory from '@components/statistic/category/AllocationCategor
 import PercentageCategoryCompare from '@components/statistic/category/compare/PercentageCategoryCompare';
 import AllocationCategoryCompare from '@components/statistic/category/compare/AllocationCategoryCompare';
 import LineChart from '@components/statistic/category/LineChart';
+import StackedAreaChart from '@components/statistic/category/StackedAreaChart';
 import LineChartCompare from '@components/statistic/category/compare/LineChartCompare';
 
 import { pageRouters } from '@constants/routers';
@@ -24,7 +25,6 @@ import useTeamList from '@hooks/useListTeam';
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
 import { StatisticStateContext } from '@providers/StatisticProvider';
-import StackedAreaChart from '@components/statistic/category/StackedAreaChart';
 
 const StatisticBoard = () => {
   const {
