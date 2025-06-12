@@ -429,6 +429,16 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         schedule = serializer.save()
 
         if participants is not None:
+            old_participants = instance.participants.all()
+            removed_users = [
+                user for user in old_participants if user not in participants
+            ]
+            # Stop duration of removed user
+            TaskDuration.objects.filter(
+                user__in=removed_users,
+                schedule=schedule,
+                paused_at__isnull=True,
+            ).update(paused_at=timezone.now())
             instance.participants.clear()
             for participant in participants:
                 if send_to_chat and user != participant:
@@ -844,10 +854,10 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         client_id,
                         ChatMessageTypes.REMOVE_SCHEDULE.value,
                     )
-
-        if repeat_schedule_id:
-            instance.repeat_schedules.filter(id=repeat_schedule_id).delete()
-        if not instance.repeat_schedules.exists():
+        if (
+            instance.repeat_schedules.count() == 1
+            and instance.task_durations.exists()
+        ):
             if instance.task_durations.exists():
                 instance.task_durations.filter(paused_at__isnull=True).update(
                     paused_at=now()
@@ -857,6 +867,8 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 instance.soft_delete()
             else:
                 self.perform_destroy(instance)
+        elif repeat_schedule_id:
+            instance.repeat_schedules.filter(id=repeat_schedule_id).delete()
 
         return self.response(status_code=status.HTTP_204_NO_CONTENT)
 

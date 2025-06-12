@@ -291,6 +291,26 @@ class BaseScheduleSerializer(ScheduleSerializer):
             "repeat_schedules",
         ]
 
+    def to_representation(self, instance):
+        """
+        Custom data before return
+        """
+        representation = super().to_representation(instance)
+
+        if recurring := instance.recurring:
+            fields = [
+                "start_date",
+                "end_date",
+                "repeat_type",
+                "repeat_interval",
+                "week_day",
+                "month_day",
+                "month",
+            ]
+            for field in fields:
+                representation[field] = recurring.get(field)
+        return representation
+
     def get_is_start(self, instance):
         """
         Return is_start if user is running this task
