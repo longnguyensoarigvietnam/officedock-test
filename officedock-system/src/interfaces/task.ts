@@ -2,7 +2,7 @@ import { EventCalendarType } from '@constants/enums';
 import { OptionDropdownType } from './common';
 import { PeopleInCharge, TagId, Tags } from './tag';
 import { Organizations } from './organization';
-import { EventParticipant } from './calendar';
+import { EventCalendarProps, EventParticipant } from './calendar';
 
 export interface TaskRequest {
   id?: number | string;
@@ -301,6 +301,13 @@ export interface TaskTimeSchedule {
   isAllDay?: boolean;
   statusId?: number;
 }
+export interface CombinedEventTask
+  extends Omit<EventCalendarProps, 'type'>,
+    Task {
+  id: number;
+  type: string;
+}
+
 export interface TaskErrorPerson {
   id: string;
   message: string;

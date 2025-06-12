@@ -218,10 +218,10 @@ const StackedAreaChart = ({
     }
 
     const chartData = Array.from(categoryMap.entries()).map(([name, data]) => {
-      const lastValue = data.at(-1) ?? 0;
+      const firstValue = data.at(0) ?? 0;
       return {
         name,
-        data: [...data, lastValue],
+        data: [firstValue, ...data],
       };
     });
 
@@ -419,7 +419,7 @@ const StackedAreaChart = ({
   const options = {
     chart: {
       type: 'area',
-      stacked: true,
+      stacked: false,
       zoom: {
         enabled: false, // ❌ OFF zoom
       },
@@ -434,6 +434,8 @@ const StackedAreaChart = ({
       },
     },
     legend: {
+      show: true,
+      showForSingleSeries: true,
       position: 'bottom',
       horizontalAlign: 'right',
       markers: {
@@ -1083,7 +1085,6 @@ const StackedAreaChart = ({
                             lineChartViewBy?.value as string,
                             true,
                           )}
-                          tableData
                         </p>
                         {dataDetail?.tags.map((tag, cateIndex) => {
                           const tagItem = tableData.find(

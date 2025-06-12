@@ -996,28 +996,6 @@ export const isYesterdaySchedule = (date: Date) => {
     date.getDate() === yesterday.getDate()
   );
 };
-export const calculateTotalTime = (data: OptionDropdownType[]): string => {
-  const timeToSeconds = (time: string): number => {
-    if (!time) return 0;
-
-    const [hh, mm, ss] = time.split(':').map(Number);
-    return hh * 3600 + mm * 60 + ss;
-  };
-
-  const secondsToTime = (totalSeconds: number): string => {
-    const hh = Math.floor(totalSeconds / 3600);
-    const mm = Math.floor((totalSeconds % 3600) / 60);
-    const ss = totalSeconds % 60;
-    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
-  };
-
-  const totalSeconds = data.reduce((sum, item) => {
-    const timeStr = item.totalData ? item.totalData : '';
-    return sum + timeToSeconds(timeStr);
-  }, 0);
-
-  return secondsToTime(totalSeconds);
-};
 
 export const formatDateToYMD = (dateString: Date | string) => {
   const date = new Date(dateString);

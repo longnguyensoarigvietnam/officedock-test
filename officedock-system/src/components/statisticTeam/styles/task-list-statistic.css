@@ -49,3 +49,6 @@
 .statistic-custom .css-1dimb5e-singleValue {
   margin-left: 9px !important;
 }
+.css-19bb58m input:focus {
+  caret-color: transparent;
+}

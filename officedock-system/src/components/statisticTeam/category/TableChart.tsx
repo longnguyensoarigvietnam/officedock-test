@@ -635,7 +635,7 @@ const TableChart = ({
                   )
                 }
                 placeholder=""
-                showArrow
+                showArrow={info.row.original.type === EventCalendarType.TASK}
                 options={smallCategories}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
@@ -694,6 +694,7 @@ const TableChart = ({
                     });
                   }
                 }}
+                isDisabled={info.row.original.type !== EventCalendarType.TASK}
               />
             </div>
             <div className="ml-auto">

@@ -192,10 +192,10 @@ const StackedAreaChart = ({
     }
 
     const chartData = Array.from(categoryMap.entries()).map(([name, data]) => {
-      const lastValue = data.at(-1) ?? 0;
+      const firstValue = data.at(0) ?? 0;
       return {
         name,
-        data: [...data, lastValue],
+        data: [firstValue, ...data],
       };
     });
 
@@ -335,7 +335,7 @@ const StackedAreaChart = ({
   const options = {
     chart: {
       type: 'area',
-      stacked: true,
+      stacked: false,
       zoom: {
         enabled: false, // ❌ OFF zoom
       },
@@ -350,6 +350,8 @@ const StackedAreaChart = ({
       },
     },
     legend: {
+      show: true,
+      showForSingleSeries: true,
       position: 'bottom',
       horizontalAlign: 'right',
       markers: {
@@ -843,8 +845,7 @@ const StackedAreaChart = ({
                 const isHovered = hoveredIndex === actualIndex;
 
                 const dataDetail =
-                  statisticPercentChartList &&
-                  statisticPercentChartList[idx + 1];
+                  statisticPercentChartList && statisticPercentChartList[idx];
                 const dataDetailDate =
                   statisticPercentChartList && statisticPercentChartList[idx];
 
@@ -884,22 +885,36 @@ const StackedAreaChart = ({
                             true,
                           )}
                         </p>
-                        {dataDetail?.categories.map((cate, cateIndex) => (
-                          <div
-                            key={cateIndex}
-                            className="flex items-center gap-1.5">
+                        {dataDetail?.categories.map((cate, cateIndex) => {
+                          const colorDefault = tableData.find(
+                            (itemFind) =>
+                              itemFind.categoryId === cate.categoryId,
+                          );
+                          return (
                             <div
-                              className="w-3 h-3 rounded-sm"
-                              style={{ backgroundColor: cate.categoryColor }}
-                            />
-                            <div className="flex flex-grow items-center justify-between text-base font-medium">
-                              <div className=" text-black w-fit  max-w-[180px] line-clamp-3 break-words">
-                                {cate.categoryName}
+                              key={cateIndex}
+                              className="flex items-center gap-1.5">
+                              <div
+                                className="w-3 h-3 rounded-sm"
+                                style={{
+                                  backgroundColor:
+                                    cate.categoryColor || colorDefault
+                                      ? lightenColor(
+                                          colorDefault?.categoryColor as string,
+                                          cate.percent,
+                                        )
+                                      : '',
+                                }}
+                              />
+                              <div className="flex flex-grow items-center justify-between text-base font-medium">
+                                <div className=" text-black w-fit  max-w-[180px] line-clamp-3 break-words">
+                                  {cate.categoryName}
+                                </div>
+                                <div>{cate.percent}%</div>
                               </div>
-                              <div>{cate.percent}%</div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
