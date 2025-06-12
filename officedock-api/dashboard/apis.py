@@ -628,6 +628,8 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                 & Q(Q(paused_at__lte=end_of_today) | Q(paused_at__isnull=True))
                 & Q(user=user)
             ).all()
+            if not task_durations:
+                return self.response_ok(data)
             total_duration = timedelta()
             # Calculate time between started and paused
             for task_duration in task_durations:

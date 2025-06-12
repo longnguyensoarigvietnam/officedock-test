@@ -98,8 +98,8 @@ def get_list_durations_by_users(
         event_durations = durations.filter(filter_events)
     else:
         base_filter = Q(
-            started_at__gte=start_of_day,
-            paused_at__lte=end_of_day,
+            Q(started_at__gte=start_of_day)
+            & Q(Q(paused_at__lte=end_of_day) | Q(paused_at__isnull=True)),
         )
         if not start_of_day and not end_of_day:
             return TaskDuration.objects.none()
@@ -474,7 +474,6 @@ def process_categories(
                     time_str_to_timedelta(category_duration),
                     filter_durations,
                     users,
-                    merge_task_event,
                 )
 
         # Calculate the percentage of the total duration
@@ -505,9 +504,7 @@ def process_categories(
     return categories_data
 
 
-def process_users(
-    total_duration, durations=None, users=None, merge_task_event=None
-):
+def process_users(total_duration, durations=None, users=None):
     """Processes users durations, calculates percentages, and returns structured data."""
     user_data = []
     percent = 100
@@ -519,9 +516,8 @@ def process_users(
         filter_durations = get_list_durations_by_users(
             durations=durations, users=[user]
         )
-        duration = timedelta(0)
-        percent_per_total_duration = 0
-        if filter_durations:
+        if filter_durations.exists():
+            tasks_by_user, events_by_user = get_list_models(filter_durations)
             duration = get_total_durations(filter_durations)
             # Calculate the percentage of the total duration
             percent_per_total_duration = percentage_calculation_of_duration(
@@ -539,7 +535,15 @@ def process_users(
                     "user": user_serializer,
                     "duration": format_duration(duration),
                     "percent": min(round(percent_per_total_duration), 100),
-                    "tasks": merge_task_event,
+                    "tasks": (
+                        BaseStatisticTaskSerializer(
+                            tasks_by_user.all()[:3], many=True
+                        ).data
+                        + BaseStatisticEventSerializer(
+                            events_by_user.all()[:3],
+                            many=True,
+                        ).data
+                    ),
                 }
             )
 
@@ -605,7 +609,6 @@ def process_tags(
                         time_str_to_timedelta(tag_duration),
                         filter_durations,
                         users,
-                        merge_task_event,
                     )
 
         # Calculate the percentage of the total duration

@@ -8,10 +8,12 @@ from django.db.models import (
     DurationField,
     Case,
     When,
+    Q,
 )
 from django.db.models.functions import Now, Coalesce
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.timezone import now
 from django.utils.translation import trim_whitespace
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.decorators import action
@@ -157,9 +159,12 @@ class StatisticViewSet(BaseAPIViewSet):
         tasks, events = get_list_models(durations)
         tasks = (
             tasks.filter(
-                task_durations__user=user,
-                task_durations__paused_at__lte=end_of_day,
-                task_durations__started_at__gte=start_of_day,
+                Q(task_durations__user=user)
+                & Q(
+                    Q(task_durations__paused_at__lte=end_of_day)
+                    | Q(task_durations__paused_at__isnull=True)
+                )
+                & Q(task_durations__started_at__gte=start_of_day)
             )
             .annotate(
                 total_duration=Sum(
@@ -185,9 +190,12 @@ class StatisticViewSet(BaseAPIViewSet):
         )
         events = (
             events.filter(
-                task_durations__user=user,
-                task_durations__paused_at__lte=end_of_day,
-                task_durations__started_at__gte=start_of_day,
+                Q(task_durations__user=user)
+                & Q(
+                    Q(task_durations__paused_at__lte=end_of_day)
+                    | Q(task_durations__paused_at__isnull=True)
+                )
+                & Q(task_durations__started_at__gte=start_of_day)
             )
             .annotate(
                 total_duration=Sum(
@@ -385,10 +393,24 @@ class StatisticViewSet(BaseAPIViewSet):
                 total_duration = timedelta(0)
                 percent_per_total_duration = 0
                 if filter_durations:
-                    filter_duration_by_range = filter_durations.filter(
-                        started_at__gte=start_date_min,
-                        paused_at__lte=end_date_max,
-                    )
+                    # Get duration by range
+                    if start <= now().date() <= end:
+                        filter_duration_by_range = filter_durations.filter(
+                            Q(
+                                Q(started_at__gte=start_date_min)
+                                & Q(
+                                    Q(paused_at__lte=end_date_max)
+                                    | Q(paused_at__isnull=True)
+                                ),
+                            )
+                        )
+                    else:
+                        filter_duration_by_range = filter_durations.filter(
+                            Q(
+                                Q(started_at__gte=start_date_min)
+                                & Q(Q(paused_at__lte=end_date_max)),
+                            )
+                        )
                     total_duration = get_total_durations(
                         filter_duration_by_range
                     )
@@ -910,7 +932,7 @@ class StatisticViewSet(BaseAPIViewSet):
         ranges = split_ranges(
             from_date, end_date, trim_whitespace(statistic_by)
         )
-
+        # Handle for statistic tag mydock page
         if is_tag_page:
             total_duration, tag_list = process_merge_card_per_tag(
                 tag_ids,
@@ -928,7 +950,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 tag_ids=tag_ids,
             )
             return self.response_ok(data)
-
+        # Handle for statistic category mydock page
         category_list = aggregate_durations(
             tasks,
             events,
@@ -1046,10 +1068,23 @@ class StatisticViewSet(BaseAPIViewSet):
             start_date_min = datetime.combine(start, time.min)
             end_date_max = datetime.combine(end, time.max)
             # Get duration by range
-            durations_by_range = durations.filter(
-                started_at__gte=start_date_min,
-                paused_at__lte=end_date_max,
-            )
+            if start <= now().date() <= end:
+                durations_by_range = durations.filter(
+                    Q(
+                        Q(started_at__gte=start_date_min)
+                        & Q(
+                            Q(paused_at__lte=end_date_max)
+                            | Q(paused_at__isnull=True)
+                        ),
+                    )
+                )
+            else:
+                durations_by_range = durations.filter(
+                    Q(
+                        Q(started_at__gte=start_date_min)
+                        & Q(Q(paused_at__lte=end_date_max)),
+                    )
+                )
             elements = []
             if is_tag_page:
                 if check_is_not_none_category(
