@@ -2003,19 +2003,21 @@ const EventCalendar = () => {
           ? String((data.repeatType as OptionDropdownType).value)
           : null,
       repeatInterval:
-        data.repeatInterval && data.repeatInterval.value
-          ? Number(data.repeatInterval.value)
+        data.repeatInterval && (data.repeatInterval as OptionDropdownType).value
+          ? Number((data.repeatInterval as OptionDropdownType).value)
           : null,
       weekDay:
-        data.weekDay && data.weekDay.label != ''
-          ? Number(data.weekDay.value)
+        data.weekDay && (data.weekDay as OptionDropdownType).label != ''
+          ? Number((data.weekDay as OptionDropdownType).value)
           : null,
       monthDay:
-        data.monthDay && data.monthDay.value != ''
-          ? Number(data.monthDay.value)
+        data.monthDay && (data.monthDay as OptionDropdownType).value != ''
+          ? Number((data.monthDay as OptionDropdownType).value)
           : null,
       month:
-        data.month && data.month.value != '' ? Number(data.month.value) : null,
+        data.month && (data.month as OptionDropdownType).value != ''
+          ? Number((data.month as OptionDropdownType).value)
+          : null,
     });
   };
 

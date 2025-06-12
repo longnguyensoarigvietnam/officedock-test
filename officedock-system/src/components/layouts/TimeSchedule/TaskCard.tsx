@@ -366,6 +366,11 @@ const TaskCard = ({
                 label: event.event?.extendedProps.eventType,
                 value: event.event?.extendedProps.eventType,
               },
+              repeatType: event.event?.extendedProps?.repeatType,
+              repeatInterval: event.event?.extendedProps?.repeatInterval,
+              weekDay: event.event?.extendedProps?.weekDay,
+              monthDay: event.event?.extendedProps?.monthDay,
+              month: event.event?.extendedProps?.month,
             }}
             onDelete={onDeleteEvent}
           />

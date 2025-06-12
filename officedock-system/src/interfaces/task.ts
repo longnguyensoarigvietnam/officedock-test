@@ -370,6 +370,11 @@ export interface DataDetailEventType {
   address?: string;
   isAllDay: boolean;
   type: OptionDropdownType;
+  repeatType?: string | null;
+  repeatInterval?: number | null;
+  weekDay?: number | null;
+  monthDay?: number | null;
+  month?: number | null;
 }
 //Team
 interface Category {

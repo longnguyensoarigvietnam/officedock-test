@@ -11,6 +11,7 @@ import {
   ActionsEvent,
   ItemStartType,
   PermissionsSystem,
+  TaskRepetitiveValue,
 } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 
@@ -21,6 +22,7 @@ import { hasPermissionInArray } from '@utils';
 import {
   formatHoursAndMinutesForDateTime,
   formatShowDeadline,
+  getJapaneseWeekDay,
 } from '@utils/date';
 
 type Props = {
@@ -46,6 +48,51 @@ const PopupDetailEvent = ({ dataEvent, onDelete }: Props) => {
       dataEvent.participants &&
       dataEvent.participants.find((item) => Number(item.id) == participantId)
     );
+  };
+
+  const displayRepetitiveEventTime = (dataEvent: DataDetailEventType) => {
+    let title = '';
+    const repeatStartTime = dataEvent.start
+      ? formatHoursAndMinutesForDateTime(new Date(dataEvent.start))
+      : '';
+    const repeatEndTime = dataEvent.end
+      ? formatHoursAndMinutesForDateTime(new Date(dataEvent.end))
+      : '';
+    switch (dataEvent?.repeatType as string) {
+      case TaskRepetitiveValue.DAILY:
+        title = '毎日' + repeatStartTime + '~' + repeatEndTime;
+        break;
+      case TaskRepetitiveValue.WEEKLY:
+        title =
+          '毎週' +
+          getJapaneseWeekDay(Number(dataEvent.weekDay || 0)) +
+          '曜日' +
+          repeatStartTime +
+          '~' +
+          repeatEndTime;
+        break;
+      case TaskRepetitiveValue.MONTHLY:
+        title =
+          '毎月' +
+          dataEvent.monthDay +
+          '日' +
+          repeatStartTime +
+          '~' +
+          repeatEndTime;
+        break;
+      case TaskRepetitiveValue.YEARLY:
+        title =
+          '毎年' +
+          dataEvent.month +
+          '月' +
+          dataEvent.monthDay +
+          '日' +
+          repeatStartTime +
+          '~' +
+          repeatEndTime;
+        break;
+    }
+    return title;
   };
 
   return (
@@ -101,30 +148,42 @@ const PopupDetailEvent = ({ dataEvent, onDelete }: Props) => {
       <p className="font-bold text-[16px] mb-3 break-words">
         {dataEvent?.title}
       </p>
-      <div className="flex">
-        <p className="">
-          {dataEvent?.start &&
-            dataEvent?.end &&
-            (isSameDay(new Date(dataEvent?.start), new Date(dataEvent?.end))
-              ? formatShowDeadline(dataEvent?.start)
-              : `${formatShowDeadline(dataEvent?.start)} ~ ${formatShowDeadline(dataEvent?.end)}`)}{' '}
-        </p>
-      </div>
-      {dataEvent && dataEvent.isAllDay ? (
-        <p className="text-[14px]">終日</p>
+
+      {(dataEvent?.repeatType as string) != TaskRepetitiveValue.ONCE ? (
+        <>{displayRepetitiveEventTime(dataEvent!)}</>
       ) : (
-        dataEvent &&
-        dataEvent.start &&
-        dataEvent.end && (
-          <div className="flex gap-1 items-center text-[14px]">
-            <p className="text-[12px]">開始</p>
-            <p>{formatHoursAndMinutesForDateTime(new Date(dataEvent.start))}</p>
-            <p className="text-[12px]">~</p>
-            <p className="text-[12px]">終了</p>
-            <p>{formatHoursAndMinutesForDateTime(new Date(dataEvent.end))}</p>
+        <>
+          <div className="flex">
+            <p className="">
+              {dataEvent?.start &&
+                dataEvent?.end &&
+                (isSameDay(new Date(dataEvent?.start), new Date(dataEvent?.end))
+                  ? formatShowDeadline(dataEvent?.start)
+                  : `${formatShowDeadline(dataEvent?.start)} ~ ${formatShowDeadline(dataEvent?.end)}`)}{' '}
+            </p>
           </div>
-        )
+          {dataEvent && dataEvent.isAllDay ? (
+            <p className="text-[14px]">終日</p>
+          ) : (
+            dataEvent &&
+            dataEvent.start &&
+            dataEvent.end && (
+              <div className="flex gap-1 items-center text-[14px]">
+                <p className="text-[12px]">開始</p>
+                <p>
+                  {formatHoursAndMinutesForDateTime(new Date(dataEvent.start))}
+                </p>
+                <p className="text-[12px]">~</p>
+                <p className="text-[12px]">終了</p>
+                <p>
+                  {formatHoursAndMinutesForDateTime(new Date(dataEvent.end))}
+                </p>
+              </div>
+            )
+          )}
+        </>
       )}
+
       <div className="flex items-center gap-3 mt-3">
         <p className="flex-none text-[14px]">場所</p>
         <p className="bg-[#EBF1F7] rounded-[4px] px-[5px] py-[6px] truncate max-w-[305px] text-[14px]">

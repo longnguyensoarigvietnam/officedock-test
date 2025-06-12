@@ -106,6 +106,7 @@ const ActionsEventModal = ({
   calendarView,
   backToEditing,
 }: ActionsEventModalProps) => {
+  // Creation data
   const [dataOptionsEventTypes, setDataOptionsEventTypes] = useState<
     OptionDropdownType[]
   >([]);
@@ -130,14 +131,24 @@ const ActionsEventModal = ({
   const [dataOptionsEventLocation, setDataOptionsEventLocation] = useState<
     OptionDropdownType[]
   >([]);
+
+  // Search and filter
   const [searchName, setSearchName] = useState<string>('');
+  const [removeMyselfOption, setRemoveMyselfOption] = useState(false);
+
+  // Date
   const [time, setTime] = useState<string>('');
   const [minDatePlan, setMinDatePlan] = useState<Date | null>();
-  const [removeMyselfOption, setRemoveMyselfOption] = useState(false);
-  const { data: session } = useSession();
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
   const currentDate = new Date();
   const optionTimeInput = generateTimeOptionsAsObjects();
+
+  // Session
+  const { data: session } = useSession();
+
+  // Context
+  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+
+  // React hook form
   const {
     register,
     control,
@@ -156,6 +167,7 @@ const ActionsEventModal = ({
     },
   });
 
+  // Get creation data for organizations, tags, locations, categories
   const { isFetchedCreationDataStatistic } = useCreationDataStatistic({
     is_calendar_page: true,
 
@@ -237,6 +249,7 @@ const ActionsEventModal = ({
     },
   });
 
+  // Set default values
   const defaultValues = useMemo<EventEditFormData>(() => {
     const value: EventEditFormData = {
       participantIds: [session?.user.id as number],
@@ -479,6 +492,7 @@ const ActionsEventModal = ({
     reset(defaultValues);
   }, [defaultValues, reset]);
 
+  // Get option list for event types, participants
   useEffect(() => {
     if (creationDataEventCalendar) {
       setDataOptionsEventTypes(
@@ -552,6 +566,7 @@ const ActionsEventModal = ({
     });
   };
 
+  // Call API to check overlapping location
   const handleCheckOverlappingLocation = async (data: {
     scheduleId: number;
     locationId: number;
@@ -755,6 +770,8 @@ const ActionsEventModal = ({
       setValue('participantIds', updatedParticipantList);
     }
   };
+
+  // Render avatar for users and organizations
   const renderAvatar = (memberId: number) => {
     const memberInfo = dashboardMembersWithAvatars.find(
       (memberWithAvatar) => memberWithAvatar.id === memberId,
@@ -1621,7 +1638,7 @@ const ActionsEventModal = ({
               />
             </div>
           </div>
-          {/* Work type */}
+          {/* Event category */}
           <div className="flex justify-between items-start">
             <p className="w-fit font-medium text-[14px]">業務の種類</p>
             <div className="w-[513px]">
@@ -1961,6 +1978,14 @@ const ActionsEventModal = ({
                         .includes(searchName.toLowerCase()),
                     )
                     .sort((prev: EventParticipant, next: EventParticipant) => {
+                      const prevSelected = checkIsParticipantSelected(prev);
+                      const nextSelected = checkIsParticipantSelected(next);
+
+                      // Prioritize selected participants
+                      if (prevSelected && !nextSelected) return -1;
+                      if (!prevSelected && nextSelected) return 1;
+
+                      // Prioritize organizations over users
                       if (
                         prev.type === EventParticipantType.ORGANIZATION &&
                         next.type === EventParticipantType.USER
@@ -1973,6 +1998,7 @@ const ActionsEventModal = ({
                         return 1;
                       if (prev.id === session?.user.id) return -1;
                       if (next.id === session?.user.id) return 1;
+
                       return prev.fullName.localeCompare(next.fullName);
                     })
                     .map((member) => {

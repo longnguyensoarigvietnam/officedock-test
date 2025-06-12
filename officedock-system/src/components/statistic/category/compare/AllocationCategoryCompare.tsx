@@ -736,10 +736,7 @@ const AllocationCategoryCompare = memo(
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
                                     {formatTimeToJapanese(
-                                      totalDurationsForStatistic([
-                                        pair.main?.duration || '00:00:00',
-                                        pair.compare?.duration || '00:00:00',
-                                      ]),
+                                      pair.main?.duration || '00:00:00',
                                     )}
                                   </span>
                                 </div>
@@ -938,10 +935,7 @@ const AllocationCategoryCompare = memo(
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
                                     {formatTimeToJapanese(
-                                      totalDurationsForStatistic([
-                                        pair.main?.duration || '00:00:00',
-                                        pair.compare?.duration || '00:00:00',
-                                      ]),
+                                      pair.main?.duration || '00:00:00',
                                     )}
                                   </span>
                                 </div>
@@ -1140,10 +1134,7 @@ const AllocationCategoryCompare = memo(
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
                                     {formatTimeToJapanese(
-                                      totalDurationsForStatistic([
-                                        pair.main?.duration || '00:00:00',
-                                        pair.compare?.duration || '00:00:00',
-                                      ]),
+                                      pair.main?.duration || '00:00:00',
                                     )}
                                   </span>
                                 </div>
