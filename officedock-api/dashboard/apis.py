@@ -42,6 +42,7 @@ from dashboard.serializers import (
 )
 from dashboard.utils import separate_duration
 from roles.constants import Screens
+from stat_data.utils import get_total_durations
 from tasks.constants import TaskStatus, CalculateSkillMapProcessCases
 from tasks.models import Task, TaskDuration, TaskSchedule
 from tasks.serializers import TaskCalendarSerializer
@@ -228,8 +229,16 @@ class DashboardViewSet(BaseAPIViewSet):
             .all()
         )
         data = self._append_data_to_cards(data, event_durations, request)
+        durations = TaskDuration.objects.filter(
+            Q(started_at__gte=start_date)
+            & Q(Q(paused_at__lte=end_date) | Q(paused_at__isnull=True))
+            & Q(user=request.user)
+        ).all()
+        total_duration = get_total_durations(durations)
 
-        return self.response_ok(data)
+        return self.response_ok(
+            {"cards": data, "total_duration": format_duration(total_duration)}
+        )
 
     @extend_schema(
         parameters=[
@@ -613,7 +622,6 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         data = {}
         request.query_params.get("id", None)
         obj_type = request.query_params.get("type", None)
-        current_duration_start = None
         separate_task_duration = TaskDuration.objects.filter(
             Q(paused_at__isnull=True)
             & Q(Q(task__is_start=True) | Q(schedule__is_start=True))
@@ -626,44 +634,31 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                 duration, now(), user=user
             )
 
-        if user.in_charge_tasks.filter(is_start=True).exists():
-            current_duration_start = request.user.in_charge_tasks.filter(
-                is_start=True
-            ).first()
-            obj_type = CalendarTypes.TASK.value
-        elif user.schedules.filter(is_start=True).exists():
-            current_duration_start = user.schedules.filter(
-                is_start=True
-            ).first()
-            obj_type = CalendarTypes.SCHEDULE.value
-        if current_duration_start:
-            start_of_today = datetime.combine(timezone.now().date(), time.min)
-            end_of_today = datetime.combine(timezone.now().date(), time.max)
-            task_durations = current_duration_start.task_durations.filter(
-                Q(started_at__gte=start_of_today)
-                & Q(Q(paused_at__lte=end_of_today) | Q(paused_at__isnull=True))
-                & Q(user=user)
-            ).all()
-            if not task_durations:
-                return self.response_ok(data)
-            total_duration = timedelta()
-            # Calculate time between started and paused
-            for task_duration in task_durations:
-                paused_at = (
-                    task_duration.paused_at
-                    if task_duration.paused_at
-                    else timezone.now()
-                )
-                total_duration += paused_at - task_duration.started_at
+        start_of_today = datetime.combine(timezone.now().date(), time.min)
 
+        # Get current task running
+        task_running = user.task_durations.filter(
+            started_at__gte=start_of_today,
+            paused_at__isnull=True,
+        ).first()
+        if not task_running:
+            return self.response_ok(data)
+        current_duration_start = task_running.task or task_running.schedule
+        obj_type = (
+            CalendarTypes.TASK.value
+            if task_running.task
+            else CalendarTypes.SCHEDULE.value
+        )
+        if current_duration_start:
+            paused_at = (
+                task_running.paused_at
+                if task_running.paused_at
+                else timezone.now()
+            )
+            total_duration = paused_at - task_running.started_at
             is_over_estimate = False
-            task_running = None
-            if current_duration_start.is_start:
-                # Get current task running
-                task_running = current_duration_start.task_durations.filter(
-                    started_at__gte=start_of_today,
-                    paused_at__isnull=True,
-                ).first()
+
+            if task_running:
                 is_send_sk, is_over_estimate = check_task_overtime(
                     current_duration_start, task_running
                 )
@@ -678,18 +673,12 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             data = {
                 "id": current_duration_start.id,
                 "categories": categories,
-                "task_duration_running_uuid": task_running.uuid
-                if isinstance(task_running, TaskDuration)
-                else None,
+                "task_duration_running_uuid": task_running.uuid,
                 "title": current_duration_start.title,
                 "task_duration": format_duration(total_duration),
-                "started_at": task_durations.last().started_at
-                if task_durations.exists()
-                else None,
-                "paused_at": task_durations.last().paused_at
-                if task_durations.exists()
-                else None,
-                "is_start": current_duration_start.is_start,
+                "started_at": task_running.started_at,
+                "paused_at": task_running.paused_at,
+                "is_start": bool(task_running),
                 "is_over_estimate": is_over_estimate,
                 "type": obj_type,
             }
