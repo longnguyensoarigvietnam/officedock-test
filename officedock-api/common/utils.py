@@ -585,3 +585,19 @@ def filter_task_index_team(task):
             task__people_in_charge__in=people_in_charge_ids
         )
     return task_filter
+
+
+def compare_list_categories(input_categories, current_categories):
+    """
+    Compare categories from query params and current categories
+    """
+    if len(input_categories) != len(current_categories):
+        return False
+    for a, b in zip(input_categories, current_categories):
+        stat_cat = a.get("statistic_category")
+        a_id = stat_cat.id if stat_cat is not None else None
+        a_type = a.get("type")
+
+        if a_id != b.get("id") or a_type != b.get("type"):
+            return False  # Mismatch or None detected
+    return True  # All matched

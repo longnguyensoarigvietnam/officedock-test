@@ -42,7 +42,7 @@ from dashboard.serializers import (
 )
 from dashboard.utils import separate_duration
 from roles.constants import Screens
-from tasks.constants import TaskStatus
+from tasks.constants import TaskStatus, CalculateSkillMapProcessCases
 from tasks.models import Task, TaskDuration, TaskSchedule
 from tasks.serializers import TaskCalendarSerializer
 from tasks.utils import split_date_range, calculate_progress_skill_map
@@ -326,6 +326,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                     duration_time=-(
                         current_instance.paused_at - current_instance.started_at
                     ),
+                    case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                 )
         if started_at.date() != paused_at.date():
             # Call separate_duration to handle multi-day durations
@@ -343,7 +344,10 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                 for user in instance.task.people_in_charge.all():
                     # Plus total duration to skill map actual measure time
                     calculate_progress_skill_map(
-                        instance.task, user, duration_time=total_duration
+                        instance.task,
+                        user,
+                        duration_time=total_duration,
+                        case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                     )
             return DurationSerializer(
                 new_durations, many=True, context={"request": request}
@@ -358,7 +362,10 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                 for user in instance.task.people_in_charge.all():
                     # Plus total duration to skill map actual measure time
                     calculate_progress_skill_map(
-                        instance.task, user, duration_time=total_duration
+                        instance.task,
+                        user,
+                        duration_time=total_duration,
+                        case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                     )
             # Return serialized single instance
             return [
@@ -379,7 +386,10 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             for user in instance.task.people_in_charge.all():
                 # Minus total duration to skill map actual measure time
                 calculate_progress_skill_map(
-                    instance.task, user, duration_time=-total_duration
+                    instance.task,
+                    user,
+                    duration_time=-total_duration,
+                    case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                 )
 
         instance.delete()
@@ -548,7 +558,10 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                 for user in duration.task.people_in_charge.all():
                     # Plus total duration to skill map actual measure time
                     calculate_progress_skill_map(
-                        duration.task, user, duration_time=total_duration
+                        duration.task,
+                        user,
+                        duration_time=total_duration,
+                        case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                     )
 
     def _startDuration(self, user, task=None, schedule=None):
@@ -904,7 +917,10 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             for user in duration.task.people_in_charge.all():
                 # Plus total duration to skill map actual measure time
                 calculate_progress_skill_map(
-                    duration.task, user, duration_time=total_duration
+                    duration.task,
+                    user,
+                    duration_time=total_duration,
+                    case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                 )
         if started_at.date() != paused_at.date():
             separate_duration(duration, duration.paused_at, user=user)
@@ -954,12 +970,15 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             model.type = schedule_type
             model.save()
         if instance.task:
-            paused_at = instance.paused_at or now()
-            total_duration = paused_at - instance.started_at
+            current_paused_at = instance.paused_at or now()
+            total_duration = current_paused_at - instance.started_at
             for user in instance.task.people_in_charge.all():
                 # Minus total duration to skill map actual measure time
                 calculate_progress_skill_map(
-                    instance.task, user, duration_time=-total_duration
+                    instance.task,
+                    user,
+                    duration_time=-total_duration,
+                    case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                 )
 
         # Update actual duration
@@ -974,7 +993,10 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             for user in instance.task.people_in_charge.all():
                 # Plus total duration to skill map actual measure time
                 calculate_progress_skill_map(
-                    instance.task, user, duration_time=total_duration
+                    instance.task,
+                    user,
+                    duration_time=total_duration,
+                    case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                 )
         paused_at = paused_at or instance.paused_at or now()
         started_at = started_at or instance.started_at
@@ -995,7 +1017,10 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             for user in instance.task.people_in_charge.all():
                 # Minus total duration to skill map actual measure time
                 calculate_progress_skill_map(
-                    instance.task, user, duration_time=-total_duration
+                    instance.task,
+                    user,
+                    duration_time=-total_duration,
+                    case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                 )
 
         instance.delete()

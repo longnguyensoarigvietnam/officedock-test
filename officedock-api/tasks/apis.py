@@ -50,6 +50,8 @@ from common.utils import (
     create_categories_by_model,
     check_task_overtime,
     split_id_from_string,
+    get_common_categories,
+    compare_list_categories,
 )
 from stat_data.utils import validate_date_by_regex_and_reformat
 from tasks.constants import (
@@ -59,6 +61,7 @@ from tasks.constants import (
     TaskStatus,
     FrequencyMap,
     LIMIT_DAY,
+    CalculateSkillMapProcessCases,
 )
 from tasks.utils import (
     create_task_schedule,
@@ -314,7 +317,11 @@ class TaskViewSet(
         # Increase measure count if task created have status completed
         if task.status.name == TaskStatus.COMPLETED.value:
             for user in task.people_in_charge.all():
-                calculate_progress_skill_map(task, user)
+                calculate_progress_skill_map(
+                    task,
+                    user,
+                    case=CalculateSkillMapProcessCases.NOT_CHANGE_COMPLETED_STATUS.value,
+                )
 
         return self.response_created(
             self.get_serializer(
@@ -1096,10 +1103,6 @@ class TaskViewSet(
         elif tag_ids == []:
             task.tags.clear()
 
-        # Create or update categories
-        if categories is not None:
-            create_categories_by_model(task, categories)
-
         # Check is task run overtime or not
         start_of_today = datetime.combine(timezone.now().date(), time.min)
         task_duration = TaskDuration.objects.filter(
@@ -1139,21 +1142,52 @@ class TaskViewSet(
                 old_recurring=old_recurring,
             )
 
-        # Update skill if task status is changed
-        is_change_another_to_complete_status = (
-            current_task_status.name != TaskStatus.COMPLETED.value
-            and task.status.name == TaskStatus.COMPLETED.value
-        )
-        is_change_complete_to_another_status = (
-            current_task_status.name == TaskStatus.COMPLETED.value
-            and task.status.name != TaskStatus.COMPLETED.value
-        )
-        if (
-            is_change_another_to_complete_status
-            or is_change_complete_to_another_status
+        # Determine the skill update case based on task status change
+        previous = current_task_status.name
+        current = task.status.name
+        completed = TaskStatus.COMPLETED.value
+        case = None
+        if previous != completed and current == completed:
+            case = (
+                CalculateSkillMapProcessCases.CHANGE_ANOTHER_TO_COMPLETED_STATUS.value
+            )
+        elif previous == completed and current != completed:
+            case = (
+                CalculateSkillMapProcessCases.CHANGE_COMPLETED_STATUS_TO_ANOTHER.value
+            )
+        elif previous == current == completed:
+            case = (
+                CalculateSkillMapProcessCases.NOT_CHANGE_COMPLETED_STATUS.value
+            )
+        elif previous == current and current != completed:
+            case = CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value
+
+        # Create or update categories
+        if categories is not None and not compare_list_categories(
+            categories, get_common_categories(task.categories.first())
         ):
             for user in task.people_in_charge.all():
-                calculate_progress_skill_map(task, user)
+                # Minus skill map process have old categories of current task
+                calculate_progress_skill_map(
+                    current_task, user, is_minus=True, case=case
+                )
+            # Update new categories
+            create_categories_by_model(task, categories)
+            for user in task.people_in_charge.all():
+                # Plus skill map process have new categories of updated task
+                calculate_progress_skill_map(task, user, case=case)
+        elif (
+            previous != completed
+            and current == completed
+            or previous == completed
+            and current != completed
+        ):
+
+            is_minus = previous == completed and current != completed
+            for user in task.people_in_charge.all():
+                calculate_progress_skill_map(
+                    task, user, is_minus=is_minus, case=case
+                )
 
         return self.response_ok(
             self.get_serializer(
@@ -1373,8 +1407,20 @@ class TaskViewSet(
                     is_change_another_to_complete_status
                     or is_change_complete_to_another_status
                 ):
+                    if is_change_another_to_complete_status:
+                        case = (
+                            CalculateSkillMapProcessCases.CHANGE_ANOTHER_TO_COMPLETED_STATUS.value
+                        )
+                        minus = False
+                    else:
+                        case = (
+                            CalculateSkillMapProcessCases.CHANGE_COMPLETED_STATUS_TO_ANOTHER.value
+                        )
+                        minus = True
                     for user in task.people_in_charge.all():
-                        calculate_progress_skill_map(task, user)
+                        calculate_progress_skill_map(
+                            task, user, is_minus=minus, case=case
+                        )
                 for user in task.people_in_charge.all():
                     send_web_socket_event(
                         {
