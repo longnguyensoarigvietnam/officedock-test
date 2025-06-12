@@ -308,6 +308,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
     @transaction.atomic
     def perform_update(self, serializer, request):
         """Handle update duration"""
+        current_instance = self.get_object()
         validated_data = serializer.validated_data
         started_at = validated_data.get("started_at", None)
         paused_at = validated_data.get("paused_at", None)
@@ -315,14 +316,16 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         paused_at = paused_at or instance.paused_at or now()
         started_at = started_at or instance.started_at
         user = request.user
-        is_edit_task_duration = bool(instance.task)
+        is_edit_task_duration = bool(current_instance.task)
         if is_edit_task_duration:
-            for user in instance.task.people_in_charge.all():
+            for user in current_instance.task.people_in_charge.all():
                 # Minus duration to skill map actual measure time
                 calculate_progress_skill_map(
-                    instance.task,
+                    current_instance.task,
                     user,
-                    duration_time=-(instance.paused_at - instance.started_at),
+                    duration_time=-(
+                        current_instance.paused_at - current_instance.started_at
+                    ),
                 )
         if started_at.date() != paused_at.date():
             # Call separate_duration to handle multi-day durations
