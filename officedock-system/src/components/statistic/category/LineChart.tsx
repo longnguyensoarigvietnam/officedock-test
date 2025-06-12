@@ -476,7 +476,10 @@ const LineChart = ({
                   ? convertTimeToDecimal(duration.duration)
                   : 0,
                 endDate: duration.endDate,
-                color: categoryDetail.categoryColor,
+                color:
+                  categoryDetail.categoryColor ||
+                  (color && lightenColor(color, percent)) ||
+                  getRandomColor(),
                 label: categoryDetail.categoryName,
               },
               ...(index === categoryDetail.durations.length - 1 &&
@@ -488,7 +491,10 @@ const LineChart = ({
                         ? convertTimeToDecimal(duration.duration)
                         : 0,
                       endDate: duration.endDate,
-                      color: categoryDetail.categoryColor,
+                      color:
+                        categoryDetail.categoryColor ||
+                        (color && lightenColor(color, percent)) ||
+                        getRandomColor(),
                       label: categoryDetail.categoryName,
                     },
                   ]

@@ -41,6 +41,7 @@ import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 import ChatWarningUploadingFilesModal from '@components/modals/ChatWarningUploadingFilesModal';
 import useTeamList from '@hooks/useListTeam';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import { MAXIUM_VISIBLE_NOTIFICATIONS } from '@constants';
 
 type Props = {
   className?: string;
@@ -251,7 +252,7 @@ const Sidebar = ({ className }: Props) => {
   }
 
   const handleNavigateToMyDockPage = (href: string) => {
-    if(pathname == href) return;
+    if (pathname == href) return;
     const params = new URLSearchParams(searchParams.toString());
     params.delete('organization');
     params.delete('tabId');
@@ -406,8 +407,11 @@ const Sidebar = ({ className }: Props) => {
                                 item.hasNotification &&
                                 totalNotifications != undefined &&
                                 totalNotifications > 0 && (
-                                  <p className="rounded-full w-4 h-4 bg-error text-[10px] text-center text-white leading-4">
-                                    {totalNotifications}
+                                  <p className="rounded-full w-4 h-4 bg-error text-[9px] text-center text-white leading-4">
+                                    {totalNotifications >
+                                    MAXIUM_VISIBLE_NOTIFICATIONS
+                                      ? `${MAXIUM_VISIBLE_NOTIFICATIONS}+`
+                                      : `${totalNotifications}`}
                                   </p>
                                 )}
                             </div>
@@ -618,7 +622,10 @@ const Sidebar = ({ className }: Props) => {
                                 totalNotifications != undefined &&
                                 totalNotifications > 0 && (
                                   <p className="rounded-full w-4 h-4 bg-error text-[10px] text-center text-white leading-4">
-                                    {totalNotifications}
+                                    {totalNotifications >
+                                    MAXIUM_VISIBLE_NOTIFICATIONS
+                                      ? `${MAXIUM_VISIBLE_NOTIFICATIONS}+`
+                                      : `${totalNotifications}`}
                                   </p>
                                 )}
                             </div>

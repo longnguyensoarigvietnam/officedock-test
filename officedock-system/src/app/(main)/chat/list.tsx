@@ -1007,7 +1007,7 @@ const ListChatUsers = ({
               dataChatList.map((item) => (
                 <div
                   key={item?.code}
-                  className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
+                  className={`flex relative w-full group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
                   onClick={() => handleRoomChange(item)}>
                   <div className="absolute top-1 left-0.5">
                     <DynamicTooltip
@@ -1032,19 +1032,20 @@ const ListChatUsers = ({
                     </DynamicTooltip>
                   </div>
 
-                  <div className="relative">{renderAvatar(item)}</div>
-                  <div className="ml-2 flex gap-1 items-center">
-                    <p className={`text-sm break-all w-[170px] font-medium `}>
-                      {item.code &&
-                      chatRoomNameEditing.find(
-                        (room) => room.roomCode === item.code,
-                      )
-                        ? chatRoomNameEditing.find(
-                            (room) => room.roomCode === item.code,
-                          )?.roomName
-                        : item?.name || ''}
-                    </p>
-                  </div>
+                  <div className="!w-8 !h-8">{renderAvatar(item)}</div>
+
+                  <p
+                    className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium `}>
+                    {item.code &&
+                    chatRoomNameEditing.find(
+                      (room) => room.roomCode === item.code,
+                    )
+                      ? chatRoomNameEditing.find(
+                          (room) => room.roomCode === item.code,
+                        )?.roomName
+                      : item?.name || ''}
+                  </p>
+
                   {item?.unreadMessages > 0 && (
                     <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full w-[20px] pt-[2px] h-[20px] bg-[#C32E2E] text-[10px] text-center text-white leading-4">
                       {item?.unreadMessages}
@@ -1078,7 +1079,7 @@ const ListChatUsers = ({
               filteredChatList.map((item) => (
                 <div
                   key={item?.code}
-                  className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
+                  className={`flex relative w-full group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
                   onClick={() => {
                     setLastItemId(null);
                     handleSetChatRoomParam(item.code);
@@ -1102,19 +1103,18 @@ const ListChatUsers = ({
                       name="Pin chat"
                     />
                   </div>
-                  <div className="relative">{renderAvatar(item)}</div>
-                  <div className="ml-2 flex gap-1 items-center">
-                    <p className="text-sm break-all w-[170px] font-medium">
-                      {item.code &&
-                      chatRoomNameEditing.find(
-                        (room) => room.roomCode === item.code,
-                      )
-                        ? chatRoomNameEditing.find(
-                            (room) => room.roomCode === item.code,
-                          )?.roomName
-                        : item?.name || ''}
-                    </p>
-                  </div>
+                  <div className="!w-8 !h-8">{renderAvatar(item)}</div>
+                  <p
+                    className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium`}>
+                    {item.code &&
+                    chatRoomNameEditing.find(
+                      (room) => room.roomCode === item.code,
+                    )
+                      ? chatRoomNameEditing.find(
+                          (room) => room.roomCode === item.code,
+                        )?.roomName
+                      : item?.name || ''}
+                  </p>
                   {item?.unreadMessages > 0 && (
                     <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full pt-[2px] w-[20px] h-[20px] bg-[#C32E2E] text-[10px] text-center text-white leading-4">
                       {item?.unreadMessages}

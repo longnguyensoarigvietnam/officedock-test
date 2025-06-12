@@ -73,11 +73,11 @@ export interface EventEditFormData {
   mediumCategory?: OptionDropdownType;
   categories?: { id: string; name: string; type: string }[];
   createdAt?: Date;
-  repeatType?: OptionDropdownType | string;
-  repeatInterval?: OptionDropdownType;
-  weekDay?: OptionDropdownType;
-  monthDay?: OptionDropdownType;
-  month?: OptionDropdownType;
+  repeatType?: OptionDropdownType | string | null;
+  repeatInterval?: OptionDropdownType | number | null;
+  weekDay?: OptionDropdownType | number | null;
+  monthDay?: OptionDropdownType | number | null;
+  month?: OptionDropdownType | number | null;
   scheduleId?: string; // id event delete with popup detail event in kanban schedule
   eventSchedule?: string; // id repeat event delete with popup detail event in kanban schedule
   isEventOverlapping?: boolean;
