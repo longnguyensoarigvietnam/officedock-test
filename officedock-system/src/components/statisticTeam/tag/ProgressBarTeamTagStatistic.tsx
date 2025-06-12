@@ -1,8 +1,5 @@
-import React, { useState } from 'react';
-
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
-
 import { OptionDropdownType } from '@interfaces/common';
 import { UserListStatisticType } from '@interfaces/statistic';
 import {
@@ -10,6 +7,7 @@ import {
   formatTimeToJapanese,
   getJapaneseDayName,
 } from '@utils/date';
+import React, { useState } from 'react';
 
 interface ProgressBarProps {
   label: string;
@@ -29,23 +27,26 @@ interface ProgressBarProps {
   color?: string;
   classProgressClass?: string;
   classProgressUserClass?: string;
+
   className?: string;
   showInfo?: boolean;
   startDate?: Date;
   endDate?: Date | null;
-  handleClickChart?: (data: OptionDropdownType) => void;
+  startDateCompare?: Date;
+  endDateCompare?: Date | null;
   handleClickTooltip: ({
     userId,
-    categoryId,
+    tagId,
     duration,
   }: {
     userId: number;
-    categoryId: number;
+    tagId: number;
     duration: string;
   }) => void;
+  handleClickChart?: (data: OptionDropdownType) => void;
 }
 
-const ProgressBarTeamStatistic = ({
+const ProgressBarTeamTagStatistic = ({
   id,
   label,
   value,
@@ -60,12 +61,14 @@ const ProgressBarTeamStatistic = ({
   showInfo = true,
   startDate,
   endDate,
-  handleClickChart,
+  startDateCompare,
+  endDateCompare,
   handleClickTooltip,
+  handleClickChart,
 }: ProgressBarProps) => {
   const [isExtendUser, setExtendUser] = useState(true);
-  const percentage = Math.round(Math.min((value / maxValue) * 100, 100));
 
+  const percentage = Math.round(Math.min((value / maxValue) * 100, 100));
   return (
     <>
       <div className={`font-medium text-sm text-black ${className}`}>
@@ -95,6 +98,7 @@ const ProgressBarTeamStatistic = ({
             </div>
           )}
         </div>
+
         <div
           className={`group w-full relative h-4 bg-gray-300 ${classProgressClass}`}>
           <div
@@ -110,16 +114,54 @@ const ProgressBarTeamStatistic = ({
                   value: id || '',
                 });
             }}></div>
-          <div className="absolute -top-[25%] left-[40%] w-[250px] rounded-md py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+          <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-md py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
             {id != -1 ? (
               <div>
+                {startDate && endDate && (
+                  <div className="flex items-center mb-3 px-5">
+                    <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                      基準期間
+                    </p>
+                    <div className="text-black text-xs font-normal flex items-center gap-[1px]">
+                      <p>
+                        {startDate && formatShowStatisticTask(startDate)}(
+                        {getJapaneseDayName(String(startDate))})
+                      </p>
+                      ~
+                      <p>
+                        {endDate && formatShowStatisticTask(endDate)}(
+                        {getJapaneseDayName(String(endDate))})
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {startDateCompare && endDateCompare && (
+                  <div className="flex items-center mb-3 px-5">
+                    <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                      比較期間
+                    </p>
+                    <div className="text-black text-xs font-normal flex items-center gap-[1px]">
+                      <p>
+                        {startDateCompare &&
+                          formatShowStatisticTask(startDateCompare)}
+                        ({getJapaneseDayName(String(startDateCompare))})
+                      </p>
+                      ~
+                      <p>
+                        {endDateCompare &&
+                          formatShowStatisticTask(endDateCompare)}
+                        ({getJapaneseDayName(String(endDateCompare))})
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center gap-1 px-5">
                   <div
                     style={{
                       backgroundColor: color,
                     }}
                     className="w-3 h-3"></div>
-                  <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
+                  <span className="truncate  max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                     {label}
                   </span>
                 </div>
@@ -132,7 +174,7 @@ const ProgressBarTeamStatistic = ({
                     {optionData.map((user, index) => (
                       <li
                         key={index}
-                        className="flex items-center justify-between mb-2">
+                        className="flex items-center justify-between mb-2 w-full">
                         <div className="flex items-center gap-2">
                           <div>
                             <CustomUserAvatar
@@ -157,59 +199,94 @@ const ProgressBarTeamStatistic = ({
                 <p className="text-xs text-start font-medium text-[#77858F] mb-3 px-5">
                   その他
                 </p>
-                <div className="max-h-[450px] overflow-y-auto">
-                  {mergedItems &&
-                    mergedItems?.length > 0 &&
-                    mergedItems.map((item, index) => {
-                      return (
-                        <div key={index}>
-                          <div className="flex items-center gap-1 px-5">
-                            <div
-                              style={{
-                                backgroundColor: item.color,
-                              }}
-                              className="w-3 h-3"></div>
-                            <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
-                              {item.label}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-[10px] font-normal text-sm my-2 px-5">
-                            <span>{item.value}%</span>
-                            <span>
-                              {item.duration &&
-                                formatTimeToJapanese(item.duration)}
-                            </span>
-                          </div>
-                          <div className={`max-h-[250px] overflow-y-auto px-5`}>
-                            <ul>
-                              {item.optionData.map((user, userIndex) => (
-                                <li
-                                  key={userIndex}
-                                  className="flex items-center justify-between mb-2">
-                                  <div className="flex items-center gap-2">
-                                    <div>
-                                      <CustomUserAvatar
-                                        avatarUrl={user.user?.avatar || ''}
-                                        avatarColor={
-                                          user.user?.avatarColor || ''
-                                        }
-                                        size={30}
-                                        customClassName={`${!user.user?.avatar && '!mt-0'}`}
-                                      />
-                                    </div>
-                                    <span className="inline-block w-[130px] overflow-hidden whitespace-nowrap text-ellipsis">
-                                      {user.user.fullName}
-                                    </span>
-                                  </div>
-                                  <span>{user.percent}%</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
+                {startDate && endDate && (
+                  <div className="flex items-center mb-3 px-5">
+                    <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                      基準期間
+                    </p>
+                    <div className="text-black text-xs font-normal flex items-center gap-[1px]">
+                      <p>
+                        {startDate && formatShowStatisticTask(startDate)}(
+                        {getJapaneseDayName(String(startDate))})
+                      </p>
+                      ~
+                      <p>
+                        {endDate && formatShowStatisticTask(endDate)}(
+                        {getJapaneseDayName(String(endDate))})
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {startDateCompare && endDateCompare && (
+                  <div className="flex items-center mb-3 px-5">
+                    <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                      比較期間
+                    </p>
+                    <div className="text-black text-xs font-normal flex items-center gap-[1px]">
+                      <p>
+                        {startDateCompare &&
+                          formatShowStatisticTask(startDateCompare)}
+                        ({getJapaneseDayName(String(startDateCompare))})
+                      </p>
+                      ~
+                      <p>
+                        {endDateCompare &&
+                          formatShowStatisticTask(endDateCompare)}
+                        ({getJapaneseDayName(String(endDateCompare))})
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {mergedItems &&
+                  mergedItems?.length > 0 &&
+                  mergedItems.map((item, index) => {
+                    return (
+                      <div key={index}>
+                        <div className="flex items-center gap-1 px-5">
+                          <div
+                            style={{
+                              backgroundColor: item.color,
+                            }}
+                            className="w-3 h-3"></div>
+                          <span className="truncate  max-w-[calc(100%_-_20px)] font-bold text-[16px]">
+                            {item.label}
+                          </span>
                         </div>
-                      );
-                    })}
-                </div>
+                        <div className="flex items-center gap-[10px] font-normal text-sm my-2 px-5">
+                          <span>{item.value}%</span>
+                          <span>
+                            {item.duration &&
+                              formatTimeToJapanese(item.duration)}
+                          </span>
+                        </div>
+                        <div className={`max-h-[250px] overflow-y-auto px-5`}>
+                          <ul>
+                            {item.optionData.map((user, userIndex) => (
+                              <li
+                                key={userIndex}
+                                className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <div>
+                                    <CustomUserAvatar
+                                      avatarUrl={user.user?.avatar || ''}
+                                      avatarColor={user.user?.avatarColor || ''}
+                                      size={30}
+                                      customClassName={`${!user.user?.avatar && '!mt-0'}`}
+                                    />
+                                  </div>
+                                  <span className="inline-block w-[130px] overflow-hidden whitespace-nowrap text-ellipsis">
+                                    {user.user.fullName}
+                                  </span>
+                                </div>
+                                <span>{user.percent}%</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             )}
           </div>
@@ -248,7 +325,7 @@ const ProgressBarTeamStatistic = ({
                   width: `${item.percent}%`,
                   backgroundColor: color,
                 }}></div>
-              {/*  Hover user compare */}
+              {/*  Hover user  */}
               <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
                 <div className="flex items-center gap-2">
                   <CustomUserAvatar
@@ -304,7 +381,7 @@ const ProgressBarTeamStatistic = ({
                       onClick={() =>
                         handleClickTooltip({
                           userId: item.user.id,
-                          categoryId: id,
+                          tagId: id,
                           duration: item.duration,
                         })
                       }
@@ -328,4 +405,4 @@ const ProgressBarTeamStatistic = ({
   );
 };
 
-export default ProgressBarTeamStatistic;
+export default ProgressBarTeamTagStatistic;

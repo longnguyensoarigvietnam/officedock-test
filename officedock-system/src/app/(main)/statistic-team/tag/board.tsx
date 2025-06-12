@@ -12,6 +12,8 @@ import TaskListStatisticTeamTags from '@components/statisticTeam/tag/TaskList';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import LineChartByTeamTags from '@components/statisticTeam/tag/LineChartByTeamTags';
 import LineChartByTeamTagsCompare from '@components/statisticTeam/tag/compare/LineChartByTeamTagsCompare';
+import AllocationTagTeamCompare from '@components/statisticTeam/tag/compare/AllocationTagTeamCompare';
+import AllocationTeamTag from '@components/statisticTeam/tag/AllocationTeamTag';
 
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
@@ -107,6 +109,8 @@ const StatisticTeamTagBoard = () => {
           value: item.id,
         }));
         setTagsOptions(optionsTagList);
+        setSelectedTags(optionsTagList);
+
         setListMemberTeam(
           mainItem.members.map((member) => ({
             id: member.id,
@@ -198,7 +202,7 @@ const StatisticTeamTagBoard = () => {
       largeCategoryId: selectedLarge?.value as number,
       mediumCategoryId: selectedMedium?.value as number,
       smallCategoryId: selectedSmall?.value as number,
-
+      tagIds: selectedTags,
       isCompare: isCheckCompare,
     },
     onSuccess: (data) => {
@@ -514,11 +518,25 @@ const StatisticTeamTagBoard = () => {
           {/* Percentage of categories */}
           <PercentageTeamTagsCompare
             startDate={startDate}
+            startDateCompare={startDateCompare}
+            statisticTagsListTeamCompare={statisticTagsListTeamCompare}
+            removeTag={removeTag}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+            endDate={endDate}
+            statisticTagsListTeam={statisticTagsListTeam}
+            endDateCompare={endDateCompare}
+          />
+          {/* Progress bar */}
+          <AllocationTagTeamCompare
+            startDate={startDate}
             endDate={endDate}
             startDateCompare={startDateCompare}
             endDateCompare={endDateCompare}
-            statisticTagsListTeam={statisticTagsListTeam}
-            statisticTagsListTeamCompare={statisticTagsListTeamCompare}
+            statisticTagsList={statisticTagsListTeam}
+            statisticTagsCompareList={statisticTagsListTeamCompare}
             removeTag={removeTag}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
@@ -548,6 +566,17 @@ const StatisticTeamTagBoard = () => {
             startDate={startDate}
             endDate={endDate}
             statisticTagsListTeam={statisticTagsListTeam}
+            removeTag={removeTag}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+          {/* Progress bar */}
+          <AllocationTeamTag
+            startDate={startDate}
+            endDate={endDate}
+            statisticTagsList={statisticTagsListTeam}
             removeTag={removeTag}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}

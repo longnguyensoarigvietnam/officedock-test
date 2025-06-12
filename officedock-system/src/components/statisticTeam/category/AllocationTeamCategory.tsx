@@ -1,8 +1,19 @@
 import React, { Fragment, memo, useContext, useEffect, useState } from 'react';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
 
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
+import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
+import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
+import ProgressBarTeamStatistic from './ProgressBarTeamStatistic';
+
+import { EventWorkCategory } from '@constants/enums';
 
 import {
   StatisticCategoryInfo,
@@ -15,14 +26,6 @@ import { formatTimeToJapanese } from '@utils/date';
 import { lightenColor } from '@utils';
 
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition,
-} from '@headlessui/react';
-import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
-import ProgressBarTeamStatistic from './ProgressBarTeamStatistic';
 
 type Props = {
   startDate: Date;
@@ -105,15 +108,26 @@ export function transformStatisticCategoryInfoToProgressData({
 
 const AllocationTeamCategory = memo(
   ({
+    startDate,
+    endDate,
     statisticTeamCategoryList,
     removeTag,
     removeUser,
     handleSelectOrganization,
     handleSelectLarge,
     handleSelectMedium,
+    handleSelectSmall,
   }: Props) => {
     const [isExtendData, setIsExtendData] = useState(true);
     const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
+    const [isShowModal, setIsShowModal] = useState(false);
+
+    const [detailCategory, setDetailCategory] = useState<{
+      id: number | null;
+      userId: number;
+      type: string;
+      totalDuration: string;
+    } | null>(null);
 
     const [progressDataLarge, setProgressDataLarge] = useState<
       ProgressDataType[]
@@ -125,14 +139,17 @@ const AllocationTeamCategory = memo(
       ProgressDataType[]
     >([]);
     const {
+      orderingOptions,
       totalDurationLarge,
       totalDurationMedium,
       totalDurationSmall,
       listOptionsOrganization,
       largeOptions,
       mediumOptions,
+      smallOptions,
       selectedLarge,
       selectedMedium,
+      selectedSmall,
       selectedOrganization,
       listMemberTeam,
       tagsOptions,
@@ -145,6 +162,7 @@ const AllocationTeamCategory = memo(
       firstThreeTag,
       remainingCountUser,
       remainingCountTag,
+      setTotalDurationTask,
     } = useContext(StatisticTeamStateContext);
 
     useEffect(() => {
@@ -185,6 +203,92 @@ const AllocationTeamCategory = memo(
         }
       }
     }, [statisticTeamCategoryList]);
+
+    const handleClickTooltip = ({
+      id,
+      userId,
+      duration,
+      type,
+    }: {
+      id: number;
+      userId: number;
+      duration: string;
+      type: string;
+    }) => {
+      setDetailCategory({
+        id: id,
+        userId: userId,
+        type: type,
+        totalDuration: duration,
+      });
+
+      setTimeout(() => {
+        setIsShowModal(true);
+      }, 1000);
+    };
+
+    const handleScroll = () => {
+      if (detailCategory?.type === EventWorkCategory.ALL) {
+        const item = largeOptions.find(
+          (item) => item.value === detailCategory?.id,
+        );
+        item && handleSelectLarge(item);
+
+        setTotalDurationTask(detailCategory.totalDuration);
+        if (String(detailCategory?.id) == '未設定') {
+          handleSelectLarge({
+            label: '未設定',
+            value: '未設定',
+          });
+        }
+      }
+      if (detailCategory?.type === EventWorkCategory.LARGE) {
+        const item = mediumOptions.find(
+          (item) => item.value === detailCategory?.id,
+        );
+        item && handleSelectMedium(item);
+        setTotalDurationTask(detailCategory.totalDuration);
+        if (String(detailCategory?.id) == '未設定') {
+          handleSelectMedium({
+            label: '未設定',
+            value: '未設定',
+          });
+        }
+      }
+      if (detailCategory?.type === EventWorkCategory.MEDIUM) {
+        const item = smallOptions.find(
+          (item) => item.value === detailCategory?.id,
+        );
+        item && handleSelectSmall(item);
+        setTotalDurationTask(detailCategory.totalDuration);
+        if (String(detailCategory?.id) == '未設定') {
+          handleSelectSmall({
+            label: '未設定',
+            value: '未設定',
+          });
+        }
+      }
+      if (detailCategory?.type === EventWorkCategory.SMALL) {
+        const item = smallOptions.find(
+          (item) => item.value === detailCategory?.id,
+        );
+        item && handleSelectSmall(item);
+        if (String(detailCategory?.id) == '未設定') {
+          handleSelectSmall({
+            label: '未設定',
+            value: '未設定',
+          });
+        }
+      }
+
+      const element = document.getElementById('task-list-statistic');
+      setIsShowModal(false);
+      setDetailCategory(null);
+
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    };
 
     return (
       <>
@@ -391,6 +495,24 @@ const AllocationTeamCategory = memo(
                                     }
                                   }
                                 }}
+                                handleClickTooltip={({
+                                  userId,
+                                  categoryId,
+                                  duration,
+                                }: {
+                                  userId: number;
+                                  categoryId: number;
+                                  duration: string;
+                                }) => {
+                                  handleClickTooltip({
+                                    id: categoryId,
+                                    userId,
+                                    duration,
+                                    type: EventWorkCategory.ALL,
+                                  });
+                                }}
+                                startDate={startDate}
+                                endDate={endDate}
                                 {...item}
                               />
                             ))}
@@ -443,6 +565,22 @@ const AllocationTeamCategory = memo(
                               <ProgressBarTeamStatistic
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
+                                handleClickTooltip={({
+                                  userId,
+                                  categoryId,
+                                  duration,
+                                }: {
+                                  userId: number;
+                                  categoryId: number;
+                                  duration: string;
+                                }) => {
+                                  handleClickTooltip({
+                                    id: categoryId,
+                                    userId,
+                                    duration,
+                                    type: EventWorkCategory.LARGE,
+                                  });
+                                }}
                                 handleClickChart={(
                                   data: OptionDropdownType,
                                 ) => {
@@ -459,6 +597,8 @@ const AllocationTeamCategory = memo(
                                     }
                                   }
                                 }}
+                                startDate={startDate}
+                                endDate={endDate}
                                 {...item}
                               />
                             ))}
@@ -510,7 +650,25 @@ const AllocationTeamCategory = memo(
                             progressDataSmall.map((item, index) => (
                               <ProgressBarTeamStatistic
                                 key={index}
+                                startDate={startDate}
+                                endDate={endDate}
                                 classProgressClass="h-[20px] rounded-[4px]"
+                                handleClickTooltip={({
+                                  userId,
+                                  categoryId,
+                                  duration,
+                                }: {
+                                  userId: number;
+                                  categoryId: number;
+                                  duration: string;
+                                }) => {
+                                  handleClickTooltip({
+                                    id: categoryId,
+                                    userId,
+                                    duration,
+                                    type: EventWorkCategory.MEDIUM,
+                                  });
+                                }}
                                 {...item}
                               />
                             ))}
@@ -523,6 +681,29 @@ const AllocationTeamCategory = memo(
             </>
           )}
         </div>
+        {isShowModal && (
+          <ListTaskDetailStatisticModal
+            open={isShowModal}
+            selectedTags={
+              orderingOptions && orderingOptions?.tag_ids.length > 0
+                ? orderingOptions?.tag_ids
+                : []
+            }
+            selectedLarge={selectedLarge}
+            selectedMedium={selectedMedium}
+            selectedSmall={selectedSmall}
+            startDate={startDate}
+            endDate={endDate}
+            statisticCategoryList={statisticTeamCategoryList}
+            detailCategory={detailCategory}
+            selectedOrganization={selectedOrganization}
+            onClose={() => {
+              setIsShowModal(false);
+              setDetailCategory(null);
+            }}
+            handleScroll={handleScroll}
+          />
+        )}
       </>
     );
   },

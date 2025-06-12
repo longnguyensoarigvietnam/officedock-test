@@ -1,8 +1,19 @@
 import React, { Fragment, memo, useContext, useEffect, useState } from 'react';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
 
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
+import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
+import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
+import ProgressBarTeamStatisticCompare from './ProgressBarTeamStatistic';
+
+import { EventWorkCategory } from '@constants/enums';
 
 import {
   StatisticCategoryInfo,
@@ -11,18 +22,10 @@ import {
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
-import { formatTimeToJapanese } from '@utils/date';
+import { formatShowStatisticTask, formatTimeToJapanese } from '@utils/date';
 import { lightenColor } from '@utils';
 
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition,
-} from '@headlessui/react';
-import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
-import ProgressBarTeamStatisticCompare from './ProgressBarTeamStatistic';
 
 type Props = {
   startDate: Date;
@@ -112,15 +115,33 @@ export function buildProgressDataCompareWithMergedOthers({
   threshold?: number;
   colorData?: string;
 }): ProgressDataCompareItem[] {
+  const isBaseEmpty = baseData.length === 0;
+  const isCompareEmpty = compareData.length === 0;
+
   const mergedBase = transformAndMergeProgressData({
-    data: baseData,
-    threshold: threshold,
-    colorData: colorData,
+    data: isBaseEmpty
+      ? compareData.map((item) => ({
+          ...item,
+          percent: 0,
+          duration: '00:00:00',
+          users: [],
+        }))
+      : baseData,
+    threshold,
+    colorData,
   });
+
   const mergedCompare = transformAndMergeProgressData({
-    data: compareData,
-    threshold: threshold,
-    colorData: colorData,
+    data: isCompareEmpty
+      ? baseData.map((item) => ({
+          ...item,
+          percent: 0,
+          duration: '00:00:00',
+          users: [],
+        }))
+      : compareData,
+    threshold,
+    colorData,
   });
 
   return mergedBase.map((item) => {
@@ -145,9 +166,19 @@ const AllocationTeamCategoryCompare = memo(
     handleSelectOrganization,
     handleSelectLarge,
     handleSelectMedium,
+    handleSelectSmall,
   }: Props) => {
     const [isExtendData, setIsExtendData] = useState(true);
     const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
+    const [isShowModal, setIsShowModal] = useState(false);
+    const [isModalCompare, setIsModalCompare] = useState(false);
+
+    const [detailCategory, setDetailCategory] = useState<{
+      id: number | null;
+      userId: number;
+      type: string;
+      totalDuration: string;
+    } | null>(null);
 
     const [progressDataLarge, setProgressDataLarge] = useState<
       ProgressDataCompareItem[]
@@ -159,78 +190,160 @@ const AllocationTeamCategoryCompare = memo(
       ProgressDataCompareItem[]
     >([]);
     const {
+      orderingOptions,
       totalDurationLarge,
       totalDurationMedium,
       totalDurationSmall,
+      totalDurationLargeCompare,
+      totalDurationMediumCompare,
+      totalDurationSmallCompare,
       listOptionsOrganization,
       largeOptions,
       mediumOptions,
+      smallOptions,
       selectedLarge,
       selectedMedium,
+      selectedSmall,
       selectedOrganization,
       listMemberTeam,
       tagsOptions,
       isLoadingLarge,
       isLoadingMedium,
       isLoadingOrganization,
+      isLoadingLargeCompare,
+      isLoadingMediumCompare,
+      isLoadingOrganizationCompare,
       firstThreeUser,
       allLabelUser,
       allLabelTag,
       firstThreeTag,
       remainingCountUser,
       remainingCountTag,
+      setTotalDurationTask,
     } = useContext(StatisticTeamStateContext);
 
     useEffect(() => {
       if (statisticTeamCategoryList && statisticCategoryListTeamCompare) {
-        if (
-          statisticTeamCategoryList.largeCategories &&
-          statisticCategoryListTeamCompare.largeCategories
-        ) {
-          const compareResult = buildProgressDataCompareWithMergedOthers({
-            baseData: statisticTeamCategoryList.largeCategories,
-            compareData: statisticCategoryListTeamCompare.largeCategories,
-          });
-          setProgressDataLarge(compareResult);
-        } else {
-          setProgressDataLarge([]);
-        }
-        if (
-          statisticTeamCategoryList.mediumCategories &&
-          statisticCategoryListTeamCompare.mediumCategories
-        ) {
-          const color = statisticTeamCategoryList.largeCategories.find(
+        const compareResult = buildProgressDataCompareWithMergedOthers({
+          baseData: statisticTeamCategoryList.largeCategories || [],
+          compareData: statisticCategoryListTeamCompare.largeCategories || [],
+        });
+        const color =
+          statisticTeamCategoryList.largeCategories?.find(
+            (item) => item.categoryId === selectedLarge?.value,
+          )?.categoryColor ||
+          statisticCategoryListTeamCompare.largeCategories?.find(
             (item) => item.categoryId === selectedLarge?.value,
           )?.categoryColor;
-          const compareResult = buildProgressDataCompareWithMergedOthers({
-            baseData: statisticTeamCategoryList.mediumCategories,
-            compareData: statisticCategoryListTeamCompare.mediumCategories,
-            colorData: color,
-          });
-          setProgressDataMedium(compareResult);
-        } else {
-          setProgressDataMedium([]);
-        }
-        if (
-          statisticTeamCategoryList.smallCategories &&
-          statisticCategoryListTeamCompare.smallCategories
-        ) {
-          const color = statisticTeamCategoryList.largeCategories.find(
-            (item) => item.categoryId === selectedLarge?.value,
-          )?.categoryColor;
+        const compareResultMedium = buildProgressDataCompareWithMergedOthers({
+          baseData: statisticTeamCategoryList?.mediumCategories || [],
+          compareData: statisticCategoryListTeamCompare?.mediumCategories || [],
+          colorData: color,
+        });
 
-          const compareResult = buildProgressDataCompareWithMergedOthers({
-            baseData: statisticTeamCategoryList.smallCategories,
-            compareData: statisticCategoryListTeamCompare.smallCategories,
-            colorData: color,
-          });
-
-          setProgressDataSmall(compareResult);
-        } else {
-          setProgressDataSmall([]);
-        }
+        const compareResultSmall = buildProgressDataCompareWithMergedOthers({
+          baseData: statisticTeamCategoryList?.smallCategories || [],
+          compareData: statisticCategoryListTeamCompare?.smallCategories || [],
+          colorData: color,
+        });
+        setProgressDataLarge(compareResult);
+        setProgressDataMedium(compareResultMedium);
+        setProgressDataSmall(compareResultSmall);
       }
     }, [statisticTeamCategoryList, statisticCategoryListTeamCompare]);
+
+    const handleClickTooltip = ({
+      id,
+      userId,
+      duration,
+      type,
+      isCompare,
+    }: {
+      id: number;
+      userId: number;
+      duration: string;
+      type: string;
+      isCompare?: boolean;
+    }) => {
+      if (isCompare) {
+        setIsModalCompare(true);
+      } else {
+        setIsModalCompare(false);
+      }
+      setDetailCategory({
+        id: id,
+        userId: userId,
+        type: type,
+        totalDuration: duration,
+      });
+
+      setTimeout(() => {
+        setIsShowModal(true);
+      }, 1000);
+    };
+
+    const handleScroll = () => {
+      if (detailCategory?.type === EventWorkCategory.ALL) {
+        const item = largeOptions.find(
+          (item) => item.value === detailCategory?.id,
+        );
+        item && handleSelectLarge(item);
+
+        setTotalDurationTask(detailCategory.totalDuration);
+        if (String(detailCategory?.id) == '未設定') {
+          handleSelectLarge({
+            label: '未設定',
+            value: '未設定',
+          });
+        }
+      }
+      if (detailCategory?.type === EventWorkCategory.LARGE) {
+        const item = mediumOptions.find(
+          (item) => item.value === detailCategory?.id,
+        );
+        item && handleSelectMedium(item);
+        setTotalDurationTask(detailCategory.totalDuration);
+        if (String(detailCategory?.id) == '未設定') {
+          handleSelectMedium({
+            label: '未設定',
+            value: '未設定',
+          });
+        }
+      }
+      if (detailCategory?.type === EventWorkCategory.MEDIUM) {
+        const item = smallOptions.find(
+          (item) => item.value === detailCategory?.id,
+        );
+        item && handleSelectSmall(item);
+        setTotalDurationTask(detailCategory.totalDuration);
+        if (String(detailCategory?.id) == '未設定') {
+          handleSelectSmall({
+            label: '未設定',
+            value: '未設定',
+          });
+        }
+      }
+      if (detailCategory?.type === EventWorkCategory.SMALL) {
+        const item = smallOptions.find(
+          (item) => item.value === detailCategory?.id,
+        );
+        item && handleSelectSmall(item);
+        if (String(detailCategory?.id) == '未設定') {
+          handleSelectSmall({
+            label: '未設定',
+            value: '未設定',
+          });
+        }
+      }
+
+      const element = document.getElementById('task-list-statistic');
+      setIsShowModal(false);
+      setDetailCategory(null);
+
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    };
 
     return (
       <>
@@ -402,20 +515,68 @@ const AllocationTeamCategoryCompare = memo(
                         selectedOption={selectedOrganization || undefined}
                         onChange={(data) => handleSelectOrganization(data)}
                       />
-                      <p className="text-sm text-black my-[26px]">
-                        合計{' '}
-                        {totalDurationLarge &&
-                          formatTimeToJapanese(totalDurationLarge)}
-                      </p>
 
-                      {isLoadingOrganization ? (
-                        <div className="flex flex-col gap-8">
+                      {isLoadingOrganization || isLoadingOrganizationCompare ? (
+                        <div className="flex flex-col gap-8 mt-5">
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
                       ) : (
                         <div className="flex flex-col gap-4">
+                          <div className="mt-8 my-4">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-[6px]">
+                                <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                                  基準
+                                </p>
+                                <div className="text-black text-xs font-normal flex items-center gap-[2px]">
+                                  <p>
+                                    {startDate &&
+                                      formatShowStatisticTask(startDate)}
+                                  </p>
+                                  ~
+                                  <p>
+                                    {endDate &&
+                                      formatShowStatisticTask(endDate)}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="font-medium text-sm">
+                                合計
+                                {totalDurationLarge &&
+                                progressDataLarge.length > 0
+                                  ? formatTimeToJapanese(totalDurationLarge)
+                                  : '-'}
+                              </div>
+                            </div>
+                            <div
+                              className={`mt-[10px] flex justify-between items-center`}>
+                              <div className="flex items-center gap-[6px]">
+                                <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                                  比較
+                                </p>
+                                <div className="text-black text-xs font-normal flex items-center gap-[2px]">
+                                  <p>
+                                    {startDateCompare &&
+                                      formatShowStatisticTask(startDateCompare)}
+                                  </p>
+                                  ~
+                                  <p>
+                                    {endDateCompare &&
+                                      formatShowStatisticTask(endDateCompare)}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="font-medium text-sm">
+                                合計
+                                {totalDurationLargeCompare &&
+                                  formatTimeToJapanese(
+                                    totalDurationLargeCompare,
+                                  )}
+                              </div>
+                            </div>
+                          </div>
                           {progressDataLarge.length > 0 &&
                             progressDataLarge.map((item, index) => (
                               <ProgressBarTeamStatisticCompare
@@ -425,7 +586,25 @@ const AllocationTeamCategoryCompare = memo(
                                 startDateCompare={startDateCompare}
                                 endDateCompare={endDateCompare}
                                 classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={() => {}}
+                                handleClickTooltip={({
+                                  userId,
+                                  categoryId,
+                                  duration,
+                                  isCompare,
+                                }: {
+                                  userId: number;
+                                  categoryId: number;
+                                  duration: string;
+                                  isCompare?: boolean;
+                                }) => {
+                                  handleClickTooltip({
+                                    id: categoryId,
+                                    userId,
+                                    duration,
+                                    type: EventWorkCategory.ALL,
+                                    isCompare,
+                                  });
+                                }}
                                 handleClickChart={(
                                   data: OptionDropdownType,
                                 ) => {
@@ -476,47 +655,122 @@ const AllocationTeamCategoryCompare = memo(
                         onChange={(data) => handleSelectLarge(data)}
                         disabled={!selectedOrganization}
                       />
-                      <p className="text-sm text-black my-[26px]">
-                        合計{' '}
-                        {totalDurationMedium &&
-                          formatTimeToJapanese(totalDurationMedium)}
-                      </p>
-                      {isLoadingLarge ? (
-                        <div className="flex flex-col gap-8">
+
+                      {isLoadingLarge || isLoadingLargeCompare ? (
+                        <div className="flex flex-col gap-8 mt-5">
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
                       ) : (
                         <div className="flex flex-col gap-4">
+                          <div className="mt-8 my-4">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-[6px]">
+                                <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                                  基準
+                                </p>
+                                <div className="text-black text-xs font-normal flex items-center gap-[2px]">
+                                  <p>
+                                    {startDate &&
+                                      formatShowStatisticTask(startDate)}
+                                  </p>
+                                  ~
+                                  <p>
+                                    {endDate &&
+                                      formatShowStatisticTask(endDate)}
+                                  </p>
+                                </div>
+                              </div>
+                              {progressDataMedium.length > 0 ? (
+                                <div className="font-medium text-sm">
+                                  合計
+                                  {totalDurationMedium &&
+                                    formatTimeToJapanese(totalDurationMedium)}
+                                </div>
+                              ) : (
+                                <div>-</div>
+                              )}
+                            </div>
+                            <div
+                              className={`mt-[10px] flex justify-between items-center`}>
+                              <div className="flex items-center gap-[6px]">
+                                <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                                  比較
+                                </p>
+                                <div className="text-black text-xs font-normal flex items-center gap-[2px]">
+                                  <p>
+                                    {startDateCompare &&
+                                      formatShowStatisticTask(startDateCompare)}
+                                  </p>
+                                  ~
+                                  <p>
+                                    {endDateCompare &&
+                                      formatShowStatisticTask(endDateCompare)}
+                                  </p>
+                                </div>
+                              </div>
+                              {progressDataMedium.length > 0 ? (
+                                <div className="font-medium text-sm">
+                                  合計
+                                  {totalDurationMediumCompare &&
+                                    formatTimeToJapanese(
+                                      totalDurationMediumCompare,
+                                    )}
+                                </div>
+                              ) : (
+                                <div>-</div>
+                              )}
+                            </div>
+                          </div>
                           {progressDataMedium.length > 0 &&
                             progressDataMedium.map((item, index) => (
-                              <ProgressBarTeamStatisticCompare
-                                key={index}
-                                startDate={startDate}
-                                endDate={endDate}
-                                startDateCompare={startDateCompare}
-                                endDateCompare={endDateCompare}
-                                classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={() => {}}
-                                handleClickChart={(
-                                  data: OptionDropdownType,
-                                ) => {
-                                  if (
-                                    data.value &&
-                                    data.value != selectedMedium?.value
-                                  ) {
-                                    const select = mediumOptions.find(
-                                      (item) => item.value === data.value,
-                                    );
+                              <>
+                                <ProgressBarTeamStatisticCompare
+                                  key={index}
+                                  startDate={startDate}
+                                  endDate={endDate}
+                                  startDateCompare={startDateCompare}
+                                  endDateCompare={endDateCompare}
+                                  classProgressClass="h-[20px] rounded-[4px]"
+                                  handleClickTooltip={({
+                                    userId,
+                                    categoryId,
+                                    duration,
+                                    isCompare,
+                                  }: {
+                                    userId: number;
+                                    categoryId: number;
+                                    duration: string;
+                                    isCompare?: boolean;
+                                  }) => {
+                                    handleClickTooltip({
+                                      id: categoryId,
+                                      userId,
+                                      duration,
+                                      type: EventWorkCategory.LARGE,
+                                      isCompare,
+                                    });
+                                  }}
+                                  handleClickChart={(
+                                    data: OptionDropdownType,
+                                  ) => {
+                                    if (
+                                      data.value &&
+                                      data.value != selectedMedium?.value
+                                    ) {
+                                      const select = mediumOptions.find(
+                                        (item) => item.value === data.value,
+                                      );
 
-                                    if (select) {
-                                      handleSelectMedium(select);
+                                      if (select) {
+                                        handleSelectMedium(select);
+                                      }
                                     }
-                                  }
-                                }}
-                                {...item}
-                              />
+                                  }}
+                                  {...item}
+                                />
+                              </>
                             ))}
                         </div>
                       )}
@@ -549,19 +803,74 @@ const AllocationTeamCategoryCompare = memo(
                         onChange={(data) => handleSelectMedium(data)}
                         disabled={!selectedLarge}
                       />
-                      <p className="text-sm text-black my-[26px]">
-                        合計{' '}
-                        {totalDurationSmall &&
-                          formatTimeToJapanese(totalDurationSmall)}
-                      </p>
-                      {isLoadingMedium ? (
-                        <div className="flex flex-col gap-8">
+
+                      {isLoadingMedium || isLoadingMediumCompare ? (
+                        <div className="flex flex-col gap-8 mt-5">
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
                       ) : (
                         <div className="flex flex-col gap-4">
+                          <div className="mt-8 my-4">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-[6px]">
+                                <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                                  基準
+                                </p>
+                                <div className="text-black text-xs font-normal flex items-center gap-[2px]">
+                                  <p>
+                                    {startDate &&
+                                      formatShowStatisticTask(startDate)}
+                                  </p>
+                                  ~
+                                  <p>
+                                    {endDate &&
+                                      formatShowStatisticTask(endDate)}
+                                  </p>
+                                </div>
+                              </div>
+                              {progressDataSmall.length > 0 ? (
+                                <div className="font-medium text-sm">
+                                  合計
+                                  {totalDurationSmall &&
+                                    formatTimeToJapanese(totalDurationSmall)}
+                                </div>
+                              ) : (
+                                <div>-</div>
+                              )}
+                            </div>
+                            <div
+                              className={`mt-[10px] flex justify-between items-center`}>
+                              <div className="flex items-center gap-[6px]">
+                                <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                                  比較
+                                </p>
+                                <div className="text-black text-xs font-normal flex items-center gap-[2px]">
+                                  <p>
+                                    {startDateCompare &&
+                                      formatShowStatisticTask(startDateCompare)}
+                                  </p>
+                                  ~
+                                  <p>
+                                    {endDateCompare &&
+                                      formatShowStatisticTask(endDateCompare)}
+                                  </p>
+                                </div>
+                              </div>
+                              {progressDataSmall.length > 0 ? (
+                                <div className="font-medium text-sm">
+                                  合計
+                                  {totalDurationSmallCompare &&
+                                    formatTimeToJapanese(
+                                      totalDurationSmallCompare,
+                                    )}
+                                </div>
+                              ) : (
+                                <div>-</div>
+                              )}
+                            </div>
+                          </div>
                           {progressDataSmall.length > 0 &&
                             progressDataSmall.map((item, index) => (
                               <ProgressBarTeamStatisticCompare
@@ -571,7 +880,25 @@ const AllocationTeamCategoryCompare = memo(
                                 startDateCompare={startDateCompare}
                                 endDateCompare={endDateCompare}
                                 classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={() => {}}
+                                handleClickTooltip={({
+                                  userId,
+                                  categoryId,
+                                  duration,
+                                  isCompare,
+                                }: {
+                                  userId: number;
+                                  categoryId: number;
+                                  duration: string;
+                                  isCompare?: boolean;
+                                }) => {
+                                  handleClickTooltip({
+                                    id: categoryId,
+                                    userId,
+                                    duration,
+                                    type: EventWorkCategory.MEDIUM,
+                                    isCompare,
+                                  });
+                                }}
                                 {...item}
                               />
                             ))}
@@ -584,6 +911,33 @@ const AllocationTeamCategoryCompare = memo(
             </>
           )}
         </div>
+        {isShowModal && (
+          <ListTaskDetailStatisticModal
+            open={isShowModal}
+            selectedTags={
+              orderingOptions && orderingOptions?.tag_ids.length > 0
+                ? orderingOptions?.tag_ids
+                : []
+            }
+            selectedLarge={selectedLarge}
+            selectedMedium={selectedMedium}
+            selectedSmall={selectedSmall}
+            startDate={isModalCompare ? startDateCompare : startDate}
+            endDate={isModalCompare ? endDateCompare : endDate}
+            statisticCategoryList={
+              isModalCompare
+                ? statisticCategoryListTeamCompare
+                : statisticTeamCategoryList
+            }
+            detailCategory={detailCategory}
+            selectedOrganization={selectedOrganization}
+            onClose={() => {
+              setIsShowModal(false);
+              setDetailCategory(null);
+            }}
+            handleScroll={handleScroll}
+          />
+        )}
       </>
     );
   },

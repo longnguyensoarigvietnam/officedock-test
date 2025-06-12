@@ -6,17 +6,20 @@ import { SkeletonElement } from '@components/common/SkeletonLoading';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 
-import { StatisticsCategories } from '@interfaces/statistic';
+import {
+  StatisticCategoryInfo,
+  StatisticsCategories,
+  UserListStatisticType,
+} from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
 import { formatTimeToJapanese } from '@utils/date';
-import { getRandomColor, lightenColor } from '@utils';
+import { lightenColor } from '@utils';
 
 import { EventWorkCategory } from '@constants/enums';
 
-import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
-
-import ProgressBarStatistic from './ProgressBarStatistic';
+import ProgressBarTeamTagStatistic from './ProgressBarTeamTagStatistic';
+import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 
 type Props = {
   startDate: Date;
@@ -35,10 +38,63 @@ type ProgressDataType = {
   value: number;
   color: string;
   duration: string;
-  optionData: string[];
+  optionData: UserListStatisticType[];
+  mergedItems?: ProgressDataType[];
 };
+export function transformStatisticCategoryInfoToProgressData({
+  data,
+  mergeLabel = 'その他',
+  mergeColor = '#83919E',
+  threshold = 10,
+}: {
+  data: StatisticCategoryInfo[];
+  mergeLabel?: string;
+  mergeColor?: string;
+  threshold?: number;
+}): {
+  finalData: ProgressDataType[];
+  mergedItem?: ProgressDataType;
+} {
+  const progressData: ProgressDataType[] = data.map((item) => ({
+    id: item.tagId as number,
+    label: item.tagName || '',
+    value: item.percent,
+    color: lightenColor('#2E9267' as string, item.percent) || '',
+    duration: item.duration,
+    optionData: item.users || [],
+  }));
 
-const AllocationTag = memo(
+  const mergedItems = progressData.filter((item) => item.value < threshold);
+  const mainItems = progressData.filter((item) => item.value >= threshold);
+
+  if (mergedItems.length === 0) {
+    return {
+      finalData: mainItems,
+    };
+  }
+
+  const totalMergedPercent = mergedItems.reduce(
+    (sum, item) => sum + item.value,
+    0,
+  );
+
+  const mergedItem: ProgressDataType = {
+    id: -1,
+    label: mergeLabel,
+    value: totalMergedPercent,
+    color: mergeColor,
+    duration: '',
+    optionData: mergedItems.flatMap((item) => item.optionData),
+    mergedItems,
+  };
+
+  return {
+    finalData: [...mainItems, mergedItem],
+    mergedItem,
+  };
+}
+
+const AllocationTeamTag = memo(
   ({
     startDate,
     endDate,
@@ -53,6 +109,7 @@ const AllocationTag = memo(
     const [isShowModal, setIsShowModal] = useState(false);
     const [detailCategory, setDetailCategory] = useState<{
       id: number | null;
+      userId: number;
       type: string;
       totalDuration: string;
     } | null>(null);
@@ -89,111 +146,66 @@ const AllocationTag = memo(
       isLoadingMedium,
       isLoadingOrganization,
       isLoadingSmall,
-    } = useContext(StatisticTagStateContext);
+    } = useContext(StatisticTeamTagsStateContext);
 
     useEffect(() => {
       if (statisticTagsList) {
         if (statisticTagsList.largeCategories) {
-          const listDataLarge = statisticTagsList.largeCategories.map(
-            (item) => ({
-              id: item.tagId as number,
-              label: item.tagName as string,
-              value: item.percent,
-              color:
-                lightenColor('#2E9267' as string, item.percent) ||
-                getRandomColor(),
-              duration: item.duration,
-              optionData: item.tasks.slice(0, 3).map((task) => task.title),
-            }),
-          );
-          setProgressDataLarge(listDataLarge);
+          const { finalData } = transformStatisticCategoryInfoToProgressData({
+            data: statisticTagsList.largeCategories,
+          });
+          setProgressDataLarge(finalData);
         } else {
           setProgressDataLarge([]);
         }
         if (statisticTagsList.mediumCategories) {
-          const listDataMedium = statisticTagsList.mediumCategories.map(
-            (item) => ({
-              id: item.tagId as number,
-              label: item.tagName as string,
-              value: item.percent,
-              color:
-                lightenColor('#2E9267' as string, item.percent) ||
-                getRandomColor(),
-              duration: item.duration,
-              optionData: item.tasks.slice(0, 3).map((task) => task.title),
-            }),
-          );
-          setProgressDataMedium(listDataMedium);
+          const { finalData } = transformStatisticCategoryInfoToProgressData({
+            data: statisticTagsList.mediumCategories,
+          });
+          setProgressDataMedium(finalData);
         } else {
           setProgressDataMedium([]);
         }
         if (statisticTagsList.smallCategories) {
-          const listDataSmall = statisticTagsList.smallCategories.map(
-            (item) => ({
-              id: item.tagId as number,
-              label: item.tagName as string,
-              value: item.percent,
-              color:
-                lightenColor('#2E9267' as string, item.percent) ||
-                getRandomColor(),
-              duration: item.duration,
-              optionData: item.tasks.slice(0, 3).map((task) => task.title),
-            }),
-          );
-
-          setProgressDataSmall(listDataSmall);
+          const { finalData } = transformStatisticCategoryInfoToProgressData({
+            data: statisticTagsList.smallCategories,
+          });
+          setProgressDataSmall(finalData);
         } else {
           setProgressDataSmall([]);
         }
         if (statisticTagsList.category) {
-          const listDataCategory = statisticTagsList.category.map((item) => ({
-            id: item.tagId as number,
-            label: item.tagName as string,
-            value: item.percent,
-            color:
-              lightenColor('#2E9267' as string, item.percent) ||
-              getRandomColor(),
-            duration: item.duration,
-            optionData: item.tasks.slice(0, 3).map((task) => task.title),
-          }));
-
-          setProgressDataCategory(listDataCategory);
+          const { finalData } = transformStatisticCategoryInfoToProgressData({
+            data: statisticTagsList.category,
+          });
+          setProgressDataCategory(finalData);
         } else {
           setProgressDataCategory([]);
         }
       }
     }, [statisticTagsList]);
 
-    const handleClickTooltip = (id: number | null, type: string) => {
-      let duration: string = '00:00:00';
-      if (type === EventWorkCategory.ALL) {
-        duration =
-          statisticTagsList?.largeCategories.find((item) => item.tagId == id)
-            ?.duration || '00:00:00';
-      }
-
-      if (type === EventWorkCategory.LARGE) {
-        duration =
-          statisticTagsList?.mediumCategories?.find((item) => item.tagId == id)
-            ?.duration || '00:00:00';
-      }
-      if (type === EventWorkCategory.MEDIUM) {
-        duration =
-          statisticTagsList?.smallCategories?.find((item) => item.tagId == id)
-            ?.duration || '00:00:00';
-      }
-      if (type === EventWorkCategory.SMALL) {
-        duration =
-          statisticTagsList?.category?.find((item) => item.tagId == id)
-            ?.duration || '00:00:00';
-      }
+    const handleClickTooltip = ({
+      id,
+      userId,
+      duration,
+      type,
+    }: {
+      id: number;
+      userId: number;
+      duration: string;
+      type: string;
+    }) => {
       setDetailCategory({
         id: id,
+        userId: userId,
         type: type,
         totalDuration: duration,
       });
 
-      setIsShowModal(true);
+      setTimeout(() => {
+        setIsShowModal(true);
+      }, 1000);
     };
 
     const handleScroll = () => {
@@ -316,7 +328,7 @@ const AllocationTag = memo(
                       </p>
 
                       {isLoadingOrganization ? (
-                        <div className="flex flex-col gap-8">
+                        <div className="flex flex-col gap-8 mt-3">
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
@@ -325,11 +337,24 @@ const AllocationTag = memo(
                         <div className="flex flex-col gap-4">
                           {progressDataLarge.length > 0 &&
                             progressDataLarge.map((item, index) => (
-                              <ProgressBarStatistic
+                              <ProgressBarTeamTagStatistic
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={(id: number | null) => {
-                                  handleClickTooltip(id, EventWorkCategory.ALL);
+                                handleClickTooltip={({
+                                  userId,
+                                  tagId,
+                                  duration,
+                                }: {
+                                  userId: number;
+                                  tagId: number;
+                                  duration: string;
+                                }) => {
+                                  handleClickTooltip({
+                                    id: tagId,
+                                    userId,
+                                    duration,
+                                    type: EventWorkCategory.ALL,
+                                  });
                                 }}
                                 handleClickChart={(
                                   _data: OptionDropdownType,
@@ -363,13 +388,15 @@ const AllocationTag = memo(
                         onChange={(data) => handleSelectLarge(data)}
                         disabled={!selectedOrganization}
                       />
-                      <p className="text-sm text-black my-[26px]">
-                        合計{' '}
-                        {totalDurationMedium &&
-                          formatTimeToJapanese(totalDurationMedium)}
-                      </p>
+                      {progressDataMedium.length > 0 && (
+                        <p className="text-sm text-black my-[26px]">
+                          合計{' '}
+                          {totalDurationMedium &&
+                            formatTimeToJapanese(totalDurationMedium)}
+                        </p>
+                      )}
                       {isLoadingLarge ? (
-                        <div className="flex flex-col gap-8">
+                        <div className="flex flex-col gap-8 mt-3">
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
@@ -378,14 +405,24 @@ const AllocationTag = memo(
                         <div className="flex flex-col gap-4">
                           {progressDataMedium.length > 0 &&
                             progressDataMedium.map((item, index) => (
-                              <ProgressBarStatistic
+                              <ProgressBarTeamTagStatistic
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={(id: number | null) => {
-                                  handleClickTooltip(
-                                    id,
-                                    EventWorkCategory.LARGE,
-                                  );
+                                handleClickTooltip={({
+                                  userId,
+                                  tagId,
+                                  duration,
+                                }: {
+                                  userId: number;
+                                  tagId: number;
+                                  duration: string;
+                                }) => {
+                                  handleClickTooltip({
+                                    id: tagId,
+                                    userId,
+                                    duration,
+                                    type: EventWorkCategory.LARGE,
+                                  });
                                 }}
                                 handleClickChart={(
                                   _data: OptionDropdownType,
@@ -419,13 +456,15 @@ const AllocationTag = memo(
                         onChange={(data) => handleSelectMedium(data)}
                         disabled={!selectedLarge}
                       />
-                      <p className="text-sm text-black my-[26px]">
-                        合計{' '}
-                        {totalDurationSmall &&
-                          formatTimeToJapanese(totalDurationSmall)}
-                      </p>
+                      {progressDataSmall.length > 0 && (
+                        <p className="text-sm text-black my-[26px]">
+                          合計{' '}
+                          {totalDurationSmall &&
+                            formatTimeToJapanese(totalDurationSmall)}
+                        </p>
+                      )}
                       {isLoadingMedium ? (
-                        <div className="flex flex-col gap-8">
+                        <div className="flex flex-col gap-8 mt-3">
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
@@ -434,14 +473,24 @@ const AllocationTag = memo(
                         <div className="flex flex-col gap-4">
                           {progressDataSmall.length > 0 &&
                             progressDataSmall.map((item, index) => (
-                              <ProgressBarStatistic
+                              <ProgressBarTeamTagStatistic
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={(id: number | null) => {
-                                  handleClickTooltip(
-                                    id,
-                                    EventWorkCategory.MEDIUM,
-                                  );
+                                handleClickTooltip={({
+                                  userId,
+                                  tagId,
+                                  duration,
+                                }: {
+                                  userId: number;
+                                  tagId: number;
+                                  duration: string;
+                                }) => {
+                                  handleClickTooltip({
+                                    id: tagId,
+                                    userId,
+                                    duration,
+                                    type: EventWorkCategory.MEDIUM,
+                                  });
                                 }}
                                 {...item}
                               />
@@ -472,13 +521,15 @@ const AllocationTag = memo(
                         onChange={(data) => handleSelectSmall(data)}
                         disabled={!selectedMedium}
                       />
-                      <p className="text-sm text-black my-[26px]">
-                        合計{' '}
-                        {totalDurationCategory &&
-                          formatTimeToJapanese(totalDurationCategory)}
-                      </p>
+                      {progressDataCategory.length > 0 && (
+                        <p className="text-sm text-black my-[26px]">
+                          合計{' '}
+                          {totalDurationCategory &&
+                            formatTimeToJapanese(totalDurationCategory)}
+                        </p>
+                      )}
                       {isLoadingSmall ? (
-                        <div className="flex flex-col gap-8">
+                        <div className="flex flex-col gap-8 mt-3">
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
@@ -487,14 +538,24 @@ const AllocationTag = memo(
                         <div className="flex flex-col gap-4">
                           {progressDataCategory.length > 0 &&
                             progressDataCategory.map((item, index) => (
-                              <ProgressBarStatistic
+                              <ProgressBarTeamTagStatistic
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={(id: number | null) => {
-                                  handleClickTooltip(
-                                    id,
-                                    EventWorkCategory.SMALL,
-                                  );
+                                handleClickTooltip={({
+                                  userId,
+                                  tagId,
+                                  duration,
+                                }: {
+                                  userId: number;
+                                  tagId: number;
+                                  duration: string;
+                                }) => {
+                                  handleClickTooltip({
+                                    id: tagId,
+                                    userId,
+                                    duration,
+                                    type: EventWorkCategory.SMALL,
+                                  });
                                 }}
                                 {...item}
                               />
@@ -530,4 +591,4 @@ const AllocationTag = memo(
   },
 );
 
-export default AllocationTag;
+export default AllocationTeamTag;
