@@ -394,7 +394,7 @@ const ActionsEventModal = ({
             }
           : {
               label: `${dataEvent.repeatInterval}`,
-              value: dataEvent.repeatInterval as string,
+              value: dataEvent.repeatInterval as number,
             }
         : undefined;
       value.repeatType = dataEvent.repeatType

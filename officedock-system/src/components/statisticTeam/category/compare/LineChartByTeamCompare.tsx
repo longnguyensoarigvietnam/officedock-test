@@ -67,6 +67,7 @@ import {
   getCategoryFormattedDate,
   getJapaneseDayName,
   subtractDurations,
+  totalDurationsForStatistic,
 } from '@utils/date';
 import {
   createStyledAvatarWithMargin,
@@ -168,8 +169,6 @@ const LineChartByTeamCompare = ({
 }: Props) => {
   // Context
   const {
-    totalDurationTask,
-    totalDurationTaskCompare,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -208,7 +207,7 @@ const LineChartByTeamCompare = ({
     smallCategoryId: selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
     selectedOrganization: `${selectedOrganization?.value}`,
-    tagIds: orderingOptions?.tag_ids || []
+    tagIds: orderingOptions?.tag_ids || [],
   });
   // Compare filter options
   const [compareFilter, setCompareFilter] = useState({
@@ -220,7 +219,7 @@ const LineChartByTeamCompare = ({
     smallCategoryId: selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
     selectedOrganization: `${selectedOrganization?.value}`,
-    tagIds: orderingOptions?.tag_ids || []
+    tagIds: orderingOptions?.tag_ids || [],
   });
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const [memberOptions, setMemberOptions] = useState<
@@ -267,6 +266,8 @@ const LineChartByTeamCompare = ({
   });
   const [standardDateLabels, setStandardDateLabels] = useState<string[]>([]);
   const [compareDateLabels, setCompareDateLabels] = useState<string[]>([]);
+  const [totalStandardDuration, setTotalStandardDuration] = useState<string>('00:00:00')
+  const [totalCompareDuration, setTotalCompareDuration] = useState<string>('00:00:00')
 
   // Collapse statuses
   const [categoryCollapseStatuses, setCategoryCollapseStatuses] = useState<
@@ -451,7 +452,7 @@ const LineChartByTeamCompare = ({
       smallCategoryId: selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
-      tagIds: orderingOptions?.tag_ids || []
+      tagIds: orderingOptions?.tag_ids || [],
     });
     setCompareFilter({
       fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
@@ -462,7 +463,7 @@ const LineChartByTeamCompare = ({
       smallCategoryId: selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
-      tagIds: orderingOptions?.tag_ids || []
+      tagIds: orderingOptions?.tag_ids || [],
     });
   }, [
     startDate,
@@ -475,7 +476,7 @@ const LineChartByTeamCompare = ({
     selectedLarge?.value,
     selectedMedium?.value,
     selectedSmall?.value,
-    orderingOptions
+    orderingOptions,
   ]);
 
   useEffect(() => {
@@ -777,9 +778,7 @@ const LineChartByTeamCompare = ({
   useEffect(() => {
     if (
       statisticUserTaskDurationsList &&
-      statisticUserTaskDurationsList?.length > 0 &&
-      statisticUserTaskDurationsCompareList &&
-      statisticUserTaskDurationsCompareList?.length > 0
+      statisticUserTaskDurationsList?.length > 0
     ) {
       const loadImages = async () => {
         const createAvatarImage = async (user: {
@@ -801,27 +800,19 @@ const LineChartByTeamCompare = ({
           return await createStyledAvatarWithMargin(avatarUrl, 24, 30);
         };
 
-        const standardImagePromises = statisticUserTaskDurationsList.map(
-          (item) => createAvatarImage(item.user),
+        const imagePromises = statisticUserTaskDurationsList.map((item) =>
+          createAvatarImage(item.user),
         );
 
-        const compareImagePromises = statisticUserTaskDurationsCompareList.map(
-          (item) => createAvatarImage(item.user),
-        );
-
-        const [standardLoadedImages, compareLoadedImages] = await Promise.all([
-          Promise.all(standardImagePromises),
-          Promise.all(compareImagePromises),
-        ]);
-
-        setImages([...standardLoadedImages, ...compareLoadedImages]);
+        const loadedImages = await Promise.all(imagePromises);
+        setImages(loadedImages);
       };
 
       loadImages();
     } else {
       setImages([]);
     }
-  }, [statisticUserTaskDurationsList, statisticUserTaskDurationsCompareList]);
+  }, [statisticUserTaskDurationsList]);
 
   // Get point style for line chart
   const getPointStyle = (context: any): (CanvasImageSource | string)[] => {
@@ -851,6 +842,8 @@ const LineChartByTeamCompare = ({
       const standardDateLabels: string[] = [];
       const compareDateLabels: string[] = [];
       const datasets: any[] = [];
+      const totalStandardDurationList: string[] = []
+      const totalCompareDurationList: string[] = []
 
       const standardDurationList =
         statisticUserTaskDurationsList[0]?.durations ?? [];
@@ -949,6 +942,9 @@ const LineChartByTeamCompare = ({
         const compareUser = statisticUserTaskDurationsCompareList.find(
           (c) => c.user.id == userTaskDuration.user.id,
         );
+
+        totalStandardDurationList.push(userTaskDuration.totalDuration)
+
         datasets.push({
           label: userTaskDuration.user.fullName,
           data: generateDataWithAlignment(
@@ -979,6 +975,7 @@ const LineChartByTeamCompare = ({
         const standardUser = statisticUserTaskDurationsList.find(
           (c) => c.user.id == userTaskDuration.user.id,
         );
+        totalCompareDurationList.push(userTaskDuration.totalDuration)
         datasets.push({
           label: userTaskDuration.user.fullName,
           data: generateDataWithAlignment(
@@ -1010,6 +1007,8 @@ const LineChartByTeamCompare = ({
       });
       setStandardLegendList(standardLabels);
       setCompareLegendList(comparedLabels);
+      setTotalStandardDuration(totalDurationsForStatistic(totalStandardDurationList))
+      setTotalCompareDuration(totalDurationsForStatistic(totalCompareDurationList))
     } else {
       setStandardDateLabels([]);
       setCompareDateLabels([]);
@@ -1019,6 +1018,8 @@ const LineChartByTeamCompare = ({
       });
       setStandardLegendList([]);
       setCompareLegendList([]);
+      setTotalStandardDuration('00:00:00')
+      setTotalCompareDuration('00:00:00')
     }
   }, [
     statisticUserTaskDurationsList,
@@ -1792,8 +1793,8 @@ const LineChartByTeamCompare = ({
                       </p>
                     </div>
                     <p className="font-medium text-[16px]">
-                      合計 {totalDurationTask?.split(':')[0] || '00'}時間
-                      {totalDurationTask?.split(':')[1] || '00'}分
+                      合計 {totalStandardDuration?.split(':')[0] || '00'}時間
+                      {totalStandardDuration?.split(':')[1] || '00'}分
                     </p>
                   </div>
                 )}
@@ -1816,8 +1817,8 @@ const LineChartByTeamCompare = ({
                       </p>
                     </div>
                     <p className="font-medium text-[16px]">
-                      合計 {totalDurationTaskCompare?.split(':')[0] || '00'}時間
-                      {totalDurationTaskCompare?.split(':')[1] || '00'}分
+                      合計 {totalCompareDuration?.split(':')[0] || '00'}時間
+                      {totalCompareDuration?.split(':')[1] || '00'}分
                     </p>
                   </div>
                 )}
