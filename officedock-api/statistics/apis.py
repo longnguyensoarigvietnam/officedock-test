@@ -155,13 +155,13 @@ class StatisticViewSet(BaseAPIViewSet):
                 Q(task_durations__user=user)
                 & Q(
                     Q(
-                        Q(started_at__gte=start_of_day)
-                        & Q(paused_at__lte=end_of_day)
+                        Q(task_durations__started_at__gte=start_of_day)
+                        & Q(task_durations__paused_at__lte=end_of_day)
                     )
                     | Q(
-                        Q(started_at__lte=end_of_day)
-                        & Q(started_at__gte=start_of_day)
-                        & Q(paused_at__isnull=True)
+                        Q(task_durations__started_at__lte=end_of_day)
+                        & Q(task_durations__started_at__gte=start_of_day)
+                        & Q(task_durations__paused_at__isnull=True)
                     )
                 )
             )
@@ -192,13 +192,13 @@ class StatisticViewSet(BaseAPIViewSet):
                 Q(task_durations__user=user)
                 & Q(
                     Q(
-                        Q(started_at__gte=start_of_day)
-                        & Q(paused_at__lte=end_of_day)
+                        Q(task_durations__started_at__gte=start_of_day)
+                        & Q(task_durations__paused_at__lte=end_of_day)
                     )
                     | Q(
-                        Q(started_at__lte=end_of_day)
-                        & Q(started_at__gte=start_of_day)
-                        & Q(paused_at__isnull=True)
+                        Q(task_durations__started_at__lte=end_of_day)
+                        & Q(task_durations__started_at__gte=start_of_day)
+                        & Q(task_durations__paused_at__isnull=True)
                     )
                 )
             )
