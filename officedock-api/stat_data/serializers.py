@@ -292,7 +292,7 @@ class StatisticTaskSerializer(DailyTaskSerializer):
         else:
             percent_per_total_duration = 0
 
-        return round(percent_per_total_duration)
+        return min(round(percent_per_total_duration), 100)
 
 
 class StatisticEventSerializer(DailyEventSerializer):
@@ -348,8 +348,7 @@ class StatisticEventSerializer(DailyEventSerializer):
             )
         else:
             percent_per_total_duration = 0
-
-        return round(percent_per_total_duration)
+        return min(round(percent_per_total_duration), 100)
 
 
 class BaseStatisticTaskSerializer(StatisticTaskSerializer):
