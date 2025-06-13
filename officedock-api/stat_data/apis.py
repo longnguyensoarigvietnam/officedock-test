@@ -393,7 +393,10 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                         Q(
                             Q(started_at__gte=start_of_day)
                             & Q(user=user)
-                            & Q(paused_at__lte=end_of_day)
+                            & Q(
+                                Q(paused_at__lte=end_of_day)
+                                | Q(paused_at__isnull=True)
+                            )
                         )
                     )
                     for duration in durations:

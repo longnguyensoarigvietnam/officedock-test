@@ -51,7 +51,6 @@ from stat_data.utils import (
     get_total_durations,
     get_duration_of_none_category,
     check_is_not_none_category,
-    get_list_id_category_of_organization,
     validate_date_by_regex_and_reformat,
     percentage_calculation_of_duration,
 )
@@ -140,12 +139,6 @@ class StatisticViewSet(BaseAPIViewSet):
         else:
             organization_ids = split_id_from_string(organization_ids_param)
 
-        (
-            large_category_ids,
-            medium_category_ids,
-            small_category_ids,
-        ) = get_list_id_category_of_organization(organization_ids)
-
         if tag_ids_param:
             tag_ids = split_id_from_string(tag_ids_param)
 
@@ -223,9 +216,6 @@ class StatisticViewSet(BaseAPIViewSet):
             large_category_id=large_category_id,
             medium_category_id=medium_category_id,
             small_category_id=small_category_id,
-            exists_large_category_ids=large_category_ids,
-            exists_medium_category_ids=medium_category_ids,
-            exists_small_category_ids=small_category_ids,
         )
         tasks = tasks.filter(filters)
         events = events.filter(filters)
@@ -346,11 +336,6 @@ class StatisticViewSet(BaseAPIViewSet):
         else:
             organization_ids = split_id_from_string(organization_ids_param)
 
-        (
-            large_category_ids,
-            medium_category_ids,
-            small_category_ids,
-        ) = get_list_id_category_of_organization(organization_ids)
         tag_ids = split_id_from_string(tag_ids_param)
 
         durations = get_list_durations_by_users(
@@ -365,9 +350,6 @@ class StatisticViewSet(BaseAPIViewSet):
             large_category_id=large_category_id,
             medium_category_id=medium_category_id,
             small_category_id=small_category_id,
-            exists_large_category_ids=large_category_ids,
-            exists_medium_category_ids=medium_category_ids,
-            exists_small_category_ids=small_category_ids,
         )
         tasks = tasks.filter(filters)
         events = events.filter(filters)
@@ -897,11 +879,6 @@ class StatisticViewSet(BaseAPIViewSet):
             )
         else:
             organization_ids = split_id_from_string(organization_ids_param)
-        (
-            large_category_ids,
-            medium_category_ids,
-            small_category_ids,
-        ) = get_list_id_category_of_organization(organization_ids)
         tag_ids = split_id_from_string(tag_ids_param)
 
         durations = get_list_durations_by_users(
@@ -916,9 +893,6 @@ class StatisticViewSet(BaseAPIViewSet):
             large_category_id=large_category_id,
             medium_category_id=medium_category_id,
             small_category_id=small_category_id,
-            exists_large_category_ids=large_category_ids,
-            exists_medium_category_ids=medium_category_ids,
-            exists_small_category_ids=small_category_ids,
         )
         tasks = tasks.filter(filters)
         events = events.filter(filters)

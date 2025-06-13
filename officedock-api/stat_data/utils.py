@@ -24,8 +24,7 @@ from common.utils import (
     time_str_to_timedelta,
 )
 from organizations.constants import CategoryColors
-from organizations.models import OrganizationsStatisticCategories, Organization
-from organizations.serializers import OrganizationDetailSerializer
+from organizations.models import OrganizationsStatisticCategories
 from stat_data.constants import NONE_CATEGORY, FilterTime
 from stat_data.serializers import (
     BaseStatisticTaskSerializer,
@@ -818,9 +817,6 @@ def build_category_filters(
     large_category_id=None,
     medium_category_id=None,
     small_category_id=None,
-    exists_large_category_ids=None,
-    exists_medium_category_ids=None,
-    exists_small_category_ids=None,
 ):
     """
     Handle build category filter
@@ -831,9 +827,7 @@ def build_category_filters(
     if large_category_id and large_category_id != NONE_CATEGORY:
         filters &= Q(categories__large_statistic_category__id=large_category_id)
     elif large_category_id == NONE_CATEGORY:
-        filters &= Q(categories__large_statistic_category__isnull=True) | ~Q(
-            categories__large_statistic_category__in=exists_large_category_ids
-        )
+        filters &= Q(categories__large_statistic_category__isnull=True)
 
     # Medium Category Filtering
     if medium_category_id and medium_category_id != NONE_CATEGORY:
@@ -841,17 +835,13 @@ def build_category_filters(
             categories__medium_statistic_category__id=medium_category_id
         )
     elif medium_category_id == NONE_CATEGORY:
-        filters &= Q(categories__medium_statistic_category__isnull=True) | ~Q(
-            categories__medium_statistic_category__in=exists_medium_category_ids
-        )
+        filters &= Q(categories__medium_statistic_category__isnull=True)
 
     # Small Category Filtering
     if small_category_id and small_category_id != NONE_CATEGORY:
         filters &= Q(categories__small_statistic_category__id=small_category_id)
     elif small_category_id == NONE_CATEGORY:
-        filters &= Q(categories__small_statistic_category__isnull=True) | ~Q(
-            categories__small_statistic_category__in=exists_small_category_ids
-        )
+        filters &= Q(categories__small_statistic_category__isnull=True)
 
     return filters
 
@@ -907,43 +897,6 @@ def check_is_not_none_category(large_id=None, medium_id=None, small_id=None):
         (large_id == NONE_CATEGORY)
         or (large_id and medium_id == NONE_CATEGORY)
         or (large_id and medium_id and small_id == NONE_CATEGORY)
-    )
-
-
-def get_list_id_category_of_organization(organization_ids):
-    """
-    Handle get list id category of organization
-    """
-    large_category_ids = []
-    medium_category_ids = []
-    small_category_ids = []
-    if organization := Organization.objects.filter(
-        id=organization_ids[0]
-    ).first():
-        organization_categories = OrganizationDetailSerializer(
-            organization
-        ).data["statistic_categories"]
-        if organization_categories:
-            large_category_ids = [
-                item["large_statistic_category"]["id"]
-                for item in organization_categories
-                if item["large_statistic_category"]
-            ]
-            medium_category_ids = [
-                item["medium_statistic_category"]["id"]
-                for item in organization_categories
-                if item["medium_statistic_category"]
-            ]
-            small_category_ids = [
-                item["small_statistic_category"]["id"]
-                for item in organization_categories
-                if item["small_statistic_category"]
-            ]
-
-    return (
-        set(large_category_ids),
-        set(medium_category_ids),
-        set(small_category_ids),
     )
 
 
