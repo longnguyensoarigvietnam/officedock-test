@@ -21,6 +21,7 @@ import LineChartByTeam from '@components/statisticTeam/category/LineChartByTeam'
 import LineChartByTeamCompare from '@components/statisticTeam/category/compare/LineChartByTeamCompare';
 import AllocationTeamCategoryCompare from '@components/statisticTeam/category/compare/AllocationTeamCategoryCompare';
 import AllocationTeamCategory from '@components/statisticTeam/category/AllocationTeamCategory';
+import StackedAreaTeamChart from '@components/statisticTeam/category/StackedAreaTeamChart';
 
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { pageRouters } from '@constants/routers';
@@ -826,6 +827,16 @@ const StatisticTeamBoard = () => {
           />
           {/* Line chart */}
           <LineChartByTeam
+            startDate={startDate}
+            endDate={endDate}
+            statisticTeamCategoryList={statisticCategoryListTeam}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            removeTag={removeTag}
+            removeUser={removeUser}
+          />
+          <StackedAreaTeamChart
             startDate={startDate}
             endDate={endDate}
             statisticTeamCategoryList={statisticCategoryListTeam}

@@ -1,24 +1,7 @@
-import React, {
-  Fragment,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
-import * as ReactDOM from 'react-dom/client';
+'use client';
+import React, { Fragment, useContext, useEffect, useState } from 'react';
+import Chart from 'react-apexcharts';
 import Image from 'next/image';
-import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-} from 'chart.js';
 import {
   ColumnDef,
   flexRender,
@@ -32,75 +15,42 @@ import {
   Transition,
 } from '@headlessui/react';
 
-import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
+import ImageRound from '@components/common/ImageRound';
 import { Table, TableBody } from '@components/common/Table';
-import RowSkeleton from '@components/skeleton/RowSkeleton';
-import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
-import { TeamDockLineChartTooltip } from '@components/tooltip/TeamDockLineChartTooltip';
 import RadioButton from '@components/common/RadioButton';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
-import CustomStatisticUserCheckbox from '@components/common/Checkbox/CustomStatisticUserCheckbox';
+import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
+import RowSkeleton from '@components/skeleton/RowSkeleton';
 
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
+import { SortingType, StatisticViewOptions } from '@constants/enums';
+import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
+import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
   StatisticCategoryInfo,
   StatisticsCategories,
 } from '@interfaces/statistic';
-
-import { SortingType, StatisticViewOptions } from '@constants/enums';
-import {
-  EVERYONE_OPTION_LABEL,
-  STATISTIC_CHART_VIEW_OPTIONS,
-} from '@constants';
-
+import { getLineChartEnableViews } from '@utils';
 import {
   convertDurationToTotalMinutes,
-  convertTimeToDecimal,
   convertToStatisticJapaneseLabels,
   formatDateToYMD,
 } from '@utils/date';
-import {
-  createStyledAvatarWithMargin,
-  getAvatarIconSvg,
-  getFileURL,
-  getLineChartEnableViews,
-  getRandomColor,
-  toRGBA,
-} from '@utils';
-
-import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
-import useDebounceText from '@hooks/useDebounceText';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-);
+import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
   removeTag: (selected: OptionDropdownType) => void;
   removeUser: (selected: OptionDropdownType) => void;
+
   statisticTeamCategoryList: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
 };
-
-interface TooltipDiv extends HTMLDivElement {
-  _reactRoot?: ReactDOM.Root;
-}
-
 interface TableRowDetail {
   categoryId: number;
   categoryName: string;
@@ -116,21 +66,56 @@ interface TableRowDetail {
   }[];
 }
 
-const LineChartByTeam = ({
+const buildTableDetail = (
+  categories: {
+    categoryId: number;
+    categoryName: string;
+    percent: number;
+    duration: string;
+    users?: {
+      user: {
+        id: number;
+        fullName: string;
+        avatar?: string | null;
+        avatarColor: string;
+      };
+      duration: string;
+      percent: number;
+    }[];
+  }[] = [],
+) =>
+  categories.map((category) => ({
+    categoryId: category.categoryId,
+    categoryName: category.categoryName,
+    categoryPercent: category.percent,
+    categoryDuration: category.duration,
+    userList:
+      category.users && category.users.length > 0
+        ? category.users.map((user) => {
+            return {
+              userId: user.user.id,
+              userName: user.user.fullName,
+              userAvatar: user.user.avatar,
+              userAvatarColor: user.user.avatarColor,
+              userDuration: user.duration,
+              userPercent: user.percent,
+            };
+          })
+        : [],
+  }));
+
+const StackedAreaTeamChart = ({
+  statisticTeamCategoryList,
   startDate,
   endDate,
   removeTag,
   removeUser,
-  statisticTeamCategoryList,
   handleSelectOrganization,
   handleSelectLarge,
   handleSelectMedium,
 }: Props) => {
   // Context
   const {
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
     totalDurationTask,
     listOptionsOrganization,
     largeOptions,
@@ -151,64 +136,28 @@ const LineChartByTeam = ({
     lineChartViewBy,
     setLineChartViewBy,
   } = useContext(StatisticTeamStateContext);
-  const { expanded } = useContext(GlobalStateContext);
 
-  // Selected members and category
-  const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
+  const selectedMemberList =
+    orderingOptions?.user_ids && orderingOptions.user_ids.length > 0
+      ? orderingOptions.user_ids.map((user) => user.value).join(',')
+      : listMemberTeam.map((user) => user.id).join(',');
+
   const [selectedCategory, setSelectedCategory] = useState<{
     id: number;
     name: string;
   } | null>(null);
-  // Filter options
-  const [filter, setFilter] = useState({
-    fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
-    endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-    userIds: selectedMembers?.filter(Boolean).join(','),
-    largeCategoryId: selectedLarge?.value,
-    mediumCategoryId: selectedMedium?.value,
-    smallCategoryId: selectedSmall?.value,
-    statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: `${selectedOrganization?.value}`,
-    tagIds: orderingOptions?.tag_ids || [],
-  });
+
+  const [isExtendData, setIsExtendData] = useState(true);
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
-  const [memberOptions, setMemberOptions] = useState<
-    {
-      id: number;
-      fullName: string;
-      color: string;
-      avatarUrl: string;
-    }[]
-  >([]);
+
+  // Sorting
+  const [percentageSortingStatus, setPercentageSortingStatus] =
+    useState<string>('');
+  const [durationSortingStatus, setDurationSortingStatus] =
+    useState<string>('');
 
   // Table data
   const [tableData, setTableData] = useState<TableRowDetail[]>([]);
-
-  // Chart
-  const chartRef = useRef<any>(null);
-  const [images, setImages] = useState<CanvasImageSource[]>([]);
-  const [legendList, setLegendList] = useState<
-    {
-      color: string;
-      name: string;
-    }[]
-  >([]);
-  const [lineChartData, setLineChartData] = useState<{
-    labels: string[];
-    datasets: {
-      label: string;
-      data: number[];
-      borderColor: string;
-      backgroundColor: string;
-      fill: boolean;
-      tension: number;
-      borderDash: any;
-    }[];
-  }>({
-    labels: [],
-    datasets: [],
-  });
-
   // Collapse statuses
   const [categoryCollapseStatuses, setCategoryCollapseStatuses] = useState<
     {
@@ -216,57 +165,20 @@ const LineChartByTeam = ({
       status: boolean;
     }[]
   >([]);
-  // Sorting
-  const [percentageSortingStatus, setPercentageSortingStatus] =
-    useState<string>('');
-  const [durationSortingStatus, setDurationSortingStatus] =
-    useState<string>('');
 
-  // Others
-  const [isExtendData, setIsExtendData] = useState(true);
-  const debouncedSelectedMembers = useDebounceText(
-    selectedMembers?.filter(Boolean).join(','),
-    1000,
-  );
-  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  // Filter options
+  const [filter, setFilter] = useState({
+    fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
+    endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
+    userIds: selectedMemberList,
 
-  const buildTableDetail = (
-    categories: {
-      categoryId: number;
-      categoryName: string;
-      percent: number;
-      duration: string;
-      users?: {
-        user: {
-          id: number;
-          fullName: string;
-          avatar?: string | null;
-          avatarColor: string;
-        };
-        duration: string;
-        percent: number;
-      }[];
-    }[] = [],
-  ) =>
-    categories.map((category) => ({
-      categoryId: category.categoryId,
-      categoryName: category.categoryName,
-      categoryPercent: category.percent,
-      categoryDuration: category.duration,
-      userList:
-        category.users && category.users.length > 0
-          ? category.users.map((user) => {
-              return {
-                userId: user.user.id,
-                userName: user.user.fullName,
-                userAvatar: user.user.avatar,
-                userAvatarColor: user.user.avatarColor,
-                userDuration: user.duration,
-                userPercent: user.percent,
-              };
-            })
-          : [],
-    }));
+    largeCategoryId: selectedLarge?.value,
+    mediumCategoryId: selectedMedium?.value,
+    smallCategoryId: selectedSmall?.value,
+    statisticBy: `${lineChartViewBy?.value}`,
+    selectedOrganization: `${selectedOrganization?.value}`,
+    tagIds: orderingOptions?.tag_ids || [],
+  });
 
   const handleCategorySelection = (
     categoryList: StatisticCategoryInfo[] | undefined,
@@ -286,7 +198,32 @@ const LineChartByTeam = ({
   const {
     statisticUserTaskDurationsList,
     isLoadingStatisticUserTaskDurationsList,
-  } = useStatisticUserTaskDurations({ filter });
+  } = useStatisticUserTaskDurations({
+    filter,
+  });
+
+  const [dataChart, setDataChart] = useState<
+    {
+      name: string;
+      data: number[];
+    }[]
+  >([]);
+
+  const getDisableViews = () => {
+    const allViews = [
+      StatisticViewOptions.DAY,
+      StatisticViewOptions.WEEK,
+      StatisticViewOptions.MONTH,
+    ];
+
+    const enabledViews = getLineChartEnableViews(startDate, endDate as Date);
+
+    return allViews.filter((view) => !enabledViews.includes(view));
+  };
+
+  const [timeRange, setTimeRange] = useState<string[]>([]);
+
+  const [colorList, setColorList] = useState<string[]>([]);
 
   // Get table info (statistic team categories)
   useEffect(() => {
@@ -327,37 +264,11 @@ const LineChartByTeam = ({
     selectedLarge,
     selectedMedium,
   ]);
-
-  // Get initial member options
-  useEffect(() => {
-    if (allLabelUser.length > 0) {
-      const allMembers = [
-        {
-          id: 0,
-          fullName: EVERYONE_OPTION_LABEL,
-          avatarUrl: '',
-          color: '#0065B6',
-        },
-        ...allLabelUser.map((user) => {
-          return {
-            id: Number(user.value),
-            fullName: user.label,
-            color: String(user.color),
-            avatarUrl: user?.avatarUrl || '',
-          };
-        }),
-      ];
-      setMemberOptions(allMembers);
-      setSelectedMembers([...allMembers.map((user) => Number(user.id))]);
-    }
-  }, [allLabelUser]);
-
-  // Handle listen to filter option changes
   useEffect(() => {
     setFilter({
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-      userIds: debouncedSelectedMembers,
+      userIds: selectedMemberList,
       largeCategoryId: selectedLarge?.value,
       mediumCategoryId: selectedMedium?.value,
       smallCategoryId: selectedSmall?.value,
@@ -368,402 +279,193 @@ const LineChartByTeam = ({
   }, [
     startDate,
     endDate,
-    debouncedSelectedMembers,
+    orderingOptions,
     lineChartViewBy?.value,
     selectedOrganization?.value,
     selectedLarge?.value,
     selectedMedium?.value,
     selectedSmall?.value,
-    orderingOptions,
+    selectedMemberList,
   ]);
 
-  // Hide tooltip when mouse leave over 150px
   useEffect(() => {
-    let hideTimeout: ReturnType<typeof setTimeout> | null = null;
+    if (
+      statisticUserTaskDurationsList &&
+      statisticUserTaskDurationsList.length > 0
+    ) {
+      const durations = statisticUserTaskDurationsList[0].durations;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const tooltipEl = tooltipRef.current;
-      if (!tooltipEl || tooltipEl.style.opacity === '0') {
-        if (hideTimeout) {
-          clearTimeout(hideTimeout);
-          hideTimeout = null;
-        }
-        return;
-      }
+      const startDates = durations.map((d) => d.startDate);
+      const lastEndDate = durations[durations.length - 1].endDate;
 
-      const rect = tooltipEl.getBoundingClientRect();
-      const mouseX = e.clientX;
-      const mouseY = e.clientY;
+      const rawTimeRange = [...startDates, lastEndDate];
 
-      const distance = Math.max(
-        rect.left - mouseX,
-        mouseX - rect.right,
-        rect.top - mouseY,
-        mouseY - rect.bottom,
-        0,
+      const formattedTimeRange = rawTimeRange.map((date, index, arr) => {
+        const isEdge = index === 0 || index === arr.length - 1;
+        return convertToStatisticJapaneseLabels(
+          date,
+          lineChartViewBy?.value as string,
+          isEdge,
+        );
+      });
+
+      setTimeRange(formattedTimeRange);
+
+      const chartData = statisticUserTaskDurationsList.map((userData) => {
+        const percents = userData.durations.map((d) => d.percentPerRange);
+        const duplicated = [percents[0], ...percents];
+        return {
+          name: userData.user.fullName,
+          data: duplicated,
+        };
+      });
+      const colors = statisticUserTaskDurationsList.map(
+        (userData) => userData.user.avatarColor || '#000',
       );
 
-      if (distance > 150) {
-        if (!hideTimeout) {
-          hideTimeout = setTimeout(() => {
-            if (tooltipRef.current) {
-              tooltipRef.current.style.display = 'none';
+      setDataChart(chartData);
+      setColorList(colors);
+    }
+  }, [statisticUserTaskDurationsList, lineChartViewBy]);
 
-              // Reset line styles
-              const chart = chartRef.current;
-              chart?.data.datasets.forEach((ds: any, index: number) => {
-                const meta = chart.getDatasetMeta(index);
-                meta.dataset.options.borderColor = ds.borderColor;
-              });
-              chart?.update('none');
-            }
-            hideTimeout = null;
-          }, 250); // delay before hiding tooltip
-        }
-      } else {
-        // Mouse came back within 150px: cancel hide
-        if (hideTimeout) {
-          clearTimeout(hideTimeout);
-          hideTimeout = null;
-        }
-      }
+  const annotations = dataChart.map((s, seriesIndex) => {
+    // Sum of heights of all previous series at index 0
+    const previousTotal = dataChart
+      .slice(0, seriesIndex)
+      .reduce((sum, prevSeries) => sum + prevSeries.data[0], 0);
+    // Half of the current series height at index 0
+    const currentHalf = s.data[0] / 2;
+    // Midpoint for the first point (index 0)
+    const averageMidpoint = previousTotal + currentHalf;
+    return {
+      y: averageMidpoint,
+      label: {
+        text: s.name,
+        position: 'left',
+        offsetX: 70,
+        style: {
+          color: 'white',
+          background: 'transparent',
+          fontWeight: 600,
+          borderColor: 'transparent', // Remove border
+          padding: 0,
+        },
+      },
+      strokeDashArray: 0, // removes the dotted line
+      borderColor: 'transparent',
     };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      if (hideTimeout) clearTimeout(hideTimeout);
-      document.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, []);
-
-  // Render external tooltip
-  const externalTooltipHandler = (context: any) => {
-    const tooltipModel = context.tooltip;
-    const tooltipEl = tooltipRef.current as TooltipDiv;
-
-    if (!tooltipEl || !tooltipModel || !selectedCategory) return;
-
-    if (!tooltipModel.dataPoints || tooltipModel.dataPoints.length === 0) {
-      tooltipEl.style.display = 'none';
-      return;
-    }
-
-    // Extract necessary data safely
-    const dataIndex = tooltipModel.dataPoints[0]?.dataIndex;
-    const datasetIndex = tooltipModel.dataPoints[0]?.datasetIndex;
-    const dataset = context.chart.data.datasets[datasetIndex];
-
-    if (!dataset?.data || dataIndex === undefined) {
-      tooltipEl.style.display = 'none';
-      return;
-    }
-
-    const dataPoint = tooltipModel.dataPoints[0]?.raw;
-    if (!dataPoint) {
-      tooltipEl.style.display = 'none';
-      return;
-    }
-
-    const chart = context.chart;
-    const hoveredUserId = tooltipModel.dataPoints[0]?.raw?.userId;
-
-    chart.data.datasets.forEach((ds: any, index: number) => {
-      const meta = chart.getDatasetMeta(index);
-
-      // Ensure you have stored user.id in each dataset (e.g., ds.data[0].user.id)
-      if (ds.data[0].userId == hoveredUserId) {
-        // Highlight this user's line(s)
-        meta.dataset.options.borderColor = toRGBA(ds.borderColor, 1);
-      } else {
-        // Dim others
-        meta.dataset.options.borderColor = toRGBA(ds.borderColor, 0.5);
-      }
-    });
-
-    // Hide tooltip for the last data point
-    if (dataIndex === dataset.data.length - 1) {
-      tooltipEl.style.display = 'none';
-      return;
-    }
-
-    // Extract dataset label safely
-    const matchingDataPoints = Array.from(
-      lineChartData.datasets
-        .flatMap((d) => d.data)
-        .filter(
-          (point: any) => point.x === dataPoint.x && point.y === dataPoint.y,
-        ),
-    );
-
-    if (!tooltipEl._reactRoot) {
-      tooltipEl._reactRoot = ReactDOM.createRoot(tooltipEl);
-    }
-    tooltipEl._reactRoot.render(
-      <TeamDockLineChartTooltip
-        data={matchingDataPoints}
-        selectedOptionName={selectedCategory?.name || ''}
-      />,
-    );
-
-    const { offsetLeft, offsetTop } = context.chart.canvas;
-    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 60}px`;
-    tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
-    tooltipEl.style.opacity = '1';
-    tooltipEl.style.display = 'block';
-    tooltipEl.style.zIndex = '9999';
-    tooltipEl.style.pointerEvents = 'auto';
-  };
-
-  // Line chart options configuration
-  const options: any = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: 'nearest',
-      intersect: false,
+  });
+  const options = {
+    chart: {
+      type: 'area',
+      stacked: false,
+      zoom: {
+        enabled: false, // ❌ OFF zoom
+      },
+      toolbar: {
+        show: false, // ❌ Turn off the zoom tool bar
+      },
     },
-    plugins: {
-      legend: {
-        display: false, // Hides the legend
+    grid: {
+      padding: {
+        left: 45, // 👉 increase value if label is hidden
+        right: 10,
+      },
+    },
+    legend: {
+      show: true,
+      showForSingleSeries: true,
+      position: 'bottom',
+      horizontalAlign: 'right',
+      markers: {
+        shape: 'square',
+      },
+      labels: {
+        colors: '#77858F',
+      },
+    },
+    dataLabels: {
+      enabled: false,
+      style: {
+        colors: ['#333'],
+        fontWeight: 'bold',
+      },
+      background: {
+        enabled: false,
+      },
+      offsetX: 30,
+      formatter: function ({
+        seriesIndex,
+        dataPointIndex,
+      }: {
+        seriesIndex: any;
+        dataPointIndex: any;
+      }) {
+        const productNames = dataChart.map((name) => name.name);
+        if (dataPointIndex === 0) {
+          return productNames[seriesIndex];
+        }
+        return '';
+      },
+      offsetY: 10,
+    },
+    colors: colorList,
+    fill: {
+      type: 'solid',
+      opacity: 1,
+    },
+    stroke: {
+      curve: 'straight',
+    },
+    markers: {
+      size: 0,
+      hover: {
+        size: 0,
+      },
+    },
+    annotations: {
+      yaxis: annotations,
+    },
+    yaxis: {
+      opposite: true,
+      lines: {
+        show: true,
+      },
+      tickAmount: 4,
+      labels: {
+        formatter: (val: any) => `${val}%`,
+      },
+      max: 100,
+      min: 0,
+    },
+    xaxis: {
+      categories: timeRange,
+      lines: {
+        show: true,
       },
       tooltip: {
-        enabled: false, // Disable default tooltip
-        position: 'nearest',
-        external: externalTooltipHandler,
+        enabled: false,
       },
-      datalabels: {
-        display: false,
-      },
-    },
-    elements: {
-      point: {
-        radius: 4, // Adjust actual point size
-        hitRadius: 20, // Increase hover detection area
-        hoverRadius: 8, // Increase the highlight effect
-        pointStyle: (ctx: any) => getPointStyle(ctx),
-      },
-    },
-    datasets: {
-      line: {
-        clip: false,
-      },
-    },
-    scales: {
-      x: {
-        ticks: {
-          color: '#77858F',
-          font: {
-            size: 14,
-            weight: 500,
-          },
-          padding: 15,
-          callback: function (this: { chart: any }, index: number) {
-            const chart = this.chart;
-            const labels = chart.data.labels as string[];
-
-            if (!labels || index >= labels.length) return '';
-
-            const isEdge = index === 0 || index === labels.length - 1;
-            const labelDate = new Date(labels[index]);
-            const currentMonth = labelDate.getMonth();
-
-            // Add extra spaces to reduce gap for first & last labels
-            if (lineChartViewBy?.value != StatisticViewOptions.MONTH)
-              return convertToStatisticJapaneseLabels(
-                labels[index],
-                lineChartViewBy?.value as string,
-                isEdge,
-              );
-
-            // Logic for MONTH view
-            let sameMonthAsNeighbor = false;
-
-            if (index === 0 && labels.length > 1) {
-              const nextMonth = new Date(labels[1]).getMonth();
-              sameMonthAsNeighbor = currentMonth === nextMonth;
-            } else if (index === labels.length - 1 && labels.length > 1) {
-              const prevMonth = new Date(labels[labels.length - 2]).getMonth();
-              sameMonthAsNeighbor = currentMonth === prevMonth;
-            }
-
-            return convertToStatisticJapaneseLabels(
-              labels[index],
-              lineChartViewBy?.value as string,
-              isEdge && sameMonthAsNeighbor,
-            );
-          },
-        },
-      },
-      y: {
-        position: 'right',
-        min: 0,
-        ticks: {
-          color: '#77858F',
-          font: {
-            size: 14,
-            weight: 500,
-          },
-          padding: 15,
-          stepSize: 10,
+      labels: {
+        align: 'center',
+        style: {
+          fontSize: '14px',
+          colors: '#939FA7',
         },
       },
     },
+
+    tooltip: {
+      enabled: true,
+      intersect: false,
+      shared: true,
+      custom: function () {
+        return `
+         
+        `;
+      },
+    },
   };
-
-  // Load images after calling API
-  useEffect(() => {
-    if (
-      statisticUserTaskDurationsList &&
-      statisticUserTaskDurationsList.length > 0
-    ) {
-      const loadImages = async () => {
-        if (statisticUserTaskDurationsList.length === 0) {
-          return;
-        }
-
-        const imagePromises = statisticUserTaskDurationsList.map(
-          async (userTaskDuration) => {
-            const { user } = userTaskDuration;
-            let avatarUrl = '';
-
-            if (user.avatar) {
-              avatarUrl = getFileURL(user.avatar);
-            } else {
-              const svgString = getAvatarIconSvg(user.avatarColor, 24);
-              const blob = new Blob([svgString], { type: 'image/svg+xml' });
-              avatarUrl = URL.createObjectURL(blob);
-            }
-
-            const styledAvatar = await createStyledAvatarWithMargin(
-              avatarUrl,
-              24,
-              30,
-            );
-            return styledAvatar;
-          },
-        );
-
-        const loadedImages = await Promise.all(imagePromises);
-        setImages(loadedImages);
-      };
-
-      loadImages();
-    } else {
-      setImages([]);
-    }
-  }, [statisticUserTaskDurationsList]);
-
-  // Get point style for line chart
-  const getPointStyle = (context: any): (CanvasImageSource | string)[] => {
-    const datasetIndex = context.datasetIndex;
-    const dataLength = context.chart.data.labels.length;
-    const styleArray: (CanvasImageSource | string)[] = [];
-    for (let i = 0; i < dataLength; i++) {
-      if (i === 0) {
-        styleArray.push(images[datasetIndex] || 'circle');
-      } else {
-        styleArray.push('circle');
-      }
-    }
-    return styleArray;
-  };
-
-  // Set chart data, legend list after calling API
-  useEffect(() => {
-    if (
-      statisticUserTaskDurationsList &&
-      statisticUserTaskDurationsList.length > 0
-    ) {
-      const labelList: string[] = [];
-      const legendList: { name: string; color: string }[] = [];
-      const datasets: any[] = [];
-
-      const durationList = statisticUserTaskDurationsList[0].durations;
-      durationList.map((duration, index) => {
-        labelList.push(duration.startDate);
-        if (
-          index === durationList.length - 1 &&
-          String(durationList.at(-1)?.endDate) !=
-            String(durationList.at(-1)?.startDate)
-        ) {
-          const endDate = durationList.at(-1)?.endDate;
-          if (endDate) {
-            labelList.push(endDate);
-          }
-        }
-      });
-
-      statisticUserTaskDurationsList.forEach((userTaskDuration) => {
-        legendList.push({
-          color: userTaskDuration.user.avatarColor || getRandomColor(),
-          name: userTaskDuration.user.fullName,
-        });
-        datasets.push({
-          label: userTaskDuration.user.fullName,
-          data: userTaskDuration.durations.flatMap((duration, index) => [
-            {
-              x: duration.startDate,
-              y: duration.duration
-                ? convertTimeToDecimal(duration.duration)
-                : 0,
-              endDate: duration.endDate,
-              avatarColor: userTaskDuration.user.avatarColor,
-              avatar: userTaskDuration.user.avatar || '',
-              userId: userTaskDuration.user.id,
-              label: userTaskDuration.user.fullName,
-            },
-            ...(index === userTaskDuration.durations.length - 1 &&
-            String(duration.endDate) != String(duration.startDate)
-              ? [
-                  {
-                    x: duration.endDate,
-                    y: duration.duration
-                      ? convertTimeToDecimal(duration.duration)
-                      : 0,
-                    endDate: duration.endDate,
-                    avatarColor: userTaskDuration.user.avatarColor,
-                    avatar: userTaskDuration.user.avatar || '',
-                    userId: userTaskDuration.user.id,
-                    label: userTaskDuration.user.fullName,
-                  },
-                ]
-              : []),
-          ]),
-          borderColor: userTaskDuration.user.avatarColor || getRandomColor(),
-          backgroundColor: 'transparent',
-          fill: true,
-          tension: 0,
-          pointRadius: 4,
-          pointBorderColor: 'transparent',
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor:
-            userTaskDuration.user.avatarColor || getRandomColor(),
-          pointHoverBorderColor: 'transparent',
-          pointHoverBorderWidth: 2,
-        });
-      });
-
-      setLineChartData({
-        labels: labelList,
-        datasets: datasets,
-      });
-      setLegendList(legendList);
-    } else {
-      setLineChartData({
-        labels: [],
-        datasets: [],
-      });
-      setLegendList([]);
-    }
-  }, [
-    statisticUserTaskDurationsList,
-    selectedOrganization,
-    selectedLarge,
-    selectedMedium,
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
-  ]);
 
   // Sort by percent difference
   const sortByPercentDifference = (
@@ -822,7 +524,7 @@ const LineChartByTeam = ({
         return (
           <div className="flex items-start px-[18px]">
             <RadioButton
-              name="categoryName"
+              name="categoryNameArea"
               isChecked={info.row.original.categoryId == selectedCategory?.id}
               onChange={(e: any) => {
                 if (e) {
@@ -872,7 +574,7 @@ const LineChartByTeam = ({
                 className={`flex justify-between items-center w-full ${
                   collapseStatus &&
                   info.row.original?.userList?.filter((user) =>
-                    selectedMembers.includes(user.userId),
+                    selectedMemberList.includes(String(user.userId)),
                   ).length > 0 &&
                   'mb-3'
                 }`}>
@@ -905,7 +607,11 @@ const LineChartByTeam = ({
                 info.row.original?.userList.length > 0 && (
                   <div className="flex flex-col">
                     {info.row.original?.userList
-                      ?.filter((user) => selectedMembers.includes(user.userId))
+                      ?.filter((user) =>
+                        listMemberTeam
+                          .map((item) => item.id)
+                          .includes(user.userId),
+                      )
                       .map((user) => {
                         return (
                           <div
@@ -977,7 +683,7 @@ const LineChartByTeam = ({
               className={`flex justify-center ${
                 collapseStatus &&
                 info.row.original?.userList?.filter((user) =>
-                  selectedMembers.includes(user.userId),
+                  selectedMemberList.includes(String(user.userId)),
                 ).length > 0 &&
                 'mb-3'
               }`}>
@@ -989,7 +695,11 @@ const LineChartByTeam = ({
               info.row.original?.userList.length > 0 && (
                 <div className="flex flex-col">
                   {info.row.original?.userList
-                    ?.filter((user) => selectedMembers.includes(user.userId))
+                    ?.filter((user) =>
+                      listMemberTeam
+                        .map((item) => item.id)
+                        .includes(user.userId),
+                    )
                     .map((user) => {
                       return (
                         <div
@@ -1055,7 +765,7 @@ const LineChartByTeam = ({
               className={`flex justify-center ${
                 collapseStatus &&
                 info.row.original?.userList?.filter((user) =>
-                  selectedMembers.includes(user.userId),
+                  selectedMemberList.includes(String(user.userId)),
                 ).length > 0 &&
                 'mb-3'
               }`}>
@@ -1066,7 +776,11 @@ const LineChartByTeam = ({
               info.row.original?.userList.length > 0 && (
                 <div className="flex flex-col">
                   {info.row.original?.userList
-                    ?.filter((user) => selectedMembers.includes(user.userId))
+                    ?.filter((user) =>
+                      listMemberTeam
+                        .map((item) => item.id)
+                        .includes(user.userId),
+                    )
                     .map((user) => {
                       return (
                         <div
@@ -1095,17 +809,21 @@ const LineChartByTeam = ({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  // Get disable views in view options
-  const getDisableViews = () => {
-    const allViews = [
-      StatisticViewOptions.DAY,
-      StatisticViewOptions.WEEK,
-      StatisticViewOptions.MONTH,
-    ];
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-    const enabledViews = getLineChartEnableViews(startDate, endDate as Date);
-
-    return allViews.filter((view) => !enabledViews.includes(view));
+  const getDataByIndex = (index: number) => {
+    return statisticUserTaskDurationsList?.map((userData) => {
+      const duration = userData.durations[index];
+      return {
+        user: {
+          fullName: userData.user.fullName,
+          avatarColor: userData.user.avatarColor,
+        },
+        startDate: duration?.startDate || null,
+        endDate: duration?.endDate || null,
+        percentPerRange: duration?.percentPerRange || 0,
+      };
+    });
   };
 
   return (
@@ -1361,160 +1079,146 @@ const LineChartByTeam = ({
               </div>
             </div>
           </div>
-          <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">
-            表示させるメンバー
-          </p>
-          <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[10px]">
-            {memberOptions?.length > 0 &&
-              memberOptions.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center gap-2 cursor-pointer">
-                  <div className="w-4">
-                    <CustomStatisticUserCheckbox
-                      id={String(member.id)}
-                      isChecked={selectedMembers.includes(member.id)}
-                      color={member.color}
-                      onChange={(state) => {
-                        if (state) {
-                          setSelectedMembers((prev) => {
-                            if (member.id) {
-                              const foundMember = selectedMembers.find(
-                                (memberId) => memberId == member.id,
-                              );
-                              if (!foundMember) {
-                                return [...prev, member.id];
-                              }
-                              return [...prev];
-                            } else {
-                              return memberOptions.map((member) => member.id);
-                            }
-                          });
-                        } else {
-                          setSelectedMembers((prev) => {
-                            if (member.id) {
-                              const foundMember = selectedMembers.find(
-                                (memberId) => memberId == member.id,
-                              );
-                              if (foundMember) {
-                                return [...prev].filter(
-                                  (memberId) =>
-                                    memberId && memberId != member.id,
-                                );
-                              }
-                              return [...prev];
-                            } else {
-                              return [];
-                            }
-                          });
-                        }
-                      }}
-                    />
-                  </div>
-                  {member.id ? (
-                    <div className="relative top-[2px]">
-                      <CustomUserAvatar
-                        avatarUrl={member?.avatarUrl || ''}
-                        avatarColor={member?.color || ''}
-                        size={30}
-                      />
-                    </div>
-                  ) : (
-                    <></>
-                  )}
-
-                  <span className="break-all max-w-[800px] w-full truncate text-sm">
-                    {member.fullName}
-                  </span>
-                </div>
-              ))}
-          </div>
           {isLoadingStatisticUserTaskDurationsList ? (
             <RowSkeleton
               numberOfRows={1}
-              className={`!h-[395px] ${expanded && 'w-[calc(100%_-_60px)]'} mx-auto`}
+              className={`!h-[380px] w-full mx-auto`}
             />
           ) : (
-            <div
-              style={{ position: 'relative' }}
-              className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
-              <Line ref={chartRef} data={lineChartData} options={options} />
-              <div
-                ref={tooltipRef}
-                style={{ position: 'absolute', opacity: 0 }}
+            <div className="relative">
+              <Chart
+                options={options as any}
+                series={dataChart}
+                type="area"
+                height={380}
               />
-            </div>
-          )}
+              <div className="w-full pl-[45px] pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent">
+                {timeRange.slice(1).map((item, idx) => {
+                  const actualIndex = idx + 1;
+                  const isHovered = hoveredIndex === actualIndex;
 
-          <div className="px-[30px]">
-            {!isLoadingStatisticUserTaskDurationsList && (
-              <div className="flex gap-8 items-center justify-end flex-wrap">
-                {legendList.map((label, index) => {
+                  const dataDetail = getDataByIndex(idx);
+
                   return (
-                    <div key={index} className="flex gap-1 items-center">
-                      <div
-                        className="w-8 h-1"
-                        style={{ backgroundColor: label.color }}></div>
-                      <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
-                        {label.name}
-                      </p>
+                    <div
+                      key={actualIndex}
+                      onMouseEnter={() => setHoveredIndex(actualIndex)}
+                      onMouseLeave={() => setHoveredIndex(null)}
+                      style={{
+                        flex: 1,
+                        textAlign: 'center',
+                        backgroundColor:
+                          hoveredIndex === null
+                            ? 'transparent'
+                            : isHovered
+                              ? 'transparent'
+                              : '#F8FAFCA6',
+                        transition: 'background-color 0.2s',
+                      }}
+                      className="group relative">
+                      {
+                        <div
+                          style={{
+                            boxShadow: '0px 2px 8px 0px #0000001A',
+                          }}
+                          className={`bg-white absolute p-5 top-1/2 left-1/2 hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                          <p className="text-sm font-normal text-[#77858F] mb-1 text-start w-full block">
+                            {dataDetail &&
+                              dataDetail.length > 0 &&
+                              convertToStatisticJapaneseLabels(
+                                dataDetail[0]?.startDate as string,
+                                lineChartViewBy?.value as string,
+                                true,
+                              )}{' '}
+                            ~
+                            {dataDetail &&
+                              dataDetail.length > 0 &&
+                              convertToStatisticJapaneseLabels(
+                                dataDetail[0]?.endDate as string,
+                                lineChartViewBy?.value as string,
+                                true,
+                              )}
+                          </p>
+                          {dataDetail &&
+                            dataDetail.length > 0 &&
+                            dataDetail?.map((user, userIndex) => {
+                              return (
+                                <div
+                                  key={userIndex}
+                                  className="flex items-center gap-1.5">
+                                  <div
+                                    className="w-3 h-3 rounded-sm"
+                                    style={{
+                                      backgroundColor: user.user.avatarColor,
+                                    }}
+                                  />
+                                  <div className="flex flex-grow items-center justify-between text-base font-medium">
+                                    <div className=" text-black w-fit  max-w-[180px] line-clamp-3 break-words">
+                                      {user.user.fullName}
+                                    </div>
+                                    <div>{user.percentPerRange}%</div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      }
                     </div>
                   );
                 })}
               </div>
-            )}
-
-            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                    {headerGroup.headers.map((header, index) => (
-                      <th
-                        key={header.id}
-                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
-                        style={{
-                          width: header.getSize(),
-                          minWidth: header.getSize(),
-                          maxWidth: header.getSize(),
-                        }}
-                        onClick={header.column.getToggleSortingHandler()}>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    {row.getVisibleCells().map((cell, index) => (
-                      <td
-                        key={cell.id}
-                        style={{
-                          width: cell.column.getSize(),
-                          minWidth: cell.column.getSize(),
-                          maxWidth: cell.column.getSize(),
-                        }}
-                        className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+            </div>
+          )}
+          <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+            <thead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr
+                  key={headerGroup.id}
+                  className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                  {headerGroup.headers.map((header, index) => (
+                    <th
+                      key={header.id}
+                      className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                      style={{
+                        width: header.getSize(),
+                        minWidth: header.getSize(),
+                        maxWidth: header.getSize(),
+                      }}
+                      onClick={header.column.getToggleSortingHandler()}>
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <TableBody>
+              {table.getRowModel().rows.map((row) => (
+                <tr key={row.id} className="hover:bg-gray-50">
+                  {row.getVisibleCells().map((cell, index) => (
+                    <td
+                      key={cell.id}
+                      style={{
+                        width: cell.column.getSize(),
+                        minWidth: cell.column.getSize(),
+                        maxWidth: cell.column.getSize(),
+                      }}
+                      className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>
   );
 };
-export default LineChartByTeam;
+export default StackedAreaTeamChart;
