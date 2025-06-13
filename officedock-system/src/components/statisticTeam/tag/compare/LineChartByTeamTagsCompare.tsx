@@ -68,6 +68,7 @@ import {
   getCategoryFormattedDate,
   getJapaneseDayName,
   subtractDurations,
+  totalDurationsForStatistic,
 } from '@utils/date';
 import {
   createStyledAvatarWithMargin,
@@ -171,14 +172,6 @@ const LineChartByTeamTagsCompare = ({
 }: Props) => {
   // Context
   const {
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
-    totalDurationCategory,
-    totalDurationLargeCompare,
-    totalDurationMediumCompare,
-    totalDurationSmallCompare,
-    totalDurationCategoryCompare,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -275,6 +268,10 @@ const LineChartByTeamTagsCompare = ({
   });
   const [standardDateLabels, setStandardDateLabels] = useState<string[]>([]);
   const [compareDateLabels, setCompareDateLabels] = useState<string[]>([]);
+  const [totalStandardDuration, setTotalStandardDuration] =
+    useState<string>('00:00:00');
+  const [totalCompareDuration, setTotalCompareDuration] =
+    useState<string>('00:00:00');
 
   // Collapse statuses
   const [tagCollapseStatuses, setTagCollapseStatuses] = useState<
@@ -297,40 +294,6 @@ const LineChartByTeamTagsCompare = ({
     1000,
   );
   const tooltipRef = useRef<HTMLDivElement | null>(null);
-
-  const getTotalDuration = (): {
-    standardDuration: string;
-    compareDuration: string;
-  } => {
-    if (selectedOrganization?.value) {
-      if (selectedLarge?.value) {
-        if (selectedMedium?.value) {
-          if (selectedSmall?.value) {
-            return {
-              standardDuration: totalDurationCategory,
-              compareDuration: totalDurationCategoryCompare,
-            };
-          }
-          return {
-            standardDuration: totalDurationSmall,
-            compareDuration: totalDurationSmallCompare,
-          };
-        }
-        return {
-          standardDuration: totalDurationMedium,
-          compareDuration: totalDurationMediumCompare,
-        };
-      }
-      return {
-        standardDuration: totalDurationLarge,
-        compareDuration: totalDurationLargeCompare,
-      };
-    }
-    return {
-      standardDuration: '00:00:00',
-      compareDuration: '00:00:00',
-    };
-  };
 
   const buildTableDetail = (
     tags: {
@@ -823,9 +786,7 @@ const LineChartByTeamTagsCompare = ({
   useEffect(() => {
     if (
       statisticUserTaskDurationsList &&
-      statisticUserTaskDurationsList?.length > 0 &&
-      statisticUserTaskDurationsCompareList &&
-      statisticUserTaskDurationsCompareList?.length > 0
+      statisticUserTaskDurationsList?.length > 0
     ) {
       const loadImages = async () => {
         const createAvatarImage = async (user: {
@@ -847,27 +808,19 @@ const LineChartByTeamTagsCompare = ({
           return await createStyledAvatarWithMargin(avatarUrl, 24, 30);
         };
 
-        const standardImagePromises = statisticUserTaskDurationsList.map(
-          (item) => createAvatarImage(item.user),
+        const imagePromises = statisticUserTaskDurationsList.map((item) =>
+          createAvatarImage(item.user),
         );
 
-        const compareImagePromises = statisticUserTaskDurationsCompareList.map(
-          (item) => createAvatarImage(item.user),
-        );
-
-        const [standardLoadedImages, compareLoadedImages] = await Promise.all([
-          Promise.all(standardImagePromises),
-          Promise.all(compareImagePromises),
-        ]);
-
-        setImages([...standardLoadedImages, ...compareLoadedImages]);
+        const loadedImages = await Promise.all(imagePromises);
+        setImages(loadedImages);
       };
 
       loadImages();
     } else {
       setImages([]);
     }
-  }, [statisticUserTaskDurationsList, statisticUserTaskDurationsCompareList]);
+  }, [statisticUserTaskDurationsList]);
 
   // Get point style for line chart
   const getPointStyle = (context: any): (CanvasImageSource | string)[] => {
@@ -897,6 +850,8 @@ const LineChartByTeamTagsCompare = ({
       const standardDateLabels: string[] = [];
       const compareDateLabels: string[] = [];
       const datasets: any[] = [];
+      const totalStandardDurationList: string[] = [];
+      const totalCompareDurationList: string[] = [];
 
       const standardDurationList =
         statisticUserTaskDurationsList[0]?.durations ?? [];
@@ -995,6 +950,7 @@ const LineChartByTeamTagsCompare = ({
         const compareUser = statisticUserTaskDurationsCompareList.find(
           (c) => c.user.id == userTaskDuration.user.id,
         );
+        totalStandardDurationList.push(userTaskDuration.totalDuration);
         datasets.push({
           label: userTaskDuration.user.fullName,
           data: generateDataWithAlignment(
@@ -1025,6 +981,7 @@ const LineChartByTeamTagsCompare = ({
         const standardUser = statisticUserTaskDurationsList.find(
           (c) => c.user.id == userTaskDuration.user.id,
         );
+        totalCompareDurationList.push(userTaskDuration.totalDuration);
         datasets.push({
           label: userTaskDuration.user.fullName,
           data: generateDataWithAlignment(
@@ -1056,6 +1013,12 @@ const LineChartByTeamTagsCompare = ({
       });
       setStandardLegendList(standardLabels);
       setCompareLegendList(comparedLabels);
+      setTotalStandardDuration(
+        totalDurationsForStatistic(totalStandardDurationList),
+      );
+      setTotalCompareDuration(
+        totalDurationsForStatistic(totalCompareDurationList),
+      );
     } else {
       setStandardDateLabels([]);
       setCompareDateLabels([]);
@@ -1065,6 +1028,8 @@ const LineChartByTeamTagsCompare = ({
       });
       setStandardLegendList([]);
       setCompareLegendList([]);
+      setTotalStandardDuration('00:00:00');
+      setTotalCompareDuration('00:00:00');
     }
   }, [
     statisticUserTaskDurationsList,
@@ -1904,13 +1869,8 @@ const LineChartByTeamTagsCompare = ({
                       </p>
                     </div>
                     <p className="font-medium text-[16px]">
-                      合計{' '}
-                      {getTotalDuration()?.standardDuration?.split(':')[0] ||
-                        '00'}
-                      時間
-                      {getTotalDuration()?.standardDuration?.split(':')[1] ||
-                        '00'}
-                      分
+                      合計 {totalStandardDuration?.split(':')[0] || '00'}時間
+                      {totalStandardDuration?.split(':')[1] || '00'}分
                     </p>
                   </div>
                 )}
@@ -1933,13 +1893,8 @@ const LineChartByTeamTagsCompare = ({
                       </p>
                     </div>
                     <p className="font-medium text-[16px]">
-                      合計{' '}
-                      {getTotalDuration()?.compareDuration?.split(':')[0] ||
-                        '00'}
-                      時間
-                      {getTotalDuration()?.compareDuration?.split(':')[1] ||
-                        '00'}
-                      分
+                      合計 {totalCompareDuration?.split(':')[0] || '00'}時間
+                      {totalCompareDuration?.split(':')[1] || '00'}分
                     </p>
                   </div>
                 )}
