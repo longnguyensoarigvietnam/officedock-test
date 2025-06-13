@@ -14,6 +14,7 @@ import LineChartByTeamTags from '@components/statisticTeam/tag/LineChartByTeamTa
 import LineChartByTeamTagsCompare from '@components/statisticTeam/tag/compare/LineChartByTeamTagsCompare';
 import AllocationTagTeamCompare from '@components/statisticTeam/tag/compare/AllocationTagTeamCompare';
 import AllocationTeamTag from '@components/statisticTeam/tag/AllocationTeamTag';
+import StackedAreaTeamTagChart from '@components/statisticTeam/tag/StackedAreaTeamTagChart';
 
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
@@ -588,6 +589,16 @@ const StatisticTeamTagBoard = () => {
             startDate={startDate}
             endDate={endDate}
             removeUser={removeUser}
+            removeTag={removeTag}
+            statisticTagsListTeam={statisticTagsListTeam}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+          <StackedAreaTeamTagChart
+            startDate={startDate}
+            endDate={endDate}
             removeTag={removeTag}
             statisticTagsListTeam={statisticTagsListTeam}
             handleSelectOrganization={handleSelectOrganization}

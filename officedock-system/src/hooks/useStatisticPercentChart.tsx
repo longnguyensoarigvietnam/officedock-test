@@ -70,6 +70,7 @@ const useStatisticPercentChart = ({
     data: statisticPercentChartList,
     refetch: refetchStatisticPercentChartList,
     isFetched: isFetchedStatisticPercentChartList,
+    isLoading: isLoadingStatisticPercentChartList,
   } = useQuery({
     queryKey: ['getStatisticPercentChart', [filter]],
     queryFn: getStatisticPercentChart,
@@ -90,6 +91,7 @@ const useStatisticPercentChart = ({
     statisticPercentChartList,
     refetchStatisticPercentChartList,
     isFetchedStatisticPercentChartList,
+    isLoadingStatisticPercentChartList,
   };
 };
 
