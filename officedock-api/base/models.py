@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.timezone import now
 
 
 class BaseModel(models.Model):
@@ -12,3 +13,7 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
+
+    def soft_delete(self):
+        self.deleted_at = now()
+        self.save()

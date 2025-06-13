@@ -11,7 +11,7 @@ from tags.models import Tag
 from tags.serializers import BaseTagSerializer
 from tasks.constants import FrequencyMap
 from users.models import User
-from tasks.models import PeopleInChargeTasks, TaskSchedule
+from tasks.models import PeopleInChargeTasks, TaskSchedule, TaskDuration
 from calendars.constants import CalendarTypes, ScheduleCategoryTypes
 from calendars.utils import is_event_overlapping
 
@@ -270,6 +270,7 @@ class BaseScheduleSerializer(ScheduleSerializer):
     event_type = serializers.SerializerMethodField()
     is_my_schedule = serializers.SerializerMethodField()
     categories = serializers.SerializerMethodField()
+    is_start = serializers.SerializerMethodField()
 
     class Meta:
         model = Schedule
@@ -289,6 +290,38 @@ class BaseScheduleSerializer(ScheduleSerializer):
             "select_organizations",
             "repeat_schedules",
         ]
+
+    def to_representation(self, instance):
+        """
+        Custom data before return
+        """
+        representation = super().to_representation(instance)
+
+        if recurring := instance.recurring:
+            fields = [
+                "start_date",
+                "end_date",
+                "repeat_type",
+                "repeat_interval",
+                "week_day",
+                "month_day",
+                "month",
+            ]
+            for field in fields:
+                representation[field] = recurring.get(field)
+        return representation
+
+    def get_is_start(self, instance):
+        """
+        Return is_start if user is running this task
+        """
+        request = self.context.get("request")
+        if user := request.user:
+            return TaskDuration.objects.filter(
+                schedule=instance, user=user, paused_at__isnull=True
+            ).exists()
+        else:
+            return False
 
     def get_categories(self, obj):
         """Handle retrieving categories of a Schedule."""

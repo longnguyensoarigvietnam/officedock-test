@@ -50,60 +50,64 @@ const ModalCustomTooltip = ({
   const actualValue = actualValues[tooltipData.value];
 
   return (
-    <div className="p-5">
+    <div className="py-5">
       {id == -1 ? (
         <div>
-          <p className="text-xs font-medium text-[#77858F] mb-5">その他</p>
+          <p className="text-xs font-medium text-[#77858F] mb-5 px-5">その他</p>
           {mergedItems.map((item, index) => {
             return (
               <div key={item.categoryId}>
                 <div className="w-[250px] h-fit ">
-                  <div className="flex items-center gap-2 mb-[14px]">
-                    <div
-                      style={{
-                        backgroundColor: item.categoryColor,
-                      }}
-                      className="w-3 h-3 rounded-sm"></div>
-                    <span className="font-bold max-w-[205px] line-clamp-3">
-                      {item.categoryName}
-                    </span>
+                  <div className="px-5">
+                    <div className="flex items-center gap-2 mb-[14px]">
+                      <div
+                        style={{
+                          backgroundColor: item.categoryColor,
+                        }}
+                        className="w-3 h-3 rounded-sm"></div>
+                      <span className="font-bold max-w-[205px] line-clamp-3">
+                        {item.categoryName}
+                      </span>
+                    </div>
+                    <div className="flex gap-2 text-base font-normal">
+                      <span>{item.percent}% </span>
+                      <span>{convertToJapaneseTime(item.duration)}</span>
+                    </div>
                   </div>
-                  <div className="flex gap-2 text-base font-normal">
-                    <span>{item.percent}% </span>
-                    <span>{convertToJapaneseTime(item.duration)}</span>
-                  </div>
-                  <ul className="font-normal mt-4 text-[#77858F] overflow-hidden break-words line-clamp-4">
-                    {isTeam ? (
-                      item &&
-                      item.users &&
-                      item.users.map((user) => {
-                        return (
-                          <li
-                            key={user.user.id}
-                            className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <div>
-                                <CustomUserAvatar
-                                  avatarUrl={user.user?.avatar || ''}
-                                  avatarColor={user.user?.avatarColor || ''}
-                                  size={30}
-                                  customClassName={`${!user.user?.avatar && '!mt-0'}`}
-                                />
+                  <div className=" max-h-[250px]  overflow-y-auto px-5">
+                    <ul className="font-normal mt-4 text-[#77858F] overflow-hidden break-words line-clamp-4">
+                      {isTeam ? (
+                        item &&
+                        item.users &&
+                        item.users.map((user) => {
+                          return (
+                            <li
+                              key={user.user.id}
+                              className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <div>
+                                  <CustomUserAvatar
+                                    avatarUrl={user.user?.avatar || ''}
+                                    avatarColor={user.user?.avatarColor || ''}
+                                    size={30}
+                                    customClassName={`${!user.user?.avatar && '!mt-0'}`}
+                                  />
+                                </div>
+                                <span className="inline-block w-[130px] overflow-hidden whitespace-nowrap text-ellipsis">
+                                  {user.user.fullName}
+                                </span>
                               </div>
-                              <span className="inline-block w-[170px] overflow-hidden whitespace-nowrap text-ellipsis">
-                                {user.user.fullName}
-                              </span>
-                            </div>
-                            <span>{user.percent}%</span>
-                          </li>
-                        );
-                      })
-                    ) : (
-                      <div></div>
-                    )}
-                  </ul>
+                              <span>{user.percent}%</span>
+                            </li>
+                          );
+                        })
+                      ) : (
+                        <div></div>
+                      )}
+                    </ul>
+                  </div>
                   {!isTeam && (
-                    <div className="mt-4 flex items-center justify-end">
+                    <div className="mt-4 px-5 flex items-center justify-end">
                       <button
                         onClick={() =>
                           handleClickTooltip &&
@@ -131,49 +135,53 @@ const ModalCustomTooltip = ({
       ) : (
         <>
           <div className="w-[250px] h-fit">
-            <div className="flex items-center gap-2 mb-[14px]">
-              <div
-                style={{
-                  backgroundColor: color,
-                }}
-                className="w-3 h-3 rounded-sm"></div>
-              <span className="font-bold max-w-[224px] line-clamp-3">
-                {label}
-              </span>
+            <div className="px-5">
+              <div className="flex items-center gap-2 mb-[14px]">
+                <div
+                  style={{
+                    backgroundColor: color,
+                  }}
+                  className="w-3 h-3 rounded-sm"></div>
+                <span className="font-bold max-w-[224px] line-clamp-3">
+                  {label}
+                </span>
+              </div>
+              <div className="flex gap-2 text-base font-normal">
+                <span>{percent}% </span>
+                <span>{actualValue}</span>
+              </div>
             </div>
-            <div className="flex gap-2 text-base font-normal">
-              <span>{percent}% </span>
-              <span>{actualValue}</span>
-            </div>
-            <ul className="font-normal mt-4 text-[#77858F] overflow-hidden break-words line-clamp-4">
-              {isTeam
-                ? option &&
-                  option.map((opt) => {
-                    return (
-                      <li
-                        key={opt.label}
-                        className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div>
-                            <CustomUserAvatar
-                              avatarUrl={opt?.avatarUrl || ''}
-                              avatarColor={opt?.avatarColor || ''}
-                              size={30}
-                            />
+            <div className="max-h-[250px]  overflow-y-auto px-5">
+              <div className="font-normal  mt-4 text-[#77858F] overflow-hidden break-words line-clamp-4">
+                {isTeam
+                  ? option &&
+                    option.map((opt) => {
+                      return (
+                        <div
+                          key={opt.label}
+                          className="flex w-full max-w-[150px] items-center justify-between mb-2 ">
+                          <div className="flex items-center gap-2">
+                            <div>
+                              <CustomUserAvatar
+                                avatarUrl={opt?.avatarUrl || ''}
+                                avatarColor={opt?.avatarColor || ''}
+                                size={30}
+                              />
+                            </div>
+                            <span className="inline-block w-[130px] overflow-hidden whitespace-nowrap text-ellipsis">
+                              {opt.label}
+                            </span>
                           </div>
-                          <span className="inline-block w-[170px] overflow-hidden whitespace-nowrap text-ellipsis">
-                            {opt.label}
-                          </span>
+                          <div className="flex-shrink-0">{opt.percent}%</div>
                         </div>
-                        <span>{opt.percent}%</span>
-                      </li>
-                    );
-                  })
-                : option &&
-                  option.map((opt) => <li key={opt.label}>{opt.label}</li>)}
-            </ul>
+                      );
+                    })
+                  : option &&
+                    option.map((opt) => <li key={opt.label}>{opt.label}</li>)}
+              </div>
+            </div>
             {!isTeam && (
-              <div className="mt-4 flex items-center justify-end">
+              <div className="mt-4 px-5 flex items-center justify-end">
                 <button
                   onClick={() => handleClickTooltip && handleClickTooltip(id)}
                   className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">

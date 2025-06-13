@@ -60,7 +60,7 @@ interface TableChartProps {
   totalDuration: string;
   taskList: DataTaskListStatisticListType[];
   listOptionsOrganization: OptionDropdownType[];
-  creationDataStatisticData: CreationStatisticType;
+  creationDataStatisticData: CreationStatisticType | undefined;
   setOrdering: (ord: string) => void;
 }
 
@@ -150,6 +150,7 @@ const TableChart = ({
   const queryClient = useQueryClient();
   const {
     isCheckCompare,
+    selectedOrganization,
     setIsLoadingLarge,
     setIsLoadingLargeCompare,
     setIsLoadingMedium,
@@ -449,7 +450,13 @@ const TableChart = ({
                 }
                 placeholder=""
                 showArrow
-                options={listOptionsOrganization}
+                options={
+                  selectedOrganization
+                    ? listOptionsOrganization.filter(
+                        (item) => item.value === selectedOrganization.value,
+                      )
+                    : []
+                }
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
@@ -625,8 +632,7 @@ const TableChart = ({
                   )
                 }
                 placeholder=""
-                showArrow
-                options={smallCategories}
+                showArrow={info.row.original.type === EventCalendarType.TASK}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
@@ -684,6 +690,7 @@ const TableChart = ({
                     });
                   }
                 }}
+                isDisabled={info.row.original.type !== EventCalendarType.TASK}
               />
             </div>
             <div className="ml-auto">

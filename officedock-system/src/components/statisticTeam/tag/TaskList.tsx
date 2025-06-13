@@ -20,6 +20,7 @@ import useStatisticTask from '@hooks/useStatisticTask';
 import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 type Props = {
   isCheckCompare: boolean;
@@ -28,7 +29,7 @@ type Props = {
   startDateCompare: Date;
   endDateCompare: Date | null;
   statisticTagsListTeam: StatisticsCategories | undefined;
-  creationDataStatisticData: CreationStatisticType;
+  creationDataStatisticData: CreationStatisticType | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -76,6 +77,9 @@ const TaskListStatisticTeamTags = ({
     currentPage,
     setCurrentPage,
   } = useContext(StatisticTeamTagsStateContext);
+
+  const { selectedOrganization: selectedOrganizationTeamList } =
+    useContext(GlobalStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
 
@@ -321,7 +325,7 @@ const TaskListStatisticTeamTags = ({
                       size={30}
                     />
                   </div>
-                  <span className="break-all w-full max-w-[800px] truncate">
+                  <span className="break-all w-full max-w-[800px] truncate text-sm">
                     {member.fullName}
                   </span>
                 </div>
@@ -436,7 +440,11 @@ const TaskListStatisticTeamTags = ({
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
-                    disabled={!selectedMedium}
+                    disabled={
+                      !selectedMedium ||
+                      selectedOrganization?.value !==
+                        selectedOrganizationTeamList?.value
+                    }
                   />
                 </div>
               </div>

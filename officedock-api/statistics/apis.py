@@ -8,10 +8,12 @@ from django.db.models import (
     DurationField,
     Case,
     When,
+    Q,
 )
 from django.db.models.functions import Now, Coalesce
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.timezone import now
 from django.utils.translation import trim_whitespace
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.decorators import action
@@ -49,8 +51,7 @@ from stat_data.utils import (
     get_total_durations,
     get_duration_of_none_category,
     check_is_not_none_category,
-    get_list_id_category_of_organization,
-    validate_date_format_using_regex,
+    validate_date_by_regex_and_reformat,
     percentage_calculation_of_duration,
 )
 from tasks.constants import TaskCategoryTypes
@@ -113,19 +114,18 @@ class StatisticViewSet(BaseAPIViewSet):
         user_id = request.query_params.get("user_id")
         tag_ids_param = request.query_params.get("tag_ids")
         tag_ids = []
-        from_date = request.query_params.get("from_date")
-        end_date = request.query_params.get("end_date")
         total_duration = request.query_params.get("total_duration")
         ordering = request.query_params.get("ordering")
         cursor = request.query_params.get("cursor")
         cursor_id = request.query_params.get("cursor_id")
         is_tag_page = request.query_params.get("is_tag_page")
 
-        validate_date_format_using_regex(from_date)
-        validate_date_format_using_regex(end_date)
-
-        from_date = datetime.strptime(from_date, BASE_DATE_FORMAT).date()
-        end_date = datetime.strptime(end_date, BASE_DATE_FORMAT).date()
+        from_date = validate_date_by_regex_and_reformat(
+            request.query_params.get("from_date")
+        )
+        end_date = validate_date_by_regex_and_reformat(
+            request.query_params.get("end_date")
+        )
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
         if user_id:
@@ -138,12 +138,6 @@ class StatisticViewSet(BaseAPIViewSet):
             )
         else:
             organization_ids = split_id_from_string(organization_ids_param)
-
-        (
-            large_category_ids,
-            medium_category_ids,
-            small_category_ids,
-        ) = get_list_id_category_of_organization(organization_ids)
 
         if tag_ids_param:
             tag_ids = split_id_from_string(tag_ids_param)
@@ -158,9 +152,18 @@ class StatisticViewSet(BaseAPIViewSet):
         tasks, events = get_list_models(durations)
         tasks = (
             tasks.filter(
-                task_durations__user=user,
-                task_durations__paused_at__lte=end_of_day,
-                task_durations__started_at__gte=start_of_day,
+                Q(task_durations__user=user)
+                & Q(
+                    Q(
+                        Q(task_durations__started_at__gte=start_of_day)
+                        & Q(task_durations__paused_at__lte=end_of_day)
+                    )
+                    | Q(
+                        Q(task_durations__started_at__lte=end_of_day)
+                        & Q(task_durations__started_at__gte=start_of_day)
+                        & Q(task_durations__paused_at__isnull=True)
+                    )
+                )
             )
             .annotate(
                 total_duration=Sum(
@@ -186,9 +189,18 @@ class StatisticViewSet(BaseAPIViewSet):
         )
         events = (
             events.filter(
-                task_durations__user=user,
-                task_durations__paused_at__lte=end_of_day,
-                task_durations__started_at__gte=start_of_day,
+                Q(task_durations__user=user)
+                & Q(
+                    Q(
+                        Q(task_durations__started_at__gte=start_of_day)
+                        & Q(task_durations__paused_at__lte=end_of_day)
+                    )
+                    | Q(
+                        Q(task_durations__started_at__lte=end_of_day)
+                        & Q(task_durations__started_at__gte=start_of_day)
+                        & Q(task_durations__paused_at__isnull=True)
+                    )
+                )
             )
             .annotate(
                 total_duration=Sum(
@@ -216,9 +228,6 @@ class StatisticViewSet(BaseAPIViewSet):
             large_category_id=large_category_id,
             medium_category_id=medium_category_id,
             small_category_id=small_category_id,
-            exists_large_category_ids=large_category_ids,
-            exists_medium_category_ids=medium_category_ids,
-            exists_small_category_ids=small_category_ids,
         )
         tasks = tasks.filter(filters)
         events = events.filter(filters)
@@ -319,15 +328,15 @@ class StatisticViewSet(BaseAPIViewSet):
         small_category_id = request.query_params.get("small_category_id")
         user_id = request.query_params.get("user_id")
         tag_ids_param = request.query_params.get("tag_ids")
-        from_date = request.query_params.get("from_date")
-        end_date = request.query_params.get("end_date")
         statistic_by = request.query_params.get("statistic_by")
         is_tag_page = request.query_params.get("is_tag_page")
-        validate_date_format_using_regex(from_date)
-        validate_date_format_using_regex(end_date)
 
-        from_date = datetime.strptime(from_date, BASE_DATE_FORMAT).date()
-        end_date = datetime.strptime(end_date, BASE_DATE_FORMAT).date()
+        from_date = validate_date_by_regex_and_reformat(
+            request.query_params.get("from_date")
+        )
+        end_date = validate_date_by_regex_and_reformat(
+            request.query_params.get("end_date")
+        )
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
         user = get_object_or_404(User, id=user_id) if user_id else request.user
@@ -339,11 +348,6 @@ class StatisticViewSet(BaseAPIViewSet):
         else:
             organization_ids = split_id_from_string(organization_ids_param)
 
-        (
-            large_category_ids,
-            medium_category_ids,
-            small_category_ids,
-        ) = get_list_id_category_of_organization(organization_ids)
         tag_ids = split_id_from_string(tag_ids_param)
 
         durations = get_list_durations_by_users(
@@ -358,9 +362,6 @@ class StatisticViewSet(BaseAPIViewSet):
             large_category_id=large_category_id,
             medium_category_id=medium_category_id,
             small_category_id=small_category_id,
-            exists_large_category_ids=large_category_ids,
-            exists_medium_category_ids=medium_category_ids,
-            exists_small_category_ids=small_category_ids,
         )
         tasks = tasks.filter(filters)
         events = events.filter(filters)
@@ -386,10 +387,28 @@ class StatisticViewSet(BaseAPIViewSet):
                 total_duration = timedelta(0)
                 percent_per_total_duration = 0
                 if filter_durations:
-                    filter_duration_by_range = filter_durations.filter(
-                        started_at__gte=start_date_min,
-                        paused_at__lte=end_date_max,
-                    )
+                    # Get duration by range
+                    if start <= now().date() <= end:
+                        filter_duration_by_range = filter_durations.filter(
+                            Q(
+                                Q(
+                                    Q(started_at__gte=start_date_min)
+                                    & Q(paused_at__lte=end_date_max)
+                                )
+                                | Q(
+                                    Q(started_at__lte=end_date_max)
+                                    & Q(started_at__gte=start_date_min)
+                                    & Q(paused_at__isnull=True)
+                                )
+                            )
+                        )
+                    else:
+                        filter_duration_by_range = filter_durations.filter(
+                            Q(
+                                Q(started_at__gte=start_date_min)
+                                & Q(Q(paused_at__lte=end_date_max)),
+                            )
+                        )
                     total_duration = get_total_durations(
                         filter_duration_by_range
                     )
@@ -549,15 +568,13 @@ class StatisticViewSet(BaseAPIViewSet):
         large_category_id = request.query_params.get("large_category_id")
         medium_category_id = request.query_params.get("medium_category_id")
         tag_ids_param = request.query_params.get("tag_ids")
-        organization_ids = []
         tag_ids = []
-        from_date = request.query_params.get("from_date")
-        end_date = request.query_params.get("end_date")
-        validate_date_format_using_regex(from_date)
-        validate_date_format_using_regex(end_date)
-
-        from_date = datetime.strptime(from_date, BASE_DATE_FORMAT).date()
-        end_date = datetime.strptime(end_date, BASE_DATE_FORMAT).date()
+        from_date = validate_date_by_regex_and_reformat(
+            request.query_params.get("from_date")
+        )
+        end_date = validate_date_by_regex_and_reformat(
+            request.query_params.get("end_date")
+        )
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
         if organization_ids_param is None:
@@ -693,14 +710,12 @@ class StatisticViewSet(BaseAPIViewSet):
         small_category_id = request.query_params.get("small_category_id")
         tag_ids_param = request.query_params.get("tag_ids")
         tag_ids = []
-        from_date = request.query_params.get("from_date")
-        end_date = request.query_params.get("end_date")
-
-        validate_date_format_using_regex(from_date)
-        validate_date_format_using_regex(end_date)
-
-        from_date = datetime.strptime(from_date, BASE_DATE_FORMAT).date()
-        end_date = datetime.strptime(end_date, BASE_DATE_FORMAT).date()
+        from_date = validate_date_by_regex_and_reformat(
+            request.query_params.get("from_date")
+        )
+        end_date = validate_date_by_regex_and_reformat(
+            request.query_params.get("end_date")
+        )
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
         if organization_ids_param is None:
@@ -862,15 +877,14 @@ class StatisticViewSet(BaseAPIViewSet):
         small_category_id = request.query_params.get("small_category_id")
         user_id = request.query_params.get("user_id")
         tag_ids_param = request.query_params.get("tag_ids")
-        from_date = request.query_params.get("from_date")
-        end_date = request.query_params.get("end_date")
         statistic_by = request.query_params.get("statistic_by")
         is_tag_page = request.query_params.get("is_tag_page")
-        validate_date_format_using_regex(from_date)
-        validate_date_format_using_regex(end_date)
-
-        from_date = datetime.strptime(from_date, BASE_DATE_FORMAT).date()
-        end_date = datetime.strptime(end_date, BASE_DATE_FORMAT).date()
+        from_date = validate_date_by_regex_and_reformat(
+            request.query_params.get("from_date")
+        )
+        end_date = validate_date_by_regex_and_reformat(
+            request.query_params.get("end_date")
+        )
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
         user = get_object_or_404(User, id=user_id) if user_id else request.user
@@ -881,11 +895,6 @@ class StatisticViewSet(BaseAPIViewSet):
             )
         else:
             organization_ids = split_id_from_string(organization_ids_param)
-        (
-            large_category_ids,
-            medium_category_ids,
-            small_category_ids,
-        ) = get_list_id_category_of_organization(organization_ids)
         tag_ids = split_id_from_string(tag_ids_param)
 
         durations = get_list_durations_by_users(
@@ -900,9 +909,6 @@ class StatisticViewSet(BaseAPIViewSet):
             large_category_id=large_category_id,
             medium_category_id=medium_category_id,
             small_category_id=small_category_id,
-            exists_large_category_ids=large_category_ids,
-            exists_medium_category_ids=medium_category_ids,
-            exists_small_category_ids=small_category_ids,
         )
         tasks = tasks.filter(filters)
         events = events.filter(filters)
@@ -916,7 +922,7 @@ class StatisticViewSet(BaseAPIViewSet):
         ranges = split_ranges(
             from_date, end_date, trim_whitespace(statistic_by)
         )
-
+        # Handle for statistic tag mydock page
         if is_tag_page:
             total_duration, tag_list = process_merge_card_per_tag(
                 tag_ids,
@@ -934,7 +940,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 tag_ids=tag_ids,
             )
             return self.response_ok(data)
-
+        # Handle for statistic category mydock page
         category_list = aggregate_durations(
             tasks,
             events,
@@ -1052,10 +1058,27 @@ class StatisticViewSet(BaseAPIViewSet):
             start_date_min = datetime.combine(start, time.min)
             end_date_max = datetime.combine(end, time.max)
             # Get duration by range
-            durations_by_range = durations.filter(
-                started_at__gte=start_date_min,
-                paused_at__lte=end_date_max,
-            )
+            if start <= now().date() <= end:
+                durations_by_range = durations.filter(
+                    Q(
+                        Q(
+                            Q(started_at__gte=start_date_min)
+                            & Q(paused_at__lte=end_date_max)
+                        )
+                        | Q(
+                            Q(started_at__lte=end_date_max)
+                            & Q(started_at__gte=start_date_min)
+                            & Q(paused_at__isnull=True)
+                        )
+                    )
+                )
+            else:
+                durations_by_range = durations.filter(
+                    Q(
+                        Q(started_at__gte=start_date_min)
+                        & Q(Q(paused_at__lte=end_date_max)),
+                    )
+                )
             elements = []
             if is_tag_page:
                 if check_is_not_none_category(
@@ -1172,7 +1195,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
     permission_classes = [ActionPermission]
     filter_backends = [FilterByPermission]
     screen_name = Screens.TEAMDOCK.value
-    queryset = Organization.objects.all()
+    queryset = Organization.all_objects.all()
 
     @extend_schema(
         parameters=[
@@ -1194,11 +1217,12 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         """
         Returns a list of statistic all categories.
         """
-        from_date = request.query_params.get("from_date")
-        end_date = request.query_params.get("end_date")
-
-        validate_date_format_using_regex(from_date)
-        validate_date_format_using_regex(end_date)
+        from_date = validate_date_by_regex_and_reformat(
+            request.query_params.get("from_date")
+        )
+        end_date = validate_date_by_regex_and_reformat(
+            request.query_params.get("end_date")
+        )
 
         tag_ids_param = request.query_params.get("tag_ids")
         user_ids_param = request.query_params.get("user_ids")
@@ -1211,9 +1235,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             )
         else:
             users = instance.users.all()
-        org_users = instance.users.all()
-        from_date = datetime.strptime(from_date, BASE_DATE_FORMAT).date()
-        end_date = datetime.strptime(end_date, BASE_DATE_FORMAT).date()
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
         data = {}
@@ -1222,14 +1243,14 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         durations = get_list_durations_by_users(
             start_of_day,
             end_of_day,
-            org_users,
+            users,
             organizations=[instance],
             tags=tag_ids,
         )
 
         tasks, events = get_list_models(durations)
         total_duration, category_list = process_per_user(
-            org_users,
+            users,
             tasks,
             events,
             start_of_day,
@@ -1358,11 +1379,12 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         medium_category_id = request.query_params.get("medium_category_id")
         small_category_id = request.query_params.get("small_category_id")
         tag_ids_param = request.query_params.get("tag_ids")
-        from_date = request.query_params.get("from_date")
-        end_date = request.query_params.get("end_date")
-
-        validate_date_format_using_regex(from_date)
-        validate_date_format_using_regex(end_date)
+        from_date = validate_date_by_regex_and_reformat(
+            request.query_params.get("from_date")
+        )
+        end_date = validate_date_by_regex_and_reformat(
+            request.query_params.get("end_date")
+        )
 
         instance = self.get_object()
         user_ids_param = request.query_params.get("user_ids")
@@ -1372,8 +1394,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             )
         else:
             users = instance.users.all()
-        from_date = datetime.strptime(from_date, BASE_DATE_FORMAT).date()
-        end_date = datetime.strptime(end_date, BASE_DATE_FORMAT).date()
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
 
@@ -1551,15 +1571,14 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         small_category_id = request.query_params.get("small_category_id")
         user_ids = request.query_params.get("user_ids")
         tag_ids_param = request.query_params.get("tag_ids")
-        from_date = request.query_params.get("from_date")
-        end_date = request.query_params.get("end_date")
         statistic_by = request.query_params.get("statistic_by")
         request.query_params.get("is_tag_page")
-        validate_date_format_using_regex(from_date)
-        validate_date_format_using_regex(end_date)
-
-        from_date = datetime.strptime(from_date, BASE_DATE_FORMAT).date()
-        end_date = datetime.strptime(end_date, BASE_DATE_FORMAT).date()
+        from_date = validate_date_by_regex_and_reformat(
+            request.query_params.get("from_date")
+        )
+        end_date = validate_date_by_regex_and_reformat(
+            request.query_params.get("end_date")
+        )
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
         users = split_id_from_string(user_ids)

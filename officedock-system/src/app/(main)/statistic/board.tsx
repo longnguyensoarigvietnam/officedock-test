@@ -13,6 +13,7 @@ import AllocationCategory from '@components/statistic/category/AllocationCategor
 import PercentageCategoryCompare from '@components/statistic/category/compare/PercentageCategoryCompare';
 import AllocationCategoryCompare from '@components/statistic/category/compare/AllocationCategoryCompare';
 import LineChart from '@components/statistic/category/LineChart';
+import StackedAreaChart from '@components/statistic/category/StackedAreaChart';
 import LineChartCompare from '@components/statistic/category/compare/LineChartCompare';
 
 import { pageRouters } from '@constants/routers';
@@ -186,18 +187,18 @@ const StatisticBoard = () => {
         const mainItem =
           data.organizations.find((item) => item.isMain) ||
           data.organizations[0];
+        const optionsTagList = mainItem.tags.map((item) => ({
+          label: item.name,
+          value: item.id,
+        }));
+        setTagsOptions(optionsTagList);
         return {
           label: mainItem.name,
           value: mainItem.id,
         };
       })();
 
-      const optionsTagList = data.tags.map((item) => ({
-        label: item.name,
-        value: item.id,
-      }));
       setSelectedOrganization(result);
-      setTagsOptions(optionsTagList);
 
       setListOptionsOrganization([
         ...data.organizations.map((org) => ({
@@ -235,6 +236,15 @@ const StatisticBoard = () => {
         value: stat.LARGE.id,
         label: stat.LARGE.name,
       }));
+      const optionsTagList = organization.tags.map((item) => ({
+        label: item.name,
+        value: item.id,
+      }));
+
+      setCurrentPage(1);
+
+      setSelectedTags([]);
+      setTagsOptions(optionsTagList);
       setLargeOptions(largeCategories);
     } else {
       setLargeOptions([]);
@@ -256,6 +266,14 @@ const StatisticBoard = () => {
         value: stat.LARGE.id,
         label: stat.LARGE.name,
       }));
+      const optionsTagList = organization.tags.map((item) => ({
+        label: item.name,
+        value: item.id,
+      }));
+      setCurrentPage(1);
+
+      setSelectedTags([]);
+      setTagsOptions(optionsTagList);
       setLargeOptions(largeCategories);
     } else {
       setLargeOptions([]);
@@ -580,8 +598,20 @@ const StatisticBoard = () => {
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
           />
+          {/* Stack area chart */}
+
+          <StackedAreaChart
+            startDate={startDate}
+            endDate={endDate}
+            removeTag={removeTag}
+            statisticCategoryList={statisticCategoryList}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+          />
         </>
       )}
+
       {/* Task list */}
       <TaskListStatistic
         startDate={startDate}

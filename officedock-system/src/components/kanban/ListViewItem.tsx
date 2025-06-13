@@ -2,7 +2,7 @@
 import { Draggable } from '@hello-pangea/dnd';
 import { Controller, useForm } from 'react-hook-form';
 import { formatISO } from 'date-fns';
-import { useMutation, useQueryClient } from 'react-query';
+import { useQueryClient } from 'react-query';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -18,7 +18,6 @@ import {
   StatusValueTask,
   TaskRepetitiveValue,
 } from '@constants/enums';
-import { apiRouters } from '@constants/routers';
 
 import {
   CreationDataTask,
@@ -41,7 +40,6 @@ import {
   getJapaneseWeekDay,
 } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
-import api from '@base/api';
 
 interface ListViewItemProps {
   id: string;
@@ -185,8 +183,25 @@ const ListViewItem = ({
   }, [creationDataTaskData]);
   //  Handle call api delete task
   const { calculateDurationTask } = useCalculateDurationTask({
-    onSuccess: (response) => {
+    onSuccess: (response, task) => {
       const data = response.data;
+
+      if (data.isAnotherTaskStarted) {
+        setIdTaskStarting({
+          id: data.id,
+          type: data.type,
+        });
+        setDataClickTask({
+          id: task.id,
+          type: task.type,
+        });
+        setShowWarningStartTaskModal(true);
+        return;
+      }
+      setDataRunning({
+        id: `${content.id}`,
+        type: ItemStartType.TASK,
+      });
 
       handleUpdateItemInline({
         ...content,
@@ -223,53 +238,9 @@ const ListViewItem = ({
       }
     },
   });
-  // Handle call API check start task
-  const handleCheckStartTask = async ({
-    id,
-    type,
-  }: {
-    id: string;
-    type: string;
-  }) => {
-    return await api.post(apiRouters.TASK_CHECK_START(), {
-      id,
-      type,
-    });
-  };
-  // Function call API  check start task
-  const { mutate: checkTask } = useMutation(
-    'postCheckStartTaskSchedule',
-    handleCheckStartTask,
-    {
-      onSuccess: async ({ data }, task) => {
-        if (!data.isAnotherTaskStarted) {
-          calculateDurationTask({
-            id: `${content.id}`,
-            type: ItemStartType.TASK,
-          });
-          setDataRunning({
-            id: `${content.id}`,
-            type: ItemStartType.TASK,
-          });
-        } else {
-          setIdTaskStarting({
-            id: data.id,
-            type: data.type,
-          });
-          setDataClickTask({
-            id: task.id,
-            type: task.type,
-          });
-          setShowWarningStartTaskModal(true);
-        }
-      },
-      onError: () => {},
-      onSettled: () => {},
-    },
-  );
   // Action call API check start task
   const handleConfirmCheckStartTask = (id: string) => {
-    checkTask({
+    calculateDurationTask({
       id: id,
       type: ItemStartType.TASK,
     });

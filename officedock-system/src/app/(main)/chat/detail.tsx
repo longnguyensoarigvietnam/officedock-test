@@ -48,6 +48,7 @@ import { TaskQuote } from '@components/chat/CustomTaskQuote';
 import { CustomReaction } from '@components/chat/CustomIcon';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import ErrorUploadFileValidationModal from '@components/modals/ErrorUploadFileValidationModal';
+import MemoDataChat from '@components/chat/MemoDataChat';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -212,6 +213,9 @@ const ChatDetail = ({
   } = useContext(GlobalStateContext);
 
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
+
+  // Extend data chat more
+  const [isExtendMoreData, setExtendMoreData] = useState(false);
 
   // Events
   const [openEditEventModal, setOpenEditEventModal] = useState<boolean>(false);
@@ -1575,19 +1579,21 @@ const ChatDetail = ({
           ? String((data.repeatType as OptionDropdownType).value)
           : null,
       repeatInterval:
-        data.repeatInterval && data.repeatInterval.value
-          ? Number(data.repeatInterval.value)
+        data.repeatInterval && (data.repeatInterval as OptionDropdownType).value
+          ? Number((data.repeatInterval as OptionDropdownType).value)
           : null,
       weekDay:
-        data.weekDay && data.weekDay.label != ''
-          ? Number(data.weekDay.value)
+        data.weekDay && (data.weekDay as OptionDropdownType).label != ''
+          ? Number((data.weekDay as OptionDropdownType).value)
           : null,
       monthDay:
-        data.monthDay && data.monthDay.value != ''
-          ? Number(data.monthDay.value)
+        data.monthDay && (data.monthDay as OptionDropdownType).value != ''
+          ? Number((data.monthDay as OptionDropdownType).value)
           : null,
       month:
-        data.month && data.month.value != '' ? Number(data.month.value) : null,
+        data.month && (data.month as OptionDropdownType).value != ''
+          ? Number((data.month as OptionDropdownType).value)
+          : null,
     });
   };
 
@@ -2323,539 +2329,613 @@ const ChatDetail = ({
   }, []);
 
   return (
-    <Fragment>
+    <>
       {chatRoomCode && (
-        <div
-          className="flex flex-col flex-grow w-[calc(100vw_-_600px)] !bg-[#F8FAFC] !h-[100vh]"
-          onClick={handleResetChatRoomNotification}>
-          {/* Header */}
+        <>
           <div
-            className="flex justify-between items-center px-4 py-2 min-h-[78px] !w-full border-b-[2px] text-white"
-            style={{
-              background: 'linear-gradient(to right, #0E8DC5, #0D6FBA)',
-            }}>
-            <div className={`flex items-center w-[60%] gap-2`}>
-              {chatRoomDetail && (
-                <>
-                  <div className="!min-w-[48px]">
-                    {renderImageRound(
-                      chatRoomDetail?.type,
-                      chatRoomDetail?.participants || [],
-                    )}
-                  </div>
-                  <p
-                    className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-[100%]' : 'max-w-[calc(100%_-_370px)]'}   ml-3`}
-                    style={{
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                    }}>
-                    {chatRoomDetail
-                      ? chatRoomCode &&
-                        chatRoomNameEditing.find(
-                          (room) => room.roomCode === chatRoomCode,
-                        )
-                        ? chatRoomNameEditing.find(
-                            (room) => room.roomCode === chatRoomCode,
-                          )?.roomName
-                        : chatRoomDetail?.name
-                      : chatRoomCode &&
+            className="flex relative  flex-col flex-grow  !bg-[#F8FAFC] !h-[100vh]"
+            onClick={handleResetChatRoomNotification}>
+            {/* Header */}
+            <div
+              className="flex justify-between items-center px-4 py-2 min-h-[78px] !w-full border-b-[2px] text-white"
+              style={{
+                background: 'linear-gradient(to right, #0E8DC5, #0D6FBA)',
+              }}>
+              <div className={`flex items-center w-[60%] gap-2`}>
+                {chatRoomDetail && (
+                  <>
+                    <div className="!min-w-[48px]">
+                      {renderImageRound(
+                        chatRoomDetail?.type,
+                        chatRoomDetail?.participants || [],
+                      )}
+                    </div>
+                    <p
+                      className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-[100%]' : 'max-w-[calc(100%_-_370px)]'}   ml-3`}
+                      style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                      }}>
+                      {chatRoomDetail
+                        ? chatRoomCode &&
                           chatRoomNameEditing.find(
                             (room) => room.roomCode === chatRoomCode,
                           )
-                        ? chatRoomNameEditing.find(
-                            (room) => room.roomCode === chatRoomCode,
-                          )?.roomName
-                        : ''}
-                  </p>
-                </>
-              )}
-              <div className="max-w-[280px] w-[280px] ml-3">
-                {chatRoomDetail &&
-                  chatRoomDetail.type === ChatRoomType.GROUP && (
-                    <div className="flex gap-2 items-center">
-                      <p className="text-[13px] mr-3 text-[#FFFFFFB2] text-nowrap">
-                        メンバー
-                        {chatRoomDetail &&
-                        chatRoomParticipantsEditing.find(
-                          (room) => room.roomCode === chatRoomDetail.code,
-                        )
-                          ? chatRoomParticipantsEditing.find(
-                              (room) => room.roomCode === chatRoomDetail.code,
-                            )?.participantsList.length
-                          : chatRoomDetail?.participants?.length}
-                        人
-                      </p>
-                      <DynamicTooltip
-                        content={'グループのメンバーを見る'}
-                        placement="top">
-                        <div className="flex">
+                          ? chatRoomNameEditing.find(
+                              (room) => room.roomCode === chatRoomCode,
+                            )?.roomName
+                          : chatRoomDetail?.name
+                        : chatRoomCode &&
+                            chatRoomNameEditing.find(
+                              (room) => room.roomCode === chatRoomCode,
+                            )
+                          ? chatRoomNameEditing.find(
+                              (room) => room.roomCode === chatRoomCode,
+                            )?.roomName
+                          : ''}
+                    </p>
+                  </>
+                )}
+                <div className="max-w-[280px] w-[280px] ml-3">
+                  {chatRoomDetail &&
+                    chatRoomDetail.type === ChatRoomType.GROUP && (
+                      <div className="flex gap-2 items-center">
+                        <p className="text-[13px] mr-3 text-[#FFFFFFB2] text-nowrap">
+                          メンバー
                           {chatRoomDetail &&
                           chatRoomParticipantsEditing.find(
                             (room) => room.roomCode === chatRoomDetail.code,
                           )
-                            ? getParticipantAvatars(
-                                chatRoomParticipantsEditing.find(
-                                  (room) =>
-                                    room.roomCode === chatRoomDetail.code,
-                                )?.participantsList || [],
-                                true,
-                              )
-                            : getParticipantAvatars(
-                                chatRoomDetail?.participants || [],
-                                false,
-                              )}
-                        </div>
-                      </DynamicTooltip>
+                            ? chatRoomParticipantsEditing.find(
+                                (room) => room.roomCode === chatRoomDetail.code,
+                              )?.participantsList.length
+                            : chatRoomDetail?.participants?.length}
+                          人
+                        </p>
+                        <DynamicTooltip
+                          content={'グループのメンバーを見る'}
+                          placement="top">
+                          <div className="flex">
+                            {chatRoomDetail &&
+                            chatRoomParticipantsEditing.find(
+                              (room) => room.roomCode === chatRoomDetail.code,
+                            )
+                              ? getParticipantAvatars(
+                                  chatRoomParticipantsEditing.find(
+                                    (room) =>
+                                      room.roomCode === chatRoomDetail.code,
+                                  )?.participantsList || [],
+                                  true,
+                                )
+                              : getParticipantAvatars(
+                                  chatRoomDetail?.participants || [],
+                                  false,
+                                )}
+                          </div>
+                        </DynamicTooltip>
 
-                      <DynamicTooltip
-                        content={'グループにメンバーを招待する'}
-                        placement="top">
-                        <div>
-                          <Button
-                            sz="sm"
-                            className="w-fit text-xs min-w-[80px] !px-[10px] !py-[8px] !bg-[#FFFFFF4D] !border-none"
-                            onClick={() => setOpenAddMembersBox(true)}
-                            type="button">
-                            招待する
-                          </Button>
-                        </div>
-                      </DynamicTooltip>
-                    </div>
-                  )}
-              </div>
-            </div>
-
-            <div className="flex gap-2 items-center">
-              <InputSearch
-                placeholder="チャットルーム内のキーワードを検索"
-                customSearchIconUrl="/icons/search-white.svg"
-                inputClassName="!w-[290px] !py-2 !rounded-[30px] text-sm !bg-[#F6F9FA4D] border-none placeholder-white"
-                value={searchChatMsg}
-                onChange={(e) => setSearchChatMsg(e.target.value)}
-                onKeyDown={(e: any) => {
-                  if (e.keyCode == 13 && e.target.value !== '') {
-                    searchMessagesInChatRoom({
-                      searchChatMsg,
-                      pageNumber: 1,
-                      roomType:
-                        chatRoomDetail?.type == ChatRoomType.CALENDAR ||
-                        chatRoomDetail?.type == ChatRoomType.SKILL ||
-                        chatRoomDetail?.type == ChatRoomType.TASK
-                          ? chatRoomDetail?.type || ''
-                          : '',
-                    });
-                    setOpenSearchMessagesModal(true);
-                  }
-                }}
-              />
-              {session?.user.permissions &&
-                hasPermissionInArray(
-                  session?.user.permissions,
-                  PermissionsSystem.CHAT_UPDATE,
-                ) && (
-                  <>
-                    {[
-                      ChatRoomType.GROUP,
-                      ChatRoomType.TASK,
-                      ChatRoomType.SKILL,
-                      ChatRoomType.CALENDAR,
-                    ].map(
-                      (type) =>
-                        chatRoomDetail?.code == chatRoomCode &&
-                        chatRoomDetail?.type == type && (
-                          <DynamicTooltip
-                            content={'設定'}
-                            key={type}
-                            placement="left"
-                            customOffset={{
-                              left: -40,
-                            }}>
-                            <div>
-                              <ImageRound
-                                className="w-[26px] h-[26px] hover:cursor-pointer"
-                                src="/icons/setting-chat.svg"
-                                border="full"
-                                name="Setting icon"
-                                onClick={() => setOpenSettingBox(true)}
-                              />
-                            </div>
-                          </DynamicTooltip>
-                        ),
+                        <DynamicTooltip
+                          content={'グループにメンバーを招待する'}
+                          placement="top">
+                          <div>
+                            <Button
+                              sz="sm"
+                              className="w-fit text-xs min-w-[80px] !px-[10px] !py-[8px] !bg-[#FFFFFF4D] !border-none"
+                              onClick={() => setOpenAddMembersBox(true)}
+                              type="button">
+                              招待する
+                            </Button>
+                          </div>
+                        </DynamicTooltip>
+                      </div>
                     )}
-                  </>
-                )}
-            </div>
-          </div>
-          {/* Message list */}
-          <div
-            ref={chatContainerRef}
-            className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || chatRoomDetail?.type == ChatRoomType.CALENDAR ? 'h-[calc(100vh_-_170px)]' : 'h-[calc(100vh_-_380px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex flex-col-reverse scroll-smooth`}>
-            {isLoadingNewer && (
-              <div className="flex flex-col items-start ml-3">
-                <RowSkeleton className="!h-[30px] w-[700px] mb-2" />
-                <RowSkeleton className="!h-[50px] w-[600px] mb-2" />
+                </div>
               </div>
-            )}
-            <div className="h-[calc(100vh)] mt-3 w-full bg-[rgb(229, 231, 235)] relative">
-              <div>
-                {initialLoad ? (
-                  <div className="flex flex-col items-start ml-3">
-                    <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
-                    <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
-                    <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
-                    <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
-                    <RowSkeleton
-                      numberOfRows={4}
-                      className="!h-[50px] w-[700px]"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full"></div>
-                )}
-              </div>
-            </div>
-            {dataMessageDetail &&
-              chatRoomNotifications &&
-              dataMessageDetail
-                .slice(0, chatRoomNotifications.notifications)
-                .map((item) => (
-                  <div
-                    key={item.id}
-                    data-message-id={item.id}
-                    ref={item.id == gotoMessageId ? gotoMessageRef : null}>
-                    <MessageDetail
-                      chatRoomDetail={chatRoomDetail}
-                      uploadFileStatus={uploadFileStatus}
-                      messageDetail={item}
-                      msgEditing={msgEditing}
-                      editor={editor}
-                      chatContainerRef={chatContainerRef}
-                      dashboardMembers={dashboardMembers}
-                      highlightedMessageId={highlightedMessageId}
-                      setPreserveFiles={setPreserveFiles}
-                      setOpenUploadFilesModal={setOpenUploadFilesModal}
-                      setUploadFiles={setUploadFiles}
-                      setMentionMembers={setMentionMembers}
-                      setMessage={setMessage}
-                      setMsgEditing={setMsgEditing}
-                      setMsgIdDeleted={setMsgIdDeleted}
-                      setOpenConfirmDeleteModal={setOpenConfirmDeleteModal}
-                      setMsgIdUpdated={setMsgIdUpdated}
-                      handleActionEditTask={handleActionEditTask}
-                      handleConfirmUpdateMsg={handleConfirmUpdateMsg}
-                      handleConfirmGetDataDetailEvent={
-                        handleConfirmGetDataDetailEvent
-                      }
-                      handleUpdateBookmark={handleUpdateBookmark}
-                      handleReactionClick={handleReactionClick}
-                      handleRemoveReactionClick={handleRemoveReactionClick}
-                      handleResetChatRoomNotification={
-                        handleResetChatRoomNotification
-                      }
-                    />
-                  </div>
-                ))}
-            {dataMessageDetail?.length > 0 &&
-            chatRoomNotifications &&
-            chatRoomNotifications.notifications > 0 ? (
-              <div className="flex items-center gap-5 justify-center">
-                <div className="wavy-line"></div>
-                <p className="text-[13px] text-[#0068B6] break-all min-w-[105px]">
-                  未読のメッセージ
-                </p>
-                <div className="wavy-line"></div>
-              </div>
-            ) : null}
-            {dataMessageDetail &&
-              chatRoomNotifications &&
-              dataMessageDetail
-                .slice(
-                  chatRoomNotifications.notifications,
-                  dataMessageDetail.length,
-                )
-                .map((item) => (
-                  <div
-                    key={item.id}
-                    data-message-id={item.id}
-                    ref={item.id == gotoMessageId ? gotoMessageRef : null}>
-                    <MessageDetail
-                      chatRoomDetail={chatRoomDetail}
-                      uploadFileStatus={uploadFileStatus}
-                      messageDetail={item}
-                      editor={editor}
-                      msgEditing={msgEditing}
-                      chatContainerRef={chatContainerRef}
-                      dashboardMembers={dashboardMembers}
-                      highlightedMessageId={highlightedMessageId}
-                      setPreserveFiles={setPreserveFiles}
-                      setOpenUploadFilesModal={setOpenUploadFilesModal}
-                      setUploadFiles={setUploadFiles}
-                      setMentionMembers={setMentionMembers}
-                      setMessage={setMessage}
-                      setMsgEditing={setMsgEditing}
-                      setMsgIdDeleted={setMsgIdDeleted}
-                      setOpenConfirmDeleteModal={setOpenConfirmDeleteModal}
-                      setMsgIdUpdated={setMsgIdUpdated}
-                      handleActionEditTask={handleActionEditTask}
-                      handleConfirmUpdateMsg={handleConfirmUpdateMsg}
-                      handleConfirmGetDataDetailEvent={
-                        handleConfirmGetDataDetailEvent
-                      }
-                      handleUpdateBookmark={handleUpdateBookmark}
-                      handleReactionClick={handleReactionClick}
-                      handleRemoveReactionClick={handleRemoveReactionClick}
-                      handleResetChatRoomNotification={
-                        handleResetChatRoomNotification
-                      }
-                    />
-                  </div>
-                ))}
-            {isLoadingOlder && (
-              <div className="flex flex-col items-start ml-3">
-                <RowSkeleton className="!h-[30px] w-[700px] mb-2" />
-                <RowSkeleton className="!h-[50px] w-[600px] mb-2" />
-              </div>
-            )}
-          </div>
-          {/* Options and text editor */}
-          {chatRoomDetail ? (
-            <>
-              {[
-                ChatRoomType.GROUP,
-                ChatRoomType.PRIVATE,
-                ChatRoomType.SELF,
-              ].map(
-                (type) =>
-                  chatRoomDetail?.type == type && (
-                    <div
-                      key={type}
-                      className="px-8 py-1 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
-                      <div className="flex justify-between items-center">
-                        <div className="flex gap-1 items-center">
-                          {chatRoomDetail?.type == ChatRoomType.GROUP && (
-                            <>
-                              <ChatMentionMembersList
-                                editor={editor}
-                                mentionMemberOptions={mentionMemberOptions}
-                                searchMentionMembers={searchMentionMembers}
-                                mentionMembers={mentionMembers}
-                                dashboardMembers={dashboardMembers}
-                                customModalPosition={
-                                  'left-[-125px] top-[-310px]'
-                                }
-                                customArrowPosition={
-                                  'after:top-full after:border-t-white'
-                                }
-                                setMentionMembers={setMentionMembers}
-                                handleCheckboxClick={handleCheckboxClick}
-                                setSearchMentionMembers={
-                                  setSearchMentionMembers
-                                }
-                              />
-                            </>
-                          )}
-                          <input
-                            type="file"
-                            ref={fileInputRef}
-                            className="hidden"
-                            onChange={(e) => {
-                              handleFileChange(e);
-                            }}
-                          />
 
-                          <DynamicTooltip
-                            content={'ファイルを送信'}
-                            placement="top">
-                            <div
-                              className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer"
-                              onClick={() => {
-                                fileInputRef.current?.click();
-                              }}>
-                              <ImageRound
-                                name="Add file"
-                                src="/icons/add-file.svg"
-                                className="w-[16px] h-[16px]"
-                              />
-                            </div>
-                          </DynamicTooltip>
-                          <div
-                            onClick={() => setIsShowListIcon(!isShowListIcon)}
-                            className="relative">
+              <div className="flex gap-2 items-center">
+                <InputSearch
+                  placeholder="チャットルーム内のキーワードを検索"
+                  customSearchIconUrl="/icons/search-white.svg"
+                  inputClassName="!w-[290px] !py-2 !rounded-[30px] text-sm !bg-[#F6F9FA4D] border-none placeholder-white"
+                  value={searchChatMsg}
+                  onChange={(e) => setSearchChatMsg(e.target.value)}
+                  onKeyDown={(e: any) => {
+                    if (e.keyCode == 13 && e.target.value !== '') {
+                      searchMessagesInChatRoom({
+                        searchChatMsg,
+                        pageNumber: 1,
+                        roomType:
+                          chatRoomDetail?.type == ChatRoomType.CALENDAR ||
+                          chatRoomDetail?.type == ChatRoomType.SKILL ||
+                          chatRoomDetail?.type == ChatRoomType.TASK
+                            ? chatRoomDetail?.type || ''
+                            : '',
+                      });
+                      setOpenSearchMessagesModal(true);
+                    }
+                  }}
+                />
+                {session?.user.permissions &&
+                  hasPermissionInArray(
+                    session?.user.permissions,
+                    PermissionsSystem.CHAT_UPDATE,
+                  ) && (
+                    <>
+                      {[
+                        ChatRoomType.GROUP,
+                        ChatRoomType.TASK,
+                        ChatRoomType.SKILL,
+                        ChatRoomType.CALENDAR,
+                      ].map(
+                        (type) =>
+                          chatRoomDetail?.code == chatRoomCode &&
+                          chatRoomDetail?.type == type && (
                             <DynamicTooltip
-                              content={'リアクション'}
-                              placement="top">
-                              <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                              content={'設定'}
+                              key={type}
+                              placement="left"
+                              customOffset={{
+                                left: -40,
+                              }}>
+                              <div>
                                 <ImageRound
-                                  name="Smile"
-                                  src="/icons/smile.svg"
-                                  className="w-[16px] h-[16px]"
+                                  className="w-[26px] h-[26px] hover:cursor-pointer"
+                                  src="/icons/setting-chat.svg"
+                                  border="full"
+                                  name="Setting icon"
+                                  onClick={() => setOpenSettingBox(true)}
                                 />
                               </div>
                             </DynamicTooltip>
-                            {isShowListIcon && (
-                              <div
-                                style={{
-                                  boxShadow: '0px 4px 8px 0px #0000000F',
-                                }}
-                                ref={optionIconRef}
-                                className="w-[190px] h-[44px] absolute after:content-[''] after:absolute  after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white rounded-lg top-[-54px] bg-white flex items-center gap-3 justify-center left-[-81px]">
-                                {REACTION_LIST.map((icon) => {
-                                  return (
-                                    <DynamicTooltip
-                                      content={icon.tooltipContent}
-                                      key={icon.name}
-                                      placement="top">
-                                      <div
-                                        onClick={() => insertReaction(icon)}
-                                        className={` rounded-ful`}>
-                                        <ImageRound
-                                          name={icon.name}
-                                          src={icon.src}
-                                          className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
-                                        />
-                                      </div>
-                                    </DynamicTooltip>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-
-                          {session?.user.permissions &&
-                            hasPermissionInArray(
-                              session?.user.permissions,
-                              PermissionsSystem.MY_TASK_ADD,
-                            ) && (
-                              // List task for user
-                              <ListTaskUserChat
-                                quoteTaskList={quoteTaskList}
-                                setQuoteTaskList={setQuoteTaskList}
-                                handleQuoteTaskUser={handleQuoteTaskUser}
-                              />
-                            )}
-                          <DynamicTooltip content={'書式設定'} placement="top">
-                            <p className="!font-thin text-[#77858F] hover:bg-[#77858F26] rounded-full p-[3px] hover:cursor-pointer flex justify-between items-center w-8 h-8">
-                              <span className="w-[20px] ml-1 mt-[-3px]">
-                                Aa
-                              </span>
-                            </p>
-                          </DynamicTooltip>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          {session?.user.permissions &&
-                            hasPermissionInArray(
-                              session?.user.permissions,
-                              PermissionsSystem.CHAT_UPDATE,
-                            ) &&
-                            msgIdUpdated && (
-                              <Button
-                                className="w-[120px]"
-                                variant="outline"
-                                onClick={() => {
-                                  setMsgIdUpdated && setMsgIdUpdated(undefined);
-                                  setPreserveFiles([]);
-                                  setUploadFiles([]);
-                                  setMentionMembers([]);
-                                  setMessage && setMessage('');
-                                  if (!editor) return;
-                                  editor.commands.clearContent();
-                                }}>
-                                キャンセル
-                              </Button>
-                            )}
-                          {session?.user.permissions &&
-                            hasPermissionInArray(
-                              session?.user.permissions,
-                              PermissionsSystem.CHAT_ADD,
-                            ) && (
-                              <Button
-                                className="w-[100px]"
-                                type="submit"
-                                onClick={() => {
-                                  if (msgIdUpdated) {
-                                    handleConfirmUpdateMsg(msgIdUpdated);
-                                  } else {
-                                    handleConfirmSendMessage();
-                                  }
-                                }}
-                                disabled={
-                                  trimUnnecessaryLineBreaks(
-                                    message as string,
-                                  ) === ''
-                                }>
-                                送信
-                              </Button>
-                            )}
-                        </div>
-                      </div>
-                      <div className="mt-5">
-                        <EditorContent editor={editor} />
-                      </div>
-                    </div>
-                  ),
-              )}
-            </>
-          ) : (
-            <div className="px-8 py-1 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
-              <div className="flex justify-between items-center">
-                <div className="flex gap-1 items-center">
-                  <DynamicTooltip content={'メンション'} placement="top">
-                    <div className="hover:bg-[#77858F26] rounded-full p-[7px] flex items-center justify-center hover:cursor-pointer">
-                      <ImageRound
-                        name="Mention"
-                        src="/icons/mention.svg"
-                        className="w-[16px] h-[16px]"
-                      />
-                    </div>
-                  </DynamicTooltip>
-                  <DynamicTooltip content={'ファイルを送信'} placement="top">
-                    <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
-                      <ImageRound
-                        name="Add file"
-                        src="/icons/add-file.svg"
-                        className="w-[16px] h-[16px]"
-                      />
-                    </div>
-                  </DynamicTooltip>
-                  <DynamicTooltip content={'リアクション'} placement="top">
-                    <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
-                      <ImageRound
-                        name="Smile"
-                        src="/icons/smile.svg"
-                        className="w-[16px] h-[16px]"
-                      />
-                    </div>
-                  </DynamicTooltip>
-                  <DynamicTooltip content={'タスクを引用'} placement="top">
-                    <div className="hover:bg-[#77858F26] relative rounded-full p-[7px] hover:cursor-pointer">
-                      <ImageRound
-                        name="Quote checker"
-                        src="/icons/quote-checker.svg"
-                        className="w-[18px] h-[18px]"
-                      />
-                    </div>
-                  </DynamicTooltip>
-                  <DynamicTooltip content={'書式設定'} placement="top">
-                    <p className="!font-thin text-[#77858F] hover:bg-[#77858F26] rounded-full p-[3px] hover:cursor-pointer flex justify-between items-center w-8 h-8">
-                      <span className="w-[20px] ml-1 mt-[-3px]">Aa</span>
-                    </p>
-                  </DynamicTooltip>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Button className="w-[100px]" disabled={true}>
-                    送信
-                  </Button>
-                </div>
-              </div>
-              <div className="mt-5">
-                <div className="border-[1px] border-[#77858f] rounded-[6px] h-[150px] w-full p-[14px]"></div>
+                          ),
+                      )}
+                    </>
+                  )}
               </div>
             </div>
-          )}
-        </div>
+            {/* Content */}
+            <div className="flex w-full justify-between ">
+              <div className="flex-grow">
+                {/* Message list */}
+                <div
+                  ref={chatContainerRef}
+                  className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || chatRoomDetail?.type == ChatRoomType.CALENDAR ? 'h-[calc(100vh_-_170px)]' : 'h-[calc(100vh_-_386px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex pr-0 flex-col-reverse scroll-smooth`}>
+                  {isLoadingNewer && (
+                    <div className="flex  flex-col items-start ml-3">
+                      <RowSkeleton className="!h-[30px] w-[700px] mb-2" />
+                      <RowSkeleton className="!h-[50px] w-[600px] mb-2" />
+                    </div>
+                  )}
+                  <div className="h-[calc(100vh)] mt-3 w-full bg-[rgb(229, 231, 235)] relative">
+                    <div>
+                      {initialLoad ? (
+                        <div className="flex flex-col items-start ml-3">
+                          <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
+                          <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
+                          <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
+                          <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
+                          <RowSkeleton
+                            numberOfRows={4}
+                            className="!h-[50px] w-[700px]"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full"></div>
+                      )}
+                    </div>
+                  </div>
+                  {dataMessageDetail &&
+                    chatRoomNotifications &&
+                    dataMessageDetail
+                      .slice(0, chatRoomNotifications.notifications)
+                      .map((item) => (
+                        <div
+                          key={item.id}
+                          data-message-id={item.id}
+                          ref={
+                            item.id == gotoMessageId ? gotoMessageRef : null
+                          }>
+                          <MessageDetail
+                            chatRoomDetail={chatRoomDetail}
+                            uploadFileStatus={uploadFileStatus}
+                            messageDetail={item}
+                            msgEditing={msgEditing}
+                            editor={editor}
+                            chatContainerRef={chatContainerRef}
+                            dashboardMembers={dashboardMembers}
+                            highlightedMessageId={highlightedMessageId}
+                            setPreserveFiles={setPreserveFiles}
+                            setOpenUploadFilesModal={setOpenUploadFilesModal}
+                            setUploadFiles={setUploadFiles}
+                            setMentionMembers={setMentionMembers}
+                            setMessage={setMessage}
+                            setMsgEditing={setMsgEditing}
+                            setMsgIdDeleted={setMsgIdDeleted}
+                            setOpenConfirmDeleteModal={
+                              setOpenConfirmDeleteModal
+                            }
+                            setMsgIdUpdated={setMsgIdUpdated}
+                            handleActionEditTask={handleActionEditTask}
+                            handleConfirmUpdateMsg={handleConfirmUpdateMsg}
+                            handleConfirmGetDataDetailEvent={
+                              handleConfirmGetDataDetailEvent
+                            }
+                            handleUpdateBookmark={handleUpdateBookmark}
+                            handleReactionClick={handleReactionClick}
+                            handleRemoveReactionClick={
+                              handleRemoveReactionClick
+                            }
+                            handleResetChatRoomNotification={
+                              handleResetChatRoomNotification
+                            }
+                          />
+                        </div>
+                      ))}
+                  {dataMessageDetail?.length > 0 &&
+                  chatRoomNotifications &&
+                  chatRoomNotifications.notifications > 0 ? (
+                    <div className="flex items-center gap-5 justify-center">
+                      <div className="wavy-line"></div>
+                      <p className="text-[13px] text-[#0068B6] break-all min-w-[105px]">
+                        未読のメッセージ
+                      </p>
+                      <div className="wavy-line"></div>
+                    </div>
+                  ) : null}
+                  {dataMessageDetail &&
+                    chatRoomNotifications &&
+                    dataMessageDetail
+                      .slice(
+                        chatRoomNotifications.notifications,
+                        dataMessageDetail.length,
+                      )
+                      .map((item) => (
+                        <div
+                          key={item.id}
+                          data-message-id={item.id}
+                          ref={
+                            item.id == gotoMessageId ? gotoMessageRef : null
+                          }>
+                          <MessageDetail
+                            chatRoomDetail={chatRoomDetail}
+                            uploadFileStatus={uploadFileStatus}
+                            messageDetail={item}
+                            editor={editor}
+                            msgEditing={msgEditing}
+                            chatContainerRef={chatContainerRef}
+                            dashboardMembers={dashboardMembers}
+                            highlightedMessageId={highlightedMessageId}
+                            setPreserveFiles={setPreserveFiles}
+                            setOpenUploadFilesModal={setOpenUploadFilesModal}
+                            setUploadFiles={setUploadFiles}
+                            setMentionMembers={setMentionMembers}
+                            setMessage={setMessage}
+                            setMsgEditing={setMsgEditing}
+                            setMsgIdDeleted={setMsgIdDeleted}
+                            setOpenConfirmDeleteModal={
+                              setOpenConfirmDeleteModal
+                            }
+                            setMsgIdUpdated={setMsgIdUpdated}
+                            handleActionEditTask={handleActionEditTask}
+                            handleConfirmUpdateMsg={handleConfirmUpdateMsg}
+                            handleConfirmGetDataDetailEvent={
+                              handleConfirmGetDataDetailEvent
+                            }
+                            handleUpdateBookmark={handleUpdateBookmark}
+                            handleReactionClick={handleReactionClick}
+                            handleRemoveReactionClick={
+                              handleRemoveReactionClick
+                            }
+                            handleResetChatRoomNotification={
+                              handleResetChatRoomNotification
+                            }
+                          />
+                        </div>
+                      ))}
+                  {isLoadingOlder && (
+                    <div className="flex flex-col items-start ml-3">
+                      <RowSkeleton className="!h-[30px] w-[700px] mb-2" />
+                      <RowSkeleton className="!h-[50px] w-[600px] mb-2" />
+                    </div>
+                  )}
+                </div>
+                {/* Options and text editor */}
+                {chatRoomDetail ? (
+                  <>
+                    {[
+                      ChatRoomType.GROUP,
+                      ChatRoomType.PRIVATE,
+                      ChatRoomType.SELF,
+                    ].map(
+                      (type) =>
+                        chatRoomDetail?.type == type && (
+                          <div
+                            key={type}
+                            className="px-8 pt-1 py-3 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
+                            <div className="flex justify-between items-center">
+                              <div className="flex gap-1 items-center">
+                                {chatRoomDetail?.type == ChatRoomType.GROUP && (
+                                  <>
+                                    <ChatMentionMembersList
+                                      editor={editor}
+                                      mentionMemberOptions={
+                                        mentionMemberOptions
+                                      }
+                                      searchMentionMembers={
+                                        searchMentionMembers
+                                      }
+                                      mentionMembers={mentionMembers}
+                                      dashboardMembers={dashboardMembers}
+                                      customModalPosition={
+                                        'left-[-125px] top-[-310px]'
+                                      }
+                                      customArrowPosition={
+                                        'after:top-full after:border-t-white'
+                                      }
+                                      setMentionMembers={setMentionMembers}
+                                      handleCheckboxClick={handleCheckboxClick}
+                                      setSearchMentionMembers={
+                                        setSearchMentionMembers
+                                      }
+                                    />
+                                  </>
+                                )}
+                                <input
+                                  type="file"
+                                  ref={fileInputRef}
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    handleFileChange(e);
+                                  }}
+                                />
+
+                                <DynamicTooltip
+                                  content={'ファイルを送信'}
+                                  placement="top">
+                                  <div
+                                    className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer"
+                                    onClick={() => {
+                                      fileInputRef.current?.click();
+                                    }}>
+                                    <ImageRound
+                                      name="Add file"
+                                      src="/icons/add-file.svg"
+                                      className="w-[16px] h-[16px]"
+                                    />
+                                  </div>
+                                </DynamicTooltip>
+                                <div
+                                  onClick={() =>
+                                    setIsShowListIcon(!isShowListIcon)
+                                  }
+                                  className="relative">
+                                  <DynamicTooltip
+                                    content={'リアクション'}
+                                    placement="top">
+                                    <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                                      <ImageRound
+                                        name="Smile"
+                                        src="/icons/smile.svg"
+                                        className="w-[16px] h-[16px]"
+                                      />
+                                    </div>
+                                  </DynamicTooltip>
+                                  {isShowListIcon && (
+                                    <div
+                                      style={{
+                                        boxShadow: '0px 4px 8px 0px #0000000F',
+                                      }}
+                                      ref={optionIconRef}
+                                      className="w-[190px] h-[44px] absolute after:content-[''] after:absolute  after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white rounded-lg top-[-54px] bg-white flex items-center gap-3 justify-center left-[-81px]">
+                                      {REACTION_LIST.map((icon) => {
+                                        return (
+                                          <DynamicTooltip
+                                            content={icon.tooltipContent}
+                                            key={icon.name}
+                                            placement="top">
+                                            <div
+                                              onClick={() =>
+                                                insertReaction(icon)
+                                              }
+                                              className={` rounded-ful`}>
+                                              <ImageRound
+                                                name={icon.name}
+                                                src={icon.src}
+                                                className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
+                                              />
+                                            </div>
+                                          </DynamicTooltip>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {session?.user.permissions &&
+                                  hasPermissionInArray(
+                                    session?.user.permissions,
+                                    PermissionsSystem.MY_TASK_ADD,
+                                  ) && (
+                                    // List task for user
+                                    <ListTaskUserChat
+                                      quoteTaskList={quoteTaskList}
+                                      setQuoteTaskList={setQuoteTaskList}
+                                      handleQuoteTaskUser={handleQuoteTaskUser}
+                                    />
+                                  )}
+                                <DynamicTooltip
+                                  content={'書式設定'}
+                                  placement="top">
+                                  <p className="!font-thin text-[#77858F] hover:bg-[#77858F26] rounded-full p-[3px] hover:cursor-pointer flex justify-between items-center w-8 h-8">
+                                    <span className="w-[20px] ml-1 mt-[-3px]">
+                                      Aa
+                                    </span>
+                                  </p>
+                                </DynamicTooltip>
+                              </div>
+
+                              <div className="flex items-center gap-3 mt-2">
+                                {session?.user.permissions &&
+                                  hasPermissionInArray(
+                                    session?.user.permissions,
+                                    PermissionsSystem.CHAT_UPDATE,
+                                  ) &&
+                                  msgIdUpdated && (
+                                    <Button
+                                      className="w-[120px]"
+                                      variant="outline"
+                                      onClick={() => {
+                                        setMsgIdUpdated &&
+                                          setMsgIdUpdated(undefined);
+                                        setPreserveFiles([]);
+                                        setUploadFiles([]);
+                                        setMentionMembers([]);
+                                        setMessage && setMessage('');
+                                        if (!editor) return;
+                                        editor.commands.clearContent();
+                                      }}>
+                                      キャンセル
+                                    </Button>
+                                  )}
+                                {session?.user.permissions &&
+                                  hasPermissionInArray(
+                                    session?.user.permissions,
+                                    PermissionsSystem.CHAT_ADD,
+                                  ) && (
+                                    <Button
+                                      className="w-[100px] h-9"
+                                      type="submit"
+                                      onClick={() => {
+                                        if (msgIdUpdated) {
+                                          handleConfirmUpdateMsg(msgIdUpdated);
+                                        } else {
+                                          handleConfirmSendMessage();
+                                        }
+                                      }}
+                                      disabled={
+                                        trimUnnecessaryLineBreaks(
+                                          message as string,
+                                        ) === ''
+                                      }>
+                                      送信
+                                    </Button>
+                                  )}
+                              </div>
+                            </div>
+                            <div className="mt-5">
+                              <EditorContent editor={editor} />
+                            </div>
+                          </div>
+                        ),
+                    )}
+                  </>
+                ) : (
+                  <div className="px-8 py-1 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-1 items-center">
+                        <DynamicTooltip content={'メンション'} placement="top">
+                          <div className="hover:bg-[#77858F26] rounded-full p-[7px] flex items-center justify-center hover:cursor-pointer">
+                            <ImageRound
+                              name="Mention"
+                              src="/icons/mention.svg"
+                              className="w-[16px] h-[16px]"
+                            />
+                          </div>
+                        </DynamicTooltip>
+                        <DynamicTooltip
+                          content={'ファイルを送信'}
+                          placement="top">
+                          <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                            <ImageRound
+                              name="Add file"
+                              src="/icons/add-file.svg"
+                              className="w-[16px] h-[16px]"
+                            />
+                          </div>
+                        </DynamicTooltip>
+                        <DynamicTooltip
+                          content={'リアクション'}
+                          placement="top">
+                          <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                            <ImageRound
+                              name="Smile"
+                              src="/icons/smile.svg"
+                              className="w-[16px] h-[16px]"
+                            />
+                          </div>
+                        </DynamicTooltip>
+                        <DynamicTooltip
+                          content={'タスクを引用'}
+                          placement="top">
+                          <div className="hover:bg-[#77858F26] relative rounded-full p-[7px] hover:cursor-pointer">
+                            <ImageRound
+                              name="Quote checker"
+                              src="/icons/quote-checker.svg"
+                              className="w-[18px] h-[18px]"
+                            />
+                          </div>
+                        </DynamicTooltip>
+                        <DynamicTooltip content={'書式設定'} placement="top">
+                          <p className="!font-thin text-[#77858F] hover:bg-[#77858F26] rounded-full p-[3px] hover:cursor-pointer flex justify-between items-center w-8 h-8">
+                            <span className="w-[20px] ml-1 mt-[-3px]">Aa</span>
+                          </p>
+                        </DynamicTooltip>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <Button className="w-[100px]" disabled={true}>
+                          送信
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="mt-5">
+                      <div className="border-[1px] border-[#77858f] rounded-[6px] h-[150px] w-full p-[14px]"></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              {/* LIST DATA MORE */}
+              <div
+                style={{
+                  boxShadow: '-4px 0px 8px 0px #0000000F',
+                }}
+                className={`transition-all flex-shrink-0 duration-500 ease-in-out ${
+                  isExtendMoreData
+                    ? 'w-[320px] opacity-100 translate-x-0'
+                    : 'w-0 opacity-0 max-w-0 translate-x-4'
+                } bg-[#F5F8FB] rounded-tl-xl  rounded-bl-xl`}>
+                {isExtendMoreData && (
+                  <MemoDataChat
+                    chatRoomCode={chatRoomCode}
+                    chatRoomDetail={chatRoomDetail}
+                    onClose={() => setExtendMoreData(false)}
+                  />
+                )}
+              </div>
+            </div>
+            {/* Menu chat more data */}
+            {!isExtendMoreData && (
+              <div
+                onClick={() => setExtendMoreData(true)}
+                style={{
+                  boxShadow: '0px 2px 8px 0px #0000001A',
+                }}
+                className="absolute top-[87px] flex gap-2 items-center right-0 rounded-tl-full rounded-bl-full w-[60px] px-[6px] py-[5px] bg-white">
+                <ImageRound
+                  name="Save"
+                  src={`/icons/chat-more.svg`}
+                  className="w-9 h-9 hover:cursor-pointer"
+                />
+                <ImageRound
+                  src="/icons/chat-right.svg"
+                  name="right"
+                  className="!text-transparent h-fit w-fit cursor-pointer"
+                />
+              </div>
+            )}
+          </div>
+        </>
       )}
       {openErrorUploadFileModal && (
         <ErrorUploadFileValidationModal
@@ -3174,7 +3254,7 @@ const ChatDetail = ({
           }}
         />
       )}
-    </Fragment>
+    </>
   );
 };
 

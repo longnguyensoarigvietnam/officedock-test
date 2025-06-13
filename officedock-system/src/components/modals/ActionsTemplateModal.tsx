@@ -158,8 +158,11 @@ const ActionsTemplateModal = ({
     isTeam: true,
     onSuccess: (data) => {
       if (!data) return;
-
-      const organizationCategories = data.organization.statisticCategories.map(
+      const mainItem =
+        data.organizations.find(
+          (item) => String(item.id) === String(organizationValue),
+        ) || data.organizations[0];
+      const organizationCategories = mainItem.statisticCategories.map(
         (category) => {
           const largeCategory = category.LARGE || {
             id: NO_OPTION_CATEGORY,
@@ -200,7 +203,7 @@ const ActionsTemplateModal = ({
             value: NO_OPTION_CATEGORY,
           },
         ];
-        data.organization.statisticCategories.map((category) => {
+        mainItem.statisticCategories.map((category) => {
           if (category.LARGE) {
             largeCategories.push({
               label: category.LARGE.name,
@@ -403,16 +406,17 @@ const ActionsTemplateModal = ({
       },
     ];
     if (selectedMediumCategoryOption) {
-      selectedMediumCategoryOption.SMALL && selectedMediumCategoryOption.SMALL.map((smallCategory) => {
-        if (
-          !initialSmallCategory.find((item) => item.value == smallCategory.id)
-        ) {
-          initialSmallCategory.push({
-            label: smallCategory.name,
-            value: smallCategory.id,
-          });
-        }
-      });
+      selectedMediumCategoryOption.SMALL &&
+        selectedMediumCategoryOption.SMALL.map((smallCategory) => {
+          if (
+            !initialSmallCategory.find((item) => item.value == smallCategory.id)
+          ) {
+            initialSmallCategory.push({
+              label: smallCategory.name,
+              value: smallCategory.id,
+            });
+          }
+        });
     }
 
     setDataOptionsCategorySmall(initialSmallCategory);

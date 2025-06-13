@@ -42,8 +42,9 @@ from dashboard.serializers import (
 )
 from dashboard.utils import separate_duration
 from roles.constants import Screens
-from tasks.constants import TaskStatus
-from tasks.models import TaskDuration, PeopleInChargeTasks, Task, TaskSchedule
+from stat_data.utils import get_total_durations
+from tasks.constants import TaskStatus, CalculateSkillMapProcessCases
+from tasks.models import Task, TaskDuration, TaskSchedule
 from tasks.serializers import TaskCalendarSerializer
 from tasks.utils import split_date_range, calculate_progress_skill_map
 
@@ -162,8 +163,8 @@ class DashboardViewSet(BaseAPIViewSet):
         """Handle get total duration"""
         # total_duration = time_to_timedelta(total_duration)
         for duration in durations:
-            if duration.paused_at is not None:
-                total_duration += duration.paused_at - duration.started_at
+            paused_at = duration.paused_at or now()
+            total_duration += paused_at - duration.started_at
 
         return format_duration(total_duration)
 
@@ -228,8 +229,16 @@ class DashboardViewSet(BaseAPIViewSet):
             .all()
         )
         data = self._append_data_to_cards(data, event_durations, request)
+        durations = TaskDuration.objects.filter(
+            Q(started_at__gte=start_date)
+            & Q(Q(paused_at__lte=end_date) | Q(paused_at__isnull=True))
+            & Q(user=request.user)
+        ).all()
+        total_duration = get_total_durations(durations)
 
-        return self.response_ok(data)
+        return self.response_ok(
+            {"cards": data, "total_duration": format_duration(total_duration)}
+        )
 
     @extend_schema(
         parameters=[
@@ -256,11 +265,13 @@ class DashboardViewSet(BaseAPIViewSet):
             tasks = Task.objects.filter(
                 task_schedules__plan_start_date__gte=start_date,
                 task_schedules__plan_start_date__lte=end_date,
+                deleted_at__isnull=True,
                 people_in_charge=user,
             ).distinct()
             schedules = Schedule.objects.filter(
                 repeat_schedules__plan_start_date__lte=end_date,
                 repeat_schedules__plan_end_date__gte=start_date,
+                deleted_at__isnull=True,
                 participants=user,
             ).distinct()
             data = (
@@ -306,6 +317,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
     @transaction.atomic
     def perform_update(self, serializer, request):
         """Handle update duration"""
+        current_instance = self.get_object()
         validated_data = serializer.validated_data
         started_at = validated_data.get("started_at", None)
         paused_at = validated_data.get("paused_at", None)
@@ -313,14 +325,17 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         paused_at = paused_at or instance.paused_at or now()
         started_at = started_at or instance.started_at
         user = request.user
-        is_edit_task_duration = bool(instance.task)
+        is_edit_task_duration = bool(current_instance.task)
         if is_edit_task_duration:
-            for user in instance.task.people_in_charge.all():
+            for user in current_instance.task.people_in_charge.all():
                 # Minus duration to skill map actual measure time
                 calculate_progress_skill_map(
-                    instance.task,
+                    current_instance.task,
                     user,
-                    duration_time=-(instance.paused_at - instance.started_at),
+                    duration_time=-(
+                        current_instance.paused_at - current_instance.started_at
+                    ),
+                    case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                 )
         if started_at.date() != paused_at.date():
             # Call separate_duration to handle multi-day durations
@@ -338,7 +353,10 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                 for user in instance.task.people_in_charge.all():
                     # Plus total duration to skill map actual measure time
                     calculate_progress_skill_map(
-                        instance.task, user, duration_time=total_duration
+                        instance.task,
+                        user,
+                        duration_time=total_duration,
+                        case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                     )
             return DurationSerializer(
                 new_durations, many=True, context={"request": request}
@@ -353,7 +371,10 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                 for user in instance.task.people_in_charge.all():
                     # Plus total duration to skill map actual measure time
                     calculate_progress_skill_map(
-                        instance.task, user, duration_time=total_duration
+                        instance.task,
+                        user,
+                        duration_time=total_duration,
+                        case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                     )
             # Return serialized single instance
             return [
@@ -374,7 +395,10 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             for user in instance.task.people_in_charge.all():
                 # Minus total duration to skill map actual measure time
                 calculate_progress_skill_map(
-                    instance.task, user, duration_time=-total_duration
+                    instance.task,
+                    user,
+                    duration_time=-total_duration,
+                    case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                 )
 
         instance.delete()
@@ -394,80 +418,31 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         # Return a custom response
         return self.response_ok(data)
 
-    @action(
-        methods=["POST"],
-        detail=False,
-        url_path="another-started",
-        serializer_class=DurationCalculatorSerializer,
-    )
-    def another_started(self, request, pk=None):
+    def _check_exists_duration_started(self, task, schedule, user, obj_type):
         """
-        Get the working time of tasks.
+        Check if the user has a task/event running
         """
-        obj_id = request.data.get("id", None)
-        obj_type = request.data.get("type", None)
-        # Return early if required parameters are missing
-        if not obj_id or not obj_type:
-            return self.response_ok({"is_another_task_started": False})
-        user = request.user
-        obj = None
-        user_ids = None
-        # Handle case where the type is a schedule
-        if obj_type == CalendarTypes.SCHEDULE.value:
-            obj = Schedule.objects.filter(
-                participants_schedules__user=user, id=obj_id
-            ).first()
-            # Return early if the schedule is not found for the user
-            if not obj:
-                return self.response_ok({"is_another_task_started": False})
-            # Get the list of users participating in the schedule
-            user_ids = obj.participants_schedules.values_list("user", flat=True)
-        elif obj_type == CalendarTypes.TASK.value:
-            obj = Task.objects.filter(
-                people_in_charge_tasks__user=user, id=obj_id
-            ).first()
-            # Return early if the task is not found for the user
-            if not obj:
-                return self.response_ok({"is_another_task_started": False})
-            # Get the list of users responsible for the task
-            user_ids = obj.people_in_charge_tasks.values_list("user", flat=True)
-
-        # Fetch all related schedules that have been started (is_start=True) for the users
-        schedule_ids = Schedule.objects.filter(
-            participants_schedules__user__in=user_ids, is_start=True
-        ).values_list("id", flat=True)
-        # Fetch all tasks associated with the users
-        task_ids = PeopleInChargeTasks.objects.filter(
-            user__in=user_ids
-        ).values_list("task", flat=True)
         # Check if there are any active (non-paused) TaskDuration entries
         duration_started = TaskDuration.objects.filter(
-            (Q(schedule__in=schedule_ids) | Q(task__in=task_ids)),
+            user=user,
             paused_at__isnull=True,
         )
         # Exclude the current schedule or task from the check
-        if obj_type == CalendarTypes.SCHEDULE.value:
-            duration_started = duration_started.exclude(schedule=obj)
-        elif obj_type == CalendarTypes.TASK.value:
-            duration_started = duration_started.exclude(task=obj)
-        # Determine the object type for the running task or schedule
-        obj_type = (
-            CalendarTypes.SCHEDULE.value
-            if schedule_ids
-            else CalendarTypes.TASK.value
+        duration_started = duration_started.exclude(
+            task=task, schedule=schedule
         )
-        data = {
-            "is_another_task_started": duration_started.exists(),
-        }
         if duration_started.exists():
-            data["id"] = (
-                duration_started.last().task_id
-                if duration_started.last().task_id
-                else duration_started.last().schedule_id
-            )
-            data["type"] = obj_type
-
-        return self.response_ok(data)
+            data = {
+                "is_another_task_started": duration_started.exists(),
+                "id": (
+                    duration_started.last().task_id
+                    if duration_started.last().task_id
+                    else duration_started.last().schedule_id
+                ),
+                "type": obj_type,
+            }
+            return data
+        return None
 
     @action(
         methods=["POST"],
@@ -482,16 +457,17 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         """
         object_id = request.data.get("id", None)
         object_type = request.data.get("type", None)
+        is_start = request.data.get("is_start", False)
         user = request.user
-
+        task_id = object_id if CalendarTypes.TASK.value == object_type else None
+        schedule_id = (
+            object_id if CalendarTypes.SCHEDULE.value == object_type else None
+        )
+        # Check whether the current task/event has a start time set for now.
         overlapping_qs = TaskDuration.objects.filter(
             Q(
-                task__id=object_id
-                if CalendarTypes.TASK.value == object_type
-                else None,
-                schedule__id=object_id
-                if CalendarTypes.SCHEDULE.value == object_type
-                else None,
+                task__id=task_id,
+                schedule__id=schedule_id,
             )
             & Q(started_at__lt=now(), paused_at__gt=now())
             & Q(user=user)
@@ -500,86 +476,87 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             raise ValidationError({"detail": ERROR_MESSAGES["exists_duration"]})
         if object_id is None and object_type is None:
             raise ValidationError({"detail": ERROR_MESSAGES["task_not_exists"]})
-        last_task_duration = None
-        if object_type == CalendarTypes.SCHEDULE.value:
+
+        task = None
+        schedule = None
+        if schedule_id:
             schedule = Schedule.objects.filter(
                 participants_schedules__user=user
-            ).get(id=object_id)
-            # Validate user's task
+            ).get(id=schedule_id)
+            # Validate user's event
             if not schedule:
                 raise ValidationError(
                     {"schedule": [ERROR_MESSAGES["schedule_not_exists"]]}
                 )
-            participant_ids = schedule.participants_schedules.values_list(
-                "user", flat=True
-            )
-            last_task_duration = TaskDuration.objects.filter(
-                schedule=schedule, paused_at__isnull=True
-            ).last()
-            self._stopDuration(participant_ids)
-            self._startDuration(object_type, schedule, last_task_duration)
-            last_task_duration = TaskDuration.objects.filter(
-                schedule=schedule
-            ).last()
-
-        elif object_type == CalendarTypes.TASK.value:
-            task = Task.objects.get(id=object_id)
-            people_in_charge_tasks = task.people_in_charge_tasks.values_list(
-                "user", flat=True
+        elif task_id:
+            task = Task.objects.filter(people_in_charge_tasks__user=user).get(
+                id=task_id
             )
             # Validate user's task
-            if user.id not in people_in_charge_tasks:
+            if not task:
                 raise ValidationError(
                     {"task": [ERROR_MESSAGES["task_not_exists"]]}
                 )
-
-            last_task_duration_start = TaskDuration.objects.filter(
-                task=task, paused_at__isnull=True
-            ).last()
-            self._stopDuration(people_in_charge_tasks)
-            self._startDuration(object_type, task, last_task_duration_start)
-            last_task_duration = TaskDuration.objects.filter(task=task).last()
-        return self.response_ok(
-            DurationSerializer(
-                last_task_duration, context={"request": request}
-            ).data
+        else:
+            # TODO: Create empty task with status 対応中 here
+            return
+        exists_duration_started = self._check_exists_duration_started(
+            task=task,
+            schedule=schedule,
+            user=user,
+            obj_type=object_type,
         )
+        # If there is a running task/event, return the data.
+        if exists_duration_started and not is_start:
+            return self.response_ok(exists_duration_started)
 
-    def _stopDuration(self, participant_ids):
+        last_task_duration = TaskDuration.objects.filter(
+            user=user,
+            paused_at__isnull=True,
+        ).last()
+        if (
+            last_task_duration
+            and last_task_duration.task == task
+            and last_task_duration.schedule == schedule
+        ):
+            # Check if last task/event running is current task/event, stop it and return early
+            self._stopDuration(user)
+            return self.response_ok(
+                DurationSerializer(
+                    last_task_duration, context={"request": request}
+                ).data
+            )
+        else:
+            # Stop currently running duration
+            self._stopDuration(user)
+
+        task_duration = self._startDuration(user, schedule=schedule, task=task)
+        data = DurationSerializer(
+            task_duration, context={"request": request}
+        ).data
+        data["is_another_task_started"] = False
+        return self.response_ok(data)
+
+    def _stopDuration(self, user):
         """
-        Handle stop duration
+        Handle stop duration is running of user
         """
-        # Make sure that the event has users running other events, stop those other events
-        schedules = Schedule.objects.filter(
-            participants_schedules__user__in=participant_ids, is_start=True
-        )
         durations = TaskDuration.objects.filter(
-            schedule__in=schedules.values_list("id", flat=True),
+            user=user,
             paused_at__isnull=True,
         ).all()
+        if not durations:
+            return
         for duration in durations:
             # Split time range by day and create new duration for it
-            for user in participant_ids:
-                separate_duration(duration, timezone.now(), user=user)
-        schedules.update(is_start=False)
-        # Stop task if task is running
-        task_ids = PeopleInChargeTasks.objects.filter(
-            user__in=participant_ids
-        ).values_list("task", flat=True)
-        durations = TaskDuration.objects.filter(
-            task__in=task_ids, paused_at__isnull=True
-        ).all()
-        for duration in durations:
-            # Split time range by day and create new duration for it
-            for user in participant_ids:
-                new_durations = separate_duration(
-                    duration,
-                    timezone.now(),
-                    user=user,
-                    is_get_new_durations=True,
-                )
-                if not duration.task:
-                    continue
+            new_durations = separate_duration(
+                duration, timezone.now(), user=user, is_get_new_durations=True
+            )
+            model = duration.task or duration.schedule
+            model.is_start = False
+            model.save()
+            # if duration of task, calculate progress skill map
+            if duration.task:
                 # Calculate total duration
                 total_duration = timedelta()
                 for new_duration in new_durations:
@@ -590,54 +567,36 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                 for user in duration.task.people_in_charge.all():
                     # Plus total duration to skill map actual measure time
                     calculate_progress_skill_map(
-                        duration.task, user, duration_time=total_duration
+                        duration.task,
+                        user,
+                        duration_time=total_duration,
+                        case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                     )
 
-        Task.objects.filter(id__in=task_ids).update(is_start=False)
-
-    def _startDuration(self, object_type, object_model, last_task_duration):
+    def _startDuration(self, user, task=None, schedule=None):
         """
         Handle start duration
         """
-        if last_task_duration is None or (
-            last_task_duration and last_task_duration.paused_at is not None
-        ):
-            task_durations = []
-            if object_type == CalendarTypes.SCHEDULE.value:
-                for user in object_model.participants.all():
-                    task_durations.append(
-                        TaskDuration(
-                            schedule=object_model,
-                            started_at=timezone.now(),
-                            user=user,
-                            company=user.company,
-                        )
-                    )
-            elif object_type == CalendarTypes.TASK.value:
-                for user in object_model.people_in_charge.all():
-                    task_durations.append(
-                        TaskDuration(
-                            task=object_model,
-                            started_at=timezone.now(),
-                            user=user,
-                            company=user.company,
-                        )
-                    )
-            TaskDuration.objects.bulk_create(task_durations)
-            object_model.is_start = True
-        else:
-            TaskDuration.objects.filter(
-                schedule=object_model
-                if object_type == CalendarTypes.SCHEDULE.value
-                else None,
-                task=object_model
-                if object_type == CalendarTypes.TASK.value
-                else None,
-                paused_at=None,
-            ).update(paused_at=timezone.now())
-            object_model.is_start = False
-
-        object_model.save()
+        task_duration = TaskDuration.objects.filter(
+            task=task,
+            schedule=schedule,
+            user=user,
+        ).last()
+        if task_duration is None or task_duration.paused_at is not None:
+            task_duration = TaskDuration.objects.create(
+                task=task,
+                schedule=schedule,
+                started_at=timezone.now(),
+                user=user,
+                company=user.company,
+            )
+            if task:
+                task.is_start = True
+                task.save()
+            if schedule:
+                schedule.is_start = True
+                schedule.save()
+        return task_duration
 
     @extend_schema(
         parameters=[
@@ -661,48 +620,8 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         """
         user = request.user
         data = {}
-        obj_id = request.query_params.get("id", None)
+        request.query_params.get("id", None)
         obj_type = request.query_params.get("type", None)
-        current_duration_start = None
-
-        if (
-            user.in_charge_tasks.filter(is_start=True).exists()
-            and obj_id is None
-        ):
-            current_duration_start = request.user.in_charge_tasks.filter(
-                is_start=True
-            ).first()
-            obj_type = CalendarTypes.TASK.value
-        elif user.schedules.filter(is_start=True).exists() and obj_id is None:
-            current_duration_start = user.schedules.filter(
-                is_start=True
-            ).first()
-            obj_type = CalendarTypes.SCHEDULE.value
-        elif obj_id:
-            if obj_type == CalendarTypes.TASK.value:
-                try:
-                    current_duration_start = Task.objects.get(id=obj_id)
-                except:
-                    raise ValidationError(
-                        {"task": [ERROR_MESSAGES["task_not_exists"]]}
-                    )
-            elif obj_type == CalendarTypes.SCHEDULE.value:
-                try:
-                    current_duration_start = Schedule.objects.get(id=obj_id)
-                except:
-                    raise ValidationError(
-                        {"schedule": [ERROR_MESSAGES["schedule_not_exists"]]}
-                    )
-        else:
-            task_duration = TaskDuration.objects.filter(
-                Q(paused_at__isnull=True)
-                & Q(Q(task__is_start=False) | Q(schedule__is_start=False))
-                & Q(user=user)
-            )
-            if task_duration.exists():
-                for duration in task_duration.all():
-                    separate_duration(duration, timezone.now(), user=user)
-
         separate_task_duration = TaskDuration.objects.filter(
             Q(paused_at__isnull=True)
             & Q(Q(task__is_start=True) | Q(schedule__is_start=True))
@@ -715,32 +634,31 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                 duration, now(), user=user
             )
 
-        if current_duration_start:
-            start_of_today = datetime.combine(timezone.now().date(), time.min)
-            end_of_today = datetime.combine(timezone.now().date(), time.max)
-            task_durations = current_duration_start.task_durations.filter(
-                Q(started_at__gte=start_of_today)
-                & Q(Q(paused_at__lte=end_of_today) | Q(paused_at__isnull=True))
-                & Q(user=user)
-            ).all()
-            total_duration = timedelta()
-            # Calculate time between started and paused
-            for task_duration in task_durations:
-                paused_at = (
-                    task_duration.paused_at
-                    if task_duration.paused_at
-                    else timezone.now()
-                )
-                total_duration += paused_at - task_duration.started_at
+        start_of_today = datetime.combine(timezone.now().date(), time.min)
 
+        # Get current task running
+        task_running = user.task_durations.filter(
+            started_at__gte=start_of_today,
+            paused_at__isnull=True,
+        ).first()
+        if not task_running:
+            return self.response_ok(data)
+        current_duration_start = task_running.task or task_running.schedule
+        obj_type = (
+            CalendarTypes.TASK.value
+            if task_running.task
+            else CalendarTypes.SCHEDULE.value
+        )
+        if current_duration_start:
+            paused_at = (
+                task_running.paused_at
+                if task_running.paused_at
+                else timezone.now()
+            )
+            total_duration = paused_at - task_running.started_at
             is_over_estimate = False
-            task_running = None
-            if current_duration_start.is_start:
-                # Get current task running
-                task_running = current_duration_start.task_durations.filter(
-                    started_at__gte=start_of_today,
-                    paused_at__isnull=True,
-                ).first()
+
+            if task_running:
                 is_send_sk, is_over_estimate = check_task_overtime(
                     current_duration_start, task_running
                 )
@@ -755,18 +673,12 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             data = {
                 "id": current_duration_start.id,
                 "categories": categories,
-                "task_duration_running_uuid": task_running.uuid
-                if isinstance(task_running, TaskDuration)
-                else None,
+                "task_duration_running_uuid": task_running.uuid,
                 "title": current_duration_start.title,
                 "task_duration": format_duration(total_duration),
-                "started_at": task_durations.last().started_at
-                if task_durations.exists()
-                else None,
-                "paused_at": task_durations.last().paused_at
-                if task_durations.exists()
-                else None,
-                "is_start": current_duration_start.is_start,
+                "started_at": task_running.started_at,
+                "paused_at": task_running.paused_at,
+                "is_start": bool(task_running),
                 "is_over_estimate": is_over_estimate,
                 "type": obj_type,
             }
@@ -994,7 +906,10 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             for user in duration.task.people_in_charge.all():
                 # Plus total duration to skill map actual measure time
                 calculate_progress_skill_map(
-                    duration.task, user, duration_time=total_duration
+                    duration.task,
+                    user,
+                    duration_time=total_duration,
+                    case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                 )
         if started_at.date() != paused_at.date():
             separate_duration(duration, duration.paused_at, user=user)
@@ -1044,11 +959,15 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             model.type = schedule_type
             model.save()
         if instance.task:
-            total_duration = instance.paused_at - instance.started_at
+            current_paused_at = instance.paused_at or now()
+            total_duration = current_paused_at - instance.started_at
             for user in instance.task.people_in_charge.all():
                 # Minus total duration to skill map actual measure time
                 calculate_progress_skill_map(
-                    instance.task, user, duration_time=-total_duration
+                    instance.task,
+                    user,
+                    duration_time=-total_duration,
+                    case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                 )
 
         # Update actual duration
@@ -1058,11 +977,15 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             instance.paused_at = paused_at
         instance.save()
         if instance.task:
-            total_duration = instance.paused_at - instance.started_at
+            paused_at = instance.paused_at or now()
+            total_duration = paused_at - instance.started_at
             for user in instance.task.people_in_charge.all():
                 # Plus total duration to skill map actual measure time
                 calculate_progress_skill_map(
-                    instance.task, user, duration_time=total_duration
+                    instance.task,
+                    user,
+                    duration_time=total_duration,
+                    case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                 )
         paused_at = paused_at or instance.paused_at or now()
         started_at = started_at or instance.started_at
@@ -1083,7 +1006,10 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             for user in instance.task.people_in_charge.all():
                 # Minus total duration to skill map actual measure time
                 calculate_progress_skill_map(
-                    instance.task, user, duration_time=-total_duration
+                    instance.task,
+                    user,
+                    duration_time=-total_duration,
+                    case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
                 )
 
         instance.delete()

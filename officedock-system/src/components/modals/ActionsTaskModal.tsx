@@ -251,7 +251,12 @@ const ActionsTaskModal = ({
     onSuccess: (data) => {
       if (!data) return;
 
-      const organizationCategories = data.organization.statisticCategories.map(
+      const mainItem =
+        data.organizations.find(
+          (item) => String(item.id) === String(organizationValue),
+        ) || data.organizations[0];
+
+      const organizationCategories = mainItem.statisticCategories.map(
         (category) => {
           const largeCategory = category.LARGE || {
             id: NO_OPTION_CATEGORY,
@@ -292,7 +297,7 @@ const ActionsTaskModal = ({
             value: NO_OPTION_CATEGORY,
           },
         ];
-        data.organization.statisticCategories.map((category) => {
+        mainItem.statisticCategories.map((category) => {
           if (category.LARGE) {
             largeCategories.push({
               label: category.LARGE.name,
@@ -667,16 +672,17 @@ const ActionsTaskModal = ({
       },
     ];
     if (selectedMediumCategoryOption) {
-      selectedMediumCategoryOption.SMALL && selectedMediumCategoryOption.SMALL.map((smallCategory) => {
-        if (
-          !initialSmallCategory.find((item) => item.value == smallCategory.id)
-        ) {
-          initialSmallCategory.push({
-            label: smallCategory.name,
-            value: smallCategory.id,
-          });
-        }
-      });
+      selectedMediumCategoryOption.SMALL &&
+        selectedMediumCategoryOption.SMALL.map((smallCategory) => {
+          if (
+            !initialSmallCategory.find((item) => item.value == smallCategory.id)
+          ) {
+            initialSmallCategory.push({
+              label: smallCategory.name,
+              value: smallCategory.id,
+            });
+          }
+        });
     }
 
     setDataOptionsCategorySmall(initialSmallCategory);
@@ -1505,7 +1511,7 @@ const ActionsTaskModal = ({
                       classNameError="!text-xs"
                       disabled={isCheckActionPermission}
                       options={
-                        (!columnId && action == ActionTask.CREATE)
+                        !columnId && action == ActionTask.CREATE
                           ? dataOptionsStatus
                           : dataOptionsStatus.filter(
                               (item) =>
@@ -1557,48 +1563,74 @@ const ActionsTaskModal = ({
             </div>
           </div>
           {/* Deadline */}
-          {!isRoutineTaskModal && Number(watch('statusId')?.value) != StatusValueTask.MY_ROUTINE && (
-            <div
-              style={{ zIndex: planFields.length + 1 }}
-              className="flex  relative gap-[10px] items-center">
-              <div className="w-full max-w-[100px] text-[14px] font-medium">
-                締切日時
-              </div>
-              <div className="w-full max-w-[515px] items-start flex gap-1 justify-between">
-                <div className="max-w-[315px]">
-                  <div className="flex gap-1 items-center">
-                    <div className="w-[140px]">
-                      <Controller
-                        control={control}
-                        name="deadlineDate"
-                        render={({ field: { value, onChange } }) => (
-                          <DatePickerCustom
+          {!isRoutineTaskModal &&
+            Number(watch('statusId')?.value) != StatusValueTask.MY_ROUTINE && (
+              <div
+                style={{ zIndex: planFields.length + 1 }}
+                className="flex  relative gap-[10px] items-center">
+                <div className="w-full max-w-[100px] text-[14px] font-medium">
+                  締切日時
+                </div>
+                <div className="w-full max-w-[515px] items-start flex gap-1 justify-between">
+                  <div className="max-w-[315px]">
+                    <div className="flex gap-1 items-center">
+                      <div className="w-[140px]">
+                        <Controller
+                          control={control}
+                          name="deadlineDate"
+                          render={({ field: { value, onChange } }) => (
+                            <DatePickerCustom
+                              disabled={isCheckActionPermission}
+                              className="h-[34px] !px-2 !pl-[30px] !border-[1px] !border-[#77858F] rounded-md !text-xs !pt-2 text-center"
+                              selected={value ? new Date(value) : null}
+                              onChange={(e) => {
+                                setIsFormTouched(true);
+                                onChange(e);
+                              }}
+                            />
+                          )}
+                        />
+                      </div>
+                      {showDeadlineTimeSetting ? (
+                        <div className="w-[72px] relative z-20">
+                          <Input
+                            isShowClockIcon={true}
+                            type="text"
                             disabled={isCheckActionPermission}
-                            className="h-[34px] !px-2 !pl-[30px] !border-[1px] !border-[#77858F] rounded-md !text-xs !pt-2 text-center"
-                            selected={value ? new Date(value) : null}
-                            onChange={(e) => {
+                            register={register('deadlineTime', {
+                              required: Boolean(
+                                isShowFieldRemind &&
+                                  watch('deadlineRemindCountdown') &&
+                                  watch('deadlineRemindType'),
+                              ),
+                              onChange: (e) => {
+                                setIsFormTouched(true);
+                                handleChange(e, 'deadlineTime');
+                                if (getValues('deadlineDate') === null) {
+                                  setValue(
+                                    'deadlineDate',
+                                    (() => {
+                                      const today: Date = new Date();
+                                      today.setHours(0, 0, 0, 0);
+                                      return today;
+                                    })(),
+                                  );
+                                }
+                              },
+                              onBlur: () => {
+                                if (time) {
+                                  setValue(
+                                    'deadlineTime',
+                                    formatTimeInput(time),
+                                  );
+                                }
+                                setTime('');
+                              },
+                            })}
+                            options={optionTimeInput}
+                            onChangeDropdown={(e) => {
                               setIsFormTouched(true);
-                              onChange(e);
-                            }}
-                          />
-                        )}
-                      />
-                    </div>
-                    {showDeadlineTimeSetting ? (
-                      <div className="w-[72px] relative z-20">
-                        <Input
-                          isShowClockIcon={true}
-                          type="text"
-                          disabled={isCheckActionPermission}
-                          register={register('deadlineTime', {
-                            required: Boolean(
-                              isShowFieldRemind &&
-                                watch('deadlineRemindCountdown') &&
-                                watch('deadlineRemindType'),
-                            ),
-                            onChange: (e) => {
-                              setIsFormTouched(true);
-                              handleChange(e, 'deadlineTime');
+                              setValue('deadlineTime', e.label);
                               if (getValues('deadlineDate') === null) {
                                 setValue(
                                   'deadlineDate',
@@ -1609,165 +1641,143 @@ const ActionsTaskModal = ({
                                   })(),
                                 );
                               }
-                            },
-                            onBlur: () => {
-                              if (time) {
-                                setValue('deadlineTime', formatTimeInput(time));
-                              }
-                              setTime('');
-                            },
-                          })}
-                          options={optionTimeInput}
-                          onChangeDropdown={(e) => {
+                            }}
+                            className={`h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] rounded-md  ${!errors?.deadlineTime ? '!border-[#77858F]' : '!border-error'}`}
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          className="flex gap-1 items-center hover:cursor-pointer"
+                          onClick={() => {
+                            setShowDeadlineTimeSetting(true);
+                          }}>
+                          <ImageRound
+                            className="h-[14px] w-[15px] hover:cursor-pointer"
+                            src="/icons/clock-time.svg"
+                            name="Clock icon"
+                          />
+                          <p className="text-[#77858F] text-xs font-medium">
+                            締切時間を追加
+                          </p>
+                        </div>
+                      )}
+
+                      <div>
+                        <ImageRound
+                          onClick={() => {
                             setIsFormTouched(true);
-                            setValue('deadlineTime', e.label);
-                            if (getValues('deadlineDate') === null) {
-                              setValue(
-                                'deadlineDate',
-                                (() => {
-                                  const today: Date = new Date();
-                                  today.setHours(0, 0, 0, 0);
-                                  return today;
-                                })(),
-                              );
+                            setIsShowFieldRemind(!isShowFieldRemind);
+                            if (!isShowFieldRemind) {
+                              setShowDeadlineTimeSetting(true);
                             }
                           }}
-                          className={`h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] rounded-md  ${!errors?.deadlineTime ? '!border-[#77858F]' : '!border-error'}`}
+                          src={`/icons/${isShowFieldRemind ? 'bell.svg' : 'bell-white.svg'}`}
+                          name="Bell icon"
+                          className="h-4 w-4"
                         />
                       </div>
-                    ) : (
-                      <div
-                        className="flex gap-1 items-center hover:cursor-pointer"
-                        onClick={() => {
-                          setShowDeadlineTimeSetting(true);
-                        }}>
-                        <ImageRound
-                          className="h-[14px] w-[15px] hover:cursor-pointer"
-                          src="/icons/clock-time.svg"
-                          name="Clock icon"
-                        />
-                        <p className="text-[#77858F] text-xs font-medium">
-                          締切時間を追加
-                        </p>
-                      </div>
-                    )}
-
-                    <div>
-                      <ImageRound
-                        onClick={() => {
-                          setIsFormTouched(true);
-                          setIsShowFieldRemind(!isShowFieldRemind);
-                          if (!isShowFieldRemind) {
-                            setShowDeadlineTimeSetting(true);
-                          }
-                        }}
-                        src={`/icons/${isShowFieldRemind ? 'bell.svg' : 'bell-white.svg'}`}
-                        name="Bell icon"
-                        className="h-4 w-4"
-                      />
-                    </div>
-                  </div>
-                  <ErrorMessage
-                    error={errors.deadlineTime?.message}
-                    className="mt-[6px] text-xs"
-                  />
-                </div>
-                {isShowFieldRemind ? (
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-[56px]">
-                        <Controller
-                          control={control}
-                          name="deadlineRemindCountdown"
-                          render={({ field: { value, onChange } }) => (
-                            <Dropdown
-                              className="h-[34px] !py-1 !px-0 text-xs !border-[#77858F] rounded-md"
-                              classNameTextData="!text-xs !ml-0"
-                              labelOptionClass="!ml-0 !px-0 !pl-2 text-start w-full "
-                              classNameOption="!text-xs !border border-[#77858F] !rounded-md"
-                              classNameError="!text-xs"
-                              classActive="justify-between"
-                              labelClass="w-[80%]"
-                              disabled={
-                                isCheckActionPermission ||
-                                watch('statusId')?.value ===
-                                  StatusValueTask.MY_ROUTINE
-                              }
-                              options={optionsCountDown}
-                              selectedOption={optionsCountDown.find(
-                                (element) => element.value === value?.value,
-                              )}
-                              onChange={(e) => {
-                                setIsFormTouched(true);
-                                onChange(e);
-                              }}
-                            />
-                          )}
-                        />
-                      </div>
-                      <div className="w-[82px]">
-                        <Controller
-                          control={control}
-                          name="deadlineRemindType"
-                          render={({ field: { value, onChange } }) => (
-                            <Dropdown
-                              className="h-[34px] !py-1 !pr-2 text-xs !border-[#77858F] rounded-md"
-                              classNameTextData="!text-xs"
-                              classNameOption="!text-xs !ml-0 !border border-[#77858F] !rounded-md"
-                              classNameError="!text-xs"
-                              labelOptionClass="!ml-0 !px-0 !pl-2 text-start w-full  "
-                              classActive=" justify-between"
-                              labelClass="w-[80%]"
-                              disabled={
-                                isCheckActionPermission ||
-                                watch('statusId')?.value ===
-                                  StatusValueTask.MY_ROUTINE
-                              }
-                              options={optionsCountType}
-                              selectedOption={optionsCountType.find(
-                                (element) => element.value === value?.value,
-                              )}
-                              onChange={(e) => {
-                                setIsFormTouched(true);
-                                onChange(e);
-                              }}
-                            />
-                          )}
-                        />
-                      </div>
-                      <p>に通知</p>
                     </div>
                     <ErrorMessage
                       error={errors.deadlineTime?.message}
                       className="mt-[6px] text-xs"
                     />
                   </div>
-                ) : (
-                  <div className="w-fit"></div>
-                )}
-
-                <div>
-                  {!isCheckActionPermission && (
-                    <Button
-                      sz="sm"
-                      variant="outline"
-                      className="w-[48px] h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
-                      type="button"
-                      name="Remove deadline"
-                      onClick={() => {
-                        setIsFormTouched(true);
-                        setValue('deadlineTime', '');
-                        setValue('deadlineDate', null);
-                        setValue('deadlineRemindCountdown', null);
-                        setValue('deadlineRemindType', null);
-                      }}>
-                      削除
-                    </Button>
+                  {isShowFieldRemind ? (
+                    <div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-[56px]">
+                          <Controller
+                            control={control}
+                            name="deadlineRemindCountdown"
+                            render={({ field: { value, onChange } }) => (
+                              <Dropdown
+                                className="h-[34px] !py-1 !px-0 text-xs !border-[#77858F] rounded-md"
+                                classNameTextData="!text-xs !ml-0"
+                                labelOptionClass="!ml-0 !px-0 !pl-2 text-start w-full "
+                                classNameOption="!text-xs !border border-[#77858F] !rounded-md"
+                                classNameError="!text-xs"
+                                classActive="justify-between"
+                                labelClass="w-[80%]"
+                                disabled={
+                                  isCheckActionPermission ||
+                                  watch('statusId')?.value ===
+                                    StatusValueTask.MY_ROUTINE
+                                }
+                                options={optionsCountDown}
+                                selectedOption={optionsCountDown.find(
+                                  (element) => element.value === value?.value,
+                                )}
+                                onChange={(e) => {
+                                  setIsFormTouched(true);
+                                  onChange(e);
+                                }}
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="w-[82px]">
+                          <Controller
+                            control={control}
+                            name="deadlineRemindType"
+                            render={({ field: { value, onChange } }) => (
+                              <Dropdown
+                                className="h-[34px] !py-1 !pr-2 text-xs !border-[#77858F] rounded-md"
+                                classNameTextData="!text-xs"
+                                classNameOption="!text-xs !ml-0 !border border-[#77858F] !rounded-md"
+                                classNameError="!text-xs"
+                                labelOptionClass="!ml-0 !px-0 !pl-2 text-start w-full  "
+                                classActive=" justify-between"
+                                labelClass="w-[80%]"
+                                disabled={
+                                  isCheckActionPermission ||
+                                  watch('statusId')?.value ===
+                                    StatusValueTask.MY_ROUTINE
+                                }
+                                options={optionsCountType}
+                                selectedOption={optionsCountType.find(
+                                  (element) => element.value === value?.value,
+                                )}
+                                onChange={(e) => {
+                                  setIsFormTouched(true);
+                                  onChange(e);
+                                }}
+                              />
+                            )}
+                          />
+                        </div>
+                        <p>に通知</p>
+                      </div>
+                      <ErrorMessage
+                        error={errors.deadlineTime?.message}
+                        className="mt-[6px] text-xs"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-fit"></div>
                   )}
+
+                  <div>
+                    {!isCheckActionPermission && (
+                      <Button
+                        sz="sm"
+                        variant="outline"
+                        className="w-[48px] h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
+                        type="button"
+                        name="Remove deadline"
+                        onClick={() => {
+                          setIsFormTouched(true);
+                          setValue('deadlineTime', '');
+                          setValue('deadlineDate', null);
+                          setValue('deadlineRemindCountdown', null);
+                          setValue('deadlineRemindType', null);
+                        }}>
+                        削除
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
           <div className="flex gap-2 items-center">
             <div className="h-[1px] bg-[#D2DBE1] w-[calc((100%_-_125px)/2)]"></div>
             <div
@@ -3210,182 +3220,187 @@ const ActionsTaskModal = ({
                 )}
               </div>
               {/* Todo list */}
-              {!isRoutineTaskModal && Number(watch('statusId')?.value) != StatusValueTask.MY_ROUTINE && (
-                <div className="mb-3">
-                  {showTodoSection ? (
-                    <>
+              {!isRoutineTaskModal &&
+                Number(watch('statusId')?.value) !=
+                  StatusValueTask.MY_ROUTINE && (
+                  <div className="mb-3">
+                    {showTodoSection ? (
+                      <>
+                        <div
+                          className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
+                          onClick={() => setShowTodoSection(false)}>
+                          <ImageRound
+                            className="w-[17px] h-[17px] hover:cursor-pointer"
+                            src="/icons/collapse-description.svg"
+                            name="Collapse description icon"
+                          />
+                          <p className="text-[#0068B6] text-sm">
+                            To Do リストを作成
+                          </p>
+                        </div>
+                        <div>
+                          <div className="mb-4">
+                            <Button
+                              disabled={isCheckActionPermission}
+                              type="button"
+                              variant="outline"
+                              className="!px-2 !py-1 !text-sm"
+                              onClick={handleAddItem}>
+                              To Do リストを作成
+                            </Button>
+                          </div>
+                          <DragDropContext onDragEnd={handleOnDragEnd}>
+                            <Droppable droppableId="todo-list">
+                              {(provided) => (
+                                <ul
+                                  className="flex flex-col "
+                                  {...provided.droppableProps}
+                                  ref={provided.innerRef}>
+                                  {todoList.map((todo, index) => (
+                                    <Draggable
+                                      isDragDisabled={isCheckActionPermission}
+                                      key={todo.id ? todo.id : todo.customId}
+                                      draggableId={
+                                        todo.id
+                                          ? `${todo.id}`
+                                          : `${todo.customId}`
+                                      }
+                                      index={index}>
+                                      {(provided, snapshot) => {
+                                        const draggableElement = (
+                                          <>
+                                            <li
+                                              className={`mb-2 gap-3 flex items-center px-2.5 rounded-md bg-[#F8FAFC] ${snapshot.isDragging ? 'dragging' : ''}`}
+                                              ref={provided.innerRef}
+                                              {...provided.draggableProps}>
+                                              <div
+                                                className="w-4 h-[42px] flex items-center justify-center"
+                                                {...provided.dragHandleProps}>
+                                                <ImageRound
+                                                  className="w-[6px] h-[10px] cursor-grab hover:cursor-pointer"
+                                                  src="/icons/drag.svg"
+                                                  name="drag item"
+                                                />
+                                              </div>
+                                              <div className="w-5">
+                                                {!isCheckActionPermission &&
+                                                todo.isChecked ? (
+                                                  <ImageRound
+                                                    className="w-[19px] h-[17px] cursor-grab hover:cursor-pointer"
+                                                    src="/icons/complete-blue.svg"
+                                                    name="complete item"
+                                                    onClick={() => {
+                                                      handleCheck(index);
+                                                    }}
+                                                  />
+                                                ) : (
+                                                  <ImageRound
+                                                    className="w-[19px] h-[17px] cursor-grab hover:cursor-pointer"
+                                                    src="/icons/complete.svg"
+                                                    name="complete item"
+                                                    onClick={() => {
+                                                      handleCheck(index);
+                                                    }}
+                                                  />
+                                                )}
+                                              </div>
+                                              <TextareaAutosize
+                                                defaultValue={todo.content}
+                                                ref={(el) => {
+                                                  textareaRefs.current[index] =
+                                                    el;
+                                                }}
+                                                disabled={
+                                                  isCheckActionPermission
+                                                }
+                                                placeholder={
+                                                  DEFAULT_VALUE_TODO_LIST
+                                                }
+                                                onBlur={(
+                                                  e: React.ChangeEvent<HTMLTextAreaElement>,
+                                                ) => {
+                                                  if (todo.id) {
+                                                    handleBlur({
+                                                      id: todo.id,
+                                                      content: e.target.value,
+                                                    });
+                                                  } else {
+                                                    handleBlur({
+                                                      customId: todo.customId,
+                                                      content: e.target.value,
+                                                    });
+                                                  }
+                                                }}
+                                                rows={3}
+                                                className="resize-none focus:outline-none focus:shadow-none focus:border-none focus:ring-0 placeholder-gray-300 border-[#F8FAFC] bg-[#F8FAFC] shadow-none w-full rounded-md"
+                                              />
+                                              <div className="mt-[2.5px] ml-2 flex items-center">
+                                                {!isCheckActionPermission && (
+                                                  <ImageRound
+                                                    className="w-[16px] h-[10px] opacity-40 hover:cursor-pointer"
+                                                    src="/icons/zoom-out.svg"
+                                                    name="remove icon"
+                                                    onClick={() => {
+                                                      if (todo.customId) {
+                                                        const listData =
+                                                          todoList.filter(
+                                                            (item) =>
+                                                              item.customId !==
+                                                              todo.customId,
+                                                          );
+                                                        setTodoList([
+                                                          ...listData,
+                                                        ]);
+                                                      } else if (todo.id) {
+                                                        const listData =
+                                                          todoList.filter(
+                                                            (item) =>
+                                                              item.id !==
+                                                              todo.id,
+                                                          );
+                                                        setTodoList([
+                                                          ...listData,
+                                                        ]);
+                                                      }
+                                                    }}
+                                                  />
+                                                )}
+                                              </div>
+                                            </li>
+                                          </>
+                                        );
+                                        return snapshot.isDragging
+                                          ? ReactDOM.createPortal(
+                                              draggableElement,
+                                              document.body,
+                                            )
+                                          : draggableElement;
+                                      }}
+                                    </Draggable>
+                                  ))}
+                                  {provided.placeholder}
+                                </ul>
+                              )}
+                            </Droppable>
+                          </DragDropContext>
+                        </div>
+                      </>
+                    ) : (
                       <div
                         className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
-                        onClick={() => setShowTodoSection(false)}>
+                        onClick={() => setShowTodoSection(true)}>
                         <ImageRound
                           className="w-[17px] h-[17px] hover:cursor-pointer"
-                          src="/icons/collapse-description.svg"
-                          name="Collapse description icon"
+                          src="/icons/open-description.svg"
+                          name="Open description icon"
                         />
                         <p className="text-[#0068B6] text-sm">
                           To Do リストを作成
                         </p>
                       </div>
-                      <div>
-                        <div className="mb-4">
-                          <Button
-                            disabled={isCheckActionPermission}
-                            type="button"
-                            variant="outline"
-                            className="!px-2 !py-1 !text-sm"
-                            onClick={handleAddItem}>
-                            To Do リストを作成
-                          </Button>
-                        </div>
-                        <DragDropContext onDragEnd={handleOnDragEnd}>
-                          <Droppable droppableId="todo-list">
-                            {(provided) => (
-                              <ul
-                                className="flex flex-col "
-                                {...provided.droppableProps}
-                                ref={provided.innerRef}>
-                                {todoList.map((todo, index) => (
-                                  <Draggable
-                                    isDragDisabled={isCheckActionPermission}
-                                    key={todo.id ? todo.id : todo.customId}
-                                    draggableId={
-                                      todo.id
-                                        ? `${todo.id}`
-                                        : `${todo.customId}`
-                                    }
-                                    index={index}>
-                                    {(provided, snapshot) => {
-                                      const draggableElement = (
-                                        <>
-                                          <li
-                                            className={`mb-2 gap-3 flex items-center px-2.5 rounded-md bg-[#F8FAFC] ${snapshot.isDragging ? 'dragging' : ''}`}
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}>
-                                            <div
-                                              className="w-4 h-[42px] flex items-center justify-center"
-                                              {...provided.dragHandleProps}>
-                                              <ImageRound
-                                                className="w-[6px] h-[10px] cursor-grab hover:cursor-pointer"
-                                                src="/icons/drag.svg"
-                                                name="drag item"
-                                              />
-                                            </div>
-                                            <div className="w-5">
-                                              {!isCheckActionPermission &&
-                                              todo.isChecked ? (
-                                                <ImageRound
-                                                  className="w-[19px] h-[17px] cursor-grab hover:cursor-pointer"
-                                                  src="/icons/complete-blue.svg"
-                                                  name="complete item"
-                                                  onClick={() => {
-                                                    handleCheck(index);
-                                                  }}
-                                                />
-                                              ) : (
-                                                <ImageRound
-                                                  className="w-[19px] h-[17px] cursor-grab hover:cursor-pointer"
-                                                  src="/icons/complete.svg"
-                                                  name="complete item"
-                                                  onClick={() => {
-                                                    handleCheck(index);
-                                                  }}
-                                                />
-                                              )}
-                                            </div>
-                                            <TextareaAutosize
-                                              defaultValue={todo.content}
-                                              ref={(el) => {
-                                                textareaRefs.current[index] =
-                                                  el;
-                                              }}
-                                              disabled={isCheckActionPermission}
-                                              placeholder={
-                                                DEFAULT_VALUE_TODO_LIST
-                                              }
-                                              onBlur={(
-                                                e: React.ChangeEvent<HTMLTextAreaElement>,
-                                              ) => {
-                                                if (todo.id) {
-                                                  handleBlur({
-                                                    id: todo.id,
-                                                    content: e.target.value,
-                                                  });
-                                                } else {
-                                                  handleBlur({
-                                                    customId: todo.customId,
-                                                    content: e.target.value,
-                                                  });
-                                                }
-                                              }}
-                                              rows={3}
-                                              className="resize-none focus:outline-none focus:shadow-none focus:border-none focus:ring-0 placeholder-gray-300 border-[#F8FAFC] bg-[#F8FAFC] shadow-none w-full rounded-md"
-                                            />
-                                            <div className="mt-[2.5px] ml-2 flex items-center">
-                                              {!isCheckActionPermission && (
-                                                <ImageRound
-                                                  className="w-[16px] h-[10px] opacity-40 hover:cursor-pointer"
-                                                  src="/icons/zoom-out.svg"
-                                                  name="remove icon"
-                                                  onClick={() => {
-                                                    if (todo.customId) {
-                                                      const listData =
-                                                        todoList.filter(
-                                                          (item) =>
-                                                            item.customId !==
-                                                            todo.customId,
-                                                        );
-                                                      setTodoList([
-                                                        ...listData,
-                                                      ]);
-                                                    } else if (todo.id) {
-                                                      const listData =
-                                                        todoList.filter(
-                                                          (item) =>
-                                                            item.id !== todo.id,
-                                                        );
-                                                      setTodoList([
-                                                        ...listData,
-                                                      ]);
-                                                    }
-                                                  }}
-                                                />
-                                              )}
-                                            </div>
-                                          </li>
-                                        </>
-                                      );
-                                      return snapshot.isDragging
-                                        ? ReactDOM.createPortal(
-                                            draggableElement,
-                                            document.body,
-                                          )
-                                        : draggableElement;
-                                    }}
-                                  </Draggable>
-                                ))}
-                                {provided.placeholder}
-                              </ul>
-                            )}
-                          </Droppable>
-                        </DragDropContext>
-                      </div>
-                    </>
-                  ) : (
-                    <div
-                      className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
-                      onClick={() => setShowTodoSection(true)}>
-                      <ImageRound
-                        className="w-[17px] h-[17px] hover:cursor-pointer"
-                        src="/icons/open-description.svg"
-                        name="Open description icon"
-                      />
-                      <p className="text-[#0068B6] text-sm">
-                        To Do リストを作成
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </div>
+                )}
               {/* Submit button */}
               {isPermissionAdd &&
                 (action === ActionTask.COPY ||

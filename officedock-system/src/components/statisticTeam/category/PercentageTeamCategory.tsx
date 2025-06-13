@@ -62,7 +62,7 @@ const PercentageCategoryTeam = ({
     remainingCountUser,
     remainingCountTag,
     firstThreeUser,
-    allLabelUer,
+    allLabelUser,
     allLabelTag,
     firstThreeTag,
     listMemberTeam,
@@ -169,11 +169,11 @@ const PercentageCategoryTeam = ({
     // Get list options
     const listDataOptions = filteredCategories.map(
       (item) =>
-        item.users?.slice(0, 6).map((user) => ({
+        item.users?.map((user) => ({
           label: user.user.fullName,
           avatarColor: user.user.avatarColor,
           percent: user.percent,
-          avatarUrl: user.user?.avatar || ''
+          avatarUrl: user.user?.avatar || '',
         })) || [],
     );
     // Get list id
@@ -351,7 +351,7 @@ const PercentageCategoryTeam = ({
                         </div>
                       );
                     })}
-                    {allLabelUer.length > 3 && (
+                    {allLabelUser.length > 3 && (
                       <p className=" h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
                         +{remainingCountUser}
                       </p>

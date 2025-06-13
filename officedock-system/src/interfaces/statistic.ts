@@ -14,6 +14,11 @@ export interface TaskTimeStatistic {
 export interface UserListStatisticType {
   duration: string;
   percent: number;
+  tasks: {
+    id: number;
+    title: string;
+    type: string;
+  }[];
   user: {
     id: number;
     fullName: string;
@@ -278,6 +283,13 @@ export interface CreationStatisticType {
     avatarColor: string;
   }[];
   iconColor?: string;
+  tags: TagCreationStatisticType[];
+  members: {
+    id: number;
+    fullName: string;
+    avatarColor: string;
+    avatar: string;
+  }[];
 }
 export interface DataResponseStatisticCreationType {
   organizations: CreationStatisticType[];
@@ -299,7 +311,7 @@ export interface DataResponseStatisticCreationType {
   tags: TagCreationStatisticType[];
 }
 export interface DataResponseStatisticCreationTeamType {
-  organization: CreationStatisticType;
+  organizations: CreationStatisticType[];
   tags: TagCreationStatisticType[];
   members: {
     id: number;
@@ -360,5 +372,44 @@ export interface StatisticsTagTaskDuration {
     endDate: string;
     duration: string;
     percent: number;
+  }[];
+}
+export interface StatisticsPercentChart {
+  endDate: string;
+  startDate: string;
+  totalDuration: string;
+  categories: {
+    categoryColor: string;
+    categoryId: number;
+    categoryName: string;
+    duration: string;
+    percent: number;
+  }[];
+}
+export interface StatisticsTagPercentChart {
+  endDate: string;
+  startDate: string;
+  totalDuration: string;
+  tags: {
+    tagId: number;
+    tagName: string;
+    duration: string;
+    percent: number;
+  }[];
+}
+
+export interface StatisticsUserTaskDuration {
+  user: {
+    id: number;
+    fullName: string;
+    avatarColor: string;
+    avatar: string | null;
+  };
+  totalDuration: string;
+  durations: {
+    startDate: string;
+    endDate: string;
+    duration: string;
+    percentPerRange: number;
   }[];
 }

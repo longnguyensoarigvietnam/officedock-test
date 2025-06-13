@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime, time
+from datetime import timedelta
 
 from django.db.models import Q
 from django.utils import timezone
@@ -48,20 +48,11 @@ def _get_list_durations(obj, start_of_day, end_of_day, user=None):
     """
     Handle get list durations
     """
-    start_of_today = datetime.combine(timezone.now().date(), time.min)
-
-    if start_of_today == start_of_day:
-        return obj.task_durations.filter(
-            Q(started_at__gte=start_of_day)
-            & Q(user=user)
-            & Q(Q(paused_at__lte=end_of_day) | Q(paused_at__isnull=True))
-        ).all()
-    else:
-        return obj.task_durations.filter(
-            Q(started_at__gte=start_of_day)
-            & Q(paused_at__lte=end_of_day)
-            & Q(user=user)
-        ).all()
+    return obj.task_durations.filter(
+        Q(started_at__gte=start_of_day)
+        & Q(user=user)
+        & Q(Q(paused_at__lte=end_of_day) | Q(paused_at__isnull=True))
+    ).all()
 
 
 class DailyTaskSerializer(TaskCommonSerializer):

@@ -2,7 +2,7 @@
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import { ChangeEvent, useContext, useEffect, useRef, useState } from 'react';
-import { useMutation, useQueryClient } from 'react-query';
+import { useQueryClient } from 'react-query';
 import { EventContentArg } from '@fullcalendar/core/index.js';
 
 import ImageRound from '@components/common/ImageRound';
@@ -10,12 +10,10 @@ import WarningStartTaskModal from '@components/modals/WarningStartTaskModal';
 import PopupDetail from './PopupDetail';
 import PopupDetailEvent from './PopupDetailEvent';
 
-import { apiRouters } from '@constants/routers';
 import { NO_SETTING } from '@constants';
 import { ItemScheduleType, ItemStartType, ViewOptions } from '@constants/enums';
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import { TaskContext } from '@providers/TaskProvider';
-import api from '@base/api';
 import {
   compareWithCurrentDate,
   convertToCurrentTimezone,
@@ -127,8 +125,35 @@ const TaskCard = ({
   const queryClient = useQueryClient();
 
   const { calculateDurationTask } = useCalculateDurationTask({
-    onSuccess: (response) => {
+    onSuccess: (response, task) => {
       const data = response.data;
+
+      if (data.isAnotherTaskStarted) {
+        setIdTaskStarting({
+          id: data.id,
+          type: data.type,
+        });
+        setDataClickTask({
+          id: task.id,
+          type: task.type,
+        });
+        setShowWarningStartModal(true);
+        return;
+      }
+
+      setTaskSelectedAction({
+        id: isEvent ? event.event.id : event.event.extendedProps.taskId,
+        isStart: !isStart,
+        title: event.event.title,
+        type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
+      });
+      setDataRunning({
+        id: isEvent
+          ? event.event.extendedProps.scheduleId
+          : event.event.extendedProps.taskId,
+        type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
+      });
+
       taskSelectedToStart &&
         queryClient.refetchQueries([
           'getTaskDurationDetail',
@@ -180,64 +205,10 @@ const TaskCard = ({
       }
     },
   });
-  // Handle call API check start task
-  const handleCheckStartTask = async ({
-    id,
-    type,
-  }: {
-    id: string;
-    type: string;
-  }) => {
-    return await api.post(apiRouters.TASK_CHECK_START(), {
-      id,
-      type,
-    });
-  };
-  // Function call API  check start task
-  const { mutate: checkTask } = useMutation(
-    'postCheckStartTaskSchedule',
-    handleCheckStartTask,
-    {
-      onSuccess: async ({ data }, task) => {
-        if (!data.isAnotherTaskStarted) {
-          calculateDurationTask({
-            id: isEvent
-              ? event.event.extendedProps.scheduleId
-              : event.event.extendedProps.taskId,
-            type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
-          });
-          setTaskSelectedAction({
-            id: isEvent ? event.event.id : event.event.extendedProps.taskId,
-            isStart: !isStart,
-            title: event.event.title,
-            type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
-          });
-          setDataRunning({
-            id: isEvent
-              ? event.event.extendedProps.scheduleId
-              : event.event.extendedProps.taskId,
-            type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
-          });
-        } else {
-          setDataClickTask({
-            id: task.id,
-            type: task.type,
-          });
-          setIdTaskStarting({
-            id: data.id,
-            type: data.type,
-          });
-          setShowWarningStartModal(true);
-        }
-      },
-      onError: () => {},
-      onSettled: () => {},
-    },
-  );
 
   // Action call API check start task
   const handleConfirmCheckStartTask = (id: string) => {
-    checkTask({
+    calculateDurationTask({
       id: id,
       type:
         event.event.extendedProps.type === ItemStartType.SCHEDULE
@@ -298,6 +269,7 @@ const TaskCard = ({
         event.event.extendedProps.type === ItemStartType.SCHEDULE
           ? ItemStartType.SCHEDULE
           : ItemStartType.TASK,
+      isStart: true,
     });
     setShowWarningStartModal(false);
 
@@ -394,6 +366,11 @@ const TaskCard = ({
                 label: event.event?.extendedProps.eventType,
                 value: event.event?.extendedProps.eventType,
               },
+              repeatType: event.event?.extendedProps?.repeatType,
+              repeatInterval: event.event?.extendedProps?.repeatInterval,
+              weekDay: event.event?.extendedProps?.weekDay,
+              monthDay: event.event?.extendedProps?.monthDay,
+              month: event.event?.extendedProps?.month,
             }}
             onDelete={onDeleteEvent}
           />

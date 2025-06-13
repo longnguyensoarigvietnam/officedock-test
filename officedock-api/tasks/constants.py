@@ -71,3 +71,10 @@ class FrequencyMap(EnumChoices):
             cls.YEARLY: rrule.YEARLY,
         }
         return mapping.get(value, None)
+
+
+class CalculateSkillMapProcessCases(EnumChoices):
+    NOT_CHANGE_COMPLETED_STATUS = "NOT_CHANGE_COMPLETED_STATUS"
+    CHANGE_COMPLETED_STATUS_TO_ANOTHER = "CHANGE_COMPLETED_STATUS_TO_ANOTHER"
+    CHANGE_ANOTHER_TO_COMPLETED_STATUS = "CHANGE_ANOTHER_TO_COMPLETED_STATUS"
+    NOT_CHANGE_STATUS = "NOT_CHANGE_STATUS"

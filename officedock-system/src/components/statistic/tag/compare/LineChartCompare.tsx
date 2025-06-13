@@ -1483,7 +1483,7 @@ const LineChartCompare = ({
             {isFetchedStatisticTagTaskDurationsCompareList &&
               isFetchedStatisticTagTaskDurationsList && (
                 <>
-                  <div className="flex gap-8 items-center justify-end flex-wrap">
+                  <div className="flex gap-8 items-center justify-end flex-wrap mb-3">
                     <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
                       基準
                     </p>

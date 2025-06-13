@@ -829,18 +829,17 @@ const ListChatUsers = ({
       );
     }
 
-    const memberInfo =
-      dashboardMembers.find((member) => {
-        if (item.type === AvatarChat.PRIVATE) {
-          return (
-            member.id ===
-            item.participants.find(
-              (participant) => participant.id !== session?.user.id,
-            )?.id
-          );
-        }
-        return member.id === item.participants[0].id;
-      });
+    const memberInfo = dashboardMembers.find((member) => {
+      if (item.type === AvatarChat.PRIVATE) {
+        return (
+          member.id ===
+          item.participants.find(
+            (participant) => participant.id !== session?.user.id,
+          )?.id
+        );
+      }
+      return member.id === item.participants[0].id;
+    });
 
     return (
       <div className="h-6">
@@ -882,8 +881,8 @@ const ListChatUsers = ({
   };
 
   return (
-    <aside className="w-[350px] max-w-[350px] min-w-[350px] border-r-[2px] pr-3 pt-5">
-      <div className="flex items-center justify-between mb-5">
+    <aside className="w-[270px] max-w-[270px] min-w-[270px] border-r-[2px] pl-4 pt-5">
+      <div className="flex items-center justify-between mb-5 pr-4">
         <InputSearch
           placeholder="全体のキーワードを検索"
           className="w-full"
@@ -896,10 +895,10 @@ const ListChatUsers = ({
           }}
         />
       </div>
-      <div className="flex items-center mb-5 px-3">
+      <div className="flex items-center mb-5 pr-6 pl-1">
         <div
           onClick={goToBookmark}
-          className={`${room === BOOKMARK_ROUTER_NAME && 'bg-white'} h-[36px] p-3 cursor-pointer rounded-md flex items-center gap-1 w-4/5`}>
+          className={`${room === BOOKMARK_ROUTER_NAME && 'bg-white'} h-[36px] p-3 cursor-pointer rounded-md flex items-center gap-1 flex-grow`}>
           <ImageRound
             src="/icons/save-chat.svg"
             name="Save chat icon"
@@ -909,7 +908,7 @@ const ListChatUsers = ({
             ブックマーク
           </p>
         </div>
-        <div className="flex items-center w-1/5 justify-between">
+        <div className="flex items-center w-fit flex-shrink-0 justify-between">
           <Popover className="relative">
             {({ open, close }) => {
               return (
@@ -940,7 +939,7 @@ const ListChatUsers = ({
                           className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == '' && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             setSearchRoomType('');
-                            close()
+                            close();
                           }}>
                           すべてのチャット
                         </p>
@@ -948,7 +947,7 @@ const ListChatUsers = ({
                           className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.UNREAD && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             setSearchRoomType(ChatRoomType.UNREAD);
-                            close()
+                            close();
                           }}>
                           未読があるチャット
                         </p>
@@ -956,7 +955,7 @@ const ListChatUsers = ({
                           className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.GROUP && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             setSearchRoomType(ChatRoomType.GROUP);
-                            close()
+                            close();
                           }}>
                           グループチャット
                         </p>
@@ -964,7 +963,7 @@ const ListChatUsers = ({
                           className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.PRIVATE && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             setSearchRoomType(ChatRoomType.PRIVATE);
-                            close()
+                            close();
                           }}>
                           個人チャット
                         </p>
@@ -1003,12 +1002,12 @@ const ListChatUsers = ({
         <>
           {' '}
           <div
-            className={`flex-grow w-[340px] mt-3 h-[calc(100vh_-_210px)] ${dataChatList.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden !h-[calc(100vh_-_200px)]'} overflow-x-hidden scrollbar-gutter-stable`}>
+            className={`flex-grow w-full pr-4 mt-3 h-[calc(100vh_-_210px)] ${dataChatList.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden !h-[calc(100vh_-_200px)]'} overflow-x-hidden scrollbar-gutter-stable`}>
             {dataChatList && dataChatList.length > 0 ? (
               dataChatList.map((item) => (
                 <div
                   key={item?.code}
-                  className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
+                  className={`flex relative w-full group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
                   onClick={() => handleRoomChange(item)}>
                   <div className="absolute top-1 left-0.5">
                     <DynamicTooltip
@@ -1033,19 +1032,20 @@ const ListChatUsers = ({
                     </DynamicTooltip>
                   </div>
 
-                  <div className="relative">{renderAvatar(item)}</div>
-                  <div className="ml-2 flex gap-1 items-center">
-                    <p className={`text-sm break-all w-[250px] font-medium `}>
-                      {item.code &&
-                      chatRoomNameEditing.find(
-                        (room) => room.roomCode === item.code,
-                      )
-                        ? chatRoomNameEditing.find(
-                            (room) => room.roomCode === item.code,
-                          )?.roomName
-                        : item?.name || ''}
-                    </p>
-                  </div>
+                  <div className="!w-8 !h-8">{renderAvatar(item)}</div>
+
+                  <p
+                    className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium `}>
+                    {item.code &&
+                    chatRoomNameEditing.find(
+                      (room) => room.roomCode === item.code,
+                    )
+                      ? chatRoomNameEditing.find(
+                          (room) => room.roomCode === item.code,
+                        )?.roomName
+                      : item?.name || ''}
+                  </p>
+
                   {item?.unreadMessages > 0 && (
                     <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full w-[20px] pt-[2px] h-[20px] bg-[#C32E2E] text-[10px] text-center text-white leading-4">
                       {item?.unreadMessages}
@@ -1074,12 +1074,12 @@ const ListChatUsers = ({
         searchRoomType) && (
         <>
           <div
-            className={`flex-grow w-[340px] mt-3 h-[calc(100vh_-_210px)]  ${filteredChatList.length > 0 && !initialLoadSearch ? 'overflow-y-auto' : 'overflow-y-hidden'} overflow-x-hidden scrollbar-gutter-stable`}>
+            className={`flex-grow w-full pr-4 mt-3 h-[calc(100vh_-_210px)]  ${filteredChatList.length > 0 && !initialLoadSearch ? 'overflow-y-auto' : 'overflow-y-hidden'} overflow-x-hidden scrollbar-gutter-stable`}>
             {filteredChatList && filteredChatList.length > 0 ? (
               filteredChatList.map((item) => (
                 <div
                   key={item?.code}
-                  className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
+                  className={`flex relative w-full group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
                   onClick={() => {
                     setLastItemId(null);
                     handleSetChatRoomParam(item.code);
@@ -1103,19 +1103,18 @@ const ListChatUsers = ({
                       name="Pin chat"
                     />
                   </div>
-                  <div className="relative">{renderAvatar(item)}</div>
-                  <div className="ml-2 flex gap-1 items-center">
-                    <p className="text-sm break-all w-[250px] font-medium">
-                      {item.code &&
-                      chatRoomNameEditing.find(
-                        (room) => room.roomCode === item.code,
-                      )
-                        ? chatRoomNameEditing.find(
-                            (room) => room.roomCode === item.code,
-                          )?.roomName
-                        : item?.name || ''}
-                    </p>
-                  </div>
+                  <div className="!w-8 !h-8">{renderAvatar(item)}</div>
+                  <p
+                    className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium`}>
+                    {item.code &&
+                    chatRoomNameEditing.find(
+                      (room) => room.roomCode === item.code,
+                    )
+                      ? chatRoomNameEditing.find(
+                          (room) => room.roomCode === item.code,
+                        )?.roomName
+                      : item?.name || ''}
+                  </p>
                   {item?.unreadMessages > 0 && (
                     <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full pt-[2px] w-[20px] h-[20px] bg-[#C32E2E] text-[10px] text-center text-white leading-4">
                       {item?.unreadMessages}

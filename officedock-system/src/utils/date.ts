@@ -996,28 +996,6 @@ export const isYesterdaySchedule = (date: Date) => {
     date.getDate() === yesterday.getDate()
   );
 };
-export const calculateTotalTime = (data: OptionDropdownType[]): string => {
-  const timeToSeconds = (time: string): number => {
-    if (!time) return 0;
-
-    const [hh, mm, ss] = time.split(':').map(Number);
-    return hh * 3600 + mm * 60 + ss;
-  };
-
-  const secondsToTime = (totalSeconds: number): string => {
-    const hh = Math.floor(totalSeconds / 3600);
-    const mm = Math.floor((totalSeconds % 3600) / 60);
-    const ss = totalSeconds % 60;
-    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
-  };
-
-  const totalSeconds = data.reduce((sum, item) => {
-    const timeStr = item.totalData ? item.totalData : '';
-    return sum + timeToSeconds(timeStr);
-  }, 0);
-
-  return secondsToTime(totalSeconds);
-};
 
 export const formatDateToYMD = (dateString: Date | string) => {
   const date = new Date(dateString);
@@ -1045,7 +1023,7 @@ export function formatTimeToJapanese(time: string): string {
     minutes >= 60 ||
     seconds >= 60
   ) {
-    // Handle Error
+    return `0時間0分`;
   }
 
   const totalMinutes = hours * 60 + minutes + Math.floor(seconds / 60);
@@ -1055,13 +1033,34 @@ export function formatTimeToJapanese(time: string): string {
 
   return `${resultHours}時間${String(resultMinutes).padStart(2, '0')}分`;
 }
-
+// Sum duration
 export function sumDurations(data: StatisticCategoryInfo[]): string {
   if (data.length === 0) return '00:00:00';
   let totalSeconds = 0;
 
   data.forEach((item) => {
     const [hours, minutes, seconds] = item.duration.split(':').map(Number);
+    totalSeconds += hours * 3600 + minutes * 60 + seconds;
+  });
+
+  const totalHours = Math.floor(totalSeconds / 3600);
+  const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
+  const totalSecondsLeft = totalSeconds % 60;
+
+  const formattedHours = String(totalHours).padStart(2, '0');
+  const formattedMinutes = String(totalMinutes).padStart(2, '0');
+  const formattedSeconds = String(totalSecondsLeft).padStart(2, '0');
+
+  return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+}
+// Sum total duration with statistic
+export function sumDurationsChart(durations: string[]): string {
+  if (durations.length === 0) return '00:00:00';
+
+  let totalSeconds = 0;
+
+  durations.forEach((duration) => {
+    const [hours, minutes, seconds] = duration.split(':').map(Number);
     totalSeconds += hours * 3600 + minutes * 60 + seconds;
   });
 

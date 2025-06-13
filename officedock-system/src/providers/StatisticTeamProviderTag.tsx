@@ -9,6 +9,7 @@ import {
 
 import { OptionDropdownType } from '@interfaces/common';
 import { getAdjustedStartDateDefault } from '@utils/date';
+import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
 
 interface ContextValue {
   selectedOrganization: OptionDropdownType | null;
@@ -42,6 +43,15 @@ interface ContextValue {
   }[];
   tagsOptions: OptionDropdownType[];
   selectedTags: OptionDropdownType[];
+  orderingOptions: {
+    user_ids: OptionDropdownType[];
+  } | null;
+  setOrderingOptions: Dispatch<
+    SetStateAction<{
+      user_ids: OptionDropdownType[];
+    } | null>
+  >;
+
   setTotalDurationCategory: Dispatch<SetStateAction<string>>;
   setTotalDurationCategoryCompare: Dispatch<SetStateAction<string>>;
 
@@ -103,6 +113,15 @@ interface ContextValue {
 
   currentPage: number;
   setCurrentPage: Dispatch<SetStateAction<number>>;
+
+  // Value data
+  remainingCountUser: number;
+  firstThreeUser: OptionDropdownType[];
+  allLabelUser: OptionDropdownType[];
+
+  // View by
+  lineChartViewBy: OptionDropdownType | null;
+  setLineChartViewBy: Dispatch<SetStateAction<OptionDropdownType | null>>;
 }
 
 const defaultValue: ContextValue = {
@@ -181,6 +200,14 @@ const defaultValue: ContextValue = {
   setIsLoadingOrganizationCompare: () => {},
   currentPage: 1,
   setCurrentPage: () => {},
+  orderingOptions: null,
+  setOrderingOptions: () => {},
+  remainingCountUser: 0,
+  firstThreeUser: [],
+  allLabelUser: [],
+
+  lineChartViewBy: null,
+  setLineChartViewBy: () => {},
 };
 
 export const StatisticTeamTagsStateContext =
@@ -268,6 +295,9 @@ export const StatisticTeamTagsStateProvider = ({
   // Tag
   const [tagsOptions, setTagsOptions] = useState<OptionDropdownType[]>([]);
   const [selectedTags, setSelectedTags] = useState<OptionDropdownType[]>([]);
+  const [orderingOptions, setOrderingOptions] = useState<{
+    user_ids: OptionDropdownType[];
+  } | null>(null);
 
   // Member
   const [listMemberTeam, setListMemberTeam] = useState<
@@ -278,6 +308,21 @@ export const StatisticTeamTagsStateProvider = ({
       avatarUrl: string;
     }[]
   >([]);
+
+  // View by
+  const [lineChartViewBy, setLineChartViewBy] =
+    useState<OptionDropdownType | null>({
+      value: StatisticViewOptions.WEEK,
+      label: StatisticViewLabels.WEEK,
+    });
+
+  // Value data
+  const allLabelUser =
+    orderingOptions && orderingOptions.user_ids ? orderingOptions.user_ids : [];
+
+  const firstThreeUser = allLabelUser.slice(0, 3);
+
+  const remainingCountUser = allLabelUser.length - firstThreeUser.length;
 
   const contextValue: ContextValue = {
     smallOptions,
@@ -331,6 +376,10 @@ export const StatisticTeamTagsStateProvider = ({
     selectedTags,
     setSelectedTags,
     setTagsOptions,
+
+    orderingOptions,
+    setOrderingOptions,
+
     isSkeletonTagTeamTask,
     setIsSkeletonTagTeamTask,
     isSkeletonTagTeamTaskCompare,
@@ -353,8 +402,16 @@ export const StatisticTeamTagsStateProvider = ({
     setIsLoadingMediumCompare,
     setIsLoadingSmallCompare,
     setIsLoadingOrganizationCompare,
+
     currentPage,
     setCurrentPage,
+
+    remainingCountUser,
+    firstThreeUser,
+    allLabelUser,
+
+    lineChartViewBy,
+    setLineChartViewBy,
   };
 
   return (

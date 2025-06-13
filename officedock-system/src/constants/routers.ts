@@ -450,7 +450,6 @@ export const apiRouters = {
 
   // DURATION
   TASK_DURATION: `/durations/`,
-  TASK_CHECK_START: () => `/durations/another-started/`,
   TASK_DURATION_DETAIL: () => `/durations/running/`,
   TASK_HEADER_START: '/durations/running/',
   TASK_CALCULATE_DURATION: () => `/durations/calculate/`,
@@ -466,6 +465,7 @@ export const apiRouters = {
   SOCKET_ACTION: (token: string) => `/system/ws/chat/?token=${token}`,
   CHAT_SETTING: '/users/chat-setting/',
   CHAT_UPLOAD_CHUNK: '/chat/chunk-files/',
+  MEMO_CHAT_ACTION: (code: string) => `/chat/${code}/memo/`,
 
   // BOOKMARK
   BOOKMARK_LIST: '/messages/',
@@ -540,17 +540,18 @@ export const apiRouters = {
   CONFIRM_USER_DAILY: (id: number) => `/users/${id}/report/`,
 
   // STATISTICS
-  // ROLES
   TEAM_LIST: '/teams/',
   STATISTICS_CATEGORIES: '/statistics/categories/',
   STATISTICS_TASKS: '/statistics/tasks/',
   STATISTICS_TAGS: '/statistics/tags/',
   STATISTICS_TASK_DURATIONS: '/statistics/task-durations/',
+  STATISTICS_PERCENT_CHART: '/statistics/percent-change/',
 
   // STATISTICS TEAM
   STATISTICS_CATEGORIES_TEAM: (id: number) =>
-    `/organization-statistics/${id}/categories`,
-  STATISTICS_TAGS_TEAM: (id: number) => `/organization-statistics/${id}/tags`,
+    `/organization-statistics/${id}/categories/`,
+  STATISTICS_TAGS_TEAM: (id: number) => `/organization-statistics/${id}/tags/`,
+  STATISTICS_USER_TASK_DURATIONS: (id: number) => `/organization-statistics/${id}/user-task-durations/`,
 
   // ORGANIZATION CATEGORY HIERARCHIES
   ORGANIZATION_CATEGORY_HIERARCHY_DETAIL: (id: number) =>
@@ -562,5 +563,5 @@ export const apiRouters = {
   LOCATION_DETAIL: (uuid: string) => `/event-locations/${uuid}/`,
 
   // COMPANY
-  COMPANY_SETTINGS: 'companies/settings/'
+  COMPANY_SETTINGS: 'companies/settings/',
 };

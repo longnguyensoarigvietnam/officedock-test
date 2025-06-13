@@ -72,6 +72,7 @@ const useStatisticTask = ({
     if (filter?.totalDuration === '') return null;
 
     if (isTeam && !filter.user_id) return [];
+
     setIsSkeletonCategoryTask(true);
     setIsSkeletonTagTask(true);
     setIsSkeletonCategoryTeamTask(true);

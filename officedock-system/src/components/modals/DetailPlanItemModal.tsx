@@ -6,6 +6,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
+import { useQueryClient } from 'react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import ImageRound from '@components/common/ImageRound';
@@ -16,6 +17,11 @@ import {
   StatusValueTask,
 } from '@constants/enums';
 import { ERROR_DELETE_TASK_RUNNING } from '@constants/message';
+
+import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
+
+import { TaskContext } from '@providers/TaskProvider';
+import { useToast } from '@providers/ToastProvider';
 import { DataDetailTaskType } from '@interfaces/task';
 import {
   compareWithCurrentDate,
@@ -23,13 +29,7 @@ import {
   formatShowDeadlineTask,
   formatTime24h,
 } from '@utils/date';
-import { TaskContext } from '@providers/TaskProvider';
-import { useMutation, useQueryClient } from 'react-query';
-import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
-import api from '@base/api';
-import { apiRouters } from '@constants/routers';
 import WarningStartTaskModal from './WarningStartTaskModal';
-import { useToast } from '@providers/ToastProvider';
 
 type Props = {
   popoverInfo: DataDetailTaskType;
@@ -106,8 +106,32 @@ const DetailPlanItemModal = ({
   const queryClient = useQueryClient();
 
   const { calculateDurationTask } = useCalculateDurationTask({
-    onSuccess: (response) => {
+    onSuccess: (response, task) => {
       const data = response.data;
+
+      if (data.isAnotherTaskStarted) {
+        setIdTaskStarting({
+          id: data.id,
+          type: data.type,
+        });
+        setDataClickTask({
+          id: task.id,
+          type: task.type,
+        });
+        setShowWarningStartModal(true);
+        return;
+      }
+
+      setTaskSelectedAction({
+        id: popoverInfo.taskId,
+        isStart: !isStart,
+        title: popoverInfo.title,
+        type: ItemStartType.TASK,
+      });
+      setDataRunning({
+        id: `${popoverInfo.taskId}`,
+        type: ItemStartType.TASK,
+      });
       setIsStartPopupDetail(!isStart);
       taskSelectedToStart &&
         queryClient.refetchQueries([
@@ -158,60 +182,10 @@ const DetailPlanItemModal = ({
       }
     },
   });
-  // Handle call API check start task
-  const handleCheckStartTask = async ({
-    id,
-    type,
-  }: {
-    id: string;
-    type: string;
-  }) => {
-    return await api.post(apiRouters.TASK_CHECK_START(), {
-      id,
-      type,
-    });
-  };
-  // Function call API  check start task
-  const { mutate: checkTask } = useMutation(
-    'postCheckStartTaskSchedule',
-    handleCheckStartTask,
-    {
-      onSuccess: async ({ data }, task) => {
-        if (!data.isAnotherTaskStarted) {
-          calculateDurationTask({
-            id: `${popoverInfo.taskId}`,
-            type: ItemStartType.TASK,
-          });
-          setTaskSelectedAction({
-            id: popoverInfo.taskId,
-            isStart: !isStart,
-            title: popoverInfo.title,
-            type: ItemStartType.TASK,
-          });
-          setDataRunning({
-            id: `${popoverInfo.taskId}`,
-            type: ItemStartType.TASK,
-          });
-        } else {
-          setDataClickTask({
-            id: task.id,
-            type: task.type,
-          });
-          setIdTaskStarting({
-            id: data.id,
-            type: data.type,
-          });
-          setShowWarningStartModal(true);
-        }
-      },
-      onError: () => {},
-      onSettled: () => {},
-    },
-  );
 
   // Action call API check start task
   const handleConfirmCheckStartTask = (id: string) => {
-    checkTask({
+    calculateDurationTask({
       id: id,
       type: ItemStartType.TASK,
     });
@@ -243,6 +217,7 @@ const DetailPlanItemModal = ({
     calculateDurationTask({
       id: `${popoverInfo.taskId}`,
       type: ItemStartType.TASK,
+      isStart: true,
     });
     setShowWarningStartModal(false);
 

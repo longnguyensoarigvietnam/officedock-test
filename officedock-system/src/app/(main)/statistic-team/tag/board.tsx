@@ -9,6 +9,12 @@ import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import PercentageTeamTags from '@components/statisticTeam/tag/PercentageTeamTags';
 import PercentageTeamTagsCompare from '@components/statisticTeam/tag/compare/PercentageTeamTagsCompare';
 import TaskListStatisticTeamTags from '@components/statisticTeam/tag/TaskList';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import LineChartByTeamTags from '@components/statisticTeam/tag/LineChartByTeamTags';
+import LineChartByTeamTagsCompare from '@components/statisticTeam/tag/compare/LineChartByTeamTagsCompare';
+import AllocationTagTeamCompare from '@components/statisticTeam/tag/compare/AllocationTagTeamCompare';
+import AllocationTeamTag from '@components/statisticTeam/tag/AllocationTeamTag';
+import StackedAreaTeamTagChart from '@components/statisticTeam/tag/StackedAreaTeamTagChart';
 
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
@@ -22,8 +28,8 @@ import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import { OptionDropdownType } from '@interfaces/common';
+
 import { formatDateToYMD, sumDurations } from '@utils/date';
-import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 const StatisticTeamTagBoard = () => {
   const {
@@ -39,6 +45,8 @@ const StatisticTeamTagBoard = () => {
     selectedTags,
     tagsOptions,
     selectedSmall,
+    orderingOptions,
+    setOrderingOptions,
     setTagsOptions,
     setSelectedTags,
     setSelectedLarge,
@@ -89,33 +97,50 @@ const StatisticTeamTagBoard = () => {
 
     onSuccess: (data) => {
       if (!data) return;
-      if (data.organization) {
-        setListOptionsOrganization([
-          {
-            label: data.organization.name,
-            value: data.organization.id,
-          },
-        ]);
+      const result = (() => {
+        if (data.organizations.length === 0) {
+          return { label: '', value: '' };
+        }
 
-        handleSelectOrganization({
-          label: data.organization.name,
-          value: data.organization.id,
+        const mainItem =
+          data.organizations.find((item) => item.isMain) ||
+          data.organizations[0];
+        const optionsTagList = mainItem.tags.map((item) => ({
+          label: item.name,
+          value: item.id,
+        }));
+        setTagsOptions(optionsTagList);
+        setSelectedTags(optionsTagList);
+
+        setListMemberTeam(
+          mainItem.members.map((member) => ({
+            id: member.id,
+            fullName: member.fullName,
+            color: member?.avatarColor || '',
+            avatarUrl: member?.avatar || '',
+          })),
+        );
+        setOrderingOptions({
+          user_ids: mainItem.members.map((member) => ({
+            value: member.id,
+            label: member.fullName,
+            color: member?.avatarColor || '',
+            avatarUrl: member?.avatar || '',
+          })),
         });
-      }
-      setListMemberTeam(
-        data.members.map((member) => ({
-          id: member.id,
-          fullName: member.fullName,
-          color: member?.avatarColor || '',
-          avatarUrl: member?.avatar || '',
+
+        return {
+          label: mainItem.name,
+          value: mainItem.id,
+        };
+      })();
+      handleSelectOrganization(result);
+      setListOptionsOrganization([
+        ...data.organizations.map((org) => ({
+          value: org.id || '',
+          label: org.name,
         })),
-      );
-      const optionsTagList = data.tags.map((item) => ({
-        label: item.name,
-        value: item.id,
-      }));
-      setTagsOptions(optionsTagList);
-      setSelectedTags(optionsTagList);
+      ]);
     },
   });
 
@@ -131,7 +156,18 @@ const StatisticTeamTagBoard = () => {
       tagIds: selectedTags,
     },
     onSuccess: (data) => {
-      const organization = creationDataStatisticData?.organization;
+      if (creationDataStatisticData?.organizations.length === 0) {
+        return;
+      }
+
+      const organization =
+        selectedOrganization && selectedOrganization.value
+          ? creationDataStatisticData?.organizations.find(
+              (item) => item.id === selectedOrganization?.value,
+            )
+          : creationDataStatisticData?.organizations.find(
+              (item) => item.isMain === true,
+            ) || creationDataStatisticData?.organizations[0];
 
       if (organization) {
         const largeCategories = organization.statisticCategories.map(
@@ -167,7 +203,7 @@ const StatisticTeamTagBoard = () => {
       largeCategoryId: selectedLarge?.value as number,
       mediumCategoryId: selectedMedium?.value as number,
       smallCategoryId: selectedSmall?.value as number,
-
+      tagIds: selectedTags,
       isCompare: isCheckCompare,
     },
     onSuccess: (data) => {
@@ -212,12 +248,36 @@ const StatisticTeamTagBoard = () => {
     setSelectedMedium(null);
     setSelectedSmall(null);
 
-    const organization = creationDataStatisticData?.organization;
+    const organization = creationDataStatisticData?.organizations?.find(
+      (org) => org.id === data.value,
+    );
     if (organization) {
       const largeCategories = organization.statisticCategories.map((stat) => ({
         value: stat.LARGE.id,
         label: stat.LARGE.name,
       }));
+      const optionsTagList = organization.tags.map((item) => ({
+        label: item.name,
+        value: item.id,
+      }));
+      setTagsOptions(optionsTagList);
+      setListMemberTeam(
+        organization.members.map((member) => ({
+          id: member.id,
+          fullName: member.fullName,
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
+        })),
+      );
+      setOrderingOptions({
+        user_ids: organization.members.map((member) => ({
+          value: member.id,
+          label: member.fullName,
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
+        })),
+      });
+      setCurrentPage(1);
       setLargeOptions(largeCategories);
     } else {
       setLargeOptions([]);
@@ -239,7 +299,9 @@ const StatisticTeamTagBoard = () => {
     setSelectedMedium(null);
     setSelectedSmall(null);
 
-    const organization = creationDataStatisticData?.organization;
+    const organization = creationDataStatisticData?.organizations?.find(
+      (org) => org.id === data.value,
+    );
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === data.value,
     );
@@ -269,7 +331,9 @@ const StatisticTeamTagBoard = () => {
     setSelectedMedium(data);
     setSelectedSmall(null);
 
-    const organization = creationDataStatisticData?.organization;
+    const organization = creationDataStatisticData?.organizations?.find(
+      (org) => org.id === data.value,
+    );
 
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === selectedLarge?.value,
@@ -340,6 +404,18 @@ const StatisticTeamTagBoard = () => {
     );
   };
 
+  // Remove user
+  const removeUser = (selected: OptionDropdownType) => {
+    const currentUserIds = orderingOptions?.user_ids || [];
+    const updatedUserIds = currentUserIds.filter(
+      (tag) => tag.value !== selected.value,
+    );
+    setCurrentPage(1);
+    setOrderingOptions({
+      user_ids: updatedUserIds,
+    });
+  };
+
   return (
     <div className="pt-[30px] pr-10  font-medium ">
       <div className="mb-[33px] flex items-start justify-between">
@@ -363,7 +439,7 @@ const StatisticTeamTagBoard = () => {
               variant={'outline'}
               onClick={() => {
                 router.push(
-                  `${pageRouters.STATISTIC_TEAM_MANAGEMENT.href}?organization=${selectedOrganization?.value}&tabId=1`,
+                  `${pageRouters.STATISTIC_TEAM_MANAGEMENT.href}?organization=${organizationId}&tabId=1`,
                 );
               }}
               className={`!py-0 !px-0 font-bold w-[80px] h-7 
@@ -437,32 +513,100 @@ const StatisticTeamTagBoard = () => {
           </div>
         </div>
       </div>
-      {/* Percentage of categories */}
+
       {isCheckCompare ? (
-        <PercentageTeamTagsCompare
-          startDate={startDate}
-          endDate={endDate}
-          startDateCompare={startDateCompare}
-          endDateCompare={endDateCompare}
-          statisticTagsListTeam={statisticTagsListTeam}
-          statisticTagsListTeamCompare={statisticTagsListTeamCompare}
-          removeTag={removeTag}
-          handleSelectOrganization={handleSelectOrganization}
-          handleSelectLarge={handleSelectLarge}
-          handleSelectMedium={handleSelectMedium}
-          handleSelectSmall={handleSelectSmall}
-        />
+        <>
+          {/* Percentage of categories */}
+          <PercentageTeamTagsCompare
+            startDate={startDate}
+            startDateCompare={startDateCompare}
+            statisticTagsListTeamCompare={statisticTagsListTeamCompare}
+            removeTag={removeTag}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+            endDate={endDate}
+            statisticTagsListTeam={statisticTagsListTeam}
+            endDateCompare={endDateCompare}
+          />
+          {/* Progress bar */}
+          <AllocationTagTeamCompare
+            startDate={startDate}
+            endDate={endDate}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            statisticTagsList={statisticTagsListTeam}
+            statisticTagsCompareList={statisticTagsListTeamCompare}
+            removeTag={removeTag}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+          {/* Line chart */}
+          <LineChartByTeamTagsCompare
+            startDate={startDate}
+            endDate={endDate}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            removeUser={removeUser}
+            removeTag={removeTag}
+            statisticTagsListTeam={statisticTagsListTeam}
+            statisticTagsListTeamCompare={statisticTagsListTeamCompare}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+        </>
       ) : (
-        <PercentageTeamTags
-          startDate={startDate}
-          endDate={endDate}
-          statisticTagsListTeam={statisticTagsListTeam}
-          removeTag={removeTag}
-          handleSelectOrganization={handleSelectOrganization}
-          handleSelectLarge={handleSelectLarge}
-          handleSelectMedium={handleSelectMedium}
-          handleSelectSmall={handleSelectSmall}
-        />
+        <>
+          {/* Percentage of category */}
+          <PercentageTeamTags
+            startDate={startDate}
+            endDate={endDate}
+            statisticTagsListTeam={statisticTagsListTeam}
+            removeTag={removeTag}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+          {/* Progress bar */}
+          <AllocationTeamTag
+            startDate={startDate}
+            endDate={endDate}
+            statisticTagsList={statisticTagsListTeam}
+            removeTag={removeTag}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+          {/* Line chart */}
+          <LineChartByTeamTags
+            startDate={startDate}
+            endDate={endDate}
+            removeUser={removeUser}
+            removeTag={removeTag}
+            statisticTagsListTeam={statisticTagsListTeam}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+          <StackedAreaTeamTagChart
+            startDate={startDate}
+            endDate={endDate}
+            removeTag={removeTag}
+            statisticTagsListTeam={statisticTagsListTeam}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+        </>
       )}
 
       {/* Task list */}
@@ -479,7 +623,9 @@ const StatisticTeamTagBoard = () => {
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
           handleSelectSmall={handleSelectSmall}
-          creationDataStatisticData={creationDataStatisticData?.organization}
+          creationDataStatisticData={creationDataStatisticData?.organizations?.find(
+            (org) => org.id === selectedOrganization?.value,
+          )}
         />
       )}
     </div>

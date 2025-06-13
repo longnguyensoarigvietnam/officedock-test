@@ -182,13 +182,13 @@ export enum ActionsEvent {
   EDIT = 'EDIT',
   CREATE = 'CREATE',
   DELETE = 'DELETE',
-  COPY = 'COPY'
+  COPY = 'COPY',
 }
 
 export enum EventCalendarType {
   TASK = 'TASK',
   SCHEDULE = 'SCHEDULE',
-  HOLIDAY = 'HOLIDAY'
+  HOLIDAY = 'HOLIDAY',
 }
 
 export enum EventWorkCategory {
@@ -244,7 +244,7 @@ export enum SubmitLevelStatus {
   PENDING = '申請中',
   APPROVAL = '承認',
   REJECTED = '却下',
-  DRAFT = 'ドラフト'
+  DRAFT = 'ドラフト',
 }
 
 export enum PermissionsSystem {
@@ -532,13 +532,19 @@ export enum SkillMapTypeInterval {
 }
 export enum MenuPlacementType {
   TOP = 'top',
-  BOTTOM = 'bottom'
+  BOTTOM = 'bottom',
 }
-export enum SortingType{
+export enum SortingType {
   ASC = 'asc',
-  DESC = 'desc'
+  DESC = 'desc',
 }
-export enum SelectedEventOpenType { 
+export enum SelectedEventOpenType {
   MODAL = 'MODAL',
-  POPUP = 'POPUP'
+  POPUP = 'POPUP',
+}
+
+export enum ChatMemoType {
+  MEMO = 'memo',
+  FILE = 'file',
+  MEMBER = 'member',
 }

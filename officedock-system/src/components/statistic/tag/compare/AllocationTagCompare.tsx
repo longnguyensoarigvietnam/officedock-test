@@ -498,13 +498,9 @@ const AllocationTagCompare = memo(
                                       : pair.compare?.label || ''}
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
-                                    {pair.main?.duration
-                                      ? formatTimeToJapanese(
-                                          pair.main?.duration,
-                                        )
-                                      : formatTimeToJapanese(
-                                          pair.compare?.duration || '',
-                                        )}
+                                    {formatTimeToJapanese(
+                                      pair.main?.duration || '00:00:00',
+                                    )}
                                   </span>
                                 </div>
                                 <ProgressBarStatistic
@@ -664,13 +660,9 @@ const AllocationTagCompare = memo(
                                       : pair.compare?.label || ''}
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
-                                    {pair.main?.duration
-                                      ? formatTimeToJapanese(
-                                          pair.main?.duration,
-                                        )
-                                      : formatTimeToJapanese(
-                                          pair.compare?.duration || '',
-                                        )}
+                                    {formatTimeToJapanese(
+                                      pair.main?.duration || '00:00:00',
+                                    )}
                                   </span>
                                 </div>
                                 <ProgressBarStatistic
@@ -830,13 +822,9 @@ const AllocationTagCompare = memo(
                                       : pair.compare?.label || ''}
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
-                                    {pair.main?.duration
-                                      ? formatTimeToJapanese(
-                                          pair.main?.duration,
-                                        )
-                                      : formatTimeToJapanese(
-                                          pair.compare?.duration || '',
-                                        )}
+                                    {formatTimeToJapanese(
+                                      pair.main?.duration || '00:00:00',
+                                    )}
                                   </span>
                                 </div>
                                 <ProgressBarStatistic
@@ -999,13 +987,9 @@ const AllocationTagCompare = memo(
                                       : pair.compare?.label || ''}
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
-                                    {pair.main?.duration
-                                      ? formatTimeToJapanese(
-                                          pair.main?.duration,
-                                        )
-                                      : formatTimeToJapanese(
-                                          pair.compare?.duration || '',
-                                        )}
+                                    {formatTimeToJapanese(
+                                      pair.main?.duration || '00:00:00',
+                                    )}
                                   </span>
                                 </div>
                                 <ProgressBarStatistic

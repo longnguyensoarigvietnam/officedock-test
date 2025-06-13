@@ -1,6 +1,12 @@
 'use client';
 import React, { Fragment, useContext, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
 
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
@@ -10,6 +16,12 @@ import PercentageTeamCategory from '@components/statisticTeam/category/Percentag
 import PercentageTeamCategoryCompare from '@components/statisticTeam/category/compare/PercentageCategoryCompare';
 import TaskListTeamStatistic from '@components/statisticTeam/category/TaskList';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
+import LineChartByTeam from '@components/statisticTeam/category/LineChartByTeam';
+import LineChartByTeamCompare from '@components/statisticTeam/category/compare/LineChartByTeamCompare';
+import AllocationTeamCategoryCompare from '@components/statisticTeam/category/compare/AllocationTeamCategoryCompare';
+import AllocationTeamCategory from '@components/statisticTeam/category/AllocationTeamCategory';
+import StackedAreaTeamChart from '@components/statisticTeam/category/StackedAreaTeamChart';
 
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { pageRouters } from '@constants/routers';
@@ -19,18 +31,12 @@ import useStatisticCategoriesTeamCompare from '@hooks/useStatisticCategoriesTeam
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 
 import { OptionDropdownType } from '@interfaces/common';
+
 import { formatDateToYMD, sumDurations } from '@utils/date';
 
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition,
-} from '@headlessui/react';
-import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
 
 const StatisticTeamBoard = () => {
   const {
@@ -52,7 +58,7 @@ const StatisticTeamBoard = () => {
     remainingCountUser,
     remainingCountTag,
     firstThreeUser,
-    allLabelUer,
+    allLabelUser,
     allLabelTag,
     firstThreeTag,
     setOrderingOptions,
@@ -110,7 +116,18 @@ const StatisticTeamBoard = () => {
       orderingOptions: orderingOptions,
     },
     onSuccess: (data) => {
-      const organization = creationDataStatisticData?.organization;
+      if (creationDataStatisticData?.organizations.length === 0) {
+        return;
+      }
+
+      const organization =
+        selectedOrganization && selectedOrganization.value
+          ? creationDataStatisticData?.organizations.find(
+              (item) => item.id === selectedOrganization?.value,
+            )
+          : creationDataStatisticData?.organizations.find(
+              (item) => item.isMain === true,
+            ) || creationDataStatisticData?.organizations[0];
 
       if (organization) {
         const largeCategories = organization.statisticCategories.map(
@@ -235,33 +252,51 @@ const StatisticTeamBoard = () => {
     is_statistic: true,
     onSuccess: (data) => {
       if (!data) return;
-      if (data.organization) {
-        setListOptionsOrganization([
-          {
-            label: data.organization.name,
-            value: data.organization.id,
-          },
-        ]);
 
-        handleSelectOrganization({
-          label: data.organization.name,
-          value: data.organization.id,
+      const result = (() => {
+        if (data.organizations.length === 0) {
+          return { label: '', value: '' };
+        }
+
+        const mainItem =
+          data.organizations.find((item) => item.isMain) ||
+          data.organizations[0];
+        const optionsTagList = mainItem.tags.map((item) => ({
+          label: item.name,
+          value: item.id,
+        }));
+        setTagsOptions(optionsTagList);
+        setListMemberTeam(
+          mainItem.members.map((member) => ({
+            id: member.id,
+            fullName: member.fullName,
+            color: member?.avatarColor || '',
+            avatarUrl: member?.avatar || '',
+          })),
+        );
+        setOrderingOptions({
+          tag_ids: [],
+          user_ids: mainItem.members.map((member) => ({
+            value: member.id,
+            label: member.fullName,
+            color: member?.avatarColor || '',
+            avatarUrl: member?.avatar || '',
+          })),
         });
-      }
-      const optionsTagList = data.tags.map((item) => ({
-        label: item.name,
-        value: item.id,
-      }));
-      setTagsOptions(optionsTagList);
 
-      setListMemberTeam(
-        data.members.map((member) => ({
-          id: member.id,
-          fullName: member.fullName,
-          color: member?.avatarColor || '',
-          avatarUrl: member?.avatar || '',
+        return {
+          label: mainItem.name,
+          value: mainItem.id,
+        };
+      })();
+
+      handleSelectOrganization(result);
+      setListOptionsOrganization([
+        ...data.organizations.map((org) => ({
+          value: org.id || '',
+          label: org.name,
         })),
-      );
+      ]);
     },
   });
 
@@ -279,12 +314,37 @@ const StatisticTeamBoard = () => {
     setSelectedMedium(null);
     setSelectedSmall(null);
 
-    const organization = creationDataStatisticData?.organization;
+    const organization = creationDataStatisticData?.organizations?.find(
+      (org) => org.id === data.value,
+    );
     if (organization) {
       const largeCategories = organization.statisticCategories.map((stat) => ({
         value: stat.LARGE.id,
         label: stat.LARGE.name,
       }));
+      const optionsTagList = organization.tags.map((item) => ({
+        label: item.name,
+        value: item.id,
+      }));
+      setTagsOptions(optionsTagList);
+      setListMemberTeam(
+        organization.members.map((member) => ({
+          id: member.id,
+          fullName: member.fullName,
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
+        })),
+      );
+      setCurrentPage(1);
+      setOrderingOptions({
+        tag_ids: [],
+        user_ids: organization.members.map((member) => ({
+          value: member.id,
+          label: member.fullName,
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
+        })),
+      });
       setLargeOptions(largeCategories);
     } else {
       setLargeOptions([]);
@@ -301,12 +361,32 @@ const StatisticTeamBoard = () => {
     setSelectedMedium(null);
     setSelectedSmall(null);
 
-    const organization = creationDataStatisticData?.organization;
+    const organization = creationDataStatisticData?.organizations?.find(
+      (org) => org.id === data.value,
+    );
     if (organization) {
       const largeCategories = organization.statisticCategories.map((stat) => ({
         value: stat.LARGE.id,
         label: stat.LARGE.name,
       }));
+      const optionsTagList = organization.tags.map((item) => ({
+        label: item.name,
+        value: item.id,
+      }));
+      setTagsOptions(optionsTagList);
+      setListMemberTeam(
+        organization.members.map((member) => ({
+          id: member.id,
+          fullName: member.fullName,
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
+        })),
+      );
+      setCurrentPage(1);
+      setOrderingOptions({
+        tag_ids: [],
+        user_ids: [],
+      });
       setLargeOptions(largeCategories);
     } else {
       setLargeOptions([]);
@@ -328,7 +408,9 @@ const StatisticTeamBoard = () => {
     setSelectedMedium(null);
     setSelectedSmall(null);
 
-    const organization = creationDataStatisticData?.organization;
+    const organization = creationDataStatisticData?.organizations?.find(
+      (org) => org.id === data.value,
+    );
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === data.value,
     );
@@ -358,7 +440,9 @@ const StatisticTeamBoard = () => {
     setSelectedMedium(data);
     setSelectedSmall(null);
 
-    const organization = creationDataStatisticData?.organization;
+    const organization = creationDataStatisticData?.organizations?.find(
+      (org) => org.id === data.value,
+    );
 
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === selectedLarge?.value,
@@ -477,7 +561,7 @@ const StatisticTeamBoard = () => {
             <Button
               onClick={() => {
                 router.push(
-                  `${pageRouters.STATISTIC_TEAM_TAG_MANAGEMENT.href}?organization=${selectedOrganization?.value}&tabId=1`,
+                  `${pageRouters.STATISTIC_TEAM_TAG_MANAGEMENT.href}?organization=${organizationId}&tabId=1`,
                 );
               }}
               variant={'outline'}
@@ -621,7 +705,7 @@ const StatisticTeamBoard = () => {
                     </div>
                   );
                 })}
-                {allLabelUer.length > 3 && (
+                {allLabelUser.length > 3 && (
                   <p className=" h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
                     +{remainingCountUser}
                   </p>
@@ -666,35 +750,103 @@ const StatisticTeamBoard = () => {
           </div>
         </div>
       </div>
-      {/* Percentage of categories */}
+
       {isCheckCompare ? (
-        <PercentageTeamCategoryCompare
-          startDate={startDate}
-          endDate={endDate}
-          startDateCompare={startDateCompare}
-          endDateCompare={endDateCompare}
-          statisticTeamCategoryList={statisticCategoryListTeam}
-          statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
-          handleSelectOrganization={handleSelectOrganization}
-          handleSelectOrganizationCustom={handleSelectOrganizationCustom}
-          handleSelectLarge={handleSelectLarge}
-          handleSelectMedium={handleSelectMedium}
-          removeTag={removeTag}
-          removeUser={removeUser}
-          handleSelectSmall={handleSelectSmall}
-        />
+        <>
+          {/* Compare percentage of categories */}
+          <PercentageTeamCategoryCompare
+            startDate={startDate}
+            endDate={endDate}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            statisticTeamCategoryList={statisticCategoryListTeam}
+            statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectOrganizationCustom={handleSelectOrganizationCustom}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            removeTag={removeTag}
+            removeUser={removeUser}
+            handleSelectSmall={handleSelectSmall}
+          />
+          {/* Progress bar */}
+          <AllocationTeamCategoryCompare
+            startDate={startDate}
+            endDate={endDate}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            statisticTeamCategoryList={statisticCategoryListTeam}
+            statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
+            removeTag={removeTag}
+            removeUser={removeUser}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+          {/* Compare line chart */}
+          <LineChartByTeamCompare
+            startDate={startDate}
+            endDate={endDate}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            statisticTeamCategoryList={statisticCategoryListTeam}
+            statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            removeTag={removeTag}
+            removeUser={removeUser}
+          />
+        </>
       ) : (
-        <PercentageTeamCategory
-          startDate={startDate}
-          endDate={endDate}
-          statisticTeamCategoryList={statisticCategoryListTeam}
-          handleSelectOrganization={handleSelectOrganization}
-          handleSelectOrganizationCustom={handleSelectOrganizationCustom}
-          handleSelectLarge={handleSelectLarge}
-          handleSelectMedium={handleSelectMedium}
-          removeTag={removeTag}
-          removeUser={removeUser}
-        />
+        <>
+          {/* Percentage of category */}
+          <PercentageTeamCategory
+            startDate={startDate}
+            endDate={endDate}
+            statisticTeamCategoryList={statisticCategoryListTeam}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectOrganizationCustom={handleSelectOrganizationCustom}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            removeTag={removeTag}
+            removeUser={removeUser}
+          />
+          {/* Progress bar */}
+          <AllocationTeamCategory
+            startDate={startDate}
+            endDate={endDate}
+            statisticTeamCategoryList={statisticCategoryListTeam}
+            removeTag={removeTag}
+            removeUser={removeUser}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+          {/* Line chart */}
+          <LineChartByTeam
+            startDate={startDate}
+            endDate={endDate}
+            statisticTeamCategoryList={statisticCategoryListTeam}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            removeTag={removeTag}
+            removeUser={removeUser}
+          />
+          <StackedAreaTeamChart
+            startDate={startDate}
+            endDate={endDate}
+            statisticTeamCategoryList={statisticCategoryListTeam}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            removeTag={removeTag}
+            removeUser={removeUser}
+          />
+        </>
       )}
       {/* Task list */}
       {creationDataStatisticData && (
@@ -711,7 +863,9 @@ const StatisticTeamBoard = () => {
           handleSelectSmall={handleSelectSmall}
           removeTag={removeTag}
           removeUser={removeUser}
-          creationDataStatisticData={creationDataStatisticData?.organization}
+          creationDataStatisticData={creationDataStatisticData?.organizations?.find(
+            (org) => org.id === selectedOrganization?.value,
+          )}
         />
       )}
     </div>

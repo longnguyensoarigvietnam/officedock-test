@@ -62,7 +62,7 @@ interface TableChartProps {
   totalDuration: string;
   taskList: DataTaskListStatisticListType[];
   listOptionsOrganization: OptionDropdownType[];
-  creationDataStatisticData: CreationStatisticType;
+  creationDataStatisticData: CreationStatisticType | undefined;
   setOrdering: (ord: string) => void;
 }
 
@@ -152,6 +152,7 @@ const TableChart = ({
   const queryClient = useQueryClient();
   const {
     isCheckCompare,
+    selectedOrganization,
     setIsLoadingLarge,
     setIsLoadingLargeCompare,
     setIsLoadingMedium,
@@ -239,6 +240,10 @@ const TableChart = ({
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
         queryClient.invalidateQueries({
+          predicate: (query) =>
+            query.queryKey[0] === 'getStatisticCategoryListTeam',
+        });
+        queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
         });
         queryClient.invalidateQueries({
@@ -248,6 +253,10 @@ const TableChart = ({
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingOrganizationCompare(true);
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
+          });
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTaskListCompare',
@@ -444,7 +453,13 @@ const TableChart = ({
                 }
                 placeholder=""
                 showArrow
-                options={listOptionsOrganization}
+                options={
+                  selectedOrganization
+                    ? listOptionsOrganization.filter(
+                        (item) => item.value === selectedOrganization.value,
+                      )
+                    : []
+                }
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
@@ -620,7 +635,7 @@ const TableChart = ({
                   )
                 }
                 placeholder=""
-                showArrow
+                showArrow={info.row.original.type === EventCalendarType.TASK}
                 options={smallCategories}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
@@ -679,6 +694,7 @@ const TableChart = ({
                     });
                   }
                 }}
+                isDisabled={info.row.original.type !== EventCalendarType.TASK}
               />
             </div>
             <div className="ml-auto">

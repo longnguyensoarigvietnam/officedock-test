@@ -19,6 +19,7 @@ import {
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 type Props = {
   startDate: Date;
@@ -62,6 +63,9 @@ const PercentageTeamTags = ({
     isLoadingSmall,
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
+
+  const { selectedOrganization: selectedOrganizationTeamList } =
+    useContext(GlobalStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
   const [isShowModal, setIsShowModal] = useState(false);
@@ -168,7 +172,7 @@ const PercentageTeamTags = ({
     // Get list options
     const listDataOptions = categories.map(
       (item) =>
-        item.users?.slice(0, 6).map((user) => ({
+        item.users?.map((user) => ({
           label: user.user.fullName,
           percent: user.percent,
           avatarColor: user.user.avatarColor,
@@ -469,11 +473,15 @@ const PercentageTeamTags = ({
                       onChange={(data) => handleSelectLarge(data)}
                       disabled={!selectedOrganization}
                     />
-                    <p className="text-sm text-black my-[26px]">
-                      合計{' '}
-                      {totalDurationMedium &&
-                        formatTimeToJapanese(totalDurationMedium)}
-                    </p>
+                    {dataChartMedium.data.length > 0 ? (
+                      <p className="text-sm text-black my-[26px]">
+                        合計{' '}
+                        {totalDurationMedium &&
+                          formatTimeToJapanese(totalDurationMedium)}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-black my-[26px]">-</p>
+                    )}
                     <div className="flex justify-center">
                       {isLoadingLarge ? (
                         <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
@@ -522,11 +530,15 @@ const PercentageTeamTags = ({
                       onChange={(data) => handleSelectMedium(data)}
                       disabled={!selectedLarge}
                     />
-                    <p className="text-sm text-black my-[26px]">
-                      合計{' '}
-                      {totalDurationSmall &&
-                        formatTimeToJapanese(totalDurationSmall)}
-                    </p>
+                    {dataChartSmall.data.length > 0 ? (
+                      <p className="text-sm text-black my-[26px]">
+                        合計{' '}
+                        {totalDurationSmall &&
+                          formatTimeToJapanese(totalDurationSmall)}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-black my-[26px]">-</p>
+                    )}
                     <div className="flex justify-center">
                       {isLoadingMedium ? (
                         <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
@@ -572,13 +584,21 @@ const PercentageTeamTags = ({
                       options={smallOptions}
                       selectedOption={selectedSmall || undefined}
                       onChange={(data) => handleSelectSmall(data)}
-                      disabled={!selectedLarge}
+                      disabled={
+                        !selectedMedium ||
+                        selectedOrganization?.value !==
+                          selectedOrganizationTeamList?.value
+                      }
                     />
-                    <p className="text-sm text-black my-[26px]">
-                      合計{' '}
-                      {totalDurationCategory &&
-                        formatTimeToJapanese(totalDurationCategory)}
-                    </p>
+                    {dataChartCategory.data.length > 0 ? (
+                      <p className="text-sm text-black my-[26px]">
+                        合計{' '}
+                        {totalDurationCategory &&
+                          formatTimeToJapanese(totalDurationCategory)}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-black my-[26px]">-</p>
+                    )}
                     <div className="flex justify-center">
                       {isLoadingSmall ? (
                         <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />

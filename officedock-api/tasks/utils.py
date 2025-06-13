@@ -15,7 +15,11 @@ from organizations.models import (
 )
 from skills.constants import DEFAULT_TIME
 from skills.models import SkillMap, SkillMapSkillLevel
-from tasks.constants import DatetimeUnitTypes, TaskStatus
+from tasks.constants import (
+    DatetimeUnitTypes,
+    TaskStatus,
+    CalculateSkillMapProcessCases,
+)
 from tasks.models import Task, TaskSchedule, TodoList, TaskDuration
 from tasks.serializers import TaskScheduleSerializer, TodoListSerializer
 from calendars.models import Schedule
@@ -162,16 +166,17 @@ def calculate_new_time(start_time, delta_value, delta_unit):
 
 
 @transaction.atomic()
-def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
+def calculate_progress_skill_map(
+    task, user, duration_time: timedelta = None, is_minus=False, case=None
+):
     """
     Handle calculate progress skill map by task
     """
-    if not task:
+    if not task or not case:
         return
     task_categories = task.categories.first()
     if not task_categories:
         return
-
     # Get Organization categories
     org_categories = OrganizationsStatisticCategories.objects.filter(
         large_statistic_category=task_categories.large_statistic_category,
@@ -202,36 +207,34 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
             ).first()
             actual_measure_count = current_skill_level.actual_measure_count
             actual_measure_time = current_skill_level.actual_measure_time
-            # Get all time durations of task
-            total_duration_of_task = None
-            if not duration_time:
-                count = 0
-                # Update skill map skill level actual measure count
-                if task.status.name == TaskStatus.COMPLETED.value:
-                    count = 1
-                    total_duration_of_task = get_total_hours_of_task(task)
-                elif (
-                    current_skill_level.measure_task_ids
-                    and task.id in current_skill_level.measure_task_ids
-                ):
-                    count = -1
-                    total_duration_of_task = -get_total_hours_of_task(task)
-
-                actual_measure_count = actual_measure_count + count
-                if (
-                    current_skill_level.measure_count
-                    and current_skill_level.measure_count
-                    <= actual_measure_count
-                    and current_skill_level.popup
-                ):
-                    _send_socket_show_popup_complete(
-                        skill_map,
-                        current_skill_level.measure_count,
-                        None,
-                        user,
-                        skill_map_level=current_skill_level,
-                    )
-            if total_duration_of_task or duration_time:
+            if is_minus and task.id not in current_skill_level.measure_task_ids:
+                continue
+            duration = duration_time or get_total_hours_of_task(task)
+            total_duration_of_task = -duration if is_minus else duration
+            if case in {
+                CalculateSkillMapProcessCases.NOT_CHANGE_COMPLETED_STATUS.value,
+                CalculateSkillMapProcessCases.CHANGE_COMPLETED_STATUS_TO_ANOTHER.value,
+            }:
+                actual_measure_count += -1 if is_minus else 1
+            elif (
+                case
+                == CalculateSkillMapProcessCases.CHANGE_ANOTHER_TO_COMPLETED_STATUS.value
+                and not is_minus
+            ):
+                actual_measure_count += 1
+            if (
+                current_skill_level.measure_count
+                and current_skill_level.measure_count <= actual_measure_count
+                and current_skill_level.popup
+            ):
+                _send_socket_show_popup_complete(
+                    skill_map,
+                    current_skill_level.measure_count,
+                    None,
+                    user,
+                    skill_map_level=current_skill_level,
+                )
+            if total_duration_of_task:
                 # Update skill map skill level actual measure time
                 # Get new actual measure time
                 time_duration = total_duration_of_task or duration_time
@@ -263,7 +266,9 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
                         skill_map_level=current_skill_level,
                     )
             measure_task_ids = current_skill_level.measure_task_ids or []
-            if task.id not in measure_task_ids:
+            if task.id in measure_task_ids and is_minus:
+                measure_task_ids.remove(task.id)
+            elif task.id not in measure_task_ids:
                 measure_task_ids.append(task.id)
             # Update skill map level
             skill_map.skill_map_skill_levels.filter(

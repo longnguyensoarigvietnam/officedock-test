@@ -15,7 +15,6 @@ from base.apis import BaseAPIViewSet
 from base.filters import FilterByPermission
 from base.messages import ERROR_MESSAGES
 from calendars.models import Schedule
-from common.constants import BASE_DATE_FORMAT
 from common.serializers import (
     CreationDataUserSerializer,
     CreationDataUserWithMainOrganizationSerializer,
@@ -38,7 +37,7 @@ from stat_data.serializers import (
 from stat_data.utils import (
     annotate_duration,
     get_total_durations,
-    validate_date_format_using_regex,
+    validate_date_by_regex_and_reformat,
     percentage_calculation_of_duration,
 )
 from tasks.models import Task, TaskDuration
@@ -130,14 +129,13 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             prev_user = users[index - 1].id if index > 0 else None
             next_user = users[index + 1].id if index < len(users) - 1 else None
 
-        date = request.query_params.get("date", None)
-        validate_date_format_using_regex(date)
         date = (
-            datetime.strptime(date, BASE_DATE_FORMAT).date()
-            if date
+            validate_date_by_regex_and_reformat(
+                request.query_params.get("date", None)
+            )
+            if request.query_params.get("date", None)
             else now().date()
         )
-
         start_of_day = datetime.combine(date, time.min)
         start_of_today = datetime.combine(now().date(), time.min)
         end_of_day = datetime.combine(date, time.max)
@@ -362,15 +360,15 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         Return list of statistic data
         """
         organization_ids_params = request.query_params.get("organization_ids")
-        date = request.query_params.get("date", None)
         request_user = request.user
 
-        validate_date_format_using_regex(date)
-
-        if not date:
-            date = timezone.now().date()
-        else:
-            date = datetime.strptime(date, BASE_DATE_FORMAT).date()
+        date = (
+            validate_date_by_regex_and_reformat(
+                request.query_params.get("date", None)
+            )
+            if request.query_params.get("date", None)
+            else timezone.now().date()
+        )
 
         start_of_day = datetime.combine(date, time.min)
         datetime.combine(timezone.now().date(), time.min)
@@ -395,7 +393,10 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                         Q(
                             Q(started_at__gte=start_of_day)
                             & Q(user=user)
-                            & Q(paused_at__lte=end_of_day)
+                            & Q(
+                                Q(paused_at__lte=end_of_day)
+                                | Q(paused_at__isnull=True)
+                            )
                         )
                     )
                     for duration in durations:
@@ -449,12 +450,11 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         """
         user_id = request.query_params.get("user_id", None)
         param_organization_id = request.query_params.get("organization_id")
-        date = request.query_params.get("date", None)
-
-        validate_date_format_using_regex(date)
         date = (
-            datetime.strptime(date, BASE_DATE_FORMAT).date()
-            if date
+            validate_date_by_regex_and_reformat(
+                request.query_params.get("date", None)
+            )
+            if request.query_params.get("date", None)
             else now().date()
         )
         user = get_object_or_404(User, id=user_id) if user_id else request.user

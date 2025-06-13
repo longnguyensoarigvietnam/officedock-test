@@ -197,10 +197,6 @@ const AllocationTag = memo(
     };
 
     const handleScroll = () => {
-      const item = largeOptions.find(
-        (item) => item.value === detailCategory?.id,
-      );
-      item && handleSelectLarge(item);
       const element = document.getElementById('task-list-statistic');
       setIsShowModal(false);
 

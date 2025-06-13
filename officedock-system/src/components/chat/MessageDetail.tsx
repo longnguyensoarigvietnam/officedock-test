@@ -472,24 +472,25 @@ export const MessageDetail = ({
               className={`flex !box-border group-hover:bg-[#FFFFFF] ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} py-3 ml-5 mr-3 group-hover:rounded-md`}>
               {renderAvatar(messageDetail.sender.id)}
               <div className={`ml-3 !w-full`}>
-                <div className="flex justify-between items-baseline pb-2">
-                  <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
-                    <p className="max-w-full break-all">
-                      {messageDetail.sender.fullName}{' '}
-                      <span className="font-medium text-xs text-[#77858F]">
-                        {messageDetail.sender?.organizations?.name}
-                      </span>
-                    </p>
+                <div className="flex w-full justify-between items-baseline pb-2">
+                  <div className="flex flex-grow  gap-2 items-baseline font-semibold text-[15px] pr-2">
+                    <div className="flex-grow min-w-0 max-w-[200px] break-words whitespace-normal line-clamp-3">
+                      {messageDetail.sender.fullName}
+                    </div>
+                    <div className="font-medium max-w-[200px] line-clamp-3 w-fit flex-shrink-0 break-all text-xs text-[#77858F]">
+                      {' '}
+                      {messageDetail.sender?.organizations?.name}
+                    </div>
 
                     {messageDetail.isBookmark && (
                       <ImageRound
                         name="Save"
                         src="/icons/save-active.svg"
-                        className="w-[10px] h-[12px] hover:cursor-pointer"
+                        className="w-[10px] h-[12px] hover:cursor-pointer flex-shrink-0"
                       />
                     )}
                   </div>
-                  <div className={`flex items-start`}>
+                  <div className={`flex items-start w-fit flex-shrink-0`}>
                     <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
                       {messageDetail.createdAt &&
                         formatCheckDate(
@@ -780,7 +781,7 @@ export const MessageDetail = ({
                             (messageDetail.task ? (
                               <div className={`w-full flex justify-start`}>
                                 <div
-                                  className={`text-xs font-normal bg-[#eaf8ff] w-[750px] p-4 `}>
+                                  className={`text-xs font-normal bg-[#eaf8ff] w-full p-4 `}>
                                   <div className={`flex flex-col items-start`}>
                                     <h4 className="text-sm w-fit font-medium text-black h-5 max-w-full break-all">
                                       {messageDetail.type ==
@@ -813,12 +814,12 @@ export const MessageDetail = ({
                             ) : (
                               <div className={`w-full flex justify-start`}>
                                 <div
-                                  className={`text-sm font-normal bg-[#eaf8ff] p-1`}>
+                                  className={`text-sm font-normal bg-[#eaf8ff] p-1 w-full`}>
                                   <div className={`flex flex-col items-start`}>
-                                    <p
-                                      className={`font-normal w-[500px]  text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
+                                    <div
+                                      className={`font-normal w-full  text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
                                       {TASK_DELETED}
-                                    </p>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -922,7 +923,7 @@ export const MessageDetail = ({
                         <div>
                           {messageDetail.type === MessageType.MESSAGE && (
                             <p
-                              className={`text-chat-box font-normal text-sm hover:cursor-pointer max-w-[750px] -ml-1 p-1 rounded-[5px]  `}
+                              className={`text-chat-box font-normal text-sm hover:cursor-pointer max-w-full -ml-1 p-1 rounded-[5px]  `}
                               dangerouslySetInnerHTML={{
                                 __html: messageDetail.message,
                               }}></p>
@@ -931,7 +932,7 @@ export const MessageDetail = ({
                             (messageDetail.task ? (
                               <div className={`w-full flex justify-start`}>
                                 <div
-                                  className={`text-xs font-normal bg-[#eaf8ff] w-[750px] p-4 `}>
+                                  className={`text-xs font-normal bg-[#eaf8ff] w-full p-4 `}>
                                   <div className={`flex flex-col items-start`}>
                                     <h4 className="text-sm w-fit font-medium text-black h-5 max-w-full break-all">
                                       {messageDetail.type ==

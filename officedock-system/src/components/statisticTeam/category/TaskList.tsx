@@ -34,7 +34,7 @@ type Props = {
   endDate: Date | null;
   startDateCompare: Date;
   endDateCompare: Date | null;
-  creationDataStatisticData: CreationStatisticType;
+  creationDataStatisticData: CreationStatisticType | undefined;
   statisticCategoryListTeam: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
@@ -77,7 +77,7 @@ const TaskListTeamStatistic = ({
     remainingCountUser,
     remainingCountTag,
     firstThreeUser,
-    allLabelUer,
+    allLabelUser,
     allLabelTag,
     firstThreeTag,
     listMemberTeam,
@@ -286,7 +286,7 @@ const TaskListTeamStatistic = ({
                       </div>
                     );
                   })}
-                  {allLabelUer.length > 3 && (
+                  {allLabelUser.length > 3 && (
                     <p className=" h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
                       +{remainingCountUser}
                     </p>
@@ -375,7 +375,7 @@ const TaskListTeamStatistic = ({
                           size={30}
                         />
                       </div>
-                      <span className="break-all max-w-[800px] w-full truncate">
+                      <span className="break-all max-w-[800px] w-full truncate text-sm">
                         {member.label}
                       </span>
                     </div>
@@ -403,7 +403,7 @@ const TaskListTeamStatistic = ({
                           size={30}
                         />
                       </div>
-                      <span className="break-all max-w-[800px] w-full truncate">
+                      <span className="break-all max-w-[800px] w-full truncate text-sm">
                         {member.fullName}
                       </span>
                     </div>

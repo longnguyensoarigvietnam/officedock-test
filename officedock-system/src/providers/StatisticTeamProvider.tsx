@@ -8,7 +8,10 @@ import {
 } from 'react';
 
 import { OptionDropdownType } from '@interfaces/common';
+
 import { getAdjustedStartDateDefault } from '@utils/date';
+
+import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
 
 interface ContextValue {
   selectedOrganization: OptionDropdownType | null;
@@ -112,9 +115,13 @@ interface ContextValue {
   remainingCountUser: number;
   remainingCountTag: number;
   firstThreeUser: OptionDropdownType[];
-  allLabelUer: OptionDropdownType[];
+  allLabelUser: OptionDropdownType[];
   allLabelTag: OptionDropdownType[];
   firstThreeTag: OptionDropdownType[];
+
+  // View by
+  lineChartViewBy: OptionDropdownType | null;
+  setLineChartViewBy: Dispatch<SetStateAction<OptionDropdownType | null>>;
 }
 
 const defaultValue: ContextValue = {
@@ -193,9 +200,12 @@ const defaultValue: ContextValue = {
   remainingCountUser: 0,
   remainingCountTag: 0,
   firstThreeUser: [],
-  allLabelUer: [],
+  allLabelUser: [],
   allLabelTag: [],
   firstThreeTag: [],
+
+  lineChartViewBy: null,
+  setLineChartViewBy: () => {},
 };
 
 export const StatisticTeamStateContext =
@@ -298,13 +308,20 @@ export const StatisticTeamStateProvider = ({
     }[]
   >([]);
 
+  // View by
+  const [lineChartViewBy, setLineChartViewBy] =
+    useState<OptionDropdownType | null>({
+      value: StatisticViewOptions.WEEK,
+      label: StatisticViewLabels.WEEK,
+    });
+
   // Value data
-  const allLabelUer =
+  const allLabelUser =
     orderingOptions && orderingOptions.user_ids ? orderingOptions.user_ids : [];
 
-  const firstThreeUser = allLabelUer.slice(0, 3);
+  const firstThreeUser = allLabelUser.slice(0, 3);
 
-  const remainingCountUser = allLabelUer.length - firstThreeUser.length;
+  const remainingCountUser = allLabelUser.length - firstThreeUser.length;
 
   const allLabelTag =
     orderingOptions && orderingOptions.tag_ids ? orderingOptions.tag_ids : [];
@@ -391,9 +408,12 @@ export const StatisticTeamStateProvider = ({
     remainingCountUser,
     remainingCountTag,
     firstThreeUser,
-    allLabelUer,
+    allLabelUser,
     allLabelTag,
     firstThreeTag,
+
+    lineChartViewBy,
+    setLineChartViewBy,
   };
 
   return (

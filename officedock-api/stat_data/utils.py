@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import timedelta
+from datetime import timedelta, datetime
 import re
 
 from django.db.models import (
@@ -17,15 +17,14 @@ from rest_framework.exceptions import ValidationError
 
 from base.messages import ERROR_MESSAGES
 from calendars.models import Schedule
-from common.constants import DATE_REGEX
+from common.constants import DATE_REGEX, BASE_DATE_FORMAT
 from common.serializers import CreationDataUserSerializer
 from common.utils import (
     format_duration,
     time_str_to_timedelta,
 )
 from organizations.constants import CategoryColors
-from organizations.models import OrganizationsStatisticCategories, Organization
-from organizations.serializers import OrganizationDetailSerializer
+from organizations.models import OrganizationsStatisticCategories
 from stat_data.constants import NONE_CATEGORY, FilterTime
 from stat_data.serializers import (
     BaseStatisticTaskSerializer,
@@ -98,8 +97,12 @@ def get_list_durations_by_users(
         event_durations = durations.filter(filter_events)
     else:
         base_filter = Q(
-            started_at__gte=start_of_day,
-            paused_at__lte=end_of_day,
+            Q(Q(started_at__gte=start_of_day) & Q(paused_at__lte=end_of_day))
+            | Q(
+                Q(started_at__lte=end_of_day)
+                & Q(started_at__gte=start_of_day)
+                & Q(paused_at__isnull=True)
+            )
         )
         if not start_of_day and not end_of_day:
             return TaskDuration.objects.none()
@@ -418,27 +421,28 @@ def process_categories(
                     Q(**{category_id_null_map[category_type]: True})
                     | ~Q(**{category_in_map[category_type]: category_ids})
                 )
+            merge_task_event = (
+                BaseStatisticTaskSerializer(
+                    task_filter.all()[:3],
+                    many=True,
+                    context={
+                        "start_of_day": start_of_day,
+                        "end_of_day": end_of_day,
+                        "total_duration": category_duration,
+                    },
+                ).data
+                + BaseStatisticEventSerializer(
+                    event_filter.all()[:3],
+                    many=True,
+                    context={
+                        "start_of_day": start_of_day,
+                        "end_of_day": end_of_day,
+                        "total_duration": category_duration,
+                    },
+                ).data
+            )
             if is_with_tasks:
-                data["tasks"] = (
-                    BaseStatisticTaskSerializer(
-                        task_filter.all()[:3],
-                        many=True,
-                        context={
-                            "start_of_day": start_of_day,
-                            "end_of_day": end_of_day,
-                            "total_duration": category_duration,
-                        },
-                    ).data
-                    + BaseStatisticEventSerializer(
-                        event_filter.all()[:3],
-                        many=True,
-                        context={
-                            "start_of_day": start_of_day,
-                            "end_of_day": end_of_day,
-                            "total_duration": category_duration,
-                        },
-                    ).data
-                )
+                data["tasks"] = merge_task_event
             elif users:
                 filter_key = filter_duration_by_type_category[category_type]
                 if category_id:
@@ -447,34 +451,26 @@ def process_categories(
                         **{filter_key: category_id},
                     )
                 else:
+                    # Mapping category types to their corresponding field paths
+                    null_filters = {
+                        TaskCategoryTypes.LARGE.value: [
+                            "task__categories__large_statistic_category__isnull",
+                            "schedule__categories__large_statistic_category__isnull",
+                        ],
+                        TaskCategoryTypes.MEDIUM.value: [
+                            "task__categories__medium_statistic_category__isnull",
+                            "schedule__categories__medium_statistic_category__isnull",
+                        ],
+                        TaskCategoryTypes.SMALL.value: [
+                            "task__categories__small_statistic_category__isnull",
+                            "schedule__categories__small_statistic_category__isnull",
+                        ],
+                    }
+
                     filter_duration = Q()
-                    if category_type == TaskCategoryTypes.LARGE.value:
-                        filter_duration &= Q(
-                            Q(
-                                task__categories__large_statistic_category__isnull=True
-                            )
-                            & Q(
-                                schedule__categories__large_statistic_category__isnull=True
-                            )
-                        )
-                    elif category_type == TaskCategoryTypes.MEDIUM.value:
-                        filter_duration &= Q(
-                            Q(
-                                task__categories__medium_statistic_category__isnull=True
-                            )
-                            & Q(
-                                schedule__categories__medium_statistic_category__isnull=True
-                            )
-                        )
-                    elif category_type == TaskCategoryTypes.SMALL.value:
-                        filter_duration &= Q(
-                            Q(
-                                task__categories__small_statistic_category__isnull=True
-                            )
-                            & Q(
-                                schedule__categories__small_statistic_category__isnull=True
-                            )
-                        )
+                    for field in null_filters.get(category_type, []):
+                        filter_duration &= Q(**{field: True})
+
                     filter_durations = durations.filter(filter_duration)
 
                 data["users"] = process_users(
@@ -511,11 +507,7 @@ def process_categories(
     return categories_data
 
 
-def process_users(
-    total_duration,
-    durations=None,
-    users=None,
-):
+def process_users(total_duration, durations=None, users=None):
     """Processes users durations, calculates percentages, and returns structured data."""
     user_data = []
     percent = 100
@@ -527,9 +519,8 @@ def process_users(
         filter_durations = get_list_durations_by_users(
             durations=durations, users=[user]
         )
-        duration = timedelta(0)
-        percent_per_total_duration = 0
-        if filter_durations:
+        if filter_durations.exists():
+            tasks_by_user, events_by_user = get_list_models(filter_durations)
             duration = get_total_durations(filter_durations)
             # Calculate the percentage of the total duration
             percent_per_total_duration = percentage_calculation_of_duration(
@@ -542,13 +533,22 @@ def process_users(
             else:
                 percent_per_total_duration = percent
 
-        user_data.append(
-            {
-                "user": user_serializer,
-                "duration": format_duration(duration),
-                "percent": min(round(percent_per_total_duration), 100),
-            }
-        )
+            user_data.append(
+                {
+                    "user": user_serializer,
+                    "duration": format_duration(duration),
+                    "percent": min(round(percent_per_total_duration), 100),
+                    "tasks": (
+                        BaseStatisticTaskSerializer(
+                            tasks_by_user.all()[:3], many=True
+                        ).data
+                        + BaseStatisticEventSerializer(
+                            events_by_user.all()[:3],
+                            many=True,
+                        ).data
+                    ),
+                }
+            )
 
     return user_data
 
@@ -587,25 +587,26 @@ def process_tags(
                 filter_durations = get_list_durations_by_users(
                     durations=durations, tags=[tag["tag_id"]]
                 )
+                merge_task_event = (
+                    BaseStatisticTaskSerializer(
+                        task_filter.all()[:3],
+                        many=True,
+                        context={
+                            "start_of_day": start_of_day,
+                            "end_of_day": end_of_day,
+                        },
+                    ).data
+                    + BaseStatisticEventSerializer(
+                        event_filter.all()[:3],
+                        many=True,
+                        context={
+                            "start_of_day": start_of_day,
+                            "end_of_day": end_of_day,
+                        },
+                    ).data
+                )
                 if is_with_tasks:
-                    data["tasks"] = (
-                        BaseStatisticTaskSerializer(
-                            task_filter.all()[:3],
-                            many=True,
-                            context={
-                                "start_of_day": start_of_day,
-                                "end_of_day": end_of_day,
-                            },
-                        ).data
-                        + BaseStatisticEventSerializer(
-                            event_filter.all()[:3],
-                            many=True,
-                            context={
-                                "start_of_day": start_of_day,
-                                "end_of_day": end_of_day,
-                            },
-                        ).data
-                    )
+                    data["tasks"] = merge_task_event
                 elif users:
                     data["users"] = process_users(
                         time_str_to_timedelta(tag_duration),
@@ -820,9 +821,6 @@ def build_category_filters(
     large_category_id=None,
     medium_category_id=None,
     small_category_id=None,
-    exists_large_category_ids=None,
-    exists_medium_category_ids=None,
-    exists_small_category_ids=None,
 ):
     """
     Handle build category filter
@@ -833,9 +831,7 @@ def build_category_filters(
     if large_category_id and large_category_id != NONE_CATEGORY:
         filters &= Q(categories__large_statistic_category__id=large_category_id)
     elif large_category_id == NONE_CATEGORY:
-        filters &= Q(categories__large_statistic_category__isnull=True) | ~Q(
-            categories__large_statistic_category__in=exists_large_category_ids
-        )
+        filters &= Q(categories__large_statistic_category__isnull=True)
 
     # Medium Category Filtering
     if medium_category_id and medium_category_id != NONE_CATEGORY:
@@ -843,17 +839,13 @@ def build_category_filters(
             categories__medium_statistic_category__id=medium_category_id
         )
     elif medium_category_id == NONE_CATEGORY:
-        filters &= Q(categories__medium_statistic_category__isnull=True) | ~Q(
-            categories__medium_statistic_category__in=exists_medium_category_ids
-        )
+        filters &= Q(categories__medium_statistic_category__isnull=True)
 
     # Small Category Filtering
     if small_category_id and small_category_id != NONE_CATEGORY:
         filters &= Q(categories__small_statistic_category__id=small_category_id)
     elif small_category_id == NONE_CATEGORY:
-        filters &= Q(categories__small_statistic_category__isnull=True) | ~Q(
-            categories__small_statistic_category__in=exists_small_category_ids
-        )
+        filters &= Q(categories__small_statistic_category__isnull=True)
 
     return filters
 
@@ -912,49 +904,14 @@ def check_is_not_none_category(large_id=None, medium_id=None, small_id=None):
     )
 
 
-def get_list_id_category_of_organization(organization_ids):
+def validate_date_by_regex_and_reformat(date):
     """
-    Handle get list id category of organization
-    """
-    large_category_ids = []
-    medium_category_ids = []
-    small_category_ids = []
-    if organization := Organization.objects.filter(
-        id=organization_ids[0]
-    ).first():
-        organization_categories = OrganizationDetailSerializer(
-            organization
-        ).data["statistic_categories"]
-        if organization_categories:
-            large_category_ids = [
-                item["large_statistic_category"]["id"]
-                for item in organization_categories
-                if item["large_statistic_category"]
-            ]
-            medium_category_ids = [
-                item["medium_statistic_category"]["id"]
-                for item in organization_categories
-                if item["medium_statistic_category"]
-            ]
-            small_category_ids = [
-                item["small_statistic_category"]["id"]
-                for item in organization_categories
-                if item["small_statistic_category"]
-            ]
-
-    return (
-        set(large_category_ids),
-        set(medium_category_ids),
-        set(small_category_ids),
-    )
-
-
-def validate_date_format_using_regex(date):
-    """
-    Validate date format using default regex YYYY-MM-DD
+    Validate date format using default regex YYYY-MM-DD and return date
     """
     if not date or not re.match(DATE_REGEX, date):
         raise ValidationError({"detail": ERROR_MESSAGES["date_invalid"]})
+
+    return datetime.strptime(date, BASE_DATE_FORMAT).date()
 
 
 def percentage_calculation_of_duration(total_sec, duration_sec):

@@ -17,7 +17,6 @@ from calendars.constants import (
 from calendars.models import Schedule
 from calendars.serializers import EventLocationSerializer
 from chat.constants import WebSocketEventType
-from organizations.constants import OrganizationTypes
 from skills.models import StatisticCategory, Skill, SkillMapSkillLevel
 from organizations.serializers import (
     BaseStatisticCategorySerializer,
@@ -281,8 +280,10 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         Get task list of the option
         """
 
-        tasks = Task.objects.exclude(type=TaskTypes.MY_TEMPLATE.value).order_by(
-            "-created_at"
+        tasks = (
+            Task.objects.filter(deleted_at__isnull=True)
+            .exclude(type=TaskTypes.MY_TEMPLATE.value)
+            .order_by("-created_at")
         )
 
         # Get list of tasks by room code
@@ -470,45 +471,75 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             .all()
             .distinct()
         )
-        if not is_calendar_page:
-            if organization_id:
-                data[
-                    "organization"
-                ] = CreationDataOrganizationWithStructCategorySerializer(
-                    organizations[0], context={"user": user}
-                ).data
-                # Return organization without list members if is Calendar organization
-                if organizations[0].type != OrganizationTypes.CALENDAR.value:
-                    data["members"] = CreationDataUserSerializer(
-                        organizations[0].users.order_by("created_at"), many=True
-                    ).data
-                else:
-                    return self.response_ok(data)
+        calendar_org = user.company.get_calendar_organization()
 
-            else:
-                list_org = []
-                for organization in organizations:
-                    list_org.append(
-                        CreationDataOrganizationWithStructCategorySerializer(
-                            organization, context={"user": user}
-                        ).data
-                    )
-                data["organizations"] = list_org
+        def _handle_get_data_organization_of_task(data):
+            data[
+                "organizations"
+            ] = CreationDataOrganizationWithStructCategorySerializer(
+                organizations, many=True, context={"user": user}
+            ).data
+            data["members"] = CreationDataUserSerializer(
+                organizations[0].users.order_by("created_at"), many=True
+            ).data
+            data["tags"] = BaseTagSerializer(tags, many=True).data
+            return data
+
+        def _handle_get_data_organization_of_team_statistic(data):
+            # Return data for team dock statistic (response data of current organization and with calendar organization)
+            data[
+                "organizations"
+            ] = CreationDataOrganizationWithStructCategorySerializer(
+                [organization, calendar_org], many=True, context={"user": user}
+            ).data
+            members = {
+                organization.id: CreationDataUserSerializer(
+                    organization.users.order_by("created_at"), many=True
+                ).data,
+                calendar_org.id: CreationDataUserSerializer(
+                    calendar_org.users.order_by("created_at"), many=True
+                ).data,
+            }
+
+            for org in data["organizations"]:
+                org["statistic_categories"] = add_default_entries_to_categories(
+                    org["statistic_categories"]
+                )
+                org["members"] = members[org["id"]]
+            return data
+
+        def _handle_get_data_organization_my_statistic(data):
+            data[
+                "organizations"
+            ] = CreationDataOrganizationWithStructCategorySerializer(
+                organizations, many=True, context={"user": user}
+            ).data
+            # Add calendar organization
+            data["organizations"].append(
+                CreationDataOrganizationWithStructCategorySerializer(
+                    calendar_org, context={"user": user}
+                ).data
+            )
+            for org in data["organizations"]:
+                org["statistic_categories"] = add_default_entries_to_categories(
+                    org["statistic_categories"]
+                )
+
+            return data
+
+        if not is_calendar_page:
+            # Return organization data for creation task
+            if organization_id and not is_statistic:
+                data = _handle_get_data_organization_of_task(data)
+                return self.response_ok(data)
+            # Return organization data for statistic pulldown
             if is_statistic:
                 if organization_id:
-                    data["organization"][
-                        "statistic_categories"
-                    ] = add_default_entries_to_categories(
-                        data["organization"]["statistic_categories"]
-                    )
+                    data = _handle_get_data_organization_of_team_statistic(data)
+                    return self.response_ok(data)
                 else:
-                    for org in data["organizations"]:
-                        org[
-                            "statistic_categories"
-                        ] = add_default_entries_to_categories(
-                            org["statistic_categories"]
-                        )
-            data["tags"] = BaseTagSerializer(tags, many=True).data
+                    data = _handle_get_data_organization_my_statistic(data)
+                    return self.response_ok(data)
 
         if is_calendar_page and not organization_id:
             list_org = []
@@ -522,7 +553,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             data[
                 "calendar_organization"
             ] = CreationDataOrganizationWithStructCategorySerializer(
-                user.company.get_calendar_organization(), context={"user": user}
+                calendar_org, context={"user": user}
             ).data
             data["locations"] = EventLocationSerializer(
                 user.company.event_locations.all(), many=True

@@ -1,6 +1,5 @@
 'use client';
 import { Controller, useForm } from 'react-hook-form';
-import { useMutation, useQueryClient } from 'react-query';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
@@ -8,26 +7,11 @@ import ImageRound from '@components/common/ImageRound';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import Dropdown from '@components/common/Dropdown';
 
-import {
-  EventWorkCategory,
-  ItemScheduleType,
-  ItemStartType,
-  StatusValueTask,
-} from '@constants/enums';
-import { apiRouters } from '@constants/routers';
+import { EventWorkCategory, StatusValueTask } from '@constants/enums';
 import { Task, TaskFormData } from '@interfaces/task';
 import { OptionDropdownType } from '@interfaces/common';
 
-import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
-
-import { TaskContext } from '@providers/TaskProvider';
-
-import api from '@base/api';
-import {
-  compareWithCurrentDate,
-  convertToCurrentTimezone,
-  formatShowDeadlineTask,
-} from '@utils/date';
+import { compareWithCurrentDate, formatShowDeadlineTask } from '@utils/date';
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 
 interface ItemProps {
@@ -51,29 +35,12 @@ interface ItemProps {
 const ItemTeam = ({
   content,
   editTask,
-  updateTaskIsStart,
   handlePinItem,
   handleUnPinItem,
-  handleUpdateItemInline,
   handleActionEditTask,
 }: ItemProps) => {
-  const queryClient = useQueryClient();
-
-  const {
-    taskSelectedToStart,
-    setDataClickTask,
-    setDataRunning,
-    setIdTaskStarting,
-    setTaskSelectedToStart,
-    setDataActualAddSchedule,
-  } = useContext(TaskContext);
-
-  const {
-    creationDataTaskData,
-    columnWidth,
-    selectedOptionZoom,
-    setShowWarningStartTaskModalTeam,
-  } = useContext(TaskTeamStateContext);
+  const { creationDataTaskData, columnWidth, selectedOptionZoom } =
+    useContext(TaskTeamStateContext);
 
   const [dataOptionsStatus, setDataOptionsStatus] = useState<
     OptionDropdownType[]
@@ -179,106 +146,7 @@ const ItemTeam = ({
       );
     }
   }, [creationDataTaskData]);
-  //  Handle call api delete task
-  const { calculateDurationTask } = useCalculateDurationTask({
-    onSuccess: (response) => {
-      const data = response.data;
 
-      handleUpdateItemInline({
-        ...content,
-        id: content.id,
-        isStart: !content.isStart,
-        status: content.status,
-      });
-      queryClient.refetchQueries(['getDataTaskHeaderList']);
-      queryClient.refetchQueries([
-        'getTaskDurationDetail',
-        {
-          id: `${content.id}`,
-          type: ItemStartType.TASK,
-        },
-      ]);
-      queryClient.refetchQueries(['getTaskHeaderStart']);
-      if (data) {
-        const startDateActual = new Date(
-          convertToCurrentTimezone(`${data.planStartDate}`),
-        );
-        const endDateActual = new Date(
-          convertToCurrentTimezone(`${data.planEndDate}`),
-        );
-        setDataActualAddSchedule({
-          ...data,
-          start: startDateActual,
-          end: endDateActual,
-          id: data.id.toString(),
-          startEditable: false,
-          resourceId: ItemScheduleType.ACTUAL,
-          type: ItemStartType.TASK,
-          isMyTask: false,
-        });
-        taskSelectedToStart &&
-          updateTaskIsStart(
-            taskSelectedToStart.id as number,
-            data.isStart ? false : true,
-          );
-        if (!data.isStart) {
-          queryClient.refetchQueries(['getDataTaskHeaderList']);
-        }
-      }
-    },
-  });
-  // Handle call API check start task
-  const handleCheckStartTask = async ({
-    id,
-    type,
-  }: {
-    id: string;
-    type: string;
-  }) => {
-    return await api.post(apiRouters.TASK_CHECK_START(), {
-      id,
-      type,
-    });
-  };
-  // Function call API  check start task
-  const { mutate: checkTask } = useMutation(
-    'postCheckStartTaskSchedule',
-    handleCheckStartTask,
-    {
-      onSuccess: async ({ data }, task) => {
-        if (!data.isAnotherTaskStarted) {
-          calculateDurationTask({
-            id: `${content.id}`,
-            type: ItemStartType.TASK,
-          });
-          setDataRunning({
-            id: `${content.id}`,
-            type: ItemStartType.TASK,
-          });
-        } else {
-          setIdTaskStarting({
-            id: data.id,
-            type: data.type,
-          });
-          setDataClickTask({
-            id: task.id,
-            type: task.type,
-          });
-
-          setShowWarningStartTaskModalTeam(true);
-        }
-      },
-      onError: () => {},
-      onSettled: () => {},
-    },
-  );
-  // Action call API check start task
-  const handleConfirmCheckStartTask = (id: string) => {
-    checkTask({
-      id: id,
-      type: ItemStartType.TASK,
-    });
-  };
   const isShowSchedule = content.isScheduleInToday || false;
 
   const [isClicked, setIsClicked] = useState(false);
@@ -302,12 +170,10 @@ const ItemTeam = ({
       {selectedOptionZoom.value !== 25 ? (
         <div>
           <div
-            className={`relative ${selectedOptionZoom.value !== 50 && 'gap-2'} ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col  mb-2 `}>
-            {!content.isStart && (
-              <div
-                className={`absolute left-[-1px] h-[98.5%] top-1/2 -translate-y-1/2 w-[2.5px] overflow-hidden rounded-l-md`}
-                style={{ backgroundColor: largeColor || 'white' }}></div>
-            )}
+            className={`relative ${selectedOptionZoom.value !== 50 && 'gap-2'} ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid    bg-white shadow-common rounded-md text-xs flex flex-col  mb-2 `}>
+            <div
+              className={`absolute left-[-1px] h-[98.5%] top-1/2 -translate-y-1/2 w-[2.5px] overflow-hidden rounded-l-md`}
+              style={{ backgroundColor: largeColor || 'white' }}></div>
             <div className="relative w-[100%] h-full">
               <>
                 <div
@@ -352,45 +218,6 @@ const ItemTeam = ({
                   </DynamicTooltip>
                 </div>
               </>
-              {/* TODO: Action copy */}
-              {/* {isPermissionAdd && (
-                <DynamicTooltip
-                  content="タスクを複製"
-                  placement="right">
-                  <div
-                    style={{
-                      top:
-                        (selectedOptionZoom.value as number) > 75
-                          ? `${(columnWidth / 247) * 32}px`
-                          : `${(columnWidth / 247) * 38}px`,
-                      right: `${(columnWidth / 247) * 12}px`,
-                    }}
-                    className="absolute opacity-0 group-hover:opacity-100">
-                    <ImageRound
-                      src="/icons/copy.svg"
-                      name="Copy icon"
-                      style={{
-                        width:
-                          (selectedOptionZoom.value as number) > 75
-                            ? '14px'
-                            : (selectedOptionZoom.value as number) === 75
-                              ? '12px'
-                              : `10px`,
-                        height:
-                          (selectedOptionZoom.value as number) > 75
-                            ? '14px'
-                            : (selectedOptionZoom.value as number) === 75
-                              ? '12px'
-                              : `10px`,
-                      }}
-                      className="text-gray-400 cursor-pointer"
-                      onClick={() => {
-                        handleConfirmCopyTask(parseInt(`${content.id}`));
-                      }}
-                    />
-                  </div>
-                </DynamicTooltip>
-              )} */}
             </div>
             <div
               style={{
@@ -499,46 +326,6 @@ const ItemTeam = ({
                       </span>
                     </p>
                   </div>
-                  {selectedOptionZoom.value === 50 && (
-                    <DynamicTooltip
-                      content={content.isStart ? '計測停止' : '計測開始'}
-                      placement="top">
-                      <div
-                        className=""
-                        onClick={(e) => {
-                          e.stopPropagation();
-                        }}>
-                        {content.isMyTask && (
-                          <ImageRound
-                            src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
-                            name="Start task"
-                            style={{
-                              width:
-                                (selectedOptionZoom.value as number) > 75
-                                  ? '26px'
-                                  : (selectedOptionZoom.value as number) == 75
-                                    ? '20px'
-                                    : '16px',
-                              height:
-                                (selectedOptionZoom.value as number) > 75
-                                  ? '26px'
-                                  : (selectedOptionZoom.value as number) == 75
-                                    ? '20px'
-                                    : '16px',
-                            }}
-                            className={`hover:cursor-pointer `}
-                            onClick={async () => {
-                              await new Promise<void>((resolve) => {
-                                setTaskSelectedToStart(content);
-                                resolve();
-                              });
-                              handleConfirmCheckStartTask(`${content.id}`);
-                            }}
-                          />
-                        )}
-                      </div>
-                    </DynamicTooltip>
-                  )}
                 </div>
               )}
               {selectedOptionZoom.value !== 50 && (
@@ -630,45 +417,6 @@ const ItemTeam = ({
                       />
                     </div>
                   </DynamicTooltip>
-
-                  <DynamicTooltip
-                    content={content.isStart ? '計測停止' : '計測開始'}
-                    placement="top">
-                    <div
-                      className=""
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}>
-                      {content.isMyTask && (
-                        <ImageRound
-                          src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
-                          name="Start task"
-                          style={{
-                            width:
-                              (selectedOptionZoom.value as number) > 75
-                                ? '26px'
-                                : (selectedOptionZoom.value as number) == 75
-                                  ? '20px'
-                                  : '16px',
-                            height:
-                              (selectedOptionZoom.value as number) > 75
-                                ? '26px'
-                                : (selectedOptionZoom.value as number) == 75
-                                  ? '20px'
-                                  : '16px',
-                          }}
-                          className={`hover:cursor-pointer `}
-                          onClick={async () => {
-                            await new Promise<void>((resolve) => {
-                              setTaskSelectedToStart(content);
-                              resolve();
-                            });
-                            handleConfirmCheckStartTask(`${content.id}`);
-                          }}
-                        />
-                      )}
-                    </div>
-                  </DynamicTooltip>
                 </div>
               )}
             </div>
@@ -677,7 +425,7 @@ const ItemTeam = ({
       ) : (
         <div>
           <div
-            className={`relative ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 `}>
+            className={`relative ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 `}>
             <div
               style={{
                 paddingTop: `${(columnWidth / 247) * 12}px`,
@@ -723,34 +471,6 @@ const ItemTeam = ({
                   className={`!border-none leading-[1.4] break-all line-clamp-2 cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
                   {content.title}
                 </p>
-                <DynamicTooltip
-                  content={content.isStart ? '計測停止' : '計測開始'}
-                  placement="top">
-                  <div
-                    className=""
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}>
-                    {content.isMyTask && (
-                      <ImageRound
-                        src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
-                        name="Start task"
-                        style={{
-                          width: `16px`,
-                          height: `16px`,
-                        }}
-                        className={`hover:cursor-pointer `}
-                        onClick={async () => {
-                          await new Promise<void>((resolve) => {
-                            setTaskSelectedToStart(content);
-                            resolve();
-                          });
-                          handleConfirmCheckStartTask(`${content.id}`);
-                        }}
-                      />
-                    )}
-                  </div>
-                </DynamicTooltip>
               </div>
             </div>
           </div>

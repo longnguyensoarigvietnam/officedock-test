@@ -42,7 +42,7 @@ from chat.serializers import (
     ChatMessageSerializer,
     ChatRoomsParticipantsWebSocketSerializer,
 )
-from common.constants import BASE_DATETIME_FORMAT, BASE_DATE_FORMAT
+from common.constants import BASE_DATETIME_FORMAT
 from common.filters import CustomOrderFilter
 from common.utils import (
     filter_task_index_team,
@@ -50,8 +50,10 @@ from common.utils import (
     create_categories_by_model,
     check_task_overtime,
     split_id_from_string,
+    get_common_categories,
+    compare_list_categories,
 )
-from stat_data.utils import validate_date_format_using_regex
+from stat_data.utils import validate_date_by_regex_and_reformat
 from tasks.constants import (
     DEFAULT_PAGE_SIZE,
     INITIAL_INDEX_VALUE,
@@ -59,6 +61,7 @@ from tasks.constants import (
     TaskStatus,
     FrequencyMap,
     LIMIT_DAY,
+    CalculateSkillMapProcessCases,
 )
 from tasks.utils import (
     create_task_schedule,
@@ -314,7 +317,11 @@ class TaskViewSet(
         # Increase measure count if task created have status completed
         if task.status.name == TaskStatus.COMPLETED.value:
             for user in task.people_in_charge.all():
-                calculate_progress_skill_map(task, user)
+                calculate_progress_skill_map(
+                    task,
+                    user,
+                    case=CalculateSkillMapProcessCases.NOT_CHANGE_COMPLETED_STATUS.value,
+                )
 
         return self.response_created(
             self.get_serializer(
@@ -697,17 +704,13 @@ class TaskViewSet(
         task_schedule_end_date = request.query_params.get(
             "task_schedule_end_date"
         )
-        if task_schedule_from_date and task_schedule_end_date:
-            validate_date_format_using_regex(task_schedule_from_date)
-            validate_date_format_using_regex(task_schedule_end_date)
-
         task_schedule_from_date = (
-            datetime.strptime(task_schedule_from_date, BASE_DATE_FORMAT).date()
+            validate_date_by_regex_and_reformat(task_schedule_from_date)
             if task_schedule_from_date
             else None
         )
         task_schedule_end_date = (
-            datetime.strptime(task_schedule_end_date, BASE_DATE_FORMAT).date()
+            validate_date_by_regex_and_reformat(task_schedule_end_date)
             if task_schedule_end_date
             else None
         )
@@ -1100,10 +1103,6 @@ class TaskViewSet(
         elif tag_ids == []:
             task.tags.clear()
 
-        # Create or update categories
-        if categories is not None:
-            create_categories_by_model(task, categories)
-
         # Check is task run overtime or not
         start_of_today = datetime.combine(timezone.now().date(), time.min)
         task_duration = TaskDuration.objects.filter(
@@ -1143,21 +1142,52 @@ class TaskViewSet(
                 old_recurring=old_recurring,
             )
 
-        # Update skill if task status is changed
-        is_change_another_to_complete_status = (
-            current_task_status.name != TaskStatus.COMPLETED.value
-            and task.status.name == TaskStatus.COMPLETED.value
-        )
-        is_change_complete_to_another_status = (
-            current_task_status.name == TaskStatus.COMPLETED.value
-            and task.status.name != TaskStatus.COMPLETED.value
-        )
-        if (
-            is_change_another_to_complete_status
-            or is_change_complete_to_another_status
+        # Determine the skill update case based on task status change
+        previous = current_task_status.name
+        current = task.status.name
+        completed = TaskStatus.COMPLETED.value
+        case = None
+        if previous != completed and current == completed:
+            case = (
+                CalculateSkillMapProcessCases.CHANGE_ANOTHER_TO_COMPLETED_STATUS.value
+            )
+        elif previous == completed and current != completed:
+            case = (
+                CalculateSkillMapProcessCases.CHANGE_COMPLETED_STATUS_TO_ANOTHER.value
+            )
+        elif previous == current == completed:
+            case = (
+                CalculateSkillMapProcessCases.NOT_CHANGE_COMPLETED_STATUS.value
+            )
+        elif previous == current and current != completed:
+            case = CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value
+
+        # Create or update categories
+        if categories is not None and not compare_list_categories(
+            categories, get_common_categories(task.categories.first())
         ):
             for user in task.people_in_charge.all():
-                calculate_progress_skill_map(task, user)
+                # Minus skill map process have old categories of current task
+                calculate_progress_skill_map(
+                    current_task, user, is_minus=True, case=case
+                )
+            # Update new categories
+            create_categories_by_model(task, categories)
+            for user in task.people_in_charge.all():
+                # Plus skill map process have new categories of updated task
+                calculate_progress_skill_map(task, user, case=case)
+        elif (
+            previous != completed
+            and current == completed
+            or previous == completed
+            and current != completed
+        ):
+
+            is_minus = previous == completed and current != completed
+            for user in task.people_in_charge.all():
+                calculate_progress_skill_map(
+                    task, user, is_minus=is_minus, case=case
+                )
 
         return self.response_ok(
             self.get_serializer(
@@ -1175,22 +1205,22 @@ class TaskViewSet(
 
     def destroy(self, request, *args, **kwargs):
         """
-        Handle destroying the task with send message realtime.
+        Handle destroying the task
         """
         instance = self.get_object()
-        if instance.chat_messages.count() != 0:
-            message = instance.chat_messages.first()
-            send_web_socket_event(
-                {
-                    "action": WebSocketEventType.DELETE_TASK.value,
-                    "chat_room": {"code": message.chat_room.code},
-                    "chat_message": ChatMessageSerializer(message).data,
-                },
-                chat_room=message.chat_room,
+
+        if instance.task_durations.exists():
+            instance.task_durations.filter(paused_at__isnull=True).update(
+                paused_at=now()
             )
+            instance.is_start = False
+            instance.save()
+            instance.soft_delete()
+        else:
+            instance.delete()
         reset_sort_task(request.user)
 
-        return super().destroy(request, *args, **kwargs)
+        return self.response(status_code=status.HTTP_204_NO_CONTENT)
 
     @extend_schema(
         parameters=[OpenApiParameter("page_size", type=int)],
@@ -1377,8 +1407,20 @@ class TaskViewSet(
                     is_change_another_to_complete_status
                     or is_change_complete_to_another_status
                 ):
+                    if is_change_another_to_complete_status:
+                        case = (
+                            CalculateSkillMapProcessCases.CHANGE_ANOTHER_TO_COMPLETED_STATUS.value
+                        )
+                        minus = False
+                    else:
+                        case = (
+                            CalculateSkillMapProcessCases.CHANGE_COMPLETED_STATUS_TO_ANOTHER.value
+                        )
+                        minus = True
                     for user in task.people_in_charge.all():
-                        calculate_progress_skill_map(task, user)
+                        calculate_progress_skill_map(
+                            task, user, is_minus=minus, case=case
+                        )
                 for user in task.people_in_charge.all():
                     send_web_socket_event(
                         {
@@ -1668,7 +1710,11 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     API endpoint to show Tasks to the Board.
     """
 
-    queryset = Task.objects.exclude(type=TaskTypes.MY_TEMPLATE.value).all()
+    queryset = (
+        Task.objects.filter(deleted_at__isnull=True)
+        .exclude(type=TaskTypes.MY_TEMPLATE.value)
+        .all()
+    )
     serializer_class = TaskBoardSerializer
     permission_classes = [ActionPermission]
     screen_name = Screens.MY_TASK.value
@@ -2047,7 +2093,8 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         ordering = request.query_params.get("ordering")
         tasks = (
             Task.objects.filter(
-                organization_id=organization_id, people_in_charge__isnull=True
+                organization_id=organization_id,
+                people_in_charge__isnull=True,
             )
             .exclude(
                 Q(type=TaskTypes.MY_TEMPLATE.value)

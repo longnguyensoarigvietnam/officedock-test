@@ -140,7 +140,7 @@ export const MessageHoverOptions = ({
   return (
     <div
       ref={optionRef}
-      className={`bg-white ${isShowReaction ? '!flex' : ''}   group-hover:flex hidden rounded-3xl px-3 py-1.5 shadow-md absolute left-[70%] transform -translate-x-1/2 items-center gap-2`}>
+      className={`bg-white ${isShowReaction ? '!flex' : ''}   group-hover:flex hidden rounded-3xl px-3 py-1.5 shadow-md absolute left-1/2 transform -translate-x-1/2 items-center gap-2`}>
       <div className="relative">
         <DynamicTooltip content={'返信'} placement="top">
           <div className="bg-[#f0f1f1] relative  hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">

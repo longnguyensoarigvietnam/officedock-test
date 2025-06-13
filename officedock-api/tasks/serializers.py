@@ -32,6 +32,7 @@ from tasks.models import (
     TaskStatus,
     TeamTaskIndex,
     TodoList,
+    TaskDuration,
 )
 from tasks.constants import (
     INITIAL_INDEX_VALUE,
@@ -613,6 +614,7 @@ class TaskCalendarSerializer(TaskCommonSerializer):
     type = serializers.SerializerMethodField()
     categories = serializers.SerializerMethodField()
     task_schedules = serializers.SerializerMethodField()
+    is_start = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
@@ -628,6 +630,18 @@ class TaskCalendarSerializer(TaskCommonSerializer):
             "categories",
             "status",
         ]
+
+    def get_is_start(self, instance):
+        """
+        Return is_start if user is running this task
+        """
+        request = self.context.get("request")
+        if user := request.user:
+            return TaskDuration.objects.filter(
+                task=instance, user=user, paused_at__isnull=True
+            ).exists()
+        else:
+            return False
 
     def get_task_schedules(self, instance):
         """
@@ -864,7 +878,9 @@ class TaskTeamdockSerializer(BaseUserSerializer):
 
         for status in statuses:
             tasks = obj.in_charge_tasks.filter(
-                status=status, organization_id=organization_id
+                status=status,
+                organization_id=organization_id,
+                deleted_at__isnull=True,
             ).exclude(type=TaskTypes.MY_TEMPLATE.value)
             tasks_total = tasks.count()
 
