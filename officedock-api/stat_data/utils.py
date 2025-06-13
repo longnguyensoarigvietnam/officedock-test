@@ -97,8 +97,12 @@ def get_list_durations_by_users(
         event_durations = durations.filter(filter_events)
     else:
         base_filter = Q(
-            Q(started_at__gte=start_of_day)
-            & Q(Q(paused_at__lte=end_of_day) | Q(paused_at__isnull=True)),
+            Q(Q(started_at__gte=start_of_day) & Q(paused_at__lte=end_of_day))
+            | Q(
+                Q(started_at__lte=end_of_day)
+                & Q(started_at__gte=start_of_day)
+                & Q(paused_at__isnull=True)
+            )
         )
         if not start_of_day and not end_of_day:
             return TaskDuration.objects.none()
