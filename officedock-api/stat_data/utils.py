@@ -472,10 +472,9 @@ def process_categories(
                         filter_duration &= Q(**{field: True})
 
                     filter_durations = durations.filter(filter_duration)
-
                 data["users"] = process_users(
                     time_str_to_timedelta(category_duration),
-                    filter_durations,
+                    filter_durations or durations,
                     users,
                 )
 
