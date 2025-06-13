@@ -43,7 +43,10 @@ const useCreationDataStatistic = ({
     refetch: refetchCreationDataStatistic,
     isFetched: isFetchedCreationDataStatistic,
   } = useQuery({
-    queryKey: ['getCreationDataStatistic'],
+    queryKey: [
+      'getCreationDataStatistic',
+      { is_statistic, is_calendar_page, organization_id },
+    ],
     queryFn: getCreationDataStatistic,
     retry: 0,
     enabled: !!token && condition?.every(Boolean),

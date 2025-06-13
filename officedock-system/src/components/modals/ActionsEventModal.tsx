@@ -503,14 +503,14 @@ const ActionsEventModal = ({
       );
 
       const eventMembers = creationDataEventCalendar.members.map((org) => ({
-        id: org.id,
+        id: `${EventParticipantType.USER}-${org.id}`,
         fullName: org.fullName,
         type: EventParticipantType.USER,
       }));
       if (isFetchedCreationDataStatistic) {
         const eventOrganizations = dataOptionsOrganizations
           ? dataOptionsOrganizations.map((org) => ({
-              id: org.value,
+              id: `${EventParticipantType.ORGANIZATION}-${org.value}`,
               fullName: org.label,
               type: EventParticipantType.ORGANIZATION,
               userIds: org.userIds,
@@ -668,20 +668,13 @@ const ActionsEventModal = ({
         )));
 
   const checkIsParticipantSelected = (member: EventParticipant) => {
-    if (member.type == EventParticipantType.USER) {
-      return Boolean(
-        watch('participantIds') &&
-          watch('participantIds')?.find(
-            (participant) => participant == Number(member.id),
-          ),
-      );
+    const memberId = Number(String(member.id).split('-')[1]);
+    if (member.type === EventParticipantType.USER) {
+      const selectedUserIds = watch('participantIds') ?? [];
+      return selectedUserIds.includes(memberId);
     } else {
-      return Boolean(
-        watch('selectOrganizations') &&
-          watch('selectOrganizations')?.find(
-            (participant) => participant == Number(member.id),
-          ),
-      );
+      const selectedOrgIds = watch('selectOrganizations') ?? [];
+      return selectedOrgIds.includes(memberId);
     }
   };
 
@@ -690,7 +683,7 @@ const ActionsEventModal = ({
     const isOrganization = member.type === EventParticipantType.ORGANIZATION;
     const currentParticipantList = watch('participantIds') || [];
     const currentOrganizationList = watch('selectOrganizations') || [];
-    const memberId = Number(member.id);
+    const memberId = Number(String(member.id).split('-')[1]);
 
     let updatedParticipantList = [...currentParticipantList];
     let updatedOrganizationList = [...currentOrganizationList];
@@ -772,9 +765,10 @@ const ActionsEventModal = ({
   };
 
   // Render avatar for users and organizations
-  const renderAvatar = (memberId: number) => {
+  const renderAvatar = (memberId: string) => {
+    const actualMemberId = Number(memberId.split('-')[1]);
     const memberInfo = dashboardMembersWithAvatars.find(
-      (memberWithAvatar) => memberWithAvatar.id === memberId,
+      (memberWithAvatar) => memberWithAvatar.id == actualMemberId,
     );
 
     return (
@@ -1903,7 +1897,9 @@ const ActionsEventModal = ({
                             (participant) =>
                               participant.type === EventParticipantType.USER,
                           )
-                          .map((participant) => Number(participant.id)),
+                          .map((participant) =>
+                            Number(String(participant.id).split('-')[1]),
+                          ),
                       ]);
 
                       setValue('selectOrganizations', [
@@ -1914,7 +1910,9 @@ const ActionsEventModal = ({
                               participant.type ==
                               EventParticipantType.ORGANIZATION,
                           )
-                          .map((participant) => Number(participant.id)),
+                          .map((participant) =>
+                            Number(String(participant.id).split('-')[1]),
+                          ),
                       ]);
                     }}>
                     全てをチェック
@@ -1938,8 +1936,9 @@ const ActionsEventModal = ({
                           (participantId) =>
                             !matchingParticipantList.find(
                               (matchingParticipant) =>
-                                matchingParticipant.id === participantId &&
-                                matchingParticipant.type ===
+                                String(matchingParticipant.id).split('-')[1] ===
+                                  String(participantId) &&
+                                matchingParticipant.type ==
                                   EventParticipantType.USER,
                             ),
                         );
@@ -1948,8 +1947,9 @@ const ActionsEventModal = ({
                           (participantId) =>
                             !matchingParticipantList.find(
                               (matchingParticipant) =>
-                                matchingParticipant.id === participantId &&
-                                matchingParticipant.type ===
+                                String(matchingParticipant.id).split('-')[1] ===
+                                  String(participantId) &&
+                                matchingParticipant.type ==
                                   EventParticipantType.ORGANIZATION,
                             ),
                         );
@@ -1981,11 +1981,24 @@ const ActionsEventModal = ({
                       const prevSelected = checkIsParticipantSelected(prev);
                       const nextSelected = checkIsParticipantSelected(next);
 
-                      // Prioritize selected participants
-                      if (prevSelected && !nextSelected) return -1;
-                      if (!prevSelected && nextSelected) return 1;
+                      // 1. Checked participants first
+                      if (prevSelected !== nextSelected) {
+                        return prevSelected ? -1 : 1;
+                      }
 
-                      // Prioritize organizations over users
+                      // 2. Current user (only if user, not org)
+                      if (
+                        prev.id === session?.user.id &&
+                        prev.type === EventParticipantType.USER
+                      )
+                        return -1;
+                      if (
+                        next.id === session?.user.id &&
+                        next.type === EventParticipantType.USER
+                      )
+                        return 1;
+
+                      // 3. Organizations before users
                       if (
                         prev.type === EventParticipantType.ORGANIZATION &&
                         next.type === EventParticipantType.USER
@@ -1996,9 +2009,8 @@ const ActionsEventModal = ({
                         next.type === EventParticipantType.ORGANIZATION
                       )
                         return 1;
-                      if (prev.id === session?.user.id) return -1;
-                      if (next.id === session?.user.id) return 1;
 
+                      // 4. Alphabetical
                       return prev.fullName.localeCompare(next.fullName);
                     })
                     .map((member) => {
@@ -2018,7 +2030,7 @@ const ActionsEventModal = ({
                             />
                           </div>
                           {member.type == EventParticipantType.USER && (
-                            <>{renderAvatar(member.id as number)}</>
+                            <>{renderAvatar(String(member.id))}</>
                           )}
                           {member.type == EventParticipantType.ORGANIZATION && (
                             <div className="scale-110">
