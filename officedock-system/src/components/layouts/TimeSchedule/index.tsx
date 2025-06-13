@@ -1045,11 +1045,31 @@ const TimeSchedule = memo(
     // Check for existence and delete if idTaskDelete is set
     useEffect(() => {
       if (idTaskDelete) {
-        const updatedTaskList = taskTimeScheduleList.filter(
+        let updatedTaskList = taskTimeScheduleList.filter(
           (item) =>
             `${item.taskId}` !== `${idTaskDelete}` ||
             item.resourceId !== ItemScheduleType.PLANS,
         );
+        updatedTaskList = updatedTaskList.map((item) => {
+          if (
+            `${item.taskId}` === `${idTaskDelete}` &&
+            item.isCalculation === true
+          ) {
+            return {
+              ...item,
+              planEndDate: `${new Date()}`,
+              end: adjustEndDate(
+                new Date(convertToCurrentTimezone(`${item.planStartDate}`)),
+                new Date(),
+                5,
+              ),
+              isCalculation: false,
+              isStart: false,
+            };
+          }
+          return item;
+        });
+
         setTaskTimeScheduleList(updatedTaskList);
         setIdTaskDelete('');
       }
