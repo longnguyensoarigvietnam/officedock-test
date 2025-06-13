@@ -161,10 +161,16 @@ class StatisticViewSet(BaseAPIViewSet):
             tasks.filter(
                 Q(task_durations__user=user)
                 & Q(
-                    Q(task_durations__paused_at__lte=end_of_day)
-                    | Q(task_durations__paused_at__isnull=True)
+                    Q(
+                        Q(started_at__gte=start_of_day)
+                        & Q(paused_at__lte=end_of_day)
+                    )
+                    | Q(
+                        Q(started_at__lte=end_of_day)
+                        & Q(started_at__gte=start_of_day)
+                        & Q(paused_at__isnull=True)
+                    )
                 )
-                & Q(task_durations__started_at__gte=start_of_day)
             )
             .annotate(
                 total_duration=Sum(
@@ -192,10 +198,16 @@ class StatisticViewSet(BaseAPIViewSet):
             events.filter(
                 Q(task_durations__user=user)
                 & Q(
-                    Q(task_durations__paused_at__lte=end_of_day)
-                    | Q(task_durations__paused_at__isnull=True)
+                    Q(
+                        Q(started_at__gte=start_of_day)
+                        & Q(paused_at__lte=end_of_day)
+                    )
+                    | Q(
+                        Q(started_at__lte=end_of_day)
+                        & Q(started_at__gte=start_of_day)
+                        & Q(paused_at__isnull=True)
+                    )
                 )
-                & Q(task_durations__started_at__gte=start_of_day)
             )
             .annotate(
                 total_duration=Sum(
@@ -397,11 +409,15 @@ class StatisticViewSet(BaseAPIViewSet):
                     if start <= now().date() <= end:
                         filter_duration_by_range = filter_durations.filter(
                             Q(
-                                Q(started_at__gte=start_date_min)
-                                & Q(
-                                    Q(paused_at__lte=end_date_max)
-                                    | Q(paused_at__isnull=True)
-                                ),
+                                Q(
+                                    Q(started_at__gte=start_date_min)
+                                    & Q(paused_at__lte=end_date_max)
+                                )
+                                | Q(
+                                    Q(started_at__lte=end_date_max)
+                                    & Q(started_at__gte=start_date_min)
+                                    & Q(paused_at__isnull=True)
+                                )
                             )
                         )
                     else:
@@ -1071,11 +1087,15 @@ class StatisticViewSet(BaseAPIViewSet):
             if start <= now().date() <= end:
                 durations_by_range = durations.filter(
                     Q(
-                        Q(started_at__gte=start_date_min)
-                        & Q(
-                            Q(paused_at__lte=end_date_max)
-                            | Q(paused_at__isnull=True)
-                        ),
+                        Q(
+                            Q(started_at__gte=start_date_min)
+                            & Q(paused_at__lte=end_date_max)
+                        )
+                        | Q(
+                            Q(started_at__lte=end_date_max)
+                            & Q(started_at__gte=start_date_min)
+                            & Q(paused_at__isnull=True)
+                        )
                     )
                 )
             else:
