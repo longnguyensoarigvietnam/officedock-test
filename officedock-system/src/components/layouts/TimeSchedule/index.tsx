@@ -210,8 +210,8 @@ const TimeSchedule = memo(
     const {
       memberSelected,
       dataActualAddSchedule,
-      displayHederDateStart,
-      displayHederDateEnd,
+      displayHeaderDateStart,
+      displayHeaderDateEnd,
       setIsInteracting,
       setDisplayHeaderDayStart,
       setDisplayHeaderDayEnd,
@@ -219,7 +219,6 @@ const TimeSchedule = memo(
       setIdEventDelete,
       setWidthCalendar,
     } = useContext(TaskContext);
-
     const queryClient = useQueryClient();
     const showErrorToast = useErrorToast();
 
@@ -299,9 +298,9 @@ const TimeSchedule = memo(
       return (slotHeight / baseSlider) * baseFontSizeXs;
     };
     const formattedCurrentDate = formatDateJp(new Date());
-    const formattedStartDate = formatDateJp(displayHederDateStart);
-    const formattedEndDate = formatDateJp(displayHederDateEnd);
-    const isToday = isSameDay(new Date(), displayHederDateStart);
+    const formattedStartDate = formatDateJp(displayHeaderDateStart);
+    const formattedEndDate = formatDateJp(displayHeaderDateEnd);
+    const isToday = isSameDay(new Date(), displayHeaderDateStart);
 
     // Event state
     const [dataEventEdit, setDataEventEditLocal] =
@@ -348,9 +347,6 @@ const TimeSchedule = memo(
         setDisplayHeaderDayEnd(new Date(endDateISOString));
 
         handleCallApiAllData(startDateISOString, endDateISOString);
-        saveZoomSchedule({
-          dateFilterScheduleFrom: startDateISOString,
-        });
         scrollToNowIndicator();
       }
     };
@@ -373,9 +369,6 @@ const TimeSchedule = memo(
         setDisplayHeaderDayEnd(new Date(endDateISOString));
 
         handleCallApiAllData(startDateISOString, endDateISOString);
-        saveZoomSchedule({
-          dateFilterScheduleFrom: startDateISOString,
-        });
         scrollToNowIndicator();
       }
     };
@@ -392,11 +385,9 @@ const TimeSchedule = memo(
             calendarApi.view.activeEnd,
           );
           setDisplayHeaderDayStart(new Date(startDateISOString));
+          setDisplayHeaderDayEnd(new Date(endDateISOString));
 
           handleCallApiAllData(startDateISOString, endDateISOString);
-          saveZoomSchedule({
-            dateFilterScheduleFrom: startDateISOString,
-          });
           scrollToNowIndicator();
         }
       }
@@ -1256,7 +1247,6 @@ const TimeSchedule = memo(
           saveZoomSchedule({
             isShowWeekSchedule:
               calendarView === CalendarViewOptions.VIEW_BY_WEEK,
-            dateFilterScheduleFrom: startDateISOString,
           });
           scrollToNowIndicator();
         }, 300);
@@ -2925,9 +2915,9 @@ const TimeSchedule = memo(
 
     const handleDateCheck = () => {
       const inputDate = new Date(
-        displayHederDateStart.getFullYear(),
-        displayHederDateStart.getMonth(),
-        displayHederDateStart.getDate(),
+        displayHeaderDateStart.getFullYear(),
+        displayHeaderDateStart.getMonth(),
+        displayHeaderDateStart.getDate(),
       );
       const now = new Date(
         today.getFullYear(),
@@ -2951,7 +2941,7 @@ const TimeSchedule = memo(
 
     useEffect(() => {
       handleDateCheck();
-    }, [displayHederDateStart]);
+    }, [displayHeaderDateStart]);
 
     const filteredEvents = useMemo(() => {
       if (isExtendCalendar) {
@@ -3168,7 +3158,7 @@ const TimeSchedule = memo(
       }
     }, [slotHeight, isLoadingSchedule, isExtendCalendar, view]);
 
-    const dataDate = getDateInfo(displayHederDateStart);
+    const dataDate = getDateInfo(displayHeaderDateStart);
 
     const calculateSlotHeight = (value: number): number => {
       if (value < 38) {
@@ -3191,22 +3181,12 @@ const TimeSchedule = memo(
     // Get data zoom
     const { authenticatedUser } = useAuthenticatedUser({
       onSuccess: (data) => {
-        if (data.setting?.dateFilterScheduleFrom) {
-          if (data.setting?.isShowWeekSchedule) {
-            handleViewChangeDefault(CalendarViewOptions.VIEW_BY_WEEK);
-
-            handleChooseDay(new Date(data.setting?.dateFilterScheduleFrom));
-          } else {
-            handleViewChangeDefault(CalendarViewOptions.VIEW_BY_DAY);
-            handleChooseDay(new Date(data.setting?.dateFilterScheduleFrom));
-          }
+        if (data.setting?.isShowWeekSchedule) {
+          handleViewChangeDefault(CalendarViewOptions.VIEW_BY_WEEK);
         } else {
-          if (data.setting?.isShowWeekSchedule) {
-            handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
-          } else {
-            handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
-          }
+          handleViewChangeDefault(CalendarViewOptions.VIEW_BY_DAY);
         }
+        handleChooseDay(displayHeaderDateStart || new Date());
       },
     });
 
@@ -3225,7 +3205,6 @@ const TimeSchedule = memo(
     const handleSaveZoomSchedule = async (data: {
       scheduleZoom?: number;
       isShowWeekSchedule?: boolean;
-      dateFilterScheduleFrom?: string;
     }) => {
       const { data: response } = await api.post(apiRouters.USER_SETTING, {
         ...data,
@@ -3339,7 +3318,7 @@ const TimeSchedule = memo(
                       <DatePicker
                         className="h-10 z-50 "
                         isShowInput={false}
-                        selected={displayHederDateStart}
+                        selected={displayHeaderDateStart}
                         tooltipMsg="カレンダーから日付を選択"
                         iconClassName="!static !w-8"
                         disabled={isLoadingSchedule}

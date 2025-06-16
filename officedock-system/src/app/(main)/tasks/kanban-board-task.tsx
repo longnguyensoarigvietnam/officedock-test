@@ -179,8 +179,8 @@ const KanbanBoardTask = () => {
     widthCalendar,
     columnWidth,
     selectedOptionZoom,
-    displayHederDateStart,
-    displayHederDateEnd,
+    displayHeaderDateStart,
+    displayHeaderDateEnd,
     setExtendByStatus,
     setSelectedOptionZoom,
     setStatusTaskSelected,
@@ -2132,8 +2132,8 @@ const KanbanBoardTask = () => {
       apiRouters.TASK_DETAIL(`${dataTask.id}`),
       {
         ...dataTask,
-        task_schedule_from_date: formatDateServer(displayHederDateStart),
-        task_schedule_end_date: formatDateServer(displayHederDateEnd),
+        task_schedule_from_date: formatDateServer(displayHeaderDateStart),
+        task_schedule_end_date: formatDateServer(displayHeaderDateEnd),
       },
     );
     return data;
@@ -2264,8 +2264,8 @@ const KanbanBoardTask = () => {
       remindType: data.deadlineRemindType?.value
         ? `${data.deadlineRemindType?.value}`
         : null,
-      task_schedule_from_date: formatDateServer(displayHederDateStart),
-      task_schedule_end_date: formatDateServer(displayHederDateEnd),
+      task_schedule_from_date: formatDateServer(displayHeaderDateStart),
+      task_schedule_end_date: formatDateServer(displayHeaderDateEnd),
       repeatType:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
           ? data.repeatType && data.repeatType.value
@@ -2644,8 +2644,8 @@ const KanbanBoardTask = () => {
       organizationId: data.organization
         ? Number(data.organization.value)
         : null,
-      task_schedule_from_date: formatDateServer(displayHederDateStart),
-      task_schedule_end_date: formatDateServer(displayHederDateEnd),
+      task_schedule_from_date: formatDateServer(displayHeaderDateStart),
+      task_schedule_end_date: formatDateServer(displayHeaderDateEnd),
       remindCountdown: data.deadlineRemindCountdown?.value
         ? `${data.deadlineRemindCountdown?.value}`
         : null,

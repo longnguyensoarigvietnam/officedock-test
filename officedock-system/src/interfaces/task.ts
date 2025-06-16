@@ -259,6 +259,7 @@ export interface UpdateTaskKanbanRequest {
 export interface TaskDuration {
   taskDuration: string;
   isStart: boolean;
+  title?: string
 }
 export interface KanbanDataResponse {
   count: number;

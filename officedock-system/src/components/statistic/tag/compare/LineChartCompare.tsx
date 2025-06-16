@@ -25,7 +25,6 @@ import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import Dropdown from '@components/common/Dropdown';
 import {
-  StatisticsCategories,
   StatisticsTagTaskDuration,
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
@@ -33,9 +32,9 @@ import { OptionDropdownType } from '@interfaces/common';
 import {
   SortingType,
   StatisticChartType,
-  StatisticViewLabels,
   StatisticViewOptions,
 } from '@constants/enums';
+import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 
 import {
   convertDurationToTotalMinutes,
@@ -77,8 +76,6 @@ type Props = {
   startDateCompare: Date;
   endDateCompare: Date | null;
   removeTag: (selected: OptionDropdownType) => void;
-  statisticTagsList: StatisticsCategories | undefined;
-  statisticTagsCompareList: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -109,8 +106,6 @@ type MergedTableCategory = {
 };
 
 const LineChartCompare = ({
-  statisticTagsList,
-  statisticTagsCompareList,
   startDate,
   endDate,
   startDateCompare,
@@ -187,21 +182,6 @@ const LineChartCompare = ({
     useState<string>('');
   const [durationSortingStatus, setDurationSortingStatus] =
     useState<string>('');
-
-  const viewOptions = [
-    {
-      value: StatisticViewOptions.DAY,
-      label: StatisticViewLabels.DAY,
-    },
-    {
-      value: StatisticViewOptions.WEEK,
-      label: StatisticViewLabels.WEEK,
-    },
-    {
-      value: StatisticViewOptions.MONTH,
-      label: StatisticViewLabels.MONTH,
-    },
-  ];
 
   const tooltipRef = useRef<HTMLDivElement | null>(null);
 
@@ -667,52 +647,10 @@ const LineChartCompare = ({
     ) {
       statisticTagTaskDurationsList.map(
         (categoryDetail: StatisticsTagTaskDuration) => {
-          let percent = 0;
-          if (
-            !selectedLarge?.value &&
-            statisticTagsList?.largeCategories &&
-            statisticTagsList?.largeCategories.length > 0
-          ) {
-            percent =
-              statisticTagsList?.largeCategories.find(
-                (category) => category.tagName == categoryDetail.tagName,
-              )?.percent || 0;
-          } else if (
-            !selectedMedium?.value &&
-            statisticTagsList?.mediumCategories &&
-            statisticTagsList?.mediumCategories.length > 0
-          ) {
-            percent = statisticTagsList?.mediumCategories
-              ? statisticTagsList?.mediumCategories.find(
-                  (category) => category.tagName == categoryDetail.tagName,
-                )?.percent || 0
-              : 0;
-          } else if (
-            !selectedSmall?.value &&
-            statisticTagsList?.smallCategories &&
-            statisticTagsList?.smallCategories.length > 0
-          ) {
-            percent = statisticTagsList?.smallCategories
-              ? statisticTagsList?.smallCategories.find(
-                  (category) => category.tagName == categoryDetail.tagName,
-                )?.percent || 0
-              : 0;
-          } else {
-            if (
-              statisticTagsList?.category &&
-              statisticTagsList?.category.length > 0
-            )
-              percent = statisticTagsList?.category
-                ? statisticTagsList?.category.find(
-                    (category) => category.tagName == categoryDetail.tagName,
-                  )?.percent || 0
-                : 0;
-          }
-
           standardLabels = [
             ...standardLabels,
             {
-              color: lightenColor('#2E9267', percent) || getRandomColor(),
+              color: lightenColor('#2E9267', categoryDetail?.percent || 0) || getRandomColor(),
               name: categoryDetail.tagName,
             },
           ];
@@ -723,9 +661,9 @@ const LineChartCompare = ({
               tagId: categoryDetail.tagId,
               tagName: categoryDetail.tagName,
               tagDuration: categoryDetail.duration,
-              tagPercent: String(percent),
+              tagPercent: String(categoryDetail?.percent || 0),
               tagColor:
-                lightenColor('#2E9267' as string, percent) || getRandomColor(),
+                lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
               type: StatisticChartType.STANDARD,
             },
           ];
@@ -741,10 +679,10 @@ const LineChartCompare = ({
                 compareTag?.durations ?? [],
                 StatisticChartType.STANDARD,
                 categoryDetail.tagName,
-                lightenColor('#2E9267' as string, percent) || getRandomColor(),
+                lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
               ),
               borderColor:
-                lightenColor('#2E9267' as string, percent) || getRandomColor(),
+                lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
               backgroundColor: 'transparent',
               borderDash: [],
               fill: true,
@@ -753,7 +691,7 @@ const LineChartCompare = ({
               pointBorderColor: 'transparent',
               pointHoverRadius: 6,
               pointHoverBackgroundColor:
-                lightenColor('#2E9267' as string, percent) || getRandomColor(),
+                lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
               pointHoverBorderColor: 'transparent',
               pointHoverBorderWidth: 2,
             },
@@ -767,53 +705,11 @@ const LineChartCompare = ({
     ) {
       statisticTagTaskDurationsCompareList.map(
         (categoryDetail: StatisticsTagTaskDuration) => {
-          let percent = 0;
-          if (
-            !selectedLarge?.value &&
-            statisticTagsCompareList?.largeCategories &&
-            statisticTagsCompareList?.largeCategories.length > 0
-          ) {
-            percent =
-              statisticTagsCompareList?.largeCategories.find(
-                (category) => category.tagName == categoryDetail.tagName,
-              )?.percent || 0;
-          } else if (
-            !selectedMedium?.value &&
-            statisticTagsCompareList?.mediumCategories &&
-            statisticTagsCompareList?.mediumCategories.length > 0
-          ) {
-            percent = statisticTagsCompareList?.mediumCategories
-              ? statisticTagsCompareList?.mediumCategories.find(
-                  (category) => category.tagName == categoryDetail.tagName,
-                )?.percent || 0
-              : 0;
-          } else if (
-            !selectedSmall?.value &&
-            statisticTagsCompareList?.smallCategories &&
-            statisticTagsCompareList?.smallCategories.length > 0
-          ) {
-            percent = statisticTagsCompareList?.smallCategories
-              ? statisticTagsCompareList?.smallCategories.find(
-                  (category) => category.tagName == categoryDetail.tagName,
-                )?.percent || 0
-              : 0;
-          } else {
-            if (
-              statisticTagsCompareList?.category &&
-              statisticTagsCompareList?.category.length > 0
-            )
-              percent = statisticTagsCompareList?.category
-                ? statisticTagsCompareList?.category.find(
-                    (category) => category.tagName == categoryDetail.tagName,
-                  )?.percent || 0
-                : 0;
-          }
-
           comparedLabels = [
             ...comparedLabels,
             {
               color:
-                lightenColor('#2E9267' as string, percent) || getRandomColor(),
+                lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
               name: categoryDetail.tagName,
             },
           ];
@@ -822,9 +718,9 @@ const LineChartCompare = ({
             tagId: categoryDetail.tagId,
             tagName: categoryDetail.tagName,
             tagDuration: categoryDetail.duration,
-            tagPercent: String(percent),
+            tagPercent: String(categoryDetail?.percent || 0),
             tagColor:
-              lightenColor('#2E9267' as string, percent) || getRandomColor(),
+              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
             type: StatisticChartType.COMPARE,
           });
 
@@ -839,10 +735,10 @@ const LineChartCompare = ({
               categoryDetail.durations,
               StatisticChartType.COMPARE,
               categoryDetail.tagName,
-              lightenColor('#2E9267' as string, percent) || getRandomColor(),
+              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
             ),
             borderColor:
-              lightenColor('#2E9267' as string, percent) || getRandomColor(),
+              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
             backgroundColor: 'transparent',
             borderDash: [3, 3],
             fill: true,
@@ -851,7 +747,7 @@ const LineChartCompare = ({
             pointBorderColor: 'transparent',
             pointHoverRadius: 6,
             pointHoverBackgroundColor:
-              lightenColor('#2E9267' as string, percent) || getRandomColor(),
+              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
             pointHoverBorderColor: 'transparent',
             pointHoverBorderWidth: 2,
           });
@@ -904,8 +800,6 @@ const LineChartCompare = ({
   }, [
     statisticTagTaskDurationsList,
     statisticTagTaskDurationsCompareList,
-    statisticTagsList,
-    statisticTagsCompareList,
     selectedOrganization,
     selectedLarge,
     selectedMedium,
@@ -1451,8 +1345,8 @@ const LineChartCompare = ({
               </div>
               <div>
                 <Dropdown
-                  options={viewOptions}
-                  selectedOption={viewOptions.find(
+                  options={STATISTIC_CHART_VIEW_OPTIONS}
+                  selectedOption={STATISTIC_CHART_VIEW_OPTIONS.find(
                     (element) => element.value === lineChartViewBy?.value,
                   )}
                   className="h-[34px] !w-[54px] !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
