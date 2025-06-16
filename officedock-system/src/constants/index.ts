@@ -435,8 +435,10 @@ export const STATISTIC_CHART_VIEW_OPTIONS = [
   },
 ];
 
-export const EVERYONE_OPTION_LABEL = '全員を選択'
+export const EVERYONE_OPTION_LABEL = '全員を選択';
 
-export const MAXIUM_VISIBLE_NOTIFICATIONS = 99
+export const MAXIMUM_VISIBLE_NOTIFICATIONS = 99;
 
-export const DEFAULT_TIME_TEXT = '00:00:00'
+export const DEFAULT_TIME_TEXT = '00:00:00';
+
+export const TEAM_CALENDAR_ORGANIZATION = 'カレンダーカテゴリー';

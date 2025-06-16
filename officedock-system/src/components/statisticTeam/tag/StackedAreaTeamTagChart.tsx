@@ -345,6 +345,11 @@ const StackedAreaTeamTagChart = ({
 
       setDataChart(chartData);
       setColorList(colors);
+    } else {
+      setTimeRange([]);
+      setDataChart([]);
+      setTableData([]);
+      return;
     }
   }, [statisticUserTaskDurationsList, lineChartViewBy]);
 
@@ -375,10 +380,12 @@ const StackedAreaTeamTagChart = ({
       borderColor: 'transparent',
     };
   });
+  const MAX_LABEL_LENGTH =
+    timeRange?.length > 16 ? 5 : timeRange?.length > 12 ? 6 : 1000;
   const options = {
     chart: {
       type: 'area',
-      stacked: false,
+      stacked: true,
       zoom: {
         enabled: false, // ❌ OFF zoom
       },
@@ -471,6 +478,12 @@ const StackedAreaTeamTagChart = ({
         style: {
           fontSize: '14px',
           colors: '#939FA7',
+        },
+        formatter: (val: number) => {
+          const label = String(val);
+          return label.length > MAX_LABEL_LENGTH
+            ? label.slice(0, MAX_LABEL_LENGTH) + '…'
+            : label;
         },
       },
     },
@@ -1105,7 +1118,7 @@ const StackedAreaTeamTagChart = ({
                           style={{
                             boxShadow: '0px 2px 8px 0px #0000001A',
                           }}
-                          className={`bg-white absolute p-5 top-1/2 left-1/2 hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                          className={`bg-white absolute p-5 top-1/2 left-0 hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
                           <p className="text-sm font-normal text-[#77858F] mb-1 text-start w-full block">
                             {dataDetail &&
                               dataDetail.length > 0 &&

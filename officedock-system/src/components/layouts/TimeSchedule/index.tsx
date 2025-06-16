@@ -91,6 +91,7 @@ import {
   PermissionsSystem,
   ScreenName,
   ServerStatusCode,
+  TaskRepetitiveValue,
   ViewOptions,
 } from '@constants/enums';
 import {
@@ -2687,89 +2688,158 @@ const TimeSchedule = memo(
       'editEventCalendar',
       handleEditEventCalendar,
       {
-        onSuccess: async ({ data }) => {
-          setTaskTimeScheduleList((prevEvents) => {
-            const largeColor = data.categories?.find(
-              (item: any) => item.type === EventWorkCategory.LARGE,
-            )?.color;
-            const filteredEvents = prevEvents.filter(
-              (event) =>
-                event.scheduleId !== data.id &&
-                event.resourceId === ItemScheduleType.PLANS,
-            );
-            const actualDataList = prevEvents
-              .filter((event) => event.resourceId === ItemScheduleType.ACTUAL)
-              .map((event) => {
-                if (event.scheduleId === data.id) {
+        onSuccess: async ({ data }: { data: CombinedEventTask }) => {
+          const isMeInList = data.participants?.some(
+            (user) => user.id === session?.user.id,
+          );
+          if (isMeInList) {
+            setTaskTimeScheduleList((prevEvents) => {
+              const largeColor = data.categories?.find(
+                (item: any) => item.type === EventWorkCategory.LARGE,
+              )?.color;
+              const filteredEvents = prevEvents.filter(
+                (event) =>
+                  event.scheduleId !== data.id &&
+                  event.resourceId === ItemScheduleType.PLANS,
+              );
+              const actualDataList = prevEvents
+                .filter((event) => event.resourceId === ItemScheduleType.ACTUAL)
+                .map((event) => {
+                  if (event.scheduleId === data.id) {
+                    return {
+                      ...event,
+                      title: data.title,
+                      largeColor,
+                    };
+                  }
+                  return event;
+                });
+              const splitMultiDayEvent = (event: TaskTimeSchedule) => {
+                const startDate = parseISO(String(event.planStartDate));
+                let endDate = parseISO(String(event.planEndDate));
+                if (getHours(endDate) === 0 && getMinutes(endDate) === 0) {
+                  endDate = subSeconds(endDate, 1);
+                }
+                if (isSameDay(startDate, endDate)) {
+                  return [{ ...event }];
+                }
+                if (event.isAllDay) {
+                  return [{ ...event, uuid: uuidv4() }];
+                }
+                const days = eachDayOfInterval({
+                  start: startDate,
+                  end: endDate,
+                });
+                return days.map((day, index) => {
+                  const start = index === 0 ? startDate : startOfDay(day);
+                  const end =
+                    index === days.length - 1 ? endDate : endOfDay(day);
                   return {
                     ...event,
-                    title: data.title,
-                    largeColor,
+                    start,
+                    end,
+                    id: `${event.id}-split-${index}`,
+                    uuid: uuidv4(),
                   };
-                }
-                return event;
-              });
-
-            const splitMultiDayEvent = (event: TaskTimeSchedule) => {
-              const startDate = parseISO(String(event.startDate));
-              const endDate = parseISO(String(event.endDate));
-              if (event.isAllDay)
-                return [
-                  {
-                    ...event,
-                    start: new Date(String(event.startDate)),
-                    end: new Date(
-                      new Date(String(event.endDate)).setHours(24, 0, 0, 0),
-                    ),
-                    id: `${event.id}event`,
-                    uuid: uuidv4(),
-                  },
-                ];
-
-              if (isSameDay(startDate, endDate)) {
-                return [
-                  {
-                    ...event,
-                    start: startDate,
-                    end: endDate,
-                    id: `${event.id}event`,
-                    uuid: uuidv4(),
-                  },
-                ];
+                });
+              };
+              if (
+                data.repeatSchedules === undefined ||
+                data.repeatSchedules === null
+              ) {
+                return [...filteredEvents, ...actualDataList];
               }
 
-              const days = eachDayOfInterval({
-                start: startDate,
-                end: endDate,
-              });
+              const newEventEdit = data.repeatSchedules.flatMap(
+                (schedule, index) => {
+                  const startDate = schedule.planStartDate
+                    ? parseISO(String(schedule.planStartDate))
+                    : null;
+                  const endDate = schedule.planEndDate
+                    ? parseISO(String(schedule.planEndDate))
+                    : null;
 
-              return days.map((day, index) => {
-                const start = index === 0 ? startDate : startOfDay(day);
-                const end = index === days.length - 1 ? endDate : endOfDay(day);
+                  // Skip if no valid time
+                  if (!startDate || !endDate) return [];
 
+                  const adjustedEndDate =
+                    isSameDay(startDate, endDate) || isMidnight(endDate)
+                      ? endDate
+                      : addDays(endDate, 1);
+
+                  const newEvent = {
+                    ...data,
+                    start: startDate,
+                    end: data.isAllDay
+                      ? new Date(
+                          new Date(String(schedule.planEndDate)).setHours(
+                            24,
+                            0,
+                            0,
+                            0,
+                          ),
+                        )
+                      : adjustedEndDate,
+                    id: `${data.id}-${schedule.id}-${index}`,
+                    peopleInCharge: [],
+                    status: {
+                      name: '',
+                      id: null,
+                    },
+                    taskId: data.taskId as number,
+                    eventSchedule: schedule.id,
+                    scheduleId: schedule.schedule || (data.id as number),
+                    uuid: uuidv4(),
+                    planStartDate: String(schedule.planStartDate),
+                    planEndDate: String(schedule.planEndDate),
+                    isStart: data.isStart,
+                    isMyTask: data.isMySchedule,
+                    type: EventCalendarType.SCHEDULE,
+                    taskSchedules: [],
+                    startEditable: false,
+                    resourceId: ItemScheduleType.PLANS,
+                    largeColor: largeColor,
+                    location: data.location?.name,
+                    isAllDay: data.isAllDay,
+                    participants: data.participants,
+                  };
+
+                  return splitMultiDayEvent(newEvent);
+                },
+              );
+
+              return [...filteredEvents, ...actualDataList, ...newEventEdit];
+            });
+          } else {
+            setIdEventDelete(String(data.id));
+
+            let updatedTaskList = taskTimeScheduleList.filter(
+              (item) =>
+                `${item.scheduleId}` !== `${data.id}` ||
+                item.resourceId !== ItemScheduleType.PLANS,
+            );
+            updatedTaskList = updatedTaskList.map((item) => {
+              if (
+                `${item.scheduleId}` === `${data.id}` &&
+                item.isCalculation === true
+              ) {
                 return {
-                  ...event,
-                  start,
-                  end,
-                  id: `${event.id}-split-${index}`,
-                  uuid: uuidv4(),
+                  ...item,
+                  planEndDate: `${new Date()}`,
+                  end: adjustEndDate(
+                    new Date(convertToCurrentTimezone(`${item.planStartDate}`)),
+                    new Date(),
+                    5,
+                  ),
+                  isCalculation: false,
+                  isStart: false,
                 };
-              });
-            };
-
-            const newEvents = splitMultiDayEvent({
-              ...data,
-              largeColor,
-              isStart: data.isStart,
-              scheduleId: data.id,
-              resourceId: ItemScheduleType.PLANS,
-              type: ItemStartType.SCHEDULE,
-              planStartDate: `${data.startDate}`,
-              planEndDate: `${data.endDate}`,
+              }
+              return item;
             });
 
-            return [...filteredEvents, ...actualDataList, ...newEvents];
-          });
+            setTaskTimeScheduleList(updatedTaskList);
+          }
 
           handleRemoveEventParam();
           setOpenConfirmEditEventModal(false);
@@ -2792,11 +2862,15 @@ const TimeSchedule = memo(
     // Delete Event Repeat
     const handleConfirmDeleteEventRepeatCalendar = (sendToChat: boolean) => {
       if (dataEventEdit) {
-        deleteEventRepeatCalendar({
-          eventId: `${dataEventEdit.eventSchedule}`,
-          repeatScheduleId: dataEventEdit.scheduleId as string,
-          sendToChat,
-        });
+        if (dataEventEdit.repeatType === TaskRepetitiveValue.ONCE) {
+          deleteEventCalendar({ id: `${dataEventEdit.id}`, sendToChat });
+        } else {
+          deleteEventRepeatCalendar({
+            eventId: `${dataEventEdit.eventSchedule}`,
+            repeatScheduleId: dataEventEdit.scheduleId as string,
+            sendToChat,
+          });
+        }
         return;
       }
     };
@@ -2863,6 +2937,8 @@ const TimeSchedule = memo(
         onSuccess: (data, task) => {
           handleRemoveEventParam();
           setOpenConfirmDeleteEventModal(false);
+          setOpenConfirmDeleteEventRepeatModal(false);
+
           setConfirmEventDataToEdit(undefined);
           setBackToEditing(false);
           setActionsEventMessage('');
@@ -2872,10 +2948,32 @@ const TimeSchedule = memo(
           );
 
           const deleteEventList = updatedTaskList.filter(
-            (item) => `${item.scheduleId}` !== `${task.id}`,
+            (item) =>
+              `${item.scheduleId}` !== `${task.id}` ||
+              item.resourceId !== ItemScheduleType.PLANS,
           );
 
-          setTaskTimeScheduleList(deleteEventList);
+          const deleteEventListUpdate = deleteEventList.map((item) => {
+            if (
+              `${item.scheduleId}` === `${task.id}` &&
+              item.isCalculation === true
+            ) {
+              return {
+                ...item,
+                planEndDate: `${new Date()}`,
+                end: adjustEndDate(
+                  new Date(convertToCurrentTimezone(`${item.planStartDate}`)),
+                  new Date(),
+                  5,
+                ),
+                isCalculation: false,
+                isStart: false,
+              };
+            }
+            return item;
+          });
+
+          setTaskTimeScheduleList(deleteEventListUpdate);
           setIdEventDelete(`${task.id}event`);
           showToast({
             description: SUCCESS_DELETE_MESSAGE,

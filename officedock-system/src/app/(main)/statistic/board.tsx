@@ -16,6 +16,7 @@ import LineChart from '@components/statistic/category/LineChart';
 import StackedAreaChart from '@components/statistic/category/StackedAreaChart';
 import LineChartCompare from '@components/statistic/category/compare/LineChartCompare';
 
+import { TEAM_CALENDAR_ORGANIZATION } from '@constants';
 import { pageRouters } from '@constants/routers';
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 import useStatisticCategoriesCompare from '@hooks/useStatisticCategoriesCompare';
@@ -303,7 +304,8 @@ const StatisticBoard = () => {
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === data.value,
     );
-
+    // If organization is a calendar organization then return here
+    if (selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION) return;
     if (largeCategory) {
       const mediumCategories = largeCategory.MEDIUM.map((medium) => ({
         value: medium.MEDIUM?.id || '',
@@ -317,6 +319,9 @@ const StatisticBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
+    // If organization is a calendar organization then return here
+    if (selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION) return;
+
     if (data.value !== selectedMedium?.value) {
       setIsLoadingMedium(true);
       if (isCheckCompare) {
