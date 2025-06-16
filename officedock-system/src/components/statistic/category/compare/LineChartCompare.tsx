@@ -656,50 +656,16 @@ const LineChartCompare = ({
             },
           ];
 
-          let percent = 0;
-          if (
-            !selectedLarge?.value &&
-            statisticCategoryList?.largeCategories &&
-            statisticCategoryList?.largeCategories.length > 0
-          ) {
-            percent =
-              statisticCategoryList?.largeCategories.find(
-                (category) =>
-                  category.categoryName == categoryDetail.categoryName,
-              )?.percent || 0;
-          } else if (
-            !selectedMedium?.value &&
-            statisticCategoryList?.mediumCategories &&
-            statisticCategoryList?.mediumCategories.length > 0
-          ) {
-            percent = statisticCategoryList?.mediumCategories
-              ? statisticCategoryList?.mediumCategories.find(
-                  (category) =>
-                    category.categoryName == categoryDetail.categoryName,
-                )?.percent || 0
-              : 0;
-          } else if (
-            statisticCategoryList?.smallCategories &&
-            statisticCategoryList?.smallCategories.length > 0
-          ) {
-            percent = statisticCategoryList?.smallCategories
-              ? statisticCategoryList?.smallCategories.find(
-                  (category) =>
-                    category.categoryName == categoryDetail.categoryName,
-                )?.percent || 0
-              : 0;
-          }
-
           tableDetail = [
             ...tableDetail,
             {
               categoryId: categoryDetail.categoryId,
               categoryName: categoryDetail.categoryName,
               categoryDuration: categoryDetail.duration,
-              categoryPercent: String(percent),
+              categoryPercent: String(categoryDetail?.percent || 0),
               categoryColor:
                 categoryDetail.categoryColor ||
-                (color && lightenColor(color, percent)) ||
+                (color && lightenColor(color, categoryDetail?.percent || 0)) ||
                 getRandomColor(),
               type: StatisticChartType.STANDARD,
             },
@@ -717,12 +683,12 @@ const LineChartCompare = ({
               StatisticChartType.STANDARD,
               categoryDetail.categoryName,
               categoryDetail.categoryColor ||
-                (color && lightenColor(color, percent)) ||
+                (color && lightenColor(color, categoryDetail?.percent || 0)) ||
                 getRandomColor(),
             ),
             borderColor:
               categoryDetail.categoryColor ||
-              (color && lightenColor(color, percent)) ||
+              (color && lightenColor(color, categoryDetail?.percent || 0)) ||
               getRandomColor(),
             backgroundColor: 'transparent',
             borderDash: [],
@@ -756,48 +722,15 @@ const LineChartCompare = ({
               name: categoryDetail.categoryName,
             },
           ];
-          let percent = 0;
-          if (
-            !selectedLarge?.value &&
-            statisticCategoryCompareList?.largeCategories &&
-            statisticCategoryCompareList?.largeCategories.length > 0
-          ) {
-            percent =
-              statisticCategoryCompareList?.largeCategories.find(
-                (category) =>
-                  category.categoryName == categoryDetail.categoryName,
-              )?.percent || 0;
-          } else if (
-            !selectedMedium?.value &&
-            statisticCategoryCompareList?.mediumCategories &&
-            statisticCategoryCompareList?.mediumCategories.length > 0
-          ) {
-            percent = statisticCategoryCompareList?.mediumCategories
-              ? statisticCategoryCompareList?.mediumCategories.find(
-                  (category) =>
-                    category.categoryName == categoryDetail.categoryName,
-                )?.percent || 0
-              : 0;
-          } else if (
-            statisticCategoryCompareList?.smallCategories &&
-            statisticCategoryCompareList?.smallCategories.length > 0
-          ) {
-            percent = statisticCategoryCompareList?.smallCategories
-              ? statisticCategoryCompareList?.smallCategories.find(
-                  (category) =>
-                    category.categoryName == categoryDetail.categoryName,
-                )?.percent || 0
-              : 0;
-          }
 
           tableDetail.push({
             categoryId: categoryDetail.categoryId,
             categoryName: categoryDetail.categoryName,
             categoryDuration: categoryDetail.duration,
-            categoryPercent: String(percent),
+            categoryPercent: String(categoryDetail?.percent || 0),
             categoryColor:
               categoryDetail.categoryColor ||
-              (color && lightenColor(color, percent)) ||
+              (color && lightenColor(color, categoryDetail?.percent || 0)) ||
               getRandomColor(),
             type: StatisticChartType.COMPARE,
           });
@@ -814,12 +747,12 @@ const LineChartCompare = ({
               StatisticChartType.COMPARE,
               categoryDetail.categoryName,
               categoryDetail.categoryColor ||
-                (color && lightenColor(color, percent)) ||
+                (color && lightenColor(color, categoryDetail?.percent || 0)) ||
                 getRandomColor(),
             ),
             borderColor:
               categoryDetail.categoryColor ||
-              (color && lightenColor(color, percent)) ||
+              (color && lightenColor(color, categoryDetail?.percent || 0)) ||
               getRandomColor(),
             backgroundColor: 'transparent',
             borderDash: [3, 3],
@@ -830,7 +763,7 @@ const LineChartCompare = ({
             pointHoverRadius: 6,
             pointHoverBackgroundColor:
               categoryDetail.categoryColor ||
-              (color && lightenColor(color, percent)) ||
+              (color && lightenColor(color, categoryDetail?.percent || 0)) ||
               getRandomColor(),
             pointHoverBorderColor: 'transparent',
             pointHoverBorderWidth: 2,

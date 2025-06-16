@@ -125,8 +125,8 @@ interface ContextValue {
   handleZoomOutKanban: () => void;
   calculateFontSizeTitle: () => number;
   calculateFontSizeContent: () => number;
-  displayHederDateStart: Date;
-  displayHederDateEnd: Date;
+  displayHeaderDateStart: Date;
+  displayHeaderDateEnd: Date;
   setDisplayHeaderDayStart: Dispatch<SetStateAction<Date>>;
   setDisplayHeaderDayEnd: Dispatch<SetStateAction<Date>>;
   isInteracting: boolean;
@@ -239,8 +239,8 @@ const defaultValue: ContextValue = {
   },
   setSelectedOptionZoom: () => {},
   setOrderingOptions: () => {},
-  displayHederDateStart: new Date(),
-  displayHederDateEnd: new Date(),
+  displayHeaderDateStart: new Date(),
+  displayHeaderDateEnd: new Date(),
   setDisplayHeaderDayStart: () => {},
   setDisplayHeaderDayEnd: () => {},
   isInteracting: false,
@@ -345,10 +345,10 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       value: 100,
     });
 
-  const [displayHederDateStart, setDisplayHeaderDayStart] = useState<Date>(
+  const [displayHeaderDateStart, setDisplayHeaderDayStart] = useState<Date>(
     new Date(),
   );
-  const [displayHederDateEnd, setDisplayHeaderDayEnd] = useState<Date>(
+  const [displayHeaderDateEnd, setDisplayHeaderDayEnd] = useState<Date>(
     new Date(),
   );
 
@@ -453,8 +453,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     calculateFontSizeContent,
     setSelectedOptionZoom,
     setOrderingOptions,
-    displayHederDateStart,
-    displayHederDateEnd,
+    displayHeaderDateStart,
+    displayHeaderDateEnd,
     setDisplayHeaderDayStart,
     setDisplayHeaderDayEnd,
     isInteracting,

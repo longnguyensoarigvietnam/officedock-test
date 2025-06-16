@@ -4,10 +4,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
 import socketEventEmitter from '@components/socket/socketEventEmitter';
+import Metadata from '@components/common/Metadata';
 
 import { ChatRoomType, SocketActions } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
-import { APP_NAME_METADATA, BOOKMARK_ROUTER_NAME } from '@constants';
+import { BOOKMARK_ROUTER_NAME, DEFAULT_TIME_TEXT } from '@constants';
 
 import {
   ChatDashboardMember,
@@ -17,11 +18,14 @@ import {
 
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataTask from '@hooks/useCreationDataTask';
+import useTaskDurationDetail from '@hooks/useTaskDurationDetail';
+import useContinueCounterTime from '@hooks/useContinueCounterTime';
 
 import { generateUniqueId } from '@utils';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { ChatContext } from '@providers/ChatProvider';
+import { TaskContext } from '@providers/TaskProvider';
 
 import ListChatUsers from './list';
 import ChatDetail from './detail';
@@ -40,6 +44,7 @@ const BoardChat = () => {
   // Context
   const { setChatRoomNotifications } = useContext(ChatContext);
   const { totalNotifications } = useContext(GlobalStateContext);
+  const { taskSelected } = useContext(TaskContext);
 
   // Custom hooks
   const { dashboardMemberList = [] } = useDashboardMemberList();
@@ -58,6 +63,20 @@ const BoardChat = () => {
     ChatDashboardMember[]
   >([]);
   const [clientId] = useState(() => generateUniqueId());
+
+  // Running task info
+  const { taskDurationDetail } = useTaskDurationDetail({
+    item: {
+      id: `${taskSelected.value}`.replace('event', ''),
+      type: `${taskSelected.type}`,
+    },
+  });
+
+  const elapsedTime = useContinueCounterTime(
+    taskDurationDetail?.taskDuration
+      ? taskDurationDetail
+      : { taskDuration: DEFAULT_TIME_TEXT, isStart: false },
+  );
 
   // Update last item when change param
   useEffect(() => {
@@ -355,7 +374,10 @@ const BoardChat = () => {
   };
   return (
     <>
-      <title>{`${APP_NAME_METADATA} | ${pageRouters.CHAT_MANAGEMENT.name}${totalNotifications > 0 ? `(${totalNotifications})` : ''}`}</title>
+      <Metadata
+        metadata={`${pageRouters.CHAT_MANAGEMENT.name}${totalNotifications > 0 ? `(${totalNotifications})` : ''}`}
+        taskDurationText={`${taskDurationDetail?.taskDuration ? `${elapsedTime} - ${taskDurationDetail.title}` : ''}`}
+      />
       <ListChatUsers
         hasMore={hasMore}
         dataChatList={dataChatList}

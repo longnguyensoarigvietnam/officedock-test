@@ -1,15 +1,23 @@
 'use client';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useContext, useEffect, useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
-import Footer from './Footer';
-
 import Metadata from '@components/common/Metadata';
+
 import { pageRouters } from '@constants/routers';
 import { PermissionsSystem, SessionStatus } from '@constants/enums';
 import { SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
+import { DEFAULT_TIME_TEXT } from '@constants';
+
 import { hasPermissionInArray } from '@utils';
+
+import useTaskDurationDetail from '@hooks/useTaskDurationDetail';
+import useContinueCounterTime from '@hooks/useContinueCounterTime';
+
+import { TaskContext } from '@providers/TaskProvider';
+
+import Footer from './Footer';
 
 type MainLayoutProps = {
   children?: ReactNode;
@@ -26,8 +34,21 @@ const MainLayout = ({
   permission,
   showFooter = true,
 }: MainLayoutProps) => {
+  const { taskSelected } = useContext(TaskContext);
   const { data: session, status, update } = useSession();
   const router = useRouter();
+  const { taskDurationDetail } = useTaskDurationDetail({
+    item: {
+      id: `${taskSelected.value}`.replace('event', ''),
+      type: `${taskSelected.type}`,
+    },
+  });
+
+  const elapsedTime = useContinueCounterTime(
+    taskDurationDetail?.taskDuration
+      ? taskDurationDetail
+      : { taskDuration: DEFAULT_TIME_TEXT, isStart: false },
+  );
 
   const [isShow, setIsShow] = useState(false);
 
@@ -79,7 +100,10 @@ const MainLayout = ({
 
   return (
     <div className="h-[calc(100vh_-_76px)]">
-      <Metadata metadata={title} />
+      <Metadata
+        metadata={title}
+        taskDurationText={`${taskDurationDetail?.taskDuration ? `${elapsedTime} - ${taskDurationDetail.title}` : ''}`}
+      />
       <div
         className={`overflow-x-hidden overflow-y-auto h-full flex-grow flex flex-col gap-10 bg-transparent custom-scrollbar p-4 ${className}`}>
         <main className="flex-grow flex flex-col">

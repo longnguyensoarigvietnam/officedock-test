@@ -33,9 +33,9 @@ import { OptionDropdownType } from '@interfaces/common';
 
 import {
   SortingType,
-  StatisticViewLabels,
   StatisticViewOptions,
 } from '@constants/enums';
+import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 
 import useStatisticTaskDurations from '@hooks/useStatisticTaskDurations';
 
@@ -136,21 +136,6 @@ const LineChart = ({
     useState<string>('');
   const [durationSortingStatus, setDurationSortingStatus] =
     useState<string>('');
-
-  const viewOptions = [
-    {
-      value: StatisticViewOptions.DAY,
-      label: StatisticViewLabels.DAY,
-    },
-    {
-      value: StatisticViewOptions.WEEK,
-      label: StatisticViewLabels.WEEK,
-    },
-    {
-      value: StatisticViewOptions.MONTH,
-      label: StatisticViewLabels.MONTH,
-    },
-  ];
 
   const tooltipRef = useRef<HTMLDivElement | null>(null);
 
@@ -412,46 +397,12 @@ const LineChart = ({
             }
           }
 
-          let percent = 0;
-          if (
-            !selectedLarge?.value &&
-            statisticCategoryList?.largeCategories &&
-            statisticCategoryList?.largeCategories.length > 0
-          ) {
-            percent =
-              statisticCategoryList?.largeCategories.find(
-                (category) =>
-                  category.categoryName == categoryDetail.categoryName,
-              )?.percent || 0;
-          } else if (
-            !selectedMedium?.value &&
-            statisticCategoryList?.mediumCategories &&
-            statisticCategoryList?.mediumCategories.length > 0
-          ) {
-            percent = statisticCategoryList?.mediumCategories
-              ? statisticCategoryList?.mediumCategories.find(
-                  (category) =>
-                    category.categoryName == categoryDetail.categoryName,
-                )?.percent || 0
-              : 0;
-          } else if (
-            statisticCategoryList?.smallCategories &&
-            statisticCategoryList?.smallCategories.length > 0
-          ) {
-            percent = statisticCategoryList?.smallCategories
-              ? statisticCategoryList?.smallCategories.find(
-                  (category) =>
-                    category.categoryName == categoryDetail.categoryName,
-                )?.percent || 0
-              : 0;
-          }
-
           standardLabels = [
             ...standardLabels,
             {
               color:
                 categoryDetail.categoryColor ||
-                (color && lightenColor(color, percent)) ||
+                (color && lightenColor(color, categoryDetail?.percent || 0)) ||
                 getRandomColor(),
               name: categoryDetail.categoryName,
             },
@@ -461,10 +412,10 @@ const LineChart = ({
             categoryId: categoryDetail.categoryId,
             categoryName: categoryDetail.categoryName,
             categoryDuration: categoryDetail.duration,
-            categoryPercent: String(percent),
+            categoryPercent: String(categoryDetail?.percent || 0),
             categoryColor:
               categoryDetail.categoryColor ||
-              (color && lightenColor(color, percent)) ||
+              (color && lightenColor(color, categoryDetail?.percent || 0)) ||
               getRandomColor(),
           });
           datasets.push({
@@ -478,7 +429,7 @@ const LineChart = ({
                 endDate: duration.endDate,
                 color:
                   categoryDetail.categoryColor ||
-                  (color && lightenColor(color, percent)) ||
+                  (color && lightenColor(color, categoryDetail?.percent || 0)) ||
                   getRandomColor(),
                 label: categoryDetail.categoryName,
               },
@@ -493,7 +444,7 @@ const LineChart = ({
                       endDate: duration.endDate,
                       color:
                         categoryDetail.categoryColor ||
-                        (color && lightenColor(color, percent)) ||
+                        (color && lightenColor(color, categoryDetail?.percent || 0)) ||
                         getRandomColor(),
                       label: categoryDetail.categoryName,
                     },
@@ -502,7 +453,7 @@ const LineChart = ({
             ]),
             borderColor:
               categoryDetail.categoryColor ||
-              (color && lightenColor(color, percent)) ||
+              (color && lightenColor(color, categoryDetail?.percent || 0)) ||
               getRandomColor(),
             backgroundColor: 'rgba(217, 83, 79, 0.04)',
             fill: true,
@@ -922,8 +873,8 @@ const LineChart = ({
               </div>
               <div>
                 <Dropdown
-                  options={viewOptions}
-                  selectedOption={viewOptions.find(
+                  options={STATISTIC_CHART_VIEW_OPTIONS}
+                  selectedOption={STATISTIC_CHART_VIEW_OPTIONS.find(
                     (element) => element.value === lineChartViewBy?.value,
                   )}
                   className="h-[34px] !w-[54px] !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"

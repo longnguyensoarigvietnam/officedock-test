@@ -402,8 +402,6 @@ const StatisticTagBoard = () => {
             startDateCompare={startDateCompare}
             endDateCompare={endDateCompare}
             removeTag={removeTag}
-            statisticTagsList={statisticTagsList}
-            statisticTagsCompareList={statisticTagsListCompare}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -439,7 +437,6 @@ const StatisticTagBoard = () => {
             startDate={startDate}
             endDate={endDate}
             removeTag={removeTag}
-            statisticTagsList={statisticTagsList}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
