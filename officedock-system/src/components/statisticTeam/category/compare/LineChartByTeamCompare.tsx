@@ -266,8 +266,10 @@ const LineChartByTeamCompare = ({
   });
   const [standardDateLabels, setStandardDateLabels] = useState<string[]>([]);
   const [compareDateLabels, setCompareDateLabels] = useState<string[]>([]);
-  const [totalStandardDuration, setTotalStandardDuration] = useState<string>('00:00:00')
-  const [totalCompareDuration, setTotalCompareDuration] = useState<string>('00:00:00')
+  const [totalStandardDuration, setTotalStandardDuration] =
+    useState<string>('00:00:00');
+  const [totalCompareDuration, setTotalCompareDuration] =
+    useState<string>('00:00:00');
 
   // Collapse statuses
   const [categoryCollapseStatuses, setCategoryCollapseStatuses] = useState<
@@ -438,6 +440,9 @@ const LineChartByTeamCompare = ({
       ];
       setMemberOptions(allMembers);
       setSelectedMembers([...allMembers.map((user) => Number(user.id))]);
+    } else {
+      setMemberOptions([]);
+      setSelectedMembers([]);
     }
   }, [allLabelUser]);
 
@@ -831,119 +836,130 @@ const LineChartByTeamCompare = ({
 
   // Set chart data, legend list after calling API
   useEffect(() => {
-    if (
-      statisticUserTaskDurationsList &&
+    const standardLabels: { name: string; color: string }[] = [];
+    const comparedLabels: { name: string; color: string }[] = [];
+    const standardDateLabels: string[] = [];
+    const compareDateLabels: string[] = [];
+    const datasets: any[] = [];
+    const totalStandardDurationList: string[] = [];
+    const totalCompareDurationList: string[] = [];
+
+    const standardDurationList =
+      statisticUserTaskDurationsList?.[0]?.durations || [];
+    standardDurationList.map((duration, index) => {
+      standardDateLabels.push(duration.startDate);
+      if (
+        index == standardDurationList.length - 1 &&
+        String(standardDurationList.at(-1)?.endDate) !=
+          String(standardDurationList.at(-1)?.startDate)
+      ) {
+        const endDate = standardDurationList.at(-1)?.endDate;
+        if (endDate) {
+          standardDateLabels.push(endDate);
+        }
+      }
+    });
+
+    const compareDurationList =
+      statisticUserTaskDurationsList?.[0]?.durations || [];
+    compareDurationList.map((duration, index) => {
+      compareDateLabels.push(duration.startDate);
+      if (
+        index == compareDurationList.length - 1 &&
+        String(compareDurationList.at(-1)?.endDate) !=
+          String(compareDurationList.at(-1)?.startDate)
+      ) {
+        const endDate = compareDurationList.at(-1)?.endDate;
+        if (endDate) {
+          compareDateLabels.push(endDate);
+        }
+      }
+    });
+
+    const generateDataWithAlignment = (
+      durations: any[],
+      compareDurations: any[],
+      type: string,
+      user: {
+        id: number;
+        fullName: string;
+        avatarColor: string;
+        avatar: string | null;
+      },
+    ) => {
+      const shownLabels = [...standardDateLabels];
+      if (standardDateLabels.length < compareDateLabels.length) {
+        const numOfHiddenLabels =
+          compareDateLabels.length - standardDateLabels.length;
+        for (let i = 0; i < numOfHiddenLabels; i++) {
+          shownLabels.push(`${i}`);
+        }
+      }
+      const data = shownLabels
+        .map((label, index) => {
+          let foundDuration;
+          let anotherDuration;
+          if (type == StatisticChartType.COMPARE) {
+            foundDuration = compareDurations[index];
+            anotherDuration = durations[index];
+          } else {
+            foundDuration = durations[index];
+            anotherDuration = compareDurations[index];
+          }
+
+          return foundDuration
+            ? {
+                x: label,
+                y: foundDuration.duration
+                  ? convertTimeToDecimal(foundDuration.duration)
+                  : 0,
+                startDate: foundDuration.startDate,
+                endDate: foundDuration.endDate,
+                duration: foundDuration.duration,
+                anotherStartDate: anotherDuration
+                  ? anotherDuration.startDate
+                  : null,
+                anotherEndDate: anotherDuration
+                  ? anotherDuration.endDate
+                  : null,
+                anotherDuration: anotherDuration
+                  ? anotherDuration.duration
+                  : null,
+                type,
+                user,
+              }
+            : null;
+        })
+        .filter((dataPoint) => dataPoint !== null);
+
+      // Add one more item with the same data as the last one
+      if (durations.length > 0 && shownLabels.length > 0) {
+        const lastItem = data[data.length - 1];
+        if (
+          String(durations.at(-1).startDate) != String(durations.at(-1).endDate)
+        ) {
+          const clonedItem = {
+            ...lastItem,
+            x: shownLabels.at(-1)!,
+          };
+          data.push(clonedItem);
+        }
+      }
+      return data;
+    };
+
+    statisticUserTaskDurationsList &&
       statisticUserTaskDurationsList?.length > 0 &&
-      statisticUserTaskDurationsCompareList &&
-      statisticUserTaskDurationsCompareList?.length > 0
-    ) {
-      const standardLabels: { name: string; color: string }[] = [];
-      const comparedLabels: { name: string; color: string }[] = [];
-      const standardDateLabels: string[] = [];
-      const compareDateLabels: string[] = [];
-      const datasets: any[] = [];
-      const totalStandardDurationList: string[] = []
-      const totalCompareDurationList: string[] = []
-
-      const standardDurationList =
-        statisticUserTaskDurationsList[0]?.durations ?? [];
-      standardDurationList.map((duration, index) => {
-        standardDateLabels.push(duration.startDate);
-        if (
-          index === standardDurationList.length - 1 &&
-          String(standardDurationList.at(-1)?.endDate) !=
-            String(standardDurationList.at(-1)?.startDate)
-        ) {
-          const endDate = standardDurationList.at(-1)?.endDate;
-          if (endDate) {
-            standardDateLabels.push(endDate);
-          }
-        }
-      });
-
-      const compareDurationList = statisticUserTaskDurationsList[0].durations;
-      compareDurationList.map((duration, index) => {
-        compareDateLabels.push(duration.startDate);
-        if (
-          index === compareDurationList.length - 1 &&
-          String(compareDurationList.at(-1)?.endDate) !=
-            String(compareDurationList.at(-1)?.startDate)
-        ) {
-          const endDate = compareDurationList.at(-1)?.endDate;
-          if (endDate) {
-            compareDateLabels.push(endDate);
-          }
-        }
-      });
-
-      const generateDataWithAlignment = (
-        durations: any[],
-        compareDurations: any[],
-        type: string,
-        user: {
-          id: number;
-          fullName: string;
-          avatarColor: string;
-          avatar: string | null;
-        },
-      ) => {
-        const shownLabels = [...standardDateLabels];
-        if (standardDateLabels.length < compareDateLabels.length) {
-          const numOfHiddenLabels =
-            compareDateLabels.length - standardDateLabels.length;
-          for (let i = 0; i < numOfHiddenLabels; i++) {
-            shownLabels.push(`${i}`);
-          }
-        }
-        const data = shownLabels
-          .map((label, index) => {
-            let foundDuration;
-            let anotherDuration;
-            if (type == StatisticChartType.COMPARE) {
-              foundDuration = compareDurations[index];
-              anotherDuration = durations[index];
-            } else {
-              foundDuration = durations[index];
-              anotherDuration = compareDurations[index];
-            }
-
-            return foundDuration
-              ? {
-                  x: label,
-                  y: foundDuration.duration
-                    ? convertTimeToDecimal(foundDuration.duration)
-                    : 0,
-                  startDate: foundDuration.startDate,
-                  endDate: foundDuration.endDate,
-                  duration: foundDuration.duration,
-                  anotherStartDate: anotherDuration
-                    ? anotherDuration.startDate
-                    : null,
-                  anotherEndDate: anotherDuration
-                    ? anotherDuration.endDate
-                    : null,
-                  anotherDuration: anotherDuration
-                    ? anotherDuration.duration
-                    : null,
-                  type,
-                  user,
-                }
-              : null;
-          })
-          .filter((dataPoint) => dataPoint !== null);
-        return data;
-      };
-
       statisticUserTaskDurationsList.forEach((userTaskDuration) => {
         standardLabels.push({
           color: userTaskDuration.user.avatarColor || getRandomColor(),
           name: userTaskDuration.user.fullName,
         });
-        const compareUser = statisticUserTaskDurationsCompareList.find(
+        const compareUser = statisticUserTaskDurationsCompareList?.find(
           (c) => c.user.id == userTaskDuration.user.id,
         );
 
-        totalStandardDurationList.push(userTaskDuration.totalDuration)
+        totalStandardDurationList.push(userTaskDuration.totalDuration);
 
         datasets.push({
           label: userTaskDuration.user.fullName,
@@ -967,15 +983,17 @@ const LineChartByTeamCompare = ({
         });
       });
 
+    statisticUserTaskDurationsCompareList &&
+      statisticUserTaskDurationsCompareList?.length > 0 &&
       statisticUserTaskDurationsCompareList.forEach((userTaskDuration) => {
         comparedLabels.push({
           color: userTaskDuration.user.avatarColor || getRandomColor(),
           name: userTaskDuration.user.fullName,
         });
-        const standardUser = statisticUserTaskDurationsList.find(
+        const standardUser = statisticUserTaskDurationsList?.find(
           (c) => c.user.id == userTaskDuration.user.id,
         );
-        totalCompareDurationList.push(userTaskDuration.totalDuration)
+        totalCompareDurationList.push(userTaskDuration.totalDuration);
         datasets.push({
           label: userTaskDuration.user.fullName,
           data: generateDataWithAlignment(
@@ -999,36 +1017,21 @@ const LineChartByTeamCompare = ({
         });
       });
 
-      setStandardDateLabels(standardDateLabels);
-      setCompareDateLabels(compareDateLabels);
-      setLineChartData({
-        labels: standardDateLabels,
-        datasets: datasets,
-      });
-      setStandardLegendList(standardLabels);
-      setCompareLegendList(comparedLabels);
-      setTotalStandardDuration(totalDurationsForStatistic(totalStandardDurationList))
-      setTotalCompareDuration(totalDurationsForStatistic(totalCompareDurationList))
-    } else {
-      setStandardDateLabels([]);
-      setCompareDateLabels([]);
-      setLineChartData({
-        labels: [],
-        datasets: [],
-      });
-      setStandardLegendList([]);
-      setCompareLegendList([]);
-      setTotalStandardDuration('00:00:00')
-      setTotalCompareDuration('00:00:00')
-    }
-  }, [
-    statisticUserTaskDurationsList,
-    statisticUserTaskDurationsCompareList,
-    selectedOrganization,
-    selectedLarge,
-    selectedMedium,
-    selectedCategory?.name,
-  ]);
+    setStandardDateLabels(standardDateLabels);
+    setCompareDateLabels(compareDateLabels);
+    setLineChartData({
+      labels: standardDateLabels,
+      datasets: datasets,
+    });
+    setStandardLegendList(standardLabels);
+    setCompareLegendList(comparedLabels);
+    setTotalStandardDuration(
+      totalDurationsForStatistic(totalStandardDurationList),
+    );
+    setTotalCompareDuration(
+      totalDurationsForStatistic(totalCompareDurationList),
+    );
+  }, [statisticUserTaskDurationsList, statisticUserTaskDurationsCompareList]);
 
   // Sort by percent difference
   const sortByPercentDifference = (
@@ -1845,74 +1848,80 @@ const LineChartByTeamCompare = ({
               </div>
             </div>
           </div>
-          <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">
-            表示させるメンバー
-          </p>
-          <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[10px]">
-            {memberOptions?.length > 0 &&
-              memberOptions.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center gap-2 cursor-pointer">
-                  <div className="w-4">
-                    <CustomStatisticUserCheckbox
-                      id={String(member.id)}
-                      isChecked={selectedMembers.includes(member.id)}
-                      color={member.color}
-                      onChange={(state) => {
-                        if (state) {
-                          setSelectedMembers((prev) => {
-                            if (member.id) {
-                              const foundMember = selectedMembers.find(
-                                (memberId) => memberId == member.id,
-                              );
-                              if (!foundMember) {
-                                return [...prev, member.id];
-                              }
-                              return [...prev];
-                            } else {
-                              return memberOptions.map((member) => member.id);
-                            }
-                          });
-                        } else {
-                          setSelectedMembers((prev) => {
-                            if (member.id) {
-                              const foundMember = selectedMembers.find(
-                                (memberId) => memberId == member.id,
-                              );
-                              if (foundMember) {
-                                return [...prev].filter(
-                                  (memberId) =>
-                                    memberId && memberId != member.id,
+          {memberOptions?.length > 0 ? (
+            <>
+              <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">
+                表示させるメンバー
+              </p>
+              <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[10px]">
+                {memberOptions.map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center gap-2 cursor-pointer">
+                    <div className="w-4">
+                      <CustomStatisticUserCheckbox
+                        id={String(member.id)}
+                        isChecked={selectedMembers.includes(member.id)}
+                        color={member.color}
+                        onChange={(state) => {
+                          if (state) {
+                            setSelectedMembers((prev) => {
+                              if (member.id) {
+                                const foundMember = selectedMembers.find(
+                                  (memberId) => memberId == member.id,
                                 );
+                                if (!foundMember) {
+                                  return [...prev, member.id];
+                                }
+                                return [...prev];
+                              } else {
+                                return memberOptions.map((member) => member.id);
                               }
-                              return [...prev];
-                            } else {
-                              return [];
-                            }
-                          });
-                        }
-                      }}
-                    />
-                  </div>
-                  {member.id ? (
-                    <div className="relative top-[2px]">
-                      <CustomUserAvatar
-                        avatarUrl={member?.avatarUrl || ''}
-                        avatarColor={member?.color || ''}
-                        size={30}
+                            });
+                          } else {
+                            setSelectedMembers((prev) => {
+                              if (member.id) {
+                                const foundMember = selectedMembers.find(
+                                  (memberId) => memberId == member.id,
+                                );
+                                if (foundMember) {
+                                  return [...prev].filter(
+                                    (memberId) =>
+                                      memberId && memberId != member.id,
+                                  );
+                                }
+                                return [...prev];
+                              } else {
+                                return [];
+                              }
+                            });
+                          }
+                        }}
                       />
                     </div>
-                  ) : (
-                    <></>
-                  )}
+                    {member.id ? (
+                      <div className="relative top-[2px]">
+                        <CustomUserAvatar
+                          avatarUrl={member?.avatarUrl || ''}
+                          avatarColor={member?.color || ''}
+                          size={30}
+                        />
+                      </div>
+                    ) : (
+                      <></>
+                    )}
 
-                  <span className="break-all max-w-[800px] w-full truncate text-sm">
-                    {member.fullName}
-                  </span>
-                </div>
-              ))}
-          </div>
+                    <span className="break-all max-w-[800px] w-full truncate text-sm">
+                      {member.fullName}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <></>
+          )}
+
           {isLoadingStatisticUserTaskDurationsList &&
           isLoadingStatisticUserTaskDurationsCompareList ? (
             <RowSkeleton

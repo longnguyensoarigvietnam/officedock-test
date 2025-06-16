@@ -63,6 +63,7 @@ import {
   convertTimeToDecimal,
   convertToStatisticJapaneseLabels,
   formatDateToYMD,
+  totalDurationsForStatistic,
 } from '@utils/date';
 import {
   createStyledAvatarWithMargin,
@@ -131,10 +132,6 @@ const LineChartByTeamTags = ({
 }: Props) => {
   // Context
   const {
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
-    totalDurationCategory,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -154,22 +151,6 @@ const LineChartByTeamTags = ({
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
   const { expanded } = useContext(GlobalStateContext);
-
-  const getTotalDuration = () => {
-    if (selectedOrganization?.value) {
-      if (selectedLarge?.value) {
-        if (selectedMedium?.value) {
-          if (selectedSmall?.value) {
-            return totalDurationCategory;
-          }
-          return totalDurationSmall;
-        }
-        return totalDurationMedium;
-      }
-      return totalDurationLarge;
-    }
-    return '00:00:00';
-  };
 
   // Selected members and category
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
@@ -227,6 +208,7 @@ const LineChartByTeamTags = ({
     labels: [],
     datasets: [],
   });
+  const [totalDuration, setTotalDuration] = useState<string>('00:00:00');
 
   // Collapse statuses
   const [tagCollapseStatuses, setTagCollapseStatuses] = useState<
@@ -388,6 +370,9 @@ const LineChartByTeamTags = ({
       ];
       setMemberOptions(allMembers);
       setSelectedMembers([...allMembers.map((user) => Number(user.id))]);
+    } else {
+      setMemberOptions([]);
+      setSelectedMembers([]);
     }
   }, [allLabelUser]);
 
@@ -713,6 +698,7 @@ const LineChartByTeamTags = ({
       const labelList: string[] = [];
       const legendList: { name: string; color: string }[] = [];
       const datasets: any[] = [];
+      const totalDurationList: string[] = [];
 
       const durationList = statisticUserTaskDurationsList[0].durations;
       durationList.map((duration, index) => {
@@ -733,6 +719,7 @@ const LineChartByTeamTags = ({
           color: userTaskDuration.user.avatarColor || getRandomColor(),
           name: userTaskDuration.user.fullName,
         });
+        totalDurationList.push(userTaskDuration.totalDuration);
         datasets.push({
           label: userTaskDuration.user.fullName,
           data: userTaskDuration.durations.flatMap((duration, index) => [
@@ -783,22 +770,16 @@ const LineChartByTeamTags = ({
         datasets: datasets,
       });
       setLegendList(legendList);
+      setTotalDuration(totalDurationsForStatistic(totalDurationList));
     } else {
       setLineChartData({
         labels: [],
         datasets: [],
       });
       setLegendList([]);
+      setTotalDuration('00:00:00');
     }
-  }, [
-    statisticUserTaskDurationsList,
-    selectedOrganization,
-    selectedLarge,
-    selectedMedium,
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
-  ]);
+  }, [statisticUserTaskDurationsList]);
 
   // Sort by percent difference
   const sortByPercentDifference = (
@@ -1412,13 +1393,13 @@ const LineChartByTeamTags = ({
                 <p>合計時間</p>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-[34px] leading-none">
-                    {getTotalDuration()?.split(':')[0]}
+                    {totalDuration?.split(':')[0]}
                   </p>
                   <p className="text-[25px] leading-none">時間</p>
                 </div>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-[34px] leading-none">
-                    {getTotalDuration()?.split(':')[1]}
+                    {totalDuration?.split(':')[1]}
                   </p>
                   <p className="text-[25px] leading-none">分</p>
                 </div>
@@ -1445,74 +1426,80 @@ const LineChartByTeamTags = ({
               </div>
             </div>
           </div>
-          <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">
-            表示させるメンバー
-          </p>
-          <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[10px]">
-            {memberOptions?.length > 0 &&
-              memberOptions.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center gap-2 cursor-pointer">
-                  <div className="w-4">
-                    <CustomStatisticUserCheckbox
-                      id={String(member.id)}
-                      isChecked={selectedMembers.includes(member.id)}
-                      color={member.color}
-                      onChange={(state) => {
-                        if (state) {
-                          setSelectedMembers((prev) => {
-                            if (member.id) {
-                              const foundMember = selectedMembers.find(
-                                (memberId) => memberId == member.id,
-                              );
-                              if (!foundMember) {
-                                return [...prev, member.id];
-                              }
-                              return [...prev];
-                            } else {
-                              return memberOptions.map((member) => member.id);
-                            }
-                          });
-                        } else {
-                          setSelectedMembers((prev) => {
-                            if (member.id) {
-                              const foundMember = selectedMembers.find(
-                                (memberId) => memberId == member.id,
-                              );
-                              if (foundMember) {
-                                return [...prev].filter(
-                                  (memberId) =>
-                                    memberId && memberId != member.id,
+          {memberOptions?.length > 0 ? (
+            <>
+              <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">
+                表示させるメンバー
+              </p>
+              <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[10px]">
+                {memberOptions.map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center gap-2 cursor-pointer">
+                    <div className="w-4">
+                      <CustomStatisticUserCheckbox
+                        id={String(member.id)}
+                        isChecked={selectedMembers.includes(member.id)}
+                        color={member.color}
+                        onChange={(state) => {
+                          if (state) {
+                            setSelectedMembers((prev) => {
+                              if (member.id) {
+                                const foundMember = selectedMembers.find(
+                                  (memberId) => memberId == member.id,
                                 );
+                                if (!foundMember) {
+                                  return [...prev, member.id];
+                                }
+                                return [...prev];
+                              } else {
+                                return memberOptions.map((member) => member.id);
                               }
-                              return [...prev];
-                            } else {
-                              return [];
-                            }
-                          });
-                        }
-                      }}
-                    />
-                  </div>
-                  {member.id ? (
-                    <div className="relative top-[2px]">
-                      <CustomUserAvatar
-                        avatarUrl={member?.avatarUrl || ''}
-                        avatarColor={member?.color || ''}
-                        size={30}
+                            });
+                          } else {
+                            setSelectedMembers((prev) => {
+                              if (member.id) {
+                                const foundMember = selectedMembers.find(
+                                  (memberId) => memberId == member.id,
+                                );
+                                if (foundMember) {
+                                  return [...prev].filter(
+                                    (memberId) =>
+                                      memberId && memberId != member.id,
+                                  );
+                                }
+                                return [...prev];
+                              } else {
+                                return [];
+                              }
+                            });
+                          }
+                        }}
                       />
                     </div>
-                  ) : (
-                    <></>
-                  )}
+                    {member.id ? (
+                      <div className="relative top-[2px]">
+                        <CustomUserAvatar
+                          avatarUrl={member?.avatarUrl || ''}
+                          avatarColor={member?.color || ''}
+                          size={30}
+                        />
+                      </div>
+                    ) : (
+                      <></>
+                    )}
 
-                  <span className="break-all max-w-[800px] w-full truncate text-sm">
-                    {member.fullName}
-                  </span>
-                </div>
-              ))}
-          </div>
+                    <span className="break-all max-w-[800px] w-full truncate text-sm">
+                      {member.fullName}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <></>
+          )}
+
           {isLoadingStatisticUserTaskDurationsList ? (
             <RowSkeleton
               numberOfRows={1}

@@ -62,6 +62,7 @@ import {
   convertTimeToDecimal,
   convertToStatisticJapaneseLabels,
   formatDateToYMD,
+  totalDurationsForStatistic,
 } from '@utils/date';
 import {
   createStyledAvatarWithMargin,
@@ -128,10 +129,6 @@ const LineChartByTeam = ({
 }: Props) => {
   // Context
   const {
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
-    totalDurationTask,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -159,6 +156,7 @@ const LineChartByTeam = ({
     id: number;
     name: string;
   } | null>(null);
+
   // Filter options
   const [filter, setFilter] = useState({
     fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -208,6 +206,7 @@ const LineChartByTeam = ({
     labels: [],
     datasets: [],
   });
+  const [totalDuration, setTotalDuration] = useState<string>('00:00:00');
 
   // Collapse statuses
   const [categoryCollapseStatuses, setCategoryCollapseStatuses] = useState<
@@ -349,6 +348,9 @@ const LineChartByTeam = ({
       ];
       setMemberOptions(allMembers);
       setSelectedMembers([...allMembers.map((user) => Number(user.id))]);
+    } else {
+      setMemberOptions([]);
+      setSelectedMembers([]);
     }
   }, [allLabelUser]);
 
@@ -677,6 +679,7 @@ const LineChartByTeam = ({
       const labelList: string[] = [];
       const legendList: { name: string; color: string }[] = [];
       const datasets: any[] = [];
+      const totalDurationList: string[] = [];
 
       const durationList = statisticUserTaskDurationsList[0].durations;
       durationList.map((duration, index) => {
@@ -698,6 +701,7 @@ const LineChartByTeam = ({
           color: userTaskDuration.user.avatarColor || getRandomColor(),
           name: userTaskDuration.user.fullName,
         });
+        totalDurationList.push(userTaskDuration.totalDuration);
         datasets.push({
           label: userTaskDuration.user.fullName,
           data: userTaskDuration.durations.flatMap((duration, index) => [
@@ -748,22 +752,16 @@ const LineChartByTeam = ({
         datasets: datasets,
       });
       setLegendList(legendList);
+      setTotalDuration(totalDurationsForStatistic(totalDurationList));
     } else {
       setLineChartData({
         labels: [],
         datasets: [],
       });
       setLegendList([]);
+      setTotalDuration('00:00:00');
     }
-  }, [
-    statisticUserTaskDurationsList,
-    selectedOrganization,
-    selectedLarge,
-    selectedMedium,
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
-  ]);
+  }, [statisticUserTaskDurationsList]);
 
   // Sort by percent difference
   const sortByPercentDifference = (
@@ -1328,13 +1326,13 @@ const LineChartByTeam = ({
                 <p>合計時間</p>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-[34px] leading-none">
-                    {totalDurationTask?.split(':')[0]}
+                    {totalDuration?.split(':')[0]}
                   </p>
                   <p className="text-[25px] leading-none">時間</p>
                 </div>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-[34px] leading-none">
-                    {totalDurationTask?.split(':')[1]}
+                    {totalDuration?.split(':')[1]}
                   </p>
                   <p className="text-[25px] leading-none">分</p>
                 </div>
@@ -1361,74 +1359,80 @@ const LineChartByTeam = ({
               </div>
             </div>
           </div>
-          <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">
-            表示させるメンバー
-          </p>
-          <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[10px]">
-            {memberOptions?.length > 0 &&
-              memberOptions.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center gap-2 cursor-pointer">
-                  <div className="w-4">
-                    <CustomStatisticUserCheckbox
-                      id={String(member.id)}
-                      isChecked={selectedMembers.includes(member.id)}
-                      color={member.color}
-                      onChange={(state) => {
-                        if (state) {
-                          setSelectedMembers((prev) => {
-                            if (member.id) {
-                              const foundMember = selectedMembers.find(
-                                (memberId) => memberId == member.id,
-                              );
-                              if (!foundMember) {
-                                return [...prev, member.id];
-                              }
-                              return [...prev];
-                            } else {
-                              return memberOptions.map((member) => member.id);
-                            }
-                          });
-                        } else {
-                          setSelectedMembers((prev) => {
-                            if (member.id) {
-                              const foundMember = selectedMembers.find(
-                                (memberId) => memberId == member.id,
-                              );
-                              if (foundMember) {
-                                return [...prev].filter(
-                                  (memberId) =>
-                                    memberId && memberId != member.id,
+          {memberOptions?.length > 0 ? (
+            <>
+              <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">
+                表示させるメンバー
+              </p>
+              <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[10px]">
+                {memberOptions.map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center gap-2 cursor-pointer">
+                    <div className="w-4">
+                      <CustomStatisticUserCheckbox
+                        id={String(member.id)}
+                        isChecked={selectedMembers.includes(member.id)}
+                        color={member.color}
+                        onChange={(state) => {
+                          if (state) {
+                            setSelectedMembers((prev) => {
+                              if (member.id) {
+                                const foundMember = selectedMembers.find(
+                                  (memberId) => memberId == member.id,
                                 );
+                                if (!foundMember) {
+                                  return [...prev, member.id];
+                                }
+                                return [...prev];
+                              } else {
+                                return memberOptions.map((member) => member.id);
                               }
-                              return [...prev];
-                            } else {
-                              return [];
-                            }
-                          });
-                        }
-                      }}
-                    />
-                  </div>
-                  {member.id ? (
-                    <div className="relative top-[2px]">
-                      <CustomUserAvatar
-                        avatarUrl={member?.avatarUrl || ''}
-                        avatarColor={member?.color || ''}
-                        size={30}
+                            });
+                          } else {
+                            setSelectedMembers((prev) => {
+                              if (member.id) {
+                                const foundMember = selectedMembers.find(
+                                  (memberId) => memberId == member.id,
+                                );
+                                if (foundMember) {
+                                  return [...prev].filter(
+                                    (memberId) =>
+                                      memberId && memberId != member.id,
+                                  );
+                                }
+                                return [...prev];
+                              } else {
+                                return [];
+                              }
+                            });
+                          }
+                        }}
                       />
                     </div>
-                  ) : (
-                    <></>
-                  )}
+                    {member.id ? (
+                      <div className="relative top-[2px]">
+                        <CustomUserAvatar
+                          avatarUrl={member?.avatarUrl || ''}
+                          avatarColor={member?.color || ''}
+                          size={30}
+                        />
+                      </div>
+                    ) : (
+                      <></>
+                    )}
 
-                  <span className="break-all max-w-[800px] w-full truncate text-sm">
-                    {member.fullName}
-                  </span>
-                </div>
-              ))}
-          </div>
+                    <span className="break-all max-w-[800px] w-full truncate text-sm">
+                      {member.fullName}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <></>
+          )}
+
           {isLoadingStatisticUserTaskDurationsList ? (
             <RowSkeleton
               numberOfRows={1}
