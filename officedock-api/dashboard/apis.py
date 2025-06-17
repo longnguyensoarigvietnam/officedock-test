@@ -9,7 +9,7 @@ from django.utils.timezone import now
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
@@ -481,22 +481,24 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         schedule = None
         if schedule_id:
             schedule = Schedule.objects.filter(
-                participants_schedules__user=user
-            ).get(id=schedule_id)
+                id=schedule_id,
+                participants_schedules__user=user,
+                deleted_at__isnull=True,
+            ).first()
             # Validate user's event
             if not schedule:
-                raise ValidationError(
+                raise NotFound(
                     {"schedule": [ERROR_MESSAGES["schedule_not_exists"]]}
                 )
         elif task_id:
-            task = Task.objects.filter(people_in_charge_tasks__user=user).get(
-                id=task_id
-            )
+            task = Task.objects.filter(
+                id=task_id,
+                people_in_charge_tasks__user=user,
+                deleted_at__isnull=True,
+            ).first()
             # Validate user's task
             if not task:
-                raise ValidationError(
-                    {"task": [ERROR_MESSAGES["task_not_exists"]]}
-                )
+                raise NotFound({"task": [ERROR_MESSAGES["task_not_exists"]]})
         else:
             # TODO: Create empty task with status 対応中 here
             return
