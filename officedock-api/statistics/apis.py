@@ -357,6 +357,11 @@ class StatisticViewSet(BaseAPIViewSet):
             organization_ids,
             tags=tag_ids,
         )
+        durations = get_list_durations_by_users(
+            durations=durations,
+            large_id=large_category_id,
+            medium_id=medium_category_id,
+        )
         tasks, events = get_list_models(durations)
         filters = build_category_filters(
             large_category_id=large_category_id,
@@ -474,7 +479,6 @@ class StatisticViewSet(BaseAPIViewSet):
                 tag["duration"] = format_duration(tag["duration"])
                 data.append(tag)
             return self.response_ok(data)
-
         category_list = aggregate_durations(
             tasks,
             events,
