@@ -375,6 +375,7 @@ class StatisticViewSet(BaseAPIViewSet):
         ranges = split_ranges(
             from_date, end_date, trim_whitespace(statistic_by)
         )
+        total_duration = get_total_durations(durations)
 
         def _get_durations_by_time(filter_durations, percent, duration):
             """
@@ -441,17 +442,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 tag_ids,
                 durations=durations,
             )
-            # Return empty list durations
             if not tag_list:
-                tag = {
-                    "tag_id": None,
-                    "tag_name": NONE_CATEGORY,
-                    "duration": "00:00:00",
-                }
-                tag["durations"] = _get_durations_by_time(
-                    None, 100, tag["duration"]
-                )
-                data.append(tag)
                 return self.response_ok(data)
 
             # Handle get list duration by ranges
@@ -470,6 +461,12 @@ class StatisticViewSet(BaseAPIViewSet):
                     filter_durations = get_list_durations_by_users(
                         durations=durations, tags=[tag["tag_id"]]
                     )
+                # Calculate the percentage of the total duration
+                percent_per_total_duration = percentage_calculation_of_duration(
+                    total_duration.total_seconds(),
+                    tag["duration"].total_seconds(),
+                )
+                tag["percent"] = min(round(percent_per_total_duration), 100)
                 tag["duration"] = get_total_durations(filter_durations)
                 tag["durations"] = _get_durations_by_time(
                     filter_durations, 100, tag["duration"]
@@ -487,18 +484,7 @@ class StatisticViewSet(BaseAPIViewSet):
             large_category_id=large_category_id,
             medium_category_id=medium_category_id,
         )
-        # Return empty list duration
         if not category_list:
-            category = {
-                "category_id": None,
-                "category_name": NONE_CATEGORY,
-                "category_color": CategoryColors.GRAY.value,
-                "duration": "00:00:00",
-            }
-            category["durations"] = _get_durations_by_time(
-                None, 100, category["duration"]
-            )
-            data.append(category)
             return self.response_ok(data)
 
         # Handle get list duration by ranges
@@ -534,7 +520,12 @@ class StatisticViewSet(BaseAPIViewSet):
                     large_category_id,
                     medium_category_id,
                 )
-
+            # Calculate the percentage of the total duration
+            percent_per_total_duration = percentage_calculation_of_duration(
+                total_duration.total_seconds(),
+                category["duration"].total_seconds(),
+            )
+            category["percent"] = min(round(percent_per_total_duration), 100)
             category["durations"] = _get_durations_by_time(
                 filter_durations, 100, category["duration"]
             )
