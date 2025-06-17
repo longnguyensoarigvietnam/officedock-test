@@ -21,8 +21,8 @@ from calendars.constants import ScheduleCategoryTypes
 from chat.constants import USER_ACTION_GROUP, WebSocketEventType
 from common.constants import STRIP_TAGS
 from organizations.constants import CategoryColors
-from organizations.models import OrganizationsStatisticCategories
-from roles.constants import SelectionResultOptions
+from organizations.models import OrganizationsStatisticCategories, Organization
+from roles.constants import SelectionResultOptions, Screens
 from skills.constants import DEFAULT_TIME
 from stat_data.constants import NONE_CATEGORY
 from users.models import User, RoleDetail
@@ -605,3 +605,34 @@ def compare_list_categories(input_categories, current_categories):
         if a_id != b.get("id") or a_type != b.get("type"):
             return False  # Mismatch or None detected
     return True  # All matched
+
+
+def get_organizations_of_user_by_screen_role(user, screen_name, action):
+    """
+    Handle check current screen role of user and response organizations matching
+    """
+    permission_name = f"{screen_name}_{action}"
+
+    # Retrieve the role permission
+    role_permissions = RoleDetail.objects.filter(
+        role__users=user, permission__name=permission_name
+    ).all()
+
+    if not role_permissions:
+        return None
+
+    org_ids = list(
+        Organization.all_objects.filter(users=user).values_list("id", flat=True)
+    )
+    if screen_name != Screens.ORGANIZATION_HIERARCHY.value:
+        # Handle get hierarchy
+        def _get_children(instance):
+            children = instance.organizations.all()
+            for child in children:
+                org_ids.append(child.id)
+                _get_children(child)
+
+        _get_children(user)
+        org_ids = set(org_ids)
+
+    return Organization.all_objects.filter(id__in=org_ids).all()

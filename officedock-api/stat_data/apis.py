@@ -291,21 +291,23 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         category_list = list(category_dict.values())
         total_duration = time_str_to_timedelta(format_duration(total_duration))
-        percent = 100
-        for cat in category_list:
+        percent = 0
+        for index, cat in enumerate(category_list):
+            is_last_element = index == len(category_list) - 1
             category_duration = format_duration(cat["duration"]) or timedelta(0)
             category_name = cat["category_name"]
             category_color = cat["category_color"]
             category_id = cat["category_id"]
-            percent_per_total_duration = percentage_calculation_of_duration(
+            # Calculate the percentage of the total duration
+            (
+                percent_per_total_duration,
+                percent,
+            ) = percentage_calculation_of_duration(
                 total_duration.total_seconds(),
                 time_str_to_timedelta(category_duration).total_seconds(),
+                percent,
+                is_last_element,
             )
-
-            if round(percent_per_total_duration) <= percent:
-                percent -= round(percent_per_total_duration)
-            else:
-                percent_per_total_duration = percent
 
             data["categories"].append(
                 {
@@ -313,9 +315,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     "category_name": category_name,
                     "category_color": category_color,
                     "duration": category_duration,
-                    "percent": round(percent_per_total_duration)
-                    if percent_per_total_duration < 100
-                    else 100,
+                    "percent": percent_per_total_duration,
                 }
             )
 
@@ -612,9 +612,10 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         sub_duration = timedelta(0)
         total_duration = time_str_to_timedelta(format_duration(total_duration))
-        percent = 100
+        percent = 0
         for category in list(organization_dict.values()):
-            for cat in list(category.values()):
+            for index, cat in category.items():
+                is_last_element = index == len(list(category.values())) - 1
                 category_duration = format_duration(
                     cat["duration"]
                 ) or timedelta(0)
@@ -626,15 +627,15 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 if cate_organization_id != main_organization["id"]:
                     sub_duration += time_str_to_timedelta(category_duration)
 
-                percent_per_total_duration = percentage_calculation_of_duration(
+                (
+                    percent_per_total_duration,
+                    percent,
+                ) = percentage_calculation_of_duration(
                     total_duration.total_seconds(),
                     time_str_to_timedelta(category_duration).total_seconds(),
+                    percent,
+                    is_last_element,
                 )
-
-                if round(percent_per_total_duration) <= percent:
-                    percent -= round(percent_per_total_duration)
-                else:
-                    percent_per_total_duration = percent
 
                 data["categories"].append(
                     {
@@ -642,21 +643,19 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                         "category_name": category_name,
                         "category_color": category_color,
                         "duration": category_duration,
-                        "percent": max(
-                            0, min(round(percent_per_total_duration), 100)
-                        ),
+                        "percent": percent_per_total_duration,
                         "is_of_main_organization": cate_organization_id
                         == main_organization["id"]
                         if cate_organization_id
                         else False,
                     }
                 )
-        sub_percent_duration = percentage_calculation_of_duration(
+        sub_percent, _ = percentage_calculation_of_duration(
             total_duration.total_seconds(), sub_duration.total_seconds()
         )
         data["sub_organization"] = {
             "duration": format_duration(sub_duration),
-            "percent": max(0, min(round(sub_percent_duration), 100)),
+            "percent": sub_percent,
         }
 
         date = (
