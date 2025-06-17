@@ -124,19 +124,24 @@ const PercentageTeamTags = ({
     const categories = dataCategories.filter((item) => item.percent > 0);
     const mergedItems: StatisticCategoryInfo[] = [];
     const mergedCategory: StatisticCategoryInfo = {
+      tagName: 'その他',
       categoryName: 'その他',
       categoryColor: colorData || getRandomColor(),
       percent: 0,
       duration: '',
       tasks: [] as DataTaskModalStatisticType[],
       users: [] as UserListStatisticType[],
-
+      tagId: -1,
       categoryId: -1,
     };
 
     const filteredCategories = categories.filter((item) => {
-      if (item.percent < 0) {
-        mergedItems.push({ ...item });
+      if (item.percent < 10) {
+        mergedItems.push({
+          ...item,
+          categoryColor:
+            (colorData && lightenColor(colorData, item.percent)) || '',
+        });
         mergedCategory.percent += item.percent;
         mergedCategory.duration += item.duration;
         mergedCategory.categoryColor =
@@ -155,7 +160,7 @@ const PercentageTeamTags = ({
     }
 
     // Get list percent
-    const listPercent = categories.map((percent) => percent.percent);
+    const listPercent = filteredCategories.map((percent) => percent.percent);
 
     // Get list color
     const listColor = filteredCategories.map(
@@ -164,13 +169,13 @@ const PercentageTeamTags = ({
         getRandomColor(),
     );
     // Get list label
-    const listLabel = categories.map((label) => label.tagName || '');
+    const listLabel = filteredCategories.map((label) => label.tagName || '');
     // Get list value
-    const listValueActualChart = categories.map((item) =>
+    const listValueActualChart = filteredCategories.map((item) =>
       convertToJapaneseTime(item.duration),
     );
     // Get list options
-    const listDataOptions = categories.map(
+    const listDataOptions = filteredCategories.map(
       (item) =>
         item.users?.map((user) => ({
           label: user.user.fullName,
@@ -179,10 +184,10 @@ const PercentageTeamTags = ({
         })) || [],
     );
     // Get list id
-    const listDataIds = categories.map((item) => item.tagId as number);
+    const listDataIds = filteredCategories.map((item) => item.tagId as number);
     // Get list duration
     // Get list duration
-    const listDuration = categories.map(
+    const listDuration = filteredCategories.map(
       (item) => item.users?.map((user) => user.duration) || [],
     );
 
@@ -203,6 +208,7 @@ const PercentageTeamTags = ({
       if (statisticTagsListTeam.largeCategories) {
         const largeChartData = processChartData(
           statisticTagsListTeam.largeCategories,
+          '#2E9267',
         );
         setDataChartLarge(largeChartData);
       } else {

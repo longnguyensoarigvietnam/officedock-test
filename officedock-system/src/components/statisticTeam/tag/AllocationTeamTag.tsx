@@ -13,7 +13,7 @@ import {
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
-import { formatTimeToJapanese } from '@utils/date';
+import { formatTimeToJapanese, sumDurationsChart } from '@utils/date';
 import { lightenColor } from '@utils';
 
 import { EventWorkCategory } from '@constants/enums';
@@ -77,13 +77,16 @@ export function transformStatisticCategoryInfoToProgressData({
     (sum, item) => sum + item.value,
     0,
   );
+  const durations = mergedItems.map((item) => item.duration);
+
+  const totalDuration = sumDurationsChart(durations);
 
   const mergedItem: ProgressDataType = {
     id: -1,
     label: mergeLabel,
     value: totalMergedPercent,
     color: mergeColor,
-    duration: '',
+    duration: totalDuration,
     optionData: mergedItems.flatMap((item) => item.optionData),
     mergedItems,
   };

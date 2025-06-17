@@ -66,7 +66,7 @@ const ModalCustomTooltip = ({
                         }}
                         className="w-3 h-3 rounded-sm"></div>
                       <span className="font-bold max-w-[205px] line-clamp-3">
-                        {item.categoryName}
+                        {item.categoryName || item.tagName}
                       </span>
                     </div>
                     <div className="flex gap-2 text-base font-normal">

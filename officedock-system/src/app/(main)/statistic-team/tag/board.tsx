@@ -18,6 +18,7 @@ import StackedAreaTeamTagChart from '@components/statisticTeam/tag/StackedAreaTe
 
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
+import { TEAM_CALENDAR_ORGANIZATION } from '@constants';
 
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useStatisticTagsTeam from '@hooks/useStatisticTagsTeam';
@@ -305,7 +306,8 @@ const StatisticTeamTagBoard = () => {
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === data.value,
     );
-
+    // If organization is a calendar organization then return here
+    if (selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION) return;
     if (largeCategory) {
       const mediumCategories = largeCategory.MEDIUM.map((medium) => ({
         value: medium.MEDIUM?.id || '',
@@ -320,6 +322,8 @@ const StatisticTeamTagBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
+    // If organization is a calendar organization then return here
+    if (selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION) return;
     if (data.value !== selectedMedium?.value) {
       setIsLoadingMedium(true);
       if (isCheckCompare) {

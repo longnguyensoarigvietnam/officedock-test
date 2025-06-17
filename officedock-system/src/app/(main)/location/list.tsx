@@ -176,6 +176,8 @@ const ListLocation = () => {
           description: SUCCESS_DELETE_MESSAGE,
         });
         setOpenConfirmDeleteModal(false);
+        setIsCreating(false);
+        setIsEditing(false);
 
         setSelectedLocationToDelete(null);
       },
@@ -186,6 +188,8 @@ const ListLocation = () => {
         });
       },
       onSettled: () => {
+        setIsCreating(false);
+        setIsEditing(false);
         setIsLoading(false);
       },
     },

@@ -114,7 +114,7 @@ const PercentageBarCompareTeam = ({
                                   }}
                                   className="w-3 h-3"></div>
                                 <span className="truncate max-w-[180px] font-bold text-base text-black">
-                                  {mergeItem.categoryName}
+                                  {mergeItem.categoryName || mergeItem.tagName}
                                 </span>
                               </div>
                               <div className="flex items-center gap-[10px] font-normal text-base mt-4 px-5">
@@ -129,31 +129,36 @@ const PercentageBarCompareTeam = ({
                               <div className="max-h-[250px] overflow-y-auto px-5">
                                 <ul className="mt-2">
                                   {mergeItem.users &&
-                                    mergeItem.users.map((item, index) => {
-                                      return (
-                                        <li
-                                          key={index}
-                                          className="flex items-center justify-between mb-2">
-                                          <div className="flex items-center gap-2">
-                                            <div>
-                                              <CustomUserAvatar
-                                                avatarUrl={
-                                                  item.user?.avatar || ''
-                                                }
-                                                avatarColor={
-                                                  item.user?.avatarColor || ''
-                                                }
-                                                size={30}
-                                              />
+                                    mergeItem.users.map(
+                                      (itemMer, indexMerge) => {
+                                        return (
+                                          <li
+                                            key={indexMerge}
+                                            className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                              <div>
+                                                <CustomUserAvatar
+                                                  avatarUrl={
+                                                    itemMer.user?.avatar || ''
+                                                  }
+                                                  avatarColor={
+                                                    itemMer.user?.avatarColor ||
+                                                    ''
+                                                  }
+                                                  size={30}
+                                                />
+                                              </div>
+                                              <span className="inline-block max-w-[180px] text-black overflow-hidden whitespace-nowrap text-ellipsis">
+                                                {itemMer.user.fullName}
+                                              </span>
                                             </div>
-                                            <span className="inline-block w-20 text-black overflow-hidden whitespace-nowrap text-ellipsis">
-                                              {item.user.fullName}
+                                            <span className="text-black">
+                                              {itemMer.percent}%
                                             </span>
-                                          </div>
-                                          <span>{item.percent}%</span>
-                                        </li>
-                                      );
-                                    })}
+                                          </li>
+                                        );
+                                      },
+                                    )}
                                 </ul>
                               </div>
 
@@ -203,16 +208,19 @@ const PercentageBarCompareTeam = ({
                             {item.optionData.map((item, index) => (
                               <li
                                 key={index}
-                                className="break-all text-start flex items-center gap-2 line-clamp-3 text-[#77858F] text-sm font-normal mb-2">
-                                <CustomUserAvatar
-                                  avatarUrl={item?.avatarUrl || ''}
-                                  avatarColor={item?.avatarColor || ''}
-                                  size={30}
-                                />
-                                <span className="relative top-[-3px]">
-                                  {' '}
-                                  {item.label}
-                                </span>
+                                className="break-all text-start flex items-center justify-between gap-2 line-clamp-3 text-[#77858F] text-sm font-normal mb-2">
+                                <div className="flex items-center w-fit">
+                                  <CustomUserAvatar
+                                    avatarUrl={item?.avatarUrl || ''}
+                                    avatarColor={item?.avatarColor || ''}
+                                    size={30}
+                                  />
+                                  <span className="relative max-w-[180px] truncate top-[-3px]">
+                                    {' '}
+                                    {item.label}
+                                  </span>
+                                </div>
+                                <span>{item.percent}%</span>
                               </li>
                             ))}
                           </ul>
@@ -314,11 +322,13 @@ const PercentageBarCompareTeam = ({
                                                 size={30}
                                               />
                                             </div>
-                                            <span className="inline-block text-black w-20 overflow-hidden whitespace-nowrap text-ellipsis">
+                                            <span className="inline-block text-black max-w-[180px] overflow-hidden whitespace-nowrap text-ellipsis">
                                               {item.user.fullName}
                                             </span>
                                           </div>
-                                          <span>{item.percent}%</span>
+                                          <span className="text-black">
+                                            {item.percent}%
+                                          </span>
                                         </li>
                                       );
                                     })}
@@ -373,16 +383,19 @@ const PercentageBarCompareTeam = ({
                             {item.optionData.map((item, index) => (
                               <li
                                 key={index}
-                                className="break-all text-start flex items-center gap-2 line-clamp-3 text-[#77858F] text-sm font-normal">
-                                <CustomUserAvatar
-                                  avatarUrl={item?.avatarUrl || ''}
-                                  avatarColor={item?.avatarColor || ''}
-                                  size={30}
-                                />
-                                <span className="relative top-[-3px]">
-                                  {' '}
-                                  {item.label}
-                                </span>
+                                className="break-all text-start flex items-center justify-between gap-2 line-clamp-3 text-[#77858F] text-sm font-normal">
+                                <div className="flex items-center w-fit">
+                                  <CustomUserAvatar
+                                    avatarUrl={item?.avatarUrl || ''}
+                                    avatarColor={item?.avatarColor || ''}
+                                    size={30}
+                                  />
+                                  <span className="relative max-w-[180px] truncate top-[-3px]">
+                                    {' '}
+                                    {item.label}
+                                  </span>
+                                </div>
+                                <span>{item.percent}%</span>
                               </li>
                             ))}
                           </ul>

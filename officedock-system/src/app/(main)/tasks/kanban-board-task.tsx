@@ -181,6 +181,8 @@ const KanbanBoardTask = () => {
     selectedOptionZoom,
     displayHeaderDateStart,
     displayHeaderDateEnd,
+    taskAddEmpty,
+    setTaskAddEmpty,
     setExtendByStatus,
     setSelectedOptionZoom,
     setStatusTaskSelected,
@@ -425,6 +427,41 @@ const KanbanBoardTask = () => {
       setDataItemResizeSchedule(undefined);
     }
   }, [dataItemResizeSchedule, setDataItemResizeSchedule]);
+
+  useEffect(() => {
+    if (taskAddEmpty) {
+      handleAddOrUpdateItem(
+        {
+          ...taskAddEmpty,
+          type: ItemStartType.TASK,
+        },
+        ActionTask.CREATE,
+        '',
+      );
+
+      const matchedPageData = numberPagesData.find(
+        (pageData) => `${pageData.id}` === `${taskAddEmpty.status?.id}`,
+      );
+      let isLastItemPinned = false;
+      const column = columnsKanbanData?.[taskAddEmpty.status?.id as number];
+      if (column && column.items.length > 0) {
+        const lastItem = column.items[column.items.length - 1];
+        isLastItemPinned = !!lastItem.pinAt;
+      }
+      if (actionType !== ActionTask.COPY) {
+        if (matchedPageData && matchedPageData.hasMores && isLastItemPinned) {
+          setNumberPagesData((prevNumberPages) =>
+            prevNumberPages.map((item) =>
+              `${item.id}` === `${taskAddEmpty.status?.id}`
+                ? { ...item, count: item.count + 1 }
+                : item,
+            ),
+          );
+        }
+      }
+    }
+    setTaskAddEmpty(null);
+  }, [taskAddEmpty]);
 
   useEffect(() => {
     if (frequentlyTasksList) {

@@ -16,6 +16,7 @@ import {
   ItemStartType,
   PermissionsSystem,
   SocketActions,
+  StatusValueTask,
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ERROR_TIME_START_MESSAGE } from '@constants/message';
@@ -27,13 +28,15 @@ import useTaskDurationDetail from '@hooks/useTaskDurationDetail';
 import useDataHeaderTaskList from '@hooks/useDataHeaderTask';
 
 import { OptionDropdownType } from '@interfaces/common';
-import { TaskDuration } from '@interfaces/task';
+import { Task, TaskDuration, TaskRequest } from '@interfaces/task';
 import { WebSocketMessageDataOverTime } from '@interfaces/chat';
 import { TaskContext } from '@providers/TaskProvider';
 import { hasPermissionInArray } from '@utils';
 import api from '@base/api';
 import {
+  convertDateStringWithFormat,
   convertToCurrentTimezone,
+  formatDateServer,
   formatQueryStartDateForCalendar,
   formatTimeTask,
 } from '@utils/date';
@@ -87,6 +90,9 @@ const TaskPageDataHeader = () => {
     setDataTaskEditKanban,
     setTaskSelectedToStart,
     setDataActualAddSchedule,
+    displayHeaderDateStart,
+    displayHeaderDateEnd,
+    setTaskAddEmpty,
   } = useContext(TaskContext);
 
   const [optionsTaskMe, setOptionsTaskMe] = useState<OptionDropdownType[]>([]);
@@ -471,6 +477,62 @@ const TaskPageDataHeader = () => {
     },
   );
 
+  //  Handle call api create task
+  const handleCreateTask = async (data: TaskRequest) => {
+    return await api.post(apiRouters.CREATE_TASK, data);
+  };
+  // Handle create task and response
+  const { mutate: createTask } = useMutation(
+    'postCreateUser',
+    handleCreateTask,
+    {
+      onSuccess: async ({ data }: { data: Task }) => {
+        setTaskAddEmpty(data);
+        setTaskSelectedToStart({
+          title: data.title,
+          id: data.id,
+          type: ItemStartType.TASK,
+        });
+        setOptionsTaskMe([
+          ...optionsTaskMe,
+          {
+            label: data.title,
+            value: data.id,
+            type: ItemStartType.TASK,
+          },
+        ]);
+
+        calculateDurationTask({
+          id: String(data.id),
+          type: ItemStartType.TASK,
+        });
+      },
+      onError: () => {},
+      onSettled: () => {},
+    },
+  );
+
+  const handleStartEmptyTask = () => {
+    createTask({
+      title: convertDateStringWithFormat(new Date()),
+      statusId: StatusValueTask.IN_PROGRESS,
+      priority: '',
+      deadline: null,
+      description: '',
+      tagIds: [],
+      isImportant: false,
+      sendToChat: false,
+      organizationId: null,
+      task_schedule_from_date: formatDateServer(displayHeaderDateStart),
+      task_schedule_end_date: formatDateServer(displayHeaderDateEnd),
+      remindCountdown: null,
+      remindType: null,
+      repeatType: null,
+      isTeamTask: false,
+      peopleInChargeIds: [{ peopleInChargeId: session?.user.id as number }],
+    });
+  };
+
   const timeTaskSelect = dataTaskHeaderList?.cards.find(
     (item) =>
       item.id === parseInt(String(taskSelected.value).replace('event', '')) &&
@@ -511,7 +573,7 @@ const TaskPageDataHeader = () => {
                   }}
                 />
               </div>
-              {taskSelected.value && statusTaskSelected && (
+              {taskSelected.value && statusTaskSelected ? (
                 <DynamicTooltip
                   content={
                     statusTaskSelected?.isStart && taskSelected.value
@@ -565,6 +627,15 @@ const TaskPageDataHeader = () => {
                     </div>
                   </div>
                 </DynamicTooltip>
+              ) : (
+                <div className="mt-[4px] ml-[4px]">
+                  <ImageRound
+                    src={`/icons/play.svg`}
+                    name="Start task day"
+                    className={`!w-9 !h-9 hover:cursor-pointer`}
+                    onClick={handleStartEmptyTask}
+                  />
+                </div>
               )}
 
               {taskSelected.value &&

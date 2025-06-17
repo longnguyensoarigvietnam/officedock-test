@@ -4,12 +4,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 
-import { URL_REGEX } from '@constants/regex';
 import { apiRouters } from '@constants/routers';
 import { ERROR_CREATE_MESSAGE } from '@constants/message';
 
 import api from '@base/api';
 import { useToast } from '@providers/ToastProvider';
+import { changeTextAreaFormatLink, convertLinksToHTML } from '@utils';
 
 interface TabMemoChatProps {
   chatRoomCode: string;
@@ -21,16 +21,9 @@ const TabMemoChat = ({ chatRoomCode, memoDetail }: TabMemoChatProps) => {
   const { showToast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
 
-  const formatLinks = (text: string) => {
-    return text.replace(URL_REGEX, (url) => {
-      return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: blue; text-decoration: underline;">${url}</a>`;
-    });
-  };
-
   useEffect(() => {
-    if (editorRef.current && memoDetail) {
-      const html = formatLinks(memoDetail);
-      editorRef.current.innerHTML = html;
+    if (memoDetail && editorRef.current) {
+      editorRef.current.innerHTML = convertLinksToHTML(memoDetail);
     }
   }, [memoDetail]);
 
@@ -59,29 +52,10 @@ const TabMemoChat = ({ chatRoomCode, memoDetail }: TabMemoChatProps) => {
   );
 
   const handleInput = () => {
-    const div = editorRef.current;
-    if (!div) return;
-
-    let html = div.innerText;
-
-    // Replace URLs with clickable links
-    html = html.replace(URL_REGEX, (url) => {
-      return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: blue; text-decoration: underline;">${url}</a>`;
+    changeTextAreaFormatLink({
+      editorRef,
+      onChange: () => {},
     });
-
-    // Update HTML content
-    div.innerHTML = html;
-    placeCaretAtEnd(div);
-  };
-
-  const placeCaretAtEnd = (el: HTMLElement) => {
-    el.focus();
-    const range = document.createRange();
-    range.selectNodeContents(el);
-    range.collapse(false);
-    const sel = window.getSelection();
-    sel?.removeAllRanges();
-    sel?.addRange(range);
   };
 
   // Prevent browser from capturing links inside contentEditable
@@ -106,7 +80,7 @@ const TabMemoChat = ({ chatRoomCode, memoDetail }: TabMemoChatProps) => {
   };
   const handleCancel = () => {
     if (editorRef.current && memoDetail) {
-      const html = formatLinks(memoDetail);
+      const html = convertLinksToHTML(memoDetail);
       editorRef.current.innerHTML = html;
     }
   };

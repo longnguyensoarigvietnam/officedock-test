@@ -13,17 +13,18 @@ import AllocationTag from '@components/statistic/tag/AllocationTag';
 import AllocationTagCompare from '@components/statistic/tag/compare/AllocationTagCompare';
 import LineChart from '@components/statistic/tag/LineChart';
 import LineChartCompare from '@components/statistic/tag/compare/LineChartCompare';
+import StackedAreaChart from '@components/statistic/tag/StackedAreaChart';
 
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 import useStatisticTagsCompare from '@hooks/useStatisticTagsCompare';
 import useStatisticsTags from '@hooks/useStatisticTags';
 
+import { TEAM_CALENDAR_ORGANIZATION } from '@constants';
 import { pageRouters } from '@constants/routers';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
-import StackedAreaChart from '@components/statistic/tag/StackedAreaChart';
 
 const StatisticTagBoard = () => {
   const {
@@ -223,6 +224,8 @@ const StatisticTagBoard = () => {
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === data.value,
     );
+    // If organization is a calendar organization then return here
+    if (selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION) return;
 
     if (largeCategory) {
       const mediumCategories = largeCategory.MEDIUM.map((medium) => ({
@@ -238,6 +241,8 @@ const StatisticTagBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
+    // If organization is a calendar organization then return here
+    if (selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION) return;
     if (data.value !== selectedMedium?.value) {
       setIsLoadingMedium(true);
       if (isCheckCompare) {

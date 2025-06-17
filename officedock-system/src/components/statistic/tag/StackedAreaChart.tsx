@@ -221,13 +221,28 @@ const StackedAreaChart = ({
       }
     }
 
-    const chartData = Array.from(categoryMap.entries()).map(([name, data]) => {
-      const firstValue = data.at(0) ?? 0;
-      return {
-        name,
-        data: [firstValue, ...data],
-      };
-    });
+    let chartData: { name: string; data: number[] }[] = [];
+
+    if (categoryMap.size === 0) {
+      chartData = [
+        {
+          name: '',
+          data: Array(transformedDates.length).fill(0),
+        },
+      ];
+    } else {
+      chartData = Array.from(categoryMap.entries()).map(([name, data]) => {
+        const isEmpty = data.length === 0;
+        const validData = isEmpty
+          ? Array(transformedDates.length - 1).fill(0)
+          : [data.at(0) ?? 0, ...data];
+
+        return {
+          name,
+          data: validData,
+        };
+      });
+    }
 
     setDataChart(chartData);
 
@@ -420,10 +435,13 @@ const StackedAreaChart = ({
       borderColor: 'transparent',
     };
   });
+
+  const MAX_LABEL_LENGTH =
+    timeRange?.length > 16 ? 5 : timeRange?.length > 12 ? 6 : 1000;
   const options = {
     chart: {
       type: 'area',
-      stacked: false,
+      stacked: true,
       zoom: {
         enabled: false, // ❌ OFF zoom
       },
@@ -516,6 +534,12 @@ const StackedAreaChart = ({
         style: {
           fontSize: '14px',
           colors: '#939FA7',
+        },
+        formatter: (val: number) => {
+          const label = String(val);
+          return label.length > MAX_LABEL_LENGTH
+            ? label.slice(0, MAX_LABEL_LENGTH) + '…'
+            : label;
         },
       },
     },
@@ -1055,7 +1079,7 @@ const StackedAreaChart = ({
 
                   const dataDetail =
                     statisticTagPercentChartList &&
-                    statisticTagPercentChartList[idx + 1];
+                    statisticTagPercentChartList[idx];
                   const dataDetailDate =
                     statisticTagPercentChartList &&
                     statisticTagPercentChartList[idx];
@@ -1082,7 +1106,7 @@ const StackedAreaChart = ({
                           style={{
                             boxShadow: '0px 2px 8px 0px #0000001A',
                           }}
-                          className={`bg-white absolute p-5 top-1/2 left-1/2 hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                          className={`bg-white absolute p-5 top-1/2 left-0 hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
                           <p className="text-sm font-normal text-[#77858F] mb-1 text-start w-full block">
                             {convertToStatisticJapaneseLabels(
                               dataDetailDate?.startDate as string,

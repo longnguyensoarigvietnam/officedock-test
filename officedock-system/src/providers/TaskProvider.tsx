@@ -9,6 +9,7 @@ import {
 } from 'react';
 
 import {
+  Task,
   TaskActualCalculationType,
   TaskDuration,
   TaskFieldActionStart,
@@ -131,6 +132,8 @@ interface ContextValue {
   setDisplayHeaderDayEnd: Dispatch<SetStateAction<Date>>;
   isInteracting: boolean;
   setIsInteracting: Dispatch<SetStateAction<boolean>>;
+  taskAddEmpty: Task | null;
+  setTaskAddEmpty: Dispatch<SetStateAction<Task | null>>;
 }
 
 const defaultValue: ContextValue = {
@@ -245,6 +248,8 @@ const defaultValue: ContextValue = {
   setDisplayHeaderDayEnd: () => {},
   isInteracting: false,
   setIsInteracting: () => {},
+  taskAddEmpty: null,
+  setTaskAddEmpty: () => {},
 };
 
 export const TaskContext = createContext<ContextValue>(defaultValue);
@@ -355,6 +360,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const [dataActualAddSchedule, setDataActualAddSchedule] =
     useState<TaskActualCalculationType>();
 
+  const [taskAddEmpty, setTaskAddEmpty] = useState<Task | null>(null);
+
   const [idTaskEditSelected, setIdTaskEditSelected] = useState<string>('');
   const [showEditTaskModal, setShowEditTaskModal] = useState<boolean>(false);
   const [orderingRequest, setOrderingRequest] = useState<string>('');
@@ -459,6 +466,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     setDisplayHeaderDayEnd,
     isInteracting,
     setIsInteracting,
+    taskAddEmpty,
+    setTaskAddEmpty,
   };
 
   return (
