@@ -433,7 +433,7 @@ export const getPermissionOptionDropdown = (
       PermissionType.NOT_ALLOWED,
     ]);
   }
-  if ([ScreenName.ROLE].includes(screen)) {
+  if ([ScreenName.ROLE, ScreenName.CALENDAR_MANAGEMENT].includes(screen)) {
     return includePermissions([
       PermissionType.EDITABLE,
       PermissionType.NOT_ALLOWED,

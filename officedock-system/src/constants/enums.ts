@@ -249,73 +249,94 @@ export enum SubmitLevelStatus {
 
 export enum PermissionsSystem {
   VIEW_ALL = 'view',
+
   // Role Permissions
   ROLE_VIEW = 'role_view',
   ROLE_ADD = 'role_add',
   ROLE_UPDATE = 'role_update',
   ROLE_DELETE = 'role_delete',
+
   // My Task Permissions
   MY_TASK_VIEW = 'my_task_view',
   MY_TASK_ADD = 'my_task_add',
   MY_TASK_UPDATE = 'my_task_update',
   MY_TASK_DELETE = 'my_task_delete',
+
   // Calendar Permissions
   CALENDAR_VIEW = 'calendar_view',
   CALENDAR_ADD = 'calendar_add',
   CALENDAR_UPDATE = 'calendar_update',
   CALENDAR_DELETE = 'calendar_delete',
+
+  // Calendar Permissions
+  CALENDAR_MANAGEMENT_VIEW = 'calendar_management_view',
+  CALENDAR_MANAGEMENT_ADD = 'calendar_management_add',
+  CALENDAR_MANAGEMENT_UPDATE = 'calendar_management_update',
+  CALENDAR_MANAGEMENT_DELETE = 'calendar_management_delete',
+
   // Chat Permissions
   CHAT_VIEW = 'chat_view',
   CHAT_ADD = 'chat_add',
   CHAT_UPDATE = 'chat_update',
   CHAT_DELETE = 'chat_delete',
+
   // User Permissions
   USER_VIEW = 'user_view',
   USER_ADD = 'user_add',
   USER_UPDATE = 'user_update',
   USER_DELETE = 'user_delete',
+
   // Organization Permissions
   ORGANIZATION_VIEW = 'organization_view',
   ORGANIZATION_ADD = 'organization_add',
   ORGANIZATION_UPDATE = 'organization_update',
   ORGANIZATION_DELETE = 'organization_delete',
+
   // Category Permissions
   CATEGORY_VIEW = 'category_view',
   CATEGORY_ADD = 'category_add',
   CATEGORY_UPDATE = 'category_update',
   CATEGORY_DELETE = 'category_delete',
+
   // Category Hierarchy Permissions
   CATEGORY_HIERARCHY_VIEW = 'category_hierarchy_view',
   CATEGORY_HIERARCHY_ADD = 'category_hierarchy_add',
   CATEGORY_HIERARCHY_UPDATE = 'category_hierarchy_update',
   CATEGORY_HIERARCHY_DELETE = 'category_hierarchy_delete',
+
   // Skill Permissions
   SKILL_VIEW = 'skill_view',
   SKILL_ADD = 'skill_add',
   SKILL_UPDATE = 'skill_update',
   SKILL_DELETE = 'skill_delete',
+
   // Skill Map Permissions
   SKILL_MAP_VIEW = 'skill_map_view',
   SKILL_MAP_ADD = 'skill_map_add',
   SKILL_MAP_UPDATE = 'skill_map_update',
   SKILL_MAP_DELETE = 'skill_map_delete',
+
   // Organization Skill Permissions
   ORGANIZATION_SKILL_VIEW = 'organization_skill_view',
   ORGANIZATION_SKILL_ADD = 'organization_skill_add',
   ORGANIZATION_SKILL_UPDATE = 'organization_skill_update',
   ORGANIZATION_SKILL_DELETE = 'organization_skill_delete',
+
   // Tag Permissions
   TAG_VIEW = 'tag_view',
   TAG_ADD = 'tag_add',
   TAG_UPDATE = 'tag_update',
   TAG_DELETE = 'tag_delete',
+
   // Statistic Permissions
   STATISTIC_VIEW = 'statistic_view',
   STATISTIC_ADD = 'statistic_add',
   STATISTIC_UPDATE = 'statistic_update',
+
   // Submit Level Permissions
   SUBMIT_LEVEL_VIEW = 'submit_level_view',
   SUBMIT_LEVEL_UPDATE = 'submit_level_update',
+
   // Teamdock Permissions
   TEAMDOCK_VIEW = 'teamdock_view',
   TEAMDOCK_ADD = 'teamdock_add',
@@ -381,6 +402,7 @@ export enum ScreenName {
   ORGANIZATION_HIERARCHY = 'organizationHierarchy',
   TEAM_DOCK = 'teamdock',
   TEAM_DAILY_REPORT = 'teamDailyReport',
+  CALENDAR_MANAGEMENT = 'calendarManagement',
 }
 
 export enum PermissionType {

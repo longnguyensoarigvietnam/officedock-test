@@ -702,9 +702,10 @@ const ActionsEventModal = ({
           .filter(
             (participant) =>
               participant.type == EventParticipantType.ORGANIZATION &&
-              participant.userIds?.includes(Number(member.id)),
+              participant.userIds?.includes(memberId),
           )
-          .map((org) => org.id as number);
+          .map((org) => Number(String(org.id).split('-')[1]));
+
         updatedOrganizationList = updatedOrganizationList.filter(
           (org) => !belongedOrganizations.includes(org),
         );
@@ -2077,7 +2078,8 @@ const ActionsEventModal = ({
                               Number(session?.user.id),
                             ),
                         )
-                        .map((org) => org.id as number);
+                        .map((org) => Number(String(org.id).split('-')[1]));
+
                       updatedOrganizationList = updatedOrganizationList.filter(
                         (org) => !belongedOrganizations.includes(org),
                       );

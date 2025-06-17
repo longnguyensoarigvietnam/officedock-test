@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { AxiosError } from 'axios';
 import { useMutation } from 'react-query';
 import { useParams, useRouter } from 'next/navigation';
@@ -37,17 +37,29 @@ interface rowDataType {
   actions: PermissionType | string;
 }
 const EditRoleForm = () => {
+  // Role input and error
   const [roleName, setRoleName] = useState<string>('');
-  const [isSubmit, setIsSubmit] = useState(false);
   const [error, setError] = useState('');
   const [rows, setRows] = useState<rowDataType[]>([]);
 
+  // Ref
+  const isEditingRef = useRef(false);
+
+  // Router
   const router = useRouter();
+
+  // Toasts
   const { showToast } = useToast();
-  const { setIsLoading } = useContext(LoadingContext);
-  const params = useParams<{ id: string }>();
-  const { dataRoleDetail, setDataRoleDetail } = useContext(RoleStateContext);
   const showErrorToast = useErrorToast();
+
+  // Loading
+  const { setIsLoading } = useContext(LoadingContext);
+
+  // Params
+  const params = useParams<{ id: string }>();
+
+  // Detail
+  const { dataRoleDetail, setDataRoleDetail } = useContext(RoleStateContext);
 
   const { roleDetail } = useRoleDetail({
     roleId: Number(params.id),
@@ -81,10 +93,10 @@ const EditRoleForm = () => {
   }, [setDataRoleDetail, roleDetail]);
 
   useEffect(() => {
-    if (!isSubmit) {
+    if (!isEditingRef.current) {
       setIsLoading(!dataRoleDetail);
     }
-  }, [dataRoleDetail, isSubmit, setIsLoading]);
+  }, [dataRoleDetail, setIsLoading]);
 
   useEffect(() => {
     if (dataRoleDetail) {
@@ -138,16 +150,20 @@ const EditRoleForm = () => {
     'postEditRole',
     handleEditRole,
     {
+      onMutate: () => {
+        isEditingRef.current = true;
+      },
       onSuccess: async () => {
         showToast({
           variant: 'success',
           description: SUCCESS_SAVE_MESSAGE,
         });
         router.push(pageRouters.ROLES_MANAGEMENT.href);
+        isEditingRef.current = false;
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
-        setIsSubmit(false);
+        isEditingRef.current = false;
       },
       onSettled: () => {
         setIsLoading(false);
@@ -157,7 +173,7 @@ const EditRoleForm = () => {
 
   const handleConfirmEditRole = async (e: any) => {
     e.preventDefault();
-    if (isSubmit) return;
+    if (isEditingRef.current) return;
     if (roleName?.trim() == '') {
       setError(ROLE_NAME_REQUIRED_MESSAGE);
       return;
@@ -181,7 +197,6 @@ const EditRoleForm = () => {
     if (permissions['organization']) {
       permissions['organizationHierarchy'] = { ...permissions['organization'] };
     }
-    setIsSubmit(true);
     await editRole({
       name: roleName,
       permissions,

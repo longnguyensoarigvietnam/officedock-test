@@ -174,6 +174,11 @@ export const SCREEN_LIST = [
     value: 'teamDailyReport',
     show: true,
   },
+  {
+    name: 'カレンダー設定画面',
+    value: 'calendarManagement',
+    show: true,
+  },
 ];
 
 export const PERMISSION_OPTIONS = [
