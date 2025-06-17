@@ -51,6 +51,7 @@
 
 .schedule-custom .fc .fc-daygrid-event-harness {
   min-height: 70px;
+  overflow-x: hidden;
 }
 .schedule-custom
   .fc

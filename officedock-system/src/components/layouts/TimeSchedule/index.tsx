@@ -3779,6 +3779,7 @@ const TimeSchedule = memo(
               setOpenConfirmDeleteEventModal(false);
               setBackToEditing(false);
               setActionsEventMessage('');
+              setOpenConfirmDeleteEventRepeatModal(false);
             }}
             onBackToEditModal={() => {
               router.push(
