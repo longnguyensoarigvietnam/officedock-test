@@ -622,6 +622,12 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         data = {}
         request.query_params.get("id", None)
         obj_type = request.query_params.get("type", None)
+        object_id = request.query_params.get("id", None)
+        schedule_id = (
+            object_id if CalendarTypes.SCHEDULE.value == obj_type else None
+        )
+        task_id = object_id if CalendarTypes.TASK.value == obj_type else None
+
         separate_task_duration = TaskDuration.objects.filter(
             Q(paused_at__isnull=True)
             & Q(Q(task__is_start=True) | Q(schedule__is_start=True))
@@ -639,8 +645,9 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         # Get current task running
         task_running = user.task_durations.filter(
             started_at__gte=start_of_today,
-            paused_at__isnull=True,
-        ).first()
+            task__id=task_id,
+            schedule__id=schedule_id,
+        ).last()
         if not task_running:
             return self.response_ok(data)
         current_duration_start = task_running.task or task_running.schedule
@@ -678,7 +685,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                 "task_duration": format_duration(total_duration),
                 "started_at": task_running.started_at,
                 "paused_at": task_running.paused_at,
-                "is_start": bool(task_running),
+                "is_start": not task_running.paused_at,
                 "is_over_estimate": is_over_estimate,
                 "type": obj_type,
             }
