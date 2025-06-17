@@ -523,6 +523,8 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         ):
             # Check if last task/event running is current task/event, stop it and return early
             self._stopDuration(user)
+            last_task_duration.refresh_from_db()
+
             return self.response_ok(
                 DurationSerializer(
                     last_task_duration, context={"request": request}

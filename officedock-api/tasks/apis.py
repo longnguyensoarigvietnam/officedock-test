@@ -268,7 +268,7 @@ class TaskViewSet(
                             user=user, task=task, is_update=False
                         )
 
-                elif organization:
+                else:
                     # Create new index for task created with user
                     TaskIndex.objects.create(task=task, user=user)
 
