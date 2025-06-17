@@ -252,6 +252,7 @@ const TimeSchedule = memo(
     const [EventInfo, setEventInfo] = useState<DataDetailEventType | null>(
       null,
     );
+    const [isDraggingSchedule, setDraggingSchedule] = useState(false);
 
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -2278,6 +2279,38 @@ const TimeSchedule = memo(
     const handleEventDragStop = (info: EventDragStopArg) => {
       const draggedEvent = info.event;
       const draggedResourceId = draggedEvent.extendedProps.resourceId;
+      const trashEl = document.getElementById('trash-area');
+      if (trashEl) {
+        const trashRect = trashEl.getBoundingClientRect();
+
+        const x = info.jsEvent.clientX;
+        const y = info.jsEvent.clientY;
+
+        const isInTrash =
+          x >= trashRect.left &&
+          x <= trashRect.right &&
+          y >= trashRect.top &&
+          y <= trashRect.bottom;
+
+        setDraggingSchedule(false);
+
+        if (
+          isInTrash &&
+          draggedEvent.getResources()[0]?.id === ItemScheduleType.PLANS &&
+          draggedEvent.extendedProps?.type === ItemStartType.TASK
+        ) {
+          if (draggedEvent.extendedProps.uuid) {
+            // DELETE plan task
+            const newDataTimeList = taskTimeScheduleList.filter(
+              (item) => item.uuid !== draggedEvent.extendedProps.uuid,
+            );
+            setTaskTimeScheduleList(newDataTimeList);
+            deletePlanTask(draggedEvent.extendedProps.uuid);
+          }
+          info.event.remove();
+          setTimeout(() => setIsInteracting(false), 200);
+        }
+      }
       if (
         draggedResourceId &&
         draggedEvent.getResources()[0]?.id !== draggedResourceId
@@ -3471,6 +3504,19 @@ const TimeSchedule = memo(
                         今日
                       </div>
                     )}
+                    {/* Trash area */}
+                    <div
+                      id="trash-area"
+                      style={{
+                        border: '2px dashed red',
+                        color: 'red',
+                        textAlign: 'center',
+                        lineHeight: '80px',
+                        borderRadius: '8px',
+                        fontWeight: 'bold',
+                        zIndex: 1000,
+                      }}
+                      className={`w-[160px] h-[48px] ${isDraggingSchedule ? '' : 'hidden'}`}></div>
                   </>
                 )}
               </div>
@@ -3523,7 +3569,17 @@ const TimeSchedule = memo(
                   }}
                   slotDuration={isOptionZoomSchedule}
                   initialDate={new Date()}
-                  eventDragStart={() => setIsInteracting(true)}
+                  eventDragStart={(event) => {
+                    if (
+                      event.event.extendedProps &&
+                      event.event.extendedProps.type === ItemStartType.TASK &&
+                      event.event.getResources()[0]?.id ===
+                        ItemScheduleType.PLANS
+                    ) {
+                      setDraggingSchedule(true);
+                    }
+                    setIsInteracting(true);
+                  }}
                   eventDrop={handleEventDrop}
                   eventContent={handleRenderEvent}
                   eventReceive={handleEventReceive}
@@ -3667,6 +3723,21 @@ const TimeSchedule = memo(
               />
             </DynamicTooltip>
           </div>
+          {!isExtendCalendar && (
+            /* Trash area */
+            <div
+              id="trash-area"
+              style={{
+                border: '2px dashed red',
+                color: 'red',
+                textAlign: 'center',
+                lineHeight: '80px',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                zIndex: 1000,
+              }}
+              className={`absolute top-[9px] right-[53px] w-[150px] h-[48px] ${isDraggingSchedule ? '' : 'hidden'}`}></div>
+          )}
         </div>
         {openCreateEventModal && (
           <ActionsEventModal
