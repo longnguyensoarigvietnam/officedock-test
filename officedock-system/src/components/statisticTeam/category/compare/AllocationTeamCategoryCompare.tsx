@@ -185,6 +185,7 @@ const AllocationTeamCategoryCompare = memo(
       userId: number;
       type: string;
       totalDuration: string;
+      userDuration: string;
     } | null>(null);
 
     const [progressDataLarge, setProgressDataLarge] = useState<
@@ -265,12 +266,14 @@ const AllocationTeamCategoryCompare = memo(
       duration,
       type,
       isCompare,
+      userDuration,
     }: {
       id: number;
       userId: number;
       duration: string;
       type: string;
       isCompare?: boolean;
+      userDuration: string;
     }) => {
       if (isCompare) {
         setIsModalCompare(true);
@@ -282,6 +285,7 @@ const AllocationTeamCategoryCompare = memo(
         userId: userId,
         type: type,
         totalDuration: duration,
+        userDuration,
       });
 
       setTimeout(() => {
@@ -598,11 +602,13 @@ const AllocationTeamCategoryCompare = memo(
                                   categoryId,
                                   duration,
                                   isCompare,
+                                  userDuration,
                                 }: {
                                   userId: number;
                                   categoryId: number;
                                   duration: string;
                                   isCompare?: boolean;
+                                  userDuration: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: categoryId,
@@ -610,6 +616,7 @@ const AllocationTeamCategoryCompare = memo(
                                     duration,
                                     type: EventWorkCategory.ALL,
                                     isCompare,
+                                    userDuration,
                                   });
                                 }}
                                 handleClickChart={(
@@ -745,11 +752,13 @@ const AllocationTeamCategoryCompare = memo(
                                     categoryId,
                                     duration,
                                     isCompare,
+                                    userDuration,
                                   }: {
                                     userId: number;
                                     categoryId: number;
                                     duration: string;
                                     isCompare?: boolean;
+                                    userDuration: string;
                                   }) => {
                                     handleClickTooltip({
                                       id: categoryId,
@@ -757,6 +766,7 @@ const AllocationTeamCategoryCompare = memo(
                                       duration,
                                       type: EventWorkCategory.LARGE,
                                       isCompare,
+                                      userDuration,
                                     });
                                   }}
                                   handleClickChart={(
@@ -892,11 +902,13 @@ const AllocationTeamCategoryCompare = memo(
                                   categoryId,
                                   duration,
                                   isCompare,
+                                  userDuration,
                                 }: {
                                   userId: number;
                                   categoryId: number;
                                   duration: string;
                                   isCompare?: boolean;
+                                  userDuration: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: categoryId,
@@ -904,6 +916,7 @@ const AllocationTeamCategoryCompare = memo(
                                     duration,
                                     type: EventWorkCategory.MEDIUM,
                                     isCompare,
+                                    userDuration,
                                   });
                                 }}
                                 {...item}

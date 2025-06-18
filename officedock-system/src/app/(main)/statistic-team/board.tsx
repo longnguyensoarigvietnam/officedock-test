@@ -25,7 +25,7 @@ import StackedAreaTeamChart from '@components/statisticTeam/category/StackedArea
 
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { pageRouters } from '@constants/routers';
-import { TEAM_CALENDAR_ORGANIZATION } from '@constants';
+import { ALL_TEAM_STATISTIC } from '@constants';
 
 import useStatisticCategoriesTeam from '@hooks/useStatisticCategoriesTeam';
 import useStatisticCategoriesTeamCompare from '@hooks/useStatisticCategoriesTeamCompare';
@@ -137,7 +137,12 @@ const StatisticTeamBoard = () => {
             label: stat.LARGE.name,
           }),
         );
-        setLargeOptions(largeCategories);
+        // If organization is all team then return here
+        if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+          setLargeOptions([]);
+        } else {
+          setLargeOptions(largeCategories);
+        }
       } else {
         setLargeOptions([]);
       }
@@ -261,7 +266,7 @@ const StatisticTeamBoard = () => {
 
         const mainItem =
           data.organizations.find((item) => item.isMain) ||
-          data.organizations[0];
+          data.organizations[1];
         const optionsTagList = mainItem.tags.map((item) => ({
           label: item.name,
           value: item.id,
@@ -346,7 +351,12 @@ const StatisticTeamBoard = () => {
           avatarUrl: member?.avatar || '',
         })),
       });
-      setLargeOptions(largeCategories);
+      // If organization is all team then return here
+      if (data?.value === ALL_TEAM_STATISTIC) {
+        setLargeOptions([]);
+      } else {
+        setLargeOptions(largeCategories);
+      }
     } else {
       setLargeOptions([]);
     }
@@ -384,11 +394,12 @@ const StatisticTeamBoard = () => {
         })),
       );
       setCurrentPage(1);
-      setOrderingOptions({
-        tag_ids: [],
-        user_ids: [],
-      });
-      setLargeOptions(largeCategories);
+      // If organization is all team then return here
+      if (data?.value === ALL_TEAM_STATISTIC) {
+        setLargeOptions([]);
+      } else {
+        setLargeOptions(largeCategories);
+      }
     } else {
       setLargeOptions([]);
     }
@@ -415,8 +426,6 @@ const StatisticTeamBoard = () => {
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === data.value,
     );
-    // If organization is a calendar organization then return here
-    if (selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION) return;
 
     if (largeCategory) {
       const mediumCategories = largeCategory.MEDIUM.map((medium) => ({
@@ -432,8 +441,6 @@ const StatisticTeamBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
-    // If organization is a calendar organization then return here
-    if (selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION) return;
     if (data.value !== selectedMedium?.value) {
       setIsLoadingMedium(true);
       if (isCheckCompare) {

@@ -37,6 +37,7 @@ import { OptionDropdownType } from '@interfaces/common';
 
 import {
   convertDurationToTotalMinutes,
+  convertToJapaneseDateRange,
   convertToStatisticJapaneseLabels,
   formatDateToYMD,
   sumDurationsChart,
@@ -245,10 +246,9 @@ const StackedAreaChart = ({
     }
 
     setDataChart(chartData);
-
     // 3. Collect tableData (duration + percent)
     const categoryTableMap = new Map<
-      number,
+      string, // use key combining tagId and tagName to distinguish
       {
         tagId: number;
         tagName: string;
@@ -259,73 +259,81 @@ const StackedAreaChart = ({
     >();
 
     for (const item of statisticTagPercentChartList) {
-      const tagsArray = Array.isArray(item.tags) ? item.tags : [item.tags]; // convert object to array if needed
+      const tagsArray = Array.isArray(item.tags) ? item.tags : [item.tags];
 
       for (const cat of tagsArray) {
         const id = cat.tagId ?? -1;
+        const name = cat.tagName ?? '';
+        const mapKey = `${id}_${name}`;
 
-        if (!categoryTableMap.has(id)) {
-          categoryTableMap.set(id, {
+        if (!categoryTableMap.has(mapKey)) {
+          categoryTableMap.set(mapKey, {
             tagId: id,
-            tagName: cat.tagName,
+            tagName: name,
             tagColor: getRandomColor(),
             tagDuration: [],
             tagPercent: [],
           });
         }
 
-        const existing = categoryTableMap.get(id)!;
+        const existing = categoryTableMap.get(mapKey)!;
         existing.tagDuration.push(cat.duration);
         existing.tagPercent.push(cat.percent);
       }
     }
 
-    const finalTableData = Array.from(categoryTableMap.values()).map((cat) => {
-      const totalDuration = sumDurationsChart(cat.tagDuration);
+    const finalTableData = Array.from(categoryTableMap.values())
+      .map((cat) => {
+        const totalDuration = sumDurationsChart(cat.tagDuration);
 
-      let percent = 0;
-      if (
-        !selectedLarge?.value &&
-        statisticTagsList?.largeCategories &&
-        statisticTagsList?.largeCategories.length > 0
-      ) {
-        percent =
-          statisticTagsList.largeCategories.find(
-            (category) => category.tagName === cat.tagName,
-          )?.percent ?? 0;
-      } else if (
-        !selectedMedium?.value &&
-        statisticTagsList?.mediumCategories &&
-        statisticTagsList?.mediumCategories.length > 0
-      ) {
-        percent =
-          statisticTagsList.mediumCategories.find(
-            (category) => category.tagName === cat.tagName,
-          )?.percent ?? 0;
-      } else if (
-        !selectedSmall?.value &&
-        statisticTagsList?.smallCategories &&
-        statisticTagsList?.smallCategories.length > 0
-      ) {
-        percent =
-          statisticTagsList.smallCategories.find(
-            (category) => category.tagName === cat.tagName,
-          )?.percent ?? 0;
-      } else {
-        percent =
-          statisticTagsList?.category?.find(
-            (category) => category.tagName === cat.tagName,
-          )?.percent ?? 0;
-      }
+        let percent = 0;
 
-      return {
-        tagId: cat.tagId,
-        tagName: cat.tagName,
-        tagColor: cat.tagColor,
-        tagDuration: totalDuration,
-        tagPercent: `${percent}`,
-      };
-    });
+        if (
+          !selectedLarge?.value &&
+          statisticTagsList?.largeCategories &&
+          statisticTagsList?.largeCategories?.length > 0
+        ) {
+          percent =
+            statisticTagsList.largeCategories.find(
+              (category) => category.tagName === cat.tagName,
+            )?.percent ?? 0;
+        } else if (
+          !selectedMedium?.value &&
+          statisticTagsList?.mediumCategories &&
+          statisticTagsList?.mediumCategories?.length > 0
+        ) {
+          percent =
+            statisticTagsList.mediumCategories.find(
+              (category) => category.tagName === cat.tagName,
+            )?.percent ?? 0;
+        } else if (
+          !selectedSmall?.value &&
+          statisticTagsList?.smallCategories &&
+          statisticTagsList?.smallCategories?.length > 0
+        ) {
+          percent =
+            statisticTagsList.smallCategories.find(
+              (category) => category.tagName === cat.tagName,
+            )?.percent ?? 0;
+        } else {
+          percent =
+            statisticTagsList?.category?.find(
+              (category) => category.tagName === cat.tagName,
+            )?.percent ?? 0;
+        }
+
+        return {
+          tagId: cat.tagId,
+          tagName: cat.tagName,
+          tagColor: cat.tagColor,
+          tagDuration: totalDuration,
+          tagPercent: `${percent}`,
+        };
+      })
+      .filter((data) => data.tagId !== -1)
+      .sort((a, b) => Number(b.tagPercent) - Number(a.tagPercent));
+
+    setTableData(finalTableData);
 
     setColorList(
       finalTableData.map(
@@ -335,7 +343,6 @@ const StackedAreaChart = ({
       ),
     );
 
-    setTableData(finalTableData.filter((data) => data.tagId !== -1));
     if (
       selectedOrganization?.value &&
       !selectedLarge?.value &&
@@ -499,6 +506,7 @@ const StackedAreaChart = ({
     },
     stroke: {
       curve: 'straight',
+      show: false,
     },
     markers: {
       size: 0,
@@ -1103,16 +1111,9 @@ const StackedAreaChart = ({
                           }}
                           className={`bg-white absolute p-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
                           <p className="text-sm font-normal text-[#77858F] mb-1 text-start w-full block">
-                            {convertToStatisticJapaneseLabels(
+                            {convertToJapaneseDateRange(
                               dataDetailDate?.startDate as string,
-                              lineChartViewBy?.value as string,
-                              true,
-                            )}{' '}
-                            ~
-                            {convertToStatisticJapaneseLabels(
                               dataDetailDate?.endDate as string,
-                              lineChartViewBy?.value as string,
-                              true,
                             )}
                           </p>
                           {dataDetail?.tags.map((tag, cateIndex) => {

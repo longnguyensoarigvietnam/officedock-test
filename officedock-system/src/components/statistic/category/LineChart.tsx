@@ -31,10 +31,7 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticsCategories } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
-import {
-  SortingType,
-  StatisticViewOptions,
-} from '@constants/enums';
+import { SortingType, StatisticViewOptions } from '@constants/enums';
 import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 
 import useStatisticTaskDurations from '@hooks/useStatisticTaskDurations';
@@ -429,7 +426,8 @@ const LineChart = ({
                 endDate: duration.endDate,
                 color:
                   categoryDetail.categoryColor ||
-                  (color && lightenColor(color, categoryDetail?.percent || 0)) ||
+                  (color &&
+                    lightenColor(color, categoryDetail?.percent || 0)) ||
                   getRandomColor(),
                 label: categoryDetail.categoryName,
               },
@@ -444,7 +442,8 @@ const LineChart = ({
                       endDate: duration.endDate,
                       color:
                         categoryDetail.categoryColor ||
-                        (color && lightenColor(color, categoryDetail?.percent || 0)) ||
+                        (color &&
+                          lightenColor(color, categoryDetail?.percent || 0)) ||
                         getRandomColor(),
                       label: categoryDetail.categoryName,
                     },
@@ -927,7 +926,6 @@ const LineChart = ({
                 })}
               </div>
             )}
-
             <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (

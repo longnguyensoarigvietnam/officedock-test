@@ -198,6 +198,11 @@ const TableChart = ({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTaskDurations',
         });
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            query.queryKey[0] === 'getStatisticPercentChart',
+        });
+
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
@@ -257,7 +262,10 @@ const TableChart = ({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTaskDurations',
         });
-
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            query.queryKey[0] === 'getStatisticPercentChart',
+        });
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
@@ -572,8 +580,8 @@ const TableChart = ({
                     (element) => element.value === mediumItem?.value,
                   )
                 }
-                placeholder=""
                 showArrow
+                placeholder=""
                 options={mediumCategories}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
@@ -646,8 +654,9 @@ const TableChart = ({
                   )
                 }
                 placeholder=""
-                showArrow
+                showArrow={info.row.original.type === EventCalendarType.TASK}
                 options={smallCategories}
+                isDisabled={info.row.original.type !== EventCalendarType.TASK}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({

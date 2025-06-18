@@ -37,11 +37,13 @@ interface ProgressBarProps {
     categoryId,
     duration,
     isCompare,
+    userDuration,
   }: {
     userId: number;
     categoryId: number;
     duration: string;
     isCompare?: boolean;
+    userDuration: string;
   }) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
 }
@@ -226,7 +228,7 @@ const ProgressBarTeamStatisticCompare = ({
                                   customClassName={`${!user.user?.avatar && '!mt-0'}`}
                                 />
                               </div>
-                              <span className="inline-block w-[130px] overflow-hidden whitespace-nowrap text-ellipsis">
+                              <span className="inline-block  ml-3 w-[130px] overflow-hidden whitespace-nowrap text-ellipsis">
                                 {user.user.fullName}
                               </span>
                             </div>
@@ -596,6 +598,7 @@ const ProgressBarTeamStatisticCompare = ({
                               itemUser.user.duration !== '-'
                                 ? itemUser.user.duration
                                 : '00:00:00',
+                            userDuration: item.duration,
                           })
                         }
                         className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">
@@ -691,6 +694,7 @@ const ProgressBarTeamStatisticCompare = ({
                                 ? itemUser.userCompare.duration
                                 : '00:00:00',
                             isCompare: true,
+                            userDuration: item.duration || '',
                           })
                         }
                         className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">

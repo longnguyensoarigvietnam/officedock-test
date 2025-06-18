@@ -35,6 +35,7 @@ import {
 import { getLineChartEnableViews } from '@utils';
 import {
   convertDurationToTotalMinutes,
+  convertToJapaneseDateRange,
   convertToStatisticJapaneseLabels,
   formatDateToYMD,
 } from '@utils/date';
@@ -264,6 +265,7 @@ const StackedAreaTeamChart = ({
     selectedLarge,
     selectedMedium,
   ]);
+
   useEffect(() => {
     setFilter({
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -328,7 +330,6 @@ const StackedAreaTeamChart = ({
     } else {
       setTimeRange([]);
       setDataChart([]);
-      setTableData([]);
       return;
     }
   }, [statisticUserTaskDurationsList, lineChartViewBy]);
@@ -345,7 +346,7 @@ const StackedAreaTeamChart = ({
     return {
       y: averageMidpoint,
       label: {
-        text: s.name,
+        text: '',
         position: 'left',
         offsetX: 70,
         style: {
@@ -402,19 +403,7 @@ const StackedAreaTeamChart = ({
         enabled: false,
       },
       offsetX: 30,
-      formatter: function ({
-        seriesIndex,
-        dataPointIndex,
-      }: {
-        seriesIndex: any;
-        dataPointIndex: any;
-      }) {
-        const productNames = dataChart.map((name) => name.name);
-        if (dataPointIndex === 0) {
-          return productNames[seriesIndex];
-        }
-        return '';
-      },
+
       offsetY: 10,
     },
     colors: colorList,
@@ -424,8 +413,10 @@ const StackedAreaTeamChart = ({
     },
     stroke: {
       curve: 'straight',
+      show: false,
     },
     markers: {
+      show: false,
       size: 0,
       hover: {
         size: 0,
@@ -467,11 +458,6 @@ const StackedAreaTeamChart = ({
       enabled: true,
       intersect: false,
       shared: true,
-      custom: function () {
-        return `
-         
-        `;
-      },
     },
   };
 
@@ -826,6 +812,7 @@ const StackedAreaTeamChart = ({
         user: {
           fullName: userData.user.fullName,
           avatarColor: userData.user.avatarColor,
+          avatar: userData.user.avatar,
         },
         startDate: duration?.startDate || null,
         endDate: duration?.endDate || null,
@@ -1131,22 +1118,16 @@ const StackedAreaTeamChart = ({
                             boxShadow: '0px 2px 8px 0px #0000001A',
                           }}
                           className={`bg-white absolute p-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
-                          <p className="text-sm font-normal text-[#77858F] mb-1 text-start w-full block">
+                          <p className="text-sm font-normal text-[#77858F] mb-1 text-center w-full block">
                             {dataDetail &&
                               dataDetail.length > 0 &&
-                              convertToStatisticJapaneseLabels(
+                              convertToJapaneseDateRange(
                                 dataDetail[0]?.startDate as string,
-                                lineChartViewBy?.value as string,
-                                true,
-                              )}{' '}
-                            ~
-                            {dataDetail &&
-                              dataDetail.length > 0 &&
-                              convertToStatisticJapaneseLabels(
                                 dataDetail[0]?.endDate as string,
-                                lineChartViewBy?.value as string,
-                                true,
                               )}
+                          </p>
+                          <p className="text-start my-4">
+                            {selectedCategory?.name}
                           </p>
                           {dataDetail &&
                             dataDetail.length > 0 &&
@@ -1155,14 +1136,13 @@ const StackedAreaTeamChart = ({
                                 <div
                                   key={userIndex}
                                   className="flex items-center gap-1.5">
-                                  <div
-                                    className="w-3 h-3 rounded-sm"
-                                    style={{
-                                      backgroundColor: user.user.avatarColor,
-                                    }}
+                                  <CustomUserAvatar
+                                    avatarUrl={user.user.avatar || ''}
+                                    avatarColor={user.user.avatarColor || ''}
+                                    size={30}
                                   />
                                   <div className="flex flex-grow items-center justify-between text-base font-medium">
-                                    <div className=" text-black w-fit  max-w-[180px] line-clamp-3 break-words">
+                                    <div className=" text-black w-fit  max-w-[140px] line-clamp-3 break-words">
                                       {user.user.fullName}
                                     </div>
                                     <div>{user.percentPerRange}%</div>
@@ -1178,53 +1158,55 @@ const StackedAreaTeamChart = ({
               </div>
             </div>
           )}
-          <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
-            <thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr
-                  key={headerGroup.id}
-                  className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                  {headerGroup.headers.map((header, index) => (
-                    <th
-                      key={header.id}
-                      className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
-                      style={{
-                        width: header.getSize(),
-                        minWidth: header.getSize(),
-                        maxWidth: header.getSize(),
-                      }}
-                      onClick={header.column.getToggleSortingHandler()}>
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <TableBody>
-              {table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50">
-                  {row.getVisibleCells().map((cell, index) => (
-                    <td
-                      key={cell.id}
-                      style={{
-                        width: cell.column.getSize(),
-                        minWidth: cell.column.getSize(),
-                        maxWidth: cell.column.getSize(),
-                      }}
-                      className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="px-[30px]">
+            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+              <thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr
+                    key={headerGroup.id}
+                    className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                    {headerGroup.headers.map((header, index) => (
+                      <th
+                        key={header.id}
+                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                        style={{
+                          width: header.getSize(),
+                          minWidth: header.getSize(),
+                          maxWidth: header.getSize(),
+                        }}
+                        onClick={header.column.getToggleSortingHandler()}>
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <TableBody>
+                {table.getRowModel().rows.map((row) => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    {row.getVisibleCells().map((cell, index) => (
+                      <td
+                        key={cell.id}
+                        style={{
+                          width: cell.column.getSize(),
+                          minWidth: cell.column.getSize(),
+                          maxWidth: cell.column.getSize(),
+                        }}
+                        className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
     </div>
