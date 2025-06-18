@@ -22,7 +22,7 @@ interface FilterProps {
   userIds: string;
 }
 
-const useStatisticTableInTeamTagLineChart = ({
+const useStatisticTableInTeamTagLineChartCompare = ({
   filter,
   onSuccess,
   onError,
@@ -35,7 +35,7 @@ const useStatisticTableInTeamTagLineChart = ({
   const token = session?.accessToken;
 
   // Handle call API get statistic table in team tag line chart
-  const getStatisticTableInTeamTagLineChart = async () => {
+  const getStatisticTableInTeamTagLineChartCompare = async () => {
     if (!filter?.organizationIds || !filter?.userIds) return [];
     const queryParams = [];
     if (filter.fromDate) {
@@ -73,12 +73,12 @@ const useStatisticTableInTeamTagLineChart = ({
 
   // Handle API get statistic category list
   const {
-    data: statisticTableInTeamTagLineChart,
-    refetch: refetchStatisticTableInTeamTagLineChart,
-    isFetched: isFetchedStatisticTableInTeamTagLineChart,
+    data: statisticTableInTeamTagLineChartCompare,
+    refetch: refetchStatisticTableInTeamTagLineChartCompare,
+    isFetched: isFetchedStatisticTableInTeamTagLineChartCompare,
   } = useQuery({
-    queryKey: ['getStatisticTableInTeamTagLineChart', [filter]],
-    queryFn: getStatisticTableInTeamTagLineChart,
+    queryKey: ['getStatisticTableInTeamTagLineChartCompare', [filter]],
+    queryFn: getStatisticTableInTeamTagLineChartCompare,
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,
@@ -92,10 +92,10 @@ const useStatisticTableInTeamTagLineChart = ({
   });
 
   return {
-    statisticTableInTeamTagLineChart,
-    refetchStatisticTableInTeamTagLineChart,
-    isFetchedStatisticTableInTeamTagLineChart,
+    statisticTableInTeamTagLineChartCompare,
+    refetchStatisticTableInTeamTagLineChartCompare,
+    isFetchedStatisticTableInTeamTagLineChartCompare,
   };
 };
 
-export default useStatisticTableInTeamTagLineChart;
+export default useStatisticTableInTeamTagLineChartCompare;

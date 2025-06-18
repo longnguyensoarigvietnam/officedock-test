@@ -41,12 +41,12 @@ import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import CustomStatisticUserCheckbox from '@components/common/Checkbox/CustomStatisticUserCheckbox';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { TeamDockCompareLineChartTooltip } from '@components/tooltip/TeamDockCompareLineChartTooltip';
+import ActionFilterTeamTagStatistic from '@components/modals/ActionFilterTeamTagStatistic';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 
 import { OptionDropdownType } from '@interfaces/common';
-import { StatisticsCategories } from '@interfaces/statistic';
 
 import {
   SortingType,
@@ -54,6 +54,7 @@ import {
   StatisticViewOptions,
 } from '@constants/enums';
 import {
+  DEFAULT_TIME_TEXT,
   EVERYONE_OPTION_LABEL,
   STATISTIC_CHART_VIEW_OPTIONS,
 } from '@constants';
@@ -75,13 +76,15 @@ import {
   getCompareLineChartEnableViews,
   getFileURL,
   getRandomColor,
+  getSafeTooltipLeft,
   toRGBA,
 } from '@utils';
 
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 import useStatisticUserTaskDurationsCompare from '@hooks/useStatisticUserTaskDurationsCompare';
 import useDebounceText from '@hooks/useDebounceText';
-import ActionFilterTeamTagStatistic from '@components/modals/ActionFilterTeamTagStatistic';
+import useStatisticTableInTeamTagLineChartCompare from '@hooks/useStatisticTableInTeamTagLineChartCompare';
+import useStatisticTableInTeamTagLineChart from '@hooks/useStatisticTableInTeamTagLineChart';
 
 ChartJS.register(
   CategoryScale,
@@ -99,8 +102,6 @@ type Props = {
   endDate: Date | null;
   startDateCompare: Date;
   endDateCompare: Date | null;
-  statisticTagsListTeam: StatisticsCategories | undefined;
-  statisticTagsListTeamCompare: StatisticsCategories | undefined;
   removeTag: (selected: OptionDropdownType) => void;
   removeUser: (selected: OptionDropdownType) => void;
   handleSelectOrganization: (data: OptionDropdownType) => void;
@@ -161,8 +162,6 @@ const LineChartByTeamTagsCompare = ({
   endDate,
   startDateCompare,
   endDateCompare,
-  statisticTagsListTeam,
-  statisticTagsListTeamCompare,
   removeTag,
   removeUser,
   handleSelectOrganization,
@@ -234,6 +233,12 @@ const LineChartByTeamTagsCompare = ({
   >([]);
 
   // Table data
+  const [standardTableData, setStandardTableData] = useState<TableRowDetail[]>(
+    [],
+  );
+  const [compareTableData, setCompareTableData] = useState<TableRowDetail[]>(
+    [],
+  );
   const [tableData, setTableData] = useState<MergedTableTag[]>([]);
 
   // Chart
@@ -321,15 +326,28 @@ const LineChartByTeamTagsCompare = ({
       tagDuration: tag.duration,
       type,
       userList:
-        tag.users && tag.users.length > 0
-          ? tag.users.map((user) => {
+        allLabelUser.length > 0
+          ? allLabelUser.map((userInfo) => {
+              const foundUser = tag.users?.find(
+                (user) => user.user.id == userInfo.value,
+              );
+              if (foundUser) {
+                return {
+                  userId: foundUser.user.id,
+                  userName: foundUser.user.fullName,
+                  userAvatar: foundUser.user.avatar,
+                  userAvatarColor: foundUser.user.avatarColor,
+                  userDuration: foundUser.duration,
+                  userPercent: foundUser.percent,
+                };
+              }
               return {
-                userId: user.user.id,
-                userName: user.user.fullName,
-                userAvatar: user.user.avatar,
-                userAvatarColor: user.user.avatarColor,
-                userDuration: user.duration,
-                userPercent: user.percent,
+                userId: Number(userInfo.value),
+                userName: userInfo?.label,
+                userAvatar: userInfo?.avatarUrl || '',
+                userAvatarColor: userInfo?.color || '',
+                userDuration: DEFAULT_TIME_TEXT,
+                userPercent: 0,
               };
             })
           : [],
@@ -490,43 +508,132 @@ const LineChartByTeamTagsCompare = ({
     selectedTags,
   ]);
 
+  // Get table info (statistic team standard categories)
+  useStatisticTableInTeamTagLineChart({
+    filter: {
+      fromDate: formatDateToYMD(startDate) || '',
+      endDate: formatDateToYMD(`${endDate}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: selectedLarge?.value as number,
+      mediumCategoryId: selectedMedium?.value as number,
+      smallCategoryId: selectedSmall?.value as number,
+      selectedTags: selectedTags,
+      userIds: debouncedSelectedMembers,
+    },
+    onSuccess: (data) => {
+      if (!data) return;
+      let tableDetail: TableRowDetail[] = [];
+      if (
+        selectedOrganization &&
+        !selectedLarge &&
+        !selectedMedium &&
+        !selectedSmall
+      ) {
+        tableDetail = buildTableDetail(
+          data.largeCategories,
+          StatisticChartType.STANDARD,
+        );
+      } else if (
+        selectedOrganization &&
+        selectedLarge &&
+        !selectedMedium &&
+        !selectedSmall
+      ) {
+        tableDetail = buildTableDetail(
+          data.mediumCategories,
+          StatisticChartType.STANDARD,
+        );
+      } else if (
+        selectedOrganization &&
+        selectedLarge &&
+        selectedMedium &&
+        !selectedSmall
+      ) {
+        tableDetail = buildTableDetail(
+          data.smallCategories,
+          StatisticChartType.STANDARD,
+        );
+      } else if (
+        selectedOrganization &&
+        selectedLarge &&
+        selectedMedium &&
+        selectedSmall
+      ) {
+        tableDetail = buildTableDetail(
+          data.smallCategories,
+          StatisticChartType.STANDARD,
+        );
+      }
+
+      setStandardTableData(tableDetail);
+    },
+  });
+
+  // Get table info (statistic team compare categories)
+  useStatisticTableInTeamTagLineChartCompare({
+    filter: {
+      fromDate: formatDateToYMD(startDateCompare) || '',
+      endDate: formatDateToYMD(`${endDateCompare}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: selectedLarge?.value as number,
+      mediumCategoryId: selectedMedium?.value as number,
+      smallCategoryId: selectedSmall?.value as number,
+      selectedTags: selectedTags,
+      userIds: debouncedSelectedMembers,
+    },
+    onSuccess: (data) => {
+      if (!data) return;
+      let tableDetail: TableRowDetail[] = [];
+      if (
+        selectedOrganization &&
+        !selectedLarge &&
+        !selectedMedium &&
+        !selectedSmall
+      ) {
+        tableDetail = buildTableDetail(
+          data.largeCategories,
+          StatisticChartType.COMPARE,
+        );
+      } else if (
+        selectedOrganization &&
+        selectedLarge &&
+        !selectedMedium &&
+        !selectedSmall
+      ) {
+        tableDetail = buildTableDetail(
+          data.mediumCategories,
+          StatisticChartType.COMPARE,
+        );
+      } else if (
+        selectedOrganization &&
+        selectedLarge &&
+        selectedMedium &&
+        !selectedSmall
+      ) {
+        tableDetail = buildTableDetail(
+          data.smallCategories,
+          StatisticChartType.COMPARE,
+        );
+      } else if (
+        selectedOrganization &&
+        selectedLarge &&
+        selectedMedium &&
+        selectedSmall
+      ) {
+        tableDetail = buildTableDetail(
+          data.smallCategories,
+          StatisticChartType.COMPARE,
+        );
+      }
+
+      setCompareTableData(tableDetail);
+    },
+  });
+
   useEffect(() => {
-    if (!statisticTagsListTeam || !statisticTagsListTeamCompare) return;
-    let standardTableData: TableRowDetail[] = [];
-    let compareTableData: TableRowDetail[] = [];
-
-    if (selectedOrganization && !selectedLarge && !selectedMedium) {
-      standardTableData = buildTableDetail(
-        statisticTagsListTeam.largeCategories,
-        StatisticChartType.STANDARD,
-      );
-      compareTableData = buildTableDetail(
-        statisticTagsListTeamCompare.largeCategories,
-        StatisticChartType.COMPARE,
-      );
-    } else if (selectedOrganization && selectedLarge && !selectedMedium) {
-      standardTableData = buildTableDetail(
-        statisticTagsListTeam.mediumCategories,
-        StatisticChartType.STANDARD,
-      );
-      compareTableData = buildTableDetail(
-        statisticTagsListTeamCompare.mediumCategories,
-        StatisticChartType.COMPARE,
-      );
-    } else if (selectedOrganization && selectedLarge && selectedMedium) {
-      standardTableData = buildTableDetail(
-        statisticTagsListTeam.smallCategories,
-        StatisticChartType.STANDARD,
-      );
-      compareTableData = buildTableDetail(
-        statisticTagsListTeamCompare.smallCategories,
-        StatisticChartType.COMPARE,
-      );
-    }
-
     const tableData = mergeCategories([
-      ...standardTableData,
-      ...compareTableData,
+      ...(standardTableData || []),
+      ...(compareTableData || []),
     ]);
     setTableData(tableData);
     setTagCollapseStatuses(
@@ -538,15 +645,9 @@ const LineChartByTeamTagsCompare = ({
       }),
     );
     handleTagSelection(tableData);
-  }, [
-    statisticTagsListTeam,
-    statisticTagsListTeamCompare,
-    selectedOrganization,
-    selectedLarge,
-    selectedMedium,
-  ]);
+  }, [standardTableData, compareTableData]);
 
-  // Hide tooltip when mouse leave over 150px
+  // Hide tooltip when mouse leave over 80px
   useEffect(() => {
     let hideTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -572,7 +673,7 @@ const LineChartByTeamTagsCompare = ({
         0,
       );
 
-      if (distance > 150) {
+      if (distance > 80) {
         if (!hideTimeout) {
           hideTimeout = setTimeout(() => {
             if (tooltipRef.current) {
@@ -590,7 +691,7 @@ const LineChartByTeamTagsCompare = ({
           }, 250); // delay before hiding tooltip
         }
       } else {
-        // Mouse came back within 150px: cancel hide
+        // Mouse came back within 80px: cancel hide
         if (hideTimeout) {
           clearTimeout(hideTimeout);
           hideTimeout = null;
@@ -681,7 +782,12 @@ const LineChartByTeamTagsCompare = ({
     );
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
-    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 60}px`;
+    const left = getSafeTooltipLeft({
+      offsetLeft,
+      caretX: tooltipModel.caretX,
+      tooltipWidth: 260,
+    });
+    tooltipEl.style.left = `${left - 30}px`;
     tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
     tooltipEl.style.opacity = '1';
     tooltipEl.style.display = 'block';
@@ -1108,7 +1214,7 @@ const LineChartByTeamTagsCompare = ({
         return (
           <div className="flex items-start px-[18px]">
             <RadioButton
-              name="tagName"
+              name="lineChartTagName"
               isChecked={info.row.original.tagId == selectedTag?.id}
               onChange={(e: any) => {
                 if (e) {
@@ -1293,7 +1399,7 @@ const LineChartByTeamTagsCompare = ({
     },
     {
       accessorKey: 'tagDuration',
-      size: 40,
+      size: 50,
       header: () => {
         return (
           <div
@@ -1429,7 +1535,7 @@ const LineChartByTeamTagsCompare = ({
     },
     {
       accessorKey: 'tagPercent',
-      size: 20,
+      size: 30,
       header: () => {
         return (
           <div

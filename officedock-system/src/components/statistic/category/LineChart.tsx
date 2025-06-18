@@ -590,7 +590,7 @@ const LineChart = ({
     },
     {
       accessorKey: 'categoryDuration',
-      size: 40,
+      size: 50,
       header: () => {
         return (
           <div
@@ -633,7 +633,7 @@ const LineChart = ({
     },
     {
       accessorKey: 'categoryPercent',
-      size: 20,
+      size: 30,
       header: () => {
         return (
           <div

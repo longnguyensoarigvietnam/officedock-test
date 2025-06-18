@@ -556,8 +556,6 @@ const StatisticTeamTagBoard = () => {
             endDateCompare={endDateCompare}
             removeUser={removeUser}
             removeTag={removeTag}
-            statisticTagsListTeam={statisticTagsListTeam}
-            statisticTagsListTeamCompare={statisticTagsListTeamCompare}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -594,7 +592,6 @@ const StatisticTeamTagBoard = () => {
             endDate={endDate}
             removeUser={removeUser}
             removeTag={removeTag}
-            statisticTagsListTeam={statisticTagsListTeam}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}

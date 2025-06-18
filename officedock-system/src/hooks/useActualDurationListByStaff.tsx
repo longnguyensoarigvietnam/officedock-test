@@ -1,0 +1,75 @@
+'use client';
+
+import { useQuery } from 'react-query';
+import { useSession } from 'next-auth/react';
+
+import { apiRouters } from '@constants/routers';
+import { PAGINATION_PAGE_SIZE_DEFAULT } from '@constants';
+
+import { BasePagination } from '@interfaces/common';
+import { TaskScheduleDetail } from '@interfaces/durations';
+
+import api from '@base/api';
+import { AxiosError } from 'axios';
+
+interface PaginationProps {
+  page?: number;
+  pageSize?: number;
+}
+
+const useActualDurationListByStaff = ({
+  pagination,
+  selectedStaffId,
+  onSuccess,
+  onError,
+  onSettled,
+}: {
+  pagination?: PaginationProps;
+  selectedStaffId: number;
+  onSuccess?: (success: BasePagination<TaskScheduleDetail[]>) => void;
+  onError?: (error: AxiosError) => void;
+  onSettled?: () => void;
+}) => {
+  const { data: session } = useSession();
+  const token = session?.accessToken;
+
+  // Handle call API get actual duration list by selected staff
+  const getActualDurationsByStaff = async () => {
+    if (!selectedStaffId) return;
+    const apiUrl = `${apiRouters.TASKS_SCHEDULES_LIST}?page=${pagination?.page}&page_size=${pagination?.pageSize || PAGINATION_PAGE_SIZE_DEFAULT}&user_id=${selectedStaffId}`;
+    const { data: response } =
+      await api.get<BasePagination<TaskScheduleDetail[]>>(apiUrl);
+    return response;
+  };
+
+  // Handle API get actual duration list by selected staff
+  const {
+    data: actualDurationListByStaff,
+    refetch: refetchActualDurationListByStaff,
+    isFetched: isFetchedActualDurationsByStaff,
+  } = useQuery({
+    queryKey: ['getActualDurationsByStaff', [pagination, selectedStaffId]],
+    queryFn: getActualDurationsByStaff,
+    retry: 0,
+    enabled: !!token,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    onSuccess: (response: BasePagination<TaskScheduleDetail[]>) => {
+      onSuccess && onSuccess(response);
+    },
+    onError: (error: AxiosError) => {
+      onError && onError(error);
+    },
+    onSettled: () => {
+      onSettled && onSettled();
+    },
+  });
+
+  return {
+    actualDurationListByStaff,
+    refetchActualDurationListByStaff,
+    isFetchedActualDurationsByStaff,
+  };
+};
+
+export default useActualDurationListByStaff;

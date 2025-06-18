@@ -46,7 +46,6 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 
 import { OptionDropdownType } from '@interfaces/common';
-import { StatisticsCategories } from '@interfaces/statistic';
 
 import {
   SortingType,
@@ -54,6 +53,7 @@ import {
   StatisticViewOptions,
 } from '@constants/enums';
 import {
+  DEFAULT_TIME_TEXT,
   EVERYONE_OPTION_LABEL,
   STATISTIC_CHART_VIEW_OPTIONS,
 } from '@constants';
@@ -75,12 +75,15 @@ import {
   getCompareLineChartEnableViews,
   getFileURL,
   getRandomColor,
+  getSafeTooltipLeft,
   toRGBA,
 } from '@utils';
 
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 import useStatisticUserTaskDurationsCompare from '@hooks/useStatisticUserTaskDurationsCompare';
 import useDebounceText from '@hooks/useDebounceText';
+import useStatisticTableInTeamLineChart from '@hooks/useStatisticTableInTeamLineChart';
+import useStatisticTableInTeamLineChartCompare from '@hooks/useStatisticTableInTeamLineChartCompare';
 
 ChartJS.register(
   CategoryScale,
@@ -98,8 +101,6 @@ type Props = {
   endDate: Date | null;
   startDateCompare: Date;
   endDateCompare: Date | null;
-  statisticTeamCategoryList: StatisticsCategories | undefined;
-  statisticCategoryListTeamCompare: StatisticsCategories | undefined;
   removeTag: (selected: OptionDropdownType) => void;
   removeUser: (selected: OptionDropdownType) => void;
   handleSelectOrganization: (data: OptionDropdownType) => void;
@@ -159,8 +160,6 @@ const LineChartByTeamCompare = ({
   endDate,
   startDateCompare,
   endDateCompare,
-  statisticTeamCategoryList,
-  statisticCategoryListTeamCompare,
   removeTag,
   handleSelectOrganization,
   handleSelectLarge,
@@ -232,6 +231,12 @@ const LineChartByTeamCompare = ({
   >([]);
 
   // Table data
+  const [standardTableData, setStandardTableData] = useState<TableRowDetail[]>(
+    [],
+  );
+  const [compareTableData, setCompareTableData] = useState<TableRowDetail[]>(
+    [],
+  );
   const [tableData, setTableData] = useState<MergedTableCategory[]>([]);
 
   // Chart
@@ -319,15 +324,28 @@ const LineChartByTeamCompare = ({
       categoryDuration: category.duration,
       type,
       userList:
-        category.users && category.users.length > 0
-          ? category.users.map((user) => {
+        allLabelUser.length > 0
+          ? allLabelUser.map((userInfo) => {
+              const foundUser = category.users?.find(
+                (user) => user.user.id == userInfo.value,
+              );
+              if (foundUser) {
+                return {
+                  userId: foundUser.user.id,
+                  userName: foundUser.user.fullName,
+                  userAvatar: foundUser.user.avatar,
+                  userAvatarColor: foundUser.user.avatarColor,
+                  userDuration: foundUser.duration,
+                  userPercent: foundUser.percent,
+                };
+              }
               return {
-                userId: user.user.id,
-                userName: user.user.fullName,
-                userAvatar: user.user.avatar,
-                userAvatarColor: user.user.avatarColor,
-                userDuration: user.duration,
-                userPercent: user.percent,
+                userId: Number(userInfo.value),
+                userName: userInfo?.label,
+                userAvatar: userInfo?.avatarUrl || '',
+                userAvatarColor: userInfo?.color || '',
+                userDuration: DEFAULT_TIME_TEXT,
+                userPercent: 0,
               };
             })
           : [],
@@ -484,43 +502,82 @@ const LineChartByTeamCompare = ({
     orderingOptions,
   ]);
 
+  // Get table info (statistic team standard categories)
+  useStatisticTableInTeamLineChart({
+    filter: {
+      fromDate: formatDateToYMD(startDate) || '',
+      endDate: formatDateToYMD(`${endDate}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: selectedLarge?.value as number,
+      mediumCategoryId: selectedMedium?.value as number,
+      orderingOptions: orderingOptions,
+      userIds: debouncedSelectedMembers,
+    },
+    onSuccess: (data) => {
+      if (!data) return;
+      let tableDetail: TableRowDetail[] = [];
+
+      if (selectedOrganization && !selectedLarge && !selectedMedium) {
+        tableDetail = buildTableDetail(
+          data.largeCategories,
+          StatisticChartType.STANDARD,
+        );
+      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+        tableDetail = buildTableDetail(
+          data.mediumCategories,
+          StatisticChartType.STANDARD,
+        );
+      } else if (selectedOrganization && selectedLarge && selectedMedium) {
+        tableDetail = buildTableDetail(
+          data.smallCategories,
+          StatisticChartType.STANDARD,
+        );
+      }
+
+      setStandardTableData(tableDetail);
+    },
+  });
+
+  // Get table info (statistic team compare categories)
+  useStatisticTableInTeamLineChartCompare({
+    filter: {
+      fromDate: formatDateToYMD(startDateCompare) || '',
+      endDate: formatDateToYMD(`${endDateCompare}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: selectedLarge?.value as number,
+      mediumCategoryId: selectedMedium?.value as number,
+      orderingOptions: orderingOptions,
+      userIds: debouncedSelectedMembers,
+    },
+    onSuccess: (data) => {
+      if (!data) return;
+      let tableDetail: TableRowDetail[] = [];
+
+      if (selectedOrganization && !selectedLarge && !selectedMedium) {
+        tableDetail = buildTableDetail(
+          data.largeCategories,
+          StatisticChartType.COMPARE,
+        );
+      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+        tableDetail = buildTableDetail(
+          data.mediumCategories,
+          StatisticChartType.COMPARE,
+        );
+      } else if (selectedOrganization && selectedLarge && selectedMedium) {
+        tableDetail = buildTableDetail(
+          data.smallCategories,
+          StatisticChartType.COMPARE,
+        );
+      }
+
+      setCompareTableData(tableDetail);
+    },
+  });
+
   useEffect(() => {
-    if (!statisticTeamCategoryList || !statisticCategoryListTeamCompare) return;
-    let standardTableData: TableRowDetail[] = [];
-    let compareTableData: TableRowDetail[] = [];
-
-    if (selectedOrganization && !selectedLarge && !selectedMedium) {
-      standardTableData = buildTableDetail(
-        statisticTeamCategoryList.largeCategories,
-        StatisticChartType.STANDARD,
-      );
-      compareTableData = buildTableDetail(
-        statisticCategoryListTeamCompare.largeCategories,
-        StatisticChartType.COMPARE,
-      );
-    } else if (selectedOrganization && selectedLarge && !selectedMedium) {
-      standardTableData = buildTableDetail(
-        statisticTeamCategoryList.mediumCategories,
-        StatisticChartType.STANDARD,
-      );
-      compareTableData = buildTableDetail(
-        statisticCategoryListTeamCompare.mediumCategories,
-        StatisticChartType.COMPARE,
-      );
-    } else if (selectedOrganization && selectedLarge && selectedMedium) {
-      standardTableData = buildTableDetail(
-        statisticTeamCategoryList.smallCategories,
-        StatisticChartType.STANDARD,
-      );
-      compareTableData = buildTableDetail(
-        statisticCategoryListTeamCompare.smallCategories,
-        StatisticChartType.COMPARE,
-      );
-    }
-
     const tableData = mergeCategories([
-      ...standardTableData,
-      ...compareTableData,
+      ...standardTableData || [],
+      ...compareTableData || [],
     ]);
     setTableData(tableData);
     setCategoryCollapseStatuses(
@@ -532,15 +589,9 @@ const LineChartByTeamCompare = ({
       }),
     );
     handleCategorySelection(tableData);
-  }, [
-    statisticTeamCategoryList,
-    statisticCategoryListTeamCompare,
-    selectedOrganization,
-    selectedLarge,
-    selectedMedium,
-  ]);
+  }, [standardTableData, compareTableData]);
 
-  // Hide tooltip when mouse leave over 150px
+  // Hide tooltip when mouse leave over 80px
   useEffect(() => {
     let hideTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -566,7 +617,7 @@ const LineChartByTeamCompare = ({
         0,
       );
 
-      if (distance > 150) {
+      if (distance > 80) {
         if (!hideTimeout) {
           hideTimeout = setTimeout(() => {
             if (tooltipRef.current) {
@@ -584,7 +635,7 @@ const LineChartByTeamCompare = ({
           }, 250); // delay before hiding tooltip
         }
       } else {
-        // Mouse came back within 150px: cancel hide
+        // Mouse came back within 80px: cancel hide
         if (hideTimeout) {
           clearTimeout(hideTimeout);
           hideTimeout = null;
@@ -675,7 +726,14 @@ const LineChartByTeamCompare = ({
     );
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
-    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 60}px`;
+
+    const left = getSafeTooltipLeft({
+      offsetLeft,
+      caretX: tooltipModel.caretX,
+      tooltipWidth: 260,
+    });
+
+    tooltipEl.style.left = `${left - 30}px`;
     tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
     tooltipEl.style.opacity = '1';
     tooltipEl.style.display = 'block';
@@ -1104,7 +1162,7 @@ const LineChartByTeamCompare = ({
         return (
           <div className="flex items-start px-[18px]">
             <RadioButton
-              name="categoryName"
+              name="lineChartCategoryName"
               isChecked={info.row.original.categoryId == selectedCategory?.id}
               onChange={(e: any) => {
                 if (e) {
@@ -1289,7 +1347,7 @@ const LineChartByTeamCompare = ({
     },
     {
       accessorKey: 'categoryDuration',
-      size: 40,
+      size: 50,
       header: () => {
         return (
           <div
@@ -1431,7 +1489,7 @@ const LineChartByTeamCompare = ({
     },
     {
       accessorKey: 'categoryPercent',
-      size: 20,
+      size: 30,
       header: () => {
         return (
           <div
