@@ -28,6 +28,7 @@ class PermissionForCreateSerializer(serializers.Serializer):
 
     my_task = BaseActionsSerializer()
     calendar = BaseActionsSerializer()
+    calendar_management = BaseActionsSerializer()
     chat = BaseActionsSerializer()
     organization = BaseActionsSerializer()
     category = BaseActionsSerializer()
