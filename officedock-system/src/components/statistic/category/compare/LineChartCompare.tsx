@@ -58,6 +58,7 @@ import {
 import {
   getCompareLineChartEnableViews,
   getRandomColor,
+  getSafeTooltipLeft,
   lightenColor,
 } from '@utils';
 
@@ -388,7 +389,14 @@ const LineChartCompare = ({
     `;
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
-    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 115}px`;
+
+    const left = getSafeTooltipLeft({
+      offsetLeft,
+      caretX: tooltipModel.caretX,
+      tooltipWidth: 240,
+    });
+
+    tooltipEl.style.left = `${left - 30}px`;
     tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
     tooltipEl.style.opacity = '1';
     tooltipEl.style.zIndex = '9999';
@@ -707,7 +715,10 @@ const LineChartCompare = ({
         },
       );
     }
-    if (statisticTaskDurationsCompareList && statisticTaskDurationsCompareList.length > 0) {
+    if (
+      statisticTaskDurationsCompareList &&
+      statisticTaskDurationsCompareList.length > 0
+    ) {
       statisticTaskDurationsCompareList.map(
         (categoryDetail: StatisticsTaskDuration) => {
           sumCompareDurations =
@@ -910,7 +921,7 @@ const LineChartCompare = ({
     },
     {
       accessorKey: 'categoryDuration',
-      size: 40,
+      size: 50,
       header: () => {
         return (
           <div
@@ -988,7 +999,7 @@ const LineChartCompare = ({
     },
     {
       accessorKey: 'categoryPercent',
-      size: 25,
+      size: 30,
       header: () => {
         return (
           <div

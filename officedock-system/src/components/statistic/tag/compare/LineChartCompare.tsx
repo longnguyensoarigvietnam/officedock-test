@@ -24,9 +24,7 @@ import { Table, TableBody } from '@components/common/Table';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import Dropdown from '@components/common/Dropdown';
-import {
-  StatisticsTagTaskDuration,
-} from '@interfaces/statistic';
+import { StatisticsTagTaskDuration } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
 import {
@@ -50,6 +48,7 @@ import {
 import {
   getCompareLineChartEnableViews,
   getRandomColor,
+  getSafeTooltipLeft,
   lightenColor,
 } from '@utils';
 
@@ -395,7 +394,12 @@ const LineChartCompare = ({
       `;
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
-    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 115}px`;
+    const left = getSafeTooltipLeft({
+      offsetLeft,
+      caretX: tooltipModel.caretX,
+      tooltipWidth: 240,
+    });
+    tooltipEl.style.left = `${left - 30}px`;
     tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
     tooltipEl.style.opacity = '1';
     tooltipEl.style.zIndex = '9999';
@@ -650,7 +654,9 @@ const LineChartCompare = ({
           standardLabels = [
             ...standardLabels,
             {
-              color: lightenColor('#2E9267', categoryDetail?.percent || 0) || getRandomColor(),
+              color:
+                lightenColor('#2E9267', categoryDetail?.percent || 0) ||
+                getRandomColor(),
               name: categoryDetail.tagName,
             },
           ];
@@ -663,7 +669,10 @@ const LineChartCompare = ({
               tagDuration: categoryDetail.duration,
               tagPercent: String(categoryDetail?.percent || 0),
               tagColor:
-                lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
+                lightenColor(
+                  '#2E9267' as string,
+                  categoryDetail?.percent || 0,
+                ) || getRandomColor(),
               type: StatisticChartType.STANDARD,
             },
           ];
@@ -679,10 +688,16 @@ const LineChartCompare = ({
                 compareTag?.durations ?? [],
                 StatisticChartType.STANDARD,
                 categoryDetail.tagName,
-                lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
+                lightenColor(
+                  '#2E9267' as string,
+                  categoryDetail?.percent || 0,
+                ) || getRandomColor(),
               ),
               borderColor:
-                lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
+                lightenColor(
+                  '#2E9267' as string,
+                  categoryDetail?.percent || 0,
+                ) || getRandomColor(),
               backgroundColor: 'transparent',
               borderDash: [],
               fill: true,
@@ -691,7 +706,10 @@ const LineChartCompare = ({
               pointBorderColor: 'transparent',
               pointHoverRadius: 6,
               pointHoverBackgroundColor:
-                lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
+                lightenColor(
+                  '#2E9267' as string,
+                  categoryDetail?.percent || 0,
+                ) || getRandomColor(),
               pointHoverBorderColor: 'transparent',
               pointHoverBorderWidth: 2,
             },
@@ -709,7 +727,10 @@ const LineChartCompare = ({
             ...comparedLabels,
             {
               color:
-                lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
+                lightenColor(
+                  '#2E9267' as string,
+                  categoryDetail?.percent || 0,
+                ) || getRandomColor(),
               name: categoryDetail.tagName,
             },
           ];
@@ -720,7 +741,8 @@ const LineChartCompare = ({
             tagDuration: categoryDetail.duration,
             tagPercent: String(categoryDetail?.percent || 0),
             tagColor:
-              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
+              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) ||
+              getRandomColor(),
             type: StatisticChartType.COMPARE,
           });
 
@@ -735,10 +757,12 @@ const LineChartCompare = ({
               categoryDetail.durations,
               StatisticChartType.COMPARE,
               categoryDetail.tagName,
-              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
+              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) ||
+                getRandomColor(),
             ),
             borderColor:
-              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
+              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) ||
+              getRandomColor(),
             backgroundColor: 'transparent',
             borderDash: [3, 3],
             fill: true,
@@ -747,7 +771,8 @@ const LineChartCompare = ({
             pointBorderColor: 'transparent',
             pointHoverRadius: 6,
             pointHoverBackgroundColor:
-              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
+              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) ||
+              getRandomColor(),
             pointHoverBorderColor: 'transparent',
             pointHoverBorderWidth: 2,
           });
@@ -933,7 +958,7 @@ const LineChartCompare = ({
     },
     {
       accessorKey: 'tagDuration',
-      size: 40,
+      size: 50,
       header: () => {
         return (
           <div
@@ -1006,7 +1031,7 @@ const LineChartCompare = ({
     },
     {
       accessorKey: 'tagPercent',
-      size: 25,
+      size: 30,
       header: () => {
         return (
           <div

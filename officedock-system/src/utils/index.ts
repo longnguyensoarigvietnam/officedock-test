@@ -1160,3 +1160,28 @@ export const convertLinksToHTML = (text: string) => {
     return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: blue; text-decoration: underline; cursor: pointer;">${url}</a>`;
   });
 };
+
+export const getSafeTooltipLeft = ({
+  offsetLeft,
+  caretX,
+  tooltipWidth,
+  padding = 10,
+}: {
+  offsetLeft: number;
+  caretX: number;
+  tooltipWidth: number;
+  padding?: number;
+}): number => {
+  // Center tooltip over caretX
+  let left = offsetLeft + caretX - tooltipWidth / 2;
+
+  // Clamp left within screen boundaries
+  const maxLeft = window.innerWidth - tooltipWidth - padding;
+  if (left < padding) {
+    left = padding;
+  } else if (left > maxLeft) {
+    left = maxLeft;
+  }
+
+  return left;
+};
