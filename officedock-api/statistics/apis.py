@@ -1595,13 +1595,17 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             from_date, end_date, trim_whitespace(statistic_by)
         )
         data = []
-
+        durations = get_list_durations_by_users(
+            durations=durations,
+            large_id=large_category_id,
+            medium_id=medium_category_id,
+            small_id=small_category_id,
+        )
+        if not durations:
+            return self.response_ok()
         for user in users:
             filter_durations = get_list_durations_by_users(
                 durations=durations,
-                large_id=large_category_id,
-                medium_id=medium_category_id,
-                small_id=small_category_id,
                 users=[user],
             )
             user_total_duration = get_total_durations(filter_durations)
@@ -1626,22 +1630,41 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         for start, end in ranges:
             start_date_min = datetime.combine(start, time.min)
             end_date_max = datetime.combine(end, time.max)
-            root_durations_per_range = root_durations.filter(
-                started_at__gte=start_date_min,
-                paused_at__lte=end_date_max,
-            )
+            duration = timedelta(0)
+            # Get duration by range
+            if start <= now().date() <= end:
+                filters = Q(
+                    Q(
+                        Q(started_at__gte=start_date_min)
+                        & Q(paused_at__lte=end_date_max)
+                    )
+                    | Q(
+                        Q(started_at__lte=end_date_max)
+                        & Q(started_at__gte=start_date_min)
+                        & Q(paused_at__isnull=True)
+                    )
+                )
+                root_durations_per_range = root_durations.filter(filters)
+                if filter_durations:
+                    filter_duration_by_range = filter_durations.filter(filters)
+                    duration = get_total_durations(filter_duration_by_range)
+            else:
+                root_durations_per_range = root_durations.filter(
+                    started_at__gte=start_date_min,
+                    paused_at__lte=end_date_max,
+                )
+                if filter_durations:
+                    filter_duration_by_range = filter_durations.filter(
+                        started_at__gte=start_date_min,
+                        paused_at__lte=end_date_max,
+                    )
+                    duration = get_total_durations(filter_duration_by_range)
             total_duration = (
                 get_total_durations(root_durations_per_range)
                 if root_durations_per_range
                 else timedelta(0)
             )
-            duration = timedelta(0)
-            if filter_durations:
-                filter_duration_by_range = filter_durations.filter(
-                    started_at__gte=start_date_min,
-                    paused_at__lte=end_date_max,
-                )
-                duration = get_total_durations(filter_duration_by_range)
+
             # Calculate the percentage of a user's duration relative to the total duration within a time range
             percent_per_range = percentage_calculation_of_duration(
                 total_duration.total_seconds(), duration.total_seconds()
