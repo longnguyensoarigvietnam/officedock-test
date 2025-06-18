@@ -51,7 +51,6 @@ import { DEFAULT_TASK_SCHEDULE_DURATION, NO_OPTION_CATEGORY } from '@constants';
 
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import {
   addTimeToDate,
@@ -62,15 +61,18 @@ import {
   formatTimeInput,
   generateTimeOptionsAsObjects,
 } from '@utils/date';
+
 import api from '@base/api';
 
 const EditActualDurationsForm = () => {
+  // Params
   const params = useParams();
-  const [defaultTaskScheduleData, setDefaultTaskScheduleData] =
-    useState<ActualDurationDefaultData>();
-  const { expanded } = useContext(GlobalStateContext);
   const searchParams = useSearchParams();
+
+  // Toast
   const { showToast } = useToast();
+
+  // Creation data
   const [dataOrganizationCategories, setDataOrganizationCategories] = useState<
     CategoryStructure[]
   >([]);
@@ -110,16 +112,25 @@ const EditActualDurationsForm = () => {
   const [dataOptionsEventTypes, setDataOptionsEventTypes] = useState<
     OptionDropdownType[]
   >([]);
-  const [calculatedActualDuration, setCalculatedActualDuration] = useState(
-    DEFAULT_TASK_SCHEDULE_DURATION,
-  );
-  const [isSubmit, setIsSubmit] = useState(false);
-  const { setIsLoading } = useContext(LoadingContext);
   const { creationDataEventCalendar } = useCreationDataEventCalendar({
     condition: [searchParams.get('type') == EventCalendarType.SCHEDULE],
   });
 
+  // Task schedule data
+  const [defaultTaskScheduleData, setDefaultTaskScheduleData] =
+    useState<ActualDurationDefaultData>();
+  const [calculatedActualDuration, setCalculatedActualDuration] = useState(
+    DEFAULT_TASK_SCHEDULE_DURATION,
+  );
+  const [isSubmit, setIsSubmit] = useState(false);
+
+  // Loading state
+  const { setIsLoading } = useContext(LoadingContext);
+
+  // Router
   const router = useRouter();
+
+  // Time
   const [time, setTime] = useState<string>('');
   const [minDatePlan, setMinDatePlan] = useState<Date | null>();
   const currentDate = new Date();
@@ -345,6 +356,7 @@ const EditActualDurationsForm = () => {
         });
       },
     });
+
   useEffect(() => {
     if (defaultTaskScheduleData) {
       refetchOrganizationStatisticCategories();
@@ -704,12 +716,9 @@ const EditActualDurationsForm = () => {
   return (
     <div className="flex flex-col justify-between h-full">
       <div>
-        <div>
-          <p
-            className={`font-semibold mb-2 break-words ${expanded ? '!w-[calc(100%_-_210px)]' : '!w-[calc(100%_-_60px)]'}`}>
-            {defaultTaskScheduleData?.title}
-          </p>
-        </div>
+        <p className="font-semibold mb-2 break-all max-w-full">
+          {defaultTaskScheduleData?.title}
+        </p>
         <div>
           {searchParams.get('type') == EventCalendarType.SCHEDULE && (
             <div className="flex flex-col gap-2 mb-5">
@@ -923,7 +932,7 @@ const EditActualDurationsForm = () => {
                         }}
                         render={({ field: { value, onChange } }) => (
                           <DatePickerCustom
-                            className="h-[46px] !text-sm !pt-2 !pl-6 text-center"
+                            className="h-[46px] !text-sm !pt-2 !pl-8 !pr-0 text-left"
                             customizedClassName="customized-datepicker"
                             selected={value ? new Date(value) : null}
                             onChange={(e) => {
@@ -1020,7 +1029,7 @@ const EditActualDurationsForm = () => {
                         }}
                         render={({ field: { value, onChange } }) => (
                           <DatePickerCustom
-                            className="h-[46px] !text-sm !pt-2 !pl-6 text-center"
+                            className="h-[46px] !text-sm !pt-2 !pl-8 !pr-0 text-left"
                             selected={value ? new Date(value) : null}
                             minDate={
                               minDatePlan || (watch('startedAtDate') as Date)
