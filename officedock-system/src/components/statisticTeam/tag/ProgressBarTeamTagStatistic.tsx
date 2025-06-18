@@ -359,7 +359,7 @@ const ProgressBarTeamTagStatistic = ({
                     </span>
                   </div>
                   <div className="flex items-center gap-[10px] font-normal text-base mt-[10px] mb-2">
-                    <span>{item.percent}</span>
+                    <span>{item.percent}%</span>
                     <span>
                       {item.duration && formatTimeToJapanese(item.duration)}
                     </span>

@@ -363,6 +363,13 @@ const AllocationCategoryCompare = memo(
     ) => {
       let duration: string = '00:00:00';
       if (isCompare) {
+        if (
+          isLoadingLargeCompare ||
+          isLoadingMediumCompare ||
+          isLoadingOrganizationCompare
+        )
+          return;
+
         if (type === EventWorkCategory.ALL) {
           duration =
             statisticCategoryCompareList?.largeCategories.find(
@@ -389,6 +396,8 @@ const AllocationCategoryCompare = memo(
 
         setIsShowModalCompare(true);
       } else {
+        if (isLoadingLarge || isLoadingMedium || isLoadingOrganization) return;
+
         if (type === EventWorkCategory.ALL) {
           duration =
             statisticCategoryList?.largeCategories.find(

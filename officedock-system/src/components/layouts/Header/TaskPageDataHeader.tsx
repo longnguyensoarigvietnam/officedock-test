@@ -40,6 +40,7 @@ import {
   formatQueryStartDateForCalendar,
   formatTimeTask,
 } from '@utils/date';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 const ShowTimeCounter = memo(
   ({ statusTaskSelected }: { statusTaskSelected: TaskDuration }) => {
@@ -117,6 +118,7 @@ const TaskPageDataHeader = () => {
     99,
     999,
   );
+  const { authenticatedUser } = useAuthenticatedUser({});
 
   const { dataTaskHeaderStart, refetchTaskHeaderStart } = useTaskHeaderStart({
     userId: `${userIdTask}`,
@@ -513,24 +515,29 @@ const TaskPageDataHeader = () => {
   );
 
   const handleStartEmptyTask = () => {
-    createTask({
-      title: convertDateStringWithFormat(new Date()),
-      statusId: StatusValueTask.IN_PROGRESS,
-      priority: '',
-      deadline: null,
-      description: '',
-      tagIds: [],
-      isImportant: false,
-      sendToChat: false,
-      organizationId: null,
-      task_schedule_from_date: formatDateServer(displayHeaderDateStart),
-      task_schedule_end_date: formatDateServer(displayHeaderDateEnd),
-      remindCountdown: null,
-      remindType: null,
-      repeatType: null,
-      isTeamTask: false,
-      peopleInChargeIds: [{ peopleInChargeId: session?.user.id as number }],
-    });
+    const isMainOrg = authenticatedUser?.organizations.find(
+      (organization) => organization.isMain,
+    );
+    if (isMainOrg) {
+      createTask({
+        title: convertDateStringWithFormat(new Date()),
+        statusId: StatusValueTask.IN_PROGRESS,
+        priority: '',
+        deadline: null,
+        description: '',
+        tagIds: [],
+        isImportant: false,
+        sendToChat: false,
+        organizationId: isMainOrg.id,
+        task_schedule_from_date: formatDateServer(displayHeaderDateStart),
+        task_schedule_end_date: formatDateServer(displayHeaderDateEnd),
+        remindCountdown: null,
+        remindType: null,
+        repeatType: null,
+        isTeamTask: false,
+        peopleInChargeIds: [{ peopleInChargeId: session?.user.id as number }],
+      });
+    }
   };
 
   const timeTaskSelect = dataTaskHeaderList?.cards.find(

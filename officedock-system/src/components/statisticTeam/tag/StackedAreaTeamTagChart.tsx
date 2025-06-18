@@ -29,6 +29,7 @@ import {
 import { getLineChartEnableViews } from '@utils';
 import {
   convertDurationToTotalMinutes,
+  convertToJapaneseDateRange,
   convertToStatisticJapaneseLabels,
   formatDateToYMD,
 } from '@utils/date';
@@ -348,7 +349,6 @@ const StackedAreaTeamTagChart = ({
     } else {
       setTimeRange([]);
       setDataChart([]);
-      setTableData([]);
       return;
     }
   }, [statisticUserTaskDurationsList, lineChartViewBy]);
@@ -365,7 +365,7 @@ const StackedAreaTeamTagChart = ({
     return {
       y: averageMidpoint,
       label: {
-        text: s.name,
+        text: '',
         position: 'left',
         offsetX: 70,
         style: {
@@ -443,6 +443,7 @@ const StackedAreaTeamTagChart = ({
     },
     stroke: {
       curve: 'straight',
+      show: false,
     },
     markers: {
       size: 0,
@@ -817,6 +818,7 @@ const StackedAreaTeamTagChart = ({
         user: {
           fullName: userData.user.fullName,
           avatarColor: userData.user.avatarColor,
+          avatar: userData.user.avatar,
         },
         startDate: duration?.startDate || null,
         endDate: duration?.endDate || null,
@@ -1117,20 +1119,12 @@ const StackedAreaTeamTagChart = ({
                           <p className="text-sm font-normal text-[#77858F] mb-1 text-start w-full block">
                             {dataDetail &&
                               dataDetail.length > 0 &&
-                              convertToStatisticJapaneseLabels(
+                              convertToJapaneseDateRange(
                                 dataDetail[0]?.startDate as string,
-                                lineChartViewBy?.value as string,
-                                true,
-                              )}{' '}
-                            ~
-                            {dataDetail &&
-                              dataDetail.length > 0 &&
-                              convertToStatisticJapaneseLabels(
                                 dataDetail[0]?.endDate as string,
-                                lineChartViewBy?.value as string,
-                                true,
                               )}
                           </p>
+                          <p className="text-start my-4">{selectedTag?.name}</p>
                           {dataDetail &&
                             dataDetail.length > 0 &&
                             dataDetail?.map((user, userIndex) => {
@@ -1138,14 +1132,13 @@ const StackedAreaTeamTagChart = ({
                                 <div
                                   key={userIndex}
                                   className="flex items-center gap-1.5">
-                                  <div
-                                    className="w-3 h-3 rounded-sm"
-                                    style={{
-                                      backgroundColor: user.user.avatarColor,
-                                    }}
+                                  <CustomUserAvatar
+                                    avatarUrl={user.user.avatar || ''}
+                                    avatarColor={user.user.avatarColor || ''}
+                                    size={30}
                                   />
                                   <div className="flex flex-grow items-center justify-between text-base font-medium">
-                                    <div className=" text-black w-fit  max-w-[180px] line-clamp-3 break-words">
+                                    <div className=" text-black w-fit  max-w-[140px] line-clamp-3 break-words">
                                       {user.user.fullName}
                                     </div>
                                     <div>{user.percentPerRange}%</div>
@@ -1161,53 +1154,55 @@ const StackedAreaTeamTagChart = ({
               </div>
             </div>
           )}
-          <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
-            <thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr
-                  key={headerGroup.id}
-                  className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                  {headerGroup.headers.map((header, index) => (
-                    <th
-                      key={header.id}
-                      className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
-                      style={{
-                        width: header.getSize(),
-                        minWidth: header.getSize(),
-                        maxWidth: header.getSize(),
-                      }}
-                      onClick={header.column.getToggleSortingHandler()}>
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <TableBody>
-              {table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50">
-                  {row.getVisibleCells().map((cell, index) => (
-                    <td
-                      key={cell.id}
-                      style={{
-                        width: cell.column.getSize(),
-                        minWidth: cell.column.getSize(),
-                        maxWidth: cell.column.getSize(),
-                      }}
-                      className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="px-[30px]">
+            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+              <thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr
+                    key={headerGroup.id}
+                    className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                    {headerGroup.headers.map((header, index) => (
+                      <th
+                        key={header.id}
+                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                        style={{
+                          width: header.getSize(),
+                          minWidth: header.getSize(),
+                          maxWidth: header.getSize(),
+                        }}
+                        onClick={header.column.getToggleSortingHandler()}>
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <TableBody>
+                {table.getRowModel().rows.map((row) => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    {row.getVisibleCells().map((cell, index) => (
+                      <td
+                        key={cell.id}
+                        style={{
+                          width: cell.column.getSize(),
+                          minWidth: cell.column.getSize(),
+                          maxWidth: cell.column.getSize(),
+                        }}
+                        className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
     </div>

@@ -148,7 +148,7 @@ const PercentageBarCompareTeam = ({
                                                   size={30}
                                                 />
                                               </div>
-                                              <span className="inline-block max-w-[180px] text-black overflow-hidden whitespace-nowrap text-ellipsis">
+                                              <span className="inline-block ml-3 max-w-[180px] text-black overflow-hidden whitespace-nowrap text-ellipsis">
                                                 {itemMer.user.fullName}
                                               </span>
                                             </div>
@@ -215,7 +215,7 @@ const PercentageBarCompareTeam = ({
                                     avatarColor={item?.avatarColor || ''}
                                     size={30}
                                   />
-                                  <span className="relative max-w-[180px] truncate top-[-3px]">
+                                  <span className="relative ml-3 max-w-[180px] truncate top-[-3px]">
                                     {' '}
                                     {item.label}
                                   </span>
@@ -322,7 +322,7 @@ const PercentageBarCompareTeam = ({
                                                 size={30}
                                               />
                                             </div>
-                                            <span className="inline-block text-black max-w-[180px] overflow-hidden whitespace-nowrap text-ellipsis">
+                                            <span className="inline-block text-black  ml-3 max-w-[180px] overflow-hidden whitespace-nowrap text-ellipsis">
                                               {item.user.fullName}
                                             </span>
                                           </div>
@@ -390,7 +390,7 @@ const PercentageBarCompareTeam = ({
                                     avatarColor={item?.avatarColor || ''}
                                     size={30}
                                   />
-                                  <span className="relative max-w-[180px] truncate top-[-3px]">
+                                  <span className="relative ml-3 max-w-[180px] truncate top-[-3px]">
                                     {' '}
                                     {item.label}
                                   </span>

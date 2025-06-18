@@ -196,6 +196,10 @@ const TableChart = ({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTagTaskDurations',
         });
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            query.queryKey[0] === 'getStatisticTagPercentChart',
+        });
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
@@ -253,6 +257,10 @@ const TableChart = ({
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTagTaskDurations',
+        });
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            query.queryKey[0] === 'getStatisticTagPercentChart',
         });
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
@@ -642,7 +650,7 @@ const TableChart = ({
                   )
                 }
                 placeholder=""
-                showArrow
+                showArrow={info.row.original.type === EventCalendarType.TASK}
                 options={smallCategories}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
@@ -701,6 +709,7 @@ const TableChart = ({
                     });
                   }
                 }}
+                isDisabled={info.row.original.type !== EventCalendarType.TASK}
               />
             </div>
             <div className="ml-auto">
