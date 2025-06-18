@@ -1,4 +1,5 @@
 from datetime import timedelta, datetime, time
+from itertools import chain
 from uuid import uuid4
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -16,6 +17,7 @@ from rest_framework.permissions import IsAuthenticated
 from base.apis import BaseAPIViewSet
 from base.filters import FilterByPermission
 from base.messages import ERROR_MESSAGES
+from base.paginations import BasePagination
 from calendars.constants import CalendarTypes
 from calendars.models import Schedule, RepeatSchedule
 from calendars.serializers import BaseScheduleSerializer
@@ -794,7 +796,23 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         return queryset.order_by("-created_at")
 
-    @extend_schema(parameters=[OpenApiParameter("user_id", type=int)])
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                BasePagination.page_query_param,
+                type=int,
+                description=BasePagination.page_query_description,
+            ),
+            OpenApiParameter(
+                BasePagination.page_size_query_param,
+                type=int,
+                description=BasePagination.page_size_query_description,
+            ),
+            OpenApiParameter("user_id", type=int),
+            OpenApiParameter("task_id", type=int),
+            OpenApiParameter("created_at", type=datetime),
+        ]
+    )
     @action(
         methods=["GET"],
         detail=False,
@@ -806,6 +824,8 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         Get data options tasks and schedules by user
         """
         user_id = request.query_params.get("user_id")
+        task_id = request.query_params.get("task_id")
+        created_at = request.query_params.get("created_at")
 
         # Validate user_id
         if not user_id:
@@ -813,23 +833,43 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         # Fetch tasks and schedules
         tasks = (
-            Task.objects.filter(people_in_charge=user_id)
-            .values("id", "title")
+            Task.objects.filter(
+                people_in_charge=user_id, deleted_at__isnull=True
+            )
+            .values("id", "title", "created_at")
             .annotate(
                 type=Value(CalendarTypes.TASK.value, output_field=CharField())
             )
         )
         schedules = (
-            Schedule.objects.filter(participants=user_id)
-            .values("id", "title")
+            Schedule.objects.filter(
+                participants=user_id, deleted_at__isnull=True
+            )
+            .values("id", "title", "created_at")
             .annotate(
                 type=Value(
                     CalendarTypes.SCHEDULE.value, output_field=CharField()
                 )
             )
         )
+        merged_qs = sorted(
+            chain(tasks, schedules),
+            key=lambda x: (x["created_at"], x["id"]),
+            reverse=True,
+        )
+        if task_id:
+            task_id = int(task_id)
+            created_at = datetime.fromisoformat(created_at)
+            merged_qs = [
+                x
+                for x in merged_qs
+                if x["created_at"] < created_at or x["id"] < task_id
+            ]
 
-        return self.response_ok(list(tasks) + list(schedules))
+        paginator = self.pagination_class()
+        paginated_data = paginator.paginate_queryset(merged_qs, request)
+
+        return paginator.get_paginated_response(paginated_data)
 
     def retrieve(self, request, *args, **kwargs):
         """
