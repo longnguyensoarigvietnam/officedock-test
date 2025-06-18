@@ -1130,6 +1130,7 @@ export const changeTextAreaFormatLink = ({
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
       a.style.color = 'blue';
+      a.style.cursor = 'pointer';
       a.style.textDecoration = 'underline';
       frag.appendChild(a);
 
@@ -1156,6 +1157,6 @@ export const changeTextAreaFormatLink = ({
 };
 export const convertLinksToHTML = (text: string) => {
   return text.replace(URL_REGEX, (url) => {
-    return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: blue; text-decoration: underline;">${url}</a>`;
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: blue; text-decoration: underline; cursor: pointer;">${url}</a>`;
   });
 };

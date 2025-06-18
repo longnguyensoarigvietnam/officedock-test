@@ -335,8 +335,7 @@ const StackedAreaChart = ({
     };
   });
 
-  const MAX_LABEL_LENGTH =
-    timeRange?.length > 16 ? 5 : timeRange?.length > 12 ? 6 : 1000;
+  const isLargerTime = timeRange?.length > 12;
 
   const options = {
     chart: {
@@ -351,7 +350,7 @@ const StackedAreaChart = ({
     },
     grid: {
       padding: {
-        left: 45, // 👉 increase value if label is hidden
+        left: isLargerTime ? 90 : 45, // 👉 increase value if label is hidden
         right: 10,
       },
     },
@@ -434,12 +433,6 @@ const StackedAreaChart = ({
         style: {
           fontSize: '14px',
           colors: '#939FA7',
-        },
-        formatter: (val: number) => {
-          const label = String(val);
-          return label.length > MAX_LABEL_LENGTH
-            ? label.slice(0, MAX_LABEL_LENGTH) + '…'
-            : label;
         },
       },
     },
@@ -857,7 +850,8 @@ const StackedAreaChart = ({
                 type="area"
                 height={380}
               />
-              <div className="w-full pl-[45px] pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent">
+              <div
+                className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'}  pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
                 {timeRange.slice(1).map((item, idx) => {
                   const actualIndex = idx + 1;
                   const isHovered = hoveredIndex === actualIndex;
@@ -889,7 +883,7 @@ const StackedAreaChart = ({
                           style={{
                             boxShadow: '0px 2px 8px 0px #0000001A',
                           }}
-                          className={`bg-white absolute p-5 top-1/2 left-0 hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                          className={`bg-white absolute p-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
                           <p className="text-sm font-normal text-[#77858F] mb-1 text-start w-full block">
                             {convertToStatisticJapaneseLabels(
                               dataDetailDate?.startDate as string,
