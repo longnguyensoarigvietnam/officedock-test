@@ -125,7 +125,7 @@ const ProgressBarTeamTagCompare = ({
   handleClickChart,
   handleClickTooltip,
 }: ProgressBarProps) => {
-  const [isExtendUser, setExtendUser] = useState(true);
+  const [isExtendUser, setExtendUser] = useState(false);
 
   const userCompareRows = buildUserCompareData(item, itemCompare);
 

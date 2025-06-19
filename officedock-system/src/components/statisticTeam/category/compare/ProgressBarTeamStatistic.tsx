@@ -88,26 +88,26 @@ function buildUserCompareData(
         ? {
             user: userA.user,
             tasks: userA.tasks,
-            percent: `${userA.percent}%`,
+            percent: `${userA.percent}`,
             duration: userA.duration,
           }
         : {
             user: userB!.user,
             tasks: [],
-            percent: '0%',
+            percent: '0',
             duration: '00:00:00',
           },
       userCompare: userB
         ? {
             user: userB.user,
             tasks: userB.tasks,
-            percent: `${userB.percent}%`,
+            percent: `${userB.percent}`,
             duration: userB.duration,
           }
         : {
             user: userA!.user,
             tasks: [],
-            percent: '0%',
+            percent: '0',
             duration: '00:00:00',
           },
     };
@@ -127,7 +127,7 @@ const ProgressBarTeamStatisticCompare = ({
   handleClickChart,
   handleClickTooltip,
 }: ProgressBarProps) => {
-  const [isExtendUser, setExtendUser] = useState(true);
+  const [isExtendUser, setExtendUser] = useState(false);
 
   const userCompareRows = buildUserCompareData(item, itemCompare);
 
@@ -175,7 +175,7 @@ const ProgressBarTeamStatisticCompare = ({
                     value: item.id || '',
                   });
               }}></div>
-            {item && (
+            {item && item.value > 0 && (
               <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-md py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
                 {item.id != -1 ? (
                   <div>
@@ -342,7 +342,7 @@ const ProgressBarTeamStatisticCompare = ({
                     value: itemCompare?.id || '',
                   });
               }}></div>
-            {itemCompare && (
+            {itemCompare && itemCompare.value > 0 && (
               <div className="absolute -top-[25%] left-[40%] w-[250px] rounded-md py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
                 {itemCompare.id != -1 ? (
                   <div>
@@ -525,9 +525,9 @@ const ProgressBarTeamStatisticCompare = ({
                 </div>
               </div>
               <div
-                className={`w-full group relative h-[10px] bg-gray-300 rounded-[4px]  ${classProgressUserClass}`}>
+                className={`w-full group relative h-[10px] bg-gray-300  rounded-[4px]  ${classProgressUserClass}`}>
                 <div
-                  className="h-full transition-all duration-500 "
+                  className="h-full rounded-[4px] overflow-hidden transition-all duration-500 "
                   style={{
                     width: `${itemUser.user.percent}%`,
                     backgroundColor: itemUser.user.user.avatarColor,
@@ -570,7 +570,7 @@ const ProgressBarTeamStatisticCompare = ({
                       </span>
                     </div>
                     <div className="flex items-center gap-[10px] font-normal text-base mt-[10px] mb-2">
-                      <span>{itemUser.user.percent}</span>
+                      <span>{itemUser.user.percent}%</span>
                       <span>
                         {itemUser.user.duration &&
                           formatTimeToJapanese(itemUser.user.duration)}
@@ -665,7 +665,7 @@ const ProgressBarTeamStatisticCompare = ({
                       </span>
                     </div>
                     <div className="flex items-center gap-[10px] font-normal text-base mt-[10px] mb-2">
-                      <span>{itemUser.userCompare.percent}</span>
+                      <span>{itemUser.userCompare.percent}%</span>
                       <span>
                         {itemUser.userCompare.duration &&
                           formatTimeToJapanese(itemUser.userCompare.duration)}
@@ -694,7 +694,7 @@ const ProgressBarTeamStatisticCompare = ({
                                 ? itemUser.userCompare.duration
                                 : '00:00:00',
                             isCompare: true,
-                            userDuration: item.duration || '',
+                            userDuration: itemCompare?.duration || '',
                           })
                         }
                         className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">

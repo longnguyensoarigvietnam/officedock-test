@@ -151,13 +151,49 @@ export function buildProgressDataCompareWithMergedOthers({
     colorData,
   });
 
-  return mergedBase.map((item) => {
-    const matched = mergedCompare.find((c) => c.id === item.id);
+  // Collect all IDs from both lists
+  const allIds = new Set<number>();
+  mergedBase.forEach((item) => allIds.add(item.id));
+  mergedCompare.forEach((item) => allIds.add(item.id));
+
+  // Map data with label assignment logic from the other side if missing
+  const result: ProgressDataCompareItem[] = Array.from(allIds).map((id) => {
+    const item = mergedBase.find((b) => b.id === id);
+    const itemCompare = mergedCompare.find((c) => c.id === id);
+
+    const finalItem: ProgressDataType = item ?? {
+      id,
+      label: itemCompare?.label ?? '',
+      value: 0,
+      color: '#ccc',
+      duration: '00:00:00',
+      optionData: [],
+    };
+
+    const finalItemCompare: ProgressDataType = itemCompare ?? {
+      id,
+      label: item?.label ?? '',
+      value: 0,
+      color: '#ccc',
+      duration: '00:00:00',
+      optionData: [],
+    };
+
     return {
-      item,
-      itemCompare: matched,
+      item: finalItem,
+      itemCompare: finalItemCompare,
     };
   });
+  result.sort((a, b) => {
+    const isAOther = a.item.id === -1;
+    const isBOther = b.item.id === -1;
+
+    if (isAOther && !isBOther) return 1;
+    if (!isAOther && isBOther) return -1;
+    return 0;
+  });
+
+  return result;
 }
 
 const AllocationTeamCategoryCompare = memo(
@@ -254,11 +290,16 @@ const AllocationTeamCategoryCompare = memo(
           compareData: statisticCategoryListTeamCompare?.smallCategories || [],
           colorData: color,
         });
+
         setProgressDataLarge(compareResult);
         setProgressDataMedium(compareResultMedium);
         setProgressDataSmall(compareResultSmall);
       }
-    }, [statisticTeamCategoryList, statisticCategoryListTeamCompare]);
+    }, [
+      statisticTeamCategoryList,
+      statisticCategoryListTeamCompare,
+      selectedLarge?.value,
+    ]);
 
     const handleClickTooltip = ({
       id,

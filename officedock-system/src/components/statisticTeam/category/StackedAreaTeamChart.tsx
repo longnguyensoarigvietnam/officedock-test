@@ -632,7 +632,7 @@ const StackedAreaTeamChart = ({
     },
     {
       accessorKey: 'categoryDuration',
-      size: 40,
+      size: 50,
       header: () => {
         return (
           <div
@@ -681,8 +681,10 @@ const StackedAreaTeamChart = ({
                 ).length > 0 &&
                 'mb-3'
               }`}>
-              <p>{value.split(':')[0] || 0}時間</p>
-              <p>{value.split(':')[1] || 0}分</p>
+              <p className="whitespace-nowrap">
+                {value.split(':')[0] || 0}時間
+              </p>
+              <p className="whitespace-nowrap">{value.split(':')[1] || 0}分</p>
             </div>
             {collapseStatus &&
               info.row.original?.userList &&
@@ -1117,8 +1119,8 @@ const StackedAreaTeamChart = ({
                           style={{
                             boxShadow: '0px 2px 8px 0px #0000001A',
                           }}
-                          className={`bg-white absolute p-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
-                          <p className="text-sm font-normal text-[#77858F] mb-1 text-center w-full block">
+                          className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                          <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-center w-full block">
                             {dataDetail &&
                               dataDetail.length > 0 &&
                               convertToJapaneseDateRange(
@@ -1126,30 +1128,32 @@ const StackedAreaTeamChart = ({
                                 dataDetail[0]?.endDate as string,
                               )}
                           </p>
-                          <p className="text-start my-4">
+                          <p className="text-start px-5 my-4">
                             {selectedCategory?.name}
                           </p>
-                          {dataDetail &&
-                            dataDetail.length > 0 &&
-                            dataDetail?.map((user, userIndex) => {
-                              return (
-                                <div
-                                  key={userIndex}
-                                  className="flex items-center gap-1.5">
-                                  <CustomUserAvatar
-                                    avatarUrl={user.user.avatar || ''}
-                                    avatarColor={user.user.avatarColor || ''}
-                                    size={30}
-                                  />
-                                  <div className="flex flex-grow items-center justify-between text-base font-medium">
-                                    <div className=" text-black w-fit  max-w-[140px] line-clamp-3 break-words">
-                                      {user.user.fullName}
+                          <div className="max-h-[200px] overflow-y-auto px-5">
+                            {dataDetail &&
+                              dataDetail.length > 0 &&
+                              dataDetail?.map((user, userIndex) => {
+                                return (
+                                  <div
+                                    key={userIndex}
+                                    className="flex items-center gap-1.5">
+                                    <CustomUserAvatar
+                                      avatarUrl={user.user.avatar || ''}
+                                      avatarColor={user.user.avatarColor || ''}
+                                      size={30}
+                                    />
+                                    <div className="flex flex-grow items-center justify-between text-base font-medium">
+                                      <div className=" text-black w-fit  max-w-[140px] line-clamp-3 break-words">
+                                        {user.user.fullName}
+                                      </div>
+                                      <div>{user.percentPerRange}%</div>
                                     </div>
-                                    <div>{user.percentPerRange}%</div>
                                   </div>
-                                </div>
-                              );
-                            })}
+                                );
+                              })}
+                          </div>
                         </div>
                       }
                     </div>

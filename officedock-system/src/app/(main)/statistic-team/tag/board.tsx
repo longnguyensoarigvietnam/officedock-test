@@ -47,6 +47,7 @@ const StatisticTeamTagBoard = () => {
     tagsOptions,
     selectedSmall,
     orderingOptions,
+
     setOrderingOptions,
     setTagsOptions,
     setSelectedTags,
@@ -235,6 +236,16 @@ const StatisticTeamTagBoard = () => {
     const updatedTagIds = currentTagIds.filter(
       (tag) => tag.value !== selected.value,
     );
+    setIsLoadingLarge(true);
+    setIsLoadingMedium(true);
+    setIsLoadingSmall(true);
+    setIsLoadingOrganization(true);
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingSmallCompare(true);
+      setIsLoadingOrganizationCompare(true);
+    }
     setCurrentPage(1);
     setSelectedTags(updatedTagIds);
   };
@@ -311,7 +322,7 @@ const StatisticTeamTagBoard = () => {
     setSelectedSmall(null);
 
     const organization = creationDataStatisticData?.organizations?.find(
-      (org) => org.id === data.value,
+      (org) => org.id === selectedOrganization?.value,
     );
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === data.value,
@@ -342,7 +353,7 @@ const StatisticTeamTagBoard = () => {
     setSelectedSmall(null);
 
     const organization = creationDataStatisticData?.organizations?.find(
-      (org) => org.id === data.value,
+      (org) => org.id === selectedOrganization?.value,
     );
 
     const largeCategory = organization?.statisticCategories.find(
@@ -420,6 +431,7 @@ const StatisticTeamTagBoard = () => {
     const updatedUserIds = currentUserIds.filter(
       (tag) => tag.value !== selected.value,
     );
+
     setCurrentPage(1);
     setOrderingOptions({
       user_ids: updatedUserIds,
@@ -489,6 +501,16 @@ const StatisticTeamTagBoard = () => {
                     updatedTagIds = currentTagIds.filter(
                       (tag) => tag.value != selected.value,
                     );
+                  }
+                  setIsLoadingLarge(true);
+                  setIsLoadingMedium(true);
+                  setIsLoadingSmall(true);
+                  setIsLoadingOrganization(true);
+                  if (isCheckCompare) {
+                    setIsLoadingLargeCompare(true);
+                    setIsLoadingMediumCompare(true);
+                    setIsLoadingSmallCompare(true);
+                    setIsLoadingOrganizationCompare(true);
                   }
                   setSelectedTags(updatedTagIds);
                 }}

@@ -47,9 +47,7 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 
 import { OptionDropdownType } from '@interfaces/common';
-import {
-  StatisticCategoryInfo,
-} from '@interfaces/statistic';
+import { StatisticCategoryInfo } from '@interfaces/statistic';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
 import {
@@ -147,6 +145,15 @@ const LineChartByTeamTags = ({
     remainingCountUser,
     firstThreeUser,
     allLabelUser,
+    isCheckCompare,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingSmall,
+    setIsLoadingOrganization,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingSmallCompare,
+    setIsLoadingOrganizationCompare,
     setLineChartViewBy,
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
@@ -1259,6 +1266,16 @@ const LineChartByTeamTags = ({
                           updatedTagIds = currentTagIds.filter(
                             (tag) => tag.value != selected.value,
                           );
+                        }
+                        setIsLoadingLarge(true);
+                        setIsLoadingMedium(true);
+                        setIsLoadingSmall(true);
+                        setIsLoadingOrganization(true);
+                        if (isCheckCompare) {
+                          setIsLoadingLargeCompare(true);
+                          setIsLoadingMediumCompare(true);
+                          setIsLoadingSmallCompare(true);
+                          setIsLoadingOrganizationCompare(true);
                         }
                         setSelectedTags(updatedTagIds);
                       }}
