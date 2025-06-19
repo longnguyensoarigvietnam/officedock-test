@@ -35,7 +35,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useToast } from '@providers/ToastProvider';
-import { OptionDropdownType } from '@interfaces/common';
+import { BasePagination, OptionDropdownType } from '@interfaces/common';
 import {
   ActualDurationDetail,
   TaskScheduleDetail,
@@ -50,6 +50,7 @@ import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataTag from '@hooks/useCreationDataTag';
 import useCreationDataStatisticOrganization from '@hooks/useCreationDataStatisticOrganization';
 import api from '@base/api';
+import useActualDurationListByStaff from '@hooks/useActualDurationListByStaff';
 
 const ListActualDurations = () => {
   const { setIsLoading } = useContext(LoadingContext);
@@ -130,6 +131,10 @@ const ListActualDurations = () => {
   const [chosenTaskSchedule, setChosenTaskSchedule] =
     useState<TaskScheduleDetail>();
 
+  // Actual durations by selected member
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [pageNumber, setPageNumber] = useState<number>(1);
+
   const { dashboardMemberList } = useDashboardMemberList();
 
   useEffect(() => {
@@ -199,42 +204,33 @@ const ListActualDurations = () => {
     }
   }, [actualDurationList]);
 
-  const handleGetActualDurationsByStaff = async (selectedStaffId: number) => {
-    const apiUrl = `${apiRouters.TASKS_SCHEDULES_LIST}?user_id=${selectedStaffId}`;
-    const { data: response } = await api.get(apiUrl);
-    return response;
-  };
-
-  const { mutate: getActualDurationsByStaff } = useMutation(
-    handleGetActualDurationsByStaff,
-    {
-      onSuccess: async (data: TaskScheduleDetail[]) => {
-        setActualDurationsByStaff(
-          data.map((actualDuration: TaskScheduleDetail) => {
-            return {
-              value: actualDuration.id,
-              label: actualDuration.title,
-              type: actualDuration.type,
-            };
-          }),
-        );
-      },
-      onSettled: () => {
-        setIsActualDurationsByStaffLoading(false);
-      },
+  const { isFetchingActualDurationsByStaff } = useActualDurationListByStaff({
+    selectedStaffId: Number(selectedStaff.value),
+    pagination: {
+      page: pageNumber,
     },
-  );
-
-  useEffect(() => {
-    if (selectedStaff.value) {
+    condition: [hasMore],
+    onSuccess: async (data: BasePagination<TaskScheduleDetail[]>) => {
+      const newActualDurationList = data.results.map(
+        (actualDuration: TaskScheduleDetail) => {
+          return {
+            value: actualDuration.id,
+            label: actualDuration.title,
+            type: actualDuration.type,
+          };
+        },
+      );
+      setActualDurationsByStaff((prevList) => [
+        ...(prevList || []),
+        ...newActualDurationList,
+      ]);
+      setHasMore(data?.hasNext || false);
+    },
+    onSettled: () => {
       setSelectedActualDurationId(undefined);
-      getActualDurationsByStaff(Number(selectedStaff.value));
-    } else {
-      setSelectedActualDurationId(undefined);
-      setActualDurationsByStaff([]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStaff]);
+      setIsActualDurationsByStaffLoading(false);
+    },
+  });
 
   // Delete actual duration
   const handleOpenDeleteActualDurationModal = (
@@ -543,6 +539,11 @@ const ListActualDurations = () => {
                       )
                     : undefined
                 }
+                onScrollEnd={() => {
+                  if (hasMore && !isFetchingActualDurationsByStaff) {
+                    setPageNumber((prev) => prev + 1);
+                  }
+                }}
                 onChange={(e) => {
                   setSelectedActualDurationId(Number(e.value));
                   setChosenTaskSchedule({

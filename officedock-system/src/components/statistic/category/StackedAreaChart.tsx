@@ -551,7 +551,7 @@ const StackedAreaChart = ({
     {
       accessorKey: 'categoryDuration',
       enableSorting: true,
-      size: 40,
+      size: 50,
       header: () => {
         return (
           <div
@@ -593,7 +593,7 @@ const StackedAreaChart = ({
     },
     {
       accessorKey: 'categoryPercent',
-      size: 20,
+      size: 30,
       enableSorting: true,
       header: () => {
         return (
