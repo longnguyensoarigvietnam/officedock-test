@@ -213,6 +213,7 @@ const TimeSchedule = memo(
       dataActualAddSchedule,
       displayHeaderDateStart,
       displayHeaderDateEnd,
+      dataActualEdit,
       setIsInteracting,
       setDisplayHeaderDayStart,
       setDisplayHeaderDayEnd,
@@ -912,8 +913,11 @@ const TimeSchedule = memo(
       'postUpdateActualTime',
       handleUpdateActualTime,
       {
-        onSuccess: async () => {
+        onSuccess: async (data, task) => {
           queryClient.refetchQueries(['getDataTaskHeaderList']);
+          if (task.data.pausedAt === null) {
+            queryClient.refetchQueries(['getTaskHeaderStart']);
+          }
         },
         onError: (error: AxiosError<any>) => {
           showErrorToast(error, ERROR_UPDATE_MESSAGE);
@@ -1101,6 +1105,36 @@ const TimeSchedule = memo(
         setDataItemChangeInline(undefined);
       }
     }, [dataItemChangeInline]);
+    // Update data when edit start item in header
+    useEffect(() => {
+      if (dataActualEdit) {
+        const updatedList = taskTimeScheduleList.map((item) => {
+          if (`${item.uuid}` === `${dataActualEdit.uuid}`) {
+            const startDateActual = new Date(
+              convertToCurrentTimezone(`${dataActualEdit.startDate}`),
+            );
+            const endDateActual = new Date(
+              convertToCurrentTimezone(`${item.planEndDate}`),
+            );
+            const endTimeCustom = item.planEndDate
+              ? endDateActual
+              : getNext30MinuteSlot(startDateActual);
+            return {
+              ...item,
+              start: startDateActual,
+              end: item.planEndDate
+                ? adjustEndDate(startDateActual, endDateActual, 5)
+                : adjustEndDate(startDateActual, endTimeCustom as Date),
+              planStartDate: dataActualEdit.startDate,
+            };
+          }
+
+          return item;
+        });
+
+        setTaskTimeScheduleList(updatedList);
+      }
+    }, [dataActualEdit]);
 
     //Add data Actual
     useEffect(() => {
@@ -1291,6 +1325,7 @@ const TimeSchedule = memo(
       endDate: string,
       uuid: string,
       resourcePlan: boolean,
+      isCalculation?: boolean,
     ): void => {
       let value = e.target.value.replace(/\D/g, '');
       if (value.length > 4) {
@@ -1324,7 +1359,10 @@ const TimeSchedule = memo(
               new Date(endDate),
               `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
             ),
-            pausedAt: convertDateString(endDate),
+            pausedAt:
+              isCalculation && !resourcePlan
+                ? null
+                : convertDateString(endDate),
           },
         });
       } else {
@@ -1699,6 +1737,7 @@ const TimeSchedule = memo(
     // Event resize
     const handleEventResize = async (info: EventResizeDoneArg) => {
       const resizedEvent = info.event as any;
+      const isActualCalculate = info.event.extendedProps.isCalculation;
       const isLessThanToday = isDateLessThanToday(resizedEvent.start);
       const resourcePlanDay =
         resizedEvent._def.resourceIds?.length &&
@@ -1708,15 +1747,15 @@ const TimeSchedule = memo(
       if (areDatesDifferent(`${resizedEvent.start}`, `${resizedEvent.end}`)) {
         const oldStart = info.oldEvent.start;
         const oldEnd = info.oldEvent.end;
-
         info.event.setDates(oldStart as Date, oldEnd);
       }
 
       if (!resourcePlanDay && isDateInFutureOrToday(resizedEvent.end)) {
         const oldStart = info.oldEvent.start;
         const oldEnd = info.oldEvent.end;
-
-        info.event.setDates(oldStart as Date, oldEnd);
+        if (!isActualCalculate) {
+          info.event.setDates(oldStart as Date, oldEnd);
+        }
       }
 
       if (
@@ -1810,7 +1849,9 @@ const TimeSchedule = memo(
               uuid: resizedEvent.extendedProps.uuid,
               data: {
                 startedAt: convertDateString(`${resizedEvent.start}`),
-                pausedAt: convertDateString(`${resizedEvent.end}`),
+                pausedAt: isActualCalculate
+                  ? null
+                  : convertDateString(`${resizedEvent.end}`),
               },
             });
           }
@@ -3502,8 +3543,6 @@ const TimeSchedule = memo(
                     <div
                       id="trash-area"
                       style={{
-                        border: '2px dashed red',
-                        color: 'red',
                         textAlign: 'center',
                         lineHeight: '80px',
                         borderRadius: '8px',
@@ -3731,8 +3770,6 @@ const TimeSchedule = memo(
             <div
               id="trash-area"
               style={{
-                border: '2px dashed red',
-                color: 'red',
                 textAlign: 'center',
                 lineHeight: '80px',
                 borderRadius: '8px',

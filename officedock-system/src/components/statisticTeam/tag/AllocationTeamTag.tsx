@@ -149,6 +149,15 @@ const AllocationTeamTag = memo(
       isLoadingMedium,
       isLoadingOrganization,
       isLoadingSmall,
+      isCheckCompare,
+      setIsLoadingLarge,
+      setIsLoadingMedium,
+      setIsLoadingSmall,
+      setIsLoadingOrganization,
+      setIsLoadingLargeCompare,
+      setIsLoadingMediumCompare,
+      setIsLoadingSmallCompare,
+      setIsLoadingOrganizationCompare,
     } = useContext(StatisticTeamTagsStateContext);
 
     useEffect(() => {
@@ -280,6 +289,16 @@ const AllocationTeamTag = memo(
                               updatedTagIds = currentTagIds.filter(
                                 (tag) => tag.value != selected.value,
                               );
+                            }
+                            setIsLoadingLarge(true);
+                            setIsLoadingMedium(true);
+                            setIsLoadingSmall(true);
+                            setIsLoadingOrganization(true);
+                            if (isCheckCompare) {
+                              setIsLoadingLargeCompare(true);
+                              setIsLoadingMediumCompare(true);
+                              setIsLoadingSmallCompare(true);
+                              setIsLoadingOrganizationCompare(true);
                             }
                             setSelectedTags(updatedTagIds);
                           }}

@@ -738,7 +738,7 @@ const StackedAreaChart = ({
       cell: (info) => {
         const value = info.getValue() as string;
         return (
-          <div className="font-medium flex text-[14px] justify-center text-black">
+          <div className="font-medium flex text-[14px] whitespace-nowrap justify-center text-black">
             <p>{value.split(':')[0] || 0}時間</p>
             <p>{value.split(':')[1] || 0}分</p>
           </div>

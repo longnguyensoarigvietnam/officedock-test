@@ -75,6 +75,15 @@ const PercentageTeamTagsCompare = ({
     isLoadingLargeCompare,
     isLoadingMediumCompare,
     isLoadingSmallCompare,
+    isCheckCompare,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingSmall,
+    setIsLoadingOrganization,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingSmallCompare,
+    setIsLoadingOrganizationCompare,
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
   const { setIsLoading } = useContext(LoadingContext);
@@ -156,7 +165,7 @@ const PercentageTeamTagsCompare = ({
             if (user?.user?.fullName) {
               return {
                 label: user.user.fullName,
-                percent: item.percent,
+                percent: user.percent,
                 avatarColor: user.user.avatarColor,
               };
             }
@@ -419,6 +428,16 @@ const PercentageTeamTagsCompare = ({
                             updatedTagIds = currentTagIds.filter(
                               (tag) => tag.value != selected.value,
                             );
+                          }
+                          setIsLoadingLarge(true);
+                          setIsLoadingMedium(true);
+                          setIsLoadingSmall(true);
+                          setIsLoadingOrganization(true);
+                          if (isCheckCompare) {
+                            setIsLoadingLargeCompare(true);
+                            setIsLoadingMediumCompare(true);
+                            setIsLoadingSmallCompare(true);
+                            setIsLoadingOrganizationCompare(true);
                           }
                           setSelectedTags(updatedTagIds);
                         }}

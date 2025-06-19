@@ -205,22 +205,22 @@ const PercentageBarCompareTeam = ({
                         </div>
                         <div className="max-h-[250px] overflow-y-auto px-5">
                           <ul>
-                            {item.optionData.map((item, index) => (
+                            {item.optionData.map((itemOption, index) => (
                               <li
                                 key={index}
                                 className="break-all text-start flex items-center justify-between gap-2 line-clamp-3 text-[#77858F] text-sm font-normal mb-2">
                                 <div className="flex items-center w-fit">
                                   <CustomUserAvatar
-                                    avatarUrl={item?.avatarUrl || ''}
-                                    avatarColor={item?.avatarColor || ''}
+                                    avatarUrl={itemOption?.avatarUrl || ''}
+                                    avatarColor={itemOption?.avatarColor || ''}
                                     size={30}
                                   />
                                   <span className="relative ml-3 max-w-[180px] truncate top-[-3px]">
                                     {' '}
-                                    {item.label}
+                                    {itemOption.label}
                                   </span>
                                 </div>
-                                <span>{item.percent}%</span>
+                                <span>{itemOption.percent}%</span>
                               </li>
                             ))}
                           </ul>

@@ -66,7 +66,7 @@ const ProgressBarTeamTagStatistic = ({
   handleClickTooltip,
   handleClickChart,
 }: ProgressBarProps) => {
-  const [isExtendUser, setExtendUser] = useState(true);
+  const [isExtendUser, setExtendUser] = useState(false);
 
   const percentage = Math.round(Math.min((value / maxValue) * 100, 100));
   return (

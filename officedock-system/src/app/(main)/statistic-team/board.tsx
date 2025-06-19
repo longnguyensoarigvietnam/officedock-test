@@ -266,7 +266,7 @@ const StatisticTeamBoard = () => {
 
         const mainItem =
           data.organizations.find((item) => item.isMain) ||
-          data.organizations[1];
+          data.organizations[0];
         const optionsTagList = mainItem.tags.map((item) => ({
           label: item.name,
           value: item.id,
@@ -421,7 +421,7 @@ const StatisticTeamBoard = () => {
     setSelectedSmall(null);
 
     const organization = creationDataStatisticData?.organizations?.find(
-      (org) => org.id === data.value,
+      (org) => org.id === selectedOrganization?.value,
     );
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === data.value,
@@ -453,7 +453,7 @@ const StatisticTeamBoard = () => {
     setSelectedSmall(null);
 
     const organization = creationDataStatisticData?.organizations?.find(
-      (org) => org.id === data.value,
+      (org) => org.id === selectedOrganization?.value,
     );
 
     const largeCategory = organization?.statisticCategories.find(
@@ -490,6 +490,14 @@ const StatisticTeamBoard = () => {
       (tag) => tag.value !== selected.value,
     );
     setCurrentPage(1);
+    setIsLoadingLarge(true);
+    setIsLoadingMedium(true);
+    setIsLoadingOrganization(true);
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingOrganizationCompare(true);
+    }
     setOrderingOptions((prev) => ({
       tag_ids: updatedTagIds,
       user_ids: prev?.user_ids || [],
@@ -502,6 +510,14 @@ const StatisticTeamBoard = () => {
       (tag) => tag.value !== selected.value,
     );
     setCurrentPage(1);
+    setIsLoadingLarge(true);
+    setIsLoadingMedium(true);
+    setIsLoadingOrganization(true);
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingOrganizationCompare(true);
+    }
     setOrderingOptions((prev) => ({
       tag_ids: prev?.tag_ids || [],
       user_ids: updatedUserIds,

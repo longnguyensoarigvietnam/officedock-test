@@ -134,6 +134,16 @@ interface ContextValue {
   setIsInteracting: Dispatch<SetStateAction<boolean>>;
   taskAddEmpty: Task | null;
   setTaskAddEmpty: Dispatch<SetStateAction<Task | null>>;
+  dataActualEdit: {
+    uuid: string;
+    startDate: string;
+  };
+  setDataActualEdit: Dispatch<
+    SetStateAction<{
+      uuid: string;
+      startDate: string;
+    }>
+  >;
 }
 
 const defaultValue: ContextValue = {
@@ -250,6 +260,11 @@ const defaultValue: ContextValue = {
   setIsInteracting: () => {},
   taskAddEmpty: null,
   setTaskAddEmpty: () => {},
+  dataActualEdit: {
+    uuid: '',
+    startDate: '',
+  },
+  setDataActualEdit: () => {},
 };
 
 export const TaskContext = createContext<ContextValue>(defaultValue);
@@ -271,6 +286,13 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   }>({
     id: '',
     type: '',
+  });
+  const [dataActualEdit, setDataActualEdit] = useState<{
+    uuid: string;
+    startDate: string;
+  }>({
+    uuid: '',
+    startDate: '',
   });
 
   const [dataClickTask, setDataClickTask] = useState<{
@@ -468,6 +490,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     setIsInteracting,
     taskAddEmpty,
     setTaskAddEmpty,
+    dataActualEdit,
+    setDataActualEdit,
   };
 
   return (

@@ -49,23 +49,34 @@ const useStatisticCategoriesTeam = ({
   const getStatisticCategoryListTeam = async () => {
     if (!filter?.organizationIds) return [];
 
-    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM(parseInt(filter?.organizationIds))}?${
-      filter?.fromDate ? `from_date=${filter.fromDate}` : ''
-    }${filter?.endDate ? `&end_date=${filter.endDate}` : ''}${
-      filter?.largeCategoryId
-        ? `&large_category_id=${filter.largeCategoryId}`
-        : ''
-    }${
-      filter?.mediumCategoryId
-        ? `&medium_category_id=${filter.mediumCategoryId}`
-        : ''
-    }${
-      filter?.smallCategoryId
-        ? `&small_category_id=${filter.smallCategoryId}`
-        : ''
-    }${filter?.orderingOptions?.tag_ids ? `&tag_ids=${filter?.orderingOptions?.tag_ids.map((item) => item.value).join(',')}` : ''}
-    ${filter?.orderingOptions?.user_ids ? `&user_ids=${filter?.orderingOptions?.user_ids.map((item) => item.value).join(',')}` : ''}`;
+    const params = new URLSearchParams();
 
+    if (filter.fromDate) params.set('from_date', String(filter.fromDate));
+    if (filter.endDate) params.set('end_date', String(filter.endDate));
+    if (filter.largeCategoryId)
+      params.set('large_category_id', String(filter.largeCategoryId));
+    if (filter.mediumCategoryId)
+      params.set('medium_category_id', String(filter.mediumCategoryId));
+    if (filter.smallCategoryId)
+      params.set('small_category_id', String(filter.smallCategoryId));
+
+    const tagIds = filter.orderingOptions?.tag_ids
+      ?.map((item) => String(item.value).trim())
+      .filter((val) => val !== '' && val !== undefined && val !== null)
+      .join(',');
+    if (tagIds && tagIds.length > 0) {
+      params.set('tag_ids', tagIds);
+    }
+
+    const userIds = filter.orderingOptions?.user_ids
+      ?.map((item) => String(item.value).trim())
+      .filter((val) => val !== '' && val !== undefined && val !== null)
+      .join(',');
+    if (userIds && userIds.length > 0) {
+      params.set('user_ids', userIds);
+    }
+
+    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM(Number(filter.organizationIds))}?${params.toString()}`;
     const { data } = await api.get<StatisticsCategories[]>(apiUrl);
     return data;
   };

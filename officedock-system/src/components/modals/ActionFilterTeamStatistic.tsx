@@ -26,9 +26,17 @@ const ActionFilterStatisticTeam = ({
 }: ActionTaskFilterProp) => {
   const boxListRef = useRef<HTMLDivElement | null>(null);
 
-  const { orderingOptions, setOrderingOptions } = useContext(
-    StatisticTeamStateContext,
-  );
+  const {
+    orderingOptions,
+    isCheckCompare,
+    setOrderingOptions,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganization,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganizationCompare,
+  } = useContext(StatisticTeamStateContext);
   const [_isOpen, setIsOpen] = useState(false);
 
   const [dataOptionsTagIds, setDataOptionsTagIds] = useState<
@@ -73,7 +81,7 @@ const ActionFilterStatisticTeam = ({
             value: tag.value,
             label: tag.label,
             avatarUrl: tag?.avatarUrl || '',
-            color: tag?.color || ''
+            color: tag?.color || '',
           };
         });
       }
@@ -119,6 +127,14 @@ const ActionFilterStatisticTeam = ({
   }, []);
 
   const handleSearch = () => {
+    setIsLoadingLarge(true);
+    setIsLoadingMedium(true);
+    setIsLoadingOrganization(true);
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingOrganizationCompare(true);
+    }
     setOrderingOptions({
       tag_ids: getValues('tagIds'),
       user_ids: getValues('userIds'),

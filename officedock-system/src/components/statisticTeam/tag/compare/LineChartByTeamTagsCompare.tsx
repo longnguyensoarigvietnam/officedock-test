@@ -188,6 +188,15 @@ const LineChartByTeamTagsCompare = ({
     remainingCountUser,
     listMemberTeam,
     lineChartViewBy,
+    isCheckCompare,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingSmall,
+    setIsLoadingOrganization,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingSmallCompare,
+    setIsLoadingOrganizationCompare,
     setLineChartViewBy,
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
@@ -1842,6 +1851,16 @@ const LineChartByTeamTagsCompare = ({
                           updatedTagIds = currentTagIds.filter(
                             (tag) => tag.value != selected.value,
                           );
+                        }
+                        setIsLoadingLarge(true);
+                        setIsLoadingMedium(true);
+                        setIsLoadingSmall(true);
+                        setIsLoadingOrganization(true);
+                        if (isCheckCompare) {
+                          setIsLoadingLargeCompare(true);
+                          setIsLoadingMediumCompare(true);
+                          setIsLoadingSmallCompare(true);
+                          setIsLoadingOrganizationCompare(true);
                         }
                         setSelectedTags(updatedTagIds);
                       }}
