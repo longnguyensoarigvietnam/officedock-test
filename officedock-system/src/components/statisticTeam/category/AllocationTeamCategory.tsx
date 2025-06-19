@@ -22,7 +22,7 @@ import {
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
-import { formatTimeToJapanese } from '@utils/date';
+import { formatTimeToJapanese, sumDurationsChart } from '@utils/date';
 import { lightenColor } from '@utils';
 
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
@@ -89,13 +89,16 @@ export function transformStatisticCategoryInfoToProgressData({
     (sum, item) => sum + item.value,
     0,
   );
+  const durations = mergedItems.map((item) => item.duration);
+
+  const totalDuration = sumDurationsChart(durations);
 
   const mergedItem: ProgressDataType = {
     id: -1,
     label: mergeLabel,
     value: totalMergedPercent,
     color: mergeColor,
-    duration: '',
+    duration: totalDuration,
     optionData: mergedItems.flatMap((item) => item.optionData),
     mergedItems,
   };
@@ -127,6 +130,7 @@ const AllocationTeamCategory = memo(
       userId: number;
       type: string;
       totalDuration: string;
+      userDuration: string;
     } | null>(null);
 
     const [progressDataLarge, setProgressDataLarge] = useState<
@@ -208,11 +212,13 @@ const AllocationTeamCategory = memo(
       id,
       userId,
       duration,
+      userDuration,
       type,
     }: {
       id: number;
       userId: number;
       duration: string;
+      userDuration: string;
       type: string;
     }) => {
       setDetailCategory({
@@ -220,6 +226,7 @@ const AllocationTeamCategory = memo(
         userId: userId,
         type: type,
         totalDuration: duration,
+        userDuration,
       });
 
       setTimeout(() => {
@@ -499,16 +506,19 @@ const AllocationTeamCategory = memo(
                                   userId,
                                   categoryId,
                                   duration,
+                                  userDuration,
                                 }: {
                                   userId: number;
                                   categoryId: number;
                                   duration: string;
+                                  userDuration: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: categoryId,
                                     userId,
                                     duration,
                                     type: EventWorkCategory.ALL,
+                                    userDuration,
                                   });
                                 }}
                                 startDate={startDate}
@@ -569,16 +579,19 @@ const AllocationTeamCategory = memo(
                                   userId,
                                   categoryId,
                                   duration,
+                                  userDuration,
                                 }: {
                                   userId: number;
                                   categoryId: number;
                                   duration: string;
+                                  userDuration: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: categoryId,
                                     userId,
                                     duration,
                                     type: EventWorkCategory.LARGE,
+                                    userDuration,
                                   });
                                 }}
                                 handleClickChart={(
@@ -657,16 +670,19 @@ const AllocationTeamCategory = memo(
                                   userId,
                                   categoryId,
                                   duration,
+                                  userDuration,
                                 }: {
                                   userId: number;
                                   categoryId: number;
                                   duration: string;
+                                  userDuration: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: categoryId,
                                     userId,
                                     duration,
                                     type: EventWorkCategory.MEDIUM,
+                                    userDuration,
                                   });
                                 }}
                                 {...item}

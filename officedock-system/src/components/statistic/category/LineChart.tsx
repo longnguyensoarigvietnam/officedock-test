@@ -31,11 +31,8 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticsCategories } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
-import {
-  SortingType,
-  StatisticViewLabels,
-  StatisticViewOptions,
-} from '@constants/enums';
+import { SortingType, StatisticViewOptions } from '@constants/enums';
+import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 
 import useStatisticTaskDurations from '@hooks/useStatisticTaskDurations';
 
@@ -136,21 +133,6 @@ const LineChart = ({
     useState<string>('');
   const [durationSortingStatus, setDurationSortingStatus] =
     useState<string>('');
-
-  const viewOptions = [
-    {
-      value: StatisticViewOptions.DAY,
-      label: StatisticViewLabels.DAY,
-    },
-    {
-      value: StatisticViewOptions.WEEK,
-      label: StatisticViewLabels.WEEK,
-    },
-    {
-      value: StatisticViewOptions.MONTH,
-      label: StatisticViewLabels.MONTH,
-    },
-  ];
 
   const tooltipRef = useRef<HTMLDivElement | null>(null);
 
@@ -412,46 +394,12 @@ const LineChart = ({
             }
           }
 
-          let percent = 0;
-          if (
-            !selectedLarge?.value &&
-            statisticCategoryList?.largeCategories &&
-            statisticCategoryList?.largeCategories.length > 0
-          ) {
-            percent =
-              statisticCategoryList?.largeCategories.find(
-                (category) =>
-                  category.categoryName == categoryDetail.categoryName,
-              )?.percent || 0;
-          } else if (
-            !selectedMedium?.value &&
-            statisticCategoryList?.mediumCategories &&
-            statisticCategoryList?.mediumCategories.length > 0
-          ) {
-            percent = statisticCategoryList?.mediumCategories
-              ? statisticCategoryList?.mediumCategories.find(
-                  (category) =>
-                    category.categoryName == categoryDetail.categoryName,
-                )?.percent || 0
-              : 0;
-          } else if (
-            statisticCategoryList?.smallCategories &&
-            statisticCategoryList?.smallCategories.length > 0
-          ) {
-            percent = statisticCategoryList?.smallCategories
-              ? statisticCategoryList?.smallCategories.find(
-                  (category) =>
-                    category.categoryName == categoryDetail.categoryName,
-                )?.percent || 0
-              : 0;
-          }
-
           standardLabels = [
             ...standardLabels,
             {
               color:
                 categoryDetail.categoryColor ||
-                (color && lightenColor(color, percent)) ||
+                (color && lightenColor(color, categoryDetail?.percent || 0)) ||
                 getRandomColor(),
               name: categoryDetail.categoryName,
             },
@@ -461,10 +409,10 @@ const LineChart = ({
             categoryId: categoryDetail.categoryId,
             categoryName: categoryDetail.categoryName,
             categoryDuration: categoryDetail.duration,
-            categoryPercent: String(percent),
+            categoryPercent: String(categoryDetail?.percent || 0),
             categoryColor:
               categoryDetail.categoryColor ||
-              (color && lightenColor(color, percent)) ||
+              (color && lightenColor(color, categoryDetail?.percent || 0)) ||
               getRandomColor(),
           });
           datasets.push({
@@ -478,7 +426,8 @@ const LineChart = ({
                 endDate: duration.endDate,
                 color:
                   categoryDetail.categoryColor ||
-                  (color && lightenColor(color, percent)) ||
+                  (color &&
+                    lightenColor(color, categoryDetail?.percent || 0)) ||
                   getRandomColor(),
                 label: categoryDetail.categoryName,
               },
@@ -493,7 +442,8 @@ const LineChart = ({
                       endDate: duration.endDate,
                       color:
                         categoryDetail.categoryColor ||
-                        (color && lightenColor(color, percent)) ||
+                        (color &&
+                          lightenColor(color, categoryDetail?.percent || 0)) ||
                         getRandomColor(),
                       label: categoryDetail.categoryName,
                     },
@@ -502,7 +452,7 @@ const LineChart = ({
             ]),
             borderColor:
               categoryDetail.categoryColor ||
-              (color && lightenColor(color, percent)) ||
+              (color && lightenColor(color, categoryDetail?.percent || 0)) ||
               getRandomColor(),
             backgroundColor: 'rgba(217, 83, 79, 0.04)',
             fill: true,
@@ -639,7 +589,7 @@ const LineChart = ({
     },
     {
       accessorKey: 'categoryDuration',
-      size: 40,
+      size: 50,
       header: () => {
         return (
           <div
@@ -682,7 +632,7 @@ const LineChart = ({
     },
     {
       accessorKey: 'categoryPercent',
-      size: 20,
+      size: 30,
       header: () => {
         return (
           <div
@@ -922,8 +872,8 @@ const LineChart = ({
               </div>
               <div>
                 <Dropdown
-                  options={viewOptions}
-                  selectedOption={viewOptions.find(
+                  options={STATISTIC_CHART_VIEW_OPTIONS}
+                  selectedOption={STATISTIC_CHART_VIEW_OPTIONS.find(
                     (element) => element.value === lineChartViewBy?.value,
                   )}
                   className="h-[34px] !w-[54px] !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
@@ -945,7 +895,7 @@ const LineChart = ({
           {!isFetchedStatisticTaskDurationsList ? (
             <RowSkeleton
               numberOfRows={1}
-              className={`!h-[395px] ${expanded && 'w-[calc(100%_-_60px)]'} mx-auto`}
+              className={`!h-[395px] w-[calc(100%_-_60px)] mx-auto`}
             />
           ) : (
             <div
@@ -977,53 +927,60 @@ const LineChart = ({
               </div>
             )}
 
-            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                    {headerGroup.headers.map((header, index) => (
-                      <th
-                        key={header.id}
-                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
-                        style={{
-                          width: header.getSize(),
-                          minWidth: header.getSize(),
-                          maxWidth: header.getSize(),
-                        }}
-                        onClick={header.column.getToggleSortingHandler()}>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    {row.getVisibleCells().map((cell, index) => (
-                      <td
-                        key={cell.id}
-                        style={{
-                          width: cell.column.getSize(),
-                          minWidth: cell.column.getSize(),
-                          maxWidth: cell.column.getSize(),
-                        }}
-                        className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </TableBody>
-            </Table>
+            {!isFetchedStatisticTaskDurationsList ? (
+              <RowSkeleton
+                numberOfRows={1}
+                className={`!h-[200px] mt-5 w-full mx-auto`}
+              />
+            ) : (
+              <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+                <thead>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr
+                      key={headerGroup.id}
+                      className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                      {headerGroup.headers.map((header, index) => (
+                        <th
+                          key={header.id}
+                          className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                          style={{
+                            width: header.getSize(),
+                            minWidth: header.getSize(),
+                            maxWidth: header.getSize(),
+                          }}
+                          onClick={header.column.getToggleSortingHandler()}>
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <TableBody>
+                  {table.getRowModel().rows.map((row) => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+                      {row.getVisibleCells().map((cell, index) => (
+                        <td
+                          key={cell.id}
+                          style={{
+                            width: cell.column.getSize(),
+                            minWidth: cell.column.getSize(),
+                            maxWidth: cell.column.getSize(),
+                          }}
+                          className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </div>
       )}

@@ -2,20 +2,6 @@ import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
 import { format, isSameDay } from 'date-fns';
 
-import { JwtDecode } from '@interfaces/auth';
-import { Organizations } from '@interfaces/organization';
-import { PASSWORD_REGEX } from '@constants/regex';
-import { dataTaskDaily, dataTaskDailyTable } from '@interfaces/statistic';
-import {
-  ResultTeam,
-  StatusSummary,
-  Task,
-  TransformedUser,
-  UserTotalStatus,
-} from '@interfaces/task';
-import { OptionDropdownType } from '@interfaces/common';
-import { UserRoleType } from '@interfaces/user';
-
 import {
   CalendarViewOptions,
   EventWorkCategory,
@@ -27,6 +13,21 @@ import {
   TaskRepetitiveValue,
 } from '@constants/enums';
 import { DATE_FORMAT, MAX_HEX_COLOR_VALUE, SKILL_MAP_STEPS } from '@constants';
+import { PASSWORD_REGEX, URL_REGEX } from '@constants/regex';
+
+import { JwtDecode } from '@interfaces/auth';
+import { Organizations } from '@interfaces/organization';
+import { dataTaskDaily, dataTaskDailyTable } from '@interfaces/statistic';
+import {
+  ResultTeam,
+  StatusSummary,
+  Task,
+  TransformedUser,
+  UserTotalStatus,
+} from '@interfaces/task';
+import { ChangeTextAreaProps, OptionDropdownType } from '@interfaces/common';
+import { UserRoleType } from '@interfaces/user';
+import { ChatMessageResponse } from '@interfaces/chat';
 
 import {
   convertToTimeString,
@@ -36,7 +37,6 @@ import {
   getJapaneseDayName,
   getJapaneseWeekDay,
 } from './date';
-import { ChatMessageResponse } from '@interfaces/chat';
 
 export function hasPermissionInArray(
   requiredPermissions: PermissionsSystem[],
@@ -433,7 +433,7 @@ export const getPermissionOptionDropdown = (
       PermissionType.NOT_ALLOWED,
     ]);
   }
-  if ([ScreenName.ROLE].includes(screen)) {
+  if ([ScreenName.ROLE, ScreenName.CALENDAR_MANAGEMENT].includes(screen)) {
     return includePermissions([
       PermissionType.EDITABLE,
       PermissionType.NOT_ALLOWED,
@@ -1075,9 +1075,113 @@ export const toRGBA = (color: string, alpha: number): string => {
   }
 
   if (color.startsWith('rgba(')) {
-    return color.replace(/rgba\(([^,]+),([^,]+),([^,]+),[^)]+\)/, `rgba($1,$2,$3,${alpha})`);
+    return color.replace(
+      /rgba\(([^,]+),([^,]+),([^,]+),[^)]+\)/,
+      `rgba($1,$2,$3,${alpha})`,
+    );
   }
 
   // fallback to original if format unknown
   return color;
-}
+};
+
+const placeCaretAtEnd = (el: HTMLElement) => {
+  el.focus();
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  const sel = window.getSelection();
+  sel?.removeAllRanges();
+  sel?.addRange(range);
+};
+
+export const changeTextAreaFormatLink = ({
+  editorRef,
+  onChange,
+}: ChangeTextAreaProps) => {
+  const div = editorRef.current;
+  if (!div) return;
+
+  const selection = window.getSelection();
+  if (!selection || !selection.rangeCount) return;
+
+  const range = selection.getRangeAt(0);
+  const container = range.startContainer;
+
+  // Only process if on text node
+  if (container.nodeType === Node.TEXT_NODE) {
+    const text = container.textContent || '';
+
+    let match;
+    const frag = document.createDocumentFragment();
+    let lastIndex = 0;
+
+    while ((match = URL_REGEX.exec(text)) !== null) {
+      const beforeText = text.slice(lastIndex, match.index);
+      const linkText = match[0];
+
+      if (beforeText) {
+        frag.appendChild(document.createTextNode(beforeText));
+      }
+
+      const a = document.createElement('a');
+      a.href = linkText;
+      a.textContent = linkText;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.style.color = 'blue';
+      a.style.cursor = 'pointer';
+      a.style.textDecoration = 'underline';
+      frag.appendChild(a);
+
+      frag.appendChild(document.createTextNode(' ')); // Add space
+
+      lastIndex = match.index + linkText.length;
+    }
+
+    const afterText = text.slice(lastIndex);
+    if (afterText) {
+      frag.appendChild(document.createTextNode(afterText));
+    }
+
+    const parent = container.parentNode;
+    if (parent) {
+      parent.replaceChild(frag, container);
+    }
+
+    placeCaretAtEnd(div);
+  }
+
+  // Return new content
+  onChange?.(div.innerHTML);
+};
+export const convertLinksToHTML = (text: string) => {
+  return text.replace(URL_REGEX, (url) => {
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: blue; text-decoration: underline; cursor: pointer;">${url}</a>`;
+  });
+};
+
+export const getSafeTooltipLeft = ({
+  offsetLeft,
+  caretX,
+  tooltipWidth,
+  padding = 10,
+}: {
+  offsetLeft: number;
+  caretX: number;
+  tooltipWidth: number;
+  padding?: number;
+}): number => {
+  // Center tooltip over caretX
+  let left = offsetLeft + caretX - tooltipWidth / 2;
+
+  // Clamp left within screen boundaries
+  const maxLeft = window.innerWidth - tooltipWidth - padding;
+  if (left < padding) {
+    left = padding;
+  } else if (left > maxLeft) {
+    left = maxLeft;
+  }
+
+  return left;
+};

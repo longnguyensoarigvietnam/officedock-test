@@ -38,10 +38,12 @@ interface ProgressBarProps {
     userId,
     categoryId,
     duration,
+    userDuration,
   }: {
     userId: number;
     categoryId: number;
     duration: string;
+    userDuration: string;
   }) => void;
 }
 
@@ -63,7 +65,7 @@ const ProgressBarTeamStatistic = ({
   handleClickChart,
   handleClickTooltip,
 }: ProgressBarProps) => {
-  const [isExtendUser, setExtendUser] = useState(true);
+  const [isExtendUser, setExtendUser] = useState(false);
   const percentage = Math.round(Math.min((value / maxValue) * 100, 100));
 
   return (
@@ -235,7 +237,7 @@ const ProgressBarTeamStatistic = ({
                     </span>
                   </div>
                   <span className="text-sm font-medium truncate max-w-24">
-                    {duration && formatTimeToJapanese(duration)}
+                    {item.duration && formatTimeToJapanese(item.duration)}
                   </span>
                 </div>
               )}
@@ -282,7 +284,7 @@ const ProgressBarTeamStatistic = ({
                     </span>
                   </div>
                   <div className="flex items-center gap-[10px] font-normal text-base mt-[10px] mb-2">
-                    <span>{item.percent}</span>
+                    <span>{item.percent}%</span>
                     <span>
                       {item.duration && formatTimeToJapanese(item.duration)}
                     </span>
@@ -305,7 +307,8 @@ const ProgressBarTeamStatistic = ({
                         handleClickTooltip({
                           userId: item.user.id,
                           categoryId: id,
-                          duration: item.duration,
+                          userDuration: item.duration,
+                          duration: duration,
                         })
                       }
                       className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">

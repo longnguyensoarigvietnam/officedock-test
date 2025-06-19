@@ -22,7 +22,11 @@ import {
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
-import { formatShowStatisticTask, formatTimeToJapanese } from '@utils/date';
+import {
+  formatShowStatisticTask,
+  formatTimeToJapanese,
+  sumDurationsChart,
+} from '@utils/date';
 import { lightenColor } from '@utils';
 
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
@@ -90,13 +94,16 @@ function transformAndMergeProgressData({
     (sum, item) => sum + item.value,
     0,
   );
+  const durations = mergedItems.map((item) => item.duration);
+
+  const totalDuration = sumDurationsChart(durations);
 
   const mergedItem: ProgressDataType = {
     id: -1,
     label: mergeLabel,
     value: totalMergedPercent,
     color: mergeColor,
-    duration: '',
+    duration: totalDuration,
     optionData: mergedItems.flatMap((item) => item.optionData),
     mergedItems,
   };
@@ -144,13 +151,49 @@ export function buildProgressDataCompareWithMergedOthers({
     colorData,
   });
 
-  return mergedBase.map((item) => {
-    const matched = mergedCompare.find((c) => c.id === item.id);
+  // Collect all IDs from both lists
+  const allIds = new Set<number>();
+  mergedBase.forEach((item) => allIds.add(item.id));
+  mergedCompare.forEach((item) => allIds.add(item.id));
+
+  // Map data with label assignment logic from the other side if missing
+  const result: ProgressDataCompareItem[] = Array.from(allIds).map((id) => {
+    const item = mergedBase.find((b) => b.id === id);
+    const itemCompare = mergedCompare.find((c) => c.id === id);
+
+    const finalItem: ProgressDataType = item ?? {
+      id,
+      label: itemCompare?.label ?? '',
+      value: 0,
+      color: '#ccc',
+      duration: '00:00:00',
+      optionData: [],
+    };
+
+    const finalItemCompare: ProgressDataType = itemCompare ?? {
+      id,
+      label: item?.label ?? '',
+      value: 0,
+      color: '#ccc',
+      duration: '00:00:00',
+      optionData: [],
+    };
+
     return {
-      item,
-      itemCompare: matched,
+      item: finalItem,
+      itemCompare: finalItemCompare,
     };
   });
+  result.sort((a, b) => {
+    const isAOther = a.item.id === -1;
+    const isBOther = b.item.id === -1;
+
+    if (isAOther && !isBOther) return 1;
+    if (!isAOther && isBOther) return -1;
+    return 0;
+  });
+
+  return result;
 }
 
 const AllocationTeamCategoryCompare = memo(
@@ -178,6 +221,7 @@ const AllocationTeamCategoryCompare = memo(
       userId: number;
       type: string;
       totalDuration: string;
+      userDuration: string;
     } | null>(null);
 
     const [progressDataLarge, setProgressDataLarge] = useState<
@@ -246,11 +290,16 @@ const AllocationTeamCategoryCompare = memo(
           compareData: statisticCategoryListTeamCompare?.smallCategories || [],
           colorData: color,
         });
+
         setProgressDataLarge(compareResult);
         setProgressDataMedium(compareResultMedium);
         setProgressDataSmall(compareResultSmall);
       }
-    }, [statisticTeamCategoryList, statisticCategoryListTeamCompare]);
+    }, [
+      statisticTeamCategoryList,
+      statisticCategoryListTeamCompare,
+      selectedLarge?.value,
+    ]);
 
     const handleClickTooltip = ({
       id,
@@ -258,12 +307,14 @@ const AllocationTeamCategoryCompare = memo(
       duration,
       type,
       isCompare,
+      userDuration,
     }: {
       id: number;
       userId: number;
       duration: string;
       type: string;
       isCompare?: boolean;
+      userDuration: string;
     }) => {
       if (isCompare) {
         setIsModalCompare(true);
@@ -275,6 +326,7 @@ const AllocationTeamCategoryCompare = memo(
         userId: userId,
         type: type,
         totalDuration: duration,
+        userDuration,
       });
 
       setTimeout(() => {
@@ -591,11 +643,13 @@ const AllocationTeamCategoryCompare = memo(
                                   categoryId,
                                   duration,
                                   isCompare,
+                                  userDuration,
                                 }: {
                                   userId: number;
                                   categoryId: number;
                                   duration: string;
                                   isCompare?: boolean;
+                                  userDuration: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: categoryId,
@@ -603,6 +657,7 @@ const AllocationTeamCategoryCompare = memo(
                                     duration,
                                     type: EventWorkCategory.ALL,
                                     isCompare,
+                                    userDuration,
                                   });
                                 }}
                                 handleClickChart={(
@@ -738,11 +793,13 @@ const AllocationTeamCategoryCompare = memo(
                                     categoryId,
                                     duration,
                                     isCompare,
+                                    userDuration,
                                   }: {
                                     userId: number;
                                     categoryId: number;
                                     duration: string;
                                     isCompare?: boolean;
+                                    userDuration: string;
                                   }) => {
                                     handleClickTooltip({
                                       id: categoryId,
@@ -750,6 +807,7 @@ const AllocationTeamCategoryCompare = memo(
                                       duration,
                                       type: EventWorkCategory.LARGE,
                                       isCompare,
+                                      userDuration,
                                     });
                                   }}
                                   handleClickChart={(
@@ -885,11 +943,13 @@ const AllocationTeamCategoryCompare = memo(
                                   categoryId,
                                   duration,
                                   isCompare,
+                                  userDuration,
                                 }: {
                                   userId: number;
                                   categoryId: number;
                                   duration: string;
                                   isCompare?: boolean;
+                                  userDuration: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: categoryId,
@@ -897,6 +957,7 @@ const AllocationTeamCategoryCompare = memo(
                                     duration,
                                     type: EventWorkCategory.MEDIUM,
                                     isCompare,
+                                    userDuration,
                                   });
                                 }}
                                 {...item}

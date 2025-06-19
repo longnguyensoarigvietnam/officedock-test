@@ -25,14 +25,11 @@ import Dropdown from '@components/common/Dropdown';
 import { Table, TableBody } from '@components/common/Table';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 
-import { StatisticsCategories } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
-import {
-  SortingType,
-  StatisticViewLabels,
-  StatisticViewOptions,
-} from '@constants/enums';
+import { SortingType, StatisticViewOptions } from '@constants/enums';
+import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
+
 import {
   convertDurationToTotalMinutes,
   convertFromNumberToJapaneseTime,
@@ -63,7 +60,6 @@ type Props = {
   startDate: Date;
   endDate: Date | null;
   removeTag: (selected: OptionDropdownType) => void;
-  statisticTagsList: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -71,7 +67,6 @@ type Props = {
 };
 
 const LineChart = ({
-  statisticTagsList,
   startDate,
   endDate,
   removeTag,
@@ -139,21 +134,6 @@ const LineChart = ({
     useState<string>('');
   const [durationSortingStatus, setDurationSortingStatus] =
     useState<string>('');
-
-  const viewOptions = [
-    {
-      value: StatisticViewOptions.DAY,
-      label: StatisticViewLabels.DAY,
-    },
-    {
-      value: StatisticViewOptions.WEEK,
-      label: StatisticViewLabels.WEEK,
-    },
-    {
-      value: StatisticViewOptions.MONTH,
-      label: StatisticViewLabels.MONTH,
-    },
-  ];
 
   const tooltipRef = useRef<HTMLDivElement | null>(null);
 
@@ -413,52 +393,12 @@ const LineChart = ({
             }
           }
 
-          let percent = 0;
-          if (
-            !selectedLarge?.value &&
-            statisticTagsList?.largeCategories &&
-            statisticTagsList?.largeCategories.length > 0
-          ) {
-            percent =
-              statisticTagsList?.largeCategories.find(
-                (category) => category.tagName == categoryDetail.tagName,
-              )?.percent || 0;
-          } else if (
-            !selectedMedium?.value &&
-            statisticTagsList?.mediumCategories &&
-            statisticTagsList?.mediumCategories.length > 0
-          ) {
-            percent = statisticTagsList?.mediumCategories
-              ? statisticTagsList?.mediumCategories.find(
-                  (category) => category.tagName == categoryDetail.tagName,
-                )?.percent || 0
-              : 0;
-          } else if (
-            !selectedSmall?.value &&
-            statisticTagsList?.smallCategories &&
-            statisticTagsList?.smallCategories.length > 0
-          ) {
-            percent = statisticTagsList?.smallCategories
-              ? statisticTagsList?.smallCategories.find(
-                  (category) => category.tagName == categoryDetail.tagName,
-                )?.percent || 0
-              : 0;
-          } else {
-            if (
-              statisticTagsList?.category &&
-              statisticTagsList?.category.length > 0
-            )
-              percent = statisticTagsList?.category
-                ? statisticTagsList?.category.find(
-                    (category) => category.tagName == categoryDetail.tagName,
-                  )?.percent || 0
-                : 0;
-          }
-
           standardLabels = [
             ...standardLabels,
             {
-              color: lightenColor('#2E9267', percent) || getRandomColor(),
+              color:
+                lightenColor('#2E9267', categoryDetail?.percent || 0) ||
+                getRandomColor(),
               name: categoryDetail.tagName,
             },
           ];
@@ -467,9 +407,10 @@ const LineChart = ({
             tagId: categoryDetail.tagId,
             tagName: categoryDetail.tagName,
             tagDuration: categoryDetail.duration,
-            tagPercent: String(percent),
+            tagPercent: String(categoryDetail?.percent || 0),
             tagColor:
-              lightenColor('#2E9267' as string, percent) || getRandomColor(),
+              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) ||
+              getRandomColor(),
           });
           datasets.push({
             label: categoryDetail.tagName,
@@ -499,7 +440,8 @@ const LineChart = ({
                 : []),
             ]),
             borderColor:
-              lightenColor('#2E9267' as string, percent) || getRandomColor(),
+              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) ||
+              getRandomColor(),
             backgroundColor: 'rgba(217, 83, 79, 0.04)',
             fill: true,
             tension: 0,
@@ -507,7 +449,8 @@ const LineChart = ({
             pointBorderColor: 'transparent',
             pointHoverRadius: 6,
             pointHoverBackgroundColor:
-              lightenColor('#2E9267', percent) || getRandomColor(),
+              lightenColor('#2E9267', categoryDetail?.percent || 0) ||
+              getRandomColor(),
             pointHoverBorderColor: 'transparent',
             pointHoverBorderWidth: 2,
           });
@@ -561,7 +504,6 @@ const LineChart = ({
     }
   }, [
     statisticTagTaskDurationsList,
-    statisticTagsList,
     selectedOrganization,
     selectedLarge,
     selectedMedium,
@@ -604,8 +546,12 @@ const LineChart = ({
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
-      const rowADuration = convertDurationToTotalMinutes(rowA.tagDuration || '00:00:00');
-      const rowBDuration = convertDurationToTotalMinutes(rowB.tagDuration || '00:00:00');
+      const rowADuration = convertDurationToTotalMinutes(
+        rowA.tagDuration || '00:00:00',
+      );
+      const rowBDuration = convertDurationToTotalMinutes(
+        rowB.tagDuration || '00:00:00',
+      );
 
       return sortingType == SortingType.ASC
         ? rowADuration - rowBDuration
@@ -662,7 +608,7 @@ const LineChart = ({
     },
     {
       accessorKey: 'tagDuration',
-      size: 40,
+      size: 50,
       header: () => {
         return (
           <div
@@ -705,7 +651,7 @@ const LineChart = ({
     },
     {
       accessorKey: 'tagPercent',
-      size: 20,
+      size: 30,
       header: () => {
         return (
           <div
@@ -997,8 +943,8 @@ const LineChart = ({
               </div>
               <div>
                 <Dropdown
-                  options={viewOptions}
-                  selectedOption={viewOptions.find(
+                  options={STATISTIC_CHART_VIEW_OPTIONS}
+                  selectedOption={STATISTIC_CHART_VIEW_OPTIONS.find(
                     (element) => element.value === lineChartViewBy?.value,
                   )}
                   className="h-[34px] !w-[54px] !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
@@ -1020,7 +966,7 @@ const LineChart = ({
           {!isFetchedStatisticTagTaskDurationsList ? (
             <RowSkeleton
               numberOfRows={1}
-              className={`!h-[395px] ${expanded && 'w-[calc(100%_-_60px)]'} mx-auto`}
+              className={`!h-[395px] w-[calc(100%_-_60px)] mx-auto`}
             />
           ) : (
             <div
@@ -1052,53 +998,60 @@ const LineChart = ({
               </div>
             )}
 
-            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                    {headerGroup.headers.map((header, index) => (
-                      <th
-                        key={header.id}
-                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
-                        style={{
-                          width: header.getSize(),
-                          minWidth: header.getSize(),
-                          maxWidth: header.getSize(),
-                        }}
-                        onClick={header.column.getToggleSortingHandler()}>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    {row.getVisibleCells().map((cell, index) => (
-                      <td
-                        key={cell.id}
-                        style={{
-                          width: cell.column.getSize(),
-                          minWidth: cell.column.getSize(),
-                          maxWidth: cell.column.getSize(),
-                        }}
-                        className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </TableBody>
-            </Table>
+            {!isFetchedStatisticTagTaskDurationsList ? (
+              <RowSkeleton
+                numberOfRows={1}
+                className={`!h-[200px] mt-5 w-full mx-auto`}
+              />
+            ) : (
+              <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+                <thead>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr
+                      key={headerGroup.id}
+                      className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                      {headerGroup.headers.map((header, index) => (
+                        <th
+                          key={header.id}
+                          className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                          style={{
+                            width: header.getSize(),
+                            minWidth: header.getSize(),
+                            maxWidth: header.getSize(),
+                          }}
+                          onClick={header.column.getToggleSortingHandler()}>
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <TableBody>
+                  {table.getRowModel().rows.map((row) => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+                      {row.getVisibleCells().map((cell, index) => (
+                        <td
+                          key={cell.id}
+                          style={{
+                            width: cell.column.getSize(),
+                            minWidth: cell.column.getSize(),
+                            maxWidth: cell.column.getSize(),
+                          }}
+                          className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </>
       )}

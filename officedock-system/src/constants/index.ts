@@ -174,6 +174,11 @@ export const SCREEN_LIST = [
     value: 'teamDailyReport',
     show: true,
   },
+  {
+    name: 'カレンダー設定画面',
+    value: 'calendarManagement',
+    show: true,
+  },
 ];
 
 export const PERMISSION_OPTIONS = [
@@ -435,6 +440,11 @@ export const STATISTIC_CHART_VIEW_OPTIONS = [
   },
 ];
 
-export const EVERYONE_OPTION_LABEL = '全員を選択'
+export const EVERYONE_OPTION_LABEL = '全員を選択';
 
-export const MAXIUM_VISIBLE_NOTIFICATIONS = 99
+export const MAXIMUM_VISIBLE_NOTIFICATIONS = 99;
+
+export const DEFAULT_TIME_TEXT = '00:00:00';
+
+export const TEAM_CALENDAR_ORGANIZATION = 'カレンダーカテゴリー';
+export const ALL_TEAM_STATISTIC = 'すべてのチーム';

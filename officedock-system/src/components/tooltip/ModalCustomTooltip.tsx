@@ -6,6 +6,13 @@ import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { StatisticCategoryInfo } from '@interfaces/statistic';
 import { convertToJapaneseTime } from '@utils/date';
 
+type OptionModalType = {
+  label: string;
+  percent?: number;
+  avatarColor?: string;
+  avatarUrl?: string;
+  mergedItems?: StatisticCategoryInfo[];
+};
 type Props = {
   isTeam: boolean;
   tooltipData: {
@@ -16,13 +23,7 @@ type Props = {
   labels: string[];
   colors: string[];
   actualValues: string[];
-  optionsData: {
-    label: string;
-    percent?: number;
-    avatarColor?: string;
-    avatarUrl?: string;
-    mergedItems?: StatisticCategoryInfo[];
-  }[][];
+  optionsData: OptionModalType[][];
   data: number[];
   mergedItems: StatisticCategoryInfo[];
   listIdData: number[];
@@ -66,7 +67,7 @@ const ModalCustomTooltip = ({
                         }}
                         className="w-3 h-3 rounded-sm"></div>
                       <span className="font-bold max-w-[205px] line-clamp-3">
-                        {item.categoryName}
+                        {item.categoryName || item.tagName}
                       </span>
                     </div>
                     <div className="flex gap-2 text-base font-normal">
@@ -155,10 +156,10 @@ const ModalCustomTooltip = ({
               <div className="font-normal  mt-4 text-[#77858F] overflow-hidden break-words line-clamp-4">
                 {isTeam
                   ? option &&
-                    option.map((opt) => {
+                    option.map((opt, indexOption) => {
                       return (
                         <div
-                          key={opt.label}
+                          key={indexOption}
                           className="flex w-full max-w-[150px] items-center justify-between mb-2 ">
                           <div className="flex items-center gap-2">
                             <div>

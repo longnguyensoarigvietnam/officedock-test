@@ -75,6 +75,15 @@ const PercentageTeamTagsCompare = ({
     isLoadingLargeCompare,
     isLoadingMediumCompare,
     isLoadingSmallCompare,
+    isCheckCompare,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingSmall,
+    setIsLoadingOrganization,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingSmallCompare,
+    setIsLoadingOrganizationCompare,
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
   const { setIsLoading } = useContext(LoadingContext);
@@ -132,23 +141,31 @@ const PercentageTeamTagsCompare = ({
     if (!dataCategories) return [];
     const categories = dataCategories.filter((item) => item.percent > 0);
 
-    const otherItems = categories.filter((item) => item.percent < 0);
-    const mainItems = categories.filter((item) => item.percent >= 0);
+    const otherItems = categories.filter((item) => item.percent < 10);
+    const mainItems = categories.filter((item) => item.percent >= 10);
 
     const otherItem = {
       id: -1,
       label: 'その他',
       percentage: otherItems.reduce((sum, item) => sum + item.percent, 0),
-      color: colorData || getRandomColor(),
+      color:
+        colorData ||
+        lightenColor(
+          colorData as string,
+          otherItems.reduce((sum, item) => sum + item.percent, 0),
+        ),
       totalDuration: '',
-      mergedItems: otherItems.map((item) => ({ ...item })),
+      mergedItems: otherItems.map((item) => ({
+        ...item,
+        categoryColor: lightenColor(colorData as string, item.percent),
+      })),
       optionData: otherItems
         .flatMap((item) =>
           item.users?.map((user) => {
             if (user?.user?.fullName) {
               return {
                 label: user.user.fullName,
-                percent: item.percent,
+                percent: user.percent,
                 avatarColor: user.user.avatarColor,
               };
             }
@@ -411,6 +428,16 @@ const PercentageTeamTagsCompare = ({
                             updatedTagIds = currentTagIds.filter(
                               (tag) => tag.value != selected.value,
                             );
+                          }
+                          setIsLoadingLarge(true);
+                          setIsLoadingMedium(true);
+                          setIsLoadingSmall(true);
+                          setIsLoadingOrganization(true);
+                          if (isCheckCompare) {
+                            setIsLoadingLargeCompare(true);
+                            setIsLoadingMediumCompare(true);
+                            setIsLoadingSmallCompare(true);
+                            setIsLoadingOrganizationCompare(true);
                           }
                           setSelectedTags(updatedTagIds);
                         }}

@@ -39,6 +39,7 @@ import {
   StatisticChartType,
   StatisticViewOptions,
 } from '@constants/enums';
+import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 
 import useStatisticTaskDurationsCompare from '@hooks/useStatisticTaskDurationsCompare';
 import useStatisticTaskDurations from '@hooks/useStatisticTaskDurations';
@@ -57,9 +58,9 @@ import {
 import {
   getCompareLineChartEnableViews,
   getRandomColor,
+  getSafeTooltipLeft,
   lightenColor,
 } from '@utils';
-import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 
 ChartJS.register(
   CategoryScale,
@@ -129,12 +130,6 @@ const LineChartCompare = ({
     selectedOrganization,
     selectedTags,
     tagsOptions,
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
-    totalDurationLargeCompare,
-    totalDurationMediumCompare,
-    totalDurationSmallCompare,
     totalDurationTaskCompare,
     totalDurationTask,
     lineChartViewBy,
@@ -196,7 +191,7 @@ const LineChartCompare = ({
   const externalTooltipHandler = (context: any) => {
     const tooltipModel = context.tooltip;
     const tooltipEl = tooltipRef.current;
-    
+
     if (!tooltipEl || !tooltipModel) return;
 
     if (!tooltipModel.dataPoints || tooltipModel.dataPoints.length === 0) {
@@ -394,7 +389,14 @@ const LineChartCompare = ({
     `;
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
-    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 115}px`;
+
+    const left = getSafeTooltipLeft({
+      offsetLeft,
+      caretX: tooltipModel.caretX,
+      tooltipWidth: 240,
+    });
+
+    tooltipEl.style.left = `${left - 30}px`;
     tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
     tooltipEl.style.opacity = '1';
     tooltipEl.style.zIndex = '9999';
@@ -535,317 +537,261 @@ const LineChartCompare = ({
   };
 
   useEffect(() => {
-    if (statisticTaskDurationsList && statisticTaskDurationsCompareList) {
-      const color =
-        statisticCategoryList && statisticCategoryList.largeCategories
-          ? statisticCategoryList?.largeCategories.find(
-              (item) => item.categoryId === selectedLarge?.value,
-            )?.categoryColor
-          : '';
+    const color =
+      statisticCategoryList && statisticCategoryList.largeCategories
+        ? statisticCategoryList?.largeCategories.find(
+            (item) => item.categoryId === selectedLarge?.value,
+          )?.categoryColor
+        : '';
 
-      let datasets: any[] = [];
-      let sumStandardDurations: number = 0;
-      let sumCompareDurations: number = 0;
-      let standardLabels: { name: string; color: string }[] = [];
-      let comparedLabels: { name: string; color: string }[] = [];
-      let tableDetail: TableCategoryItem[] = [];
+    const datasets: any[] = [];
+    let sumStandardDurations: number = 0;
+    let sumCompareDurations: number = 0;
+    let standardLabels: { name: string; color: string }[] = [];
+    let comparedLabels: { name: string; color: string }[] = [];
+    let tableDetail: TableCategoryItem[] = [];
 
-      const standardDateLabels = Array.from(
-        new Set([
-          ...statisticTaskDurationsList.flatMap((category) =>
-            category.durations.flatMap((duration, index) =>
-              index === category.durations.length - 1 &&
-              String(category.durations.at(-1)?.endDate) !==
-                String(category.durations.at(-1)?.startDate)
-                ? [duration.startDate, duration.endDate]
-                : duration.startDate,
-            ),
+    const standardDateLabels = Array.from(
+      new Set([
+        ...(statisticTaskDurationsList || []).flatMap((category) =>
+          category.durations.flatMap((duration, index) =>
+            index === category.durations.length - 1 &&
+            String(category.durations.at(-1)?.endDate) !==
+              String(category.durations.at(-1)?.startDate)
+              ? [duration.startDate, duration.endDate]
+              : duration.startDate,
           ),
-        ]),
-      );
-      const compareDateLabels = Array.from(
-        new Set([
-          ...statisticTaskDurationsCompareList.flatMap((category) =>
-            category.durations.flatMap((duration, index) =>
-              index === category.durations.length - 1 &&
-              String(category.durations.at(-1)?.endDate) !==
-                String(category.durations.at(-1)?.startDate)
-                ? [duration.startDate, duration.endDate]
-                : duration.startDate,
-            ),
+        ),
+      ]),
+    );
+    const compareDateLabels = Array.from(
+      new Set([
+        ...(statisticTaskDurationsCompareList || []).flatMap((category) =>
+          category.durations.flatMap((duration, index) =>
+            index === category.durations.length - 1 &&
+            String(category.durations.at(-1)?.endDate) !==
+              String(category.durations.at(-1)?.startDate)
+              ? [duration.startDate, duration.endDate]
+              : duration.startDate,
           ),
-        ]),
-      );
+        ),
+      ]),
+    );
 
-      const generateDataWithAlignment = (
-        durations: any[],
-        compareDurations: any[],
-        type: string,
-        name: string,
-        color: string,
-      ) => {
-        const shownLabels = [...standardDateLabels];
-        if (standardDateLabels.length < compareDateLabels.length) {
-          const numOfHiddenLabels =
-            compareDateLabels.length - standardDateLabels.length;
-          for (let i = 0; i < numOfHiddenLabels; i++) {
-            shownLabels.push(`${i}`);
-          }
+    const generateDataWithAlignment = (
+      durations: any[],
+      compareDurations: any[],
+      type: string,
+      name: string,
+      color: string,
+    ) => {
+      const shownLabels = [...standardDateLabels];
+      if (standardDateLabels.length < compareDateLabels.length) {
+        const numOfHiddenLabels =
+          compareDateLabels.length - standardDateLabels.length;
+        for (let i = 0; i < numOfHiddenLabels; i++) {
+          shownLabels.push(`${i}`);
         }
-        const data = shownLabels
-          .map((label, index) => {
-            let foundDuration;
-            let anotherDuration;
-            if (type == StatisticChartType.COMPARE) {
-              foundDuration = compareDurations[index];
-              anotherDuration = durations[index];
-            } else {
-              foundDuration = durations[index];
-              anotherDuration = compareDurations[index];
-            }
-
-            return foundDuration
-              ? {
-                  x: label,
-                  y: foundDuration.duration
-                    ? convertTimeToDecimal(foundDuration.duration)
-                    : 0,
-                  startDate: foundDuration.startDate,
-                  endDate: foundDuration.endDate,
-                  duration: foundDuration.duration,
-                  anotherStartDate: anotherDuration
-                    ? anotherDuration.startDate
-                    : null,
-                  anotherEndDate: anotherDuration
-                    ? anotherDuration.endDate
-                    : null,
-                  anotherDuration: anotherDuration
-                    ? anotherDuration.duration
-                    : null,
-                  type,
-                  label: name,
-                  color,
-                }
-              : null;
-          })
-          .filter((dataPoint) => dataPoint !== null);
-        return data;
-      };
-
-      if (statisticTaskDurationsList.length > 0) {
-        statisticTaskDurationsList.map(
-          (categoryDetail: StatisticsTaskDuration) => {
-            sumStandardDurations =
-              sumStandardDurations +
-              convertTimeToDecimal(categoryDetail.duration);
-            standardLabels = [
-              ...standardLabels,
-              {
-                color:
-                  categoryDetail.categoryColor ||
-                  (color && lightenColor(color, 50)) ||
-                  getRandomColor(),
-                name: categoryDetail.categoryName,
-              },
-            ];
-
-            let percent = 0;
-            if (
-              !selectedLarge?.value &&
-              statisticCategoryList?.largeCategories &&
-              statisticCategoryList?.largeCategories.length > 0
-            ) {
-              percent =
-                statisticCategoryList?.largeCategories.find(
-                  (category) =>
-                    category.categoryName == categoryDetail.categoryName,
-                )?.percent || 0;
-            } else if (
-              !selectedMedium?.value &&
-              statisticCategoryList?.mediumCategories &&
-              statisticCategoryList?.mediumCategories.length > 0
-            ) {
-              percent = statisticCategoryList?.mediumCategories
-                ? statisticCategoryList?.mediumCategories.find(
-                    (category) =>
-                      category.categoryName == categoryDetail.categoryName,
-                  )?.percent || 0
-                : 0;
-            } else if (
-              statisticCategoryList?.smallCategories &&
-              statisticCategoryList?.smallCategories.length > 0
-            ) {
-              percent = statisticCategoryList?.smallCategories
-                ? statisticCategoryList?.smallCategories.find(
-                    (category) =>
-                      category.categoryName == categoryDetail.categoryName,
-                  )?.percent || 0
-                : 0;
-            }
-
-            tableDetail = [
-              ...tableDetail,
-              {
-                categoryId: categoryDetail.categoryId,
-                categoryName: categoryDetail.categoryName,
-                categoryDuration: categoryDetail.duration,
-                categoryPercent: String(percent),
-                categoryColor:
-                  categoryDetail.categoryColor ||
-                  (color && lightenColor(color, percent)) ||
-                  getRandomColor(),
-                type: StatisticChartType.STANDARD,
-              },
-            ];
-
-            const compareCategory = statisticTaskDurationsCompareList.find(
-              (c) => c.categoryName === categoryDetail.categoryName,
-            );
-
-            datasets = [
-              ...datasets,
-              {
-                label: categoryDetail.categoryName,
-                data: generateDataWithAlignment(
-                  categoryDetail.durations,
-                  compareCategory?.durations ?? [],
-                  StatisticChartType.STANDARD,
-                  categoryDetail.categoryName,
-                  categoryDetail.categoryColor ||
-                    (color && lightenColor(color, percent)) ||
-                    getRandomColor(),
-                ),
-                borderColor:
-                  categoryDetail.categoryColor ||
-                  (color && lightenColor(color, percent)) ||
-                  getRandomColor(),
-                backgroundColor: 'transparent',
-                borderDash: [],
-                fill: true,
-                tension: 0,
-                pointRadius: 4,
-                pointBorderColor: 'transparent',
-                pointHoverRadius: 6,
-                pointHoverBackgroundColor:
-                  categoryDetail.categoryColor ||
-                  (color && lightenColor(color, 50)) ||
-                  getRandomColor(),
-                pointHoverBorderColor: 'transparent',
-                pointHoverBorderWidth: 2,
-              },
-            ];
-          },
-        );
       }
-      if (statisticTaskDurationsCompareList.length > 0) {
-        statisticTaskDurationsCompareList.map(
-          (categoryDetail: StatisticsTaskDuration) => {
-            sumCompareDurations =
-              sumCompareDurations +
-              convertTimeToDecimal(categoryDetail.duration);
-            comparedLabels = [
-              ...comparedLabels,
-              {
-                color:
-                  categoryDetail.categoryColor ||
-                  (color && lightenColor(color, 50)) ||
-                  getRandomColor(),
-                name: categoryDetail.categoryName,
-              },
-            ];
-            let percent = 0;
-            if (
-              !selectedLarge?.value &&
-              statisticCategoryCompareList?.largeCategories &&
-              statisticCategoryCompareList?.largeCategories.length > 0
-            ) {
-              percent =
-                statisticCategoryCompareList?.largeCategories.find(
-                  (category) =>
-                    category.categoryName == categoryDetail.categoryName,
-                )?.percent || 0;
-            } else if (
-              !selectedMedium?.value &&
-              statisticCategoryCompareList?.mediumCategories &&
-              statisticCategoryCompareList?.mediumCategories.length > 0
-            ) {
-              percent = statisticCategoryCompareList?.mediumCategories
-                ? statisticCategoryCompareList?.mediumCategories.find(
-                    (category) =>
-                      category.categoryName == categoryDetail.categoryName,
-                  )?.percent || 0
-                : 0;
-            } else if (
-              statisticCategoryCompareList?.smallCategories &&
-              statisticCategoryCompareList?.smallCategories.length > 0
-            ) {
-              percent = statisticCategoryCompareList?.smallCategories
-                ? statisticCategoryCompareList?.smallCategories.find(
-                    (category) =>
-                      category.categoryName == categoryDetail.categoryName,
-                  )?.percent || 0
-                : 0;
-            }
+      const data = shownLabels
+        .map((label, index) => {
+          let foundDuration;
+          let anotherDuration;
+          if (type == StatisticChartType.COMPARE) {
+            foundDuration = compareDurations[index];
+            anotherDuration = durations[index];
+          } else {
+            foundDuration = durations[index];
+            anotherDuration = compareDurations[index];
+          }
 
-            tableDetail.push({
+          return foundDuration
+            ? {
+                x: label,
+                y: foundDuration.duration
+                  ? convertTimeToDecimal(foundDuration.duration)
+                  : 0,
+                startDate: foundDuration.startDate,
+                endDate: foundDuration.endDate,
+                duration: foundDuration.duration,
+                anotherStartDate: anotherDuration
+                  ? anotherDuration.startDate
+                  : null,
+                anotherEndDate: anotherDuration
+                  ? anotherDuration.endDate
+                  : null,
+                anotherDuration: anotherDuration
+                  ? anotherDuration.duration
+                  : null,
+                type,
+                label: name,
+                color,
+              }
+            : null;
+        })
+        .filter((dataPoint) => dataPoint !== null);
+
+      // Add one more item with the same data as the last one
+      if (durations.length > 0 && shownLabels.length > 0) {
+        const lastItem = data[data.length - 1];
+        if (
+          String(durations.at(-1).startDate) != String(durations.at(-1).endDate)
+        ) {
+          const clonedItem = {
+            ...lastItem,
+            x: shownLabels.at(-1)!,
+          };
+          data.push(clonedItem);
+        }
+      }
+      return data;
+    };
+
+    if (statisticTaskDurationsList && statisticTaskDurationsList.length > 0) {
+      statisticTaskDurationsList.map(
+        (categoryDetail: StatisticsTaskDuration) => {
+          sumStandardDurations =
+            sumStandardDurations +
+            convertTimeToDecimal(categoryDetail.duration);
+          standardLabels = [
+            ...standardLabels,
+            {
+              color:
+                categoryDetail.categoryColor ||
+                (color && lightenColor(color, 50)) ||
+                getRandomColor(),
+              name: categoryDetail.categoryName,
+            },
+          ];
+
+          tableDetail = [
+            ...tableDetail,
+            {
               categoryId: categoryDetail.categoryId,
               categoryName: categoryDetail.categoryName,
               categoryDuration: categoryDetail.duration,
-              categoryPercent: String(percent),
+              categoryPercent: String(categoryDetail?.percent || 0),
               categoryColor:
                 categoryDetail.categoryColor ||
-                (color && lightenColor(color, percent)) ||
+                (color && lightenColor(color, categoryDetail?.percent || 0)) ||
                 getRandomColor(),
-              type: StatisticChartType.COMPARE,
-            });
+              type: StatisticChartType.STANDARD,
+            },
+          ];
 
-            const standardCategory = statisticTaskDurationsList.find(
-              (c) => c.categoryName === categoryDetail.categoryName,
-            );
+          const compareCategory = statisticTaskDurationsCompareList?.find(
+            (c) => c.categoryName === categoryDetail.categoryName,
+          );
 
-            datasets.push({
-              label: categoryDetail.categoryName,
-              data: generateDataWithAlignment(
-                standardCategory?.durations ?? [],
-                categoryDetail.durations,
-                StatisticChartType.COMPARE,
-                categoryDetail.categoryName,
-                categoryDetail.categoryColor ||
-                  (color && lightenColor(color, percent)) ||
-                  getRandomColor(),
-              ),
-              borderColor:
-                categoryDetail.categoryColor ||
-                (color && lightenColor(color, percent)) ||
+          datasets.push({
+            label: categoryDetail.categoryName,
+            data: generateDataWithAlignment(
+              categoryDetail.durations,
+              compareCategory?.durations ?? [],
+              StatisticChartType.STANDARD,
+              categoryDetail.categoryName,
+              categoryDetail.categoryColor ||
+                (color && lightenColor(color, categoryDetail?.percent || 0)) ||
                 getRandomColor(),
-              backgroundColor: 'transparent',
-              borderDash: [3, 3],
-              fill: true,
-              tension: 0,
-              pointRadius: 4,
-              pointBorderColor: 'transparent',
-              pointHoverRadius: 6,
-              pointHoverBackgroundColor:
-                categoryDetail.categoryColor ||
-                (color && lightenColor(color, percent)) ||
-                getRandomColor(),
-              pointHoverBorderColor: 'transparent',
-              pointHoverBorderWidth: 2,
-            });
-          },
-        );
-      }
-      setStandardLabelsInfo(standardLabels);
-      setComparedLabelsInfo(comparedLabels);
-      setStandardDateLabels(standardDateLabels);
-      setCompareDateLabels(compareDateLabels);
-      setLineChartData({
-        labels: standardDateLabels,
-        datasets: datasets || [],
-      });
-
-      setTableData(mergeCategories(tableDetail) || []);
+            ),
+            borderColor:
+              categoryDetail.categoryColor ||
+              (color && lightenColor(color, categoryDetail?.percent || 0)) ||
+              getRandomColor(),
+            backgroundColor: 'transparent',
+            borderDash: [],
+            fill: true,
+            tension: 0,
+            pointRadius: 4,
+            pointBorderColor: 'transparent',
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor:
+              categoryDetail.categoryColor ||
+              (color && lightenColor(color, 50)) ||
+              getRandomColor(),
+            pointHoverBorderColor: 'transparent',
+            pointHoverBorderWidth: 2,
+          });
+        },
+      );
     }
+    if (
+      statisticTaskDurationsCompareList &&
+      statisticTaskDurationsCompareList.length > 0
+    ) {
+      statisticTaskDurationsCompareList.map(
+        (categoryDetail: StatisticsTaskDuration) => {
+          sumCompareDurations =
+            sumCompareDurations + convertTimeToDecimal(categoryDetail.duration);
+          comparedLabels = [
+            ...comparedLabels,
+            {
+              color:
+                categoryDetail.categoryColor ||
+                (color && lightenColor(color, 50)) ||
+                getRandomColor(),
+              name: categoryDetail.categoryName,
+            },
+          ];
+
+          tableDetail.push({
+            categoryId: categoryDetail.categoryId,
+            categoryName: categoryDetail.categoryName,
+            categoryDuration: categoryDetail.duration,
+            categoryPercent: String(categoryDetail?.percent || 0),
+            categoryColor:
+              categoryDetail.categoryColor ||
+              (color && lightenColor(color, categoryDetail?.percent || 0)) ||
+              getRandomColor(),
+            type: StatisticChartType.COMPARE,
+          });
+
+          const standardCategory = statisticTaskDurationsList?.find(
+            (c) => c.categoryName === categoryDetail.categoryName,
+          );
+
+          datasets.push({
+            label: categoryDetail.categoryName,
+            data: generateDataWithAlignment(
+              standardCategory?.durations ?? [],
+              categoryDetail.durations,
+              StatisticChartType.COMPARE,
+              categoryDetail.categoryName,
+              categoryDetail.categoryColor ||
+                (color && lightenColor(color, categoryDetail?.percent || 0)) ||
+                getRandomColor(),
+            ),
+            borderColor:
+              categoryDetail.categoryColor ||
+              (color && lightenColor(color, categoryDetail?.percent || 0)) ||
+              getRandomColor(),
+            backgroundColor: 'transparent',
+            borderDash: [3, 3],
+            fill: true,
+            tension: 0,
+            pointRadius: 4,
+            pointBorderColor: 'transparent',
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor:
+              categoryDetail.categoryColor ||
+              (color && lightenColor(color, categoryDetail?.percent || 0)) ||
+              getRandomColor(),
+            pointHoverBorderColor: 'transparent',
+            pointHoverBorderWidth: 2,
+          });
+        },
+      );
+    }
+    setStandardLabelsInfo(standardLabels);
+    setComparedLabelsInfo(comparedLabels);
+    setStandardDateLabels(standardDateLabels);
+    setCompareDateLabels(compareDateLabels);
+    setLineChartData({
+      labels: standardDateLabels,
+      datasets: datasets || [],
+    });
+
+    setTableData(mergeCategories(tableDetail) || []);
   }, [
     statisticTaskDurationsList,
     statisticTaskDurationsCompareList,
@@ -854,12 +800,6 @@ const LineChartCompare = ({
     selectedOrganization,
     selectedLarge,
     selectedMedium,
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
-    totalDurationLargeCompare,
-    totalDurationMediumCompare,
-    totalDurationSmallCompare,
   ]);
 
   const sortByPercentDifference = (
@@ -981,7 +921,7 @@ const LineChartCompare = ({
     },
     {
       accessorKey: 'categoryDuration',
-      size: 40,
+      size: 50,
       header: () => {
         return (
           <div
@@ -1059,7 +999,7 @@ const LineChartCompare = ({
     },
     {
       accessorKey: 'categoryPercent',
-      size: 25,
+      size: 30,
       header: () => {
         return (
           <div
@@ -1390,7 +1330,7 @@ const LineChartCompare = ({
           ) : (
             <RowSkeleton
               numberOfRows={1}
-              className={`!h-[395px] ${expanded && 'w-[calc(100%_-_60px)]'} mx-auto`}
+              className={`!h-[395px] w-[calc(100%_-_60px)] mx-auto`}
             />
           )}
 
@@ -1435,53 +1375,61 @@ const LineChartCompare = ({
                 </>
               )}
 
-            <Table className="w-full border border-gray-300 mt-5 rounded-md">
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                    {headerGroup.headers.map((header, index) => (
-                      <th
-                        key={header.id}
-                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
-                        style={{
-                          width: header.getSize(),
-                          minWidth: header.getSize(),
-                          maxWidth: header.getSize(),
-                        }}
-                        onClick={header.column.getToggleSortingHandler()}>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    {row.getVisibleCells().map((cell, index) => (
-                      <td
-                        key={cell.id}
-                        style={{
-                          width: cell.column.getSize(),
-                          minWidth: cell.column.getSize(),
-                          maxWidth: cell.column.getSize(),
-                        }}
-                        className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </TableBody>
-            </Table>
+            {isFetchedStatisticTaskDurationsList &&
+            isFetchedStatisticTaskDurationsCompareList ? (
+              <Table className="w-full border border-gray-300 mt-5 rounded-md">
+                <thead>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr
+                      key={headerGroup.id}
+                      className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                      {headerGroup.headers.map((header, index) => (
+                        <th
+                          key={header.id}
+                          className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                          style={{
+                            width: header.getSize(),
+                            minWidth: header.getSize(),
+                            maxWidth: header.getSize(),
+                          }}
+                          onClick={header.column.getToggleSortingHandler()}>
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <TableBody>
+                  {table.getRowModel().rows.map((row) => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+                      {row.getVisibleCells().map((cell, index) => (
+                        <td
+                          key={cell.id}
+                          style={{
+                            width: cell.column.getSize(),
+                            minWidth: cell.column.getSize(),
+                            maxWidth: cell.column.getSize(),
+                          }}
+                          className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <RowSkeleton
+                numberOfRows={1}
+                className={`!h-[200px] mt-5 w-full mx-auto`}
+              />
+            )}
           </div>
         </>
       )}

@@ -2,6 +2,7 @@ import React, {
   Fragment,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -46,13 +47,11 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 
 import { OptionDropdownType } from '@interfaces/common';
-import {
-  StatisticCategoryInfo,
-  StatisticsCategories,
-} from '@interfaces/statistic';
+import { StatisticCategoryInfo } from '@interfaces/statistic';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
 import {
+  DEFAULT_TIME_TEXT,
   EVERYONE_OPTION_LABEL,
   STATISTIC_CHART_VIEW_OPTIONS,
 } from '@constants';
@@ -62,6 +61,7 @@ import {
   convertTimeToDecimal,
   convertToStatisticJapaneseLabels,
   formatDateToYMD,
+  totalDurationsForStatistic,
 } from '@utils/date';
 import {
   createStyledAvatarWithMargin,
@@ -69,11 +69,14 @@ import {
   getFileURL,
   getLineChartEnableViews,
   getRandomColor,
+  getSafeTooltipLeft,
   toRGBA,
 } from '@utils';
 
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 import useDebounceText from '@hooks/useDebounceText';
+import useStatisticTableInTeamLineChart from '@hooks/useStatisticTableInTeamLineChart';
+import { useGenericDebounce } from '@hooks/useGenericDebounce';
 
 ChartJS.register(
   CategoryScale,
@@ -91,7 +94,6 @@ type Props = {
   endDate: Date | null;
   removeTag: (selected: OptionDropdownType) => void;
   removeUser: (selected: OptionDropdownType) => void;
-  statisticTeamCategoryList: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -121,17 +123,12 @@ const LineChartByTeam = ({
   endDate,
   removeTag,
   removeUser,
-  statisticTeamCategoryList,
   handleSelectOrganization,
   handleSelectLarge,
   handleSelectMedium,
 }: Props) => {
   // Context
   const {
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
-    totalDurationTask,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -159,6 +156,8 @@ const LineChartByTeam = ({
     id: number;
     name: string;
   } | null>(null);
+  const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
+
   // Filter options
   const [filter, setFilter] = useState({
     fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -208,6 +207,7 @@ const LineChartByTeam = ({
     labels: [],
     datasets: [],
   });
+  const [totalDuration, setTotalDuration] = useState<string>('00:00:00');
 
   // Collapse statuses
   const [categoryCollapseStatuses, setCategoryCollapseStatuses] = useState<
@@ -254,15 +254,28 @@ const LineChartByTeam = ({
       categoryPercent: category.percent,
       categoryDuration: category.duration,
       userList:
-        category.users && category.users.length > 0
-          ? category.users.map((user) => {
+        allLabelUser.length > 0
+          ? allLabelUser.map((userInfo) => {
+              const foundUser = category.users?.find(
+                (user) => user.user.id == userInfo.value,
+              );
+              if (foundUser) {
+                return {
+                  userId: foundUser.user.id,
+                  userName: foundUser.user.fullName,
+                  userAvatar: foundUser.user.avatar,
+                  userAvatarColor: foundUser.user.avatarColor,
+                  userDuration: foundUser.duration,
+                  userPercent: foundUser.percent,
+                };
+              }
               return {
-                userId: user.user.id,
-                userName: user.user.fullName,
-                userAvatar: user.user.avatar,
-                userAvatarColor: user.user.avatarColor,
-                userDuration: user.duration,
-                userPercent: user.percent,
+                userId: Number(userInfo.value),
+                userName: userInfo?.label,
+                userAvatar: userInfo?.avatarUrl || '',
+                userAvatarColor: userInfo?.color || '',
+                userDuration: DEFAULT_TIME_TEXT,
+                userPercent: 0,
               };
             })
           : [],
@@ -289,44 +302,50 @@ const LineChartByTeam = ({
   } = useStatisticUserTaskDurations({ filter });
 
   // Get table info (statistic team categories)
-  useEffect(() => {
-    if (statisticTeamCategoryList) {
-      let tableDetail: TableRowDetail[] = [];
-      if (selectedOrganization && !selectedLarge && !selectedMedium) {
-        tableDetail = buildTableDetail(
-          statisticTeamCategoryList.largeCategories,
-        );
-        handleCategorySelection(statisticTeamCategoryList.largeCategories);
-      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
-        tableDetail = buildTableDetail(
-          statisticTeamCategoryList.mediumCategories,
-        );
-        handleCategorySelection(statisticTeamCategoryList.mediumCategories);
-      } else if (selectedOrganization && selectedLarge && selectedMedium) {
-        tableDetail = buildTableDetail(
-          statisticTeamCategoryList.smallCategories,
-        );
-        handleCategorySelection(statisticTeamCategoryList.smallCategories);
-      }
+  const { isLoadingStatisticTableInTeamLineChart } =
+    useStatisticTableInTeamLineChart({
+      filter: {
+        fromDate: formatDateToYMD(startDate) || '',
+        endDate: formatDateToYMD(`${endDate}`) || '',
+        organizationIds: String(selectedOrganization?.value || ''),
+        largeCategoryId: selectedLarge?.value as number,
+        mediumCategoryId: selectedMedium?.value as number,
+        orderingOptions: orderingOptions,
+        userIds: debouncedSelectedMembers,
+      },
+      onSuccess: (data) => {
+        if (!data) return;
+        let tableDetail: TableRowDetail[] = [];
+        if (selectedOrganization && !selectedLarge && !selectedMedium) {
+          tableDetail = buildTableDetail(data.largeCategories);
+          handleCategorySelection(data.largeCategories);
+        } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+          tableDetail = buildTableDetail(data.mediumCategories);
+          handleCategorySelection(data.mediumCategories);
+        } else if (selectedOrganization && selectedLarge && selectedMedium) {
+          tableDetail = buildTableDetail(data.smallCategories);
+          handleCategorySelection(data.smallCategories);
+        }
 
-      setCategoryCollapseStatuses(
-        tableDetail.map((category) => {
-          return {
-            categoryId: category.categoryId,
-            status: false,
-          };
-        }),
-      );
+        setCategoryCollapseStatuses(
+          tableDetail.map((category) => {
+            return {
+              categoryId: category.categoryId,
+              status: false,
+            };
+          }),
+        );
 
-      setTableData(tableDetail);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    statisticTeamCategoryList,
-    selectedOrganization,
-    selectedLarge,
-    selectedMedium,
-  ]);
+        setTableData(tableDetail);
+
+        // Calculate total duration
+        const totalDurationList = (tableDetail || [])
+          .map((item) => item.categoryDuration)
+          .filter(Boolean); // remove null, undefined, ''
+
+        setTotalDuration(totalDurationsForStatistic(totalDurationList));
+      },
+    });
 
   // Get initial member options
   useEffect(() => {
@@ -349,35 +368,52 @@ const LineChartByTeam = ({
       ];
       setMemberOptions(allMembers);
       setSelectedMembers([...allMembers.map((user) => Number(user.id))]);
+    } else {
+      setMemberOptions([]);
+      setSelectedMembers([]);
     }
   }, [allLabelUser]);
 
   // Handle listen to filter option changes
-  useEffect(() => {
-    setFilter({
+  const memoizedFilter = useMemo(() => {
+    return {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-      userIds: debouncedSelectedMembers,
+      userIds: selectedMembers?.filter(Boolean).join(','),
       largeCategoryId: selectedLarge?.value,
       mediumCategoryId: selectedMedium?.value,
       smallCategoryId: selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
       tagIds: orderingOptions?.tag_ids || [],
-    });
+    };
   }, [
     startDate,
     endDate,
-    debouncedSelectedMembers,
-    lineChartViewBy?.value,
-    selectedOrganization?.value,
+    selectedMembers,
     selectedLarge?.value,
     selectedMedium?.value,
     selectedSmall?.value,
+    lineChartViewBy?.value,
+    selectedOrganization?.value,
     orderingOptions,
   ]);
 
-  // Hide tooltip when mouse leave over 150px
+  useEffect(() => {
+    if (isOrganizationChanging && selectedMembers.length > 0) {
+      setIsOrganizationChanging(false); // Done
+    }
+  }, [selectedMembers, isOrganizationChanging]);
+
+  const debouncedFilter = useGenericDebounce(memoizedFilter, 1000);
+
+  useEffect(() => {
+    if (!isOrganizationChanging) {
+      setFilter(debouncedFilter); // Trigger API only when everything is ready
+    }
+  }, [debouncedFilter, isOrganizationChanging]);
+
+  // Hide tooltip when mouse leave over 80px
   useEffect(() => {
     let hideTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -402,8 +438,7 @@ const LineChartByTeam = ({
         mouseY - rect.bottom,
         0,
       );
-
-      if (distance > 150) {
+      if (distance > 80) {
         if (!hideTimeout) {
           hideTimeout = setTimeout(() => {
             if (tooltipRef.current) {
@@ -421,7 +456,7 @@ const LineChartByTeam = ({
           }, 250); // delay before hiding tooltip
         }
       } else {
-        // Mouse came back within 150px: cancel hide
+        // Mouse came back within 80px: cancel hide
         if (hideTimeout) {
           clearTimeout(hideTimeout);
           hideTimeout = null;
@@ -506,7 +541,12 @@ const LineChartByTeam = ({
     );
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
-    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 60}px`;
+    const left = getSafeTooltipLeft({
+      offsetLeft,
+      caretX: tooltipModel.caretX,
+      tooltipWidth: 220,
+    });
+    tooltipEl.style.left = `${left - 30}px`;
     tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
     tooltipEl.style.opacity = '1';
     tooltipEl.style.display = 'block';
@@ -754,16 +794,9 @@ const LineChartByTeam = ({
         datasets: [],
       });
       setLegendList([]);
+      setTotalDuration('00:00:00');
     }
-  }, [
-    statisticUserTaskDurationsList,
-    selectedOrganization,
-    selectedLarge,
-    selectedMedium,
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
-  ]);
+  }, [statisticUserTaskDurationsList]);
 
   // Sort by percent difference
   const sortByPercentDifference = (
@@ -822,7 +855,7 @@ const LineChartByTeam = ({
         return (
           <div className="flex items-start px-[18px]">
             <RadioButton
-              name="categoryName"
+              name="lineChartCategoryName"
               isChecked={info.row.original.categoryId == selectedCategory?.id}
               onChange={(e: any) => {
                 if (e) {
@@ -932,7 +965,7 @@ const LineChartByTeam = ({
     },
     {
       accessorKey: 'categoryDuration',
-      size: 40,
+      size: 50,
       header: () => {
         return (
           <div
@@ -1008,7 +1041,7 @@ const LineChartByTeam = ({
     },
     {
       accessorKey: 'categoryPercent',
-      size: 20,
+      size: 30,
       header: () => {
         return (
           <div
@@ -1274,7 +1307,11 @@ const LineChartByTeam = ({
                     classNameOption="!text-sm"
                     options={listOptionsOrganization}
                     selectedOption={selectedOrganization || undefined}
-                    onChange={(data) => handleSelectOrganization(data)}
+                    onChange={(data) => {
+                      setSelectedMembers([]);
+                      setIsOrganizationChanging(true);
+                      handleSelectOrganization(data);
+                    }}
                   />
                 </div>
               </div>
@@ -1328,13 +1365,13 @@ const LineChartByTeam = ({
                 <p>合計時間</p>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-[34px] leading-none">
-                    {totalDurationTask?.split(':')[0]}
+                    {totalDuration?.split(':')[0]}
                   </p>
                   <p className="text-[25px] leading-none">時間</p>
                 </div>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-[34px] leading-none">
-                    {totalDurationTask?.split(':')[1]}
+                    {totalDuration?.split(':')[1]}
                   </p>
                   <p className="text-[25px] leading-none">分</p>
                 </div>
@@ -1361,78 +1398,84 @@ const LineChartByTeam = ({
               </div>
             </div>
           </div>
-          <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">
-            表示させるメンバー
-          </p>
-          <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[10px]">
-            {memberOptions?.length > 0 &&
-              memberOptions.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center gap-2 cursor-pointer">
-                  <div className="w-4">
-                    <CustomStatisticUserCheckbox
-                      id={String(member.id)}
-                      isChecked={selectedMembers.includes(member.id)}
-                      color={member.color}
-                      onChange={(state) => {
-                        if (state) {
-                          setSelectedMembers((prev) => {
-                            if (member.id) {
-                              const foundMember = selectedMembers.find(
-                                (memberId) => memberId == member.id,
-                              );
-                              if (!foundMember) {
-                                return [...prev, member.id];
-                              }
-                              return [...prev];
-                            } else {
-                              return memberOptions.map((member) => member.id);
-                            }
-                          });
-                        } else {
-                          setSelectedMembers((prev) => {
-                            if (member.id) {
-                              const foundMember = selectedMembers.find(
-                                (memberId) => memberId == member.id,
-                              );
-                              if (foundMember) {
-                                return [...prev].filter(
-                                  (memberId) =>
-                                    memberId && memberId != member.id,
+          {memberOptions?.length > 0 ? (
+            <>
+              <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">
+                表示させるメンバー
+              </p>
+              <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[10px]">
+                {memberOptions.map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center gap-2 cursor-pointer">
+                    <div className="w-4">
+                      <CustomStatisticUserCheckbox
+                        id={String(member.id)}
+                        isChecked={selectedMembers.includes(member.id)}
+                        color={member.color}
+                        onChange={(state) => {
+                          if (state) {
+                            setSelectedMembers((prev) => {
+                              if (member.id) {
+                                const foundMember = selectedMembers.find(
+                                  (memberId) => memberId == member.id,
                                 );
+                                if (!foundMember) {
+                                  return [...prev, member.id];
+                                }
+                                return [...prev];
+                              } else {
+                                return memberOptions.map((member) => member.id);
                               }
-                              return [...prev];
-                            } else {
-                              return [];
-                            }
-                          });
-                        }
-                      }}
-                    />
-                  </div>
-                  {member.id ? (
-                    <div className="relative top-[2px]">
-                      <CustomUserAvatar
-                        avatarUrl={member?.avatarUrl || ''}
-                        avatarColor={member?.color || ''}
-                        size={30}
+                            });
+                          } else {
+                            setSelectedMembers((prev) => {
+                              if (member.id) {
+                                const foundMember = selectedMembers.find(
+                                  (memberId) => memberId == member.id,
+                                );
+                                if (foundMember) {
+                                  return [...prev].filter(
+                                    (memberId) =>
+                                      memberId && memberId != member.id,
+                                  );
+                                }
+                                return [...prev];
+                              } else {
+                                return [];
+                              }
+                            });
+                          }
+                        }}
                       />
                     </div>
-                  ) : (
-                    <></>
-                  )}
+                    {member.id ? (
+                      <div className="relative top-[2px]">
+                        <CustomUserAvatar
+                          avatarUrl={member?.avatarUrl || ''}
+                          avatarColor={member?.color || ''}
+                          size={30}
+                        />
+                      </div>
+                    ) : (
+                      <></>
+                    )}
 
-                  <span className="break-all max-w-[800px] w-full truncate text-sm">
-                    {member.fullName}
-                  </span>
-                </div>
-              ))}
-          </div>
+                    <span className="break-all max-w-[800px] w-full truncate text-sm">
+                      {member.fullName}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <></>
+          )}
+
           {isLoadingStatisticUserTaskDurationsList ? (
             <RowSkeleton
               numberOfRows={1}
-              className={`!h-[395px] ${expanded && 'w-[calc(100%_-_60px)]'} mx-auto`}
+              className={`!h-[395px] w-[calc(100%_-_60px)] mx-auto`}
             />
           ) : (
             <div
@@ -1464,53 +1507,60 @@ const LineChartByTeam = ({
               </div>
             )}
 
-            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                    {headerGroup.headers.map((header, index) => (
-                      <th
-                        key={header.id}
-                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
-                        style={{
-                          width: header.getSize(),
-                          minWidth: header.getSize(),
-                          maxWidth: header.getSize(),
-                        }}
-                        onClick={header.column.getToggleSortingHandler()}>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    {row.getVisibleCells().map((cell, index) => (
-                      <td
-                        key={cell.id}
-                        style={{
-                          width: cell.column.getSize(),
-                          minWidth: cell.column.getSize(),
-                          maxWidth: cell.column.getSize(),
-                        }}
-                        className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </TableBody>
-            </Table>
+            {isLoadingStatisticTableInTeamLineChart ? (
+              <RowSkeleton
+                numberOfRows={1}
+                className={`!h-[200px] mt-5 w-full mx-auto`}
+              />
+            ) : (
+              <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+                <thead>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr
+                      key={headerGroup.id}
+                      className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                      {headerGroup.headers.map((header, index) => (
+                        <th
+                          key={header.id}
+                          className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                          style={{
+                            width: header.getSize(),
+                            minWidth: header.getSize(),
+                            maxWidth: header.getSize(),
+                          }}
+                          onClick={header.column.getToggleSortingHandler()}>
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <TableBody>
+                  {table.getRowModel().rows.map((row) => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+                      {row.getVisibleCells().map((cell, index) => (
+                        <td
+                          key={cell.id}
+                          style={{
+                            width: cell.column.getSize(),
+                            minWidth: cell.column.getSize(),
+                            maxWidth: cell.column.getSize(),
+                          }}
+                          className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </div>
       )}

@@ -252,6 +252,7 @@ const PercentageCategory = ({
   }, [statisticCategoryList]);
 
   const handleClickTooltip = (id: number | null, type: string) => {
+    if (isLoadingLarge || isLoadingMedium || isLoadingOrganization) return;
     let duration: string = '00:00:00';
 
     if (type === EventWorkCategory.ALL) {

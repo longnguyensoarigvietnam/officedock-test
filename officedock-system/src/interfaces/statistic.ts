@@ -361,6 +361,7 @@ export interface StatisticsTaskDuration {
     duration: string;
     percent: number;
   }[];
+  percent?: number;
 }
 
 export interface StatisticsTagTaskDuration {
@@ -373,6 +374,7 @@ export interface StatisticsTagTaskDuration {
     duration: string;
     percent: number;
   }[];
+  percent?: number;
 }
 export interface StatisticsPercentChart {
   endDate: string;

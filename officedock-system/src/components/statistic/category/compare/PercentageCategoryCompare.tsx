@@ -114,7 +114,7 @@ const PercentageCategoryCompare = ({
     colorData?: string,
   ) => {
     if (!dataCategories) return [];
-    const categories = dataCategories.filter((item) => item.percent > 0);
+    const categories = dataCategories.filter((item) => item.percent >= 0);
 
     const otherItems = categories.filter((item) => item.percent < 10);
     const mainItems = categories.filter((item) => item.percent >= 10);
@@ -221,6 +221,13 @@ const PercentageCategoryCompare = ({
   ) => {
     let duration: string = '00:00:00';
     if (isCompare) {
+      if (
+        isLoadingLargeCompare ||
+        isLoadingMediumCompare ||
+        isLoadingOrganizationCompare
+      )
+        return;
+
       if (type === EventWorkCategory.ALL) {
         duration =
           statisticCategoryCompareList?.largeCategories.find(
@@ -247,6 +254,8 @@ const PercentageCategoryCompare = ({
 
       setIsShowModalCompare(true);
     } else {
+      if (isLoadingLarge || isLoadingMedium || isLoadingOrganization) return;
+
       if (type === EventWorkCategory.ALL) {
         duration =
           statisticCategoryList?.largeCategories.find(
@@ -335,7 +344,7 @@ const PercentageCategoryCompare = ({
     }
 
     const element = document.getElementById('task-list-statistic');
-      setIsShowModal(false);
+    setIsShowModal(false);
 
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });

@@ -72,6 +72,7 @@ import { OptionDropdownType } from '@interfaces/common';
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { TaskContext } from '@providers/TaskProvider';
 
 import {
   ERROR_CREATE_MESSAGE,
@@ -164,6 +165,7 @@ const EventCalendar = () => {
 
   // Context
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+  const { setIdEventDelete } = useContext(TaskContext);
 
   // Loading
   const { setIsLoading } = useContext(LoadingContext);
@@ -2167,7 +2169,8 @@ const EventCalendar = () => {
     'deleteSpecificEventInPopup',
     handleDeleteSpecificEventInPopup,
     {
-      onSuccess: () => {
+      onSuccess: (_data, variables) => {
+        setIdEventDelete(`${variables.eventId}event`);
         handleRemoveEventParam();
         setOpenConfirmDeleteEventModal(false);
         setConfirmEventDataToEdit(undefined);
@@ -2212,7 +2215,8 @@ const EventCalendar = () => {
     'deleteEventInModal',
     handleDeleteEventInModal,
     {
-      onSuccess: () => {
+      onSuccess: (_data, variables) => {
+        setIdEventDelete(`${variables.eventId}event`);
         setOpenConfirmDeleteEventModal(false);
         setConfirmEventDataToEdit(undefined);
         setBackToEditing(false);

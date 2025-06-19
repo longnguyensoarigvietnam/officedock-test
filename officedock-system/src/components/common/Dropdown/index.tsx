@@ -1,5 +1,12 @@
 'use client';
-import { CSSProperties, Fragment, ReactNode, useEffect, useState } from 'react';
+import {
+  CSSProperties,
+  Fragment,
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   Listbox,
   ListboxButton,
@@ -9,12 +16,16 @@ import {
 } from '@headlessui/react';
 import Image from 'next/image';
 
+import { useDebounce } from '@hooks/useDebounce';
+
+import { NO_DATA_AVAILABLE } from '@constants';
+import { PriorityTask, StatusTask } from '@constants/enums';
+
+import { OptionDropdownType } from '@interfaces/common';
+
 import ErrorMessage from '../ErrorMessage';
 import ImageRound from '../ImageRound';
 import InputSearch from '../InputSearch';
-import { OptionDropdownType } from '@interfaces/common';
-import { NO_DATA_AVAILABLE } from '@constants';
-import { PriorityTask, StatusTask } from '@constants/enums';
 import Spinner from '../Spinner';
 
 type Props = {
@@ -44,6 +55,7 @@ type Props = {
   styleClass?: CSSProperties;
   styleClassOption?: CSSProperties;
   imgClassname?: string;
+  onScrollEnd?: () => void;
   onChange?: (value: OptionDropdownType) => void;
   onAdd?: (value: string) => void;
   disableItems?: string[];
@@ -77,9 +89,11 @@ const Dropdown = ({
   isShowIconDrop = true,
   imgClassname,
   disableItems = [],
+  onScrollEnd,
   onAdd,
   onChange,
 }: Props) => {
+  const listboxRef = useRef<HTMLUListElement>(null);
   const [selected, setSelected] = useState<OptionDropdownType | undefined>(
     selectedOption ? selectedOption : undefined,
   );
@@ -150,6 +164,13 @@ const Dropdown = ({
         : ' ',
     );
 
+  const handleScroll = useDebounce(() => {
+    const el = listboxRef.current;
+    if (el && el.scrollTop + el.clientHeight >= el.scrollHeight - 150) {
+      onScrollEnd?.();
+    }
+  }, 800);
+
   return (
     <div className="flex flex-col w-full h-full">
       {label && (
@@ -213,6 +234,8 @@ const Dropdown = ({
                   leaveFrom="opacity-100"
                   leaveTo="opacity-0">
                   <ListboxOptions
+                    ref={listboxRef}
+                    onScroll={handleScroll as any}
                     className={`absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none !border-[1px] !border-[#77858F] ${classNameOption}`}>
                     {searchOption && (
                       <div className="flex gap-2 items-center ">

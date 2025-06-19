@@ -36,7 +36,7 @@ const useStatisticTableInTeamTagLineChart = ({
 
   // Handle call API get statistic table in team tag line chart
   const getStatisticTableInTeamTagLineChart = async () => {
-    if (!filter?.organizationIds) return [];
+    if (!filter?.organizationIds || !filter?.userIds) return [];
     const queryParams = [];
     if (filter.fromDate) {
       queryParams.push(`from_date=${filter.fromDate}`);
@@ -75,7 +75,7 @@ const useStatisticTableInTeamTagLineChart = ({
   const {
     data: statisticTableInTeamTagLineChart,
     refetch: refetchStatisticTableInTeamTagLineChart,
-    isFetched: isFetchedStatisticTableInTeamTagLineChart,
+    isLoading: isLoadingStatisticTableInTeamTagLineChart,
   } = useQuery({
     queryKey: ['getStatisticTableInTeamTagLineChart', [filter]],
     queryFn: getStatisticTableInTeamTagLineChart,
@@ -94,7 +94,7 @@ const useStatisticTableInTeamTagLineChart = ({
   return {
     statisticTableInTeamTagLineChart,
     refetchStatisticTableInTeamTagLineChart,
-    isFetchedStatisticTableInTeamTagLineChart,
+    isLoadingStatisticTableInTeamTagLineChart,
   };
 };
 

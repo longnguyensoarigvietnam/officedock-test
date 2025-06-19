@@ -6,6 +6,7 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
+  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 
@@ -29,6 +30,7 @@ import { StatisticStateContext } from '@providers/StatisticProvider';
 import { getLineChartEnableViews, lightenColor } from '@utils';
 import {
   convertDurationToTotalMinutes,
+  convertToJapaneseDateRange,
   convertToStatisticJapaneseLabels,
   formatDateToYMD,
   sumDurationsChart,
@@ -205,7 +207,7 @@ const StackedAreaChart = ({
 
     // 3. Collect tableData (duration + percent)
     const categoryTableMap = new Map<
-      number,
+      string, // use key `${id}_${name}` to distinguish
       {
         categoryId: number;
         categoryName: string;
@@ -215,10 +217,15 @@ const StackedAreaChart = ({
       }
     >();
 
+    let colorChild = '';
+
+    // Iterate through each item
     for (const item of statisticPercentChartList) {
       for (const cat of item.categories) {
-        if (!categoryTableMap.has(cat.categoryId)) {
-          categoryTableMap.set(cat.categoryId, {
+        const mapKey = `${cat.categoryId}_${cat.categoryName}`; // distinguish by ID + name
+
+        if (!categoryTableMap.has(mapKey)) {
+          categoryTableMap.set(mapKey, {
             categoryId: cat.categoryId,
             categoryName: cat.categoryName,
             categoryColor: cat.categoryColor,
@@ -227,13 +234,13 @@ const StackedAreaChart = ({
           });
         }
 
-        const existing = categoryTableMap.get(cat.categoryId)!;
+        const existing = categoryTableMap.get(mapKey)!;
         existing.durations.push(cat.duration);
         existing.percents.push(cat.percent);
       }
     }
-    let colorChild = '';
-    if (statisticCategoryList && statisticCategoryList?.mediumCategories) {
+
+    if (statisticCategoryList?.mediumCategories) {
       colorChild =
         statisticCategoryList?.largeCategories.find(
           (item) => item.categoryId === selectedLarge?.value,
@@ -248,31 +255,29 @@ const StackedAreaChart = ({
       if (
         !selectedLarge?.value &&
         statisticCategoryList?.largeCategories &&
-        statisticCategoryList?.largeCategories.length > 0
+        statisticCategoryList?.largeCategories?.length > 0
       ) {
         percent =
-          statisticCategoryList?.largeCategories.find(
-            (category) => category.categoryName == cat.categoryName,
+          statisticCategoryList.largeCategories.find(
+            (category) => category.categoryName === cat.categoryName,
           )?.percent || 0;
       } else if (
         !selectedMedium?.value &&
         statisticCategoryList?.mediumCategories &&
-        statisticCategoryList?.mediumCategories.length > 0
+        statisticCategoryList?.mediumCategories?.length > 0
       ) {
-        percent = statisticCategoryList?.mediumCategories
-          ? statisticCategoryList?.mediumCategories.find(
-              (category) => category.categoryName == cat.categoryName,
-            )?.percent || 0
-          : 0;
+        percent =
+          statisticCategoryList.mediumCategories.find(
+            (category) => category.categoryName === cat.categoryName,
+          )?.percent || 0;
       } else if (
         statisticCategoryList?.smallCategories &&
-        statisticCategoryList?.smallCategories.length > 0
+        statisticCategoryList?.smallCategories?.length > 0
       ) {
-        percent = statisticCategoryList?.smallCategories
-          ? statisticCategoryList?.smallCategories.find(
-              (category) => category.categoryName == cat.categoryName,
-            )?.percent || 0
-          : 0;
+        percent =
+          statisticCategoryList.smallCategories.find(
+            (category) => category.categoryName === cat.categoryName,
+          )?.percent || 0;
       }
 
       return {
@@ -282,20 +287,20 @@ const StackedAreaChart = ({
           cat.categoryColor !== null
             ? cat.categoryColor
             : colorChild !== ''
-              ? lightenColor(colorChild as string, percent)
+              ? lightenColor(colorChild, percent)
               : '',
         categoryDuration: totalDuration,
         categoryPercent: `${percent}`,
       };
     });
 
+    setTableData(finalTableData);
+
     setColorList(
       finalTableData.map((color) => {
         return color.categoryColor;
       }),
     );
-
-    setTableData(finalTableData);
   }, [
     statisticPercentChartList,
     lineChartViewBy,
@@ -334,10 +339,13 @@ const StackedAreaChart = ({
       borderColor: 'transparent',
     };
   });
+
+  const isLargerTime = timeRange?.length > 12;
+
   const options = {
     chart: {
       type: 'area',
-      stacked: false,
+      stacked: true,
       zoom: {
         enabled: false, // ❌ OFF zoom
       },
@@ -347,7 +355,7 @@ const StackedAreaChart = ({
     },
     grid: {
       padding: {
-        left: 45, // 👉 increase value if label is hidden
+        left: isLargerTime ? 90 : 45, // 👉 increase value if label is hidden
         right: 10,
       },
     },
@@ -395,6 +403,7 @@ const StackedAreaChart = ({
     },
     stroke: {
       curve: 'straight',
+      show: false,
     },
     markers: {
       size: 0,
@@ -541,7 +550,8 @@ const StackedAreaChart = ({
     },
     {
       accessorKey: 'categoryDuration',
-      size: 40,
+      enableSorting: true,
+      size: 50,
       header: () => {
         return (
           <div
@@ -571,11 +581,10 @@ const StackedAreaChart = ({
           </div>
         );
       },
-      enableSorting: false,
       cell: (info) => {
         const value = info.getValue() as string;
         return (
-          <div className="font-medium flex text-[14px] justify-center text-black">
+          <div className="font-medium flex text-[14px] whitespace-nowrap justify-center text-black">
             <p>{value.split(':')[0] || 0}時間</p>
             <p>{value.split(':')[1] || 0}分</p>
           </div>
@@ -584,7 +593,8 @@ const StackedAreaChart = ({
     },
     {
       accessorKey: 'categoryPercent',
-      size: 20,
+      size: 30,
+      enableSorting: true,
       header: () => {
         return (
           <div
@@ -616,7 +626,6 @@ const StackedAreaChart = ({
           </div>
         );
       },
-      enableSorting: false,
       cell: (info) => {
         const value = Number(info.getValue()) || 0;
         return (
@@ -636,6 +645,15 @@ const StackedAreaChart = ({
   const table = useReactTable({
     data: tableData,
     columns,
+    initialState: {
+      sorting: [
+        {
+          id: 'categoryDuration',
+          desc: true,
+        },
+      ],
+    },
+    getSortedRowModel: getSortedRowModel(),
     getCoreRowModel: getCoreRowModel(),
   });
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -847,7 +865,8 @@ const StackedAreaChart = ({
                 type="area"
                 height={380}
               />
-              <div className="w-full pl-[45px] pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent">
+              <div
+                className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'}  pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
                 {timeRange.slice(1).map((item, idx) => {
                   const actualIndex = idx + 1;
                   const isHovered = hoveredIndex === actualIndex;
@@ -879,18 +898,11 @@ const StackedAreaChart = ({
                           style={{
                             boxShadow: '0px 2px 8px 0px #0000001A',
                           }}
-                          className={`bg-white absolute p-5 top-1/2 left-1/2 hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
-                          <p className="text-sm font-normal text-[#77858F] mb-1 text-start w-full block">
-                            {convertToStatisticJapaneseLabels(
+                          className={`bg-white absolute p-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                          <p className="text-sm font-normal text-[#77858F] mb-1 text-center w-full block">
+                            {convertToJapaneseDateRange(
                               dataDetailDate?.startDate as string,
-                              lineChartViewBy?.value as string,
-                              true,
-                            )}{' '}
-                            ~
-                            {convertToStatisticJapaneseLabels(
                               dataDetailDate?.endDate as string,
-                              lineChartViewBy?.value as string,
-                              true,
                             )}
                           </p>
                           {dataDetail?.categories.map((cate, cateIndex) => {
@@ -906,12 +918,9 @@ const StackedAreaChart = ({
                                   className="w-3 h-3 rounded-sm"
                                   style={{
                                     backgroundColor:
-                                      cate.categoryColor || colorDefault
-                                        ? lightenColor(
-                                            colorDefault?.categoryColor as string,
-                                            cate.percent,
-                                          )
-                                        : '',
+                                      cate.categoryColor ||
+                                      colorDefault?.categoryColor ||
+                                      '',
                                   }}
                                 />
                                 <div className="flex flex-grow items-center justify-between text-base font-medium">
@@ -931,53 +940,55 @@ const StackedAreaChart = ({
               </div>
             </div>
           )}
-          <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
-            <thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr
-                  key={headerGroup.id}
-                  className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                  {headerGroup.headers.map((header, index) => (
-                    <th
-                      key={header.id}
-                      className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
-                      style={{
-                        width: header.getSize(),
-                        minWidth: header.getSize(),
-                        maxWidth: header.getSize(),
-                      }}
-                      onClick={header.column.getToggleSortingHandler()}>
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <TableBody>
-              {table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50">
-                  {row.getVisibleCells().map((cell, index) => (
-                    <td
-                      key={cell.id}
-                      style={{
-                        width: cell.column.getSize(),
-                        minWidth: cell.column.getSize(),
-                        maxWidth: cell.column.getSize(),
-                      }}
-                      className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="px-[30px]">
+            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+              <thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr
+                    key={headerGroup.id}
+                    className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                    {headerGroup.headers.map((header, index) => (
+                      <th
+                        key={header.id}
+                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                        style={{
+                          width: header.getSize(),
+                          minWidth: header.getSize(),
+                          maxWidth: header.getSize(),
+                        }}
+                        onClick={header.column.getToggleSortingHandler()}>
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <TableBody>
+                {table.getRowModel().rows.map((row) => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    {row.getVisibleCells().map((cell, index) => (
+                      <td
+                        key={cell.id}
+                        style={{
+                          width: cell.column.getSize(),
+                          minWidth: cell.column.getSize(),
+                          maxWidth: cell.column.getSize(),
+                        }}
+                        className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
     </div>

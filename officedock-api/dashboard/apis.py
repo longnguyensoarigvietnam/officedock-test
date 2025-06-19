@@ -1,4 +1,5 @@
 from datetime import timedelta, datetime, time
+from itertools import chain
 from uuid import uuid4
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -9,13 +10,14 @@ from django.utils.timezone import now
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from base.apis import BaseAPIViewSet
 from base.filters import FilterByPermission
 from base.messages import ERROR_MESSAGES
+from base.paginations import BasePagination
 from calendars.constants import CalendarTypes
 from calendars.models import Schedule, RepeatSchedule
 from calendars.serializers import BaseScheduleSerializer
@@ -322,6 +324,10 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         started_at = validated_data.get("started_at", None)
         paused_at = validated_data.get("paused_at", None)
         instance = serializer.save()  # Save the updated instance
+        if not paused_at and not instance.paused_at:
+            return [
+                DurationSerializer(instance, context={"request": request}).data
+            ]
         paused_at = paused_at or instance.paused_at or now()
         started_at = started_at or instance.started_at
         user = request.user
@@ -481,22 +487,24 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         schedule = None
         if schedule_id:
             schedule = Schedule.objects.filter(
-                participants_schedules__user=user
-            ).get(id=schedule_id)
+                id=schedule_id,
+                participants_schedules__user=user,
+                deleted_at__isnull=True,
+            ).first()
             # Validate user's event
             if not schedule:
-                raise ValidationError(
+                raise NotFound(
                     {"schedule": [ERROR_MESSAGES["schedule_not_exists"]]}
                 )
         elif task_id:
-            task = Task.objects.filter(people_in_charge_tasks__user=user).get(
-                id=task_id
-            )
+            task = Task.objects.filter(
+                id=task_id,
+                people_in_charge_tasks__user=user,
+                deleted_at__isnull=True,
+            ).first()
             # Validate user's task
             if not task:
-                raise ValidationError(
-                    {"task": [ERROR_MESSAGES["task_not_exists"]]}
-                )
+                raise NotFound({"task": [ERROR_MESSAGES["task_not_exists"]]})
         else:
             # TODO: Create empty task with status 対応中 here
             return
@@ -521,6 +529,8 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         ):
             # Check if last task/event running is current task/event, stop it and return early
             self._stopDuration(user)
+            last_task_duration.refresh_from_db()
+
             return self.response_ok(
                 DurationSerializer(
                     last_task_duration, context={"request": request}
@@ -622,6 +632,12 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         data = {}
         request.query_params.get("id", None)
         obj_type = request.query_params.get("type", None)
+        object_id = request.query_params.get("id", None)
+        schedule_id = (
+            object_id if CalendarTypes.SCHEDULE.value == obj_type else None
+        )
+        task_id = object_id if CalendarTypes.TASK.value == obj_type else None
+
         separate_task_duration = TaskDuration.objects.filter(
             Q(paused_at__isnull=True)
             & Q(Q(task__is_start=True) | Q(schedule__is_start=True))
@@ -635,12 +651,18 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             )
 
         start_of_today = datetime.combine(timezone.now().date(), time.min)
-
-        # Get current task running
-        task_running = user.task_durations.filter(
-            started_at__gte=start_of_today,
-            paused_at__isnull=True,
-        ).first()
+        if task_id or schedule_id:
+            # Get current task running
+            task_running = user.task_durations.filter(
+                started_at__gte=start_of_today,
+                task__id=task_id,
+                schedule__id=schedule_id,
+            ).last()
+        else:
+            # Get current task running
+            task_running = user.task_durations.filter(
+                started_at__gte=start_of_today,
+            ).last()
         if not task_running:
             return self.response_ok(data)
         current_duration_start = task_running.task or task_running.schedule
@@ -678,7 +700,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                 "task_duration": format_duration(total_duration),
                 "started_at": task_running.started_at,
                 "paused_at": task_running.paused_at,
-                "is_start": bool(task_running),
+                "is_start": not task_running.paused_at,
                 "is_over_estimate": is_over_estimate,
                 "type": obj_type,
             }
@@ -783,7 +805,21 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         return queryset.order_by("-created_at")
 
-    @extend_schema(parameters=[OpenApiParameter("user_id", type=int)])
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                BasePagination.page_query_param,
+                type=int,
+                description=BasePagination.page_query_description,
+            ),
+            OpenApiParameter(
+                BasePagination.page_size_query_param,
+                type=int,
+                description=BasePagination.page_size_query_description,
+            ),
+            OpenApiParameter("user_id", type=int),
+        ]
+    )
     @action(
         methods=["GET"],
         detail=False,
@@ -802,23 +838,35 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         # Fetch tasks and schedules
         tasks = (
-            Task.objects.filter(people_in_charge=user_id)
-            .values("id", "title")
+            Task.objects.filter(
+                people_in_charge=user_id, deleted_at__isnull=True
+            )
+            .values("id", "title", "created_at")
             .annotate(
                 type=Value(CalendarTypes.TASK.value, output_field=CharField())
             )
         )
         schedules = (
-            Schedule.objects.filter(participants=user_id)
-            .values("id", "title")
+            Schedule.objects.filter(
+                participants=user_id, deleted_at__isnull=True
+            )
+            .values("id", "title", "created_at")
             .annotate(
                 type=Value(
                     CalendarTypes.SCHEDULE.value, output_field=CharField()
                 )
             )
         )
+        merged_qs = sorted(
+            chain(tasks, schedules),
+            key=lambda x: (x["created_at"], x["id"]),
+            reverse=True,
+        )
 
-        return self.response_ok(list(tasks) + list(schedules))
+        paginator = self.pagination_class()
+        paginated_data = paginator.paginate_queryset(merged_qs, request)
+
+        return paginator.get_paginated_response(paginated_data)
 
     def retrieve(self, request, *args, **kwargs):
         """

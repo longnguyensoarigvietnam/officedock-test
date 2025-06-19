@@ -139,7 +139,7 @@ const PercentageTeamCategoryCompare = ({
                 label: user.user.fullName,
                 percent: item.percent,
                 avatarColor: user.user.avatarColor,
-                avatarUrl: user.user?.avatar || ''
+                avatarUrl: user.user?.avatar || '',
               };
             }
             return undefined;
@@ -152,7 +152,7 @@ const PercentageTeamCategoryCompare = ({
             label: string;
             percent: number;
             avatarColor: string;
-            avatarUrl: string
+            avatarUrl: string;
           } => !!item,
         ),
     };
@@ -172,9 +172,9 @@ const PercentageTeamCategoryCompare = ({
             if (user?.user?.fullName) {
               return {
                 label: user.user.fullName,
-                percent: item.percent,
+                percent: user.percent,
                 avatarColor: user.user.avatarColor,
-                avatarUrl: user.user?.avatar || ''
+                avatarUrl: user.user?.avatar || '',
               };
             }
             return undefined;
@@ -186,7 +186,7 @@ const PercentageTeamCategoryCompare = ({
               label: string;
               percent: number;
               avatarColor: string;
-              avatarUrl: string
+              avatarUrl: string;
             } => !!user,
           ) || [],
       mergedItems: [],
@@ -206,6 +206,7 @@ const PercentageTeamCategoryCompare = ({
         statisticTeamCategoryList.largeCategories.find(
           (item) => item.categoryId === selectedLarge?.value,
         );
+
       setDataChartLarge(
         mapCategoryData(statisticTeamCategoryList.largeCategories || []),
       );

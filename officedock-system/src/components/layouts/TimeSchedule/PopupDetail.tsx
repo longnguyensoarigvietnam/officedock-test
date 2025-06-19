@@ -43,6 +43,7 @@ type Props = {
     endDate: string,
     uuid: string,
     resourcePlan: boolean,
+    isCalculation?: boolean,
   ) => void;
   handleChangeEndTime: (
     e: ChangeEvent<HTMLInputElement>,
@@ -214,6 +215,7 @@ const PopupDetail = ({
                       planEndDate,
                       uuid,
                       resourcePlan || false,
+                      isCalculation,
                     );
                   } else {
                     setValueStart(formatTime24h(planStartDate));

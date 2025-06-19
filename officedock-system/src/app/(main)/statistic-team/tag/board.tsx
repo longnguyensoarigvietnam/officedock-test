@@ -18,6 +18,7 @@ import StackedAreaTeamTagChart from '@components/statisticTeam/tag/StackedAreaTe
 
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
+import { ALL_TEAM_STATISTIC } from '@constants';
 
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useStatisticTagsTeam from '@hooks/useStatisticTagsTeam';
@@ -46,6 +47,7 @@ const StatisticTeamTagBoard = () => {
     tagsOptions,
     selectedSmall,
     orderingOptions,
+
     setOrderingOptions,
     setTagsOptions,
     setSelectedTags,
@@ -176,7 +178,12 @@ const StatisticTeamTagBoard = () => {
             label: stat.LARGE.name,
           }),
         );
-        setLargeOptions(largeCategories);
+        // If organization is all team then return here
+        if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+          setLargeOptions([]);
+        } else {
+          setLargeOptions(largeCategories);
+        }
       } else {
         setLargeOptions([]);
       }
@@ -229,6 +236,16 @@ const StatisticTeamTagBoard = () => {
     const updatedTagIds = currentTagIds.filter(
       (tag) => tag.value !== selected.value,
     );
+    setIsLoadingLarge(true);
+    setIsLoadingMedium(true);
+    setIsLoadingSmall(true);
+    setIsLoadingOrganization(true);
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingSmallCompare(true);
+      setIsLoadingOrganizationCompare(true);
+    }
     setCurrentPage(1);
     setSelectedTags(updatedTagIds);
   };
@@ -278,7 +295,12 @@ const StatisticTeamTagBoard = () => {
         })),
       });
       setCurrentPage(1);
-      setLargeOptions(largeCategories);
+      // If organization is all team then return here
+      if (data?.value === ALL_TEAM_STATISTIC) {
+        setLargeOptions([]);
+      } else {
+        setLargeOptions(largeCategories);
+      }
     } else {
       setLargeOptions([]);
     }
@@ -300,12 +322,11 @@ const StatisticTeamTagBoard = () => {
     setSelectedSmall(null);
 
     const organization = creationDataStatisticData?.organizations?.find(
-      (org) => org.id === data.value,
+      (org) => org.id === selectedOrganization?.value,
     );
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === data.value,
     );
-
     if (largeCategory) {
       const mediumCategories = largeCategory.MEDIUM.map((medium) => ({
         value: medium.MEDIUM?.id || '',
@@ -332,7 +353,7 @@ const StatisticTeamTagBoard = () => {
     setSelectedSmall(null);
 
     const organization = creationDataStatisticData?.organizations?.find(
-      (org) => org.id === data.value,
+      (org) => org.id === selectedOrganization?.value,
     );
 
     const largeCategory = organization?.statisticCategories.find(
@@ -410,6 +431,7 @@ const StatisticTeamTagBoard = () => {
     const updatedUserIds = currentUserIds.filter(
       (tag) => tag.value !== selected.value,
     );
+
     setCurrentPage(1);
     setOrderingOptions({
       user_ids: updatedUserIds,
@@ -479,6 +501,16 @@ const StatisticTeamTagBoard = () => {
                     updatedTagIds = currentTagIds.filter(
                       (tag) => tag.value != selected.value,
                     );
+                  }
+                  setIsLoadingLarge(true);
+                  setIsLoadingMedium(true);
+                  setIsLoadingSmall(true);
+                  setIsLoadingOrganization(true);
+                  if (isCheckCompare) {
+                    setIsLoadingLargeCompare(true);
+                    setIsLoadingMediumCompare(true);
+                    setIsLoadingSmallCompare(true);
+                    setIsLoadingOrganizationCompare(true);
                   }
                   setSelectedTags(updatedTagIds);
                 }}
@@ -552,8 +584,6 @@ const StatisticTeamTagBoard = () => {
             endDateCompare={endDateCompare}
             removeUser={removeUser}
             removeTag={removeTag}
-            statisticTagsListTeam={statisticTagsListTeam}
-            statisticTagsListTeamCompare={statisticTagsListTeamCompare}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -590,7 +620,6 @@ const StatisticTeamTagBoard = () => {
             endDate={endDate}
             removeUser={removeUser}
             removeTag={removeTag}
-            statisticTagsListTeam={statisticTagsListTeam}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}

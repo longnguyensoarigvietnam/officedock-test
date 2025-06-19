@@ -87,7 +87,7 @@ const ListUsers = () => {
   // Error messages
   const [emailErrorMessage, setEmailErrorMessage] = useState<string>('');
   const [usernameErrorMessage, setUsernameErrorMessage] = useState<string>('');
-  const [passwordErrorMessage, setPasswordErrorMessage] = useState<string>('')
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState<string>('');
 
   // Set ID user for delete
   const [selectedUserToDelete, setSelectedUserToDelete] = useState<User | null>(
@@ -313,11 +313,16 @@ const ListUsers = () => {
         handleRemoveParam();
         setUsernameErrorMessage('');
         setEmailErrorMessage('');
+        setPasswordErrorMessage('');
       }
     },
     onError: ({
       response,
-    }: ResponseError<{ username: string[]; email: string[]; password: string[] }>) => {
+    }: ResponseError<{
+      username: string[];
+      email: string[];
+      password: string[];
+    }>) => {
       if (response?.data.username) {
         setUsernameErrorMessage(ERROR_ID_AVAILABLE_MESSAGE);
       }
@@ -791,6 +796,9 @@ const ListUsers = () => {
               setOpenActionsUserModal(false);
               setUserEditId(null);
               setUserEditDetail(null);
+              setUsernameErrorMessage('');
+              setEmailErrorMessage('');
+              setPasswordErrorMessage('');
             }}
             onDelete={(userToDelete: User) => {
               handleOpenDeleteUserModal(userToDelete);

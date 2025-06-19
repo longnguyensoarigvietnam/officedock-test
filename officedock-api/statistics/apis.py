@@ -357,6 +357,11 @@ class StatisticViewSet(BaseAPIViewSet):
             organization_ids,
             tags=tag_ids,
         )
+        durations = get_list_durations_by_users(
+            durations=durations,
+            large_id=large_category_id,
+            medium_id=medium_category_id,
+        )
         tasks, events = get_list_models(durations)
         filters = build_category_filters(
             large_category_id=large_category_id,
@@ -375,6 +380,7 @@ class StatisticViewSet(BaseAPIViewSet):
         ranges = split_ranges(
             from_date, end_date, trim_whitespace(statistic_by)
         )
+        total_duration = get_total_durations(durations)
 
         def _get_durations_by_time(filter_durations, percent, duration):
             """
@@ -441,17 +447,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 tag_ids,
                 durations=durations,
             )
-            # Return empty list durations
             if not tag_list:
-                tag = {
-                    "tag_id": None,
-                    "tag_name": NONE_CATEGORY,
-                    "duration": "00:00:00",
-                }
-                tag["durations"] = _get_durations_by_time(
-                    None, 100, tag["duration"]
-                )
-                data.append(tag)
                 return self.response_ok(data)
 
             # Handle get list duration by ranges
@@ -470,6 +466,12 @@ class StatisticViewSet(BaseAPIViewSet):
                     filter_durations = get_list_durations_by_users(
                         durations=durations, tags=[tag["tag_id"]]
                     )
+                # Calculate the percentage of the total duration
+                percent_per_total_duration = percentage_calculation_of_duration(
+                    total_duration.total_seconds(),
+                    tag["duration"].total_seconds(),
+                )
+                tag["percent"] = min(round(percent_per_total_duration), 100)
                 tag["duration"] = get_total_durations(filter_durations)
                 tag["durations"] = _get_durations_by_time(
                     filter_durations, 100, tag["duration"]
@@ -477,7 +479,6 @@ class StatisticViewSet(BaseAPIViewSet):
                 tag["duration"] = format_duration(tag["duration"])
                 data.append(tag)
             return self.response_ok(data)
-
         category_list = aggregate_durations(
             tasks,
             events,
@@ -487,18 +488,7 @@ class StatisticViewSet(BaseAPIViewSet):
             large_category_id=large_category_id,
             medium_category_id=medium_category_id,
         )
-        # Return empty list duration
         if not category_list:
-            category = {
-                "category_id": None,
-                "category_name": NONE_CATEGORY,
-                "category_color": CategoryColors.GRAY.value,
-                "duration": "00:00:00",
-            }
-            category["durations"] = _get_durations_by_time(
-                None, 100, category["duration"]
-            )
-            data.append(category)
             return self.response_ok(data)
 
         # Handle get list duration by ranges
@@ -534,7 +524,12 @@ class StatisticViewSet(BaseAPIViewSet):
                     large_category_id,
                     medium_category_id,
                 )
-
+            # Calculate the percentage of the total duration
+            percent_per_total_duration = percentage_calculation_of_duration(
+                total_duration.total_seconds(),
+                category["duration"].total_seconds(),
+            )
+            category["percent"] = min(round(percent_per_total_duration), 100)
             category["durations"] = _get_durations_by_time(
                 filter_durations, 100, category["duration"]
             )
@@ -913,6 +908,8 @@ class StatisticViewSet(BaseAPIViewSet):
         tasks = tasks.filter(filters)
         events = events.filter(filters)
         data = []
+        if not durations:
+            return self.response_ok(data)
         if not check_is_not_none_category(
             large_category_id, medium_category_id, small_category_id
         ):
@@ -1023,14 +1020,6 @@ class StatisticViewSet(BaseAPIViewSet):
                     durations=durations_by_range, tags=[tag["tag_id"]]
                 )
                 if not filter_duration.exists():
-                    elements.append(
-                        {
-                            "tag_id": tag["tag_id"],
-                            "tag_name": tag["tag_name"],
-                            "duration": "00:00:00",
-                            "percent": 0,
-                        }
-                    )
                     continue
                 duration = get_total_durations(filter_duration)
                 percent_per_total_duration = percentage_calculation_of_duration(
@@ -1141,6 +1130,8 @@ class StatisticViewSet(BaseAPIViewSet):
                         filter_durations = _handle_get_filter_durations(
                             id, filter_duration_by_range
                         )
+                        if not filter_durations:
+                            continue
                         if id is None:
                             filter_durations = get_duration_of_none_category(
                                 filter_durations
@@ -1600,13 +1591,17 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             from_date, end_date, trim_whitespace(statistic_by)
         )
         data = []
-
+        durations = get_list_durations_by_users(
+            durations=durations,
+            large_id=large_category_id,
+            medium_id=medium_category_id,
+            small_id=small_category_id,
+        )
+        if not durations:
+            return self.response_ok(data)
         for user in users:
             filter_durations = get_list_durations_by_users(
                 durations=durations,
-                large_id=large_category_id,
-                medium_id=medium_category_id,
-                small_id=small_category_id,
                 users=[user],
             )
             user_total_duration = get_total_durations(filter_durations)
@@ -1631,22 +1626,41 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         for start, end in ranges:
             start_date_min = datetime.combine(start, time.min)
             end_date_max = datetime.combine(end, time.max)
-            root_durations_per_range = root_durations.filter(
-                started_at__gte=start_date_min,
-                paused_at__lte=end_date_max,
-            )
+            duration = timedelta(0)
+            # Get duration by range
+            if start <= now().date() <= end:
+                filters = Q(
+                    Q(
+                        Q(started_at__gte=start_date_min)
+                        & Q(paused_at__lte=end_date_max)
+                    )
+                    | Q(
+                        Q(started_at__lte=end_date_max)
+                        & Q(started_at__gte=start_date_min)
+                        & Q(paused_at__isnull=True)
+                    )
+                )
+                root_durations_per_range = root_durations.filter(filters)
+                if filter_durations:
+                    filter_duration_by_range = filter_durations.filter(filters)
+                    duration = get_total_durations(filter_duration_by_range)
+            else:
+                root_durations_per_range = root_durations.filter(
+                    started_at__gte=start_date_min,
+                    paused_at__lte=end_date_max,
+                )
+                if filter_durations:
+                    filter_duration_by_range = filter_durations.filter(
+                        started_at__gte=start_date_min,
+                        paused_at__lte=end_date_max,
+                    )
+                    duration = get_total_durations(filter_duration_by_range)
             total_duration = (
                 get_total_durations(root_durations_per_range)
                 if root_durations_per_range
                 else timedelta(0)
             )
-            duration = timedelta(0)
-            if filter_durations:
-                filter_duration_by_range = filter_durations.filter(
-                    started_at__gte=start_date_min,
-                    paused_at__lte=end_date_max,
-                )
-                duration = get_total_durations(filter_duration_by_range)
+
             # Calculate the percentage of a user's duration relative to the total duration within a time range
             percent_per_range = percentage_calculation_of_duration(
                 total_duration.total_seconds(), duration.total_seconds()

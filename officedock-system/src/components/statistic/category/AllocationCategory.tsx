@@ -153,6 +153,7 @@ const AllocationCategory = memo(
 
     const handleClickTooltip = (id: number | null, type: string) => {
       let duration: string = '00:00:00';
+      if (isLoadingLarge || isLoadingMedium || isLoadingOrganization) return;
 
       if (type === EventWorkCategory.ALL) {
         duration =

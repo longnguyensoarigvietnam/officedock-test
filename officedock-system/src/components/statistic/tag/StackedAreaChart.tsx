@@ -37,6 +37,7 @@ import { OptionDropdownType } from '@interfaces/common';
 
 import {
   convertDurationToTotalMinutes,
+  convertToJapaneseDateRange,
   convertToStatisticJapaneseLabels,
   formatDateToYMD,
   sumDurationsChart,
@@ -221,19 +222,33 @@ const StackedAreaChart = ({
       }
     }
 
-    const chartData = Array.from(categoryMap.entries()).map(([name, data]) => {
-      const firstValue = data.at(0) ?? 0;
-      return {
-        name,
-        data: [firstValue, ...data],
-      };
-    });
+    let chartData: { name: string; data: number[] }[] = [];
+
+    if (categoryMap.size === 0) {
+      chartData = [
+        {
+          name: '',
+          data: Array(transformedDates.length).fill(0),
+        },
+      ];
+    } else {
+      chartData = Array.from(categoryMap.entries()).map(([name, data]) => {
+        const isEmpty = data.length === 0;
+        const validData = isEmpty
+          ? Array(transformedDates.length - 1).fill(0)
+          : [data.at(0) ?? 0, ...data];
+
+        return {
+          name,
+          data: validData,
+        };
+      });
+    }
 
     setDataChart(chartData);
-
     // 3. Collect tableData (duration + percent)
     const categoryTableMap = new Map<
-      number,
+      string, // use key combining tagId and tagName to distinguish
       {
         tagId: number;
         tagName: string;
@@ -244,73 +259,81 @@ const StackedAreaChart = ({
     >();
 
     for (const item of statisticTagPercentChartList) {
-      const tagsArray = Array.isArray(item.tags) ? item.tags : [item.tags]; // convert object to array if needed
+      const tagsArray = Array.isArray(item.tags) ? item.tags : [item.tags];
 
       for (const cat of tagsArray) {
         const id = cat.tagId ?? -1;
+        const name = cat.tagName ?? '';
+        const mapKey = `${id}_${name}`;
 
-        if (!categoryTableMap.has(id)) {
-          categoryTableMap.set(id, {
+        if (!categoryTableMap.has(mapKey)) {
+          categoryTableMap.set(mapKey, {
             tagId: id,
-            tagName: cat.tagName,
+            tagName: name,
             tagColor: getRandomColor(),
             tagDuration: [],
             tagPercent: [],
           });
         }
 
-        const existing = categoryTableMap.get(id)!;
+        const existing = categoryTableMap.get(mapKey)!;
         existing.tagDuration.push(cat.duration);
         existing.tagPercent.push(cat.percent);
       }
     }
 
-    const finalTableData = Array.from(categoryTableMap.values()).map((cat) => {
-      const totalDuration = sumDurationsChart(cat.tagDuration);
+    const finalTableData = Array.from(categoryTableMap.values())
+      .map((cat) => {
+        const totalDuration = sumDurationsChart(cat.tagDuration);
 
-      let percent = 0;
-      if (
-        !selectedLarge?.value &&
-        statisticTagsList?.largeCategories &&
-        statisticTagsList?.largeCategories.length > 0
-      ) {
-        percent =
-          statisticTagsList.largeCategories.find(
-            (category) => category.tagName === cat.tagName,
-          )?.percent ?? 0;
-      } else if (
-        !selectedMedium?.value &&
-        statisticTagsList?.mediumCategories &&
-        statisticTagsList?.mediumCategories.length > 0
-      ) {
-        percent =
-          statisticTagsList.mediumCategories.find(
-            (category) => category.tagName === cat.tagName,
-          )?.percent ?? 0;
-      } else if (
-        !selectedSmall?.value &&
-        statisticTagsList?.smallCategories &&
-        statisticTagsList?.smallCategories.length > 0
-      ) {
-        percent =
-          statisticTagsList.smallCategories.find(
-            (category) => category.tagName === cat.tagName,
-          )?.percent ?? 0;
-      } else {
-        percent =
-          statisticTagsList?.category?.find(
-            (category) => category.tagName === cat.tagName,
-          )?.percent ?? 0;
-      }
+        let percent = 0;
 
-      return {
-        tagId: cat.tagId,
-        tagName: cat.tagName,
-        tagColor: cat.tagColor,
-        tagDuration: totalDuration,
-        tagPercent: `${percent}`,
-      };
-    });
+        if (
+          !selectedLarge?.value &&
+          statisticTagsList?.largeCategories &&
+          statisticTagsList?.largeCategories?.length > 0
+        ) {
+          percent =
+            statisticTagsList.largeCategories.find(
+              (category) => category.tagName === cat.tagName,
+            )?.percent ?? 0;
+        } else if (
+          !selectedMedium?.value &&
+          statisticTagsList?.mediumCategories &&
+          statisticTagsList?.mediumCategories?.length > 0
+        ) {
+          percent =
+            statisticTagsList.mediumCategories.find(
+              (category) => category.tagName === cat.tagName,
+            )?.percent ?? 0;
+        } else if (
+          !selectedSmall?.value &&
+          statisticTagsList?.smallCategories &&
+          statisticTagsList?.smallCategories?.length > 0
+        ) {
+          percent =
+            statisticTagsList.smallCategories.find(
+              (category) => category.tagName === cat.tagName,
+            )?.percent ?? 0;
+        } else {
+          percent =
+            statisticTagsList?.category?.find(
+              (category) => category.tagName === cat.tagName,
+            )?.percent ?? 0;
+        }
+
+        return {
+          tagId: cat.tagId,
+          tagName: cat.tagName,
+          tagColor: cat.tagColor,
+          tagDuration: totalDuration,
+          tagPercent: `${percent}`,
+        };
+      })
+      .filter((data) => data.tagId !== -1)
+      .sort((a, b) => Number(b.tagPercent) - Number(a.tagPercent));
+
+    setTableData(finalTableData);
 
     setColorList(
       finalTableData.map(
@@ -320,7 +343,6 @@ const StackedAreaChart = ({
       ),
     );
 
-    setTableData(finalTableData.filter((data) => data.tagId !== -1));
     if (
       selectedOrganization?.value &&
       !selectedLarge?.value &&
@@ -420,10 +442,13 @@ const StackedAreaChart = ({
       borderColor: 'transparent',
     };
   });
+
+  const isLargerTime = timeRange?.length > 12;
+
   const options = {
     chart: {
       type: 'area',
-      stacked: false,
+      stacked: true,
       zoom: {
         enabled: false, // ❌ OFF zoom
       },
@@ -433,7 +458,7 @@ const StackedAreaChart = ({
     },
     grid: {
       padding: {
-        left: 45, // 👉 increase value if label is hidden
+        left: isLargerTime ? 90 : 45, // 👉 increase value if label is hidden
         right: 10,
       },
     },
@@ -481,6 +506,7 @@ const StackedAreaChart = ({
     },
     stroke: {
       curve: 'straight',
+      show: false,
     },
     markers: {
       size: 0,
@@ -678,7 +704,7 @@ const StackedAreaChart = ({
     },
     {
       accessorKey: 'tagDuration',
-      size: 40,
+      size: 50,
       header: () => {
         return (
           <div
@@ -712,7 +738,7 @@ const StackedAreaChart = ({
       cell: (info) => {
         const value = info.getValue() as string;
         return (
-          <div className="font-medium flex text-[14px] justify-center text-black">
+          <div className="font-medium flex text-[14px] whitespace-nowrap justify-center text-black">
             <p>{value.split(':')[0] || 0}時間</p>
             <p>{value.split(':')[1] || 0}分</p>
           </div>
@@ -721,7 +747,7 @@ const StackedAreaChart = ({
     },
     {
       accessorKey: 'tagPercent',
-      size: 20,
+      size: 30,
       header: () => {
         return (
           <div
@@ -1048,14 +1074,15 @@ const StackedAreaChart = ({
                 type="area"
                 height={380}
               />
-              <div className="w-full pl-[45px] pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent">
+              <div
+                className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'} pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
                 {timeRange.slice(1).map((item, idx) => {
                   const actualIndex = idx + 1;
                   const isHovered = hoveredIndex === actualIndex;
 
                   const dataDetail =
                     statisticTagPercentChartList &&
-                    statisticTagPercentChartList[idx + 1];
+                    statisticTagPercentChartList[idx];
                   const dataDetailDate =
                     statisticTagPercentChartList &&
                     statisticTagPercentChartList[idx];
@@ -1082,18 +1109,11 @@ const StackedAreaChart = ({
                           style={{
                             boxShadow: '0px 2px 8px 0px #0000001A',
                           }}
-                          className={`bg-white absolute p-5 top-1/2 left-1/2 hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                          className={`bg-white absolute p-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
                           <p className="text-sm font-normal text-[#77858F] mb-1 text-start w-full block">
-                            {convertToStatisticJapaneseLabels(
+                            {convertToJapaneseDateRange(
                               dataDetailDate?.startDate as string,
-                              lineChartViewBy?.value as string,
-                              true,
-                            )}{' '}
-                            ~
-                            {convertToStatisticJapaneseLabels(
                               dataDetailDate?.endDate as string,
-                              lineChartViewBy?.value as string,
-                              true,
                             )}
                           </p>
                           {dataDetail?.tags.map((tag, cateIndex) => {
@@ -1168,7 +1188,7 @@ const StackedAreaChart = ({
                           minWidth: cell.column.getSize(),
                           maxWidth: cell.column.getSize(),
                         }}
-                        className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
+                        className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),

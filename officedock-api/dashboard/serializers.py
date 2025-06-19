@@ -201,17 +201,6 @@ class UpdateDurationSerializer(serializers.ModelSerializer):
         started_at = data.get("started_at", None)
         paused_at = data.get("paused_at")
 
-        if (
-            instance.paused_at is None
-            and "paused_at" in data
-            and paused_at is None
-        ):
-            raise serializers.ValidationError(
-                {"detail": ERROR_MESSAGES["cannot_updated"]}
-            )
-
-        check_valid_duration(started_at, paused_at, instance)
-
         # Exclude the current instance when updating
         if instance:
             paused_at = paused_at or instance.paused_at or now()

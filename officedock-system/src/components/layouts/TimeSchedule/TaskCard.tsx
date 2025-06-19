@@ -54,6 +54,7 @@ interface TaskCardProps {
     endDate: string,
     uuid: string,
     resourcePlan: boolean,
+    isCalculation?: boolean,
   ) => void;
   handleChangeEndTime: (
     e: ChangeEvent<HTMLInputElement>,

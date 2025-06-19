@@ -13,7 +13,11 @@ import {
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
-import { formatShowStatisticTask, formatTimeToJapanese } from '@utils/date';
+import {
+  formatShowStatisticTask,
+  formatTimeToJapanese,
+  sumDurationsChart,
+} from '@utils/date';
 import { lightenColor } from '@utils';
 
 import { EventWorkCategory } from '@constants/enums';
@@ -78,13 +82,16 @@ function transformAndMergeProgressData({
     (sum, item) => sum + item.value,
     0,
   );
+  const durations = mergedItems.map((item) => item.duration);
+
+  const totalDuration = sumDurationsChart(durations);
 
   const mergedItem: ProgressDataType = {
     id: -1,
     label: mergeLabel,
     value: totalMergedPercent,
     color: mergeColor,
-    duration: '',
+    duration: totalDuration,
     optionData: mergedItems.flatMap((item) => item.optionData),
     mergedItems,
   };
@@ -128,13 +135,51 @@ export function buildProgressDataCompareWithMergedOthers({
     threshold,
   });
 
-  return mergedBase.map((item) => {
-    const matched = mergedCompare.find((c) => c.id === item.id);
+  // Collect all IDs from both sides
+  const allIds = new Set<number>();
+  mergedBase.forEach((item) => allIds.add(item.id));
+  mergedCompare.forEach((item) => allIds.add(item.id));
+
+  // Create full item with fallback label
+  const result: ProgressDataCompareItem[] = Array.from(allIds).map((id) => {
+    const item = mergedBase.find((b) => b.id === id);
+    const itemCompare = mergedCompare.find((c) => c.id === id);
+
+    const finalItem: ProgressDataType = item ?? {
+      id,
+      label: itemCompare?.label ?? '',
+      value: 0,
+      color: '#ccc',
+      duration: '00:00:00',
+      optionData: [],
+    };
+
+    const finalItemCompare: ProgressDataType = itemCompare ?? {
+      id,
+      label: item?.label ?? '',
+      value: 0,
+      color: '#ccc',
+      duration: '00:00:00',
+      optionData: [],
+    };
+
     return {
-      item,
-      itemCompare: matched,
+      item: finalItem,
+      itemCompare: finalItemCompare,
     };
   });
+
+  // 👉 Move "その他" to the end
+  result.sort((a, b) => {
+    const isAOther = a.item.id === -1;
+    const isBOther = b.item.id === -1;
+
+    if (isAOther && !isBOther) return 1;
+    if (!isAOther && isBOther) return -1;
+    return 0;
+  });
+
+  return result;
 }
 
 const AllocationTagTeamCompare = memo(
@@ -204,6 +249,15 @@ const AllocationTagTeamCompare = memo(
       isLoadingOrganization,
       isLoadingSmall,
       isLoadingSmallCompare,
+      isCheckCompare,
+      setIsLoadingLarge,
+      setIsLoadingMedium,
+      setIsLoadingSmall,
+      setIsLoadingOrganization,
+      setIsLoadingLargeCompare,
+      setIsLoadingMediumCompare,
+      setIsLoadingSmallCompare,
+      setIsLoadingOrganizationCompare,
       setSelectedTags,
     } = useContext(StatisticTeamTagsStateContext);
 
@@ -337,6 +391,16 @@ const AllocationTagTeamCompare = memo(
                               updatedTagIds = currentTagIds.filter(
                                 (tag) => tag.value != selected.value,
                               );
+                            }
+                            setIsLoadingLarge(true);
+                            setIsLoadingMedium(true);
+                            setIsLoadingSmall(true);
+                            setIsLoadingOrganization(true);
+                            if (isCheckCompare) {
+                              setIsLoadingLargeCompare(true);
+                              setIsLoadingMediumCompare(true);
+                              setIsLoadingSmallCompare(true);
+                              setIsLoadingOrganizationCompare(true);
                             }
                             setSelectedTags(updatedTagIds);
                           }}

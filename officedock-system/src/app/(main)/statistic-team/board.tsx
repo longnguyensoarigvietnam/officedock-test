@@ -25,6 +25,7 @@ import StackedAreaTeamChart from '@components/statisticTeam/category/StackedArea
 
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { pageRouters } from '@constants/routers';
+import { ALL_TEAM_STATISTIC } from '@constants';
 
 import useStatisticCategoriesTeam from '@hooks/useStatisticCategoriesTeam';
 import useStatisticCategoriesTeamCompare from '@hooks/useStatisticCategoriesTeamCompare';
@@ -136,7 +137,12 @@ const StatisticTeamBoard = () => {
             label: stat.LARGE.name,
           }),
         );
-        setLargeOptions(largeCategories);
+        // If organization is all team then return here
+        if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+          setLargeOptions([]);
+        } else {
+          setLargeOptions(largeCategories);
+        }
       } else {
         setLargeOptions([]);
       }
@@ -345,7 +351,12 @@ const StatisticTeamBoard = () => {
           avatarUrl: member?.avatar || '',
         })),
       });
-      setLargeOptions(largeCategories);
+      // If organization is all team then return here
+      if (data?.value === ALL_TEAM_STATISTIC) {
+        setLargeOptions([]);
+      } else {
+        setLargeOptions(largeCategories);
+      }
     } else {
       setLargeOptions([]);
     }
@@ -383,11 +394,12 @@ const StatisticTeamBoard = () => {
         })),
       );
       setCurrentPage(1);
-      setOrderingOptions({
-        tag_ids: [],
-        user_ids: [],
-      });
-      setLargeOptions(largeCategories);
+      // If organization is all team then return here
+      if (data?.value === ALL_TEAM_STATISTIC) {
+        setLargeOptions([]);
+      } else {
+        setLargeOptions(largeCategories);
+      }
     } else {
       setLargeOptions([]);
     }
@@ -409,7 +421,7 @@ const StatisticTeamBoard = () => {
     setSelectedSmall(null);
 
     const organization = creationDataStatisticData?.organizations?.find(
-      (org) => org.id === data.value,
+      (org) => org.id === selectedOrganization?.value,
     );
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === data.value,
@@ -441,7 +453,7 @@ const StatisticTeamBoard = () => {
     setSelectedSmall(null);
 
     const organization = creationDataStatisticData?.organizations?.find(
-      (org) => org.id === data.value,
+      (org) => org.id === selectedOrganization?.value,
     );
 
     const largeCategory = organization?.statisticCategories.find(
@@ -478,6 +490,14 @@ const StatisticTeamBoard = () => {
       (tag) => tag.value !== selected.value,
     );
     setCurrentPage(1);
+    setIsLoadingLarge(true);
+    setIsLoadingMedium(true);
+    setIsLoadingOrganization(true);
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingOrganizationCompare(true);
+    }
     setOrderingOptions((prev) => ({
       tag_ids: updatedTagIds,
       user_ids: prev?.user_ids || [],
@@ -490,6 +510,14 @@ const StatisticTeamBoard = () => {
       (tag) => tag.value !== selected.value,
     );
     setCurrentPage(1);
+    setIsLoadingLarge(true);
+    setIsLoadingMedium(true);
+    setIsLoadingOrganization(true);
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingOrganizationCompare(true);
+    }
     setOrderingOptions((prev) => ({
       tag_ids: prev?.tag_ids || [],
       user_ids: updatedUserIds,
@@ -790,8 +818,6 @@ const StatisticTeamBoard = () => {
             endDate={endDate}
             startDateCompare={startDateCompare}
             endDateCompare={endDateCompare}
-            statisticTeamCategoryList={statisticCategoryListTeam}
-            statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -829,7 +855,6 @@ const StatisticTeamBoard = () => {
           <LineChartByTeam
             startDate={startDate}
             endDate={endDate}
-            statisticTeamCategoryList={statisticCategoryListTeam}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}

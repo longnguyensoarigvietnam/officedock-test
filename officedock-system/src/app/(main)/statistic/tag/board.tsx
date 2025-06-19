@@ -13,17 +13,18 @@ import AllocationTag from '@components/statistic/tag/AllocationTag';
 import AllocationTagCompare from '@components/statistic/tag/compare/AllocationTagCompare';
 import LineChart from '@components/statistic/tag/LineChart';
 import LineChartCompare from '@components/statistic/tag/compare/LineChartCompare';
+import StackedAreaChart from '@components/statistic/tag/StackedAreaChart';
 
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 import useStatisticTagsCompare from '@hooks/useStatisticTagsCompare';
 import useStatisticsTags from '@hooks/useStatisticTags';
 
+import { ALL_TEAM_STATISTIC } from '@constants';
 import { pageRouters } from '@constants/routers';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
-import StackedAreaChart from '@components/statistic/tag/StackedAreaChart';
 
 const StatisticTagBoard = () => {
   const {
@@ -90,7 +91,12 @@ const StatisticTagBoard = () => {
             label: stat.LARGE.name,
           }),
         );
-        setLargeOptions(largeCategories);
+        // If organization is all team then return here
+        if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+          setLargeOptions([]);
+        } else {
+          setLargeOptions(largeCategories);
+        }
       } else {
         setLargeOptions([]);
       }
@@ -183,6 +189,7 @@ const StatisticTagBoard = () => {
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === data.value,
     );
+
     if (organization) {
       const largeCategories = organization.statisticCategories.map((stat) => ({
         value: stat.LARGE.id,
@@ -197,7 +204,12 @@ const StatisticTagBoard = () => {
       setSelectedTags([]);
       setTagsOptions(optionsTagList);
       setSelectedTags(optionsTagList);
-      setLargeOptions(largeCategories);
+      // If organization is all team then return here
+      if (data?.value === ALL_TEAM_STATISTIC) {
+        setLargeOptions([]);
+      } else {
+        setLargeOptions(largeCategories);
+      }
     } else {
       setLargeOptions([]);
     }
@@ -402,8 +414,6 @@ const StatisticTagBoard = () => {
             startDateCompare={startDateCompare}
             endDateCompare={endDateCompare}
             removeTag={removeTag}
-            statisticTagsList={statisticTagsList}
-            statisticTagsCompareList={statisticTagsListCompare}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -439,7 +449,6 @@ const StatisticTagBoard = () => {
             startDate={startDate}
             endDate={endDate}
             removeTag={removeTag}
-            statisticTagsList={statisticTagsList}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}

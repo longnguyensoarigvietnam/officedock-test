@@ -9,6 +9,7 @@ import ImageRound from '@components/common/ImageRound';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import WarningStartTaskModal from '@components/modals/WarningStartTaskModal';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import Input from '@components/common/Input';
 
 import {
   ActionTask,
@@ -16,6 +17,7 @@ import {
   ItemStartType,
   PermissionsSystem,
   SocketActions,
+  StatusValueTask,
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ERROR_TIME_START_MESSAGE } from '@constants/message';
@@ -27,16 +29,27 @@ import useTaskDurationDetail from '@hooks/useTaskDurationDetail';
 import useDataHeaderTaskList from '@hooks/useDataHeaderTask';
 
 import { OptionDropdownType } from '@interfaces/common';
-import { TaskDuration } from '@interfaces/task';
+import { Task, TaskDuration, TaskRequest } from '@interfaces/task';
 import { WebSocketMessageDataOverTime } from '@interfaces/chat';
 import { TaskContext } from '@providers/TaskProvider';
 import { hasPermissionInArray } from '@utils';
 import api from '@base/api';
 import {
+  combineDateAndTime,
+  convertDateString,
+  convertDateStringWithFormat,
   convertToCurrentTimezone,
+  convertToMinutesNumber,
+  formatCurrentDay,
+  formatDateServer,
   formatQueryStartDateForCalendar,
-  formatTimeTask,
+  formatTime24h,
+  formatTimeInputCustom,
+  formatTimeTaskCustom,
+  getTimeDifference,
+  isTimeEarlier,
 } from '@utils/date';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 const ShowTimeCounter = memo(
   ({ statusTaskSelected }: { statusTaskSelected: TaskDuration }) => {
@@ -87,6 +100,10 @@ const TaskPageDataHeader = () => {
     setDataTaskEditKanban,
     setTaskSelectedToStart,
     setDataActualAddSchedule,
+    displayHeaderDateStart,
+    displayHeaderDateEnd,
+    setTaskAddEmpty,
+    setDataActualEdit,
   } = useContext(TaskContext);
 
   const [optionsTaskMe, setOptionsTaskMe] = useState<OptionDropdownType[]>([]);
@@ -111,6 +128,7 @@ const TaskPageDataHeader = () => {
     99,
     999,
   );
+  const { authenticatedUser } = useAuthenticatedUser({});
 
   const { dataTaskHeaderStart, refetchTaskHeaderStart } = useTaskHeaderStart({
     userId: `${userIdTask}`,
@@ -219,6 +237,7 @@ const TaskPageDataHeader = () => {
         setStatusTaskSelected({
           taskDuration: dataTaskHeaderStart.taskDuration,
           isStart: dataTaskHeaderStart.isStart,
+          taskDurationRunningUuid: dataTaskHeaderStart.taskDurationRunningUuid,
         });
       }
     } else {
@@ -471,10 +490,138 @@ const TaskPageDataHeader = () => {
     },
   );
 
+  //  Handle call api create task
+  const handleCreateTask = async (data: TaskRequest) => {
+    return await api.post(apiRouters.CREATE_TASK, data);
+  };
+  // Handle create task and response
+  const { mutate: createTask } = useMutation(
+    'postCreateUser',
+    handleCreateTask,
+    {
+      onSuccess: async ({ data }: { data: Task }) => {
+        setTaskAddEmpty(data);
+        setTaskSelectedToStart({
+          title: data.title,
+          id: data.id,
+          type: ItemStartType.TASK,
+        });
+        setOptionsTaskMe([
+          ...optionsTaskMe,
+          {
+            label: data.title,
+            value: data.id,
+            type: ItemStartType.TASK,
+          },
+        ]);
+
+        calculateDurationTask({
+          id: String(data.id),
+          type: ItemStartType.TASK,
+        });
+      },
+      onError: () => {},
+      onSettled: () => {},
+    },
+  );
+
+  const handleStartEmptyTask = () => {
+    const isMainOrg = authenticatedUser?.organizations.find(
+      (organization) => organization.isMain,
+    );
+    if (isMainOrg) {
+      createTask({
+        title: convertDateStringWithFormat(new Date()),
+        statusId: StatusValueTask.IN_PROGRESS,
+        priority: '',
+        deadline: null,
+        description: '',
+        tagIds: [],
+        isImportant: false,
+        sendToChat: false,
+        organizationId: isMainOrg.id,
+        task_schedule_from_date: formatDateServer(displayHeaderDateStart),
+        task_schedule_end_date: formatDateServer(displayHeaderDateEnd),
+        remindCountdown: null,
+        remindType: null,
+        repeatType: null,
+        isTeamTask: false,
+        peopleInChargeIds: [{ peopleInChargeId: session?.user.id as number }],
+      });
+    }
+  };
+
   const timeTaskSelect = dataTaskHeaderList?.cards.find(
     (item) =>
       item.id === parseInt(String(taskSelected.value).replace('event', '')) &&
       item.type === taskSelected.type,
+  );
+  const [valueStart, setValueStart] = useState('');
+
+  useEffect(() => {
+    setValueStart(
+      statusTaskSelected?.isStart && taskSelected.value
+        ? formatTimeTaskCustom(`${dataTaskHeaderStart?.startedAt}`)
+        : formatTimeTaskCustom(
+            `${timeTaskSelect ? timeTaskSelect.startedAt : ''}`,
+          ),
+    );
+  }, [
+    dataTaskHeaderStart?.startedAt,
+    statusTaskSelected?.isStart,
+    taskSelected.value,
+    timeTaskSelect,
+  ]);
+
+  // Update actual for task
+  const handleUpdateActualTime = async ({
+    uuid,
+    data,
+  }: {
+    uuid: string;
+    data: { startedAt: string | null; pausedAt: string | null };
+  }) => {
+    return await api.patch(apiRouters.UPDATE_TASK_ACTUAL(`${uuid}`), data);
+  };
+
+  const { mutate: updateActualTime } = useMutation(
+    'postUpdateActualTime',
+    handleUpdateActualTime,
+    {
+      onSuccess: async ({ data }, task) => {
+        refetchDataHeaderTaskList();
+        if (task.data.pausedAt === null) {
+          queryClient.refetchQueries(['getTaskHeaderStart']);
+        } else {
+          if (data.length > 0) {
+            const totalDuration =
+              data[0].planStartDate &&
+              data[0].planEndDate &&
+              getTimeDifference(data[0].planStartDate, data[0].planEndDate);
+            setStatusTaskSelected({
+              ...statusTaskSelected,
+              taskDuration: totalDuration || '',
+            });
+          }
+        }
+        if (data.length > 0) {
+          setDataActualEdit({
+            uuid: data[0].uuid,
+            startDate: data[0].planStartDate,
+          });
+        }
+      },
+      onError: () => {
+        setValueStart(
+          statusTaskSelected?.isStart && taskSelected.value
+            ? formatTimeTaskCustom(`${dataTaskHeaderStart?.startedAt}`)
+            : formatTimeTaskCustom(
+                `${timeTaskSelect ? timeTaskSelect.startedAt : ''}`,
+              ),
+        );
+      },
+      onSettled: () => {},
+    },
   );
 
   return (
@@ -511,7 +658,7 @@ const TaskPageDataHeader = () => {
                   }}
                 />
               </div>
-              {taskSelected.value && statusTaskSelected && (
+              {taskSelected.value && statusTaskSelected ? (
                 <DynamicTooltip
                   content={
                     statusTaskSelected?.isStart && taskSelected.value
@@ -565,6 +712,15 @@ const TaskPageDataHeader = () => {
                     </div>
                   </div>
                 </DynamicTooltip>
+              ) : (
+                <div className="mt-[4px] ml-[4px]">
+                  <ImageRound
+                    src={`/icons/play.svg`}
+                    name="Start task day"
+                    className={`!w-9 !h-9 hover:cursor-pointer`}
+                    onClick={handleStartEmptyTask}
+                  />
+                </div>
               )}
 
               {taskSelected.value &&
@@ -577,11 +733,77 @@ const TaskPageDataHeader = () => {
                   <div className="flex items-center justify-center text-xs font-medium text-[#A7B7C2] gap-x-1 min-w-[146px]">
                     <p>開始</p>
                     <p className="text-base font-normal text-[#77858F]">
-                      {statusTaskSelected?.isStart && taskSelected.value
-                        ? formatTimeTask(`${dataTaskHeaderStart?.startedAt}`)
-                        : formatTimeTask(
-                            `${timeTaskSelect ? timeTaskSelect.startedAt : ''}`,
-                          )}
+                      <Input
+                        type="text"
+                        value={valueStart}
+                        onChange={(e) => {
+                          setValueStart(e.target.value);
+                        }}
+                        disabled
+                        onBlur={(e) => {
+                          // Edit start data running in header
+                          const startDate =
+                            statusTaskSelected?.isStart && taskSelected.value
+                              ? formatTimeTaskCustom(
+                                  `${dataTaskHeaderStart?.startedAt}`,
+                                )
+                              : formatTimeTaskCustom(
+                                  `${timeTaskSelect ? timeTaskSelect.startedAt : ''}`,
+                                );
+                          const isEventRunning =
+                            statusTaskSelected?.isStart && taskSelected.value;
+
+                          const endDate = dataTaskHeaderList?.cards.find(
+                            (item) =>
+                              item.id ===
+                                parseInt(
+                                  String(taskSelected.value).replace(
+                                    'event',
+                                    '',
+                                  ),
+                                ) && item.type === taskSelected.type,
+                          )?.pausedAt;
+                          const data = isTimeEarlier(
+                            formatTimeInputCustom(
+                              `${convertToMinutesNumber(e.target.value)}`,
+                            ),
+                            isEventRunning
+                              ? formatCurrentDay()
+                              : formatTime24h(endDate || ''),
+                          );
+
+                          if (data) {
+                            setValueStart(
+                              formatTimeInputCustom(
+                                `${convertToMinutesNumber(e.target.value)}`,
+                              ),
+                            );
+                            let value = e.target.value.replace(/\D/g, '');
+                            if (value.length > 4) {
+                              value = value.substring(0, 4);
+                            }
+                            updateActualTime({
+                              data: {
+                                startedAt: combineDateAndTime(
+                                  isEventRunning
+                                    ? new Date()
+                                    : new Date(endDate as string),
+                                  `${formatTimeInputCustom(`${convertToMinutesNumber(value)}`)}`,
+                                ),
+                                pausedAt: isEventRunning
+                                  ? null
+                                  : convertDateString(endDate as string),
+                              },
+                              uuid:
+                                statusTaskSelected.taskDurationRunningUuid ||
+                                '',
+                            });
+                          } else {
+                            setValueStart(startDate);
+                          }
+                        }}
+                        className="!w-[50px] !px-0 !py-0 text-[#77858F] !text-base  font-normal text-center !border-none  !opacity-100"
+                      />
                     </p>
                     <p className="px-[2px]">~</p>
 
@@ -596,7 +818,7 @@ const TaskPageDataHeader = () => {
                       <>
                         <p>終了</p>
                         <p className="text-base font-normal text-[#77858F]">
-                          {formatTimeTask(
+                          {formatTimeTaskCustom(
                             `${
                               dataTaskHeaderList?.cards.find(
                                 (item) =>

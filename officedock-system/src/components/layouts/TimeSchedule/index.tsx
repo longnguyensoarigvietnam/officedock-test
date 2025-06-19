@@ -91,6 +91,7 @@ import {
   PermissionsSystem,
   ScreenName,
   ServerStatusCode,
+  TaskRepetitiveValue,
   ViewOptions,
 } from '@constants/enums';
 import {
@@ -210,8 +211,9 @@ const TimeSchedule = memo(
     const {
       memberSelected,
       dataActualAddSchedule,
-      displayHederDateStart,
-      displayHederDateEnd,
+      displayHeaderDateStart,
+      displayHeaderDateEnd,
+      dataActualEdit,
       setIsInteracting,
       setDisplayHeaderDayStart,
       setDisplayHeaderDayEnd,
@@ -219,7 +221,6 @@ const TimeSchedule = memo(
       setIdEventDelete,
       setWidthCalendar,
     } = useContext(TaskContext);
-
     const queryClient = useQueryClient();
     const showErrorToast = useErrorToast();
 
@@ -252,6 +253,7 @@ const TimeSchedule = memo(
     const [EventInfo, setEventInfo] = useState<DataDetailEventType | null>(
       null,
     );
+    const [isDraggingSchedule, setDraggingSchedule] = useState(false);
 
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -299,9 +301,9 @@ const TimeSchedule = memo(
       return (slotHeight / baseSlider) * baseFontSizeXs;
     };
     const formattedCurrentDate = formatDateJp(new Date());
-    const formattedStartDate = formatDateJp(displayHederDateStart);
-    const formattedEndDate = formatDateJp(displayHederDateEnd);
-    const isToday = isSameDay(new Date(), displayHederDateStart);
+    const formattedStartDate = formatDateJp(displayHeaderDateStart);
+    const formattedEndDate = formatDateJp(displayHeaderDateEnd);
+    const isToday = isSameDay(new Date(), displayHeaderDateStart);
 
     // Event state
     const [dataEventEdit, setDataEventEditLocal] =
@@ -348,9 +350,6 @@ const TimeSchedule = memo(
         setDisplayHeaderDayEnd(new Date(endDateISOString));
 
         handleCallApiAllData(startDateISOString, endDateISOString);
-        saveZoomSchedule({
-          dateFilterScheduleFrom: startDateISOString,
-        });
         scrollToNowIndicator();
       }
     };
@@ -373,9 +372,6 @@ const TimeSchedule = memo(
         setDisplayHeaderDayEnd(new Date(endDateISOString));
 
         handleCallApiAllData(startDateISOString, endDateISOString);
-        saveZoomSchedule({
-          dateFilterScheduleFrom: startDateISOString,
-        });
         scrollToNowIndicator();
       }
     };
@@ -392,11 +388,9 @@ const TimeSchedule = memo(
             calendarApi.view.activeEnd,
           );
           setDisplayHeaderDayStart(new Date(startDateISOString));
+          setDisplayHeaderDayEnd(new Date(endDateISOString));
 
           handleCallApiAllData(startDateISOString, endDateISOString);
-          saveZoomSchedule({
-            dateFilterScheduleFrom: startDateISOString,
-          });
           scrollToNowIndicator();
         }
       }
@@ -919,8 +913,11 @@ const TimeSchedule = memo(
       'postUpdateActualTime',
       handleUpdateActualTime,
       {
-        onSuccess: async () => {
+        onSuccess: async (data, task) => {
           queryClient.refetchQueries(['getDataTaskHeaderList']);
+          if (task.data.pausedAt === null) {
+            queryClient.refetchQueries(['getTaskHeaderStart']);
+          }
         },
         onError: (error: AxiosError<any>) => {
           showErrorToast(error, ERROR_UPDATE_MESSAGE);
@@ -1108,6 +1105,36 @@ const TimeSchedule = memo(
         setDataItemChangeInline(undefined);
       }
     }, [dataItemChangeInline]);
+    // Update data when edit start item in header
+    useEffect(() => {
+      if (dataActualEdit) {
+        const updatedList = taskTimeScheduleList.map((item) => {
+          if (`${item.uuid}` === `${dataActualEdit.uuid}`) {
+            const startDateActual = new Date(
+              convertToCurrentTimezone(`${dataActualEdit.startDate}`),
+            );
+            const endDateActual = new Date(
+              convertToCurrentTimezone(`${item.planEndDate}`),
+            );
+            const endTimeCustom = item.planEndDate
+              ? endDateActual
+              : getNext30MinuteSlot(startDateActual);
+            return {
+              ...item,
+              start: startDateActual,
+              end: item.planEndDate
+                ? adjustEndDate(startDateActual, endDateActual, 5)
+                : adjustEndDate(startDateActual, endTimeCustom as Date),
+              planStartDate: dataActualEdit.startDate,
+            };
+          }
+
+          return item;
+        });
+
+        setTaskTimeScheduleList(updatedList);
+      }
+    }, [dataActualEdit]);
 
     //Add data Actual
     useEffect(() => {
@@ -1256,7 +1283,6 @@ const TimeSchedule = memo(
           saveZoomSchedule({
             isShowWeekSchedule:
               calendarView === CalendarViewOptions.VIEW_BY_WEEK,
-            dateFilterScheduleFrom: startDateISOString,
           });
           scrollToNowIndicator();
         }, 300);
@@ -1299,6 +1325,7 @@ const TimeSchedule = memo(
       endDate: string,
       uuid: string,
       resourcePlan: boolean,
+      isCalculation?: boolean,
     ): void => {
       let value = e.target.value.replace(/\D/g, '');
       if (value.length > 4) {
@@ -1332,7 +1359,10 @@ const TimeSchedule = memo(
               new Date(endDate),
               `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
             ),
-            pausedAt: convertDateString(endDate),
+            pausedAt:
+              isCalculation && !resourcePlan
+                ? null
+                : convertDateString(endDate),
           },
         });
       } else {
@@ -1707,6 +1737,7 @@ const TimeSchedule = memo(
     // Event resize
     const handleEventResize = async (info: EventResizeDoneArg) => {
       const resizedEvent = info.event as any;
+      const isActualCalculate = info.event.extendedProps.isCalculation;
       const isLessThanToday = isDateLessThanToday(resizedEvent.start);
       const resourcePlanDay =
         resizedEvent._def.resourceIds?.length &&
@@ -1716,15 +1747,15 @@ const TimeSchedule = memo(
       if (areDatesDifferent(`${resizedEvent.start}`, `${resizedEvent.end}`)) {
         const oldStart = info.oldEvent.start;
         const oldEnd = info.oldEvent.end;
-
         info.event.setDates(oldStart as Date, oldEnd);
       }
 
       if (!resourcePlanDay && isDateInFutureOrToday(resizedEvent.end)) {
         const oldStart = info.oldEvent.start;
         const oldEnd = info.oldEvent.end;
-
-        info.event.setDates(oldStart as Date, oldEnd);
+        if (!isActualCalculate) {
+          info.event.setDates(oldStart as Date, oldEnd);
+        }
       }
 
       if (
@@ -1742,107 +1773,110 @@ const TimeSchedule = memo(
         const oldEnd = info.oldEvent.end;
 
         info.event.setDates(oldStart as Date, oldEnd);
-      }
+      } else {
+        if (
+          (!resourcePlanDay && searchParams.get('view') === ViewOptions.DAY) ||
+          (!resourcePlanWeek && searchParams.get('view') === ViewOptions.WEEK)
+        ) {
+          if (info.event.extendedProps.type === EventCalendarType.TASK) {
+            const hasOverlap = taskTimeScheduleList.some((item) => {
+              if (item.uuid === resizedEvent.extendedProps.uuid) {
+                return false;
+              }
+              return (
+                resizedEvent.start < item.end &&
+                resizedEvent.end > item.start &&
+                item.resourceId === ItemScheduleType.ACTUAL &&
+                item.taskId === resizedEvent.extendedProps.taskId
+              );
+            });
 
-      if (
-        (!resourcePlanDay && searchParams.get('view') === ViewOptions.DAY) ||
-        (!resourcePlanWeek && searchParams.get('view') === ViewOptions.WEEK)
-      ) {
-        if (info.event.extendedProps.type === EventCalendarType.TASK) {
-          const hasOverlap = taskTimeScheduleList.some((item) => {
-            if (item.uuid === resizedEvent.extendedProps.uuid) {
-              return false;
+            if (hasOverlap) {
+              const oldStart = info.oldEvent.start;
+              const oldEnd = info.oldEvent.end;
+
+              info.event.setDates(oldStart as Date, oldEnd);
             }
-            return (
-              resizedEvent.start < item.end &&
-              resizedEvent.end > item.start &&
-              item.resourceId === ItemScheduleType.ACTUAL &&
-              item.taskId === resizedEvent.extendedProps.taskId
-            );
-          });
-
-          if (hasOverlap) {
-            const oldStart = info.oldEvent.start;
-            const oldEnd = info.oldEvent.end;
-
-            info.event.setDates(oldStart as Date, oldEnd);
-          }
-        } else {
-          const hasOverlap = taskTimeScheduleList.some((item) => {
-            if (item.uuid === resizedEvent.extendedProps.uuid) {
-              return false;
-            }
-            return (
-              resizedEvent.start < item.end &&
-              resizedEvent.end > item.start &&
-              item.resourceId === ItemScheduleType.ACTUAL &&
-              item.scheduleId === resizedEvent.extendedProps.scheduleId
-            );
-          });
-
-          if (hasOverlap) {
-            const oldStart = info.oldEvent.start;
-            const oldEnd = info.oldEvent.end;
-
-            info.event.setDates(oldStart as Date, oldEnd);
-          }
-        }
-      }
-
-      setTaskTimeScheduleList((prevEvents) => {
-        return prevEvents.map((event) => {
-          if (event.uuid === resizedEvent.extendedProps.uuid) {
-            const newData = {
-              ...event,
-              planStartDate: `${resizedEvent.start}`,
-              planEndDate: `${resizedEvent.end}`,
-              start: resizedEvent.start || new Date(),
-              end: resizedEvent.end || new Date(),
-            };
-            return newData;
           } else {
-            return event;
+            const hasOverlap = taskTimeScheduleList.some((item) => {
+              if (item.uuid === resizedEvent.extendedProps.uuid) {
+                return false;
+              }
+              return (
+                resizedEvent.start < item.end &&
+                resizedEvent.end > item.start &&
+                item.resourceId === ItemScheduleType.ACTUAL &&
+                item.scheduleId === resizedEvent.extendedProps.scheduleId
+              );
+            });
+
+            if (hasOverlap) {
+              const oldStart = info.oldEvent.start;
+              const oldEnd = info.oldEvent.end;
+
+              info.event.setDates(oldStart as Date, oldEnd);
+            }
           }
+        }
+
+        setTaskTimeScheduleList((prevEvents) => {
+          return prevEvents.map((event) => {
+            if (event.uuid === resizedEvent.extendedProps.uuid) {
+              const newData = {
+                ...event,
+                planStartDate: `${resizedEvent.start}`,
+                planEndDate: `${resizedEvent.end}`,
+                start: resizedEvent.start || new Date(),
+                end: resizedEvent.end || new Date(),
+              };
+              return newData;
+            } else {
+              return event;
+            }
+          });
         });
-      });
-      if (searchParams.get('view') === ViewOptions.DAY) {
-        if (resourcePlanDay) {
-          updatePlanTime({
-            uuid: resizedEvent.extendedProps.uuid,
-            data: {
-              planStartDate: convertDateString(`${resizedEvent.start}`),
-              planEndDate: convertDateString(`${resizedEvent.end}`),
-            },
-          });
-        } else {
-          updateActualTime({
-            uuid: resizedEvent.extendedProps.uuid,
-            data: {
-              startedAt: convertDateString(`${resizedEvent.start}`),
-              pausedAt: convertDateString(`${resizedEvent.end}`),
-            },
-          });
+        if (searchParams.get('view') === ViewOptions.DAY) {
+          if (resourcePlanDay) {
+            updatePlanTime({
+              uuid: resizedEvent.extendedProps.uuid,
+              data: {
+                planStartDate: convertDateString(`${resizedEvent.start}`),
+                planEndDate: convertDateString(`${resizedEvent.end}`),
+              },
+            });
+          } else {
+            updateActualTime({
+              uuid: resizedEvent.extendedProps.uuid,
+              data: {
+                startedAt: convertDateString(`${resizedEvent.start}`),
+                pausedAt: isActualCalculate
+                  ? null
+                  : convertDateString(`${resizedEvent.end}`),
+              },
+            });
+          }
+        }
+        if (searchParams.get('view') === ViewOptions.WEEK) {
+          if (resourcePlanWeek) {
+            updatePlanTime({
+              uuid: resizedEvent.extendedProps.uuid,
+              data: {
+                planStartDate: convertDateString(`${resizedEvent.start}`),
+                planEndDate: convertDateString(`${resizedEvent.end}`),
+              },
+            });
+          } else {
+            updateActualTime({
+              uuid: resizedEvent.extendedProps.uuid,
+              data: {
+                startedAt: convertDateString(`${resizedEvent.start}`),
+                pausedAt: convertDateString(`${resizedEvent.end}`),
+              },
+            });
+          }
         }
       }
-      if (searchParams.get('view') === ViewOptions.WEEK) {
-        if (resourcePlanWeek) {
-          updatePlanTime({
-            uuid: resizedEvent.extendedProps.uuid,
-            data: {
-              planStartDate: convertDateString(`${resizedEvent.start}`),
-              planEndDate: convertDateString(`${resizedEvent.end}`),
-            },
-          });
-        } else {
-          updateActualTime({
-            uuid: resizedEvent.extendedProps.uuid,
-            data: {
-              startedAt: convertDateString(`${resizedEvent.start}`),
-              pausedAt: convertDateString(`${resizedEvent.end}`),
-            },
-          });
-        }
-      }
+
       setTimeout(() => setIsInteracting(false), 200);
     };
     // Event drag & drop schedule
@@ -2287,12 +2321,44 @@ const TimeSchedule = memo(
     const handleEventDragStop = (info: EventDragStopArg) => {
       const draggedEvent = info.event;
       const draggedResourceId = draggedEvent.extendedProps.resourceId;
+      const trashEl = document.getElementById('trash-area');
+      if (trashEl) {
+        const trashRect = trashEl.getBoundingClientRect();
+
+        const x = info.jsEvent.clientX;
+        const y = info.jsEvent.clientY;
+
+        const isInTrash =
+          x >= trashRect.left &&
+          x <= trashRect.right &&
+          y >= trashRect.top &&
+          y <= trashRect.bottom;
+
+        setDraggingSchedule(false);
+
+        if (
+          isInTrash &&
+          draggedEvent.getResources()[0]?.id === ItemScheduleType.PLANS &&
+          draggedEvent.extendedProps?.type === ItemStartType.TASK
+        ) {
+          if (draggedEvent.extendedProps.uuid) {
+            // DELETE plan task
+            const newDataTimeList = taskTimeScheduleList.filter(
+              (item) => item.uuid !== draggedEvent.extendedProps.uuid,
+            );
+            setTaskTimeScheduleList(newDataTimeList);
+            deletePlanTask(draggedEvent.extendedProps.uuid);
+          }
+          info.event.remove();
+        }
+      }
       if (
         draggedResourceId &&
         draggedEvent.getResources()[0]?.id !== draggedResourceId
       ) {
         draggedEvent.setProp('resourceId', draggedResourceId);
       }
+      setTimeout(() => setIsInteracting(false), 200);
     };
     // Event permission
     const handleEventAllow = (
@@ -2300,13 +2366,6 @@ const TimeSchedule = memo(
       draggedEvent: EventApi | null,
     ): boolean => {
       if (!draggedEvent) return false;
-
-      if (
-        draggedEvent.extendedProps.type === EventCalendarType.SCHEDULE ||
-        !draggedEvent.startEditable
-      ) {
-        return false;
-      }
       const isAllDay = draggedEvent.allDay;
       if (isAllDay && dropInfo.allDay) {
         return true;
@@ -2697,89 +2756,158 @@ const TimeSchedule = memo(
       'editEventCalendar',
       handleEditEventCalendar,
       {
-        onSuccess: async ({ data }) => {
-          setTaskTimeScheduleList((prevEvents) => {
-            const largeColor = data.categories?.find(
-              (item: any) => item.type === EventWorkCategory.LARGE,
-            )?.color;
-            const filteredEvents = prevEvents.filter(
-              (event) =>
-                event.scheduleId !== data.id &&
-                event.resourceId === ItemScheduleType.PLANS,
-            );
-            const actualDataList = prevEvents
-              .filter((event) => event.resourceId === ItemScheduleType.ACTUAL)
-              .map((event) => {
-                if (event.scheduleId === data.id) {
+        onSuccess: async ({ data }: { data: CombinedEventTask }) => {
+          const isMeInList = data.participants?.some(
+            (user) => user.id === session?.user.id,
+          );
+          if (isMeInList) {
+            setTaskTimeScheduleList((prevEvents) => {
+              const largeColor = data.categories?.find(
+                (item: any) => item.type === EventWorkCategory.LARGE,
+              )?.color;
+              const filteredEvents = prevEvents.filter(
+                (event) =>
+                  event.scheduleId !== data.id &&
+                  event.resourceId === ItemScheduleType.PLANS,
+              );
+              const actualDataList = prevEvents
+                .filter((event) => event.resourceId === ItemScheduleType.ACTUAL)
+                .map((event) => {
+                  if (event.scheduleId === data.id) {
+                    return {
+                      ...event,
+                      title: data.title,
+                      largeColor,
+                    };
+                  }
+                  return event;
+                });
+              const splitMultiDayEvent = (event: TaskTimeSchedule) => {
+                const startDate = parseISO(String(event.planStartDate));
+                let endDate = parseISO(String(event.planEndDate));
+                if (getHours(endDate) === 0 && getMinutes(endDate) === 0) {
+                  endDate = subSeconds(endDate, 1);
+                }
+                if (isSameDay(startDate, endDate)) {
+                  return [{ ...event }];
+                }
+                if (event.isAllDay) {
+                  return [{ ...event, uuid: uuidv4() }];
+                }
+                const days = eachDayOfInterval({
+                  start: startDate,
+                  end: endDate,
+                });
+                return days.map((day, index) => {
+                  const start = index === 0 ? startDate : startOfDay(day);
+                  const end =
+                    index === days.length - 1 ? endDate : endOfDay(day);
                   return {
                     ...event,
-                    title: data.title,
-                    largeColor,
+                    start,
+                    end,
+                    id: `${event.id}-split-${index}`,
+                    uuid: uuidv4(),
                   };
-                }
-                return event;
-              });
-
-            const splitMultiDayEvent = (event: TaskTimeSchedule) => {
-              const startDate = parseISO(String(event.startDate));
-              const endDate = parseISO(String(event.endDate));
-              if (event.isAllDay)
-                return [
-                  {
-                    ...event,
-                    start: new Date(String(event.startDate)),
-                    end: new Date(
-                      new Date(String(event.endDate)).setHours(24, 0, 0, 0),
-                    ),
-                    id: `${event.id}event`,
-                    uuid: uuidv4(),
-                  },
-                ];
-
-              if (isSameDay(startDate, endDate)) {
-                return [
-                  {
-                    ...event,
-                    start: startDate,
-                    end: endDate,
-                    id: `${event.id}event`,
-                    uuid: uuidv4(),
-                  },
-                ];
+                });
+              };
+              if (
+                data.repeatSchedules === undefined ||
+                data.repeatSchedules === null
+              ) {
+                return [...filteredEvents, ...actualDataList];
               }
 
-              const days = eachDayOfInterval({
-                start: startDate,
-                end: endDate,
-              });
+              const newEventEdit = data.repeatSchedules.flatMap(
+                (schedule, index) => {
+                  const startDate = schedule.planStartDate
+                    ? parseISO(String(schedule.planStartDate))
+                    : null;
+                  const endDate = schedule.planEndDate
+                    ? parseISO(String(schedule.planEndDate))
+                    : null;
 
-              return days.map((day, index) => {
-                const start = index === 0 ? startDate : startOfDay(day);
-                const end = index === days.length - 1 ? endDate : endOfDay(day);
+                  // Skip if no valid time
+                  if (!startDate || !endDate) return [];
 
+                  const adjustedEndDate =
+                    isSameDay(startDate, endDate) || isMidnight(endDate)
+                      ? endDate
+                      : addDays(endDate, 1);
+
+                  const newEvent = {
+                    ...data,
+                    start: startDate,
+                    end: data.isAllDay
+                      ? new Date(
+                          new Date(String(schedule.planEndDate)).setHours(
+                            24,
+                            0,
+                            0,
+                            0,
+                          ),
+                        )
+                      : adjustedEndDate,
+                    id: `${data.id}-${schedule.id}-${index}`,
+                    peopleInCharge: [],
+                    status: {
+                      name: '',
+                      id: null,
+                    },
+                    taskId: data.taskId as number,
+                    eventSchedule: schedule.id,
+                    scheduleId: schedule.schedule || (data.id as number),
+                    uuid: uuidv4(),
+                    planStartDate: String(schedule.planStartDate),
+                    planEndDate: String(schedule.planEndDate),
+                    isStart: data.isStart,
+                    isMyTask: data.isMySchedule,
+                    type: EventCalendarType.SCHEDULE,
+                    taskSchedules: [],
+                    startEditable: false,
+                    resourceId: ItemScheduleType.PLANS,
+                    largeColor: largeColor,
+                    location: data.location?.name,
+                    isAllDay: data.isAllDay,
+                    participants: data.participants,
+                  };
+
+                  return splitMultiDayEvent(newEvent);
+                },
+              );
+
+              return [...filteredEvents, ...actualDataList, ...newEventEdit];
+            });
+          } else {
+            setIdEventDelete(String(data.id));
+
+            let updatedTaskList = taskTimeScheduleList.filter(
+              (item) =>
+                `${item.scheduleId}` !== `${data.id}` ||
+                item.resourceId !== ItemScheduleType.PLANS,
+            );
+            updatedTaskList = updatedTaskList.map((item) => {
+              if (
+                `${item.scheduleId}` === `${data.id}` &&
+                item.isCalculation === true
+              ) {
                 return {
-                  ...event,
-                  start,
-                  end,
-                  id: `${event.id}-split-${index}`,
-                  uuid: uuidv4(),
+                  ...item,
+                  planEndDate: `${new Date()}`,
+                  end: adjustEndDate(
+                    new Date(convertToCurrentTimezone(`${item.planStartDate}`)),
+                    new Date(),
+                    5,
+                  ),
+                  isCalculation: false,
+                  isStart: false,
                 };
-              });
-            };
-
-            const newEvents = splitMultiDayEvent({
-              ...data,
-              largeColor,
-              isStart: data.isStart,
-              scheduleId: data.id,
-              resourceId: ItemScheduleType.PLANS,
-              type: ItemStartType.SCHEDULE,
-              planStartDate: `${data.startDate}`,
-              planEndDate: `${data.endDate}`,
+              }
+              return item;
             });
 
-            return [...filteredEvents, ...actualDataList, ...newEvents];
-          });
+            setTaskTimeScheduleList(updatedTaskList);
+          }
 
           handleRemoveEventParam();
           setOpenConfirmEditEventModal(false);
@@ -2802,11 +2930,15 @@ const TimeSchedule = memo(
     // Delete Event Repeat
     const handleConfirmDeleteEventRepeatCalendar = (sendToChat: boolean) => {
       if (dataEventEdit) {
-        deleteEventRepeatCalendar({
-          eventId: `${dataEventEdit.eventSchedule}`,
-          repeatScheduleId: dataEventEdit.scheduleId as string,
-          sendToChat,
-        });
+        if (dataEventEdit.repeatType === TaskRepetitiveValue.ONCE) {
+          deleteEventCalendar({ id: `${dataEventEdit.id}`, sendToChat });
+        } else {
+          deleteEventRepeatCalendar({
+            eventId: `${dataEventEdit.eventSchedule}`,
+            repeatScheduleId: dataEventEdit.scheduleId as string,
+            sendToChat,
+          });
+        }
         return;
       }
     };
@@ -2873,6 +3005,8 @@ const TimeSchedule = memo(
         onSuccess: (data, task) => {
           handleRemoveEventParam();
           setOpenConfirmDeleteEventModal(false);
+          setOpenConfirmDeleteEventRepeatModal(false);
+
           setConfirmEventDataToEdit(undefined);
           setBackToEditing(false);
           setActionsEventMessage('');
@@ -2882,10 +3016,32 @@ const TimeSchedule = memo(
           );
 
           const deleteEventList = updatedTaskList.filter(
-            (item) => `${item.scheduleId}` !== `${task.id}`,
+            (item) =>
+              `${item.scheduleId}` !== `${task.id}` ||
+              item.resourceId !== ItemScheduleType.PLANS,
           );
 
-          setTaskTimeScheduleList(deleteEventList);
+          const deleteEventListUpdate = deleteEventList.map((item) => {
+            if (
+              `${item.scheduleId}` === `${task.id}` &&
+              item.isCalculation === true
+            ) {
+              return {
+                ...item,
+                planEndDate: `${new Date()}`,
+                end: adjustEndDate(
+                  new Date(convertToCurrentTimezone(`${item.planStartDate}`)),
+                  new Date(),
+                  5,
+                ),
+                isCalculation: false,
+                isStart: false,
+              };
+            }
+            return item;
+          });
+
+          setTaskTimeScheduleList(deleteEventListUpdate);
           setIdEventDelete(`${task.id}event`);
           showToast({
             description: SUCCESS_DELETE_MESSAGE,
@@ -2925,9 +3081,9 @@ const TimeSchedule = memo(
 
     const handleDateCheck = () => {
       const inputDate = new Date(
-        displayHederDateStart.getFullYear(),
-        displayHederDateStart.getMonth(),
-        displayHederDateStart.getDate(),
+        displayHeaderDateStart.getFullYear(),
+        displayHeaderDateStart.getMonth(),
+        displayHeaderDateStart.getDate(),
       );
       const now = new Date(
         today.getFullYear(),
@@ -2951,7 +3107,7 @@ const TimeSchedule = memo(
 
     useEffect(() => {
       handleDateCheck();
-    }, [displayHederDateStart]);
+    }, [displayHeaderDateStart]);
 
     const filteredEvents = useMemo(() => {
       if (isExtendCalendar) {
@@ -3168,7 +3324,7 @@ const TimeSchedule = memo(
       }
     }, [slotHeight, isLoadingSchedule, isExtendCalendar, view]);
 
-    const dataDate = getDateInfo(displayHederDateStart);
+    const dataDate = getDateInfo(displayHeaderDateStart);
 
     const calculateSlotHeight = (value: number): number => {
       if (value < 38) {
@@ -3191,22 +3347,12 @@ const TimeSchedule = memo(
     // Get data zoom
     const { authenticatedUser } = useAuthenticatedUser({
       onSuccess: (data) => {
-        if (data.setting?.dateFilterScheduleFrom) {
-          if (data.setting?.isShowWeekSchedule) {
-            handleViewChangeDefault(CalendarViewOptions.VIEW_BY_WEEK);
-
-            handleChooseDay(new Date(data.setting?.dateFilterScheduleFrom));
-          } else {
-            handleViewChangeDefault(CalendarViewOptions.VIEW_BY_DAY);
-            handleChooseDay(new Date(data.setting?.dateFilterScheduleFrom));
-          }
+        if (data.setting?.isShowWeekSchedule) {
+          handleViewChangeDefault(CalendarViewOptions.VIEW_BY_WEEK);
         } else {
-          if (data.setting?.isShowWeekSchedule) {
-            handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
-          } else {
-            handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
-          }
+          handleViewChangeDefault(CalendarViewOptions.VIEW_BY_DAY);
         }
+        handleChooseDay(displayHeaderDateStart || new Date());
       },
     });
 
@@ -3225,7 +3371,6 @@ const TimeSchedule = memo(
     const handleSaveZoomSchedule = async (data: {
       scheduleZoom?: number;
       isShowWeekSchedule?: boolean;
-      dateFilterScheduleFrom?: string;
     }) => {
       const { data: response } = await api.post(apiRouters.USER_SETTING, {
         ...data,
@@ -3339,7 +3484,7 @@ const TimeSchedule = memo(
                       <DatePicker
                         className="h-10 z-50 "
                         isShowInput={false}
-                        selected={displayHederDateStart}
+                        selected={displayHeaderDateStart}
                         tooltipMsg="カレンダーから日付を選択"
                         iconClassName="!static !w-8"
                         disabled={isLoadingSchedule}
@@ -3394,6 +3539,26 @@ const TimeSchedule = memo(
                         今日
                       </div>
                     )}
+                    {/* Trash area */}
+                    <div
+                      id="trash-area"
+                      style={{
+                        textAlign: 'center',
+                        lineHeight: '80px',
+                        borderRadius: '8px',
+                        fontWeight: 'bold',
+                        zIndex: 1000,
+                      }}
+                      className={` w-[150px] flex flex-col gap-[2px] items-center justify-center h-[48px] ${isDraggingSchedule ? '' : 'hidden'}`}>
+                      <p className="text-white  bg-[#5B6770] text-[10px] leading-[14px]  py-[2px] px-1 rounded-sm">
+                        スケジュールから削除
+                      </p>
+                      <ImageRound
+                        name="Delete"
+                        src={'/icons/delete-task.svg'}
+                        className={`w-[14px] h-fit hover:cursor-pointer`}
+                      />
+                    </div>
                   </>
                 )}
               </div>
@@ -3446,7 +3611,17 @@ const TimeSchedule = memo(
                   }}
                   slotDuration={isOptionZoomSchedule}
                   initialDate={new Date()}
-                  eventDragStart={() => setIsInteracting(true)}
+                  eventDragStart={(event) => {
+                    if (
+                      event.event.extendedProps &&
+                      event.event.extendedProps.type === ItemStartType.TASK &&
+                      event.event.getResources()[0]?.id ===
+                        ItemScheduleType.PLANS
+                    ) {
+                      setDraggingSchedule(true);
+                    }
+                    setIsInteracting(true);
+                  }}
                   eventDrop={handleEventDrop}
                   eventContent={handleRenderEvent}
                   eventReceive={handleEventReceive}
@@ -3590,6 +3765,28 @@ const TimeSchedule = memo(
               />
             </DynamicTooltip>
           </div>
+          {!isExtendCalendar && (
+            /* Trash area */
+            <div
+              id="trash-area"
+              style={{
+                textAlign: 'center',
+                lineHeight: '80px',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                zIndex: 1000,
+              }}
+              className={`absolute top-[9px]  right-[53px] w-[150px] flex flex-col gap-[2px] items-center justify-center h-[48px] ${isDraggingSchedule ? '' : 'hidden'}`}>
+              <p className="text-white  bg-[#5B6770] text-[10px] leading-[14px]  py-[2px] px-1 rounded-sm">
+                スケジュールから削除
+              </p>
+              <ImageRound
+                name="Delete"
+                src={'/icons/delete-task.svg'}
+                className={`w-[14px] h-fit hover:cursor-pointer`}
+              />
+            </div>
+          )}
         </div>
         {openCreateEventModal && (
           <ActionsEventModal
@@ -3702,6 +3899,7 @@ const TimeSchedule = memo(
               setOpenConfirmDeleteEventModal(false);
               setBackToEditing(false);
               setActionsEventMessage('');
+              setOpenConfirmDeleteEventRepeatModal(false);
             }}
             onBackToEditModal={() => {
               router.push(

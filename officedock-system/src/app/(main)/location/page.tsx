@@ -10,7 +10,7 @@ const LocalPage = () => {
     <MainLayout
       title={pageRouters.LOCATION_MANAGEMENT.name}
       className="bg-[#EBF1F7] !px-10 !py-[30px]"
-      permission={PermissionsSystem.VIEW_ALL}>
+      permission={PermissionsSystem.CALENDAR_MANAGEMENT_VIEW}>
       <ListLocation />
     </MainLayout>
   );

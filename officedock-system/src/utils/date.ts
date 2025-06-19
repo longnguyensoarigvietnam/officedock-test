@@ -126,6 +126,35 @@ export const formatTimeInput = (value: string): string => {
   const formattedMinutes = String(minutes).padStart(2, '0');
   return `${formattedHours}:${formattedMinutes}`;
 };
+export const formatTimeInputCustom = (value: string): string => {
+  let hours = 0;
+  let minutes = 0;
+
+  const cleanValue = value.replace(/\D/g, '');
+
+  if (cleanValue.length === 3) {
+    hours = parseInt(cleanValue.slice(0, 1), 10);
+    minutes = parseInt(cleanValue.slice(1, 3), 10);
+  } else if (cleanValue.length >= 4) {
+    hours = parseInt(cleanValue.slice(0, 2), 10);
+    minutes = parseInt(cleanValue.slice(2, 4), 10);
+  } else if (cleanValue.length === 2) {
+    hours = parseInt(cleanValue.slice(0, 2), 10);
+  } else if (cleanValue.length === 1) {
+    hours = parseInt(cleanValue.slice(0, 1), 10);
+  }
+
+  if (hours >= 24 || minutes >= 60) {
+    const now = new Date();
+    hours = now.getHours();
+    minutes = now.getMinutes();
+  }
+
+  const formattedHours = hours.toString().padStart(2, '0');
+  const formattedMinutes = minutes.toString().padStart(2, '0');
+
+  return `${formattedHours}:${formattedMinutes}`;
+};
 
 export const formatTimeInputFilter = (value: string, date: Date): string => {
   let hours: number, minutes: number;
@@ -199,6 +228,21 @@ export function formatTimeTask(isoString: string): string {
 
   return formattedTime;
 }
+export function formatTimeTaskCustom(isoString: string): string {
+  if (!isoString || isNaN(Date.parse(isoString))) {
+    return '----';
+  }
+
+  const date: Date = new Date(isoString);
+
+  const hours: number = date.getHours();
+  const minutes: number = date.getMinutes();
+
+  const formattedTime: string = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+  return formattedTime;
+}
+
 //Convert date to 00:00
 export const convertDateToStartDate = (dateString: string): string => {
   const date = parseISO(dateString);
@@ -1611,3 +1655,43 @@ export function getDateInfoFull(date: Date): DateInfo {
     weekday,
   };
 }
+export function convertDateStringWithFormat(dateStr: string | Date): string {
+  const date = new Date(dateStr);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hour = date.getHours();
+  const minute = date.getMinutes();
+
+  const hourStr = String(hour).padStart(2, '0');
+  const minuteStr = String(minute).padStart(2, '0');
+
+  return `${year}/${month}/${day} ${hourStr}:${minuteStr}`;
+}
+// Get total duration with start and end time
+export const getTimeDifference = (
+  startedAt: string,
+  pausedAt: string,
+): string => {
+  const start = new Date(startedAt);
+  const pause = new Date(pausedAt);
+
+  const diffMs = pause.getTime() - start.getTime();
+
+  if (diffMs < 0) return '00:00:00';
+
+  const totalSeconds = Math.floor(diffMs / 1000);
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const formatted = [
+    hours.toString().padStart(2, '0'),
+    minutes.toString().padStart(2, '0'),
+    seconds.toString().padStart(2, '0'),
+  ].join(':');
+
+  return formatted;
+};

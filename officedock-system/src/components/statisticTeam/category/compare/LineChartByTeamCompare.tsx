@@ -2,6 +2,7 @@ import React, {
   Fragment,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -46,7 +47,6 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 
 import { OptionDropdownType } from '@interfaces/common';
-import { StatisticsCategories } from '@interfaces/statistic';
 
 import {
   SortingType,
@@ -54,6 +54,7 @@ import {
   StatisticViewOptions,
 } from '@constants/enums';
 import {
+  DEFAULT_TIME_TEXT,
   EVERYONE_OPTION_LABEL,
   STATISTIC_CHART_VIEW_OPTIONS,
 } from '@constants';
@@ -75,12 +76,16 @@ import {
   getCompareLineChartEnableViews,
   getFileURL,
   getRandomColor,
+  getSafeTooltipLeft,
   toRGBA,
 } from '@utils';
 
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 import useStatisticUserTaskDurationsCompare from '@hooks/useStatisticUserTaskDurationsCompare';
 import useDebounceText from '@hooks/useDebounceText';
+import useStatisticTableInTeamLineChart from '@hooks/useStatisticTableInTeamLineChart';
+import useStatisticTableInTeamLineChartCompare from '@hooks/useStatisticTableInTeamLineChartCompare';
+import { useGenericDebounce } from '@hooks/useGenericDebounce';
 
 ChartJS.register(
   CategoryScale,
@@ -98,8 +103,6 @@ type Props = {
   endDate: Date | null;
   startDateCompare: Date;
   endDateCompare: Date | null;
-  statisticTeamCategoryList: StatisticsCategories | undefined;
-  statisticCategoryListTeamCompare: StatisticsCategories | undefined;
   removeTag: (selected: OptionDropdownType) => void;
   removeUser: (selected: OptionDropdownType) => void;
   handleSelectOrganization: (data: OptionDropdownType) => void;
@@ -159,8 +162,6 @@ const LineChartByTeamCompare = ({
   endDate,
   startDateCompare,
   endDateCompare,
-  statisticTeamCategoryList,
-  statisticCategoryListTeamCompare,
   removeTag,
   handleSelectOrganization,
   handleSelectLarge,
@@ -196,6 +197,7 @@ const LineChartByTeamCompare = ({
     id: number;
     name: string;
   } | null>(null);
+  const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
 
   // Filter options
   const [filter, setFilter] = useState({
@@ -232,6 +234,12 @@ const LineChartByTeamCompare = ({
   >([]);
 
   // Table data
+  const [standardTableData, setStandardTableData] = useState<TableRowDetail[]>(
+    [],
+  );
+  const [compareTableData, setCompareTableData] = useState<TableRowDetail[]>(
+    [],
+  );
   const [tableData, setTableData] = useState<MergedTableCategory[]>([]);
 
   // Chart
@@ -266,8 +274,10 @@ const LineChartByTeamCompare = ({
   });
   const [standardDateLabels, setStandardDateLabels] = useState<string[]>([]);
   const [compareDateLabels, setCompareDateLabels] = useState<string[]>([]);
-  const [totalStandardDuration, setTotalStandardDuration] = useState<string>('00:00:00')
-  const [totalCompareDuration, setTotalCompareDuration] = useState<string>('00:00:00')
+  const [totalStandardDuration, setTotalStandardDuration] =
+    useState<string>('00:00:00');
+  const [totalCompareDuration, setTotalCompareDuration] =
+    useState<string>('00:00:00');
 
   // Collapse statuses
   const [categoryCollapseStatuses, setCategoryCollapseStatuses] = useState<
@@ -317,15 +327,28 @@ const LineChartByTeamCompare = ({
       categoryDuration: category.duration,
       type,
       userList:
-        category.users && category.users.length > 0
-          ? category.users.map((user) => {
+        allLabelUser.length > 0
+          ? allLabelUser.map((userInfo) => {
+              const foundUser = category.users?.find(
+                (user) => user.user.id == userInfo.value,
+              );
+              if (foundUser) {
+                return {
+                  userId: foundUser.user.id,
+                  userName: foundUser.user.fullName,
+                  userAvatar: foundUser.user.avatar,
+                  userAvatarColor: foundUser.user.avatarColor,
+                  userDuration: foundUser.duration,
+                  userPercent: foundUser.percent,
+                };
+              }
               return {
-                userId: user.user.id,
-                userName: user.user.fullName,
-                userAvatar: user.user.avatar,
-                userAvatarColor: user.user.avatarColor,
-                userDuration: user.duration,
-                userPercent: user.percent,
+                userId: Number(userInfo.value),
+                userName: userInfo?.label,
+                userAvatar: userInfo?.avatarUrl || '',
+                userAvatarColor: userInfo?.color || '',
+                userDuration: DEFAULT_TIME_TEXT,
+                userPercent: 0,
               };
             })
           : [],
@@ -438,39 +461,53 @@ const LineChartByTeamCompare = ({
       ];
       setMemberOptions(allMembers);
       setSelectedMembers([...allMembers.map((user) => Number(user.id))]);
+    } else {
+      setMemberOptions([]);
+      setSelectedMembers([]);
     }
   }, [allLabelUser]);
 
   // Handle listen to filter option changes
-  useEffect(() => {
-    setFilter({
+  const memoizedFilter = useMemo(() => {
+    return {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-      userIds: debouncedSelectedMembers,
+      userIds: selectedMembers?.filter(Boolean).join(','),
       largeCategoryId: selectedLarge?.value,
       mediumCategoryId: selectedMedium?.value,
       smallCategoryId: selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
       tagIds: orderingOptions?.tag_ids || [],
-    });
-    setCompareFilter({
-      fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
-      endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
-      userIds: debouncedSelectedMembers,
-      largeCategoryId: selectedLarge?.value,
-      mediumCategoryId: selectedMedium?.value,
-      smallCategoryId: selectedSmall?.value,
-      statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: `${selectedOrganization?.value}`,
-      tagIds: orderingOptions?.tag_ids || [],
-    });
+    };
   }, [
     startDate,
     endDate,
+    selectedMembers,
+    lineChartViewBy?.value,
+    selectedOrganization?.value,
+    selectedLarge?.value,
+    selectedMedium?.value,
+    selectedSmall?.value,
+    orderingOptions,
+  ]);
+
+  const memoizedCompareFilter = useMemo(() => {
+    return {
+      fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
+      endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
+      userIds: selectedMembers?.filter(Boolean).join(','),
+      largeCategoryId: selectedLarge?.value,
+      mediumCategoryId: selectedMedium?.value,
+      smallCategoryId: selectedSmall?.value,
+      statisticBy: `${lineChartViewBy?.value}`,
+      selectedOrganization: `${selectedOrganization?.value}`,
+      tagIds: orderingOptions?.tag_ids || [],
+    };
+  }, [
     startDateCompare,
     endDateCompare,
-    debouncedSelectedMembers,
+    selectedMembers,
     lineChartViewBy?.value,
     selectedOrganization?.value,
     selectedLarge?.value,
@@ -480,43 +517,118 @@ const LineChartByTeamCompare = ({
   ]);
 
   useEffect(() => {
-    if (!statisticTeamCategoryList || !statisticCategoryListTeamCompare) return;
-    let standardTableData: TableRowDetail[] = [];
-    let compareTableData: TableRowDetail[] = [];
-
-    if (selectedOrganization && !selectedLarge && !selectedMedium) {
-      standardTableData = buildTableDetail(
-        statisticTeamCategoryList.largeCategories,
-        StatisticChartType.STANDARD,
-      );
-      compareTableData = buildTableDetail(
-        statisticCategoryListTeamCompare.largeCategories,
-        StatisticChartType.COMPARE,
-      );
-    } else if (selectedOrganization && selectedLarge && !selectedMedium) {
-      standardTableData = buildTableDetail(
-        statisticTeamCategoryList.mediumCategories,
-        StatisticChartType.STANDARD,
-      );
-      compareTableData = buildTableDetail(
-        statisticCategoryListTeamCompare.mediumCategories,
-        StatisticChartType.COMPARE,
-      );
-    } else if (selectedOrganization && selectedLarge && selectedMedium) {
-      standardTableData = buildTableDetail(
-        statisticTeamCategoryList.smallCategories,
-        StatisticChartType.STANDARD,
-      );
-      compareTableData = buildTableDetail(
-        statisticCategoryListTeamCompare.smallCategories,
-        StatisticChartType.COMPARE,
-      );
+    if (isOrganizationChanging && selectedMembers.length > 0) {
+      setIsOrganizationChanging(false); // Done
     }
+  }, [selectedMembers, isOrganizationChanging]);
 
+  const debouncedFilter = useGenericDebounce(memoizedFilter, 1000);
+  const debouncedCompareFilter = useGenericDebounce(
+    memoizedCompareFilter,
+    1000,
+  );
+
+  useEffect(() => {
+    if (!isOrganizationChanging) {
+      setFilter(debouncedFilter); // Trigger API only when everything is ready
+      setCompareFilter(debouncedCompareFilter); // Trigger API only when everything is ready
+    }
+  }, [debouncedFilter, debouncedCompareFilter, isOrganizationChanging]);
+
+  // Get table info (statistic team standard categories)
+  const { isLoadingStatisticTableInTeamLineChart } =
+    useStatisticTableInTeamLineChart({
+      filter: {
+        fromDate: formatDateToYMD(startDate) || '',
+        endDate: formatDateToYMD(`${endDate}`) || '',
+        organizationIds: String(selectedOrganization?.value || ''),
+        largeCategoryId: selectedLarge?.value as number,
+        mediumCategoryId: selectedMedium?.value as number,
+        orderingOptions: orderingOptions,
+        userIds: debouncedSelectedMembers,
+      },
+      onSuccess: (data) => {
+        if (!data) return;
+        let tableDetail: TableRowDetail[] = [];
+
+        if (selectedOrganization && !selectedLarge && !selectedMedium) {
+          tableDetail = buildTableDetail(
+            data.largeCategories,
+            StatisticChartType.STANDARD,
+          );
+        } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+          tableDetail = buildTableDetail(
+            data.mediumCategories,
+            StatisticChartType.STANDARD,
+          );
+        } else if (selectedOrganization && selectedLarge && selectedMedium) {
+          tableDetail = buildTableDetail(
+            data.smallCategories,
+            StatisticChartType.STANDARD,
+          );
+        }
+
+        setStandardTableData(tableDetail);
+      },
+    });
+
+  // Get table info (statistic team compare categories)
+  const { isLoadingStatisticTableInTeamLineChartCompare } =
+    useStatisticTableInTeamLineChartCompare({
+      filter: {
+        fromDate: formatDateToYMD(startDateCompare) || '',
+        endDate: formatDateToYMD(`${endDateCompare}`) || '',
+        organizationIds: String(selectedOrganization?.value || ''),
+        largeCategoryId: selectedLarge?.value as number,
+        mediumCategoryId: selectedMedium?.value as number,
+        orderingOptions: orderingOptions,
+        userIds: debouncedSelectedMembers,
+      },
+      onSuccess: (data) => {
+        if (!data) return;
+        let tableDetail: TableRowDetail[] = [];
+
+        if (selectedOrganization && !selectedLarge && !selectedMedium) {
+          tableDetail = buildTableDetail(
+            data.largeCategories,
+            StatisticChartType.COMPARE,
+          );
+        } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+          tableDetail = buildTableDetail(
+            data.mediumCategories,
+            StatisticChartType.COMPARE,
+          );
+        } else if (selectedOrganization && selectedLarge && selectedMedium) {
+          tableDetail = buildTableDetail(
+            data.smallCategories,
+            StatisticChartType.COMPARE,
+          );
+        }
+
+        setCompareTableData(tableDetail);
+      },
+    });
+
+  useEffect(() => {
     const tableData = mergeCategories([
-      ...standardTableData,
-      ...compareTableData,
+      ...(standardTableData || []),
+      ...(compareTableData || []),
     ]);
+    const totalStandardDurationList = (standardTableData || [])
+      .map((item) => item.categoryDuration)
+      .filter(Boolean); // remove null, undefined, ''
+
+    const totalCompareDurationList = (compareTableData || [])
+      .map((item) => item.categoryDuration)
+      .filter(Boolean);
+
+    setTotalStandardDuration(
+      totalDurationsForStatistic(totalStandardDurationList),
+    );
+    setTotalCompareDuration(
+      totalDurationsForStatistic(totalCompareDurationList),
+    );
+
     setTableData(tableData);
     setCategoryCollapseStatuses(
       tableData.map((category) => {
@@ -527,15 +639,9 @@ const LineChartByTeamCompare = ({
       }),
     );
     handleCategorySelection(tableData);
-  }, [
-    statisticTeamCategoryList,
-    statisticCategoryListTeamCompare,
-    selectedOrganization,
-    selectedLarge,
-    selectedMedium,
-  ]);
+  }, [standardTableData, compareTableData]);
 
-  // Hide tooltip when mouse leave over 150px
+  // Hide tooltip when mouse leave over 80px
   useEffect(() => {
     let hideTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -561,7 +667,7 @@ const LineChartByTeamCompare = ({
         0,
       );
 
-      if (distance > 150) {
+      if (distance > 80) {
         if (!hideTimeout) {
           hideTimeout = setTimeout(() => {
             if (tooltipRef.current) {
@@ -579,7 +685,7 @@ const LineChartByTeamCompare = ({
           }, 250); // delay before hiding tooltip
         }
       } else {
-        // Mouse came back within 150px: cancel hide
+        // Mouse came back within 80px: cancel hide
         if (hideTimeout) {
           clearTimeout(hideTimeout);
           hideTimeout = null;
@@ -670,7 +776,14 @@ const LineChartByTeamCompare = ({
     );
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
-    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 60}px`;
+
+    const left = getSafeTooltipLeft({
+      offsetLeft,
+      caretX: tooltipModel.caretX,
+      tooltipWidth: 260,
+    });
+
+    tooltipEl.style.left = `${left - 30}px`;
     tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
     tooltipEl.style.opacity = '1';
     tooltipEl.style.display = 'block';
@@ -831,119 +944,126 @@ const LineChartByTeamCompare = ({
 
   // Set chart data, legend list after calling API
   useEffect(() => {
-    if (
-      statisticUserTaskDurationsList &&
+    const standardLabels: { name: string; color: string }[] = [];
+    const comparedLabels: { name: string; color: string }[] = [];
+    const standardDateLabels: string[] = [];
+    const compareDateLabels: string[] = [];
+    const datasets: any[] = [];
+
+    const standardDurationList =
+      statisticUserTaskDurationsList?.[0]?.durations || [];
+    standardDurationList.map((duration, index) => {
+      standardDateLabels.push(duration.startDate);
+      if (
+        index == standardDurationList.length - 1 &&
+        String(standardDurationList.at(-1)?.endDate) !=
+          String(standardDurationList.at(-1)?.startDate)
+      ) {
+        const endDate = standardDurationList.at(-1)?.endDate;
+        if (endDate) {
+          standardDateLabels.push(endDate);
+        }
+      }
+    });
+
+    const compareDurationList =
+      statisticUserTaskDurationsList?.[0]?.durations || [];
+    compareDurationList.map((duration, index) => {
+      compareDateLabels.push(duration.startDate);
+      if (
+        index == compareDurationList.length - 1 &&
+        String(compareDurationList.at(-1)?.endDate) !=
+          String(compareDurationList.at(-1)?.startDate)
+      ) {
+        const endDate = compareDurationList.at(-1)?.endDate;
+        if (endDate) {
+          compareDateLabels.push(endDate);
+        }
+      }
+    });
+
+    const generateDataWithAlignment = (
+      durations: any[],
+      compareDurations: any[],
+      type: string,
+      user: {
+        id: number;
+        fullName: string;
+        avatarColor: string;
+        avatar: string | null;
+      },
+    ) => {
+      const shownLabels = [...standardDateLabels];
+      if (standardDateLabels.length < compareDateLabels.length) {
+        const numOfHiddenLabels =
+          compareDateLabels.length - standardDateLabels.length;
+        for (let i = 0; i < numOfHiddenLabels; i++) {
+          shownLabels.push(`${i}`);
+        }
+      }
+      const data = shownLabels
+        .map((label, index) => {
+          let foundDuration;
+          let anotherDuration;
+          if (type == StatisticChartType.COMPARE) {
+            foundDuration = compareDurations[index];
+            anotherDuration = durations[index];
+          } else {
+            foundDuration = durations[index];
+            anotherDuration = compareDurations[index];
+          }
+
+          return foundDuration
+            ? {
+                x: label,
+                y: foundDuration.duration
+                  ? convertTimeToDecimal(foundDuration.duration)
+                  : 0,
+                startDate: foundDuration.startDate,
+                endDate: foundDuration.endDate,
+                duration: foundDuration.duration,
+                anotherStartDate: anotherDuration
+                  ? anotherDuration.startDate
+                  : null,
+                anotherEndDate: anotherDuration
+                  ? anotherDuration.endDate
+                  : null,
+                anotherDuration: anotherDuration
+                  ? anotherDuration.duration
+                  : null,
+                type,
+                user,
+              }
+            : null;
+        })
+        .filter((dataPoint) => dataPoint !== null);
+
+      // Add one more item with the same data as the last one
+      if (durations.length > 0 && shownLabels.length > 0) {
+        const lastItem = data[data.length - 1];
+        if (
+          String(durations.at(-1).startDate) != String(durations.at(-1).endDate)
+        ) {
+          const clonedItem = {
+            ...lastItem,
+            x: shownLabels.at(-1)!,
+          };
+          data.push(clonedItem);
+        }
+      }
+      return data;
+    };
+
+    statisticUserTaskDurationsList &&
       statisticUserTaskDurationsList?.length > 0 &&
-      statisticUserTaskDurationsCompareList &&
-      statisticUserTaskDurationsCompareList?.length > 0
-    ) {
-      const standardLabels: { name: string; color: string }[] = [];
-      const comparedLabels: { name: string; color: string }[] = [];
-      const standardDateLabels: string[] = [];
-      const compareDateLabels: string[] = [];
-      const datasets: any[] = [];
-      const totalStandardDurationList: string[] = []
-      const totalCompareDurationList: string[] = []
-
-      const standardDurationList =
-        statisticUserTaskDurationsList[0]?.durations ?? [];
-      standardDurationList.map((duration, index) => {
-        standardDateLabels.push(duration.startDate);
-        if (
-          index === standardDurationList.length - 1 &&
-          String(standardDurationList.at(-1)?.endDate) !=
-            String(standardDurationList.at(-1)?.startDate)
-        ) {
-          const endDate = standardDurationList.at(-1)?.endDate;
-          if (endDate) {
-            standardDateLabels.push(endDate);
-          }
-        }
-      });
-
-      const compareDurationList = statisticUserTaskDurationsList[0].durations;
-      compareDurationList.map((duration, index) => {
-        compareDateLabels.push(duration.startDate);
-        if (
-          index === compareDurationList.length - 1 &&
-          String(compareDurationList.at(-1)?.endDate) !=
-            String(compareDurationList.at(-1)?.startDate)
-        ) {
-          const endDate = compareDurationList.at(-1)?.endDate;
-          if (endDate) {
-            compareDateLabels.push(endDate);
-          }
-        }
-      });
-
-      const generateDataWithAlignment = (
-        durations: any[],
-        compareDurations: any[],
-        type: string,
-        user: {
-          id: number;
-          fullName: string;
-          avatarColor: string;
-          avatar: string | null;
-        },
-      ) => {
-        const shownLabels = [...standardDateLabels];
-        if (standardDateLabels.length < compareDateLabels.length) {
-          const numOfHiddenLabels =
-            compareDateLabels.length - standardDateLabels.length;
-          for (let i = 0; i < numOfHiddenLabels; i++) {
-            shownLabels.push(`${i}`);
-          }
-        }
-        const data = shownLabels
-          .map((label, index) => {
-            let foundDuration;
-            let anotherDuration;
-            if (type == StatisticChartType.COMPARE) {
-              foundDuration = compareDurations[index];
-              anotherDuration = durations[index];
-            } else {
-              foundDuration = durations[index];
-              anotherDuration = compareDurations[index];
-            }
-
-            return foundDuration
-              ? {
-                  x: label,
-                  y: foundDuration.duration
-                    ? convertTimeToDecimal(foundDuration.duration)
-                    : 0,
-                  startDate: foundDuration.startDate,
-                  endDate: foundDuration.endDate,
-                  duration: foundDuration.duration,
-                  anotherStartDate: anotherDuration
-                    ? anotherDuration.startDate
-                    : null,
-                  anotherEndDate: anotherDuration
-                    ? anotherDuration.endDate
-                    : null,
-                  anotherDuration: anotherDuration
-                    ? anotherDuration.duration
-                    : null,
-                  type,
-                  user,
-                }
-              : null;
-          })
-          .filter((dataPoint) => dataPoint !== null);
-        return data;
-      };
-
       statisticUserTaskDurationsList.forEach((userTaskDuration) => {
         standardLabels.push({
           color: userTaskDuration.user.avatarColor || getRandomColor(),
           name: userTaskDuration.user.fullName,
         });
-        const compareUser = statisticUserTaskDurationsCompareList.find(
+        const compareUser = statisticUserTaskDurationsCompareList?.find(
           (c) => c.user.id == userTaskDuration.user.id,
         );
-
-        totalStandardDurationList.push(userTaskDuration.totalDuration)
 
         datasets.push({
           label: userTaskDuration.user.fullName,
@@ -967,15 +1087,16 @@ const LineChartByTeamCompare = ({
         });
       });
 
+    statisticUserTaskDurationsCompareList &&
+      statisticUserTaskDurationsCompareList?.length > 0 &&
       statisticUserTaskDurationsCompareList.forEach((userTaskDuration) => {
         comparedLabels.push({
           color: userTaskDuration.user.avatarColor || getRandomColor(),
           name: userTaskDuration.user.fullName,
         });
-        const standardUser = statisticUserTaskDurationsList.find(
+        const standardUser = statisticUserTaskDurationsList?.find(
           (c) => c.user.id == userTaskDuration.user.id,
         );
-        totalCompareDurationList.push(userTaskDuration.totalDuration)
         datasets.push({
           label: userTaskDuration.user.fullName,
           data: generateDataWithAlignment(
@@ -999,36 +1120,15 @@ const LineChartByTeamCompare = ({
         });
       });
 
-      setStandardDateLabels(standardDateLabels);
-      setCompareDateLabels(compareDateLabels);
-      setLineChartData({
-        labels: standardDateLabels,
-        datasets: datasets,
-      });
-      setStandardLegendList(standardLabels);
-      setCompareLegendList(comparedLabels);
-      setTotalStandardDuration(totalDurationsForStatistic(totalStandardDurationList))
-      setTotalCompareDuration(totalDurationsForStatistic(totalCompareDurationList))
-    } else {
-      setStandardDateLabels([]);
-      setCompareDateLabels([]);
-      setLineChartData({
-        labels: [],
-        datasets: [],
-      });
-      setStandardLegendList([]);
-      setCompareLegendList([]);
-      setTotalStandardDuration('00:00:00')
-      setTotalCompareDuration('00:00:00')
-    }
-  }, [
-    statisticUserTaskDurationsList,
-    statisticUserTaskDurationsCompareList,
-    selectedOrganization,
-    selectedLarge,
-    selectedMedium,
-    selectedCategory?.name,
-  ]);
+    setStandardDateLabels(standardDateLabels);
+    setCompareDateLabels(compareDateLabels);
+    setLineChartData({
+      labels: standardDateLabels,
+      datasets: datasets,
+    });
+    setStandardLegendList(standardLabels);
+    setCompareLegendList(comparedLabels);
+  }, [statisticUserTaskDurationsList, statisticUserTaskDurationsCompareList]);
 
   // Sort by percent difference
   const sortByPercentDifference = (
@@ -1101,7 +1201,7 @@ const LineChartByTeamCompare = ({
         return (
           <div className="flex items-start px-[18px]">
             <RadioButton
-              name="categoryName"
+              name="lineChartCategoryName"
               isChecked={info.row.original.categoryId == selectedCategory?.id}
               onChange={(e: any) => {
                 if (e) {
@@ -1286,7 +1386,7 @@ const LineChartByTeamCompare = ({
     },
     {
       accessorKey: 'categoryDuration',
-      size: 40,
+      size: 50,
       header: () => {
         return (
           <div
@@ -1428,7 +1528,7 @@ const LineChartByTeamCompare = ({
     },
     {
       accessorKey: 'categoryPercent',
-      size: 20,
+      size: 30,
       header: () => {
         return (
           <div
@@ -1725,7 +1825,11 @@ const LineChartByTeamCompare = ({
                     classNameOption="!text-sm"
                     options={listOptionsOrganization}
                     selectedOption={selectedOrganization || undefined}
-                    onChange={(data) => handleSelectOrganization(data)}
+                    onChange={(data) => {
+                      setSelectedMembers([]);
+                      setIsOrganizationChanging(true);
+                      handleSelectOrganization(data);
+                    }}
                   />
                 </div>
               </div>
@@ -1845,81 +1949,82 @@ const LineChartByTeamCompare = ({
               </div>
             </div>
           </div>
-          <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">
-            表示させるメンバー
-          </p>
-          <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[10px]">
-            {memberOptions?.length > 0 &&
-              memberOptions.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center gap-2 cursor-pointer">
-                  <div className="w-4">
-                    <CustomStatisticUserCheckbox
-                      id={String(member.id)}
-                      isChecked={selectedMembers.includes(member.id)}
-                      color={member.color}
-                      onChange={(state) => {
-                        if (state) {
-                          setSelectedMembers((prev) => {
-                            if (member.id) {
-                              const foundMember = selectedMembers.find(
-                                (memberId) => memberId == member.id,
-                              );
-                              if (!foundMember) {
-                                return [...prev, member.id];
-                              }
-                              return [...prev];
-                            } else {
-                              return memberOptions.map((member) => member.id);
-                            }
-                          });
-                        } else {
-                          setSelectedMembers((prev) => {
-                            if (member.id) {
-                              const foundMember = selectedMembers.find(
-                                (memberId) => memberId == member.id,
-                              );
-                              if (foundMember) {
-                                return [...prev].filter(
-                                  (memberId) =>
-                                    memberId && memberId != member.id,
+          {memberOptions?.length > 0 ? (
+            <>
+              <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">
+                表示させるメンバー
+              </p>
+              <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[10px]">
+                {memberOptions.map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center gap-2 cursor-pointer">
+                    <div className="w-4">
+                      <CustomStatisticUserCheckbox
+                        id={String(member.id)}
+                        isChecked={selectedMembers.includes(member.id)}
+                        color={member.color}
+                        onChange={(state) => {
+                          if (state) {
+                            setSelectedMembers((prev) => {
+                              if (member.id) {
+                                const foundMember = selectedMembers.find(
+                                  (memberId) => memberId == member.id,
                                 );
+                                if (!foundMember) {
+                                  return [...prev, member.id];
+                                }
+                                return [...prev];
+                              } else {
+                                return memberOptions.map((member) => member.id);
                               }
-                              return [...prev];
-                            } else {
-                              return [];
-                            }
-                          });
-                        }
-                      }}
-                    />
-                  </div>
-                  {member.id ? (
-                    <div className="relative top-[2px]">
-                      <CustomUserAvatar
-                        avatarUrl={member?.avatarUrl || ''}
-                        avatarColor={member?.color || ''}
-                        size={30}
+                            });
+                          } else {
+                            setSelectedMembers((prev) => {
+                              if (member.id) {
+                                const foundMember = selectedMembers.find(
+                                  (memberId) => memberId == member.id,
+                                );
+                                if (foundMember) {
+                                  return [...prev].filter(
+                                    (memberId) =>
+                                      memberId && memberId != member.id,
+                                  );
+                                }
+                                return [...prev];
+                              } else {
+                                return [];
+                              }
+                            });
+                          }
+                        }}
                       />
                     </div>
-                  ) : (
-                    <></>
-                  )}
+                    {member.id ? (
+                      <div className="relative top-[2px]">
+                        <CustomUserAvatar
+                          avatarUrl={member?.avatarUrl || ''}
+                          avatarColor={member?.color || ''}
+                          size={30}
+                        />
+                      </div>
+                    ) : (
+                      <></>
+                    )}
 
-                  <span className="break-all max-w-[800px] w-full truncate text-sm">
-                    {member.fullName}
-                  </span>
-                </div>
-              ))}
-          </div>
-          {isLoadingStatisticUserTaskDurationsList &&
-          isLoadingStatisticUserTaskDurationsCompareList ? (
-            <RowSkeleton
-              numberOfRows={1}
-              className={`!h-[395px] ${expanded && 'w-[calc(100%_-_60px)]'} mx-auto`}
-            />
+                    <span className="break-all max-w-[800px] w-full truncate text-sm">
+                      {member.fullName}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
+            <></>
+          )}
+
+          {!isLoadingStatisticUserTaskDurationsList &&
+          !isLoadingStatisticUserTaskDurationsCompareList ? (
             <div
               style={{ position: 'relative' }}
               className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
@@ -1934,6 +2039,11 @@ const LineChartByTeamCompare = ({
                 style={{ position: 'absolute', opacity: 0 }}
               />
             </div>
+          ) : (
+            <RowSkeleton
+              numberOfRows={1}
+              className={`!h-[395px] w-[calc(100%_-_60px)] mx-auto`}
+            />
           )}
 
           <div className="px-[30px]">
@@ -1977,53 +2087,61 @@ const LineChartByTeamCompare = ({
                 </>
               )}
 
-            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                    {headerGroup.headers.map((header, index) => (
-                      <th
-                        key={header.id}
-                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
-                        style={{
-                          width: header.getSize(),
-                          minWidth: header.getSize(),
-                          maxWidth: header.getSize(),
-                        }}
-                        onClick={header.column.getToggleSortingHandler()}>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    {row.getVisibleCells().map((cell, index) => (
-                      <td
-                        key={cell.id}
-                        style={{
-                          width: cell.column.getSize(),
-                          minWidth: cell.column.getSize(),
-                          maxWidth: cell.column.getSize(),
-                        }}
-                        className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </TableBody>
-            </Table>
+            {!isLoadingStatisticTableInTeamLineChart &&
+            !isLoadingStatisticTableInTeamLineChartCompare ? (
+              <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+                <thead>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr
+                      key={headerGroup.id}
+                      className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                      {headerGroup.headers.map((header, index) => (
+                        <th
+                          key={header.id}
+                          className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                          style={{
+                            width: header.getSize(),
+                            minWidth: header.getSize(),
+                            maxWidth: header.getSize(),
+                          }}
+                          onClick={header.column.getToggleSortingHandler()}>
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <TableBody>
+                  {table.getRowModel().rows.map((row) => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+                      {row.getVisibleCells().map((cell, index) => (
+                        <td
+                          key={cell.id}
+                          style={{
+                            width: cell.column.getSize(),
+                            minWidth: cell.column.getSize(),
+                            maxWidth: cell.column.getSize(),
+                          }}
+                          className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <RowSkeleton
+                numberOfRows={1}
+                className={`!h-[200px] mt-5 w-full mx-auto`}
+              />
+            )}
           </div>
         </div>
       )}

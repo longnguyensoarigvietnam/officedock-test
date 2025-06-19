@@ -9,6 +9,7 @@ import {
 } from 'react';
 
 import {
+  Task,
   TaskActualCalculationType,
   TaskDuration,
   TaskFieldActionStart,
@@ -125,12 +126,24 @@ interface ContextValue {
   handleZoomOutKanban: () => void;
   calculateFontSizeTitle: () => number;
   calculateFontSizeContent: () => number;
-  displayHederDateStart: Date;
-  displayHederDateEnd: Date;
+  displayHeaderDateStart: Date;
+  displayHeaderDateEnd: Date;
   setDisplayHeaderDayStart: Dispatch<SetStateAction<Date>>;
   setDisplayHeaderDayEnd: Dispatch<SetStateAction<Date>>;
   isInteracting: boolean;
   setIsInteracting: Dispatch<SetStateAction<boolean>>;
+  taskAddEmpty: Task | null;
+  setTaskAddEmpty: Dispatch<SetStateAction<Task | null>>;
+  dataActualEdit: {
+    uuid: string;
+    startDate: string;
+  };
+  setDataActualEdit: Dispatch<
+    SetStateAction<{
+      uuid: string;
+      startDate: string;
+    }>
+  >;
 }
 
 const defaultValue: ContextValue = {
@@ -239,12 +252,19 @@ const defaultValue: ContextValue = {
   },
   setSelectedOptionZoom: () => {},
   setOrderingOptions: () => {},
-  displayHederDateStart: new Date(),
-  displayHederDateEnd: new Date(),
+  displayHeaderDateStart: new Date(),
+  displayHeaderDateEnd: new Date(),
   setDisplayHeaderDayStart: () => {},
   setDisplayHeaderDayEnd: () => {},
   isInteracting: false,
   setIsInteracting: () => {},
+  taskAddEmpty: null,
+  setTaskAddEmpty: () => {},
+  dataActualEdit: {
+    uuid: '',
+    startDate: '',
+  },
+  setDataActualEdit: () => {},
 };
 
 export const TaskContext = createContext<ContextValue>(defaultValue);
@@ -266,6 +286,13 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   }>({
     id: '',
     type: '',
+  });
+  const [dataActualEdit, setDataActualEdit] = useState<{
+    uuid: string;
+    startDate: string;
+  }>({
+    uuid: '',
+    startDate: '',
   });
 
   const [dataClickTask, setDataClickTask] = useState<{
@@ -345,15 +372,17 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       value: 100,
     });
 
-  const [displayHederDateStart, setDisplayHeaderDayStart] = useState<Date>(
+  const [displayHeaderDateStart, setDisplayHeaderDayStart] = useState<Date>(
     new Date(),
   );
-  const [displayHederDateEnd, setDisplayHeaderDayEnd] = useState<Date>(
+  const [displayHeaderDateEnd, setDisplayHeaderDayEnd] = useState<Date>(
     new Date(),
   );
 
   const [dataActualAddSchedule, setDataActualAddSchedule] =
     useState<TaskActualCalculationType>();
+
+  const [taskAddEmpty, setTaskAddEmpty] = useState<Task | null>(null);
 
   const [idTaskEditSelected, setIdTaskEditSelected] = useState<string>('');
   const [showEditTaskModal, setShowEditTaskModal] = useState<boolean>(false);
@@ -453,12 +482,16 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     calculateFontSizeContent,
     setSelectedOptionZoom,
     setOrderingOptions,
-    displayHederDateStart,
-    displayHederDateEnd,
+    displayHeaderDateStart,
+    displayHeaderDateEnd,
     setDisplayHeaderDayStart,
     setDisplayHeaderDayEnd,
     isInteracting,
     setIsInteracting,
+    taskAddEmpty,
+    setTaskAddEmpty,
+    dataActualEdit,
+    setDataActualEdit,
   };
 
   return (

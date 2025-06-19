@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { AxiosError } from 'axios';
 import { useMutation } from 'react-query';
 import { useRouter } from 'next/navigation';
@@ -34,14 +34,23 @@ interface rowDataType {
   actions: PermissionType | string;
 }
 const CreateRoleForm = () => {
+  // Role input and error
   const [roleName, setRoleName] = useState<string>('');
-  const [error, setError] = useState('');
-  const router = useRouter();
-  const { showToast } = useToast();
   const [rows, setRows] = useState<rowDataType[]>([]);
-  const { setIsLoading } = useContext(LoadingContext);
-  const [isSubmit, setIsSubmit] = useState(false);
+  const [error, setError] = useState('');
+
+  // Router
+  const router = useRouter();
+
+  // Toasts
+  const { showToast } = useToast();
   const showErrorToast = useErrorToast();
+
+  // Loading
+  const { setIsLoading } = useContext(LoadingContext);
+
+  // Ref
+  const isCreatingRef = useRef(false);
 
   const getDefaultScreenAction = (screenName: string) => {
     if (screenName == ScreenName.TEAM_DOCK) return PermissionType.TEAM_AND_SUB;
@@ -85,16 +94,20 @@ const CreateRoleForm = () => {
     'postCreateRole',
     handleCreateRole,
     {
+      onMutate: () => {
+        isCreatingRef.current = true;
+      },
       onSuccess: async () => {
         showToast({
           variant: 'success',
           description: SUCCESS_SAVE_MESSAGE,
         });
         router.push(pageRouters.ROLES_MANAGEMENT.href);
+        isCreatingRef.current = false;
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_CREATE_MESSAGE);
-        setIsSubmit(false);
+        isCreatingRef.current = false;
       },
       onSettled: () => {
         setIsLoading(false);
@@ -104,7 +117,7 @@ const CreateRoleForm = () => {
 
   const handleConfirmCreateRole = async (e: any) => {
     e.preventDefault();
-    if (isSubmit) return;
+    if (isCreatingRef.current) return;
     if (roleName?.trim() == '') {
       setError(ROLE_NAME_REQUIRED_MESSAGE);
       return;
@@ -128,7 +141,6 @@ const CreateRoleForm = () => {
     if (permissions['organization']) {
       permissions['organizationHierarchy'] = { ...permissions['organization'] };
     }
-    setIsSubmit(true);
     await createNewRole({
       name: roleName,
       permissions,

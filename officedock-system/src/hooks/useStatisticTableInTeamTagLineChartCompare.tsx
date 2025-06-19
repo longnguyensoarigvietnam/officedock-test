@@ -18,13 +18,11 @@ interface FilterProps {
   mediumCategoryId?: number;
   smallCategoryId?: number;
   organizationIds?: string;
-  orderingOptions: {
-    tag_ids: OptionDropdownType[];
-  } | null;
+  selectedTags: OptionDropdownType[]
   userIds: string;
 }
 
-const useStatisticTableInTeamLineChartCompare = ({
+const useStatisticTableInTeamTagLineChartCompare = ({
   filter,
   onSuccess,
   onError,
@@ -36,9 +34,9 @@ const useStatisticTableInTeamLineChartCompare = ({
   const { data: session } = useSession();
   const token = session?.accessToken;
 
-  // Handle call API get statistic table in team line chart
-  const getStatisticTableInTeamLineChartCompare = async () => {
-    if (!filter?.organizationIds || !filter.userIds) return [];
+  // Handle call API get statistic table in team tag line chart
+  const getStatisticTableInTeamTagLineChartCompare = async () => {
+    if (!filter?.organizationIds || !filter?.userIds) return [];
     const queryParams = [];
     if (filter.fromDate) {
       queryParams.push(`from_date=${filter.fromDate}`);
@@ -58,16 +56,16 @@ const useStatisticTableInTeamLineChartCompare = ({
     if (filter.userIds) {
       queryParams.push(`user_ids=${filter.userIds}`);
     }
-    if (filter.orderingOptions?.tag_ids) {
+    if (filter.selectedTags) {
       queryParams.push(
-        `tag_ids=${filter?.orderingOptions?.tag_ids.map((item) => item.value).join(',')}`,
+        `tag_ids=${filter?.selectedTags.map((item) => item.value).join(',')}`,
       );
     }
 
     const queryString =
       queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
 
-    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM(parseInt(filter?.organizationIds))}${queryString}`;
+    const apiUrl = `${apiRouters.STATISTICS_TAGS_TEAM(parseInt(filter?.organizationIds))}${queryString}`;
 
     const { data } = await api.get<StatisticsCategories[]>(apiUrl);
     return data;
@@ -75,12 +73,12 @@ const useStatisticTableInTeamLineChartCompare = ({
 
   // Handle API get statistic category list
   const {
-    data: statisticTableInTeamLineChartCompare,
-    refetch: refetchStatisticTableInTeamLineChartCompare,
-    isLoading: isLoadingStatisticTableInTeamLineChartCompare,
+    data: statisticTableInTeamTagLineChartCompare,
+    refetch: refetchStatisticTableInTeamTagLineChartCompare,
+    isLoading: isLoadingStatisticTableInTeamTagLineChartCompare,
   } = useQuery({
-    queryKey: ['getStatisticTableInTeamLineChartCompare', [filter]],
-    queryFn: getStatisticTableInTeamLineChartCompare,
+    queryKey: ['getStatisticTableInTeamTagLineChartCompare', [filter]],
+    queryFn: getStatisticTableInTeamTagLineChartCompare,
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,
@@ -94,10 +92,10 @@ const useStatisticTableInTeamLineChartCompare = ({
   });
 
   return {
-    statisticTableInTeamLineChartCompare,
-    refetchStatisticTableInTeamLineChartCompare,
-    isLoadingStatisticTableInTeamLineChartCompare,
+    statisticTableInTeamTagLineChartCompare,
+    refetchStatisticTableInTeamTagLineChartCompare,
+    isLoadingStatisticTableInTeamTagLineChartCompare,
   };
 };
 
-export default useStatisticTableInTeamLineChartCompare;
+export default useStatisticTableInTeamTagLineChartCompare;

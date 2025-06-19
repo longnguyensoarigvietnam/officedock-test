@@ -63,3 +63,8 @@ export interface DateInfo {
   day: number;
   weekday: string;
 }
+
+export type ChangeTextAreaProps = {
+  editorRef: React.RefObject<HTMLDivElement>;
+  onChange?: (html: string) => void;
+};

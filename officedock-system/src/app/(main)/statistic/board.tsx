@@ -16,6 +16,7 @@ import LineChart from '@components/statistic/category/LineChart';
 import StackedAreaChart from '@components/statistic/category/StackedAreaChart';
 import LineChartCompare from '@components/statistic/category/compare/LineChartCompare';
 
+import { ALL_TEAM_STATISTIC } from '@constants';
 import { pageRouters } from '@constants/routers';
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 import useStatisticCategoriesCompare from '@hooks/useStatisticCategoriesCompare';
@@ -92,7 +93,12 @@ const StatisticBoard = () => {
             label: stat.LARGE.name,
           }),
         );
-        setLargeOptions(largeCategories);
+        // If organization is all team then return here
+        if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+          setLargeOptions([]);
+        } else {
+          setLargeOptions(largeCategories);
+        }
       } else {
         setLargeOptions([]);
       }
@@ -231,6 +237,7 @@ const StatisticBoard = () => {
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === data.value,
     );
+
     if (organization) {
       const largeCategories = organization.statisticCategories.map((stat) => ({
         value: stat.LARGE.id,
@@ -245,11 +252,15 @@ const StatisticBoard = () => {
 
       setSelectedTags([]);
       setTagsOptions(optionsTagList);
-      setLargeOptions(largeCategories);
+      // If organization is all team then return here
+      if (data?.value === ALL_TEAM_STATISTIC) {
+        setLargeOptions([]);
+      } else {
+        setLargeOptions(largeCategories);
+      }
     } else {
       setLargeOptions([]);
     }
-    setMediumOptions([]);
   };
   // Handle Choose organization with setup options medium
   const handleSelectOrganizationCustom = (data: OptionDropdownType) => {
@@ -261,6 +272,7 @@ const StatisticBoard = () => {
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === data.value,
     );
+
     if (organization) {
       const largeCategories = organization.statisticCategories.map((stat) => ({
         value: stat.LARGE.id,
@@ -272,9 +284,14 @@ const StatisticBoard = () => {
       }));
       setCurrentPage(1);
 
-      setSelectedTags([]);
+      // setSelectedTags([]);
       setTagsOptions(optionsTagList);
-      setLargeOptions(largeCategories);
+      // If organization is all team then return here
+      if (data?.value === ALL_TEAM_STATISTIC) {
+        setLargeOptions([]);
+      } else {
+        setLargeOptions(largeCategories);
+      }
     } else {
       setLargeOptions([]);
     }

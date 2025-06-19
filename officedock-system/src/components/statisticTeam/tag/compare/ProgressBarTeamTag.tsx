@@ -86,26 +86,26 @@ function buildUserCompareData(
         ? {
             user: userA.user,
             tasks: userA.tasks,
-            percent: `${userA.percent}%`,
+            percent: `${userA.percent}`,
             duration: userA.duration,
           }
         : {
             user: userB!.user,
             tasks: [],
-            percent: '0%',
+            percent: '0',
             duration: '00:00:00',
           },
       userCompare: userB
         ? {
             user: userB.user,
             tasks: userB.tasks,
-            percent: `${userB.percent}%`,
+            percent: `${userB.percent}`,
             duration: userB.duration,
           }
         : {
             user: userA!.user,
             tasks: [],
-            percent: '0%',
+            percent: '0',
             duration: '00:00:00',
           },
     };
@@ -125,7 +125,7 @@ const ProgressBarTeamTagCompare = ({
   handleClickChart,
   handleClickTooltip,
 }: ProgressBarProps) => {
-  const [isExtendUser, setExtendUser] = useState(true);
+  const [isExtendUser, setExtendUser] = useState(false);
 
   const userCompareRows = buildUserCompareData(item, itemCompare);
 
@@ -562,7 +562,7 @@ const ProgressBarTeamTagCompare = ({
                       </span>
                     </div>
                     <div className="flex items-center gap-[10px] font-normal text-base mt-[10px] mb-2">
-                      <span>{itemUser.user.percent}</span>
+                      <span>{itemUser.user.percent}%</span>
                       <span>
                         {itemUser.user.duration &&
                           formatTimeToJapanese(itemUser.user.duration)}
@@ -651,7 +651,7 @@ const ProgressBarTeamTagCompare = ({
                       </span>
                     </div>
                     <div className="flex items-center gap-[10px] font-normal text-base mt-[10px] mb-2">
-                      <span>{itemUser.userCompare.percent}</span>
+                      <span>{itemUser.userCompare.percent}%</span>
                       <span>
                         {itemUser.userCompare.duration &&
                           formatTimeToJapanese(itemUser.userCompare.duration)}

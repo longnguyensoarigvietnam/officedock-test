@@ -62,8 +62,7 @@ const useStatisticCategoriesTeamCompare = ({
       filter?.smallCategoryId
         ? `&small_category_id=${filter.smallCategoryId}`
         : ''
-    }${filter?.orderingOptions?.tag_ids ? `&tag_ids=${filter?.orderingOptions?.tag_ids.map((item) => item.value).join(',')}` : ''}
-    ${filter?.orderingOptions?.user_ids ? `&user_ids=${filter?.orderingOptions?.user_ids.map((item) => item.value).join(',')}` : ''}`;
+    }${filter?.orderingOptions?.tag_ids ? `&tag_ids=${filter?.orderingOptions?.tag_ids.map((item) => item.value).join(',')}` : ''}${filter?.orderingOptions?.user_ids ? `&user_ids=${filter?.orderingOptions?.user_ids.map((item) => item.value).join(',')}` : ''}`;
 
     const { data } = await api.get<StatisticsCategories[]>(apiUrl);
     return data;
