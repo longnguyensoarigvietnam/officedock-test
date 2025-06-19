@@ -647,13 +647,18 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             )
 
         start_of_today = datetime.combine(timezone.now().date(), time.min)
-
-        # Get current task running
-        task_running = user.task_durations.filter(
-            started_at__gte=start_of_today,
-            task__id=task_id,
-            schedule__id=schedule_id,
-        ).last()
+        if task_id or schedule_id:
+            # Get current task running
+            task_running = user.task_durations.filter(
+                started_at__gte=start_of_today,
+                task__id=task_id,
+                schedule__id=schedule_id,
+            ).last()
+        else:
+            # Get current task running
+            task_running = user.task_durations.filter(
+                started_at__gte=start_of_today,
+            ).last()
         if not task_running:
             return self.response_ok(data)
         current_duration_start = task_running.task or task_running.schedule
@@ -809,8 +814,6 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 description=BasePagination.page_size_query_description,
             ),
             OpenApiParameter("user_id", type=int),
-            OpenApiParameter("task_id", type=int),
-            OpenApiParameter("created_at", type=datetime),
         ]
     )
     @action(
@@ -824,8 +827,6 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         Get data options tasks and schedules by user
         """
         user_id = request.query_params.get("user_id")
-        task_id = request.query_params.get("task_id")
-        created_at = request.query_params.get("created_at")
 
         # Validate user_id
         if not user_id:
@@ -857,14 +858,6 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             key=lambda x: (x["created_at"], x["id"]),
             reverse=True,
         )
-        if task_id:
-            task_id = int(task_id)
-            created_at = datetime.fromisoformat(created_at)
-            merged_qs = [
-                x
-                for x in merged_qs
-                if x["created_at"] < created_at or x["id"] < task_id
-            ]
 
         paginator = self.pagination_class()
         paginated_data = paginator.paginate_queryset(merged_qs, request)
