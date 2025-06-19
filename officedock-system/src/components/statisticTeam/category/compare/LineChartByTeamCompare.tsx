@@ -2,6 +2,7 @@ import React, {
   Fragment,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -84,6 +85,7 @@ import useStatisticUserTaskDurationsCompare from '@hooks/useStatisticUserTaskDur
 import useDebounceText from '@hooks/useDebounceText';
 import useStatisticTableInTeamLineChart from '@hooks/useStatisticTableInTeamLineChart';
 import useStatisticTableInTeamLineChartCompare from '@hooks/useStatisticTableInTeamLineChartCompare';
+import { useGenericDebounce } from '@hooks/useGenericDebounce';
 
 ChartJS.register(
   CategoryScale,
@@ -195,6 +197,7 @@ const LineChartByTeamCompare = ({
     id: number;
     name: string;
   } | null>(null);
+  const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
 
   // Filter options
   const [filter, setFilter] = useState({
@@ -465,35 +468,22 @@ const LineChartByTeamCompare = ({
   }, [allLabelUser]);
 
   // Handle listen to filter option changes
-  useEffect(() => {
-    setFilter({
+  const memoizedFilter = useMemo(() => {
+    return {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-      userIds: debouncedSelectedMembers,
+      userIds: selectedMembers?.filter(Boolean).join(','),
       largeCategoryId: selectedLarge?.value,
       mediumCategoryId: selectedMedium?.value,
       smallCategoryId: selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
       tagIds: orderingOptions?.tag_ids || [],
-    });
-    setCompareFilter({
-      fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
-      endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
-      userIds: debouncedSelectedMembers,
-      largeCategoryId: selectedLarge?.value,
-      mediumCategoryId: selectedMedium?.value,
-      smallCategoryId: selectedSmall?.value,
-      statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: `${selectedOrganization?.value}`,
-      tagIds: orderingOptions?.tag_ids || [],
-    });
+    };
   }, [
     startDate,
     endDate,
-    startDateCompare,
-    endDateCompare,
-    debouncedSelectedMembers,
+    selectedMembers,
     lineChartViewBy?.value,
     selectedOrganization?.value,
     selectedLarge?.value,
@@ -502,82 +492,127 @@ const LineChartByTeamCompare = ({
     orderingOptions,
   ]);
 
+  const memoizedCompareFilter = useMemo(() => {
+    return {
+      fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
+      endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
+      userIds: selectedMembers?.filter(Boolean).join(','),
+      largeCategoryId: selectedLarge?.value,
+      mediumCategoryId: selectedMedium?.value,
+      smallCategoryId: selectedSmall?.value,
+      statisticBy: `${lineChartViewBy?.value}`,
+      selectedOrganization: `${selectedOrganization?.value}`,
+      tagIds: orderingOptions?.tag_ids || [],
+    };
+  }, [
+    startDateCompare,
+    endDateCompare,
+    selectedMembers,
+    lineChartViewBy?.value,
+    selectedOrganization?.value,
+    selectedLarge?.value,
+    selectedMedium?.value,
+    selectedSmall?.value,
+    orderingOptions,
+  ]);
+
+  useEffect(() => {
+    if (isOrganizationChanging && selectedMembers.length > 0) {
+      setIsOrganizationChanging(false); // Done
+    }
+  }, [selectedMembers, isOrganizationChanging]);
+
+  const debouncedFilter = useGenericDebounce(memoizedFilter, 1000);
+  const debouncedCompareFilter = useGenericDebounce(
+    memoizedCompareFilter,
+    1000,
+  );
+
+  useEffect(() => {
+    if (!isOrganizationChanging) {
+      setFilter(debouncedFilter); // Trigger API only when everything is ready
+      setCompareFilter(debouncedCompareFilter); // Trigger API only when everything is ready
+    }
+  }, [debouncedFilter, debouncedCompareFilter, isOrganizationChanging]);
+
   // Get table info (statistic team standard categories)
-  useStatisticTableInTeamLineChart({
-    filter: {
-      fromDate: formatDateToYMD(startDate) || '',
-      endDate: formatDateToYMD(`${endDate}`) || '',
-      organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value as number,
-      mediumCategoryId: selectedMedium?.value as number,
-      orderingOptions: orderingOptions,
-      userIds: debouncedSelectedMembers,
-    },
-    onSuccess: (data) => {
-      if (!data) return;
-      let tableDetail: TableRowDetail[] = [];
+  const { isLoadingStatisticTableInTeamLineChart } =
+    useStatisticTableInTeamLineChart({
+      filter: {
+        fromDate: formatDateToYMD(startDate) || '',
+        endDate: formatDateToYMD(`${endDate}`) || '',
+        organizationIds: String(selectedOrganization?.value || ''),
+        largeCategoryId: selectedLarge?.value as number,
+        mediumCategoryId: selectedMedium?.value as number,
+        orderingOptions: orderingOptions,
+        userIds: debouncedSelectedMembers,
+      },
+      onSuccess: (data) => {
+        if (!data) return;
+        let tableDetail: TableRowDetail[] = [];
 
-      if (selectedOrganization && !selectedLarge && !selectedMedium) {
-        tableDetail = buildTableDetail(
-          data.largeCategories,
-          StatisticChartType.STANDARD,
-        );
-      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
-        tableDetail = buildTableDetail(
-          data.mediumCategories,
-          StatisticChartType.STANDARD,
-        );
-      } else if (selectedOrganization && selectedLarge && selectedMedium) {
-        tableDetail = buildTableDetail(
-          data.smallCategories,
-          StatisticChartType.STANDARD,
-        );
-      }
+        if (selectedOrganization && !selectedLarge && !selectedMedium) {
+          tableDetail = buildTableDetail(
+            data.largeCategories,
+            StatisticChartType.STANDARD,
+          );
+        } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+          tableDetail = buildTableDetail(
+            data.mediumCategories,
+            StatisticChartType.STANDARD,
+          );
+        } else if (selectedOrganization && selectedLarge && selectedMedium) {
+          tableDetail = buildTableDetail(
+            data.smallCategories,
+            StatisticChartType.STANDARD,
+          );
+        }
 
-      setStandardTableData(tableDetail);
-    },
-  });
+        setStandardTableData(tableDetail);
+      },
+    });
 
   // Get table info (statistic team compare categories)
-  useStatisticTableInTeamLineChartCompare({
-    filter: {
-      fromDate: formatDateToYMD(startDateCompare) || '',
-      endDate: formatDateToYMD(`${endDateCompare}`) || '',
-      organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value as number,
-      mediumCategoryId: selectedMedium?.value as number,
-      orderingOptions: orderingOptions,
-      userIds: debouncedSelectedMembers,
-    },
-    onSuccess: (data) => {
-      if (!data) return;
-      let tableDetail: TableRowDetail[] = [];
+  const { isLoadingStatisticTableInTeamLineChartCompare } =
+    useStatisticTableInTeamLineChartCompare({
+      filter: {
+        fromDate: formatDateToYMD(startDateCompare) || '',
+        endDate: formatDateToYMD(`${endDateCompare}`) || '',
+        organizationIds: String(selectedOrganization?.value || ''),
+        largeCategoryId: selectedLarge?.value as number,
+        mediumCategoryId: selectedMedium?.value as number,
+        orderingOptions: orderingOptions,
+        userIds: debouncedSelectedMembers,
+      },
+      onSuccess: (data) => {
+        if (!data) return;
+        let tableDetail: TableRowDetail[] = [];
 
-      if (selectedOrganization && !selectedLarge && !selectedMedium) {
-        tableDetail = buildTableDetail(
-          data.largeCategories,
-          StatisticChartType.COMPARE,
-        );
-      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
-        tableDetail = buildTableDetail(
-          data.mediumCategories,
-          StatisticChartType.COMPARE,
-        );
-      } else if (selectedOrganization && selectedLarge && selectedMedium) {
-        tableDetail = buildTableDetail(
-          data.smallCategories,
-          StatisticChartType.COMPARE,
-        );
-      }
+        if (selectedOrganization && !selectedLarge && !selectedMedium) {
+          tableDetail = buildTableDetail(
+            data.largeCategories,
+            StatisticChartType.COMPARE,
+          );
+        } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+          tableDetail = buildTableDetail(
+            data.mediumCategories,
+            StatisticChartType.COMPARE,
+          );
+        } else if (selectedOrganization && selectedLarge && selectedMedium) {
+          tableDetail = buildTableDetail(
+            data.smallCategories,
+            StatisticChartType.COMPARE,
+          );
+        }
 
-      setCompareTableData(tableDetail);
-    },
-  });
+        setCompareTableData(tableDetail);
+      },
+    });
 
   useEffect(() => {
     const tableData = mergeCategories([
-      ...standardTableData || [],
-      ...compareTableData || [],
+      ...(standardTableData || []),
+      ...(compareTableData || []),
     ]);
     setTableData(tableData);
     setCategoryCollapseStatuses(
@@ -1786,7 +1821,11 @@ const LineChartByTeamCompare = ({
                     classNameOption="!text-sm"
                     options={listOptionsOrganization}
                     selectedOption={selectedOrganization || undefined}
-                    onChange={(data) => handleSelectOrganization(data)}
+                    onChange={(data) => {
+                      setSelectedMembers([]);
+                      setIsOrganizationChanging(true);
+                      handleSelectOrganization(data);
+                    }}
                   />
                 </div>
               </div>
@@ -1980,13 +2019,8 @@ const LineChartByTeamCompare = ({
             <></>
           )}
 
-          {isLoadingStatisticUserTaskDurationsList &&
-          isLoadingStatisticUserTaskDurationsCompareList ? (
-            <RowSkeleton
-              numberOfRows={1}
-              className={`!h-[395px] ${expanded && 'w-[calc(100%_-_60px)]'} mx-auto`}
-            />
-          ) : (
+          {!isLoadingStatisticUserTaskDurationsList &&
+          !isLoadingStatisticUserTaskDurationsCompareList ? (
             <div
               style={{ position: 'relative' }}
               className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
@@ -2001,6 +2035,11 @@ const LineChartByTeamCompare = ({
                 style={{ position: 'absolute', opacity: 0 }}
               />
             </div>
+          ) : (
+            <RowSkeleton
+              numberOfRows={1}
+              className={`!h-[395px] w-[calc(100%_-_60px)] mx-auto`}
+            />
           )}
 
           <div className="px-[30px]">
@@ -2044,53 +2083,61 @@ const LineChartByTeamCompare = ({
                 </>
               )}
 
-            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                    {headerGroup.headers.map((header, index) => (
-                      <th
-                        key={header.id}
-                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
-                        style={{
-                          width: header.getSize(),
-                          minWidth: header.getSize(),
-                          maxWidth: header.getSize(),
-                        }}
-                        onClick={header.column.getToggleSortingHandler()}>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    {row.getVisibleCells().map((cell, index) => (
-                      <td
-                        key={cell.id}
-                        style={{
-                          width: cell.column.getSize(),
-                          minWidth: cell.column.getSize(),
-                          maxWidth: cell.column.getSize(),
-                        }}
-                        className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </TableBody>
-            </Table>
+            {!isLoadingStatisticTableInTeamLineChart &&
+            !isLoadingStatisticTableInTeamLineChartCompare ? (
+              <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+                <thead>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr
+                      key={headerGroup.id}
+                      className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                      {headerGroup.headers.map((header, index) => (
+                        <th
+                          key={header.id}
+                          className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                          style={{
+                            width: header.getSize(),
+                            minWidth: header.getSize(),
+                            maxWidth: header.getSize(),
+                          }}
+                          onClick={header.column.getToggleSortingHandler()}>
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <TableBody>
+                  {table.getRowModel().rows.map((row) => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+                      {row.getVisibleCells().map((cell, index) => (
+                        <td
+                          key={cell.id}
+                          style={{
+                            width: cell.column.getSize(),
+                            minWidth: cell.column.getSize(),
+                            maxWidth: cell.column.getSize(),
+                          }}
+                          className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <RowSkeleton
+                numberOfRows={1}
+                className={`!h-[200px] mt-5 w-full mx-auto`}
+              />
+            )}
           </div>
         </div>
       )}

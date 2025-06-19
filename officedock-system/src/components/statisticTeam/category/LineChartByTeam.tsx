@@ -2,6 +2,7 @@ import React, {
   Fragment,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -46,9 +47,7 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 
 import { OptionDropdownType } from '@interfaces/common';
-import {
-  StatisticCategoryInfo,
-} from '@interfaces/statistic';
+import { StatisticCategoryInfo } from '@interfaces/statistic';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
 import {
@@ -77,6 +76,7 @@ import {
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 import useDebounceText from '@hooks/useDebounceText';
 import useStatisticTableInTeamLineChart from '@hooks/useStatisticTableInTeamLineChart';
+import { useGenericDebounce } from '@hooks/useGenericDebounce';
 
 ChartJS.register(
   CategoryScale,
@@ -156,6 +156,7 @@ const LineChartByTeam = ({
     id: number;
     name: string;
   } | null>(null);
+  const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
 
   // Filter options
   const [filter, setFilter] = useState({
@@ -301,42 +302,43 @@ const LineChartByTeam = ({
   } = useStatisticUserTaskDurations({ filter });
 
   // Get table info (statistic team categories)
-  useStatisticTableInTeamLineChart({
-    filter: {
-      fromDate: formatDateToYMD(startDate) || '',
-      endDate: formatDateToYMD(`${endDate}`) || '',
-      organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value as number,
-      mediumCategoryId: selectedMedium?.value as number,
-      orderingOptions: orderingOptions,
-      userIds: debouncedSelectedMembers,
-    },
-    onSuccess: (data) => {
-      if (!data) return;
-      let tableDetail: TableRowDetail[] = [];
-      if (selectedOrganization && !selectedLarge && !selectedMedium) {
-        tableDetail = buildTableDetail(data.largeCategories);
-        handleCategorySelection(data.largeCategories);
-      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
-        tableDetail = buildTableDetail(data.mediumCategories);
-        handleCategorySelection(data.mediumCategories);
-      } else if (selectedOrganization && selectedLarge && selectedMedium) {
-        tableDetail = buildTableDetail(data.smallCategories);
-        handleCategorySelection(data.smallCategories);
-      }
+  const { isLoadingStatisticTableInTeamLineChart } =
+    useStatisticTableInTeamLineChart({
+      filter: {
+        fromDate: formatDateToYMD(startDate) || '',
+        endDate: formatDateToYMD(`${endDate}`) || '',
+        organizationIds: String(selectedOrganization?.value || ''),
+        largeCategoryId: selectedLarge?.value as number,
+        mediumCategoryId: selectedMedium?.value as number,
+        orderingOptions: orderingOptions,
+        userIds: debouncedSelectedMembers,
+      },
+      onSuccess: (data) => {
+        if (!data) return;
+        let tableDetail: TableRowDetail[] = [];
+        if (selectedOrganization && !selectedLarge && !selectedMedium) {
+          tableDetail = buildTableDetail(data.largeCategories);
+          handleCategorySelection(data.largeCategories);
+        } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+          tableDetail = buildTableDetail(data.mediumCategories);
+          handleCategorySelection(data.mediumCategories);
+        } else if (selectedOrganization && selectedLarge && selectedMedium) {
+          tableDetail = buildTableDetail(data.smallCategories);
+          handleCategorySelection(data.smallCategories);
+        }
 
-      setCategoryCollapseStatuses(
-        tableDetail.map((category) => {
-          return {
-            categoryId: category.categoryId,
-            status: false,
-          };
-        }),
-      );
+        setCategoryCollapseStatuses(
+          tableDetail.map((category) => {
+            return {
+              categoryId: category.categoryId,
+              status: false,
+            };
+          }),
+        );
 
-      setTableData(tableDetail);
-    },
-  });
+        setTableData(tableDetail);
+      },
+    });
 
   // Get initial member options
   useEffect(() => {
@@ -366,29 +368,43 @@ const LineChartByTeam = ({
   }, [allLabelUser]);
 
   // Handle listen to filter option changes
-  useEffect(() => {
-    setFilter({
+  const memoizedFilter = useMemo(() => {
+    return {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-      userIds: debouncedSelectedMembers,
+      userIds: selectedMembers?.filter(Boolean).join(','),
       largeCategoryId: selectedLarge?.value,
       mediumCategoryId: selectedMedium?.value,
       smallCategoryId: selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
       tagIds: orderingOptions?.tag_ids || [],
-    });
+    };
   }, [
     startDate,
     endDate,
-    debouncedSelectedMembers,
-    lineChartViewBy?.value,
-    selectedOrganization?.value,
+    selectedMembers,
     selectedLarge?.value,
     selectedMedium?.value,
     selectedSmall?.value,
+    lineChartViewBy?.value,
+    selectedOrganization?.value,
     orderingOptions,
   ]);
+
+  useEffect(() => {
+    if (isOrganizationChanging && selectedMembers.length > 0) {
+      setIsOrganizationChanging(false); // Done
+    }
+  }, [selectedMembers, isOrganizationChanging]);
+
+  const debouncedFilter = useGenericDebounce(memoizedFilter, 1000);
+
+  useEffect(() => {
+    if (!isOrganizationChanging) {
+      setFilter(debouncedFilter); // Trigger API only when everything is ready
+    }
+  }, [debouncedFilter, isOrganizationChanging]);
 
   // Hide tooltip when mouse leave over 80px
   useEffect(() => {
@@ -1287,7 +1303,11 @@ const LineChartByTeam = ({
                     classNameOption="!text-sm"
                     options={listOptionsOrganization}
                     selectedOption={selectedOrganization || undefined}
-                    onChange={(data) => handleSelectOrganization(data)}
+                    onChange={(data) => {
+                      setSelectedMembers([]);
+                      setIsOrganizationChanging(true);
+                      handleSelectOrganization(data);
+                    }}
                   />
                 </div>
               </div>
@@ -1451,7 +1471,7 @@ const LineChartByTeam = ({
           {isLoadingStatisticUserTaskDurationsList ? (
             <RowSkeleton
               numberOfRows={1}
-              className={`!h-[395px] ${expanded && 'w-[calc(100%_-_60px)]'} mx-auto`}
+              className={`!h-[395px] w-[calc(100%_-_60px)] mx-auto`}
             />
           ) : (
             <div
@@ -1483,53 +1503,60 @@ const LineChartByTeam = ({
               </div>
             )}
 
-            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                    {headerGroup.headers.map((header, index) => (
-                      <th
-                        key={header.id}
-                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
-                        style={{
-                          width: header.getSize(),
-                          minWidth: header.getSize(),
-                          maxWidth: header.getSize(),
-                        }}
-                        onClick={header.column.getToggleSortingHandler()}>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    {row.getVisibleCells().map((cell, index) => (
-                      <td
-                        key={cell.id}
-                        style={{
-                          width: cell.column.getSize(),
-                          minWidth: cell.column.getSize(),
-                          maxWidth: cell.column.getSize(),
-                        }}
-                        className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </TableBody>
-            </Table>
+            {isLoadingStatisticTableInTeamLineChart ? (
+              <RowSkeleton
+                numberOfRows={1}
+                className={`!h-[200px] mt-5 w-full mx-auto`}
+              />
+            ) : (
+              <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+                <thead>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr
+                      key={headerGroup.id}
+                      className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                      {headerGroup.headers.map((header, index) => (
+                        <th
+                          key={header.id}
+                          className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                          style={{
+                            width: header.getSize(),
+                            minWidth: header.getSize(),
+                            maxWidth: header.getSize(),
+                          }}
+                          onClick={header.column.getToggleSortingHandler()}>
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <TableBody>
+                  {table.getRowModel().rows.map((row) => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+                      {row.getVisibleCells().map((cell, index) => (
+                        <td
+                          key={cell.id}
+                          style={{
+                            width: cell.column.getSize(),
+                            minWidth: cell.column.getSize(),
+                            maxWidth: cell.column.getSize(),
+                          }}
+                          className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </div>
       )}

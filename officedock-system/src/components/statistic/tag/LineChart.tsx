@@ -27,10 +27,7 @@ import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 import { OptionDropdownType } from '@interfaces/common';
 
-import {
-  SortingType,
-  StatisticViewOptions,
-} from '@constants/enums';
+import { SortingType, StatisticViewOptions } from '@constants/enums';
 import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 
 import {
@@ -399,7 +396,9 @@ const LineChart = ({
           standardLabels = [
             ...standardLabels,
             {
-              color: lightenColor('#2E9267', categoryDetail?.percent || 0) || getRandomColor(),
+              color:
+                lightenColor('#2E9267', categoryDetail?.percent || 0) ||
+                getRandomColor(),
               name: categoryDetail.tagName,
             },
           ];
@@ -410,7 +409,8 @@ const LineChart = ({
             tagDuration: categoryDetail.duration,
             tagPercent: String(categoryDetail?.percent || 0),
             tagColor:
-              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
+              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) ||
+              getRandomColor(),
           });
           datasets.push({
             label: categoryDetail.tagName,
@@ -440,7 +440,8 @@ const LineChart = ({
                 : []),
             ]),
             borderColor:
-              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) || getRandomColor(),
+              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) ||
+              getRandomColor(),
             backgroundColor: 'rgba(217, 83, 79, 0.04)',
             fill: true,
             tension: 0,
@@ -448,7 +449,8 @@ const LineChart = ({
             pointBorderColor: 'transparent',
             pointHoverRadius: 6,
             pointHoverBackgroundColor:
-              lightenColor('#2E9267', categoryDetail?.percent || 0) || getRandomColor(),
+              lightenColor('#2E9267', categoryDetail?.percent || 0) ||
+              getRandomColor(),
             pointHoverBorderColor: 'transparent',
             pointHoverBorderWidth: 2,
           });
@@ -544,8 +546,12 @@ const LineChart = ({
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
-      const rowADuration = convertDurationToTotalMinutes(rowA.tagDuration || '00:00:00');
-      const rowBDuration = convertDurationToTotalMinutes(rowB.tagDuration || '00:00:00');
+      const rowADuration = convertDurationToTotalMinutes(
+        rowA.tagDuration || '00:00:00',
+      );
+      const rowBDuration = convertDurationToTotalMinutes(
+        rowB.tagDuration || '00:00:00',
+      );
 
       return sortingType == SortingType.ASC
         ? rowADuration - rowBDuration
@@ -960,7 +966,7 @@ const LineChart = ({
           {!isFetchedStatisticTagTaskDurationsList ? (
             <RowSkeleton
               numberOfRows={1}
-              className={`!h-[395px] ${expanded && 'w-[calc(100%_-_60px)]'} mx-auto`}
+              className={`!h-[395px] w-[calc(100%_-_60px)] mx-auto`}
             />
           ) : (
             <div
@@ -992,53 +998,60 @@ const LineChart = ({
               </div>
             )}
 
-            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                    {headerGroup.headers.map((header, index) => (
-                      <th
-                        key={header.id}
-                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
-                        style={{
-                          width: header.getSize(),
-                          minWidth: header.getSize(),
-                          maxWidth: header.getSize(),
-                        }}
-                        onClick={header.column.getToggleSortingHandler()}>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    {row.getVisibleCells().map((cell, index) => (
-                      <td
-                        key={cell.id}
-                        style={{
-                          width: cell.column.getSize(),
-                          minWidth: cell.column.getSize(),
-                          maxWidth: cell.column.getSize(),
-                        }}
-                        className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </TableBody>
-            </Table>
+            {!isFetchedStatisticTagTaskDurationsList ? (
+              <RowSkeleton
+                numberOfRows={1}
+                className={`!h-[200px] mt-5 w-full mx-auto`}
+              />
+            ) : (
+              <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+                <thead>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr
+                      key={headerGroup.id}
+                      className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                      {headerGroup.headers.map((header, index) => (
+                        <th
+                          key={header.id}
+                          className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                          style={{
+                            width: header.getSize(),
+                            minWidth: header.getSize(),
+                            maxWidth: header.getSize(),
+                          }}
+                          onClick={header.column.getToggleSortingHandler()}>
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <TableBody>
+                  {table.getRowModel().rows.map((row) => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+                      {row.getVisibleCells().map((cell, index) => (
+                        <td
+                          key={cell.id}
+                          style={{
+                            width: cell.column.getSize(),
+                            minWidth: cell.column.getSize(),
+                            maxWidth: cell.column.getSize(),
+                          }}
+                          className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </>
       )}
