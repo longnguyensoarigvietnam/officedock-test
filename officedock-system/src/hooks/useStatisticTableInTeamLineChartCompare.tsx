@@ -77,7 +77,7 @@ const useStatisticTableInTeamLineChartCompare = ({
   const {
     data: statisticTableInTeamLineChartCompare,
     refetch: refetchStatisticTableInTeamLineChartCompare,
-    isFetched: isFetchedStatisticTableInTeamLineChartCompare,
+    isLoading: isLoadingStatisticTableInTeamLineChartCompare,
   } = useQuery({
     queryKey: ['getStatisticTableInTeamLineChartCompare', [filter]],
     queryFn: getStatisticTableInTeamLineChartCompare,
@@ -96,7 +96,7 @@ const useStatisticTableInTeamLineChartCompare = ({
   return {
     statisticTableInTeamLineChartCompare,
     refetchStatisticTableInTeamLineChartCompare,
-    isFetchedStatisticTableInTeamLineChartCompare,
+    isLoadingStatisticTableInTeamLineChartCompare,
   };
 };
 

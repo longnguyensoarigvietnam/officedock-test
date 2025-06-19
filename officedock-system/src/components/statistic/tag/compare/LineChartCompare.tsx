@@ -24,6 +24,7 @@ import { Table, TableBody } from '@components/common/Table';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import Dropdown from '@components/common/Dropdown';
+
 import { StatisticsTagTaskDuration } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
@@ -1408,7 +1409,7 @@ const LineChartCompare = ({
           ) : (
             <RowSkeleton
               numberOfRows={1}
-              className={`!h-[395px] ${expanded && 'w-[calc(100%_-_60px)]'} mx-auto`}
+              className={`!h-[395px] w-[calc(100%_-_60px)] mx-auto`}
             />
           )}
 
@@ -1453,53 +1454,61 @@ const LineChartCompare = ({
                 </>
               )}
 
-            <Table className="w-full border border-gray-300 mt-5 !rounded-md">
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                    {headerGroup.headers.map((header, index) => (
-                      <th
-                        key={header.id}
-                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
-                        style={{
-                          width: header.getSize(),
-                          minWidth: header.getSize(),
-                          maxWidth: header.getSize(),
-                        }}
-                        onClick={header.column.getToggleSortingHandler()}>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    {row.getVisibleCells().map((cell, index) => (
-                      <td
-                        key={cell.id}
-                        style={{
-                          width: cell.column.getSize(),
-                          minWidth: cell.column.getSize(),
-                          maxWidth: cell.column.getSize(),
-                        }}
-                        className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </TableBody>
-            </Table>
+            {isFetchedStatisticTagTaskDurationsCompareList &&
+            isFetchedStatisticTagTaskDurationsList ? (
+              <Table className="w-full border border-gray-300 mt-5 !rounded-md">
+                <thead>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr
+                      key={headerGroup.id}
+                      className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                      {headerGroup.headers.map((header, index) => (
+                        <th
+                          key={header.id}
+                          className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                          style={{
+                            width: header.getSize(),
+                            minWidth: header.getSize(),
+                            maxWidth: header.getSize(),
+                          }}
+                          onClick={header.column.getToggleSortingHandler()}>
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <TableBody>
+                  {table.getRowModel().rows.map((row) => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+                      {row.getVisibleCells().map((cell, index) => (
+                        <td
+                          key={cell.id}
+                          style={{
+                            width: cell.column.getSize(),
+                            minWidth: cell.column.getSize(),
+                            maxWidth: cell.column.getSize(),
+                          }}
+                          className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <RowSkeleton
+                numberOfRows={1}
+                className={`!h-[200px] mt-5 w-full mx-auto`}
+              />
+            )}
           </div>
         </>
       )}
