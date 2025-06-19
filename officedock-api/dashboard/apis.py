@@ -324,6 +324,10 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         started_at = validated_data.get("started_at", None)
         paused_at = validated_data.get("paused_at", None)
         instance = serializer.save()  # Save the updated instance
+        if not paused_at and not instance.paused_at:
+            return [
+                DurationSerializer(instance, context={"request": request}).data
+            ]
         paused_at = paused_at or instance.paused_at or now()
         started_at = started_at or instance.started_at
         user = request.user
