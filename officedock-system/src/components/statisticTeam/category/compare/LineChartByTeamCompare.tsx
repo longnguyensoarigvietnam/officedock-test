@@ -614,6 +614,21 @@ const LineChartByTeamCompare = ({
       ...(standardTableData || []),
       ...(compareTableData || []),
     ]);
+    const totalStandardDurationList = (standardTableData || [])
+      .map((item) => item.categoryDuration)
+      .filter(Boolean); // remove null, undefined, ''
+
+    const totalCompareDurationList = (compareTableData || [])
+      .map((item) => item.categoryDuration)
+      .filter(Boolean);
+
+    setTotalStandardDuration(
+      totalDurationsForStatistic(totalStandardDurationList),
+    );
+    setTotalCompareDuration(
+      totalDurationsForStatistic(totalCompareDurationList),
+    );
+
     setTableData(tableData);
     setCategoryCollapseStatuses(
       tableData.map((category) => {
@@ -934,8 +949,6 @@ const LineChartByTeamCompare = ({
     const standardDateLabels: string[] = [];
     const compareDateLabels: string[] = [];
     const datasets: any[] = [];
-    const totalStandardDurationList: string[] = [];
-    const totalCompareDurationList: string[] = [];
 
     const standardDurationList =
       statisticUserTaskDurationsList?.[0]?.durations || [];
@@ -1052,8 +1065,6 @@ const LineChartByTeamCompare = ({
           (c) => c.user.id == userTaskDuration.user.id,
         );
 
-        totalStandardDurationList.push(userTaskDuration.totalDuration);
-
         datasets.push({
           label: userTaskDuration.user.fullName,
           data: generateDataWithAlignment(
@@ -1086,7 +1097,6 @@ const LineChartByTeamCompare = ({
         const standardUser = statisticUserTaskDurationsList?.find(
           (c) => c.user.id == userTaskDuration.user.id,
         );
-        totalCompareDurationList.push(userTaskDuration.totalDuration);
         datasets.push({
           label: userTaskDuration.user.fullName,
           data: generateDataWithAlignment(
@@ -1118,12 +1128,6 @@ const LineChartByTeamCompare = ({
     });
     setStandardLegendList(standardLabels);
     setCompareLegendList(comparedLabels);
-    setTotalStandardDuration(
-      totalDurationsForStatistic(totalStandardDurationList),
-    );
-    setTotalCompareDuration(
-      totalDurationsForStatistic(totalCompareDurationList),
-    );
   }, [statisticUserTaskDurationsList, statisticUserTaskDurationsCompareList]);
 
   // Sort by percent difference

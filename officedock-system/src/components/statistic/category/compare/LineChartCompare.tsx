@@ -1413,7 +1413,7 @@ const LineChartCompare = ({
                             minWidth: cell.column.getSize(),
                             maxWidth: cell.column.getSize(),
                           }}
-                          className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
+                          className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext(),
