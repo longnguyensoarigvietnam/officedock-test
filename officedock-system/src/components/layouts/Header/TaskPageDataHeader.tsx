@@ -216,7 +216,11 @@ const TaskPageDataHeader = () => {
   }, [dataTaskHeaderList]);
 
   useEffect(() => {
-    if (dataTaskHeaderStart && dataTaskHeaderStart.id) {
+    if (
+      dataTaskHeaderStart &&
+      dataTaskHeaderStart.id &&
+      dataTaskHeaderStart.isStart
+    ) {
       setTaskSelected({
         label: dataTaskHeaderStart.title,
         value:
