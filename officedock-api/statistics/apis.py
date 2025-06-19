@@ -908,6 +908,8 @@ class StatisticViewSet(BaseAPIViewSet):
         tasks = tasks.filter(filters)
         events = events.filter(filters)
         data = []
+        if not durations:
+            return self.response_ok(data)
         if not check_is_not_none_category(
             large_category_id, medium_category_id, small_category_id
         ):
@@ -1018,14 +1020,6 @@ class StatisticViewSet(BaseAPIViewSet):
                     durations=durations_by_range, tags=[tag["tag_id"]]
                 )
                 if not filter_duration.exists():
-                    elements.append(
-                        {
-                            "tag_id": tag["tag_id"],
-                            "tag_name": tag["tag_name"],
-                            "duration": "00:00:00",
-                            "percent": 0,
-                        }
-                    )
                     continue
                 duration = get_total_durations(filter_duration)
                 percent_per_total_duration = percentage_calculation_of_duration(
@@ -1136,6 +1130,8 @@ class StatisticViewSet(BaseAPIViewSet):
                         filter_durations = _handle_get_filter_durations(
                             id, filter_duration_by_range
                         )
+                        if not filter_durations:
+                            continue
                         if id is None:
                             filter_durations = get_duration_of_none_category(
                                 filter_durations
@@ -1602,7 +1598,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             small_id=small_category_id,
         )
         if not durations:
-            return self.response_ok()
+            return self.response_ok(data)
         for user in users:
             filter_durations = get_list_durations_by_users(
                 durations=durations,
