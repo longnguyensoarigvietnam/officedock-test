@@ -365,6 +365,13 @@ const LineChartByTeamTags = ({
         );
 
         setTableData(tableDetail);
+
+        // Calculate total duration
+        const totalDurationList = (tableDetail || [])
+          .map((item) => item.tagDuration)
+          .filter(Boolean); // remove null, undefined, ''
+
+        setTotalDuration(totalDurationsForStatistic(totalDurationList));
       },
     });
 
@@ -736,7 +743,6 @@ const LineChartByTeamTags = ({
       const labelList: string[] = [];
       const legendList: { name: string; color: string }[] = [];
       const datasets: any[] = [];
-      const totalDurationList: string[] = [];
 
       const durationList = statisticUserTaskDurationsList[0].durations;
       durationList.map((duration, index) => {
@@ -757,7 +763,6 @@ const LineChartByTeamTags = ({
           color: userTaskDuration.user.avatarColor || getRandomColor(),
           name: userTaskDuration.user.fullName,
         });
-        totalDurationList.push(userTaskDuration.totalDuration);
         datasets.push({
           label: userTaskDuration.user.fullName,
           data: userTaskDuration.durations.flatMap((duration, index) => [
@@ -808,7 +813,6 @@ const LineChartByTeamTags = ({
         datasets: datasets,
       });
       setLegendList(legendList);
-      setTotalDuration(totalDurationsForStatistic(totalDurationList));
     } else {
       setLineChartData({
         labels: [],
