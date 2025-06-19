@@ -193,7 +193,7 @@ const PercentageTeamTagsCompare = ({
             if (user?.user?.fullName) {
               return {
                 label: user.user.fullName,
-                percent: item.percent,
+                percent: user.percent,
                 avatarColor: user.user.avatarColor,
               };
             }

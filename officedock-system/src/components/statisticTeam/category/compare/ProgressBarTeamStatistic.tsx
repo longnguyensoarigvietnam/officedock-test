@@ -38,12 +38,14 @@ interface ProgressBarProps {
     duration,
     isCompare,
     userDuration,
+    totalTask,
   }: {
     userId: number;
     categoryId: number;
     duration: string;
     isCompare?: boolean;
     userDuration: string;
+    totalTask?: string;
   }) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
 }
@@ -594,11 +596,11 @@ const ProgressBarTeamStatisticCompare = ({
                           handleClickTooltip({
                             userId: itemUser.user.user.id,
                             categoryId: item.id,
-                            duration:
+                            duration: item.duration,
+                            userDuration:
                               itemUser.user.duration !== '-'
                                 ? itemUser.user.duration
                                 : '00:00:00',
-                            userDuration: item.duration,
                           })
                         }
                         className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">
@@ -695,6 +697,7 @@ const ProgressBarTeamStatisticCompare = ({
                                 : '00:00:00',
                             isCompare: true,
                             userDuration: itemCompare?.duration || '',
+                            totalTask: item.duration,
                           })
                         }
                         className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">
