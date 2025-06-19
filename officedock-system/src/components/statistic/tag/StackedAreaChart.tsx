@@ -704,7 +704,7 @@ const StackedAreaChart = ({
     },
     {
       accessorKey: 'tagDuration',
-      size: 40,
+      size: 50,
       header: () => {
         return (
           <div
@@ -747,7 +747,7 @@ const StackedAreaChart = ({
     },
     {
       accessorKey: 'tagPercent',
-      size: 20,
+      size: 30,
       header: () => {
         return (
           <div
