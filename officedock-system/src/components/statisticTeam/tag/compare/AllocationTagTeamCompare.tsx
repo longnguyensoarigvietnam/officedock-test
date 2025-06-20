@@ -135,15 +135,38 @@ export function buildProgressDataCompareWithMergedOthers({
     threshold,
   });
 
-  // Collect all IDs from both sides
+  // ✅ Collect IDs from both outside and within merged items (その他)
   const allIds = new Set<number>();
-  mergedBase.forEach((item) => allIds.add(item.id));
-  mergedCompare.forEach((item) => allIds.add(item.id));
 
-  // Create full item with fallback label
+  const extractIds = (data: ProgressDataType[]) => {
+    data.forEach((item) => {
+      if (item.id === -1 && item.mergedItems) {
+        item.mergedItems.forEach((sub) => allIds.add(sub.id));
+      } else {
+        allIds.add(item.id);
+      }
+    });
+  };
+
+  extractIds(mergedBase);
+  extractIds(mergedCompare);
+
+  const findItemById = (
+    id: number,
+    data: ProgressDataType[],
+  ): ProgressDataType | undefined => {
+    return (
+      data.find((d) => d.id === id) ||
+      data
+        .find((d) => d.id === -1 && d.mergedItems?.some((m) => m.id === id))
+        ?.mergedItems?.find((m) => m.id === id)
+    );
+  };
+
+  // ✅ Map the results against fallback data if needed
   const result: ProgressDataCompareItem[] = Array.from(allIds).map((id) => {
-    const item = mergedBase.find((b) => b.id === id);
-    const itemCompare = mergedCompare.find((c) => c.id === id);
+    const item = findItemById(id, mergedBase);
+    const itemCompare = findItemById(id, mergedCompare);
 
     const finalItem: ProgressDataType = item ?? {
       id,
@@ -169,11 +192,10 @@ export function buildProgressDataCompareWithMergedOthers({
     };
   });
 
-  // 👉 Move "その他" to the end
+  // ✅ Make sure the item with id === -1 ("その他") is always at the end
   result.sort((a, b) => {
     const isAOther = a.item.id === -1;
     const isBOther = b.item.id === -1;
-
     if (isAOther && !isBOther) return 1;
     if (!isAOther && isBOther) return -1;
     return 0;

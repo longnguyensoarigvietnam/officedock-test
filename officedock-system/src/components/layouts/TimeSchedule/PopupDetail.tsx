@@ -8,6 +8,7 @@ import { ERROR_DELETE_TASK_RUNNING } from '@constants/message';
 import { useToast } from '@providers/ToastProvider';
 import {
   combineDateAndTime,
+  convertToCurrentTimezone,
   convertToMinutesNumber,
   formatCurrentDay,
   formatShowDeadlineTask,
@@ -107,10 +108,16 @@ const PopupDetail = ({
     params.set('action', action);
     router.push(`?${params.toString()}`);
   };
-  const [valueStart, setValueStart] = useState(formatTime24h(planStartDate));
-  const [valueEnd, setValueEnd] = useState(formatTime24h(planEndDate));
+  const [valueStart, setValueStart] = useState(
+    formatTime24h(String(new Date(convertToCurrentTimezone(planStartDate)))),
+  );
+  const [valueEnd, setValueEnd] = useState(
+    String(new Date(convertToCurrentTimezone(planEndDate))),
+  );
 
-  const isToday = isTodaySchedule(new Date(planStartDate));
+  const isToday = isTodaySchedule(
+    new Date(convertToCurrentTimezone(planStartDate)),
+  );
 
   return (
     <>

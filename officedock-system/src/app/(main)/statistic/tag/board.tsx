@@ -124,7 +124,7 @@ const StatisticTagBoard = () => {
       setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
       setTotalDurationMediumCompare(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmallCompare(sumDurations(data.smallCategories ?? []));
-      setTotalDurationCategoryCompare(sumDurations(data.smallCategories ?? []));
+      setTotalDurationCategoryCompare(sumDurations(data.category ?? []));
     },
   });
   const { creationDataStatisticData } = useCreationDataStatistic({
