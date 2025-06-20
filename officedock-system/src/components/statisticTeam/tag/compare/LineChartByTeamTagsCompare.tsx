@@ -973,34 +973,13 @@ const LineChartByTeamTagsCompare = ({
 
             if (!labels || index >= labels.length) return '';
 
-            const isEdge = index === 0 || index === labels.length - 1;
-            const labelDate = new Date(labels[index]);
-            const currentMonth = labelDate.getMonth();
-
-            // Add extra spaces to reduce gap for first & last labels
-            if (lineChartViewBy?.value != StatisticViewOptions.MONTH)
-              return convertToStatisticJapaneseLabels(
-                labels[index],
-                lineChartViewBy?.value as string,
-                isEdge,
-              );
-
-            // Logic for MONTH view
-            let sameMonthAsNeighbor = false;
-
-            if (index === 0 && labels.length > 1) {
-              const nextMonth = new Date(labels[1]).getMonth();
-              sameMonthAsNeighbor = currentMonth === nextMonth;
-            } else if (index === labels.length - 1 && labels.length > 1) {
-              const prevMonth = new Date(labels[labels.length - 2]).getMonth();
-              sameMonthAsNeighbor = currentMonth === prevMonth;
-            }
-
-            return convertToStatisticJapaneseLabels(
-              labels[index],
-              lineChartViewBy?.value as string,
-              isEdge && sameMonthAsNeighbor,
-            );
+            return isNaN(labels[index] as any)
+              ? convertToStatisticJapaneseLabels(
+                  labels[index],
+                  lineChartViewBy?.value as string,
+                  false,
+                )
+              : '';
           },
         },
       },
@@ -1100,7 +1079,7 @@ const LineChartByTeamTagsCompare = ({
     });
 
     const compareDurationList =
-      statisticUserTaskDurationsList?.[0]?.durations || [];
+      statisticUserTaskDurationsCompareList?.[0]?.durations || [];
     compareDurationList.map((duration, index) => {
       compareDateLabels.push(duration.startDate);
       if (
