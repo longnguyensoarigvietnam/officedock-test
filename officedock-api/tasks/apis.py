@@ -1163,18 +1163,15 @@ class TaskViewSet(
             case = CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value
 
         # Create or update categories
-        if (
-            categories is not None
-            and task.categories.exists()
-            and not compare_list_categories(
-                categories, get_common_categories(task.categories.first())
-            )
+        if categories is not None and not compare_list_categories(
+            categories, get_common_categories(task.categories.first())
         ):
             for user in task.people_in_charge.all():
                 # Minus skill map process have old categories of current task
                 calculate_progress_skill_map(
                     current_task, user, is_minus=True, case=case
                 )
+
             # Update new categories
             create_categories_by_model(task, categories)
             for user in task.people_in_charge.all():
