@@ -220,6 +220,8 @@ const TimeSchedule = memo(
       setDataEventEdit,
       setIdEventDelete,
       setWidthCalendar,
+      statusTaskSelected,
+      setStatusTaskSelected,
     } = useContext(TaskContext);
     const queryClient = useQueryClient();
     const showErrorToast = useErrorToast();
@@ -913,10 +915,23 @@ const TimeSchedule = memo(
       'postUpdateActualTime',
       handleUpdateActualTime,
       {
-        onSuccess: async (data, task) => {
+        onSuccess: async ({ data }, task) => {
           queryClient.refetchQueries(['getDataTaskHeaderList']);
-          if (task.data.pausedAt === null) {
+          if (task.data.pausedAt === null && statusTaskSelected.isStart) {
             queryClient.refetchQueries(['getTaskHeaderStart']);
+          }
+          if (
+            data &&
+            data.length > 0 &&
+            statusTaskSelected.taskDurationRunningUuid &&
+            statusTaskSelected.isStart === false
+          ) {
+            if (statusTaskSelected.taskDurationRunningUuid === data[0].uuid) {
+              setStatusTaskSelected({
+                ...statusTaskSelected,
+                taskDuration: data[0].totalDuration,
+              });
+            }
           }
         },
         onError: (error: AxiosError<any>) => {

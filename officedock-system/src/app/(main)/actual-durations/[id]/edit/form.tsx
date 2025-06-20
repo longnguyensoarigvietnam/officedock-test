@@ -8,7 +8,7 @@ import React, {
   useState,
 } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { useMutation } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { AxiosError } from 'axios';
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 
@@ -51,6 +51,7 @@ import { DEFAULT_TASK_SCHEDULE_DURATION, NO_OPTION_CATEGORY } from '@constants';
 
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
+import { TaskContext } from '@providers/TaskProvider';
 
 import {
   addTimeToDate,
@@ -60,14 +61,18 @@ import {
   convertToTimeString,
   formatTimeInput,
   generateTimeOptionsAsObjects,
+  getTimeDifference,
 } from '@utils/date';
 
 import api from '@base/api';
 
 const EditActualDurationsForm = () => {
+  const { statusTaskSelected, setStatusTaskSelected } = useContext(TaskContext);
+
   // Params
   const params = useParams();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
 
   // Toast
   const { showToast } = useToast();
@@ -636,10 +641,24 @@ const EditActualDurationsForm = () => {
     'postEditActualDuration',
     handleEditActualDuration,
     {
-      onSuccess: () => {
+      onSuccess: (data) => {
         showToast({
           description: SUCCESS_UPDATE_MESSAGE,
         });
+        queryClient.refetchQueries(['getDataTaskHeaderList']);
+
+        if (
+          data &&
+          statusTaskSelected &&
+          statusTaskSelected.taskDurationRunningUuid
+        ) {
+          if (statusTaskSelected.taskDurationRunningUuid === data.uuid) {
+            setStatusTaskSelected({
+              ...statusTaskSelected,
+              taskDuration: getTimeDifference(data.startedAt, data.pausedAt),
+            });
+          }
+        }
         router.push(pageRouters.ACTUAL_DURATIONS_MANAGEMENT.href);
       },
       onError: () => {
