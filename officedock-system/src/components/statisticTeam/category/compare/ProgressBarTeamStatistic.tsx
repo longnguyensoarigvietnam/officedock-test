@@ -691,12 +691,12 @@ const ProgressBarTeamStatisticCompare = ({
                           handleClickTooltip({
                             userId: itemUser.userCompare.user.id,
                             categoryId: item.id,
-                            duration:
+                            userDuration:
                               itemUser.userCompare.duration !== '-'
                                 ? itemUser.userCompare.duration
                                 : '00:00:00',
                             isCompare: true,
-                            userDuration: itemCompare?.duration || '',
+                            duration: itemCompare?.duration || '',
                             totalTask: item.duration,
                           })
                         }

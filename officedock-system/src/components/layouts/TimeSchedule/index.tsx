@@ -2377,7 +2377,7 @@ const TimeSchedule = memo(
         return false;
       }
 
-      const draggedResourceId = draggedEvent.extendedProps.resourceId;
+      const draggedResourceId = draggedEvent.extendedProps?.resourceId;
       const dropResourceId = dropInfo.resource?.id;
 
       if (
