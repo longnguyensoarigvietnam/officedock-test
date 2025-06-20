@@ -34,13 +34,13 @@ const MainLayout = ({
   permission,
   showFooter = true,
 }: MainLayoutProps) => {
-  const { taskSelected } = useContext(TaskContext);
+  const { dataRunning } = useContext(TaskContext);
   const { data: session, status, update } = useSession();
   const router = useRouter();
   const { taskDurationDetail } = useTaskDurationDetail({
     item: {
-      id: `${taskSelected.value}`.replace('event', ''),
-      type: `${taskSelected.type}`,
+      id: `${dataRunning.id}`.replace('event', ''),
+      type: `${dataRunning.type}`,
     },
   });
 

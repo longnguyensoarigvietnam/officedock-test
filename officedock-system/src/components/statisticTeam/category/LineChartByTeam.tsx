@@ -299,7 +299,15 @@ const LineChartByTeam = ({
   const {
     statisticUserTaskDurationsList,
     isLoadingStatisticUserTaskDurationsList,
-  } = useStatisticUserTaskDurations({ filter });
+  } = useStatisticUserTaskDurations({
+    filter: {
+      ...filter,
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : filter.userIds,
+    },
+  });
 
   // Get table info (statistic team categories)
   const { isLoadingStatisticTableInTeamLineChart } =
@@ -311,7 +319,9 @@ const LineChartByTeam = ({
         largeCategoryId: selectedLarge?.value as number,
         mediumCategoryId: selectedMedium?.value as number,
         orderingOptions: orderingOptions,
-        userIds: debouncedSelectedMembers,
+        userIds: orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : debouncedSelectedMembers,
       },
       onSuccess: (data) => {
         if (!data) return;

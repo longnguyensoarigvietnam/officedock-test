@@ -148,6 +148,7 @@ const LineChartByTeamTags = ({
     firstThreeUser,
     allLabelUser,
     isCheckCompare,
+    orderingOptions,
     setIsLoadingLarge,
     setIsLoadingMedium,
     setIsLoadingSmall,
@@ -170,7 +171,17 @@ const LineChartByTeamTags = ({
   const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
 
   // Filter options
-  const [filter, setFilter] = useState({
+  const [filter, setFilter] = useState<{
+    fromDate: string;
+    endDate: string;
+    userIds?: string;
+    largeCategoryId?: string | number;
+    mediumCategoryId?: string | number;
+    smallCategoryId?: string | number;
+    statisticBy: string;
+    selectedOrganization: string;
+    tagIds: { label: string; value: number }[];
+  }>({
     fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
     endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
     userIds: selectedMembers?.filter(Boolean).join(','),
@@ -179,7 +190,7 @@ const LineChartByTeamTags = ({
     smallCategoryId: selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
     selectedOrganization: `${selectedOrganization?.value}`,
-    tagIds: selectedTags || [],
+    tagIds: [],
   });
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const [memberOptions, setMemberOptions] = useState<
@@ -300,8 +311,25 @@ const LineChartByTeamTags = ({
         id: Number(firstTag.tagId),
         name: String(firstTag.tagName),
       });
+      setFilter((prev) => {
+        return {
+          ...prev,
+          tagIds: [
+            {
+              label: String(firstTag.tagName),
+              value: Number(firstTag.tagId),
+            },
+          ],
+        };
+      });
     } else {
       setSelectedTag(null);
+      setFilter((prev) => {
+        return {
+          ...prev,
+          tagIds: [],
+        };
+      });
     }
   };
 
@@ -310,7 +338,13 @@ const LineChartByTeamTags = ({
     statisticUserTaskDurationsList,
     isLoadingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
-    filter,
+    filter: {
+      ...filter,
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : filter.userIds,
+    },
     condition: [Boolean(filter.tagIds?.length > 0)],
   });
 
@@ -325,7 +359,10 @@ const LineChartByTeamTags = ({
         mediumCategoryId: selectedMedium?.value as number,
         smallCategoryId: selectedSmall?.value as number,
         selectedTags: selectedTags,
-        userIds: debouncedSelectedMembers,
+        userIds:
+          orderingOptions?.user_ids?.length == 0
+            ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+            : debouncedSelectedMembers,
       },
       onSuccess: (data) => {
         if (!data) return;
@@ -422,7 +459,14 @@ const LineChartByTeamTags = ({
       smallCategoryId: selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
-      tagIds: selectedTags || [],
+      tagIds: selectedTag
+        ? [
+            {
+              value: selectedTag?.id,
+              label: selectedTag?.name,
+            },
+          ]
+        : [],
     };
   }, [
     startDate,
@@ -433,7 +477,7 @@ const LineChartByTeamTags = ({
     selectedLarge?.value,
     selectedMedium?.value,
     selectedSmall?.value,
-    selectedTags,
+    selectedTag,
   ]);
 
   useEffect(() => {

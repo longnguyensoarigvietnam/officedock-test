@@ -39,7 +39,7 @@ const useStatisticUserTaskDurations = ({
 
   // Handle call API get statistic task duration list
   const getStatisticUserTaskDurations = async () => {
-    if (!filter?.selectedOrganization || !filter.userIds) return [];
+    if (!filter?.selectedOrganization) return [];
     const queryParams = [];
     if (filter.fromDate) {
       queryParams.push(`from_date=${filter.fromDate}`);

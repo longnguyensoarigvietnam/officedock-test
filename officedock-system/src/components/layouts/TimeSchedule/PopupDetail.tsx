@@ -112,7 +112,7 @@ const PopupDetail = ({
     formatTime24h(String(new Date(convertToCurrentTimezone(planStartDate)))),
   );
   const [valueEnd, setValueEnd] = useState(
-    String(new Date(convertToCurrentTimezone(planEndDate))),
+    formatTime24h(String(new Date(convertToCurrentTimezone(planEndDate)))),
   );
 
   const isToday = isTodaySchedule(
@@ -183,10 +183,7 @@ const PopupDetail = ({
                     setValueStart(formatTime24h(planStartDate));
                   }
                 } else {
-                  if (isCalculation) {
-                    setValueStart(formatTime24h(planStartDate));
-                    return;
-                  }
+                
                   const data = isTimeEarlier(
                     formatTimeInput(
                       `${convertToMinutesNumber(e.target.value)}`,

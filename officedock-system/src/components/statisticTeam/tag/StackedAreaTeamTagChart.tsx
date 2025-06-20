@@ -181,17 +181,26 @@ const StackedAreaTeamTagChart = ({
   } | null>(null);
 
   // Filter options
-  const [filter, setFilter] = useState({
+  const [filter, setFilter] = useState<{
+    fromDate: string;
+    endDate: string;
+    userIds?: string;
+    largeCategoryId?: string | number;
+    mediumCategoryId?: string | number;
+    smallCategoryId?: string | number;
+    statisticBy: string;
+    selectedOrganization: string;
+    tagIds: { label: string; value: number }[];
+  }>({
     fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
     endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
     userIds: selectedMemberList,
-
     largeCategoryId: selectedLarge?.value,
     mediumCategoryId: selectedMedium?.value,
     smallCategoryId: selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
     selectedOrganization: `${selectedOrganization?.value}`,
-    tagIds: selectedTags || [],
+    tagIds: [],
   });
 
   const handleTagSelection = (tagList: StatisticCategoryInfo[] | undefined) => {
@@ -201,8 +210,25 @@ const StackedAreaTeamTagChart = ({
         id: Number(firstTag.tagId),
         name: String(firstTag.tagName),
       });
+      setFilter((prev) => {
+        return {
+          ...prev,
+          tagIds: [
+            {
+              label: String(firstTag.tagName),
+              value: Number(firstTag.tagId),
+            },
+          ],
+        };
+      });
     } else {
       setSelectedTag(null);
+      setFilter((prev) => {
+        return {
+          ...prev,
+          tagIds: [],
+        };
+      });
     }
   };
 
@@ -304,7 +330,14 @@ const StackedAreaTeamTagChart = ({
       smallCategoryId: selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
-      tagIds: selectedTags || [],
+      tagIds: selectedTag
+        ? [
+            {
+              value: selectedTag?.id,
+              label: selectedTag?.name,
+            },
+          ]
+        : [],
     });
   }, [
     startDate,
@@ -315,7 +348,7 @@ const StackedAreaTeamTagChart = ({
     selectedMedium?.value,
     selectedSmall?.value,
     selectedMemberList,
-    selectedTags,
+    selectedTag,
   ]);
 
   useEffect(() => {

@@ -44,7 +44,7 @@ const BoardChat = () => {
   // Context
   const { setChatRoomNotifications } = useContext(ChatContext);
   const { totalNotifications } = useContext(GlobalStateContext);
-  const { taskSelected } = useContext(TaskContext);
+  const { dataRunning } = useContext(TaskContext);
 
   // Custom hooks
   const { dashboardMemberList = [] } = useDashboardMemberList();
@@ -67,8 +67,8 @@ const BoardChat = () => {
   // Running task info
   const { taskDurationDetail } = useTaskDurationDetail({
     item: {
-      id: `${taskSelected.value}`.replace('event', ''),
-      type: `${taskSelected.type}`,
+      id: `${dataRunning.id}`.replace('event', ''),
+      type: `${dataRunning.type}`,
     },
   });
 

@@ -372,13 +372,29 @@ const LineChartByTeamCompare = ({
   const {
     statisticUserTaskDurationsList,
     isLoadingStatisticUserTaskDurationsList,
-  } = useStatisticUserTaskDurations({ filter });
+  } = useStatisticUserTaskDurations({
+    filter: {
+      ...filter,
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : filter.userIds,
+    },
+  });
 
   // Get user task durations (compared)
   const {
     statisticUserTaskDurationsCompareList,
     isLoadingStatisticUserTaskDurationsCompareList,
-  } = useStatisticUserTaskDurationsCompare({ filter: compareFilter });
+  } = useStatisticUserTaskDurationsCompare({
+    filter: {
+      ...compareFilter,
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : compareFilter.userIds,
+    },
+  });
 
   const mergeCategories = (data: TableRowDetail[]): MergedTableCategory[] => {
     const grouped: Record<number, MergedTableCategory> = {};
@@ -545,7 +561,10 @@ const LineChartByTeamCompare = ({
         largeCategoryId: selectedLarge?.value as number,
         mediumCategoryId: selectedMedium?.value as number,
         orderingOptions: orderingOptions,
-        userIds: debouncedSelectedMembers,
+        userIds:
+          orderingOptions?.user_ids?.length == 0
+            ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+            : debouncedSelectedMembers,
       },
       onSuccess: (data) => {
         if (!data) return;
@@ -582,7 +601,10 @@ const LineChartByTeamCompare = ({
         largeCategoryId: selectedLarge?.value as number,
         mediumCategoryId: selectedMedium?.value as number,
         orderingOptions: orderingOptions,
-        userIds: debouncedSelectedMembers,
+        userIds:
+          orderingOptions?.user_ids?.length == 0
+            ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+            : debouncedSelectedMembers,
       },
       onSuccess: (data) => {
         if (!data) return;
