@@ -238,6 +238,7 @@ const StackedAreaTeamTagChart = ({
     isLoadingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
     filter,
+    condition: [Boolean(filter.tagIds?.length > 0)],
   });
 
   const [dataChart, setDataChart] = useState<
