@@ -53,7 +53,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     Endpoint API of Schedule
     """
 
-    queryset = Schedule.objects.filter(deleted_at__isnull=True).all()
+    queryset = Schedule.objects.all()
     serializer_class = ScheduleSerializer
     permission_classes = [
         ActionPermission,
@@ -69,6 +69,8 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         user = self.request.user
         queryset = super().get_queryset().filter(company=user.company)
+        if self.action in ["list", "retrieve"]:
+            queryset = queryset.filter(deleted_at__isnull=True)
 
         return queryset.order_by("created_at")
 
