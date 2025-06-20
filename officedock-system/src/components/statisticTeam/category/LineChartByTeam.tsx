@@ -163,9 +163,18 @@ const LineChartByTeam = ({
     fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
     endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
     userIds: selectedMembers?.filter(Boolean).join(','),
-    largeCategoryId: selectedLarge?.value,
-    mediumCategoryId: selectedMedium?.value,
-    smallCategoryId: selectedSmall?.value,
+    largeCategoryId:
+      selectedOrganization && !selectedLarge && !selectedMedium
+        ? selectedCategory?.id
+        : selectedLarge?.value,
+    mediumCategoryId:
+      selectedOrganization && selectedLarge && !selectedMedium
+        ? selectedCategory?.id
+        : selectedMedium?.value,
+    smallCategoryId:
+      selectedOrganization && selectedLarge && selectedMedium
+        ? selectedCategory?.id
+        : selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
     selectedOrganization: `${selectedOrganization?.value}`,
     tagIds: orderingOptions?.tag_ids || [],
@@ -290,10 +299,105 @@ const LineChartByTeam = ({
         id: firstCategory.categoryId,
         name: firstCategory.categoryName,
       });
+      if (selectedOrganization && !selectedLarge && !selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            largeCategoryId: firstCategory.categoryId,
+          };
+        });
+      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            mediumCategoryId: firstCategory.categoryId,
+          };
+        });
+      } else if (selectedOrganization && selectedLarge && selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            smallCategoryId: firstCategory.categoryId,
+          };
+        });
+      }
     } else {
       setSelectedCategory(null);
+      if (selectedOrganization && !selectedLarge && !selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            largeCategoryId: undefined,
+          };
+        });
+      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            mediumCategoryId: undefined,
+          };
+        });
+      } else if (selectedOrganization && selectedLarge && selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            smallCategoryId: undefined,
+          };
+        });
+      }
     }
   };
+
+  // Get table info (statistic team categories)
+  const {
+    isLoadingStatisticTableInTeamLineChart,
+    isFetchedStatisticTableInTeamLineChart,
+  } = useStatisticTableInTeamLineChart({
+    filter: {
+      fromDate: formatDateToYMD(startDate) || '',
+      endDate: formatDateToYMD(`${endDate}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: selectedLarge?.value as number,
+      mediumCategoryId: selectedMedium?.value as number,
+      orderingOptions: orderingOptions,
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : debouncedSelectedMembers,
+    },
+    onSuccess: (data) => {
+      if (!data) return;
+      let tableDetail: TableRowDetail[] = [];
+      if (selectedOrganization && !selectedLarge && !selectedMedium) {
+        tableDetail = buildTableDetail(data.largeCategories);
+        handleCategorySelection(data.largeCategories);
+      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+        tableDetail = buildTableDetail(data.mediumCategories);
+        handleCategorySelection(data.mediumCategories);
+      } else if (selectedOrganization && selectedLarge && selectedMedium) {
+        tableDetail = buildTableDetail(data.smallCategories);
+        handleCategorySelection(data.smallCategories);
+      }
+
+      setCategoryCollapseStatuses(
+        tableDetail.map((category) => {
+          return {
+            categoryId: category.categoryId,
+            status: false,
+          };
+        }),
+      );
+
+      setTableData(tableDetail);
+
+      // Calculate total duration
+      const totalDurationList = (tableDetail || [])
+        .map((item) => item.categoryDuration)
+        .filter(Boolean); // remove null, undefined, ''
+
+      setTotalDuration(totalDurationsForStatistic(totalDurationList));
+    },
+  });
 
   // Get user task durations
   const {
@@ -307,55 +411,8 @@ const LineChartByTeam = ({
           ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
           : filter.userIds,
     },
+    condition: [Boolean(isFetchedStatisticTableInTeamLineChart)],
   });
-
-  // Get table info (statistic team categories)
-  const { isLoadingStatisticTableInTeamLineChart } =
-    useStatisticTableInTeamLineChart({
-      filter: {
-        fromDate: formatDateToYMD(startDate) || '',
-        endDate: formatDateToYMD(`${endDate}`) || '',
-        organizationIds: String(selectedOrganization?.value || ''),
-        largeCategoryId: selectedLarge?.value as number,
-        mediumCategoryId: selectedMedium?.value as number,
-        orderingOptions: orderingOptions,
-        userIds: orderingOptions?.user_ids?.length == 0
-          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
-          : debouncedSelectedMembers,
-      },
-      onSuccess: (data) => {
-        if (!data) return;
-        let tableDetail: TableRowDetail[] = [];
-        if (selectedOrganization && !selectedLarge && !selectedMedium) {
-          tableDetail = buildTableDetail(data.largeCategories);
-          handleCategorySelection(data.largeCategories);
-        } else if (selectedOrganization && selectedLarge && !selectedMedium) {
-          tableDetail = buildTableDetail(data.mediumCategories);
-          handleCategorySelection(data.mediumCategories);
-        } else if (selectedOrganization && selectedLarge && selectedMedium) {
-          tableDetail = buildTableDetail(data.smallCategories);
-          handleCategorySelection(data.smallCategories);
-        }
-
-        setCategoryCollapseStatuses(
-          tableDetail.map((category) => {
-            return {
-              categoryId: category.categoryId,
-              status: false,
-            };
-          }),
-        );
-
-        setTableData(tableDetail);
-
-        // Calculate total duration
-        const totalDurationList = (tableDetail || [])
-          .map((item) => item.categoryDuration)
-          .filter(Boolean); // remove null, undefined, ''
-
-        setTotalDuration(totalDurationsForStatistic(totalDurationList));
-      },
-    });
 
   // Get initial member options
   useEffect(() => {
@@ -390,9 +447,18 @@ const LineChartByTeam = ({
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
       userIds: selectedMembers?.filter(Boolean).join(','),
-      largeCategoryId: selectedLarge?.value,
-      mediumCategoryId: selectedMedium?.value,
-      smallCategoryId: selectedSmall?.value,
+      largeCategoryId:
+        selectedOrganization && !selectedLarge && !selectedMedium
+          ? selectedCategory?.id
+          : selectedLarge?.value,
+      mediumCategoryId:
+        selectedOrganization && selectedLarge && !selectedMedium
+          ? selectedCategory?.id
+          : selectedMedium?.value,
+      smallCategoryId:
+        selectedOrganization && selectedLarge && selectedMedium
+          ? selectedCategory?.id
+          : selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
       tagIds: orderingOptions?.tag_ids || [],
@@ -401,12 +467,13 @@ const LineChartByTeam = ({
     startDate,
     endDate,
     selectedMembers,
-    selectedLarge?.value,
-    selectedMedium?.value,
+    selectedOrganization,
+    selectedLarge,
+    selectedMedium,
+    selectedCategory?.id,
     selectedSmall?.value,
     lineChartViewBy?.value,
-    selectedOrganization?.value,
-    orderingOptions,
+    orderingOptions?.tag_ids,
   ]);
 
   useEffect(() => {
@@ -1482,12 +1549,8 @@ const LineChartByTeam = ({
             <></>
           )}
 
-          {isLoadingStatisticUserTaskDurationsList ? (
-            <RowSkeleton
-              numberOfRows={1}
-              className={`!h-[395px] w-[calc(100%_-_60px)] mx-auto`}
-            />
-          ) : (
+          {!isLoadingStatisticUserTaskDurationsList &&
+          !isLoadingStatisticTableInTeamLineChart ? (
             <div
               style={{ position: 'relative' }}
               className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
@@ -1497,25 +1560,31 @@ const LineChartByTeam = ({
                 style={{ position: 'absolute', opacity: 0 }}
               />
             </div>
+          ) : (
+            <RowSkeleton
+              numberOfRows={1}
+              className={`!h-[395px] w-[calc(100%_-_60px)] mx-auto`}
+            />
           )}
 
           <div className="px-[30px]">
-            {!isLoadingStatisticUserTaskDurationsList && (
-              <div className="flex gap-8 items-center justify-end flex-wrap">
-                {legendList.map((label, index) => {
-                  return (
-                    <div key={index} className="flex gap-1 items-center">
-                      <div
-                        className="w-8 h-1"
-                        style={{ backgroundColor: label.color }}></div>
-                      <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
-                        {label.name}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            {!isLoadingStatisticUserTaskDurationsList &&
+              !isLoadingStatisticTableInTeamLineChart && (
+                <div className="flex gap-8 items-center justify-end flex-wrap">
+                  {legendList.map((label, index) => {
+                    return (
+                      <div key={index} className="flex gap-1 items-center">
+                        <div
+                          className="w-8 h-1"
+                          style={{ backgroundColor: label.color }}></div>
+                        <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
+                          {label.name}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
             {isLoadingStatisticTableInTeamLineChart ? (
               <RowSkeleton
