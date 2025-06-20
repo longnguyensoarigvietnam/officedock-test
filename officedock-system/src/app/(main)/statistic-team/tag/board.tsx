@@ -405,7 +405,7 @@ const StatisticTeamTagBoard = () => {
         {slicedParticipants.map((item) => {
           return (
             <div
-              className="ml-[-10px] border-[1px] border-white rounded-full h-[32px] w-[32px]"
+              className="ml-[-10px] relative border-[1px] border-white rounded-full h-[32px] w-[32px]"
               key={item.id}>
               <CustomUserAvatar
                 avatarUrl={item?.avatarUrl || ''}
@@ -417,7 +417,7 @@ const StatisticTeamTagBoard = () => {
           );
         })}
         {remainingCount > 0 && (
-          <div className="ml-[-10px] flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[32px] h-[32px]">
+          <div className="ml-[-10px] relative flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[32px] h-[32px]">
             +{remainingCount}
           </div>
         )}
