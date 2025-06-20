@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError
 from base.messages import ERROR_MESSAGES
 from calendars.constants import CalendarTypes, ScheduleTypes
 from calendars.models import Schedule
-from common.utils import get_common_categories
+from common.utils import get_common_categories, format_duration
 from roles.constants import Actions, Screens
 from roles.utils import has_permission
 from tags.models import Tag
@@ -42,6 +42,7 @@ class DurationSerializer(serializers.ModelSerializer):
     plan_end_date = serializers.SerializerMethodField()
     type = serializers.SerializerMethodField()
     categories = serializers.SerializerMethodField()
+    total_duration = serializers.SerializerMethodField()
 
     class Meta:
         model = TaskDuration
@@ -58,8 +59,20 @@ class DurationSerializer(serializers.ModelSerializer):
             "type",
             "is_cancel_alert",
             "categories",
+            "total_duration",
         ]
         read_only_fields = ["id"]
+
+    def get_total_duration(self, instance):
+        """
+        Return total duration of task
+        """
+
+        return (
+            format_duration(instance.paused_at - instance.started_at)
+            if instance.paused_at
+            else None
+        )
 
     def get_categories(self, obj):
         """Handle retrieving categories of a Task."""
@@ -264,11 +277,7 @@ class ActualDurationCreationSerializer(serializers.ModelSerializer):
         choices=ScheduleTypes.choices(),
         write_only=True,
     )
-    uuid = serializers.UUIDField(
-        write_only=True,
-        required=False,
-        allow_null=True,
-    )
+    uuid = serializers.UUIDField(required=False, allow_null=True)
 
     class Meta:
         model = TaskDuration
