@@ -743,7 +743,6 @@ const TaskPageDataHeader = () => {
                         onChange={(e) => {
                           setValueStart(e.target.value);
                         }}
-                        disabled
                         onBlur={(e) => {
                           // Edit start data running in header
                           const startDate =

@@ -53,7 +53,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     Endpoint API of Schedule
     """
 
-    queryset = Schedule.objects.filter(deleted_at__isnull=True).all()
+    queryset = Schedule.objects.all()
     serializer_class = ScheduleSerializer
     permission_classes = [
         ActionPermission,
@@ -69,6 +69,8 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         user = self.request.user
         queryset = super().get_queryset().filter(company=user.company)
+        if self.action in ["list", "retrieve"]:
+            queryset = queryset.filter(deleted_at__isnull=True)
 
         return queryset.order_by("created_at")
 
@@ -1239,7 +1241,7 @@ class EventLocationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     queryset = EventLocation.objects.order_by("-created_at")
     serializer_class = EventLocationSerializer
     permission_classes = [ActionPermission]
-    screen_name = Screens.CALENDAR.value
+    screen_name = Screens.CALENDAR_MANAGEMENT.value
     lookup_field = "uuid"
 
     def get_queryset(self):

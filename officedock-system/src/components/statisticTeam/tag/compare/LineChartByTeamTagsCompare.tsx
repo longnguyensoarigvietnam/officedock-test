@@ -189,6 +189,7 @@ const LineChartByTeamTagsCompare = ({
     listMemberTeam,
     lineChartViewBy,
     isCheckCompare,
+    orderingOptions,
     setIsLoadingLarge,
     setIsLoadingMedium,
     setIsLoadingSmall,
@@ -211,7 +212,17 @@ const LineChartByTeamTagsCompare = ({
   const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
 
   // Filter options
-  const [filter, setFilter] = useState({
+  const [filter, setFilter] = useState<{
+    fromDate: string;
+    endDate: string;
+    userIds?: string;
+    largeCategoryId?: string | number;
+    mediumCategoryId?: string | number;
+    smallCategoryId?: string | number;
+    statisticBy: string;
+    selectedOrganization: string;
+    tagIds: { label: string; value: number }[];
+  }>({
     fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
     endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
     userIds: selectedMembers?.filter(Boolean).join(','),
@@ -220,10 +231,20 @@ const LineChartByTeamTagsCompare = ({
     smallCategoryId: selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
     selectedOrganization: `${selectedOrganization?.value}`,
-    tagIds: selectedTags || [],
+    tagIds: [],
   });
   // Compare filter options
-  const [compareFilter, setCompareFilter] = useState({
+  const [compareFilter, setCompareFilter] = useState<{
+    fromDate: string;
+    endDate: string;
+    userIds?: string;
+    largeCategoryId?: string | number;
+    mediumCategoryId?: string | number;
+    smallCategoryId?: string | number;
+    statisticBy: string;
+    selectedOrganization: string;
+    tagIds: { label: string; value: number }[];
+  }>({
     fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
     endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
     userIds: selectedMembers?.filter(Boolean).join(','),
@@ -232,7 +253,7 @@ const LineChartByTeamTagsCompare = ({
     smallCategoryId: selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
     selectedOrganization: `${selectedOrganization?.value}`,
-    tagIds: selectedTags || [],
+    tagIds: [],
   });
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const [memberOptions, setMemberOptions] = useState<
@@ -372,8 +393,25 @@ const LineChartByTeamTagsCompare = ({
         id: firstTag.tagId,
         name: firstTag.tagName,
       });
+      setFilter((prev) => {
+        return {
+          ...prev,
+          tagIds: [
+            {
+              label: String(firstTag.tagName),
+              value: Number(firstTag.tagId),
+            },
+          ],
+        };
+      });
     } else {
       setSelectedTag(null);
+      setFilter((prev) => {
+        return {
+          ...prev,
+          tagIds: [],
+        };
+      });
     }
   };
 
@@ -382,7 +420,13 @@ const LineChartByTeamTagsCompare = ({
     statisticUserTaskDurationsList,
     isLoadingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
-    filter,
+    filter: {
+      ...filter,
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : filter.userIds,
+    },
     condition: [Boolean(filter.tagIds?.length > 0)],
   });
 
@@ -391,7 +435,13 @@ const LineChartByTeamTagsCompare = ({
     statisticUserTaskDurationsCompareList,
     isLoadingStatisticUserTaskDurationsCompareList,
   } = useStatisticUserTaskDurationsCompare({
-    filter: compareFilter,
+    filter: {
+      ...compareFilter,
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : compareFilter.userIds,
+    },
     condition: [Boolean(compareFilter.tagIds?.length > 0)],
   });
 
@@ -493,7 +543,14 @@ const LineChartByTeamTagsCompare = ({
       smallCategoryId: selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
-      tagIds: selectedTags || [],
+      tagIds: selectedTag
+        ? [
+            {
+              value: selectedTag?.id,
+              label: selectedTag?.name,
+            },
+          ]
+        : [],
     };
   }, [
     startDate,
@@ -504,7 +561,7 @@ const LineChartByTeamTagsCompare = ({
     selectedLarge?.value,
     selectedMedium?.value,
     selectedSmall?.value,
-    selectedTags,
+    selectedTag,
   ]);
 
   const memoizedCompareFilter = useMemo(() => {
@@ -517,7 +574,14 @@ const LineChartByTeamTagsCompare = ({
       smallCategoryId: selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
-      tagIds: selectedTags || [],
+      tagIds: selectedTag
+        ? [
+            {
+              value: selectedTag?.id,
+              label: selectedTag?.name,
+            },
+          ]
+        : [],
     };
   }, [
     startDateCompare,
@@ -528,7 +592,7 @@ const LineChartByTeamTagsCompare = ({
     selectedLarge?.value,
     selectedMedium?.value,
     selectedSmall?.value,
-    selectedTags,
+    selectedTag,
   ]);
 
   useEffect(() => {
@@ -561,7 +625,10 @@ const LineChartByTeamTagsCompare = ({
         mediumCategoryId: selectedMedium?.value as number,
         smallCategoryId: selectedSmall?.value as number,
         selectedTags: selectedTags,
-        userIds: debouncedSelectedMembers,
+        userIds:
+          orderingOptions?.user_ids?.length == 0
+            ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+            : debouncedSelectedMembers,
       },
       onSuccess: (data) => {
         if (!data) return;
@@ -623,7 +690,10 @@ const LineChartByTeamTagsCompare = ({
         mediumCategoryId: selectedMedium?.value as number,
         smallCategoryId: selectedSmall?.value as number,
         selectedTags: selectedTags,
-        userIds: debouncedSelectedMembers,
+        userIds:
+          orderingOptions?.user_ids?.length == 0
+            ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+            : debouncedSelectedMembers,
       },
       onSuccess: (data) => {
         if (!data) return;
@@ -903,34 +973,13 @@ const LineChartByTeamTagsCompare = ({
 
             if (!labels || index >= labels.length) return '';
 
-            const isEdge = index === 0 || index === labels.length - 1;
-            const labelDate = new Date(labels[index]);
-            const currentMonth = labelDate.getMonth();
-
-            // Add extra spaces to reduce gap for first & last labels
-            if (lineChartViewBy?.value != StatisticViewOptions.MONTH)
-              return convertToStatisticJapaneseLabels(
-                labels[index],
-                lineChartViewBy?.value as string,
-                isEdge,
-              );
-
-            // Logic for MONTH view
-            let sameMonthAsNeighbor = false;
-
-            if (index === 0 && labels.length > 1) {
-              const nextMonth = new Date(labels[1]).getMonth();
-              sameMonthAsNeighbor = currentMonth === nextMonth;
-            } else if (index === labels.length - 1 && labels.length > 1) {
-              const prevMonth = new Date(labels[labels.length - 2]).getMonth();
-              sameMonthAsNeighbor = currentMonth === prevMonth;
-            }
-
-            return convertToStatisticJapaneseLabels(
-              labels[index],
-              lineChartViewBy?.value as string,
-              isEdge && sameMonthAsNeighbor,
-            );
+            return isNaN(labels[index] as any)
+              ? convertToStatisticJapaneseLabels(
+                  labels[index],
+                  lineChartViewBy?.value as string,
+                  false,
+                )
+              : '';
           },
         },
       },
@@ -1030,7 +1079,7 @@ const LineChartByTeamTagsCompare = ({
     });
 
     const compareDurationList =
-      statisticUserTaskDurationsList?.[0]?.durations || [];
+      statisticUserTaskDurationsCompareList?.[0]?.durations || [];
     compareDurationList.map((duration, index) => {
       compareDateLabels.push(duration.startDate);
       if (

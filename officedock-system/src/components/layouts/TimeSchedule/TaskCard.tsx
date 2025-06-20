@@ -107,6 +107,11 @@ const TaskCard = ({
   let isCalculation = false;
   let largeColor = '';
   let checkDeadline = false;
+  let extendedPropsData = {
+    isAllDay: false,
+    planStartDate: '',
+    planEndDate: '',
+  };
 
   try {
     const extendedProps = event?.event?.extendedProps;
@@ -114,6 +119,11 @@ const TaskCard = ({
     isEvent = extendedProps?.type === ItemStartType.SCHEDULE;
     isCalculation = extendedProps?.isCalculation ?? false;
     largeColor = extendedProps.largeColor;
+    extendedPropsData = {
+      isAllDay: extendedProps.isAllDay,
+      planStartDate: extendedProps.planStartDate,
+      planEndDate: extendedProps.planEndDate,
+    };
     checkDeadline =
       extendedProps && compareWithCurrentDate(extendedProps.deadline);
   } catch (error) {
@@ -525,12 +535,12 @@ const TaskCard = ({
             <div className="flex overflow-hidden flex-col gap-1 w-[95%]">
               <p
                 style={{
-                  width: event.event?.extendedProps.isAllDay
+                  width: extendedPropsData.isAllDay
                     ? view === ViewOptions.WEEK
                       ? '100%'
                       : '100px'
                     : '100%',
-                  paddingRight: event.event?.extendedProps.isAllDay
+                  paddingRight: extendedPropsData.isAllDay
                     ? view === ViewOptions.WEEK
                       ? '44px'
                       : '0'
@@ -552,14 +562,12 @@ const TaskCard = ({
                   {!isCalculation ? (
                     event.timeText && isEvent ? (
                       <p className="w-[80%] break-all">
-                        {event.event?.extendedProps &&
-                          convertToTimeString(
-                            event.event?.extendedProps.planStartDate,
-                          )}
+                        {extendedPropsData &&
+                          convertToTimeString(extendedPropsData.planStartDate)}
                         ~
-                        {event.event?.extendedProps &&
+                        {extendedPropsData &&
                           convertToTimeString(
-                            event.event?.extendedProps.planEndDate,
+                            extendedPropsData.planEndDate,
                           )}{' '}
                       </p>
                     ) : (

@@ -28,7 +28,7 @@ import {
   SortingState,
 } from '@tanstack/react-table';
 import { EventContentArg } from '@fullcalendar/core/index.js';
-import { useMutation } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { useSession } from 'next-auth/react';
 import { AxiosError } from 'axios';
 
@@ -91,6 +91,7 @@ import {
   formatDateServer,
   formatTimeInput,
   getDateInfoFull,
+  getTimeDifference,
   isEndTimeLater,
   isTimeEarlier,
   isTodaySchedule,
@@ -108,14 +109,17 @@ import { useWebSocket } from '@providers/WebSocketProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import api from '@base/api';
+import { TaskContext } from '@providers/TaskProvider';
 
 const DailyReportBoard = () => {
+  const { statusTaskSelected, setStatusTaskSelected } = useContext(TaskContext);
   const calendarRef = useRef<FullCalendar | null>(null);
   const popoverRef = useRef<HTMLDivElement | null>(null);
 
   const calendarDownloadRef = useRef<FullCalendar | null>(null);
 
   const socket = useWebSocket();
+  const queryClient = useQueryClient();
 
   const { data: session } = useSession();
 
@@ -392,9 +396,21 @@ const DailyReportBoard = () => {
     'postEditDurationTask',
     handleEditDuration,
     {
-      onSuccess: async () => {
+      onSuccess: async ({ data }, task) => {
         refetchDataStatistic();
         refetchDataStatisticPDF();
+        queryClient.refetchQueries(['getDataTaskHeaderList']);
+        if (task.pausedAt === null && statusTaskSelected.isStart) {
+          queryClient.refetchQueries(['getTaskHeaderStart']);
+        }
+        if (data && statusTaskSelected.taskDurationRunningUuid) {
+          if (statusTaskSelected.taskDurationRunningUuid === data.uuid) {
+            setStatusTaskSelected({
+              ...statusTaskSelected,
+              taskDuration: getTimeDifference(data.startedAt, data.pausedAt),
+            });
+          }
+        }
       },
       onError: (data, variant) => {
         if (variant.pausedAt) {

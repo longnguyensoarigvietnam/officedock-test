@@ -1171,6 +1171,7 @@ class TaskViewSet(
                 calculate_progress_skill_map(
                     current_task, user, is_minus=True, case=case
                 )
+
             # Update new categories
             create_categories_by_model(task, categories)
             for user in task.people_in_charge.all():
@@ -1794,9 +1795,13 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         is_team_task = (
             self.request.query_params.get("is_team_task", "").lower() == "true"
         )
+        organization_id = self.request.query_params.get("organization_id")
+        is_cross_team_task = (
+            self.request.query_params.get("is_cross_team_task", "").lower()
+            == "true"
+        )
 
         if is_team_task:
-            organization_id = self.request.query_params.get("organization_id")
             if not organization_id:
                 raise ValidationError(
                     {"organization_id": ERROR_MESSAGES["field_required"]}
@@ -1805,10 +1810,18 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             task_pin = TeamTaskIndex.objects.filter(
                 task=OuterRef("pk"), team_id=organization_id, user_id=user.id
             ).values("pin_at")[:1]
+
+            # Filter only in organization
+            if not is_cross_team_task:
+                queryset = queryset.filter(organization__id=organization_id)
         else:
             task_pin = TaskIndex.objects.filter(
                 task=OuterRef("pk"), user_id=user_id if user_id else user.id
             ).values("pin_at")[:1]
+
+            # Case Mytask: filter only in organization
+            if organization_id:
+                queryset = queryset.filter(organization__id=organization_id)
 
         # Filter tasks by the current user if no user_id is provided
         if not user_id:
@@ -1914,6 +1927,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             OpenApiParameter("category_ids", type=str),
             OpenApiParameter("organization_ids", type=str),
             OpenApiParameter("is_team_task", type=bool),
+            OpenApiParameter("is_cross_team_task", type=bool),
         ],
     )
     def list(self, request, *args, **kwargs):
@@ -2060,6 +2074,7 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             OpenApiParameter("category_ids", type=str),
             OpenApiParameter("organization_ids", type=str),
             OpenApiParameter("search", type=str),
+            OpenApiParameter("is_cross_team_task", type=bool),
         ]
     )
     def list(self, request, *args, **kwargs):

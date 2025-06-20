@@ -220,6 +220,8 @@ const TimeSchedule = memo(
       setDataEventEdit,
       setIdEventDelete,
       setWidthCalendar,
+      statusTaskSelected,
+      setStatusTaskSelected,
     } = useContext(TaskContext);
     const queryClient = useQueryClient();
     const showErrorToast = useErrorToast();
@@ -913,10 +915,23 @@ const TimeSchedule = memo(
       'postUpdateActualTime',
       handleUpdateActualTime,
       {
-        onSuccess: async (data, task) => {
+        onSuccess: async ({ data }, task) => {
           queryClient.refetchQueries(['getDataTaskHeaderList']);
-          if (task.data.pausedAt === null) {
+          if (task.data.pausedAt === null && statusTaskSelected.isStart) {
             queryClient.refetchQueries(['getTaskHeaderStart']);
+          }
+          if (
+            data &&
+            data.length > 0 &&
+            statusTaskSelected.taskDurationRunningUuid &&
+            statusTaskSelected.isStart === false
+          ) {
+            if (statusTaskSelected.taskDurationRunningUuid === data[0].uuid) {
+              setStatusTaskSelected({
+                ...statusTaskSelected,
+                taskDuration: data[0].totalDuration,
+              });
+            }
           }
         },
         onError: (error: AxiosError<any>) => {
@@ -1755,6 +1770,8 @@ const TimeSchedule = memo(
         const oldEnd = info.oldEvent.end;
         if (!isActualCalculate) {
           info.event.setDates(oldStart as Date, oldEnd);
+        } else {
+          info.event.setDates(oldStart as Date, oldEnd);
         }
       }
 
@@ -1768,7 +1785,10 @@ const TimeSchedule = memo(
         info.event.setDates(oldStart as Date, oldEnd);
       }
 
-      if (info.event.extendedProps.type === EventCalendarType.SCHEDULE) {
+      if (
+        info.event.extendedProps.type === EventCalendarType.SCHEDULE ||
+        isActualCalculate
+      ) {
         const oldStart = info.oldEvent.start;
         const oldEnd = info.oldEvent.end;
 
@@ -2377,7 +2397,7 @@ const TimeSchedule = memo(
         return false;
       }
 
-      const draggedResourceId = draggedEvent.extendedProps.resourceId;
+      const draggedResourceId = draggedEvent.extendedProps?.resourceId;
       const dropResourceId = dropInfo.resource?.id;
 
       if (

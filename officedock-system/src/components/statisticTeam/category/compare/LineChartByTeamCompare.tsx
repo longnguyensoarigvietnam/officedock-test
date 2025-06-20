@@ -363,22 +363,246 @@ const LineChartByTeamCompare = ({
         id: firstCategory.categoryId,
         name: firstCategory.categoryName,
       });
+      if (selectedOrganization && !selectedLarge && !selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            largeCategoryId: firstCategory.categoryId,
+          };
+        });
+        setCompareFilter((prev) => {
+          return {
+            ...prev,
+            largeCategoryId: firstCategory.categoryId,
+          };
+        });
+      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            mediumCategoryId: firstCategory.categoryId,
+          };
+        });
+        setCompareFilter((prev) => {
+          return {
+            ...prev,
+            mediumCategoryId: firstCategory.categoryId,
+          };
+        });
+      } else if (selectedOrganization && selectedLarge && selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            smallCategoryId: firstCategory.categoryId,
+          };
+        });
+        setCompareFilter((prev) => {
+          return {
+            ...prev,
+            smallCategoryId: firstCategory.categoryId,
+          };
+        });
+      }
     } else {
       setSelectedCategory(null);
+      if (selectedOrganization && !selectedLarge && !selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            largeCategoryId: undefined,
+          };
+        });
+        setCompareFilter((prev) => {
+          return {
+            ...prev,
+            largeCategoryId: undefined,
+          };
+        });
+      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            mediumCategoryId: undefined,
+          };
+        });
+        setCompareFilter((prev) => {
+          return {
+            ...prev,
+            mediumCategoryId: undefined,
+          };
+        });
+      } else if (selectedOrganization && selectedLarge && selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            smallCategoryId: undefined,
+          };
+        });
+        setCompareFilter((prev) => {
+          return {
+            ...prev,
+            smallCategoryId: undefined,
+          };
+        });
+      }
     }
   };
+
+  // Get table info (statistic team standard categories)
+  const {
+    isLoadingStatisticTableInTeamLineChart,
+    isFetchedStatisticTableInTeamLineChart,
+  } = useStatisticTableInTeamLineChart({
+    filter: {
+      fromDate: formatDateToYMD(startDate) || '',
+      endDate: formatDateToYMD(`${endDate}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: selectedLarge?.value as number,
+      mediumCategoryId: selectedMedium?.value as number,
+      orderingOptions: orderingOptions,
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : debouncedSelectedMembers,
+    },
+    onSuccess: (data) => {
+      if (!data) return;
+      let tableDetail: TableRowDetail[] = [];
+
+      if (selectedOrganization && !selectedLarge && !selectedMedium) {
+        tableDetail = buildTableDetail(
+          data.largeCategories,
+          StatisticChartType.STANDARD,
+        );
+      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+        tableDetail = buildTableDetail(
+          data.mediumCategories,
+          StatisticChartType.STANDARD,
+        );
+      } else if (selectedOrganization && selectedLarge && selectedMedium) {
+        tableDetail = buildTableDetail(
+          data.smallCategories,
+          StatisticChartType.STANDARD,
+        );
+      }
+
+      setStandardTableData(tableDetail);
+    },
+  });
+
+  // Get table info (statistic team compare categories)
+  const {
+    isLoadingStatisticTableInTeamLineChartCompare,
+    isFetchedStatisticTableInTeamLineChartCompare,
+  } = useStatisticTableInTeamLineChartCompare({
+    filter: {
+      fromDate: formatDateToYMD(startDateCompare) || '',
+      endDate: formatDateToYMD(`${endDateCompare}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: selectedLarge?.value as number,
+      mediumCategoryId: selectedMedium?.value as number,
+      orderingOptions: orderingOptions,
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : debouncedSelectedMembers,
+    },
+    onSuccess: (data) => {
+      if (!data) return;
+      let tableDetail: TableRowDetail[] = [];
+
+      if (selectedOrganization && !selectedLarge && !selectedMedium) {
+        tableDetail = buildTableDetail(
+          data.largeCategories,
+          StatisticChartType.COMPARE,
+        );
+      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+        tableDetail = buildTableDetail(
+          data.mediumCategories,
+          StatisticChartType.COMPARE,
+        );
+      } else if (selectedOrganization && selectedLarge && selectedMedium) {
+        tableDetail = buildTableDetail(
+          data.smallCategories,
+          StatisticChartType.COMPARE,
+        );
+      }
+
+      setCompareTableData(tableDetail);
+    },
+  });
+
+  useEffect(() => {
+    const tableData = mergeCategories([
+      ...(standardTableData || []),
+      ...(compareTableData || []),
+    ]);
+    const totalStandardDurationList = (standardTableData || [])
+      .map((item) => item.categoryDuration)
+      .filter(Boolean); // remove null, undefined, ''
+
+    const totalCompareDurationList = (compareTableData || [])
+      .map((item) => item.categoryDuration)
+      .filter(Boolean);
+
+    setTotalStandardDuration(
+      totalDurationsForStatistic(totalStandardDurationList),
+    );
+    setTotalCompareDuration(
+      totalDurationsForStatistic(totalCompareDurationList),
+    );
+
+    setTableData(tableData);
+    setCategoryCollapseStatuses(
+      tableData.map((category) => {
+        return {
+          categoryId: category.categoryId,
+          status: false,
+        };
+      }),
+    );
+    handleCategorySelection(tableData);
+  }, [standardTableData, compareTableData]);
 
   // Get user task durations
   const {
     statisticUserTaskDurationsList,
     isLoadingStatisticUserTaskDurationsList,
-  } = useStatisticUserTaskDurations({ filter });
+  } = useStatisticUserTaskDurations({
+    filter: {
+      ...filter,
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : filter.userIds,
+    },
+    condition: [
+      Boolean(
+        isFetchedStatisticTableInTeamLineChart &&
+          isFetchedStatisticTableInTeamLineChartCompare,
+      ),
+    ],
+  });
 
   // Get user task durations (compared)
   const {
     statisticUserTaskDurationsCompareList,
     isLoadingStatisticUserTaskDurationsCompareList,
-  } = useStatisticUserTaskDurationsCompare({ filter: compareFilter });
+  } = useStatisticUserTaskDurationsCompare({
+    filter: {
+      ...compareFilter,
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : compareFilter.userIds,
+    },
+    condition: [
+      Boolean(
+        isFetchedStatisticTableInTeamLineChart &&
+          isFetchedStatisticTableInTeamLineChartCompare,
+      ),
+    ],
+  });
 
   const mergeCategories = (data: TableRowDetail[]): MergedTableCategory[] => {
     const grouped: Record<number, MergedTableCategory> = {};
@@ -473,9 +697,18 @@ const LineChartByTeamCompare = ({
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
       userIds: selectedMembers?.filter(Boolean).join(','),
-      largeCategoryId: selectedLarge?.value,
-      mediumCategoryId: selectedMedium?.value,
-      smallCategoryId: selectedSmall?.value,
+      largeCategoryId:
+        selectedOrganization && !selectedLarge && !selectedMedium
+          ? selectedCategory?.id
+          : selectedLarge?.value,
+      mediumCategoryId:
+        selectedOrganization && selectedLarge && !selectedMedium
+          ? selectedCategory?.id
+          : selectedMedium?.value,
+      smallCategoryId:
+        selectedOrganization && selectedLarge && selectedMedium
+          ? selectedCategory?.id
+          : selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
       tagIds: orderingOptions?.tag_ids || [],
@@ -484,12 +717,13 @@ const LineChartByTeamCompare = ({
     startDate,
     endDate,
     selectedMembers,
-    lineChartViewBy?.value,
-    selectedOrganization?.value,
-    selectedLarge?.value,
-    selectedMedium?.value,
+    selectedOrganization,
+    selectedLarge,
+    selectedMedium,
+    selectedCategory?.id,
     selectedSmall?.value,
-    orderingOptions,
+    lineChartViewBy?.value,
+    orderingOptions?.tag_ids,
   ]);
 
   const memoizedCompareFilter = useMemo(() => {
@@ -497,9 +731,18 @@ const LineChartByTeamCompare = ({
       fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
       endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
       userIds: selectedMembers?.filter(Boolean).join(','),
-      largeCategoryId: selectedLarge?.value,
-      mediumCategoryId: selectedMedium?.value,
-      smallCategoryId: selectedSmall?.value,
+      largeCategoryId:
+        selectedOrganization && !selectedLarge && !selectedMedium
+          ? selectedCategory?.id
+          : selectedLarge?.value,
+      mediumCategoryId:
+        selectedOrganization && selectedLarge && !selectedMedium
+          ? selectedCategory?.id
+          : selectedMedium?.value,
+      smallCategoryId:
+        selectedOrganization && selectedLarge && selectedMedium
+          ? selectedCategory?.id
+          : selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
       tagIds: orderingOptions?.tag_ids || [],
@@ -508,12 +751,13 @@ const LineChartByTeamCompare = ({
     startDateCompare,
     endDateCompare,
     selectedMembers,
-    lineChartViewBy?.value,
-    selectedOrganization?.value,
-    selectedLarge?.value,
-    selectedMedium?.value,
+    selectedOrganization,
+    selectedLarge,
+    selectedMedium,
+    selectedCategory?.id,
     selectedSmall?.value,
-    orderingOptions,
+    lineChartViewBy?.value,
+    orderingOptions?.tag_ids,
   ]);
 
   useEffect(() => {
@@ -534,112 +778,6 @@ const LineChartByTeamCompare = ({
       setCompareFilter(debouncedCompareFilter); // Trigger API only when everything is ready
     }
   }, [debouncedFilter, debouncedCompareFilter, isOrganizationChanging]);
-
-  // Get table info (statistic team standard categories)
-  const { isLoadingStatisticTableInTeamLineChart } =
-    useStatisticTableInTeamLineChart({
-      filter: {
-        fromDate: formatDateToYMD(startDate) || '',
-        endDate: formatDateToYMD(`${endDate}`) || '',
-        organizationIds: String(selectedOrganization?.value || ''),
-        largeCategoryId: selectedLarge?.value as number,
-        mediumCategoryId: selectedMedium?.value as number,
-        orderingOptions: orderingOptions,
-        userIds: debouncedSelectedMembers,
-      },
-      onSuccess: (data) => {
-        if (!data) return;
-        let tableDetail: TableRowDetail[] = [];
-
-        if (selectedOrganization && !selectedLarge && !selectedMedium) {
-          tableDetail = buildTableDetail(
-            data.largeCategories,
-            StatisticChartType.STANDARD,
-          );
-        } else if (selectedOrganization && selectedLarge && !selectedMedium) {
-          tableDetail = buildTableDetail(
-            data.mediumCategories,
-            StatisticChartType.STANDARD,
-          );
-        } else if (selectedOrganization && selectedLarge && selectedMedium) {
-          tableDetail = buildTableDetail(
-            data.smallCategories,
-            StatisticChartType.STANDARD,
-          );
-        }
-
-        setStandardTableData(tableDetail);
-      },
-    });
-
-  // Get table info (statistic team compare categories)
-  const { isLoadingStatisticTableInTeamLineChartCompare } =
-    useStatisticTableInTeamLineChartCompare({
-      filter: {
-        fromDate: formatDateToYMD(startDateCompare) || '',
-        endDate: formatDateToYMD(`${endDateCompare}`) || '',
-        organizationIds: String(selectedOrganization?.value || ''),
-        largeCategoryId: selectedLarge?.value as number,
-        mediumCategoryId: selectedMedium?.value as number,
-        orderingOptions: orderingOptions,
-        userIds: debouncedSelectedMembers,
-      },
-      onSuccess: (data) => {
-        if (!data) return;
-        let tableDetail: TableRowDetail[] = [];
-
-        if (selectedOrganization && !selectedLarge && !selectedMedium) {
-          tableDetail = buildTableDetail(
-            data.largeCategories,
-            StatisticChartType.COMPARE,
-          );
-        } else if (selectedOrganization && selectedLarge && !selectedMedium) {
-          tableDetail = buildTableDetail(
-            data.mediumCategories,
-            StatisticChartType.COMPARE,
-          );
-        } else if (selectedOrganization && selectedLarge && selectedMedium) {
-          tableDetail = buildTableDetail(
-            data.smallCategories,
-            StatisticChartType.COMPARE,
-          );
-        }
-
-        setCompareTableData(tableDetail);
-      },
-    });
-
-  useEffect(() => {
-    const tableData = mergeCategories([
-      ...(standardTableData || []),
-      ...(compareTableData || []),
-    ]);
-    const totalStandardDurationList = (standardTableData || [])
-      .map((item) => item.categoryDuration)
-      .filter(Boolean); // remove null, undefined, ''
-
-    const totalCompareDurationList = (compareTableData || [])
-      .map((item) => item.categoryDuration)
-      .filter(Boolean);
-
-    setTotalStandardDuration(
-      totalDurationsForStatistic(totalStandardDurationList),
-    );
-    setTotalCompareDuration(
-      totalDurationsForStatistic(totalCompareDurationList),
-    );
-
-    setTableData(tableData);
-    setCategoryCollapseStatuses(
-      tableData.map((category) => {
-        return {
-          categoryId: category.categoryId,
-          status: false,
-        };
-      }),
-    );
-    handleCategorySelection(tableData);
-  }, [standardTableData, compareTableData]);
 
   // Hide tooltip when mouse leave over 80px
   useEffect(() => {
@@ -840,34 +978,13 @@ const LineChartByTeamCompare = ({
 
             if (!labels || index >= labels.length) return '';
 
-            const isEdge = index === 0 || index === labels.length - 1;
-            const labelDate = new Date(labels[index]);
-            const currentMonth = labelDate.getMonth();
-
-            // Add extra spaces to reduce gap for first & last labels
-            if (lineChartViewBy?.value != StatisticViewOptions.MONTH)
-              return convertToStatisticJapaneseLabels(
-                labels[index],
-                lineChartViewBy?.value as string,
-                isEdge,
-              );
-
-            // Logic for MONTH view
-            let sameMonthAsNeighbor = false;
-
-            if (index === 0 && labels.length > 1) {
-              const nextMonth = new Date(labels[1]).getMonth();
-              sameMonthAsNeighbor = currentMonth === nextMonth;
-            } else if (index === labels.length - 1 && labels.length > 1) {
-              const prevMonth = new Date(labels[labels.length - 2]).getMonth();
-              sameMonthAsNeighbor = currentMonth === prevMonth;
-            }
-
-            return convertToStatisticJapaneseLabels(
-              labels[index],
-              lineChartViewBy?.value as string,
-              isEdge && sameMonthAsNeighbor,
-            );
+            return isNaN(labels[index] as any)
+              ? convertToStatisticJapaneseLabels(
+                  labels[index],
+                  lineChartViewBy?.value as string,
+                  false,
+                )
+              : '';
           },
         },
       },
@@ -967,7 +1084,7 @@ const LineChartByTeamCompare = ({
     });
 
     const compareDurationList =
-      statisticUserTaskDurationsList?.[0]?.durations || [];
+      statisticUserTaskDurationsCompareList?.[0]?.durations || [];
     compareDurationList.map((duration, index) => {
       compareDateLabels.push(duration.startDate);
       if (
@@ -2024,7 +2141,9 @@ const LineChartByTeamCompare = ({
           )}
 
           {!isLoadingStatisticUserTaskDurationsList &&
-          !isLoadingStatisticUserTaskDurationsCompareList ? (
+          !isLoadingStatisticUserTaskDurationsCompareList &&
+          !isLoadingStatisticTableInTeamLineChart &&
+          !isLoadingStatisticTableInTeamLineChartCompare ? (
             <div
               style={{ position: 'relative' }}
               className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
@@ -2048,7 +2167,9 @@ const LineChartByTeamCompare = ({
 
           <div className="px-[30px]">
             {!isLoadingStatisticUserTaskDurationsList &&
-              !isLoadingStatisticUserTaskDurationsCompareList && (
+              !isLoadingStatisticUserTaskDurationsCompareList &&
+              !isLoadingStatisticTableInTeamLineChart &&
+              !isLoadingStatisticTableInTeamLineChartCompare && (
                 <>
                   <div className="flex gap-8 items-center justify-end flex-wrap mb-3">
                     <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
