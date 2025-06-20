@@ -28,6 +28,7 @@ const CustomUserAvatar = ({
             className="hover:cursor-pointer object-cover object-center"
             fill
             alt="avatar"
+            unoptimized={true}
           />
         </div>
       ) : (

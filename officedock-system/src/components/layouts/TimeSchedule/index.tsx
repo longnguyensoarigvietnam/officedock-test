@@ -1755,6 +1755,8 @@ const TimeSchedule = memo(
         const oldEnd = info.oldEvent.end;
         if (!isActualCalculate) {
           info.event.setDates(oldStart as Date, oldEnd);
+        } else {
+          info.event.setDates(oldStart as Date, oldEnd);
         }
       }
 
@@ -1768,7 +1770,10 @@ const TimeSchedule = memo(
         info.event.setDates(oldStart as Date, oldEnd);
       }
 
-      if (info.event.extendedProps.type === EventCalendarType.SCHEDULE) {
+      if (
+        info.event.extendedProps.type === EventCalendarType.SCHEDULE ||
+        isActualCalculate
+      ) {
         const oldStart = info.oldEvent.start;
         const oldEnd = info.oldEvent.end;
 

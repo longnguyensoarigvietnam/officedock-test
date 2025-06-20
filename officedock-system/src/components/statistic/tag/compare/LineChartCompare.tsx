@@ -992,7 +992,7 @@ const LineChartCompare = ({
       enableSorting: false,
       cell: (info) => {
         return (
-          <div className="flex flex-col pl-2 gap-2 w-full">
+          <div className="flex flex-col px-3 gap-2 w-full">
             <div className="h-[22px]"></div>
             <div className="font-medium flex text-[14px] justify-end text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
               <p>
@@ -1065,7 +1065,7 @@ const LineChartCompare = ({
       enableSorting: false,
       cell: (info) => {
         return (
-          <div className="flex flex-col pl-2 gap-2 w-full">
+          <div className="flex flex-col px-3 gap-2 w-full">
             <div className="h-[22px]"></div>
             <p className="font-medium flex text-[14px] justify-end text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
               {info.row.original.standardInfo?.tagPercent || 0}%
