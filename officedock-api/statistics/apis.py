@@ -977,31 +977,27 @@ class StatisticViewSet(BaseAPIViewSet):
 
         def _handle_get_filter_durations(id, filter_duration_by_range):
             filter_durations = None
-            if check_is_not_none_category(
-                large_category_id, medium_category_id, small_category_id
-            ):
-
-                # Get filter durations of all large category
-                if not large_category_id and not medium_category_id:
-                    filter_durations = get_list_durations_by_users(
-                        durations=filter_duration_by_range,
-                        large_id=id,
-                    )
-                    # Get filter duration of all medium category is child of large_category_id
-                elif large_category_id:
+            # Get filter durations of all large category
+            if not large_category_id and not medium_category_id:
+                filter_durations = get_list_durations_by_users(
+                    durations=filter_duration_by_range,
+                    large_id=id,
+                )
+                # Get filter duration of all medium category is child of large_category_id
+            elif large_category_id:
+                filter_durations = get_list_durations_by_users(
+                    durations=filter_duration_by_range,
+                    large_id=large_category_id,
+                    medium_id=id,
+                )
+                # Get filter duration of all small category is child of large_category_id and medium_category_id
+                if medium_category_id:
                     filter_durations = get_list_durations_by_users(
                         durations=filter_duration_by_range,
                         large_id=large_category_id,
-                        medium_id=id,
+                        medium_id=medium_category_id,
+                        small_id=id,
                     )
-                    # Get filter duration of all small category is child of large_category_id and medium_category_id
-                    if medium_category_id:
-                        filter_durations = get_list_durations_by_users(
-                            durations=filter_duration_by_range,
-                            large_id=large_category_id,
-                            medium_id=medium_category_id,
-                            small_id=id,
-                        )
 
             return filter_durations
 
