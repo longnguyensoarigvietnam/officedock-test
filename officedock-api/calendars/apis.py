@@ -1241,7 +1241,7 @@ class EventLocationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     queryset = EventLocation.objects.order_by("-created_at")
     serializer_class = EventLocationSerializer
     permission_classes = [ActionPermission]
-    screen_name = Screens.CALENDAR.value
+    screen_name = Screens.CALENDAR_MANAGEMENT.value
     lookup_field = "uuid"
 
     def get_queryset(self):

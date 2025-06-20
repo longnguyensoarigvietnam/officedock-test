@@ -1163,8 +1163,12 @@ class TaskViewSet(
             case = CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value
 
         # Create or update categories
-        if categories is not None and not compare_list_categories(
-            categories, get_common_categories(task.categories.first())
+        if (
+            categories is not None
+            and task.categories.exists()
+            and not compare_list_categories(
+                categories, get_common_categories(task.categories.first())
+            )
         ):
             for user in task.people_in_charge.all():
                 # Minus skill map process have old categories of current task
@@ -1794,9 +1798,13 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         is_team_task = (
             self.request.query_params.get("is_team_task", "").lower() == "true"
         )
+        organization_id = self.request.query_params.get("organization_id")
+        is_cross_team_task = (
+            self.request.query_params.get("is_cross_team_task", "").lower()
+            == "true"
+        )
 
         if is_team_task:
-            organization_id = self.request.query_params.get("organization_id")
             if not organization_id:
                 raise ValidationError(
                     {"organization_id": ERROR_MESSAGES["field_required"]}
@@ -1805,10 +1813,18 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             task_pin = TeamTaskIndex.objects.filter(
                 task=OuterRef("pk"), team_id=organization_id, user_id=user.id
             ).values("pin_at")[:1]
+
+            # Filter only in organization
+            if not is_cross_team_task:
+                queryset = queryset.filter(organization__id=organization_id)
         else:
             task_pin = TaskIndex.objects.filter(
                 task=OuterRef("pk"), user_id=user_id if user_id else user.id
             ).values("pin_at")[:1]
+
+            # Case Mytask: filter only in organization
+            if organization_id:
+                queryset = queryset.filter(organization__id=organization_id)
 
         # Filter tasks by the current user if no user_id is provided
         if not user_id:
@@ -1914,6 +1930,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             OpenApiParameter("category_ids", type=str),
             OpenApiParameter("organization_ids", type=str),
             OpenApiParameter("is_team_task", type=bool),
+            OpenApiParameter("is_cross_team_task", type=bool),
         ],
     )
     def list(self, request, *args, **kwargs):
@@ -2060,6 +2077,7 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             OpenApiParameter("category_ids", type=str),
             OpenApiParameter("organization_ids", type=str),
             OpenApiParameter("search", type=str),
+            OpenApiParameter("is_cross_team_task", type=bool),
         ]
     )
     def list(self, request, *args, **kwargs):

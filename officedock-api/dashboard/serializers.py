@@ -201,6 +201,8 @@ class UpdateDurationSerializer(serializers.ModelSerializer):
         started_at = data.get("started_at", None)
         paused_at = data.get("paused_at")
 
+        check_valid_duration(started_at, paused_at, instance)
+
         # Exclude the current instance when updating
         if instance:
             paused_at = paused_at or instance.paused_at or now()

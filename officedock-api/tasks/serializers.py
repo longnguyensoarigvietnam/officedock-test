@@ -528,6 +528,7 @@ class TaskBoardSerializer(TaskCommonSerializer):
     pin_at = serializers.SerializerMethodField(read_only=True)
     type = serializers.SerializerMethodField(read_only=True)
     categories = serializers.SerializerMethodField(read_only=True)
+    is_cross_team_task = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Task
@@ -540,6 +541,7 @@ class TaskBoardSerializer(TaskCommonSerializer):
             "is_important",
             "deadline",
             "is_schedule_in_today",
+            "is_cross_team_task",
             "index",
             "pin_at",
             "type",
@@ -604,6 +606,24 @@ class TaskBoardSerializer(TaskCommonSerializer):
         Return task type for duration
         """
         return CalendarTypes.TASK.value
+
+    def get_is_cross_team_task(self, instance):
+        """
+        Returns detailed information about a task, including the `is_cross_team_task` flag
+        to indicate whether the task belongs to another (secondary) team.
+        """
+        organization_id = self.context.get("organization_id")
+
+        # If no organization_id in context, task is not cross-team
+        if organization_id is None:
+            return False
+
+        # If task has no organization, it's not cross-team
+        if not instance.organization:
+            return False
+
+        # Compare organization IDs
+        return int(instance.organization.id) != int(organization_id)
 
 
 class TaskCalendarSerializer(TaskCommonSerializer):
@@ -869,17 +889,27 @@ class TaskTeamdockSerializer(BaseUserSerializer):
         user = request.user
         ordering_fields = self.context.get("ordering_fields")
         organization_id = request.query_params.get("organization_id")
+        is_cross_team_task = (
+            request.query_params.get("is_cross_team_task", "").lower() == "true"
+        )
         page_size = int(request.query_params.get("page_size", 5))
         ordering = request.query_params.get("ordering", None)
         statuses = TaskStatus.objects.exclude(
             name=TaskStatusConstant.MY_ROUTINE.value
         ).order_by("id")
+
+        user_org_ids = (
+            obj.organizations.all().values_list("id", flat=True)
+            if is_cross_team_task
+            else [organization_id]
+        )
+
         results = []
 
         for status in statuses:
             tasks = obj.in_charge_tasks.filter(
                 status=status,
-                organization_id=organization_id,
+                organization__id__in=user_org_ids,
                 deleted_at__isnull=True,
             ).exclude(type=TaskTypes.MY_TEMPLATE.value)
             tasks_total = tasks.count()

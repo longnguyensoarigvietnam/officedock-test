@@ -372,6 +372,10 @@ def transform_statistic_categories(statistic_categories):
 
 def get_common_categories(category, obj=None):
     """Handle transform common category"""
+
+    if not category:
+        return []
+
     category_types = [
         ("large_statistic_category", ScheduleCategoryTypes.LARGE.value),
         ("medium_statistic_category", ScheduleCategoryTypes.MEDIUM.value),
@@ -397,7 +401,7 @@ def get_common_categories(category, obj=None):
             "type": type_value,
         }
         for attr, type_value in category_types
-        if getattr(category, attr)
+        if hasattr(category, attr) and getattr(category, attr) is not None
     ]
 
 
