@@ -52,10 +52,8 @@ class ActionPermission(BasePermission):
             return False  # Deny access if `screen_name` is not defined
 
         # Allow `GET` requests if fetching data for a screen different from the current screen
-        if (
-            current_screen
-            and request.method == "GET"
-            and to_camel_case(current_screen) != to_camel_case(screen_name)
+        if current_screen and to_camel_case(current_screen) != to_camel_case(
+            screen_name
         ):
             return True
 
@@ -63,17 +61,6 @@ class ActionPermission(BasePermission):
         if (
             screen_name == Screens.MY_TASK.value
             and current_screen == Screens.TEAMDOCK.value
-        ):
-            return True
-
-        # Allow `PATCH` requests to update MY_TASK from the STATISTIC screen
-        if (
-            current_screen
-            and request.method == "PATCH"
-            and to_camel_case(current_screen)
-            == to_camel_case(Screens.STATISTIC.value)
-            and to_camel_case(screen_name)
-            == to_camel_case(Screens.MY_TASK.value)
         ):
             return True
 

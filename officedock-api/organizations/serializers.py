@@ -3,6 +3,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from base.messages import ERROR_MESSAGES
+from common.constants import AVATAR_GCS_EXPIRATION_SECONDS
 from common.utils import compare_categories, get_signed_url
 from roles.constants import Actions, Screens
 from roles.utils import has_permission
@@ -29,7 +30,9 @@ class BaseOrganizationSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         if instance.icon:
-            representation["icon"] = get_signed_url(instance.icon)
+            representation["icon"] = get_signed_url(
+                instance.icon, AVATAR_GCS_EXPIRATION_SECONDS
+            )
 
         return representation
 

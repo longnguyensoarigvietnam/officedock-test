@@ -10,7 +10,10 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from base.messages import ERROR_MESSAGES
 from common.utils import get_signed_url
-from common.constants import USER_AVATAR_UPLOAD_MAX_SIZE
+from common.constants import (
+    AVATAR_GCS_EXPIRATION_SECONDS,
+    USER_AVATAR_UPLOAD_MAX_SIZE,
+)
 from calendars.constants import CalendarTypes
 from companies.serializers import CompanySerializer
 from organizations.models import UsersOrganizations, Organization
@@ -75,7 +78,9 @@ class BaseUserSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         if instance.avatar:
-            representation["avatar"] = get_signed_url(instance.avatar)
+            representation["avatar"] = get_signed_url(
+                instance.avatar, AVATAR_GCS_EXPIRATION_SECONDS
+            )
 
         return representation
 
