@@ -90,6 +90,8 @@ const useStatisticUserTaskDurations = ({
     enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
+    staleTime: 0, // data is considered immediately stale
+    cacheTime: 0, // disable in-memory caching
     onSuccess: (data: StatisticsUserTaskDuration[]) => {
       onSuccess && onSuccess(data);
     },
