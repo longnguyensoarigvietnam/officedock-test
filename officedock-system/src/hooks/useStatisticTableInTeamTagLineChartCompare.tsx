@@ -18,7 +18,9 @@ interface FilterProps {
   mediumCategoryId?: number;
   smallCategoryId?: number;
   organizationIds?: string;
-  selectedTags: OptionDropdownType[]
+  organizationMemberId?: string;
+
+  selectedTags: OptionDropdownType[];
   userIds: string;
 }
 
@@ -43,6 +45,11 @@ const useStatisticTableInTeamTagLineChartCompare = ({
     }
     if (filter.endDate) {
       queryParams.push(`end_date=${filter.endDate}`);
+    }
+    if (filter.organizationMemberId) {
+      queryParams.push(
+        `organization_get_members_id=${filter.organizationMemberId.toString()}`,
+      );
     }
     if (filter.largeCategoryId) {
       queryParams.push(`large_category_id=${filter.largeCategoryId}`);

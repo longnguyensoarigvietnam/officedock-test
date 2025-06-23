@@ -18,7 +18,7 @@ import StackedAreaTeamTagChart from '@components/statisticTeam/tag/StackedAreaTe
 
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
-import { ALL_TEAM_STATISTIC } from '@constants';
+import { ALL_TEAM_STATISTIC, TEAM_CALENDAR_ORGANIZATION } from '@constants';
 
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useStatisticTagsTeam from '@hooks/useStatisticTagsTeam';
@@ -78,7 +78,10 @@ const StatisticTeamTagBoard = () => {
     setIsLoadingSmallCompare,
     setCurrentPage,
   } = useContext(StatisticTeamTagsStateContext);
-  const { organizationTeamList } = useContext(GlobalStateContext);
+  const {
+    organizationTeamList,
+    selectedOrganization: selectedOrganizationSideBar,
+  } = useContext(GlobalStateContext);
 
   const router = useRouter();
   const { showToast } = useToast();
@@ -156,6 +159,10 @@ const StatisticTeamTagBoard = () => {
       smallCategoryId: selectedSmall?.value as number,
 
       tagIds: selectedTags,
+      organizationMemberId:
+        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
     },
     onSuccess: (data) => {
       if (creationDataStatisticData?.organizations.length === 0) {
@@ -212,6 +219,10 @@ const StatisticTeamTagBoard = () => {
       smallCategoryId: selectedSmall?.value as number,
       tagIds: selectedTags,
       isCompare: isCheckCompare,
+      organizationMemberId:
+        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
     },
     onSuccess: (data) => {
       setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));

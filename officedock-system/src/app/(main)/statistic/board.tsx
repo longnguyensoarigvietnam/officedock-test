@@ -69,6 +69,7 @@ const StatisticBoard = () => {
     setTagsOptions,
     setCurrentPage,
   } = useContext(StatisticStateContext);
+
   const [isMyTask, setIsMyTask] = useState(true);
   const router = useRouter();
 

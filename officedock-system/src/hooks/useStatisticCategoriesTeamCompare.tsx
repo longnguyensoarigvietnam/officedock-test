@@ -20,6 +20,7 @@ interface FilterProps {
   mediumCategoryId?: number;
   smallCategoryId?: number;
   organizationIds?: string;
+  organizationMemberId?: string;
   orderingOptions: {
     tag_ids: OptionDropdownType[];
     user_ids: OptionDropdownType[];
@@ -45,24 +46,40 @@ const useStatisticCategoriesTeamCompare = ({
 
   // Handle call API get statistic category list team
   const getStatisticCategoryListTeamCompare = async () => {
-    if (!filter?.organizationIds) return [];
-    if (!filter?.isCompare) return [];
+    if (!filter?.organizationIds || !filter?.isCompare) return [];
 
-    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM(parseInt(filter?.organizationIds))}?${
-      filter?.fromDate ? `from_date=${filter.fromDate}` : ''
-    }${filter?.endDate ? `&end_date=${filter.endDate}` : ''}${
-      filter?.largeCategoryId
-        ? `&large_category_id=${filter.largeCategoryId}`
-        : ''
-    }${
-      filter?.mediumCategoryId
-        ? `&medium_category_id=${filter.mediumCategoryId}`
-        : ''
-    }${
-      filter?.smallCategoryId
-        ? `&small_category_id=${filter.smallCategoryId}`
-        : ''
-    }${filter?.orderingOptions?.tag_ids ? `&tag_ids=${filter?.orderingOptions?.tag_ids.map((item) => item.value).join(',')}` : ''}${filter?.orderingOptions?.user_ids ? `&user_ids=${filter?.orderingOptions?.user_ids.map((item) => item.value).join(',')}` : ''}`;
+    const params = new URLSearchParams();
+
+    if (filter.fromDate) params.append('from_date', String(filter.fromDate));
+    if (filter.endDate) params.append('end_date', String(filter.endDate));
+    if (filter.organizationMemberId)
+      params.append(
+        'organization_get_members_id',
+        filter.organizationMemberId.toString(),
+      );
+    if (filter.largeCategoryId)
+      params.append('large_category_id', filter.largeCategoryId.toString());
+    if (filter.mediumCategoryId)
+      params.append('medium_category_id', filter.mediumCategoryId.toString());
+    if (filter.smallCategoryId)
+      params.append('small_category_id', filter.smallCategoryId.toString());
+
+    if (filter.orderingOptions?.tag_ids) {
+      const tagIds = filter.orderingOptions.tag_ids
+        .map((item) => item.value)
+        .join(',');
+      params.append('tag_ids', tagIds);
+    }
+
+    if (filter.orderingOptions?.user_ids) {
+      const userIds = filter.orderingOptions.user_ids
+        .map((item) => item.value)
+        .join(',');
+      params.append('user_ids', userIds);
+    }
+
+    const orgId = parseInt(filter.organizationIds);
+    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM(orgId)}?${params.toString()}`;
 
     const { data } = await api.get<StatisticsCategories[]>(apiUrl);
     return data;

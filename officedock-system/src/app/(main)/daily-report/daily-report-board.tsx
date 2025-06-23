@@ -134,11 +134,14 @@ const DailyReportBoard = () => {
 
   const { dataStatistic, refetchDataStatistic } = useDataStatistic({
     date: formatDateServer(currentDate),
+    current_screen: 'daily_report',
   });
   const [isLoadingDownload, setIsLoadingDownload] = useState(false);
 
   const { dataStatisticPDF, refetchDataStatisticPDF } = useDataStatisticPDF({
     date: formatDateServer(currentDate),
+    current_screen: 'daily_report',
+
     onSettled: () => {
       setTimeout(() => {
         setIsLoading(false);

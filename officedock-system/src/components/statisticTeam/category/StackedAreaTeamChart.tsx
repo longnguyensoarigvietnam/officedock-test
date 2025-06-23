@@ -24,7 +24,10 @@ import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatis
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
-import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
+import {
+  STATISTIC_CHART_VIEW_OPTIONS,
+  TEAM_CALENDAR_ORGANIZATION,
+} from '@constants';
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 
 import { OptionDropdownType } from '@interfaces/common';
@@ -42,6 +45,7 @@ import {
   sumDurationsChart,
 } from '@utils/date';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 type Props = {
   startDate: Date;
@@ -139,6 +143,8 @@ const StackedAreaTeamChart = ({
     lineChartViewBy,
     setLineChartViewBy,
   } = useContext(StatisticTeamStateContext);
+  const { selectedOrganization: selectedOrganizationSideBar } =
+    useContext(GlobalStateContext);
 
   const selectedMemberList =
     orderingOptions?.user_ids && orderingOptions.user_ids.length > 0
@@ -181,6 +187,10 @@ const StackedAreaTeamChart = ({
     statisticBy: `${lineChartViewBy?.value}`,
     selectedOrganization: `${selectedOrganization?.value}`,
     tagIds: orderingOptions?.tag_ids || [],
+    organizationMemberId:
+      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        ? String(selectedOrganizationSideBar?.value || '')
+        : undefined,
   });
 
   const handleCategorySelection = (
@@ -289,6 +299,10 @@ const StackedAreaTeamChart = ({
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
       tagIds: orderingOptions?.tag_ids || [],
+      organizationMemberId:
+        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
     });
   }, [
     startDate,
@@ -304,6 +318,7 @@ const StackedAreaTeamChart = ({
     selectedLarge,
     selectedMedium,
     selectedCategory?.id,
+    selectedOrganizationSideBar?.value,
   ]);
 
   useEffect(() => {

@@ -16,6 +16,7 @@ interface useDataStatisticPDFProps {
   userId?: string;
   organizationId?: string;
   condition?: boolean[];
+  current_screen?: string;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
 }
@@ -25,6 +26,7 @@ const useDataStatisticPDF = ({
   userId,
   organizationId,
   condition,
+  current_screen,
   onError,
   onSettled,
 }: useDataStatisticPDFProps) => {
@@ -36,7 +38,17 @@ const useDataStatisticPDF = ({
   // Handle call API get task calendar
   const getDataStatistic = async () => {
     setIsLoading(true);
-    const apiUrl = `${apiRouters.DATA_DAILY_STATISTIC_PDF}?${date ? `date=${date}` : ''}${userId ? `&user_id=${userId}` : ''}${organizationId ? `&organization_id=${organizationId}` : ''}`;
+
+    const params = new URLSearchParams();
+    if (date) params.append('date', date);
+    if (userId) params.append('user_id', userId.toString());
+    if (current_screen)
+      params.append('current_screen', current_screen.toString());
+
+    if (organizationId)
+      params.append('organization_id', organizationId.toString());
+
+    const apiUrl = `${apiRouters.DATA_DAILY_STATISTIC_PDF}?${params.toString()}`;
     const { data } = await api.get<dataStatisticResponsePDF>(apiUrl);
     return data;
   };
@@ -47,7 +59,10 @@ const useDataStatisticPDF = ({
     refetch: refetchDataStatisticPDF,
     isFetched: isFetchedDataStatisticPDF,
   } = useQuery({
-    queryKey: ['getDataStatisticPDF', [date, userId, organizationId]],
+    queryKey: [
+      'getDataStatisticPDF',
+      [date, userId, organizationId, current_screen],
+    ],
     queryFn: getDataStatistic,
     retry: 0,
     enabled: !!token && condition?.every(Boolean),

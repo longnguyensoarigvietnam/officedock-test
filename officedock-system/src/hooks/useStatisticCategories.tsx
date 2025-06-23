@@ -19,6 +19,7 @@ interface FilterProps {
   mediumCategoryId?: number;
   smallCategoryId?: number;
   organizationIds?: string;
+  organizationMemberId?: string;
   tagIds?: OptionDropdownType[];
 }
 
@@ -40,26 +41,30 @@ const useStatisticCategories = ({
   // Handle call API get statistic category list
   const getStatisticCategoryList = async () => {
     if (!filter?.organizationIds) return [];
-    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES}?${
-      filter?.fromDate ? `from_date=${filter.fromDate}` : ''
-    }${filter?.endDate ? `&end_date=${filter.endDate}` : ''}${
-      filter?.largeCategoryId
-        ? `&large_category_id=${filter.largeCategoryId}`
-        : ''
-    }${
-      filter?.mediumCategoryId
-        ? `&medium_category_id=${filter.mediumCategoryId}`
-        : ''
-    }${
-      filter?.smallCategoryId
-        ? `&small_category_id=${filter.smallCategoryId}`
-        : ''
-    }${
-      filter?.organizationIds
-        ? `&organization_ids=${filter.organizationIds}`
-        : ''
-    }${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
+    const params = new URLSearchParams();
+
+    if (filter.fromDate) params.append('from_date', String(filter.fromDate));
+    if (filter.endDate) params.append('end_date', String(filter.endDate));
+    if (filter.largeCategoryId)
+      params.append('large_category_id', filter.largeCategoryId.toString());
+    if (filter.mediumCategoryId)
+      params.append('medium_category_id', filter.mediumCategoryId.toString());
+    if (filter.smallCategoryId)
+      params.append('small_category_id', filter.smallCategoryId.toString());
+    if (filter.organizationIds)
+      params.append('organization_ids', filter.organizationIds.toString());
+    if (filter.organizationMemberId)
+      params.append(
+        'organization_get_members_id',
+        filter.organizationMemberId.toString(),
+      );
+    if (filter.tagIds) {
+      const tagValues = filter.tagIds.map((item) => item.value).join(',');
+      params.append('tag_ids', tagValues);
+    }
+
+    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES}?${params.toString()}`;
     const { data } = await api.get<StatisticsCategories[]>(apiUrl);
     return data;
   };
