@@ -335,6 +335,10 @@ const StatisticTeamBoard = () => {
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === data.value,
     );
+
+    const organizationMember = creationDataStatisticData?.organizations?.find(
+      (org) => org.id === selectedOrganizationSideBar?.value,
+    );
     if (organization) {
       const largeCategories = organization.statisticCategories.map((stat) => ({
         value: stat.LARGE.id,
@@ -345,24 +349,49 @@ const StatisticTeamBoard = () => {
         value: item.id,
       }));
       setTagsOptions(optionsTagList);
-      setListMemberTeam(
-        organization.members.map((member) => ({
-          id: member.id,
-          fullName: member.fullName,
-          color: member?.avatarColor || '',
-          avatarUrl: member?.avatar || '',
-        })),
-      );
+      if (
+        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION &&
+        organizationMember
+      ) {
+        setListMemberTeam(
+          organizationMember.members.map((member) => ({
+            id: member.id,
+            fullName: member.fullName,
+            color: member?.avatarColor || '',
+            avatarUrl: member?.avatar || '',
+          })),
+        );
+        setOrderingOptions({
+          tag_ids: [],
+          user_ids: organizationMember.members.map((member) => ({
+            value: member.id,
+            label: member.fullName,
+            color: member?.avatarColor || '',
+            avatarUrl: member?.avatar || '',
+          })),
+        });
+      } else {
+        setListMemberTeam(
+          organization.members.map((member) => ({
+            id: member.id,
+            fullName: member.fullName,
+            color: member?.avatarColor || '',
+            avatarUrl: member?.avatar || '',
+          })),
+        );
+        setOrderingOptions({
+          tag_ids: [],
+          user_ids: organization.members.map((member) => ({
+            value: member.id,
+            label: member.fullName,
+            color: member?.avatarColor || '',
+            avatarUrl: member?.avatar || '',
+          })),
+        });
+      }
+
       setCurrentPage(1);
-      setOrderingOptions({
-        tag_ids: [],
-        user_ids: organization.members.map((member) => ({
-          value: member.id,
-          label: member.fullName,
-          color: member?.avatarColor || '',
-          avatarUrl: member?.avatar || '',
-        })),
-      });
+
       // If organization is all team then return here
       if (data?.value === ALL_TEAM_STATISTIC) {
         setLargeOptions([]);
