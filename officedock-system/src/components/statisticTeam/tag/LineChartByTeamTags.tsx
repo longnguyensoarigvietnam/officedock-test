@@ -55,6 +55,7 @@ import {
   DEFAULT_TIME_TEXT,
   EVERYONE_OPTION_LABEL,
   STATISTIC_CHART_VIEW_OPTIONS,
+  TEAM_CALENDAR_ORGANIZATION,
 } from '@constants';
 
 import {
@@ -160,8 +161,8 @@ const LineChartByTeamTags = ({
     setLineChartViewBy,
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
-  const { expanded } = useContext(GlobalStateContext);
-
+  const { expanded, selectedOrganization: selectedOrganizationSideBar } =
+    useContext(GlobalStateContext);
   // Selected members and category
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
   const [selectedTag, setSelectedTag] = useState<{
@@ -181,6 +182,7 @@ const LineChartByTeamTags = ({
     statisticBy: string;
     selectedOrganization: string;
     tagIds: { label: string; value: number }[];
+    organizationMemberId?: string;
   }>({
     fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
     endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
@@ -191,6 +193,10 @@ const LineChartByTeamTags = ({
     statisticBy: `${lineChartViewBy?.value}`,
     selectedOrganization: `${selectedOrganization?.value}`,
     tagIds: [],
+    organizationMemberId:
+      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        ? String(selectedOrganizationSideBar?.value || '')
+        : undefined,
   });
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const [memberOptions, setMemberOptions] = useState<
@@ -363,6 +369,10 @@ const LineChartByTeamTags = ({
           orderingOptions?.user_ids?.length == 0
             ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
             : debouncedSelectedMembers,
+        organizationMemberId:
+          selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+            ? String(selectedOrganizationSideBar?.value || '')
+            : undefined,
       },
       onSuccess: (data) => {
         if (!data) return;
@@ -467,17 +477,23 @@ const LineChartByTeamTags = ({
             },
           ]
         : [],
+      organizationId:
+        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
     };
   }, [
     startDate,
     endDate,
     selectedMembers,
-    lineChartViewBy?.value,
-    selectedOrganization?.value,
     selectedLarge?.value,
     selectedMedium?.value,
     selectedSmall?.value,
+    lineChartViewBy?.value,
+    selectedOrganization?.value,
+    selectedOrganization?.label,
     selectedTag,
+    selectedOrganizationSideBar?.value,
   ]);
 
   useEffect(() => {

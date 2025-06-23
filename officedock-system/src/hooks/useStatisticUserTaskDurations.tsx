@@ -21,6 +21,7 @@ interface FilterProps {
   tagIds?: OptionDropdownType[];
   statisticBy?: string;
   selectedOrganization?: string;
+  organizationMemberId?: string;
 }
 
 const useStatisticUserTaskDurations = ({
@@ -46,6 +47,11 @@ const useStatisticUserTaskDurations = ({
     }
     if (filter.endDate) {
       queryParams.push(`end_date=${filter.endDate}`);
+    }
+    if (filter.organizationMemberId) {
+      queryParams.push(
+        `organization_get_members_id=${filter.organizationMemberId.toString()}`,
+      );
     }
     if (filter.largeCategoryId) {
       queryParams.push(`large_category_id=${filter.largeCategoryId}`);

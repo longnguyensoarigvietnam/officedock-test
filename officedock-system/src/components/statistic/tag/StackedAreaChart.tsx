@@ -355,7 +355,7 @@ const StackedAreaChart = ({
       const tagIdOrder = sortSource.map((item) => item.tagId);
 
       finalTableData.sort(
-        (a, b) => tagIdOrder.indexOf(a.tagId) - tagIdOrder.indexOf(b.tagId),
+        (a, b) => tagIdOrder?.indexOf(a.tagId) - tagIdOrder?.indexOf(b.tagId),
       );
     }
 

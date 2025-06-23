@@ -314,12 +314,12 @@ const StackedAreaChart = ({
     if (sortSource?.length) {
       const order = sortSource.map((cat) => cat.categoryName);
       finalTableData.sort(
-        (a, b) => order.indexOf(a.categoryName) - order.indexOf(b.categoryName),
+        (a, b) =>
+          order?.indexOf(a.categoryName) - order?.indexOf(b.categoryName),
       );
     }
 
     setTableData(finalTableData);
-
     setColorList(
       finalTableData.map((color) => {
         return color.categoryColor;

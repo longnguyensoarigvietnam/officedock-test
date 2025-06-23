@@ -18,7 +18,10 @@ import RowSkeleton from '@components/skeleton/RowSkeleton';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
-import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
+import {
+  STATISTIC_CHART_VIEW_OPTIONS,
+  TEAM_CALENDAR_ORGANIZATION,
+} from '@constants';
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 
 import { OptionDropdownType } from '@interfaces/common';
@@ -36,6 +39,7 @@ import {
   sumDurationsChart,
 } from '@utils/date';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 type Props = {
   startDate: Date;
@@ -140,6 +144,8 @@ const StackedAreaTeamTagChart = ({
     setLineChartViewBy,
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
+  const { selectedOrganization: selectedOrganizationSideBar } =
+    useContext(GlobalStateContext);
 
   const getTotalDuration = () => {
     if (selectedOrganization?.value) {
@@ -193,6 +199,7 @@ const StackedAreaTeamTagChart = ({
     statisticBy: string;
     selectedOrganization: string;
     tagIds: { label: string; value: number }[];
+    organizationMemberId?: string;
   }>({
     fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
     endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
@@ -203,6 +210,10 @@ const StackedAreaTeamTagChart = ({
     statisticBy: `${lineChartViewBy?.value}`,
     selectedOrganization: `${selectedOrganization?.value}`,
     tagIds: [],
+    organizationMemberId:
+      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        ? String(selectedOrganizationSideBar?.value || '')
+        : undefined,
   });
 
   const handleTagSelection = (tagList: StatisticCategoryInfo[] | undefined) => {
@@ -341,6 +352,10 @@ const StackedAreaTeamTagChart = ({
             },
           ]
         : [],
+      organizationMemberId:
+        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
     });
   }, [
     startDate,
@@ -352,6 +367,8 @@ const StackedAreaTeamTagChart = ({
     selectedSmall?.value,
     selectedMemberList,
     selectedTag,
+    selectedOrganization?.label,
+    selectedOrganizationSideBar?.value,
   ]);
 
   useEffect(() => {

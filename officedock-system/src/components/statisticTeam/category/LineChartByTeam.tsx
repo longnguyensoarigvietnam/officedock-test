@@ -54,6 +54,7 @@ import {
   DEFAULT_TIME_TEXT,
   EVERYONE_OPTION_LABEL,
   STATISTIC_CHART_VIEW_OPTIONS,
+  TEAM_CALENDAR_ORGANIZATION,
 } from '@constants';
 
 import {
@@ -148,7 +149,8 @@ const LineChartByTeam = ({
     lineChartViewBy,
     setLineChartViewBy,
   } = useContext(StatisticTeamStateContext);
-  const { expanded } = useContext(GlobalStateContext);
+  const { expanded, selectedOrganization: selectedOrganizationSideBar } =
+    useContext(GlobalStateContext);
 
   // Selected members and category
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
@@ -178,6 +180,10 @@ const LineChartByTeam = ({
     statisticBy: `${lineChartViewBy?.value}`,
     selectedOrganization: `${selectedOrganization?.value}`,
     tagIds: orderingOptions?.tag_ids || [],
+    organizationMemberId:
+      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        ? String(selectedOrganizationSideBar?.value || '')
+        : undefined,
   });
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const [memberOptions, setMemberOptions] = useState<
@@ -358,6 +364,10 @@ const LineChartByTeam = ({
         largeCategoryId: selectedLarge?.value as number,
         mediumCategoryId: selectedMedium?.value as number,
         orderingOptions: orderingOptions,
+        organizationMemberId:
+          selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+            ? String(selectedOrganizationSideBar?.value || '')
+            : undefined,
         userIds:
           orderingOptions?.user_ids?.length == 0
             ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
@@ -464,6 +474,10 @@ const LineChartByTeam = ({
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
       tagIds: orderingOptions?.tag_ids || [],
+      organizationMemberId:
+        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
     };
   }, [
     startDate,
@@ -476,6 +490,7 @@ const LineChartByTeam = ({
     selectedSmall?.value,
     lineChartViewBy?.value,
     orderingOptions?.tag_ids,
+    selectedOrganizationSideBar?.value,
   ]);
 
   useEffect(() => {
@@ -1473,7 +1488,7 @@ const LineChartByTeam = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
-                    setTableData([])
+                    setTableData([]);
                     setLineChartViewBy({
                       label: e.label,
                       value: e.value,

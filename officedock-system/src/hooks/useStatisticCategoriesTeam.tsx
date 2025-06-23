@@ -19,6 +19,7 @@ interface FilterProps {
   mediumCategoryId?: number;
   smallCategoryId?: number;
   organizationIds?: string;
+  organizationMemberId?: string;
   orderingOptions: {
     tag_ids: OptionDropdownType[];
     user_ids: OptionDropdownType[];
@@ -50,7 +51,11 @@ const useStatisticCategoriesTeam = ({
     if (!filter?.organizationIds) return [];
 
     const params = new URLSearchParams();
-
+    if (filter.organizationMemberId)
+      params.append(
+        'organization_get_members_id',
+        filter.organizationMemberId.toString(),
+      );
     if (filter.fromDate) params.set('from_date', String(filter.fromDate));
     if (filter.endDate) params.set('end_date', String(filter.endDate));
     if (filter.largeCategoryId)

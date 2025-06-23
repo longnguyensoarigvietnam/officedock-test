@@ -14,6 +14,7 @@ interface useDataStatisticProps {
   userId?: string;
   organizationId?: string;
   condition?: boolean[];
+  current_screen?: string;
   onError?: (error: AxiosError) => void;
 }
 
@@ -22,6 +23,7 @@ const useDataStatistic = ({
   userId,
   organizationId,
   condition,
+  current_screen,
   onError,
 }: useDataStatisticProps) => {
   const { data: session } = useSession();
@@ -30,7 +32,16 @@ const useDataStatistic = ({
 
   // Handle call API get task calendar
   const getDataStatistic = async () => {
-    const apiUrl = `${apiRouters.DATA_DAILY_STATISTIC}?${date ? `date=${date}&` : ''}${userId ? `user_id=${userId}&` : ''}${organizationId ? `organization_id=${organizationId}` : ''}`;
+    const params = new URLSearchParams();
+
+    if (date) params.append('date', date);
+    if (current_screen) params.append('current_screen', current_screen);
+
+    if (userId) params.append('user_id', userId.toString());
+    if (organizationId)
+      params.append('organization_id', organizationId.toString());
+
+    const apiUrl = `${apiRouters.DATA_DAILY_STATISTIC}?${params.toString()}`;
     const { data } = await api.get<dataStatisticResponse>(apiUrl);
     return data;
   };
@@ -41,7 +52,10 @@ const useDataStatistic = ({
     refetch: refetchDataStatistic,
     isFetched: isFetchedDataStatistic,
   } = useQuery({
-    queryKey: ['getDataStatistic', [date, userId, organizationId]],
+    queryKey: [
+      'getDataStatistic',
+      [date, userId, organizationId, current_screen],
+    ],
     queryFn: getDataStatistic,
     retry: 0,
     enabled: !!token && condition?.every(Boolean),

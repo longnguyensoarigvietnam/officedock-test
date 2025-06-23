@@ -58,6 +58,7 @@ import {
   DEFAULT_TIME_TEXT,
   EVERYONE_OPTION_LABEL,
   STATISTIC_CHART_VIEW_OPTIONS,
+  TEAM_CALENDAR_ORGANIZATION,
 } from '@constants';
 
 import {
@@ -201,8 +202,8 @@ const LineChartByTeamTagsCompare = ({
     setLineChartViewBy,
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
-  const { expanded } = useContext(GlobalStateContext);
-
+  const { expanded, selectedOrganization: selectedOrganizationSideBar } =
+    useContext(GlobalStateContext);
   // Selected members and tag
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
   const [selectedTag, setSelectedTag] = useState<{
@@ -222,6 +223,7 @@ const LineChartByTeamTagsCompare = ({
     statisticBy: string;
     selectedOrganization: string;
     tagIds: { label: string; value: number }[];
+    organizationMemberId?: string;
   }>({
     fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
     endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
@@ -232,6 +234,10 @@ const LineChartByTeamTagsCompare = ({
     statisticBy: `${lineChartViewBy?.value}`,
     selectedOrganization: `${selectedOrganization?.value}`,
     tagIds: [],
+    organizationMemberId:
+      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        ? String(selectedOrganizationSideBar?.value || '')
+        : undefined,
   });
   // Compare filter options
   const [compareFilter, setCompareFilter] = useState<{
@@ -244,6 +250,7 @@ const LineChartByTeamTagsCompare = ({
     statisticBy: string;
     selectedOrganization: string;
     tagIds: { label: string; value: number }[];
+    organizationMemberId?: string;
   }>({
     fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
     endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
@@ -254,6 +261,10 @@ const LineChartByTeamTagsCompare = ({
     statisticBy: `${lineChartViewBy?.value}`,
     selectedOrganization: `${selectedOrganization?.value}`,
     tagIds: [],
+    organizationMemberId:
+      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        ? String(selectedOrganizationSideBar?.value || '')
+        : undefined,
   });
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const [memberOptions, setMemberOptions] = useState<
@@ -426,6 +437,10 @@ const LineChartByTeamTagsCompare = ({
         orderingOptions?.user_ids?.length == 0
           ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
           : filter.userIds,
+      organizationMemberId:
+        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
     },
     condition: [Boolean(filter.tagIds?.length > 0)],
   });
@@ -551,17 +566,23 @@ const LineChartByTeamTagsCompare = ({
             },
           ]
         : [],
+      organizationId:
+        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
     };
   }, [
     startDate,
     endDate,
     selectedMembers,
-    lineChartViewBy?.value,
-    selectedOrganization?.value,
     selectedLarge?.value,
     selectedMedium?.value,
     selectedSmall?.value,
+    lineChartViewBy?.value,
+    selectedOrganization?.value,
+    selectedOrganization?.label,
     selectedTag,
+    selectedOrganizationSideBar?.value,
   ]);
 
   const memoizedCompareFilter = useMemo(() => {
@@ -582,17 +603,23 @@ const LineChartByTeamTagsCompare = ({
             },
           ]
         : [],
+      organizationId:
+        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
     };
   }, [
     startDateCompare,
     endDateCompare,
     selectedMembers,
-    lineChartViewBy?.value,
-    selectedOrganization?.value,
     selectedLarge?.value,
     selectedMedium?.value,
     selectedSmall?.value,
+    lineChartViewBy?.value,
+    selectedOrganization?.value,
+    selectedOrganization?.label,
     selectedTag,
+    selectedOrganizationSideBar?.value,
   ]);
 
   useEffect(() => {
@@ -629,6 +656,10 @@ const LineChartByTeamTagsCompare = ({
           orderingOptions?.user_ids?.length == 0
             ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
             : debouncedSelectedMembers,
+        organizationMemberId:
+          selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+            ? String(selectedOrganizationSideBar?.value || '')
+            : undefined,
       },
       onSuccess: (data) => {
         if (!data) return;
@@ -694,6 +725,10 @@ const LineChartByTeamTagsCompare = ({
           orderingOptions?.user_ids?.length == 0
             ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
             : debouncedSelectedMembers,
+        organizationMemberId:
+          selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+            ? String(selectedOrganizationSideBar?.value || '')
+            : undefined,
       },
       onSuccess: (data) => {
         if (!data) return;
