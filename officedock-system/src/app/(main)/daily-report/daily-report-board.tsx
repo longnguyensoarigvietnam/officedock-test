@@ -134,11 +134,14 @@ const DailyReportBoard = () => {
 
   const { dataStatistic, refetchDataStatistic } = useDataStatistic({
     date: formatDateServer(currentDate),
+    current_screen: 'daily_report',
   });
   const [isLoadingDownload, setIsLoadingDownload] = useState(false);
 
   const { dataStatisticPDF, refetchDataStatisticPDF } = useDataStatisticPDF({
     date: formatDateServer(currentDate),
+    current_screen: 'daily_report',
+
     onSettled: () => {
       setTimeout(() => {
         setIsLoading(false);
@@ -388,7 +391,7 @@ const DailyReportBoard = () => {
     setIsLoadingDownload(false);
 
     return await api.patch(
-      apiRouters.ACTUAL_DURATION_DETAIL(parseInt(data.id)),
+      `${apiRouters.ACTUAL_DURATION_DETAIL(parseInt(data.id))}?current_screen=daily_report`,
       data,
     );
   };
@@ -503,7 +506,7 @@ const DailyReportBoard = () => {
     setIsLoadingDownload(false);
 
     const { data: response } = await api.delete(
-      apiRouters.UPDATE_TASK_ACTUAL(uuid),
+      `${apiRouters.UPDATE_TASK_ACTUAL(uuid)}?current_screen=daily_report`,
     );
     return response;
   };

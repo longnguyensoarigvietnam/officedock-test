@@ -18,6 +18,8 @@ interface FilterProps {
   mediumCategoryId?: number;
   smallCategoryId?: number;
   organizationIds?: string;
+  organizationMemberId?: string;
+
   orderingOptions: {
     tag_ids: OptionDropdownType[];
   } | null;
@@ -45,6 +47,11 @@ const useStatisticTableInTeamLineChart = ({
     }
     if (filter.endDate) {
       queryParams.push(`end_date=${filter.endDate}`);
+    }
+    if (filter.organizationMemberId) {
+      queryParams.push(
+        `organization_get_members_id=${filter.organizationMemberId.toString()}`,
+      );
     }
     if (filter.largeCategoryId) {
       queryParams.push(`large_category_id=${filter.largeCategoryId}`);
@@ -98,7 +105,7 @@ const useStatisticTableInTeamLineChart = ({
     statisticTableInTeamLineChart,
     refetchStatisticTableInTeamLineChart,
     isLoadingStatisticTableInTeamLineChart,
-    isFetchedStatisticTableInTeamLineChart
+    isFetchedStatisticTableInTeamLineChart,
   };
 };
 

@@ -18,7 +18,10 @@ import RowSkeleton from '@components/skeleton/RowSkeleton';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
-import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
+import {
+  STATISTIC_CHART_VIEW_OPTIONS,
+  TEAM_CALENDAR_ORGANIZATION,
+} from '@constants';
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 
 import { OptionDropdownType } from '@interfaces/common';
@@ -32,8 +35,11 @@ import {
   convertToJapaneseDateRange,
   convertToStatisticJapaneseLabels,
   formatDateToYMD,
+  formatTimeToJapanese,
+  sumDurationsChart,
 } from '@utils/date';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 type Props = {
   startDate: Date;
@@ -138,6 +144,8 @@ const StackedAreaTeamTagChart = ({
     setLineChartViewBy,
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
+  const { selectedOrganization: selectedOrganizationSideBar } =
+    useContext(GlobalStateContext);
 
   const getTotalDuration = () => {
     if (selectedOrganization?.value) {
@@ -191,6 +199,7 @@ const StackedAreaTeamTagChart = ({
     statisticBy: string;
     selectedOrganization: string;
     tagIds: { label: string; value: number }[];
+    organizationMemberId?: string;
   }>({
     fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
     endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
@@ -201,6 +210,10 @@ const StackedAreaTeamTagChart = ({
     statisticBy: `${lineChartViewBy?.value}`,
     selectedOrganization: `${selectedOrganization?.value}`,
     tagIds: [],
+    organizationMemberId:
+      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        ? String(selectedOrganizationSideBar?.value || '')
+        : undefined,
   });
 
   const handleTagSelection = (tagList: StatisticCategoryInfo[] | undefined) => {
@@ -238,6 +251,7 @@ const StackedAreaTeamTagChart = ({
     isLoadingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
     filter,
+    condition: [Boolean(filter.tagIds?.length > 0)],
   });
 
   const [dataChart, setDataChart] = useState<
@@ -338,6 +352,10 @@ const StackedAreaTeamTagChart = ({
             },
           ]
         : [],
+      organizationMemberId:
+        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
     });
   }, [
     startDate,
@@ -349,6 +367,8 @@ const StackedAreaTeamTagChart = ({
     selectedSmall?.value,
     selectedMemberList,
     selectedTag,
+    selectedOrganization?.label,
+    selectedOrganizationSideBar?.value,
   ]);
 
   useEffect(() => {
@@ -865,6 +885,7 @@ const StackedAreaTeamTagChart = ({
         startDate: duration?.startDate || null,
         endDate: duration?.endDate || null,
         percentPerRange: duration?.percentPerRange || 0,
+        duration: duration.duration,
       };
     });
   };
@@ -877,17 +898,15 @@ const StackedAreaTeamTagChart = ({
       className="p-[30px] bg-[#F8FAFC] mt-5 rounded-[14px]">
       {/* Header & sort */}
       <div className="flex justify-between">
-        <div className="flex items-center gap-x-5">
-          <div className="flex items-center gap-[10px] ">
-            <ImageRound
-              className={`w-7 h-4  hover:cursor-pointer relative top-[2px]`}
-              name="statistic line chart icon"
-              src={`/icons/statistic-line-chart.svg`}
-            />
-            <span className="text-black w-[210px] flex-shrink-0  font-semibold text-[18px] relative top-[2px]">
-              期間における時間の推移
-            </span>
-          </div>
+        <div className="flex items-center gap-[10px] ">
+          <ImageRound
+            className={`w-5 h-5  hover:cursor-pointer relative top-[2px]`}
+            name="statistic stacked area chart icon"
+            src={`/icons/stacked-area.svg`}
+          />
+          <span className="text-black w-[210px] flex-shrink-0  font-semibold text-[18px] relative top-[4px]">
+            期間における割合の推移
+          </span>
         </div>
         <ImageRound
           src="/icons/extend-calendar.svg"
@@ -1145,6 +1164,17 @@ const StackedAreaTeamTagChart = ({
 
                   const dataDetail = getDataByIndex(idx);
 
+                  const totalDuration = dataDetail
+                    ? sumDurationsChart(dataDetail.map((user) => user.duration))
+                    : '00:00:00';
+
+                  const totalPercent =
+                    dataDetail &&
+                    dataDetail.reduce(
+                      (sum, user) => sum + user.percentPerRange,
+                      0,
+                    );
+
                   return (
                     <div
                       key={actualIndex}
@@ -1176,9 +1206,16 @@ const StackedAreaTeamTagChart = ({
                                 dataDetail[0]?.endDate as string,
                               )}
                           </p>
-                          <p className="text-start px-5 my-4">
+                          <p className="text-start px-5 mt-4">
                             {selectedTag?.name}
                           </p>
+                          <div className="flex text-base my-3 font-normal gap-[10px] px-5">
+                            <p>{totalPercent} %</p>
+                            <p>
+                              {totalDuration &&
+                                formatTimeToJapanese(totalDuration)}
+                            </p>
+                          </div>
                           <div className="px-5 max-h-[250px] overflow-y-auto">
                             {dataDetail &&
                               dataDetail.length > 0 &&

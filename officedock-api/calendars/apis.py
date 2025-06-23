@@ -856,10 +856,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         client_id,
                         ChatMessageTypes.REMOVE_SCHEDULE.value,
                     )
-        if (
-            instance.repeat_schedules.count() == 1
-            and instance.task_durations.exists()
-        ):
+        if instance.repeat_schedules.count() == 1:
             if instance.task_durations.exists():
                 instance.task_durations.filter(paused_at__isnull=True).update(
                     paused_at=now()

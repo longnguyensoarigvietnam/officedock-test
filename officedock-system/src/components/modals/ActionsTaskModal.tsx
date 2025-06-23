@@ -35,6 +35,7 @@ import Switch from '@components/common/Switch';
 import Drawer from '@components/common/Drawers';
 import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import TextAreaLink from '@components/common/TextAreaLink';
 
 import {
   DEFAULT_VALUE_TODO_LIST,
@@ -85,7 +86,6 @@ import {
   generateTimeOptionsAsObjects,
 } from '@utils/date';
 import {
-  changeTextAreaFormatLink,
   generateOptionsCount,
   hasPermissionInArray,
   showModalHeaderBackgroundColorByTime,
@@ -141,7 +141,6 @@ const ActionsTaskModal = ({
   const modalRef = useRef<HTMLFormElement | null>(null);
 
   const [todoList, setTodoList] = useState<TodoItem[]>([]);
-  const editorRef = useRef<HTMLDivElement>(null);
 
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
 
@@ -1107,29 +1106,6 @@ const ActionsTaskModal = ({
       },
     ]);
   };
-
-  const handleChangeTextArea = () => {
-    changeTextAreaFormatLink({
-      editorRef,
-      onChange: (html) => {
-        setValue('description', html);
-        setIsFormTouched(true);
-      },
-    });
-  };
-
-  // Prevent browser from capturing links inside contentEditable
-  const handleClickTextArea = (e: React.MouseEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLElement;
-    if (target.tagName === 'A') {
-      e.preventDefault();
-      const href = target.getAttribute('href');
-      if (href) {
-        window.open(href, '_blank', 'noopener,noreferrer');
-      }
-    }
-  };
-
   const isRoutineTaskModal = type == ItemStartType.FIXED_TASK;
   return (
     <Drawer
@@ -3218,15 +3194,12 @@ const ActionsTaskModal = ({
                     </div>
 
                     {/* Description */}
-                    <div
-                      ref={editorRef}
-                      contentEditable
-                      onInput={handleChangeTextArea}
-                      onClick={handleClickTextArea}
-                      className="h-32 overflow-y-auto !border-[1px] !border-[#77858F] rounded-lg px-3.5 py-2.5 focus-visible:outline-none text-sm font-normal"
-                      data-placeholder=""
-                      dangerouslySetInnerHTML={{
-                        __html: getValues('description') || '',
+                    <TextAreaLink
+                      className="min-h-32 overflow-y-auto !border-[1px] !border-[#77858F] rounded-lg px-3.5 py-2.5 focus-visible:outline-none text-sm font-normal"
+                      initialValue={getValues('description') || ''}
+                      onChange={(data) => {
+                        setValue('description', data);
+                        setIsFormTouched(true);
                       }}
                     />
                   </>

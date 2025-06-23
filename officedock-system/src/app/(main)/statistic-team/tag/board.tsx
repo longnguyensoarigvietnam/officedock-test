@@ -18,7 +18,7 @@ import StackedAreaTeamTagChart from '@components/statisticTeam/tag/StackedAreaTe
 
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
-import { ALL_TEAM_STATISTIC } from '@constants';
+import { ALL_TEAM_STATISTIC, TEAM_CALENDAR_ORGANIZATION } from '@constants';
 
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useStatisticTagsTeam from '@hooks/useStatisticTagsTeam';
@@ -78,7 +78,10 @@ const StatisticTeamTagBoard = () => {
     setIsLoadingSmallCompare,
     setCurrentPage,
   } = useContext(StatisticTeamTagsStateContext);
-  const { organizationTeamList } = useContext(GlobalStateContext);
+  const {
+    organizationTeamList,
+    selectedOrganization: selectedOrganizationSideBar,
+  } = useContext(GlobalStateContext);
 
   const router = useRouter();
   const { showToast } = useToast();
@@ -156,6 +159,10 @@ const StatisticTeamTagBoard = () => {
       smallCategoryId: selectedSmall?.value as number,
 
       tagIds: selectedTags,
+      organizationMemberId:
+        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
     },
     onSuccess: (data) => {
       if (creationDataStatisticData?.organizations.length === 0) {
@@ -212,6 +219,10 @@ const StatisticTeamTagBoard = () => {
       smallCategoryId: selectedSmall?.value as number,
       tagIds: selectedTags,
       isCompare: isCheckCompare,
+      organizationMemberId:
+        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
     },
     onSuccess: (data) => {
       setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
@@ -268,6 +279,9 @@ const StatisticTeamTagBoard = () => {
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === data.value,
     );
+    const organizationMember = creationDataStatisticData?.organizations?.find(
+      (org) => org.id === selectedOrganizationSideBar?.value,
+    );
     if (organization) {
       const largeCategories = organization.statisticCategories.map((stat) => ({
         value: stat.LARGE.id,
@@ -278,22 +292,45 @@ const StatisticTeamTagBoard = () => {
         value: item.id,
       }));
       setTagsOptions(optionsTagList);
-      setListMemberTeam(
-        organization.members.map((member) => ({
-          id: member.id,
-          fullName: member.fullName,
-          color: member?.avatarColor || '',
-          avatarUrl: member?.avatar || '',
-        })),
-      );
-      setOrderingOptions({
-        user_ids: organization.members.map((member) => ({
-          value: member.id,
-          label: member.fullName,
-          color: member?.avatarColor || '',
-          avatarUrl: member?.avatar || '',
-        })),
-      });
+      if (
+        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION &&
+        organizationMember
+      ) {
+        setListMemberTeam(
+          organizationMember.members.map((member) => ({
+            id: member.id,
+            fullName: member.fullName,
+            color: member?.avatarColor || '',
+            avatarUrl: member?.avatar || '',
+          })),
+        );
+        setOrderingOptions({
+          user_ids: organizationMember.members.map((member) => ({
+            value: member.id,
+            label: member.fullName,
+            color: member?.avatarColor || '',
+            avatarUrl: member?.avatar || '',
+          })),
+        });
+      } else {
+        setListMemberTeam(
+          organization.members.map((member) => ({
+            id: member.id,
+            fullName: member.fullName,
+            color: member?.avatarColor || '',
+            avatarUrl: member?.avatar || '',
+          })),
+        );
+        setOrderingOptions({
+          user_ids: organization.members.map((member) => ({
+            value: member.id,
+            label: member.fullName,
+            color: member?.avatarColor || '',
+            avatarUrl: member?.avatar || '',
+          })),
+        });
+      }
+
       setCurrentPage(1);
       // If organization is all team then return here
       if (data?.value === ALL_TEAM_STATISTIC) {
@@ -405,7 +442,7 @@ const StatisticTeamTagBoard = () => {
         {slicedParticipants.map((item) => {
           return (
             <div
-              className="ml-[-10px] border-[1px] border-white rounded-full h-[32px] w-[32px]"
+              className="ml-[-10px] relative border-[1px] border-white rounded-full h-[32px] w-[32px]"
               key={item.id}>
               <CustomUserAvatar
                 avatarUrl={item?.avatarUrl || ''}
@@ -417,7 +454,7 @@ const StatisticTeamTagBoard = () => {
           );
         })}
         {remainingCount > 0 && (
-          <div className="ml-[-10px] flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[32px] h-[32px]">
+          <div className="ml-[-10px] relative flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[32px] h-[32px]">
             +{remainingCount}
           </div>
         )}

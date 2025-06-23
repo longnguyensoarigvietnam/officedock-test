@@ -1019,24 +1019,30 @@ export const getAvatarIconSvg = (color: string, size: number) => {
 export const createStyledAvatarWithMargin = (
   url: string,
   displaySize = 24,
-  marginRight: number,
+  marginRight = 0,
 ): Promise<HTMLCanvasElement> => {
-  return new Promise((resolve) => {
-    const scale = 1;
+  return new Promise((resolve, reject) => {
+    const scale = window.devicePixelRatio || 1;
     const totalWidth = displaySize + marginRight;
-    const actualSize = totalWidth * scale;
-    const img = new window.Image();
+
+    const img = new Image();
     img.crossOrigin = 'anonymous';
+
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = actualSize;
+      canvas.width = totalWidth * scale;
       canvas.height = displaySize * scale;
+      canvas.style.width = `${totalWidth}px`;
+      canvas.style.height = `${displaySize}px`;
+
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) return reject('Canvas context not found');
+
       ctx.scale(scale, scale);
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
-      // Clip to circle
+
+      // Draw circular mask
       ctx.beginPath();
       ctx.arc(
         displaySize / 2,
@@ -1047,14 +1053,33 @@ export const createStyledAvatarWithMargin = (
       );
       ctx.closePath();
       ctx.clip();
-      // Fill background
+
       ctx.fillStyle = 'white';
       ctx.fillRect(0, 0, displaySize, displaySize);
-      // Draw image in the left side of the larger canvas
-      ctx.drawImage(img, 0, 0, displaySize, displaySize);
+
+      // Calculate center crop
+      const { width: imgW, height: imgH } = img;
+      const side = Math.min(imgW, imgH);
+      const sx = (imgW - side) / 2;
+      const sy = (imgH - side) / 2;
+
+      // Draw square crop centered in canvas
+      ctx.drawImage(img, sx, sy, side, side, 0, 0, displaySize, displaySize);
+
+      // Optional border
+      ctx.beginPath();
+      ctx.arc(displaySize / 2, displaySize / 2, displaySize / 2 - 0.5, 0, Math.PI * 2);
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
       resolve(canvas);
     };
-    img.src = url;
+
+    img.onerror = () => reject(new Error('Failed to load avatar'));
+    img.src = url.startsWith('blob')
+      ? url
+      : `/api/image-proxy?url=${encodeURIComponent(url)}`;
   });
 };
 

@@ -6,6 +6,7 @@ import { AxiosError } from 'axios';
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
 import { TaskDuration } from '@interfaces/task';
+import { OPTION_DEFAULT_TASK } from '@constants';
 
 interface UseTaskDurationDetailHooksProps {
   item: {
@@ -33,7 +34,8 @@ const useTaskDurationDetail = ({
       !item.id ||
       !item.type ||
       item.id === undefined ||
-      item.id === 'undefined'
+      item.id === 'undefined' ||
+      item.id == OPTION_DEFAULT_TASK.value
     ) {
       return;
     } else {

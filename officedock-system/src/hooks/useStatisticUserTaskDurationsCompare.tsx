@@ -22,6 +22,7 @@ interface FilterProps {
   statisticBy?: string;
   isTagPage?: boolean;
   selectedOrganization?: string;
+  organizationMemberId?: string;
 }
 
 const useStatisticUserTaskDurationsCompare = ({
@@ -47,6 +48,11 @@ const useStatisticUserTaskDurationsCompare = ({
     }
     if (filter.endDate) {
       queryParams.push(`end_date=${filter.endDate}`);
+    }
+    if (filter.organizationMemberId) {
+      queryParams.push(
+        `organization_get_members_id=${filter.organizationMemberId.toString()}`,
+      );
     }
     if (filter.largeCategoryId) {
       queryParams.push(`large_category_id=${filter.largeCategoryId}`);

@@ -1,6 +1,7 @@
-import { getFileURL } from '@utils';
+import { memo, useMemo } from 'react';
 import Image from 'next/image';
-import { useMemo } from 'react';
+
+import { getFileURL } from '@utils';
 
 export type CustomUserAvatarProps = {
   avatarUrl: string;
@@ -9,7 +10,7 @@ export type CustomUserAvatarProps = {
   customClassName?: string;
   isCalendarScreen?: boolean;
 };
-const CustomUserAvatar = ({
+const CustomUserAvatar = memo(({
   avatarUrl,
   avatarColor,
   size,
@@ -74,5 +75,5 @@ const CustomUserAvatar = ({
       )}
     </div>
   );
-};
+});
 export default CustomUserAvatar;

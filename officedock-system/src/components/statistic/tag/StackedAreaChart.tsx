@@ -32,7 +32,10 @@ import {
 } from '@constants/enums';
 import useStatisticTagPercentChart from '@hooks/useStatisticTagPercentChart';
 
-import { StatisticsCategories } from '@interfaces/statistic';
+import {
+  StatisticCategoryInfo,
+  StatisticsCategories,
+} from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
 import {
@@ -330,8 +333,32 @@ const StackedAreaChart = ({
           tagPercent: `${percent}`,
         };
       })
-      .filter((data) => data.tagId !== -1)
-      .sort((a, b) => Number(b.tagPercent) - Number(a.tagPercent));
+      .filter((data) => data.tagId !== -1);
+
+    let sortSource: StatisticCategoryInfo[] | undefined =
+      statisticTagsList?.category;
+
+    if (!selectedLarge?.value && statisticTagsList?.largeCategories?.length) {
+      sortSource = statisticTagsList.largeCategories;
+    } else if (
+      !selectedMedium?.value &&
+      statisticTagsList?.mediumCategories?.length
+    ) {
+      sortSource = statisticTagsList.mediumCategories;
+    } else if (
+      !selectedSmall?.value &&
+      statisticTagsList?.smallCategories?.length
+    ) {
+      sortSource = statisticTagsList.smallCategories;
+    }
+
+    if (sortSource?.length) {
+      const tagIdOrder = sortSource.map((item) => item.tagId);
+
+      finalTableData.sort(
+        (a, b) => tagIdOrder?.indexOf(a.tagId) - tagIdOrder?.indexOf(b.tagId),
+      );
+    }
 
     setTableData(finalTableData);
 

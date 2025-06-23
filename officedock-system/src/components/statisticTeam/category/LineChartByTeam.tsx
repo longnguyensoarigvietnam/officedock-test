@@ -54,6 +54,7 @@ import {
   DEFAULT_TIME_TEXT,
   EVERYONE_OPTION_LABEL,
   STATISTIC_CHART_VIEW_OPTIONS,
+  TEAM_CALENDAR_ORGANIZATION,
 } from '@constants';
 
 import {
@@ -148,7 +149,8 @@ const LineChartByTeam = ({
     lineChartViewBy,
     setLineChartViewBy,
   } = useContext(StatisticTeamStateContext);
-  const { expanded } = useContext(GlobalStateContext);
+  const { expanded, selectedOrganization: selectedOrganizationSideBar } =
+    useContext(GlobalStateContext);
 
   // Selected members and category
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
@@ -178,6 +180,10 @@ const LineChartByTeam = ({
     statisticBy: `${lineChartViewBy?.value}`,
     selectedOrganization: `${selectedOrganization?.value}`,
     tagIds: orderingOptions?.tag_ids || [],
+    organizationMemberId:
+      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        ? String(selectedOrganizationSideBar?.value || '')
+        : undefined,
   });
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const [memberOptions, setMemberOptions] = useState<
@@ -349,55 +355,56 @@ const LineChartByTeam = ({
   };
 
   // Get table info (statistic team categories)
-  const {
-    isLoadingStatisticTableInTeamLineChart,
-    isFetchedStatisticTableInTeamLineChart,
-  } = useStatisticTableInTeamLineChart({
-    filter: {
-      fromDate: formatDateToYMD(startDate) || '',
-      endDate: formatDateToYMD(`${endDate}`) || '',
-      organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value as number,
-      mediumCategoryId: selectedMedium?.value as number,
-      orderingOptions: orderingOptions,
-      userIds:
-        orderingOptions?.user_ids?.length == 0
-          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
-          : debouncedSelectedMembers,
-    },
-    onSuccess: (data) => {
-      if (!data) return;
-      let tableDetail: TableRowDetail[] = [];
-      if (selectedOrganization && !selectedLarge && !selectedMedium) {
-        tableDetail = buildTableDetail(data.largeCategories);
-        handleCategorySelection(data.largeCategories);
-      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
-        tableDetail = buildTableDetail(data.mediumCategories);
-        handleCategorySelection(data.mediumCategories);
-      } else if (selectedOrganization && selectedLarge && selectedMedium) {
-        tableDetail = buildTableDetail(data.smallCategories);
-        handleCategorySelection(data.smallCategories);
-      }
+  const { isLoadingStatisticTableInTeamLineChart } =
+    useStatisticTableInTeamLineChart({
+      filter: {
+        fromDate: formatDateToYMD(startDate) || '',
+        endDate: formatDateToYMD(`${endDate}`) || '',
+        organizationIds: String(selectedOrganization?.value || ''),
+        largeCategoryId: selectedLarge?.value as number,
+        mediumCategoryId: selectedMedium?.value as number,
+        orderingOptions: orderingOptions,
+        organizationMemberId:
+          selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+            ? String(selectedOrganizationSideBar?.value || '')
+            : undefined,
+        userIds:
+          orderingOptions?.user_ids?.length == 0
+            ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+            : debouncedSelectedMembers,
+      },
+      onSuccess: (data) => {
+        if (!data) return;
+        let tableDetail: TableRowDetail[] = [];
+        if (selectedOrganization && !selectedLarge && !selectedMedium) {
+          tableDetail = buildTableDetail(data.largeCategories);
+          handleCategorySelection(data.largeCategories);
+        } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+          tableDetail = buildTableDetail(data.mediumCategories);
+          handleCategorySelection(data.mediumCategories);
+        } else if (selectedOrganization && selectedLarge && selectedMedium) {
+          tableDetail = buildTableDetail(data.smallCategories);
+          handleCategorySelection(data.smallCategories);
+        }
 
-      setCategoryCollapseStatuses(
-        tableDetail.map((category) => {
-          return {
-            categoryId: category.categoryId,
-            status: false,
-          };
-        }),
-      );
+        setCategoryCollapseStatuses(
+          tableDetail.map((category) => {
+            return {
+              categoryId: category.categoryId,
+              status: false,
+            };
+          }),
+        );
 
-      setTableData(tableDetail);
+        setTableData(tableDetail);
 
-      // Calculate total duration
-      const totalDurationList = (tableDetail || [])
-        .map((item) => item.categoryDuration)
-        .filter(Boolean); // remove null, undefined, ''
-
-      setTotalDuration(totalDurationsForStatistic(totalDurationList));
-    },
-  });
+        // Calculate total duration
+        const totalDurationList = (tableDetail || [])
+          .map((item) => item.categoryDuration)
+          .filter(Boolean); // remove null, undefined, ''
+        setTotalDuration(totalDurationsForStatistic(totalDurationList));
+      },
+    });
 
   // Get user task durations
   const {
@@ -411,7 +418,12 @@ const LineChartByTeam = ({
           ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
           : filter.userIds,
     },
-    condition: [Boolean(isFetchedStatisticTableInTeamLineChart)],
+    condition: [
+      Boolean(
+        tableData.length > 0 &&
+          (filter.largeCategoryId || filter.mediumCategoryId),
+      ),
+    ],
   });
 
   // Get initial member options
@@ -462,6 +474,10 @@ const LineChartByTeam = ({
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
       tagIds: orderingOptions?.tag_ids || [],
+      organizationMemberId:
+        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
     };
   }, [
     startDate,
@@ -474,6 +490,7 @@ const LineChartByTeam = ({
     selectedSmall?.value,
     lineChartViewBy?.value,
     orderingOptions?.tag_ids,
+    selectedOrganizationSideBar?.value,
   ]);
 
   useEffect(() => {
@@ -871,7 +888,6 @@ const LineChartByTeam = ({
         datasets: [],
       });
       setLegendList([]);
-      setTotalDuration('00:00:00');
     }
   }, [statisticUserTaskDurationsList]);
 
@@ -1386,6 +1402,7 @@ const LineChartByTeam = ({
                     selectedOption={selectedOrganization || undefined}
                     onChange={(data) => {
                       setSelectedMembers([]);
+                      setTableData([]);
                       setIsOrganizationChanging(true);
                       handleSelectOrganization(data);
                     }}
@@ -1408,7 +1425,10 @@ const LineChartByTeam = ({
                     classNameOption="!text-sm"
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
-                    onChange={(data) => handleSelectLarge(data)}
+                    onChange={(data) => {
+                      setTableData([]);
+                      handleSelectLarge(data);
+                    }}
                     disabled={!selectedOrganization}
                   />
                 </div>
@@ -1429,7 +1449,10 @@ const LineChartByTeam = ({
                     classNameOption="!text-sm"
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
-                    onChange={(data) => handleSelectMedium(data)}
+                    onChange={(data) => {
+                      setTableData([]);
+                      handleSelectMedium(data);
+                    }}
                     disabled={!selectedLarge}
                   />
                 </div>
@@ -1465,6 +1488,7 @@ const LineChartByTeam = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
+                    setTableData([]);
                     setLineChartViewBy({
                       label: e.label,
                       value: e.value,
