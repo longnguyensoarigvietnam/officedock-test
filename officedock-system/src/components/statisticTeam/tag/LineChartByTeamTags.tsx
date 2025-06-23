@@ -860,7 +860,6 @@ const LineChartByTeamTags = ({
           pointHoverBorderWidth: 2,
         });
       });
-
       setLineChartData({
         labels: labelList,
         datasets: datasets,
@@ -872,7 +871,6 @@ const LineChartByTeamTags = ({
         datasets: [],
       });
       setLegendList([]);
-      setTotalDuration('00:00:00');
     }
   }, [statisticUserTaskDurationsList]);
 

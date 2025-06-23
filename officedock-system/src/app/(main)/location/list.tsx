@@ -6,7 +6,6 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { useSession } from 'next-auth/react';
 import { v4 as uuidv4 } from 'uuid';
 import { useMutation } from 'react-query';
 
@@ -15,8 +14,9 @@ import { Table, TableBody, TableHeader } from '@components/common/Table';
 import Checkbox from '@components/common/Checkbox';
 import Button from '@components/common/Button';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
+import Pagination from '@components/common/Pagination';
+import Dropdown from '@components/common/Dropdown';
 
-import { PermissionsSystem } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
 import {
   ERROR_CREATE_MESSAGE,
@@ -36,13 +36,9 @@ import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 
 import { LocationEventType } from '@interfaces/location';
-import { hasPermissionInArray } from '@utils';
 import api from '@base/api';
-import Pagination from '@components/common/Pagination';
-import Dropdown from '@components/common/Dropdown';
 
 const ListLocation = () => {
-  const { data: session } = useSession();
   const { showToast } = useToast();
   const { setIsLoading } = useContext(LoadingContext);
 
@@ -374,63 +370,45 @@ const ListLocation = () => {
                   </td>
                   <td>
                     <div className="flex w-[50px] break-words gap-3 justify-center">
-                      {session?.user.permissions &&
-                      hasPermissionInArray(
-                        session?.user.permissions,
-                        PermissionsSystem.ORGANIZATION_UPDATE,
-                      ) ? (
-                        <button>
-                          <ImageRound
-                            name="Edit"
-                            src={'/icons/edit-gray.svg'}
-                            className={`w-3.5 h-3.5 hover:cursor-pointer`}
-                            onClick={() => {
-                              if (isEditing || isCreating) return;
-                              setIsEditing(true);
-                              handleEditClick(item?.uuid as string, item.name);
-                            }}
-                          />
-                        </button>
-                      ) : (
-                        <div className="w-3.5"></div>
-                      )}
-                      {session?.user.permissions &&
-                      hasPermissionInArray(
-                        session?.user.permissions,
-                        PermissionsSystem.ORGANIZATION_DELETE,
-                      ) ? (
-                        <ImageRound
-                          name="Delete"
-                          src={'/icons/delete-gray.svg'}
-                          className="w-[13px] h-[15px] hover:cursor-pointer"
-                          onMouseDown={(e) => {
-                            if (isCreating) {
-                              e.preventDefault();
-                            }
-                          }}
-                          onClick={() => {
-                            if (isCreating && editingId === item.uuid) {
-                              setDataLocation((prev) =>
-                                prev.filter((data) => data.uuid !== item.uuid),
-                              );
-                              setEditingId(null);
-                              setEditText('');
-                              setIsCreating(false);
-                              setIsEditing(false);
-                              return;
-                            }
-                            if (
-                              (isCreating && editingId !== item.uuid) ||
-                              isEditing
-                            )
-                              return;
-                            setSelectedLocationToDelete(item);
-                            setOpenConfirmDeleteModal(true);
-                          }}
-                        />
-                      ) : (
-                        <div className="w-[13px]"></div>
-                      )}
+                      <ImageRound
+                        name="Edit"
+                        src={'/icons/edit-gray.svg'}
+                        className={`w-3.5 h-3.5 hover:cursor-pointer`}
+                        onClick={() => {
+                          if (isEditing || isCreating) return;
+                          setIsEditing(true);
+                          handleEditClick(item?.uuid as string, item.name);
+                        }}
+                      />
+                      <ImageRound
+                        name="Delete"
+                        src={'/icons/delete-gray.svg'}
+                        className="w-[13px] h-[15px] hover:cursor-pointer"
+                        onMouseDown={(e) => {
+                          if (isCreating) {
+                            e.preventDefault();
+                          }
+                        }}
+                        onClick={() => {
+                          if (isCreating && editingId === item.uuid) {
+                            setDataLocation((prev) =>
+                              prev.filter((data) => data.uuid !== item.uuid),
+                            );
+                            setEditingId(null);
+                            setEditText('');
+                            setIsCreating(false);
+                            setIsEditing(false);
+                            return;
+                          }
+                          if (
+                            (isCreating && editingId !== item.uuid) ||
+                            isEditing
+                          )
+                            return;
+                          setSelectedLocationToDelete(item);
+                          setOpenConfirmDeleteModal(true);
+                        }}
+                      />
                     </div>
                   </td>
                 </tr>
