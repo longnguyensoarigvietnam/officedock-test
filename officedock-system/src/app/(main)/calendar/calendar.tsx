@@ -1226,7 +1226,7 @@ const EventCalendar = () => {
       : [];
     const isUser = member.type === EventParticipantType.USER;
     const isOrganization = member.type === EventParticipantType.ORGANIZATION;
-    const memberId = Number(member.id);
+    const memberId = Number(String(member.id).split('-')[1]);
 
     if (isUser) {
       const isAlreadySelected = selectedScheduleUserIds.includes(
@@ -1242,9 +1242,9 @@ const EventCalendar = () => {
           .filter(
             (participant) =>
               participant.type == EventParticipantType.ORGANIZATION &&
-              participant.userIds?.includes(Number(member.id)),
+              participant.userIds?.includes(memberId),
           )
-          .map((org) => org.id as number);
+          .map((org) => Number(String(org.id).split('-')[1]));
         updatedOrgIds = updatedOrgIds.filter(
           (org) => !belongedOrganizations.includes(org),
         );
@@ -1353,7 +1353,7 @@ const EventCalendar = () => {
           .filter(
             (participant) => participant.type === EventParticipantType.USER,
           )
-          .map((participant) => Number(participant.id)),
+          .map((participant) => Number(String(participant.id).split('-')[1])),
       ]
         .filter((id) => id != Number(session?.user.id))
         .map(Number);
@@ -1364,7 +1364,7 @@ const EventCalendar = () => {
           .filter(
             (participant) => participant.type === EventParticipantType.USER,
           )
-          .map((participant) => Number(participant.id)),
+          .map((participant) => Number(String(participant.id).split('-')[1])),
       ].map(Number);
     }
 
@@ -1377,7 +1377,7 @@ const EventCalendar = () => {
             (participant) =>
               participant.type === EventParticipantType.ORGANIZATION,
           )
-          .map((participant) => Number(participant.id)),
+          .map((participant) => Number(String(participant.id).split('-')[1])),
       ].join(','),
     );
 
@@ -1435,7 +1435,7 @@ const EventCalendar = () => {
       (participantId) =>
         !matchingParticipantList.find(
           (matchingParticipant) =>
-            matchingParticipant.id == participantId &&
+            String(matchingParticipant.id).split('-')[1] == participantId &&
             matchingParticipant.type === EventParticipantType.USER,
         ),
     );
@@ -1443,7 +1443,7 @@ const EventCalendar = () => {
       (participantId) =>
         !matchingParticipantList.find(
           (matchingParticipant) =>
-            matchingParticipant.id == participantId &&
+            String(matchingParticipant.id).split('-')[1] == participantId &&
             matchingParticipant.type === EventParticipantType.ORGANIZATION,
         ),
     );
@@ -2037,6 +2037,7 @@ const EventCalendar = () => {
         setBackToEditing(false);
         setConfirmEventDataToEdit(undefined);
         setActionsEventMessage('');
+        queryClient.refetchQueries(['getTaskDurationDetail']);
         showToast({
           description: SUCCESS_UPDATE_MESSAGE,
         });
@@ -2236,6 +2237,7 @@ const EventCalendar = () => {
         handleRemoveEventParam();
         queryClient.refetchQueries(['getDataTaskHeaderList']);
         queryClient.refetchQueries(['getTaskHeaderStart']);
+        queryClient.refetchQueries(['getTaskDurationDetail']);
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_DELETE_MESSAGE);
