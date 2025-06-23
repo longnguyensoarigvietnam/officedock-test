@@ -38,6 +38,8 @@ import {
   convertToJapaneseDateRange,
   convertToStatisticJapaneseLabels,
   formatDateToYMD,
+  formatTimeToJapanese,
+  sumDurationsChart,
 } from '@utils/date';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 
@@ -201,6 +203,7 @@ const StackedAreaTeamChart = ({
     isLoadingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
     filter,
+    condition: [Boolean(tableData.length > 0)],
   });
 
   const [dataChart, setDataChart] = useState<
@@ -271,9 +274,18 @@ const StackedAreaTeamChart = ({
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
       userIds: selectedMemberList,
-      largeCategoryId: selectedLarge?.value,
-      mediumCategoryId: selectedMedium?.value,
-      smallCategoryId: selectedSmall?.value,
+      largeCategoryId:
+        selectedOrganization && !selectedLarge && !selectedMedium
+          ? selectedCategory?.id
+          : selectedLarge?.value,
+      mediumCategoryId:
+        selectedOrganization && selectedLarge && !selectedMedium
+          ? selectedCategory?.id
+          : selectedMedium?.value,
+      smallCategoryId:
+        selectedOrganization && selectedLarge && selectedMedium
+          ? selectedCategory?.id
+          : selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: `${selectedOrganization?.value}`,
       tagIds: orderingOptions?.tag_ids || [],
@@ -288,6 +300,10 @@ const StackedAreaTeamChart = ({
     selectedMedium?.value,
     selectedSmall?.value,
     selectedMemberList,
+    selectedOrganization,
+    selectedLarge,
+    selectedMedium,
+    selectedCategory?.id,
   ]);
 
   useEffect(() => {
@@ -810,6 +826,7 @@ const StackedAreaTeamChart = ({
   const getDataByIndex = (index: number) => {
     return statisticUserTaskDurationsList?.map((userData) => {
       const duration = userData.durations[index];
+
       return {
         user: {
           fullName: userData.user.fullName,
@@ -819,6 +836,7 @@ const StackedAreaTeamChart = ({
         startDate: duration?.startDate || null,
         endDate: duration?.endDate || null,
         percentPerRange: duration?.percentPerRange || 0,
+        duration: duration.duration,
       };
     });
   };
@@ -834,12 +852,12 @@ const StackedAreaTeamChart = ({
         <div className="flex items-center gap-x-5">
           <div className="flex items-center gap-[10px] ">
             <ImageRound
-              className={`w-7 h-4  hover:cursor-pointer relative top-[2px]`}
-              name="statistic line chart icon"
-              src={`/icons/statistic-line-chart.svg`}
+              className={`w-5 h-5  hover:cursor-pointer relative top-[2px]`}
+              name="statistic stacked area chart icon"
+              src={`/icons/stacked-area.svg`}
             />
-            <span className="text-black w-[210px] flex-shrink-0  font-semibold text-[18px] relative top-[2px]">
-              期間における時間の推移
+            <span className="text-black w-[210px] flex-shrink-0  font-semibold text-[18px] relative top-[4px]">
+              期間における割合の推移
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -848,7 +866,7 @@ const StackedAreaTeamChart = ({
               <Popover className="relative">
                 {() => (
                   <>
-                    <div className="flex items-center gap-2 relative top-[5px]">
+                    <div className="flex items-center gap-2 relative top-2">
                       <PopoverButton
                         onClick={() => setIsOpenModalFilter(!isOpenModalFilter)}
                         className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
@@ -1096,6 +1114,16 @@ const StackedAreaTeamChart = ({
                   const isHovered = hoveredIndex === actualIndex;
 
                   const dataDetail = getDataByIndex(idx);
+                  const totalDuration = dataDetail
+                    ? sumDurationsChart(dataDetail.map((user) => user.duration))
+                    : '00:00:00';
+
+                  const totalPercent =
+                    dataDetail &&
+                    dataDetail.reduce(
+                      (sum, user) => sum + user.percentPerRange,
+                      0,
+                    );
 
                   return (
                     <div
@@ -1128,9 +1156,16 @@ const StackedAreaTeamChart = ({
                                 dataDetail[0]?.endDate as string,
                               )}
                           </p>
-                          <p className="text-start px-5 my-4">
+                          <p className="text-start px-5 mt-4">
                             {selectedCategory?.name}
                           </p>
+                          <div className="flex text-base my-3 font-normal gap-[10px] px-5">
+                            <p>{totalPercent} %</p>
+                            <p>
+                              {totalDuration &&
+                                formatTimeToJapanese(totalDuration)}
+                            </p>
+                          </div>
                           <div className="max-h-[200px] overflow-y-auto px-5">
                             {dataDetail &&
                               dataDetail.length > 0 &&

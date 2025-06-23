@@ -50,6 +50,7 @@ import {
   isTimeEarlier,
 } from '@utils/date';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
+import { OPTION_DEFAULT_TASK } from '@constants';
 
 const ShowTimeCounter = memo(
   ({ statusTaskSelected }: { statusTaskSelected: TaskDuration }) => {
@@ -211,7 +212,7 @@ const TaskPageDataHeader = () => {
         };
       });
 
-      setOptionsTaskMe(dataOption);
+      setOptionsTaskMe([OPTION_DEFAULT_TASK, ...dataOption]);
     }
   }, [dataTaskHeaderList]);
 
@@ -245,12 +246,7 @@ const TaskPageDataHeader = () => {
         });
       }
     } else {
-      if (!taskSelected) {
-        setTaskSelected({
-          label: '',
-          value: '',
-        });
-      }
+      setTaskSelected(OPTION_DEFAULT_TASK);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataTaskHeaderStart, setStatusTaskSelected, setDataRunning]);
@@ -411,6 +407,7 @@ const TaskPageDataHeader = () => {
         });
 
         if (!data.isStart) {
+          refetchTaskHeaderStart();
           refetchDataHeaderTaskList();
         }
       }
@@ -662,7 +659,9 @@ const TaskPageDataHeader = () => {
                   }}
                 />
               </div>
-              {taskSelected.value && statusTaskSelected ? (
+              {taskSelected.value &&
+              statusTaskSelected &&
+              taskSelected.value !== OPTION_DEFAULT_TASK.value ? (
                 <DynamicTooltip
                   content={
                     statusTaskSelected?.isStart && taskSelected.value

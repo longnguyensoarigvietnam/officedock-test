@@ -448,3 +448,10 @@ export const DEFAULT_TIME_TEXT = '00:00:00';
 
 export const TEAM_CALENDAR_ORGANIZATION = 'カレンダーカテゴリー';
 export const ALL_TEAM_STATISTIC = 'すべてのチーム';
+
+export const OPTION_DEFAULT_TASK = {
+  label: '未選択',
+  value: '未選択',
+  type: 'TASK',
+  totalData: '00:00:00',
+};
