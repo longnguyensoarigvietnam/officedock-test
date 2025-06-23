@@ -29,11 +29,11 @@ import TextareaAutosize from 'react-textarea-autosize';
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
 import Input from '@components/common/Input';
-import TextArea from '@components/common/TextArea';
 import ImageRound from '@components/common/ImageRound';
 import ErrorMessage from '@components/common/ErrorMessage';
 import PeopleDropdown from '@components/common/Dropdown/PeopleDropdown';
 import Switch from '@components/common/Switch';
+import TextAreaLink from '@components/common/TextAreaLink';
 import Drawer from '@components/common/Drawers';
 import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
@@ -637,16 +637,17 @@ const ActionsTaskModalTeam = ({
       },
     ];
     if (selectedMediumCategoryOption) {
-      selectedMediumCategoryOption.SMALL && selectedMediumCategoryOption.SMALL.map((smallCategory) => {
-        if (
-          !initialSmallCategory.find((item) => item.value == smallCategory.id)
-        ) {
-          initialSmallCategory.push({
-            label: smallCategory.name,
-            value: smallCategory.id,
-          });
-        }
-      });
+      selectedMediumCategoryOption.SMALL &&
+        selectedMediumCategoryOption.SMALL.map((smallCategory) => {
+          if (
+            !initialSmallCategory.find((item) => item.value == smallCategory.id)
+          ) {
+            initialSmallCategory.push({
+              label: smallCategory.name,
+              value: smallCategory.id,
+            });
+          }
+        });
     }
 
     setDataOptionsCategorySmall(initialSmallCategory);
@@ -2775,15 +2776,13 @@ const ActionsTaskModalTeam = ({
                     </div>
 
                     {/* Description */}
-                    <TextArea
-                      disabled={isCheckActionPermission}
-                      register={Object.assign(register('description'), {
-                        onChange: () => {
-                          setIsFormTouched(true);
-                        },
-                      })}
-                      labelClassName="font-medium"
-                      className="resize-none !border-[1px] !border-[#77858F]"
+                    <TextAreaLink
+                      className="min-h-32 overflow-y-auto !border-[1px] !border-[#77858F] rounded-lg px-3.5 py-2.5 focus-visible:outline-none text-sm font-normal"
+                      initialValue={getValues('description') || ''}
+                      onChange={(data) => {
+                        setValue('description', data);
+                        setIsFormTouched(true);
+                      }}
                     />
                   </>
                 ) : (

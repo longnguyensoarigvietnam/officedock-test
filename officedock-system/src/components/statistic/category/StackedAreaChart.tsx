@@ -6,7 +6,6 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 
@@ -25,7 +24,10 @@ import {
 import useStatisticPercentChart from '@hooks/useStatisticPercentChart';
 
 import { OptionDropdownType } from '@interfaces/common';
-import { StatisticsCategories } from '@interfaces/statistic';
+import {
+  StatisticCategoryInfo,
+  StatisticsCategories,
+} from '@interfaces/statistic';
 import { StatisticStateContext } from '@providers/StatisticProvider';
 import { getLineChartEnableViews, lightenColor } from '@utils';
 import {
@@ -69,6 +71,7 @@ const StackedAreaChart = ({
     selectedTags,
     tagsOptions,
     lineChartViewBy,
+    selectedSmall,
     setSelectedTags,
     setLineChartViewBy,
   } = useContext(StatisticStateContext);
@@ -293,6 +296,27 @@ const StackedAreaChart = ({
         categoryPercent: `${percent}`,
       };
     });
+    let sortSource: StatisticCategoryInfo[] | undefined =
+      statisticCategoryList?.largeCategories;
+
+    if (selectedLarge && statisticCategoryList?.mediumCategories?.length) {
+      sortSource = statisticCategoryList.mediumCategories;
+
+      if (selectedMedium && statisticCategoryList?.smallCategories?.length) {
+        sortSource = statisticCategoryList.smallCategories;
+
+        if (selectedSmall && statisticCategoryList?.category?.length) {
+          sortSource = statisticCategoryList.category;
+        }
+      }
+    }
+
+    if (sortSource?.length) {
+      const order = sortSource.map((cat) => cat.categoryName);
+      finalTableData.sort(
+        (a, b) => order.indexOf(a.categoryName) - order.indexOf(b.categoryName),
+      );
+    }
 
     setTableData(finalTableData);
 
@@ -310,6 +334,7 @@ const StackedAreaChart = ({
     selectedLarge,
     statisticCategoryList,
     selectedMedium,
+    selectedSmall,
   ]);
 
   const annotations = dataChart.map((s, seriesIndex) => {
@@ -550,7 +575,7 @@ const StackedAreaChart = ({
     },
     {
       accessorKey: 'categoryDuration',
-      enableSorting: true,
+      enableSorting: false,
       size: 50,
       header: () => {
         return (
@@ -594,7 +619,7 @@ const StackedAreaChart = ({
     {
       accessorKey: 'categoryPercent',
       size: 30,
-      enableSorting: true,
+      enableSorting: false,
       header: () => {
         return (
           <div
@@ -645,15 +670,6 @@ const StackedAreaChart = ({
   const table = useReactTable({
     data: tableData,
     columns,
-    initialState: {
-      sorting: [
-        {
-          id: 'categoryDuration',
-          desc: true,
-        },
-      ],
-    },
-    getSortedRowModel: getSortedRowModel(),
     getCoreRowModel: getCoreRowModel(),
   });
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
