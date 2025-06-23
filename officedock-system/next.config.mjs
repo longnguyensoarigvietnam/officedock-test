@@ -43,6 +43,7 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+    unoptimized: true,
   },
 };
 
