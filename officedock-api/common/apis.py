@@ -497,7 +497,8 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     organization.users.order_by("created_at"), many=True
                 ).data,
                 calendar_org.id: CreationDataUserSerializer(
-                    calendar_org.users.order_by("created_at"), many=True
+                    organization.users.order_by("created_at"),
+                    many=True,  # Get list user of calendar organization base on organization selected
                 ).data,
             }
 

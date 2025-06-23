@@ -145,7 +145,7 @@ class StatisticViewSet(BaseAPIViewSet):
         durations = get_list_durations_by_users(
             start_of_day,
             end_of_day,
-            [user],
+            [],
             organization_ids,
             tags=tag_ids,
         )
@@ -1192,6 +1192,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             OpenApiParameter(name="medium_category_id", type=str),
             OpenApiParameter(name="tag_ids", type=str),
             OpenApiParameter(name="user_ids", type=str),
+            OpenApiParameter(name="organization_get_members_id", type=str),
         ]
     )
     @action(
@@ -1215,13 +1216,23 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         user_ids_param = request.query_params.get("user_ids")
         large_category_id = request.query_params.get("large_category_id")
         medium_category_id = request.query_params.get("medium_category_id")
+        organization_get_members_id = request.query_params.get(
+            "organization_get_members_id"
+        )
         instance = self.get_object()
         if user_ids_param:
             users = instance.users.filter(
                 id__in=split_id_from_string(user_ids_param)
             )
         else:
-            users = instance.users.all()
+            org = (
+                instance
+                if not organization_get_members_id
+                else get_object_or_404(
+                    Organization, id=organization_get_members_id
+                )
+            )
+            users = org.users.all()
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
         data = {}
@@ -1350,6 +1361,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             OpenApiParameter(name="small_category_id", type=str),
             OpenApiParameter(name="tag_ids", type=str),
             OpenApiParameter(name="user_ids", type=str),
+            OpenApiParameter(name="organization_get_members_id", type=str),
         ]
     )
     @action(
@@ -1372,7 +1384,9 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         end_date = validate_date_by_regex_and_reformat(
             request.query_params.get("end_date")
         )
-
+        organization_get_members_id = request.query_params.get(
+            "organization_get_members_id"
+        )
         instance = self.get_object()
         user_ids_param = request.query_params.get("user_ids")
         if user_ids_param:
@@ -1380,7 +1394,14 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 id__in=split_id_from_string(user_ids_param)
             )
         else:
-            users = instance.users.all()
+            org = (
+                instance
+                if not organization_get_members_id
+                else get_object_or_404(
+                    Organization, id=organization_get_members_id
+                )
+            )
+            users = org.users.all()
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
 
