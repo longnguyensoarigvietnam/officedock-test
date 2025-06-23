@@ -315,7 +315,8 @@ const StackedAreaChart = ({
       const order = sortSource.map((cat) => cat.categoryName);
       finalTableData.sort(
         (a, b) =>
-          order?.indexOf(a.categoryName) - order?.indexOf(b.categoryName),
+          order?.indexOf(String(a.categoryName)) -
+          order?.indexOf(String(b.categoryName)),
       );
     }
 
