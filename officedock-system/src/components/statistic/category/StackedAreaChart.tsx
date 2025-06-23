@@ -24,7 +24,10 @@ import {
 import useStatisticPercentChart from '@hooks/useStatisticPercentChart';
 
 import { OptionDropdownType } from '@interfaces/common';
-import { StatisticsCategories } from '@interfaces/statistic';
+import {
+  StatisticCategoryInfo,
+  StatisticsCategories,
+} from '@interfaces/statistic';
 import { StatisticStateContext } from '@providers/StatisticProvider';
 import { getLineChartEnableViews, lightenColor } from '@utils';
 import {
@@ -293,6 +296,29 @@ const StackedAreaChart = ({
         categoryPercent: `${percent}`,
       };
     });
+    let sortSource: StatisticCategoryInfo[] | undefined =
+      statisticCategoryList?.largeCategories;
+
+    if (selectedLarge && statisticCategoryList?.mediumCategories?.length) {
+      sortSource = statisticCategoryList.mediumCategories;
+
+      if (selectedMedium && statisticCategoryList?.smallCategories?.length) {
+        sortSource = statisticCategoryList.smallCategories;
+
+        if (selectedSmall && statisticCategoryList?.category?.length) {
+          sortSource = statisticCategoryList.category;
+        }
+      }
+    }
+
+    if (sortSource?.length) {
+      const order = sortSource.map((cat) => cat.categoryName);
+      finalTableData.sort(
+        (a, b) =>
+          order?.indexOf(String(a.categoryName)) -
+          order?.indexOf(String(b.categoryName)),
+      );
+    }
 
     setTableData(finalTableData);
     setColorList(
