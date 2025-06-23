@@ -188,55 +188,33 @@ class DashboardViewSet(BaseAPIViewSet):
             plan_start_date__gte=start_date,
             plan_end_date__lte=end_date,
             task__people_in_charge_tasks__user=request.user,
+            task__deleted_at__isnull=True,
         ).all()
         data = self._append_data_to_cards([], task_schedules, request)
-
-        # Get actual duration of task
-        task_durations = (
-            TaskDuration.objects.filter(
-                Q(started_at__gte=start_date)
-                & Q(Q(paused_at__lte=end_date) | Q(paused_at__isnull=True))
-                & Q(task__people_in_charge_tasks__user=request.user)
-            )
-            .exclude(
-                task__in=[
-                    task_schedule.task for task_schedule in task_schedules
-                ]
-            )
-            .all()
-        )
-        data = self._append_data_to_cards(data, task_durations, request)
 
         # Get data event in schedule
         repeat_schedules = RepeatSchedule.objects.filter(
             plan_end_date__gte=start_date,
             plan_start_date__lte=end_date,
             schedule__participants_schedules__user=request.user,
+            schedule__deleted_at__isnull=True,
         ).all()
         data = self._append_data_to_cards(data, repeat_schedules, request)
 
-        # Get actual duration of event
-        event_durations = (
-            TaskDuration.objects.filter(
-                Q(started_at__gte=start_date)
-                & Q(Q(paused_at__lte=end_date) | Q(paused_at__isnull=True))
-                & Q(schedule__participants_schedules__user=request.user)
-            )
-            .exclude(
-                schedule__in=[
-                    repeat_schedule.schedule
-                    for repeat_schedule in repeat_schedules
-                ]
-            )
-            .all()
-        )
-        data = self._append_data_to_cards(data, event_durations, request)
+        # Get actual duration
         durations = TaskDuration.objects.filter(
             Q(started_at__gte=start_date)
             & Q(Q(paused_at__lte=end_date) | Q(paused_at__isnull=True))
             & Q(user=request.user)
+        )
+        duration_cards = durations.exclude(
+            schedule__in=[
+                repeat_schedule.schedule for repeat_schedule in repeat_schedules
+            ],
+            task__in=[task_schedule.task for task_schedule in task_schedules],
         ).all()
-        total_duration = get_total_durations(durations)
+        data = self._append_data_to_cards(data, duration_cards, request)
+        total_duration = get_total_durations(durations.all())
 
         return self.response_ok(
             {"cards": data, "total_duration": format_duration(total_duration)}
