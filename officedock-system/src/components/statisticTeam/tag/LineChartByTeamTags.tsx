@@ -351,7 +351,7 @@ const LineChartByTeamTags = ({
           ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
           : filter.userIds,
     },
-    condition: [Boolean(filter.tagIds?.length > 0)],
+    condition: [Boolean(tableData.length > 0 && filter.tagIds?.length > 0)],
   });
 
   // Get table info (statistic team categories)
@@ -1404,6 +1404,7 @@ const LineChartByTeamTags = ({
                     selectedOption={selectedOrganization || undefined}
                     onChange={(data) => {
                       setSelectedMembers([]);
+                      setTableData([]);
                       setIsOrganizationChanging(true);
                       handleSelectOrganization(data);
                     }}
@@ -1438,7 +1439,10 @@ const LineChartByTeamTags = ({
                     classNameOption="!text-sm"
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
-                    onChange={(data) => handleSelectLarge(data)}
+                    onChange={(data) => {
+                      setTableData([]);
+                      handleSelectLarge(data);
+                    }}
                     disabled={!selectedOrganization}
                   />
                 </div>
@@ -1470,7 +1474,10 @@ const LineChartByTeamTags = ({
                     classNameOption="!text-sm"
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
-                    onChange={(data) => handleSelectMedium(data)}
+                    onChange={(data) => {
+                      setTableData([]);
+                      handleSelectMedium(data);
+                    }}
                     disabled={!selectedLarge}
                   />
                 </div>
@@ -1502,7 +1509,10 @@ const LineChartByTeamTags = ({
                     classNameOption="!text-sm"
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
-                    onChange={(data) => handleSelectSmall(data)}
+                    onChange={(data) => {
+                      setTableData([]);
+                      handleSelectSmall(data);
+                    }}
                     disabled={!selectedMedium}
                   />
                 </div>
@@ -1538,6 +1548,7 @@ const LineChartByTeamTags = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
+                    setTableData([]);
                     setLineChartViewBy({
                       label: e.label,
                       value: e.value,
@@ -1564,6 +1575,7 @@ const LineChartByTeamTags = ({
                         isChecked={selectedMembers.includes(member.id)}
                         color={member.color}
                         onChange={(state) => {
+                          setTableData([]);
                           if (state) {
                             setSelectedMembers((prev) => {
                               if (member.id) {

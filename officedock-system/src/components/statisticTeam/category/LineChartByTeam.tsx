@@ -1515,6 +1515,7 @@ const LineChartByTeam = ({
                         isChecked={selectedMembers.includes(member.id)}
                         color={member.color}
                         onChange={(state) => {
+                          setTableData([]);
                           if (state) {
                             setSelectedMembers((prev) => {
                               if (member.id) {

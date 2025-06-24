@@ -442,7 +442,7 @@ const LineChartByTeamTagsCompare = ({
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     },
-    condition: [Boolean(filter.tagIds?.length > 0)],
+    condition: [Boolean(tableData.length > 0 && filter.tagIds?.length > 0)],
   });
 
   // Get user task durations (compared)
@@ -457,7 +457,9 @@ const LineChartByTeamTagsCompare = ({
           ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
           : compareFilter.userIds,
     },
-    condition: [Boolean(compareFilter.tagIds?.length > 0)],
+    condition: [
+      Boolean(tableData.length > 0 && compareFilter.tagIds?.length > 0),
+    ],
   });
 
   const mergeCategories = (data: TableRowDetail[]): MergedTableTag[] => {
@@ -1355,58 +1357,28 @@ const LineChartByTeamTagsCompare = ({
                     id: info.row.original.tagId,
                     name: info.row.original.tagName,
                   });
-                  if (
-                    selectedOrganization &&
-                    !selectedLarge &&
-                    !selectedMedium
-                  ) {
-                    setFilter((prev) => {
-                      return {
-                        ...prev,
-                        largeCategoryId: info.row.original.tagId,
-                      };
-                    });
-                    setCompareFilter((prev) => {
-                      return {
-                        ...prev,
-                        largeCategoryId: info.row.original.tagId,
-                      };
-                    });
-                  } else if (
-                    selectedOrganization &&
-                    selectedLarge &&
-                    !selectedMedium
-                  ) {
-                    setFilter((prev) => {
-                      return {
-                        ...prev,
-                        mediumCategoryId: info.row.original.tagId,
-                      };
-                    });
-                    setCompareFilter((prev) => {
-                      return {
-                        ...prev,
-                        mediumCategoryId: info.row.original.tagId,
-                      };
-                    });
-                  } else if (
-                    selectedOrganization &&
-                    selectedLarge &&
-                    selectedMedium
-                  ) {
-                    setFilter((prev) => {
-                      return {
-                        ...prev,
-                        smallCategoryId: info.row.original.tagId,
-                      };
-                    });
-                    setCompareFilter((prev) => {
-                      return {
-                        ...prev,
-                        smallCategoryId: info.row.original.tagId,
-                      };
-                    });
-                  }
+                  setFilter((prev) => {
+                    return {
+                      ...prev,
+                      tagIds: [
+                        {
+                          label: info.row.original.tagName,
+                          value: info.row.original.tagId,
+                        },
+                      ],
+                    };
+                  });
+                  setCompareFilter((prev) => {
+                    return {
+                      ...prev,
+                      tagIds: [
+                        {
+                          label: info.row.original.tagName,
+                          value: info.row.original.tagId,
+                        },
+                      ],
+                    };
+                  });
                 }
               }}
             />
@@ -1993,6 +1965,7 @@ const LineChartByTeamTagsCompare = ({
                     selectedOption={selectedOrganization || undefined}
                     onChange={(data) => {
                       setSelectedMembers([]);
+                      setTableData([]);
                       setIsOrganizationChanging(true);
                       handleSelectOrganization(data);
                     }}
@@ -2027,7 +2000,10 @@ const LineChartByTeamTagsCompare = ({
                     classNameOption="!text-sm"
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
-                    onChange={(data) => handleSelectLarge(data)}
+                    onChange={(data) => {
+                      setTableData([]);
+                      handleSelectLarge(data);
+                    }}
                     disabled={!selectedOrganization}
                   />
                 </div>
@@ -2059,7 +2035,10 @@ const LineChartByTeamTagsCompare = ({
                     classNameOption="!text-sm"
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
-                    onChange={(data) => handleSelectMedium(data)}
+                    onChange={(data) => {
+                      setTableData([]);
+                      handleSelectMedium(data);
+                    }}
                     disabled={!selectedLarge}
                   />
                 </div>
@@ -2091,7 +2070,10 @@ const LineChartByTeamTagsCompare = ({
                     classNameOption="!text-sm"
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
-                    onChange={(data) => handleSelectSmall(data)}
+                    onChange={(data) => {
+                      setTableData([]);
+                      handleSelectSmall(data);
+                    }}
                     disabled={!selectedMedium}
                   />
                 </div>
@@ -2160,6 +2142,7 @@ const LineChartByTeamTagsCompare = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
+                    setTableData([]);
                     setLineChartViewBy({
                       label: e.label,
                       value: e.value,
@@ -2186,6 +2169,7 @@ const LineChartByTeamTagsCompare = ({
                         isChecked={selectedMembers.includes(member.id)}
                         color={member.color}
                         onChange={(state) => {
+                          setTableData([]);
                           if (state) {
                             setSelectedMembers((prev) => {
                               if (member.id) {
