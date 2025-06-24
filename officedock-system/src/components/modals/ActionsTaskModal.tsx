@@ -3195,7 +3195,6 @@ const ActionsTaskModal = ({
 
                     {/* Description */}
                     <TextAreaLink
-                      className="min-h-32 overflow-y-auto !border-[1px] !border-[#77858F] rounded-lg px-3.5 py-2.5 focus-visible:outline-none text-sm font-normal"
                       initialValue={getValues('description') || ''}
                       onChange={(data) => {
                         setValue('description', data);
