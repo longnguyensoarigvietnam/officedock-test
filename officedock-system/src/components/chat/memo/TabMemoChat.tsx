@@ -64,7 +64,7 @@ const TabMemoChat = ({ chatRoomCode, memoDetail }: TabMemoChatProps) => {
         />
       </div>
       <TextAreaLink
-        className='className="rounded-[4px] p-[10px] min-h-[100px] whitespace-pre-wrap leading-[22px] tracking-[0] focus:border-none mt-1 max-h-[calc(100vh_-_386px)] overflow-y-auto focus-visible:border-none focus-visible:outline-none text-sm font-normal"'
+        className="rounded-[4px] p-[10px] min-h-[100px] whitespace-pre-wrap leading-[22px] tracking-[0] focus:border-none mt-1 max-h-[calc(100vh_-_386px)] overflow-y-auto focus-visible:border-none focus-visible:outline-none text-sm font-normal"
         initialValue={memoDetail || ''}
         onChange={(data) => setDataText(data)}
       />

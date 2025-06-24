@@ -373,6 +373,7 @@ const Header = ({ className }: HeaderProps) => {
       handleRemoveParam();
       queryClient.refetchQueries(['getTaskHeaderStart']);
       queryClient.refetchQueries(['getDataStatistic']);
+      queryClient.refetchQueries(['getTaskDurationDetail']);
 
       showToast({
         description: SUCCESS_UPDATE_MESSAGE,
@@ -581,6 +582,7 @@ const Header = ({ className }: HeaderProps) => {
       setDataTaskEdit(null);
       setIdEventDelete(taskDetailId as string);
       queryClient.refetchQueries(['getTaskHeaderStart']);
+      queryClient.refetchQueries(['getTaskDurationDetail']);
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
       });
