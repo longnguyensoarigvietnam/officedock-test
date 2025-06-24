@@ -193,7 +193,7 @@ const TextAreaLink: React.FC<TextAreaLinkProps> = ({
   if (!editorState) return;
 
   return (
-    <div className={`${className}`}>
+    <div className={`${className}`} onClick={() => editorRef.current?.focus()}>
       <Editor
         ref={editorRef}
         editorState={editorState}
