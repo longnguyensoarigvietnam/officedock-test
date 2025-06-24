@@ -312,7 +312,7 @@ const ProgressBarTeamTagStatistic = ({
                     </span>
                   </div>
                   <span className="text-sm font-medium truncate max-w-24">
-                    {duration && formatTimeToJapanese(duration)}
+                    {item.duration && formatTimeToJapanese(item.duration)}
                   </span>
                 </div>
               )}
