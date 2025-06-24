@@ -1168,13 +1168,6 @@ const StackedAreaTeamTagChart = ({
                     ? sumDurationsChart(dataDetail.map((user) => user.duration))
                     : '00:00:00';
 
-                  const totalPercent =
-                    dataDetail &&
-                    dataDetail.reduce(
-                      (sum, user) => sum + user.percentPerRange,
-                      0,
-                    );
-
                   return (
                     <div
                       key={actualIndex}
@@ -1210,7 +1203,6 @@ const StackedAreaTeamTagChart = ({
                             {selectedTag?.name}
                           </p>
                           <div className="flex text-base my-3 font-normal gap-[10px] px-5">
-                            <p>{totalPercent} %</p>
                             <p>
                               {totalDuration &&
                                 formatTimeToJapanese(totalDuration)}
@@ -1223,14 +1215,14 @@ const StackedAreaTeamTagChart = ({
                                 return (
                                   <div
                                     key={userIndex}
-                                    className="flex items-center gap-1.5">
+                                    className="flex items-center gap-1.5 mb-1.5">
                                     <CustomUserAvatar
                                       avatarUrl={user.user.avatar || ''}
                                       avatarColor={user.user.avatarColor || ''}
                                       size={30}
                                     />
                                     <div className="flex flex-grow items-center justify-between text-base font-medium">
-                                      <div className=" text-black w-fit  max-w-[140px] line-clamp-3 break-words">
+                                      <div className=" text-black w-fit max-w-[140px] line-clamp-3 break-all text-left">
                                         {user.user.fullName}
                                       </div>
                                       <div>{user.percentPerRange}%</div>

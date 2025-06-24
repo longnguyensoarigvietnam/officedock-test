@@ -1,104 +1,15 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  Editor,
-  EditorState,
-  CompositeDecorator,
-  ContentState,
-  ContentBlock,
-  SelectionState,
-  Modifier,
-  RichUtils,
-} from 'draft-js';
-import 'draft-js/dist/Draft.css';
+import React, { useEffect } from 'react';
 
-import { URL_REGEX } from '@constants/regex';
-
-// Link finding strategy
-
-const findLinkEntities = (
-  contentBlock: ContentBlock,
-  callback: (start: number, end: number) => void,
-  contentState: ContentState,
-) => {
-  contentBlock.findEntityRanges((character) => {
-    const entityKey = character.getEntity();
-    return (
-      entityKey !== null &&
-      contentState.getEntity(entityKey).getType() === 'LINK'
-    );
-  }, callback);
-};
-
-// How to render the link
-const Link = (props: any) => {
-  const { url } = props.contentState.getEntity(props.entityKey).getData();
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    window.open(url, '_blank');
-  };
-
-  return (
-    <a
-      onMouseDown={handleClick}
-      style={{
-        color: 'blue',
-        textDecoration: 'underline',
-        cursor: 'pointer',
-        pointerEvents: 'auto',
-      }}>
-      {props.children}
-    </a>
-  );
-};
-
-const linkDecorator = new CompositeDecorator([
-  {
-    strategy: findLinkEntities,
-    component: Link,
-  },
-]);
-
-// Process the original text to automatically detect and apply links
-function createContentWithLinks(text: string): ContentState {
-  let contentState = ContentState.createFromText(text);
-  const blockMap = contentState.getBlockMap();
-
-  blockMap.forEach((block: any) => {
-    const blockText = block.getText();
-    const blockKey = block.getKey();
-
-    let matchArr;
-    while ((matchArr = URL_REGEX.exec(blockText)) !== null) {
-      const url = matchArr[0];
-      const start = matchArr.index;
-      const end = start + url.length;
-
-      contentState = contentState.createEntity('LINK', 'MUTABLE', { url });
-      const entityKey = contentState.getLastCreatedEntityKey();
-
-      const selection = SelectionState.createEmpty(blockKey).merge({
-        anchorOffset: start,
-        focusOffset: end,
-      });
-
-      contentState = Modifier.applyEntity(
-        contentState,
-        selection as SelectionState,
-        entityKey,
-      );
-    }
-  });
-
-  return contentState;
-}
+import { useEditor, EditorContent } from '@tiptap/react';
+import { StarterKit } from '@tiptap/starter-kit';
+import { Link } from '@tiptap/extension-link';
 
 interface TextAreaLinkProps {
   initialValue: string;
   className?: string;
-  onChange?: (rawContent: string) => void;
+  onChange?: (text: string) => void;
 }
 
 const TextAreaLink: React.FC<TextAreaLinkProps> = ({
@@ -106,100 +17,88 @@ const TextAreaLink: React.FC<TextAreaLinkProps> = ({
   className,
   onChange,
 }) => {
-  const [editorState, setEditorState] = useState<EditorState | null>(null);
-  const editorRef = useRef<any>(null);
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Link.configure({
+        openOnClick: true,
+        autolink: true,
+        linkOnPaste: true,
+      }),
+    ],
+    content: initialValue,
+    onUpdate({ editor }) {
+      const { state, view } = editor;
+      const { schema } = state;
+      const tr = state.tr;
 
+      state.doc.descendants((node, pos) => {
+        if (node.isText) {
+          node.marks.forEach((mark) => {
+            if (mark.type.name === 'link') {
+              const text = node.text || '';
+              const href = mark.attrs.href;
+
+              if (/^https?:\/\/[^\s]+$/.test(text)) {
+                // Optional: update href if text changed
+                if (href !== text) {
+                  tr.removeMark(pos, pos + node.nodeSize, schema.marks.link);
+                  tr.addMark(
+                    pos,
+                    pos + node.nodeSize,
+                    schema.marks.link.create({ href: text }),
+                  );
+                }
+              } else {
+                tr.removeMark(pos, pos + node.nodeSize, schema.marks.link);
+              }
+            }
+          });
+        }
+      });
+
+      if (tr.docChanged) {
+        view.dispatch(tr);
+      }
+
+      onChange?.(editor.getHTML());
+    },
+    editorProps: {
+      handleKeyDown(view, event) {
+        const { state, dispatch } = view;
+        const { schema, selection } = state;
+        const linkMark = schema.marks.link;
+        const $from = selection.$from;
+
+        // Only run for typing characters (space included)
+        if (event.key.length !== 1) return false;
+
+        // If inside a link
+        const marks = state.storedMarks || $from.marks();
+        const isInsideLink = marks.some((mark) => mark.type === linkMark);
+
+        if (isInsideLink) {
+          // Remove the stored mark so that next characters won't inherit the link
+          dispatch(state.tr.removeStoredMark(linkMark));
+        }
+
+        return false;
+      },
+    },
+  });
+
+  // Optional: Update content when `initialValue` changes
   useEffect(() => {
-    const content = createContentWithLinks(initialValue);
-    const state = EditorState.createWithContent(content, linkDecorator);
-    setEditorState(state);
-  }, [initialValue]);
-
-  // ✅ Attach compositionend event to handle IME (Japanese typing)
-  useEffect(() => {
-    const editorDOM = editorRef.current?.editor;
-
-    if (editorDOM) {
-      const handleCompositionEnd = () => {
-        if (!editorState) return;
-        // Re-apply decorator to ensure consistency after IME input
-        const updated = EditorState.createWithContent(
-          editorState.getCurrentContent(),
-          linkDecorator,
-        );
-        setEditorState(updated);
-      };
-
-      editorDOM.addEventListener('compositionend', handleCompositionEnd);
-      return () => {
-        editorDOM.removeEventListener('compositionend', handleCompositionEnd);
-      };
+    if (editor && initialValue !== editor.getHTML()) {
+      editor.commands.setContent(initialValue, false);
     }
-  }, [editorRef, editorState]);
-
-  // Paste the link and apply the entity yourself
-  const handlePastedText = (
-    text: string,
-    html: string | undefined,
-    state: EditorState,
-  ): 'handled' | 'not-handled' => {
-    const urlMatch = text.match(/https?:\/\/[^\s]+/);
-    if (!urlMatch) return 'not-handled';
-
-    const url = urlMatch[0];
-    const contentState = state.getCurrentContent();
-    const selection = state.getSelection();
-
-    const contentWithEntity = contentState.createEntity('LINK', 'MUTABLE', {
-      url,
-    });
-    const entityKey = contentWithEntity.getLastCreatedEntityKey();
-
-    const contentWithText = Modifier.insertText(
-      contentWithEntity,
-      selection,
-      url,
-      undefined,
-      entityKey,
-    );
-
-    const newEditorState = EditorState.push(
-      state,
-      contentWithText,
-      'insert-characters',
-    );
-
-    setEditorState(newEditorState);
-    return 'handled';
-  };
-
-  const handleKeyCommand = (command: string, state: EditorState) => {
-    const newState = RichUtils.handleKeyCommand(state, command);
-    if (newState) {
-      setEditorState(newState);
-      return 'handled';
-    }
-    return 'not-handled';
-  };
-
-  // Send text string every time it changes
-  useEffect(() => {
-    if (editorState && onChange) {
-      const plainText = editorState.getCurrentContent().getPlainText();
-      onChange(plainText);
-    }
-  }, [editorState, onChange]);
-
-  if (!editorState) return;
+  }, [editor, initialValue]);
 
   return (
-    <div className={`${className}`} onClick={() => editorRef.current?.focus()}>
-      <Editor
-        ref={editorRef}
-        editorState={editorState}
-        onChange={setEditorState}
-        handlePastedText={handlePastedText}
-        handleKeyCommand={handleKeyCommand}
+    <div className={className}>
+      <EditorContent
+        editor={editor}
+        className="prose prose-sm max-w-none [&_a]:text-blue-600 [&_a]:cursor-pointer text-sm"
       />
     </div>
   );
