@@ -24,6 +24,7 @@ import ActionsTaskModalTeam from '@components/modals/ActionsTaskModalTeam';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 import NoSettingColumn from '@components/kanbanTeam/NoSettingColumn';
+import Checkbox from '@components/common/Checkbox';
 
 import { useErrorToast } from '@hooks/useErrorToast';
 import useTaskNoSettingTeam from '@hooks/useTaskNoSettingTeam';
@@ -102,6 +103,8 @@ const KanbanBoardTaskTeam = () => {
     setListDataKanbanTeam,
     listTaskNoSetting,
     setListTaskNoSetting,
+    isConcurrently,
+    setIsConcurrently,
   } = useContext(TaskTeamStateContext);
 
   const { setIsLoading } = useContext(LoadingContext);
@@ -197,6 +200,7 @@ const KanbanBoardTaskTeam = () => {
     organization_id: organizationId as string,
     filter: {
       userId: orderingOptions?.user_ids,
+      is_cross_team_task: isConcurrently,
     },
     isReadyToFetch: isReadyToFetch,
     ordering: dataOrderRing,
@@ -412,6 +416,22 @@ const KanbanBoardTaskTeam = () => {
     ) {
       return;
     }
+    // Move concurrent task to another status then return
+    if (sourceUserId === destUserId && destStatus !== sourceStatus) {
+      const movedItem = listTaskNoSetting[source.index];
+      if (movedItem.isCrossTeamTask) {
+        return;
+      }
+    }
+
+    // Move concurrent task to another user then return
+    if (sourceUserId !== destUserId) {
+      const movedItem = listTaskNoSetting[source.index];
+      if (movedItem.isCrossTeamTask) {
+        return;
+      }
+    }
+
     if (sourceUserId === COLUMN_ID_TASK && destUserId === COLUMN_ID_TASK) {
       // Drag no setting --> drop no setting
       if (source.index === destination.index) return;
@@ -2364,6 +2384,16 @@ const KanbanBoardTaskTeam = () => {
               iconClassName="w-[14px] h-[14px]"
               placeholder="タスク、キーワードを検索"
             />
+
+            <div className="ml-3">
+              <Checkbox
+                label="他チームを表示"
+                isChecked={isConcurrently}
+                onChange={(data) => {
+                  setIsConcurrently(data);
+                }}
+              />
+            </div>
           </div>
         </div>
 

@@ -175,6 +175,7 @@ export interface Task {
   planStartDate?: string | null;
   planEndDate?: string | null;
   hasActualDuration?: boolean;
+  isCrossTeamTask?: boolean;
 }
 export interface TaskRunningType {
   id: number;

@@ -248,7 +248,6 @@ const StackedAreaChart = ({
       });
     }
 
-    setDataChart(chartData);
     // 3. Collect tableData (duration + percent)
     const categoryTableMap = new Map<
       string, // use key combining tagId and tagName to distinguish
@@ -353,12 +352,24 @@ const StackedAreaChart = ({
     }
 
     if (sortSource?.length) {
+      const tagNameOrder = sortSource.map((item) => item.tagName);
+
+      chartData.sort((a, b) => {
+        const indexA = tagNameOrder.indexOf(a.name);
+        const indexB = tagNameOrder.indexOf(b.name);
+        return (
+          (indexA === -1 ? Infinity : indexA) -
+          (indexB === -1 ? Infinity : indexB)
+        );
+      });
       const tagIdOrder = sortSource.map((item) => item.tagId);
 
       finalTableData.sort(
         (a, b) => tagIdOrder?.indexOf(a.tagId) - tagIdOrder?.indexOf(b.tagId),
       );
     }
+
+    setDataChart(chartData);
 
     setTableData(finalTableData);
 
