@@ -919,6 +919,7 @@ const TimeSchedule = memo(
           queryClient.refetchQueries(['getDataTaskHeaderList']);
           if (task.data.pausedAt === null && statusTaskSelected.isStart) {
             queryClient.refetchQueries(['getTaskHeaderStart']);
+            queryClient.refetchQueries(['getTaskDurationDetail']);
           }
           if (
             data &&
@@ -2991,6 +2992,7 @@ const TimeSchedule = memo(
           });
           queryClient.refetchQueries(['getDataTaskHeaderList']);
           queryClient.refetchQueries(['getTaskHeaderStart']);
+          queryClient.refetchQueries(['getTaskDurationDetail']);
         },
         onError: (error: AxiosError<any>) => {
           showErrorToast(error, ERROR_DELETE_MESSAGE);
@@ -3066,6 +3068,7 @@ const TimeSchedule = memo(
           showToast({
             description: SUCCESS_DELETE_MESSAGE,
           });
+          queryClient.refetchQueries(['getTaskDurationDetail']);
         },
         onError: (error: AxiosError<any>) => {
           showErrorToast(error, ERROR_DELETE_MESSAGE);

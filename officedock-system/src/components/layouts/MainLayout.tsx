@@ -43,7 +43,6 @@ const MainLayout = ({
       type: `${dataRunning.type}`,
     },
   });
-
   const elapsedTime = useContinueCounterTime(
     taskDurationDetail?.taskDuration
       ? taskDurationDetail
@@ -102,7 +101,7 @@ const MainLayout = ({
     <div className="h-[calc(100vh_-_76px)]">
       <Metadata
         metadata={title}
-        taskDurationText={`${taskDurationDetail?.taskDuration ? `${elapsedTime} - ${taskDurationDetail.title}` : ''}`}
+        taskDurationText={`${taskDurationDetail?.taskDuration && taskDurationDetail.isStart ? `${elapsedTime} - ${taskDurationDetail.title}` : ''}`}
       />
       <div
         className={`overflow-x-hidden overflow-y-auto h-full flex-grow flex flex-col gap-10 bg-transparent custom-scrollbar p-4 ${className}`}>

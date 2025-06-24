@@ -56,7 +56,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
     permission_classes = [ActionPermission]
     filter_backends = [FilterByPermission]
-    screen_name = Screens.DAILY_REPORT.value
+    screen_name = Screens.TEAM_DAILY_REPORT.value
 
     def _separate_duration(self, duration, end_date, user=None):
         """

@@ -646,6 +646,7 @@ const EditActualDurationsForm = () => {
           description: SUCCESS_UPDATE_MESSAGE,
         });
         queryClient.refetchQueries(['getDataTaskHeaderList']);
+        queryClient.refetchQueries(['getTaskDurationDetail']);
 
         if (
           data &&

@@ -23,10 +23,8 @@ class FilterByPermission(DjangoFilterBackend):
             return queryset
 
         # Allow `GET` requests if fetching data for a screen different from the current screen
-        if (
-            current_screen
-            and request.method == "GET"
-            and to_camel_case(current_screen) != to_camel_case(screen_name)
+        if current_screen and to_camel_case(current_screen) != to_camel_case(
+            screen_name
         ):
             return queryset
 
@@ -54,6 +52,10 @@ class FilterByPermission(DjangoFilterBackend):
             return queryset.none()
 
         org_ids = list(request.user.organizations.values_list("id", flat=True))
+
+        if calendar_org := request.user.company.get_calendar_organization():
+            org_ids.append(calendar_org.id)
+
         if screen_name != Screens.ORGANIZATION_HIERARCHY.value:
             # Handle get hierarchy
             def _get_children(instance):

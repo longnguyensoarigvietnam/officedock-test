@@ -129,7 +129,7 @@ export const CalendarSidebar = ({
   useEffect(() => {
     if (dashboardMembersWithAvatars && isFetchedCreationDataStatistic) {
       const eventMembers = dashboardMembersWithAvatars.map((member) => ({
-        id: member.id,
+        id: `${EventParticipantType.USER}-${member.id}`,
         fullName: member.fullName,
         type: EventParticipantType.USER,
         mainOrganization: member.mainOrganization || '',
@@ -138,7 +138,7 @@ export const CalendarSidebar = ({
       }));
       const eventOrganizations = dataOptionsOrganizations
         ? dataOptionsOrganizations.map((org) => ({
-            id: org.id,
+            id: `${EventParticipantType.ORGANIZATION}-${org.id}`,
             fullName: org.fullName,
             type: EventParticipantType.ORGANIZATION,
             userIds: org.userIds,
@@ -166,42 +166,29 @@ export const CalendarSidebar = ({
 
   // Check is participant selected
   const checkIsParticipantSelected = (member: EventParticipant) => {
-    const updatedUserIds: string[] = selectedScheduleUserIds
-      ? selectedScheduleUserIds.split(',').filter(Boolean)
-      : [];
+    const memberId = String(Number(String(member.id).split('-')[1]));
 
-    const updatedOrgIds: string[] = selectedScheduleOrgIds
-      ? selectedScheduleOrgIds.split(',').filter(Boolean)
-      : [];
-    if (member.type == EventParticipantType.USER) {
-      return Boolean(
-        updatedUserIds &&
-          updatedUserIds?.find(
-            (participant) => participant == String(member.id),
-          ),
-      );
-    } else {
-      return Boolean(
-        updatedOrgIds &&
-          updatedOrgIds?.find(
-            (participant) => participant == String(member.id),
-          ),
-      );
-    }
+    const userIds = selectedScheduleUserIds?.split(',').filter(Boolean) ?? [];
+    const orgIds = selectedScheduleOrgIds?.split(',').filter(Boolean) ?? [];
+
+    return member.type === EventParticipantType.USER
+      ? userIds.includes(memberId)
+      : orgIds.includes(memberId);
   };
 
   // Render user's avatar
-  const renderAvatar = (memberId: number) => {
+  const renderAvatar = (memberId: string) => {
+    const actualMemberId = Number(memberId.split('-')[1]);
     const memberInfo = dashboardMembersWithAvatars.find(
-      (memberWithAvatar) => memberWithAvatar.id === memberId,
+      (memberWithAvatar) => memberWithAvatar.id == actualMemberId,
     );
 
     return (
-      <div className="h-6 min-w-[33px] min-h-[33px]">
+      <div className="h-6 min-w-[30px] min-h-[30px]">
         <CustomUserAvatar
           avatarUrl={memberInfo?.avatar || ''}
           avatarColor={memberInfo?.avatarColor || ''}
-          size={33}
+          size={30}
         />
       </div>
     );
@@ -275,6 +262,27 @@ export const CalendarSidebar = ({
                   !removeMyselfOption || member.id != session?.user.id,
               )
               .sort((prev: EventParticipant, next: EventParticipant) => {
+                const prevSelected = checkIsParticipantSelected(prev);
+                const nextSelected = checkIsParticipantSelected(next);
+
+                // 1. Checked participants first
+                if (prevSelected !== nextSelected) {
+                  return prevSelected ? -1 : 1;
+                }
+
+                // 2. Current user (only if user, not org)
+                if (
+                  prev.id === session?.user.id &&
+                  prev.type === EventParticipantType.USER
+                )
+                  return -1;
+                if (
+                  next.id === session?.user.id &&
+                  next.type === EventParticipantType.USER
+                )
+                  return 1;
+
+                // 3. Organizations before users
                 if (
                   prev.type === EventParticipantType.ORGANIZATION &&
                   next.type === EventParticipantType.USER
@@ -285,8 +293,8 @@ export const CalendarSidebar = ({
                   next.type === EventParticipantType.ORGANIZATION
                 )
                   return 1;
-                if (prev.id === session?.user.id) return -1;
-                if (next.id === session?.user.id) return 1;
+
+                // 4. Alphabetical
                 return prev.fullName.localeCompare(next.fullName);
               })
               .map((member) => {
@@ -312,7 +320,7 @@ export const CalendarSidebar = ({
                     <div
                       className={`flex flex-1 gap-3 items-center p-1.5 hover:cursor-pointer`}>
                       {member.type == EventParticipantType.USER && (
-                        <>{renderAvatar(member.id as number)}</>
+                        <>{renderAvatar(String(member.id))}</>
                       )}
                       {member.type == EventParticipantType.ORGANIZATION && (
                         <div className="scale-110 min-w-[33px]">
@@ -367,7 +375,7 @@ export const CalendarSidebar = ({
                     participant.type == EventParticipantType.ORGANIZATION &&
                     participant.userIds?.includes(Number(session?.user.id)),
                 )
-                .map((org) => org.id as number);
+                .map((org) => Number(String(org.id).split('-')[1]));
               updatedOrgIds = updatedOrgIds.filter(
                 (org) => !belongedOrganizations.includes(org),
               );

@@ -206,8 +206,6 @@ const StackedAreaChart = ({
       };
     });
 
-    setDataChart(chartData);
-
     // 3. Collect tableData (duration + percent)
     const categoryTableMap = new Map<
       string, // use key `${id}_${name}` to distinguish
@@ -313,12 +311,16 @@ const StackedAreaChart = ({
 
     if (sortSource?.length) {
       const order = sortSource.map((cat) => cat.categoryName);
+      chartData.sort(
+        (a, b) => order.indexOf(String(a.name)) - order.indexOf(String(b.name)),
+      );
       finalTableData.sort(
         (a, b) =>
           order?.indexOf(String(a.categoryName)) -
           order?.indexOf(String(b.categoryName)),
       );
     }
+    setDataChart(chartData);
 
     setTableData(finalTableData);
     setColorList(

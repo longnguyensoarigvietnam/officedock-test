@@ -183,7 +183,6 @@ const PopupDetail = ({
                     setValueStart(formatTime24h(planStartDate));
                   }
                 } else {
-                
                   const data = isTimeEarlier(
                     formatTimeInput(
                       `${convertToMinutesNumber(e.target.value)}`,

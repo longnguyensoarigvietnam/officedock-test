@@ -45,8 +45,12 @@ const StatusColumn = ({
   handleSetParamCopyTask,
 }: Props) => {
   // Context
-  const { dataTotalStatus, setListDataKanbanTeam, setDataTotalStatus } =
-    useContext(TaskTeamStateContext);
+  const {
+    dataTotalStatus,
+    isConcurrently,
+    setListDataKanbanTeam,
+    setDataTotalStatus,
+  } = useContext(TaskTeamStateContext);
 
   // State
   const [isExtendData, setIsExtendData] = useState(true);
@@ -148,20 +152,9 @@ const StatusColumn = ({
     if (lastIndex) {
       apiUrl += `&index=${lastIndex}`;
     }
-    // if (searchValue) {
-    //   apiUrl += `&search=${searchValue}${idTasks ? `&ids=${idTasks}` : ''}`;
-    // }
-    // if (orderingOptions?.organization_ids?.length) {
-    //   apiUrl += `&organization_ids=${orderingOptions.organization_ids.map((item) => item.value).join(',')}`;
-    // }
-
-    // if (orderingOptions?.category_ids?.length) {
-    //   apiUrl += `&category_ids=${orderingOptions.category_ids.map((item) => item.value).join(',')}`;
-    // }
-
-    // if (orderingOptions?.tag_ids?.length) {
-    //   apiUrl += `&tag_ids=${orderingOptions.tag_ids.map((item) => item.value).join(',')}`;
-    // }
+    if (isConcurrently) {
+      apiUrl += `&is_cross_team_task=${true}`;
+    }
 
     return await api.get<KanbanDataResponse>(apiUrl);
   };

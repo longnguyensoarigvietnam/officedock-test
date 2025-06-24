@@ -2126,6 +2126,7 @@ const KanbanBoardTask = () => {
         type: ItemStartType.TASK,
       });
       queryClient.refetchQueries(['getDataTaskHeaderList']);
+      queryClient.refetchQueries(['getTaskDurationDetail']);
 
       handleRemoveParam();
       setPendingTaskData(null);
@@ -2864,6 +2865,7 @@ const KanbanBoardTask = () => {
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
       });
+      queryClient.refetchQueries(['getTaskDurationDetail']);
       setOpenConfirmDeleteTaskModal(false);
       const updatedFrequentlyTaskList = frequentlyTasks.filter(
         (item) => `${item.id}` !== type,
