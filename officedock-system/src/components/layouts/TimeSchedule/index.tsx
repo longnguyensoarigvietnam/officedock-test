@@ -919,6 +919,7 @@ const TimeSchedule = memo(
           queryClient.refetchQueries(['getDataTaskHeaderList']);
           if (task.data.pausedAt === null && statusTaskSelected.isStart) {
             queryClient.refetchQueries(['getTaskHeaderStart']);
+            queryClient.refetchQueries(['getTaskDurationDetail']);
           }
           if (
             data &&

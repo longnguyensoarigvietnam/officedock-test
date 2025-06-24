@@ -593,6 +593,7 @@ const TaskPageDataHeader = () => {
         refetchDataHeaderTaskList();
         if (task.data.pausedAt === null) {
           queryClient.refetchQueries(['getTaskHeaderStart']);
+          queryClient.refetchQueries(['getTaskDurationDetail']);
         } else {
           if (data.length > 0) {
             const totalDuration =

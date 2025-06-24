@@ -17,6 +17,7 @@ interface FilterProps {
   userId?: OptionDropdownType[];
   tagId?: string;
   search?: string;
+  is_cross_team_task?: boolean;
 }
 
 const useTaskBoardTeam = ({
@@ -56,6 +57,9 @@ const useTaskBoardTeam = ({
         user_ids: filter.userId.map((item) => item.value).join(','),
       }),
       ...(filter?.tagId && { tag_id: String(filter.tagId) }),
+      ...(filter?.is_cross_team_task && {
+        is_cross_team_task: String(filter.is_cross_team_task),
+      }),
       ...(filter?.search && { search: filter.search }),
       ...(current_screen && { current_screen: current_screen }),
     });
