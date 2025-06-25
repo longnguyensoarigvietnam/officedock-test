@@ -517,7 +517,7 @@ const ProgressBarTeamTagCompare = ({
                 </div>
               </div>
               <div
-                className={`w-full group relative h-[10px] bg-gray-300 rounded-[4px]  ${classProgressUserClass}`}>
+                className={`w-full group relative h-[10px] bg-gray-300 ${classProgressUserClass}`}>
                 <div
                   className="h-full transition-all duration-500 "
                   style={{
@@ -609,7 +609,7 @@ const ProgressBarTeamTagCompare = ({
               <div
                 className={`w-full group relative h-[10px] bg-gray-300   ${classProgressUserClass}`}>
                 <div
-                  className="h-full transition-all rounded-[4px] overflow-hidden duration-500 "
+                  className="h-full transition-all overflow-hidden duration-500 "
                   style={{
                     width: `${itemUser.userCompare.percent}%`,
                     backgroundColor: itemUser.userCompare.user.avatarColor,
