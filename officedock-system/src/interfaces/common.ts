@@ -40,6 +40,7 @@ export interface DataChartType {
   listId: number[];
   listDuration: string[][];
   mergedItems: StatisticCategoryInfo[];
+  dataOrganization?: string[];
 }
 
 export interface DataPercentCompareType {
@@ -55,6 +56,8 @@ export interface DataPercentCompareType {
     avatarUrl?: string;
   }[];
   mergedItems: StatisticCategoryInfo[];
+  dataOrganization?: string[];
+  organizationId?: string;
 }
 
 export interface DateInfo {

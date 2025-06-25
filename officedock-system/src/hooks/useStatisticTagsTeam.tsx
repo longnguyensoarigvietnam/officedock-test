@@ -54,6 +54,9 @@ const useStatisticTagsTeam = ({
 
     if (filter.fromDate) params.append('from_date', String(filter.fromDate));
     if (filter.endDate) params.append('end_date', String(filter.endDate));
+    if (filter.organizationIds) {
+      params.append('organization_id', filter.organizationIds.toString());
+    }
     if (filter.organizationMemberId)
       params.append(
         'organization_get_members_id',
@@ -71,8 +74,7 @@ const useStatisticTagsTeam = ({
       params.append('tag_ids', tagIds);
     }
 
-    const orgId = parseInt(filter.organizationIds);
-    const apiUrl = `${apiRouters.STATISTICS_TAGS_TEAM(orgId)}?${params.toString()}`;
+    const apiUrl = `${apiRouters.STATISTICS_TAGS_TEAM}?${params.toString()}`;
 
     const { data } = await api.get<StatisticsCategories[]>(apiUrl);
     return data;

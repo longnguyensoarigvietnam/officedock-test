@@ -12,6 +12,7 @@ import { OptionDropdownType } from '@interfaces/common';
 import { getAdjustedStartDateDefault } from '@utils/date';
 
 import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
+import { TableRowDetail } from '@interfaces/statistic';
 
 interface ContextValue {
   selectedOrganization: OptionDropdownType | null;
@@ -122,6 +123,8 @@ interface ContextValue {
   // View by
   lineChartViewBy: OptionDropdownType | null;
   setLineChartViewBy: Dispatch<SetStateAction<OptionDropdownType | null>>;
+  tableDataArea: TableRowDetail[];
+  setTableDataArea: Dispatch<SetStateAction<TableRowDetail[]>>;
 }
 
 const defaultValue: ContextValue = {
@@ -206,6 +209,8 @@ const defaultValue: ContextValue = {
 
   lineChartViewBy: null,
   setLineChartViewBy: () => {},
+  tableDataArea: [],
+  setTableDataArea: () => {},
 };
 
 export const StatisticTeamStateContext =
@@ -239,6 +244,7 @@ export const StatisticTeamStateProvider = ({
   const [listOptionsOrganization, setListOptionsOrganization] = useState<
     OptionDropdownType[]
   >([]);
+  const [tableDataArea, setTableDataArea] = useState<TableRowDetail[]>([]);
 
   // Select
   const [selectedOrganization, setSelectedOrganization] =
@@ -414,6 +420,8 @@ export const StatisticTeamStateProvider = ({
 
     lineChartViewBy,
     setLineChartViewBy,
+    tableDataArea,
+    setTableDataArea,
   };
 
   return (

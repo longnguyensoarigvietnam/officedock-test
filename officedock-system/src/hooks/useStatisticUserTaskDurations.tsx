@@ -20,7 +20,7 @@ interface FilterProps {
   userIds?: string;
   tagIds?: OptionDropdownType[];
   statisticBy?: string;
-  selectedOrganization?: string;
+  selectedOrganization?: string | number;
   organizationMemberId?: string;
 }
 
@@ -40,7 +40,11 @@ const useStatisticUserTaskDurations = ({
 
   // Handle call API get statistic task duration list
   const getStatisticUserTaskDurations = async () => {
-    if (!filter?.selectedOrganization) return [];
+    if (
+      !filter?.selectedOrganization ||
+      isNaN(Number(filter?.selectedOrganization))
+    )
+      return [];
     const queryParams = [];
     if (filter.fromDate) {
       queryParams.push(`from_date=${filter.fromDate}`);

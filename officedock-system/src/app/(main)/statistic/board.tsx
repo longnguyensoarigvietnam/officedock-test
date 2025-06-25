@@ -301,6 +301,7 @@ const StatisticBoard = () => {
 
   // Handle Choose LARGE
   const handleSelectLarge = (data: OptionDropdownType) => {
+    if (selectedOrganization?.label === ALL_TEAM_STATISTIC) return;
     if (data.value !== selectedLarge?.value) {
       setIsLoadingLarge(true);
 
@@ -335,6 +336,8 @@ const StatisticBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
+    if (selectedOrganization?.label === ALL_TEAM_STATISTIC) return;
+
     if (data.value !== selectedMedium?.value) {
       setIsLoadingMedium(true);
       if (isCheckCompare) {

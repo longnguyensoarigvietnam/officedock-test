@@ -51,6 +51,8 @@ const useStatisticCategoriesTeam = ({
     if (!filter?.organizationIds) return [];
 
     const params = new URLSearchParams();
+    if (filter.organizationIds)
+      params.append('organization_id', filter?.organizationIds.toString());
     if (filter.organizationMemberId)
       params.append(
         'organization_get_members_id',
@@ -81,7 +83,7 @@ const useStatisticCategoriesTeam = ({
       params.set('user_ids', userIds);
     }
 
-    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM(Number(filter.organizationIds))}?${params.toString()}`;
+    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM}?${params.toString()}`;
     const { data } = await api.get<StatisticsCategories[]>(apiUrl);
     return data;
   };

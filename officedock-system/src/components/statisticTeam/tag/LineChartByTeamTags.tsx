@@ -111,6 +111,7 @@ interface TableRowDetail {
   tagName: string;
   tagDuration: string;
   tagPercent: number;
+  organizationId: number;
   userList: {
     userId: number;
     userName: string;
@@ -168,8 +169,11 @@ const LineChartByTeamTags = ({
   const [selectedTag, setSelectedTag] = useState<{
     id: number;
     name: string;
+    organizationId: number;
   } | null>(null);
   const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
+  const [selectedOrganizationInTable, setSelectedOrganizationInTable] =
+    useState<number>(0);
 
   // Filter options
   const [filter, setFilter] = useState<{
@@ -180,7 +184,7 @@ const LineChartByTeamTags = ({
     mediumCategoryId?: string | number;
     smallCategoryId?: string | number;
     statisticBy: string;
-    selectedOrganization: string;
+    selectedOrganization: number;
     tagIds: { label: string; value: number }[];
     organizationMemberId?: string;
   }>({
@@ -191,7 +195,7 @@ const LineChartByTeamTags = ({
     mediumCategoryId: selectedMedium?.value,
     smallCategoryId: selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: `${selectedOrganization?.value}`,
+    selectedOrganization: 0,
     tagIds: [],
     organizationMemberId:
       selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
@@ -242,6 +246,7 @@ const LineChartByTeamTags = ({
     {
       tagId: number;
       status: boolean;
+      organizationId: number;
     }[]
   >([]);
 
@@ -265,6 +270,7 @@ const LineChartByTeamTags = ({
       tagName?: string;
       percent: number;
       duration: string;
+      organizationId?: number;
       users?: {
         user: {
           id: number;
@@ -282,6 +288,7 @@ const LineChartByTeamTags = ({
       tagName: String(tag.tagName),
       tagPercent: tag.percent,
       tagDuration: tag.duration,
+      organizationId: tag.organizationId ?? 0,
       userList:
         allLabelUser.length > 0
           ? allLabelUser.map((userInfo) => {
@@ -316,7 +323,9 @@ const LineChartByTeamTags = ({
       setSelectedTag({
         id: Number(firstTag.tagId),
         name: String(firstTag.tagName),
+        organizationId: Number(firstTag.organizationId),
       });
+      setSelectedOrganizationInTable(Number(firstTag.organizationId));
       setFilter((prev) => {
         return {
           ...prev,
@@ -326,6 +335,7 @@ const LineChartByTeamTags = ({
               value: Number(firstTag.tagId),
             },
           ],
+          selectedOrganization: Number(firstTag.organizationId),
         };
       });
     } else {
@@ -334,6 +344,7 @@ const LineChartByTeamTags = ({
         return {
           ...prev,
           tagIds: [],
+          selectedOrganization: 0,
         };
       });
     }
@@ -376,6 +387,7 @@ const LineChartByTeamTags = ({
       },
       onSuccess: (data) => {
         if (!data) return;
+
         let tableDetail: TableRowDetail[] = [];
         if (
           selectedOrganization &&
@@ -416,6 +428,7 @@ const LineChartByTeamTags = ({
             return {
               tagId: tag.tagId,
               status: false,
+              organizationId: tag.organizationId,
             };
           }),
         );
@@ -468,7 +481,7 @@ const LineChartByTeamTags = ({
       mediumCategoryId: selectedMedium?.value,
       smallCategoryId: selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: `${selectedOrganization?.value}`,
+      selectedOrganization: selectedOrganizationInTable,
       tagIds: selectedTag
         ? [
             {
@@ -477,7 +490,7 @@ const LineChartByTeamTags = ({
             },
           ]
         : [],
-      organizationId:
+      organizationMemberId:
         selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
@@ -486,11 +499,11 @@ const LineChartByTeamTags = ({
     startDate,
     endDate,
     selectedMembers,
+    lineChartViewBy?.value,
+    selectedOrganizationInTable,
     selectedLarge?.value,
     selectedMedium?.value,
     selectedSmall?.value,
-    lineChartViewBy?.value,
-    selectedOrganization?.value,
     selectedOrganization?.label,
     selectedTag,
     selectedOrganizationSideBar?.value,
@@ -942,19 +955,29 @@ const LineChartByTeamTags = ({
         const collapseStatus =
           tagCollapseStatuses.find(
             (tagCollapseStatus) =>
-              tagCollapseStatus.tagId == info.row.original.tagId,
+              tagCollapseStatus.tagId == info.row.original.tagId &&
+              info.row.original.organizationId ==
+                tagCollapseStatus?.organizationId,
           )?.status || false;
+
         return (
           <div className="flex items-start px-[18px]">
             <RadioButton
               name="lineChartTagName"
-              isChecked={info.row.original.tagId == selectedTag?.id}
+              isChecked={
+                info.row.original.tagId == selectedTag?.id &&
+                info.row.original.organizationId == selectedTag?.organizationId
+              }
               onChange={(e: any) => {
                 if (e) {
                   setSelectedTag({
                     id: info.row.original.tagId,
                     name: info.row.original.tagName,
+                    organizationId: info.row.original.organizationId,
                   });
+                  setSelectedOrganizationInTable(
+                    info.row.original.organizationId,
+                  );
                   setFilter((prev) => {
                     return {
                       ...prev,
@@ -964,6 +987,7 @@ const LineChartByTeamTags = ({
                           value: info.row.original.tagId,
                         },
                       ],
+                      selectedOrganization: info.row.original.organizationId,
                     };
                   });
                 }
@@ -993,7 +1017,9 @@ const LineChartByTeamTags = ({
                     onClick={() => {
                       setTagCollapseStatuses((prev) => {
                         return prev.map((item) =>
-                          item.tagId == info.row.original.tagId
+                          item.tagId == info.row.original.tagId &&
+                          item.organizationId ==
+                            info.row.original.organizationId
                             ? { ...item, status: !item.status }
                             : item,
                         );
@@ -1070,7 +1096,9 @@ const LineChartByTeamTags = ({
         const collapseStatus =
           tagCollapseStatuses.find(
             (tagCollapseStatus) =>
-              tagCollapseStatus.tagId == info.row.original.tagId,
+              tagCollapseStatus.tagId == info.row.original.tagId &&
+              info.row.original.organizationId ==
+                tagCollapseStatus?.organizationId,
           )?.status || false;
 
         return (
@@ -1148,7 +1176,9 @@ const LineChartByTeamTags = ({
         const collapseStatus =
           tagCollapseStatuses.find(
             (tagCollapseStatus) =>
-              tagCollapseStatus.tagId == info.row.original.tagId,
+              tagCollapseStatus.tagId == info.row.original.tagId &&
+              info.row.original.organizationId ==
+                tagCollapseStatus?.organizationId,
           )?.status || false;
 
         return (
@@ -1405,6 +1435,7 @@ const LineChartByTeamTags = ({
                     onChange={(data) => {
                       setSelectedMembers([]);
                       setTableData([]);
+                      setSelectedTag(null);
                       setIsOrganizationChanging(true);
                       handleSelectOrganization(data);
                     }}
@@ -1441,6 +1472,7 @@ const LineChartByTeamTags = ({
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => {
                       setTableData([]);
+                      setSelectedTag(null);
                       handleSelectLarge(data);
                     }}
                     disabled={!selectedOrganization}
@@ -1476,6 +1508,7 @@ const LineChartByTeamTags = ({
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => {
                       setTableData([]);
+                      setSelectedTag(null);
                       handleSelectMedium(data);
                     }}
                     disabled={!selectedLarge}
@@ -1511,6 +1544,7 @@ const LineChartByTeamTags = ({
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => {
                       setTableData([]);
+                      setSelectedTag(null);
                       handleSelectSmall(data);
                     }}
                     disabled={!selectedMedium}

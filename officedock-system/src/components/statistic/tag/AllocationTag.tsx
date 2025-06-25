@@ -55,6 +55,7 @@ const AllocationTag = memo(
       id: number | null;
       type: string;
       totalDuration: string;
+      organizationId?: string;
     } | null>(null);
 
     const [progressDataLarge, setProgressDataLarge] = useState<
@@ -104,6 +105,7 @@ const AllocationTag = memo(
                 getRandomColor(),
               duration: item.duration,
               optionData: item.tasks.slice(0, 3).map((task) => task.title),
+              organizationId: item.organizationId,
             }),
           );
           setProgressDataLarge(listDataLarge);
@@ -164,33 +166,46 @@ const AllocationTag = memo(
       }
     }, [statisticTagsList]);
 
-    const handleClickTooltip = (id: number | null, type: string) => {
-      let duration: string = '00:00:00';
-      if (type === EventWorkCategory.ALL) {
-        duration =
-          statisticTagsList?.largeCategories.find((item) => item.tagId == id)
-            ?.duration || '00:00:00';
-      }
+    const getDuration = (
+      dataSource: any,
+      type: EventWorkCategory,
+      tagId: number,
+      organizationId?: string,
+    ): string => {
+      const categoryMap = {
+        [EventWorkCategory.ALL]: dataSource?.largeCategories,
+        [EventWorkCategory.LARGE]: dataSource?.mediumCategories,
+        [EventWorkCategory.MEDIUM]: dataSource?.smallCategories,
+        [EventWorkCategory.SMALL]: dataSource?.category,
+      };
 
-      if (type === EventWorkCategory.LARGE) {
-        duration =
-          statisticTagsList?.mediumCategories?.find((item) => item.tagId == id)
-            ?.duration || '00:00:00';
-      }
-      if (type === EventWorkCategory.MEDIUM) {
-        duration =
-          statisticTagsList?.smallCategories?.find((item) => item.tagId == id)
-            ?.duration || '00:00:00';
-      }
-      if (type === EventWorkCategory.SMALL) {
-        duration =
-          statisticTagsList?.category?.find((item) => item.tagId == id)
-            ?.duration || '00:00:00';
-      }
+      const categoryList = categoryMap[type] || [];
+
+      const item = categoryList?.find(
+        (item: any) =>
+          item.tagId === tagId &&
+          (!organizationId || String(item.organizationId) === organizationId),
+      );
+
+      return item?.duration || '00:00:00';
+    };
+
+    const handleClickTooltip = (
+      id: number | null,
+      type: EventWorkCategory,
+      organizationId?: string,
+    ) => {
+      const duration = getDuration(
+        statisticTagsList,
+        type,
+        id as number,
+        organizationId,
+      );
       setDetailCategory({
         id: id,
         type: type,
         totalDuration: duration,
+        organizationId,
       });
 
       setIsShowModal(true);
@@ -328,8 +343,15 @@ const AllocationTag = memo(
                               <ProgressBarStatistic
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={(id: number | null) => {
-                                  handleClickTooltip(id, EventWorkCategory.ALL);
+                                handleClickTooltip={(
+                                  id: number | null,
+                                  organizationId?: string,
+                                ) => {
+                                  handleClickTooltip(
+                                    id,
+                                    EventWorkCategory.ALL,
+                                    organizationId,
+                                  );
                                 }}
                                 handleClickChart={(
                                   _data: OptionDropdownType,

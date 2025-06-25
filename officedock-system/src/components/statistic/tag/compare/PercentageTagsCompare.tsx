@@ -84,12 +84,14 @@ const PercentageTagsCompare = ({
     id: number | null;
     type: string;
     totalDuration: string;
+    organizationId?: string;
   } | null>(null);
 
   const [detailCategoryCompare, setDetailCategoryCompare] = useState<{
     id: number | null;
     type: string;
     totalDuration: string;
+    organizationId?: string;
   } | null>(null);
 
   // Data value
@@ -154,6 +156,7 @@ const PercentageTagsCompare = ({
         label: task.title,
       })),
       mergedItems: [],
+      organizationId: item.organizationId,
     }));
 
     return [
@@ -206,73 +209,57 @@ const PercentageTagsCompare = ({
     }
   }, [statisticTagsCompareList]);
 
+  const getDuration = (
+    dataSource: StatisticsCategories,
+    type: EventWorkCategory,
+    tagId: number,
+    organizationId?: string,
+  ): string => {
+    const categoryMap = {
+      [EventWorkCategory.ALL]: dataSource?.largeCategories,
+      [EventWorkCategory.LARGE]: dataSource?.mediumCategories,
+      [EventWorkCategory.MEDIUM]: dataSource?.smallCategories,
+      [EventWorkCategory.SMALL]: dataSource?.category,
+    };
+
+    const categoryList = categoryMap[type] || [];
+
+    const item = categoryList?.find(
+      (item: any) =>
+        item.tagId === tagId &&
+        (!organizationId || String(item.organizationId) === organizationId),
+    );
+
+    return item?.duration || '00:00:00';
+  };
+
   const handleClickTooltip = (
     id: number | null,
-    type: string,
+    type: EventWorkCategory,
     isCompare: boolean,
+    organizationId?: string,
   ) => {
-    let duration: string = '00:00:00';
-    if (isCompare) {
-      if (type === EventWorkCategory.ALL) {
-        duration =
-          statisticTagsCompareList?.largeCategories.find(
-            (item) => item.tagId == id,
-          )?.duration || '00:00:00';
-      }
-      if (type === EventWorkCategory.LARGE) {
-        duration =
-          statisticTagsCompareList?.mediumCategories?.find(
-            (item) => item.tagId == id,
-          )?.duration || '00:00:00';
-      }
-      if (type === EventWorkCategory.MEDIUM) {
-        duration =
-          statisticTagsCompareList?.smallCategories?.find(
-            (item) => item.tagId == id,
-          )?.duration || '00:00:00';
-      }
-      if (type === EventWorkCategory.SMALL) {
-        duration =
-          statisticTagsCompareList?.category?.find((item) => item.tagId == id)
-            ?.duration || '00:00:00';
-      }
-      setDetailCategoryCompare({
-        id: id,
-        type: type,
-        totalDuration: duration,
-      });
+    const dataSource = isCompare ? statisticTagsCompareList : statisticTagsList;
+    const duration = getDuration(
+      dataSource as StatisticsCategories,
+      type,
+      id as number,
+      organizationId,
+    );
 
+    const detailData = {
+      id,
+      type,
+      totalDuration: duration,
+      organizationId,
+    };
+
+    if (isCompare) {
+      setDetailCategoryCompare(detailData);
       setIsShowModalCompare(true);
     } else {
-      if (type === EventWorkCategory.ALL) {
-        duration =
-          statisticTagsList?.largeCategories.find((item) => item.tagId == id)
-            ?.duration || '00:00:00';
-      }
-      if (type === EventWorkCategory.LARGE) {
-        duration =
-          statisticTagsList?.mediumCategories?.find((item) => item.tagId == id)
-            ?.duration || '00:00:00';
-      }
-      if (type === EventWorkCategory.MEDIUM) {
-        duration =
-          statisticTagsList?.smallCategories?.find((item) => item.tagId == id)
-            ?.duration || '00:00:00';
-      }
-      if (type === EventWorkCategory.SMALL) {
-        duration =
-          statisticTagsList?.category?.find((item) => item.tagId == id)
-            ?.duration || '00:00:00';
-      }
-      setDetailCategory({
-        id: id,
-        type: type,
-        totalDuration: duration,
-      });
-
-      setTimeout(() => {
-        setIsShowModal(true);
-      }, 1000);
+      setDetailCategory(detailData);
+      setIsShowModal(true);
     }
   };
 
@@ -422,11 +409,13 @@ const PercentageTagsCompare = ({
                         handleClickTooltip={(
                           id: number | null,
                           isCompare: boolean,
+                          organizationId?: string,
                         ) => {
                           handleClickTooltip(
                             id,
                             EventWorkCategory.ALL,
                             isCompare,
+                            organizationId,
                           );
                         }}
                       />

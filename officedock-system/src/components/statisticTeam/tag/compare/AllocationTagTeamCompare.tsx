@@ -47,6 +47,7 @@ type ProgressDataType = {
   duration: string;
   optionData: UserListStatisticType[];
   mergedItems?: ProgressDataType[];
+  organizationId?: string;
 };
 type ProgressDataCompareItem = {
   item: ProgressDataType;
@@ -71,6 +72,7 @@ function transformAndMergeProgressData({
     color: lightenColor('#2E9267' as string, item.percent) || '',
     duration: item.duration,
     optionData: item.users || [],
+    organizationId: String(item.organizationId),
   }));
 
   const mergedItems = progressData.filter((item) => item.value < threshold);
@@ -225,6 +227,7 @@ const AllocationTagTeamCompare = memo(
       userId: number;
       type: string;
       totalDuration: string;
+      organizationId?: string;
     } | null>(null);
 
     const [isModalCompare, setIsModalCompare] = useState(false);
@@ -316,12 +319,14 @@ const AllocationTagTeamCompare = memo(
       duration,
       type,
       isCompare,
+      organizationId,
     }: {
       id: number;
       userId: number;
       duration: string;
       type: string;
       isCompare?: boolean;
+      organizationId?: string;
     }) => {
       if (isCompare) {
         setIsModalCompare(true);
@@ -333,6 +338,7 @@ const AllocationTagTeamCompare = memo(
         userId: userId,
         type: type,
         totalDuration: duration,
+        organizationId,
       });
 
       setTimeout(() => {
@@ -537,16 +543,22 @@ const AllocationTagTeamCompare = memo(
                                   startDateCompare={startDateCompare}
                                   endDateCompare={endDateCompare}
                                   classProgressClass="h-[20px] rounded-[4px]"
+                                  organizationId={
+                                    item.item.organizationId ||
+                                    item.itemCompare?.organizationId
+                                  }
                                   handleClickTooltip={({
                                     userId,
                                     categoryId,
                                     duration,
                                     isCompare,
+                                    organizationId,
                                   }: {
                                     userId: number;
                                     categoryId: number;
                                     duration: string;
                                     isCompare?: boolean;
+                                    organizationId?: string;
                                   }) => {
                                     handleClickTooltip({
                                       id: categoryId,
@@ -554,6 +566,7 @@ const AllocationTagTeamCompare = memo(
                                       duration,
                                       type: EventWorkCategory.ALL,
                                       isCompare,
+                                      organizationId,
                                     });
                                   }}
                                   handleClickChart={(

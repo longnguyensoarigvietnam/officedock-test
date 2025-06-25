@@ -19,6 +19,7 @@ type ProgressDataType = {
   duration: string;
   optionData: UserListStatisticType[];
   mergedItems?: ProgressDataType[];
+  organizationId?: string;
 };
 
 interface ProgressBarProps {
@@ -26,7 +27,7 @@ interface ProgressBarProps {
   itemCompare?: ProgressDataType;
   classProgressClass?: string;
   classProgressUserClass?: string;
-
+  organizationId?: string;
   className?: string;
   startDate?: Date;
   endDate?: Date | null;
@@ -37,11 +38,13 @@ interface ProgressBarProps {
     categoryId,
     duration,
     isCompare,
+    organizationId,
   }: {
     userId: number;
     categoryId: number;
     duration: string;
     isCompare?: boolean;
+    organizationId?: string;
   }) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
 }
@@ -115,6 +118,7 @@ function buildUserCompareData(
 const ProgressBarTeamTagCompare = ({
   item,
   itemCompare,
+  organizationId,
   className,
   classProgressClass,
   classProgressUserClass,
@@ -587,6 +591,7 @@ const ProgressBarTeamTagCompare = ({
                             userId: itemUser.user.user.id,
                             categoryId: item.id,
                             duration: itemUser.user.duration,
+                            organizationId: organizationId,
                           })
                         }
                         className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">
@@ -677,6 +682,7 @@ const ProgressBarTeamTagCompare = ({
                             categoryId: item.id,
                             duration: itemUser.userCompare.duration,
                             isCompare: true,
+                            organizationId: organizationId,
                           })
                         }
                         className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">

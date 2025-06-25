@@ -10,7 +10,7 @@ import {
 } from '@components/common/SkeletonLoading';
 import { Table, TableBody } from '@components/common/Table';
 
-import { PAGINATION_PAGE_SIZE_SMALL } from '@constants';
+import { ALL_TEAM_STATISTIC, PAGINATION_PAGE_SIZE_SMALL } from '@constants';
 import { EventWorkCategory, OrderingDataType } from '@constants/enums';
 
 import { formatDateToYMD, formatTimeToJapanese } from '@utils/date';
@@ -28,10 +28,10 @@ type Props = {
     totalDuration: string;
     type: string;
     userId?: number;
+    organizationId?: string;
   } | null;
   selectedOrganization: OptionDropdownType | null;
   statisticTagsListTeam: StatisticsCategories | undefined;
-
   selectedLarge: OptionDropdownType | null;
   selectedMedium: OptionDropdownType | null;
   selectedSmall: OptionDropdownType | null;
@@ -72,13 +72,19 @@ const ListTaskDetailStatisticTagModal = ({
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
+      organizationId:
+        selectedOrganization?.value === ALL_TEAM_STATISTIC
+          ? detailCategory?.organizationId
+          : undefined,
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId:
-        detailCategory && detailCategory.type === EventWorkCategory.ALL
-          ? null
-          : detailCategory && detailCategory.type !== ''
-            ? (selectedLarge?.value as number)
-            : null,
+        selectedOrganization?.value === ALL_TEAM_STATISTIC
+          ? undefined
+          : detailCategory && detailCategory.type !== EventWorkCategory.ALL
+            ? null
+            : detailCategory && detailCategory.type !== ''
+              ? (selectedLarge?.value as number)
+              : null,
       mediumCategoryId:
         detailCategory && detailCategory.type === EventWorkCategory.LARGE
           ? null

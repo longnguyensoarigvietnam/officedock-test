@@ -27,7 +27,7 @@ interface ProgressBarProps {
   color?: string;
   classProgressClass?: string;
   classProgressUserClass?: string;
-
+  organizationId?: string;
   className?: string;
   showInfo?: boolean;
   startDate?: Date;
@@ -38,10 +38,12 @@ interface ProgressBarProps {
     userId,
     tagId,
     duration,
+    organizationId,
   }: {
     userId: number;
     tagId: number;
     duration: string;
+    organizationId?: string;
   }) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
 }
@@ -61,6 +63,7 @@ const ProgressBarTeamTagStatistic = ({
   showInfo = true,
   startDate,
   endDate,
+  organizationId,
   startDateCompare,
   endDateCompare,
   handleClickTooltip,
@@ -383,6 +386,7 @@ const ProgressBarTeamTagStatistic = ({
                           userId: item.user.id,
                           tagId: id,
                           duration: item.duration,
+                          organizationId: organizationId,
                         })
                       }
                       className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">

@@ -47,6 +47,7 @@ type ProgressDataType = {
   duration: string;
   optionData: UserListStatisticType[];
   mergedItems?: ProgressDataType[];
+  organizationId?: string;
 };
 export function transformStatisticCategoryInfoToProgressData({
   data,
@@ -74,6 +75,7 @@ export function transformStatisticCategoryInfoToProgressData({
       '',
     duration: item.duration,
     optionData: item.users || [],
+    organizationId: String(item.organizationId),
   }));
 
   const mergedItems = progressData.filter((item) => item.value < threshold);
@@ -131,6 +133,7 @@ const AllocationTeamCategory = memo(
       type: string;
       totalDuration: string;
       userDuration: string;
+      organizationId?: string;
     } | null>(null);
 
     const [progressDataLarge, setProgressDataLarge] = useState<
@@ -214,12 +217,14 @@ const AllocationTeamCategory = memo(
       duration,
       userDuration,
       type,
+      organizationId,
     }: {
       id: number;
       userId: number;
       duration: string;
       userDuration: string;
       type: string;
+      organizationId?: string;
     }) => {
       setDetailCategory({
         id: id,
@@ -227,6 +232,7 @@ const AllocationTeamCategory = memo(
         type: type,
         totalDuration: duration,
         userDuration,
+        organizationId,
       });
 
       setTimeout(() => {
@@ -507,11 +513,13 @@ const AllocationTeamCategory = memo(
                                   categoryId,
                                   duration,
                                   userDuration,
+                                  organizationId,
                                 }: {
                                   userId: number;
                                   categoryId: number;
                                   duration: string;
                                   userDuration: string;
+                                  organizationId?: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: categoryId,
@@ -519,10 +527,12 @@ const AllocationTeamCategory = memo(
                                     duration,
                                     type: EventWorkCategory.ALL,
                                     userDuration,
+                                    organizationId,
                                   });
                                 }}
                                 startDate={startDate}
                                 endDate={endDate}
+                                organizationId={item.organizationId}
                                 {...item}
                               />
                             ))}

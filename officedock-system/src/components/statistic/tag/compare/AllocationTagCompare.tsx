@@ -42,6 +42,7 @@ type ProgressDataType = {
   color: string;
   duration: string;
   optionData: string[];
+  organizationId?: string;
 };
 
 const AllocationTagCompare = memo(
@@ -65,11 +66,13 @@ const AllocationTagCompare = memo(
       id: number | null;
       type: string;
       totalDuration: string;
+      organizationId?: string;
     } | null>(null);
     const [detailCategoryCompare, setDetailCategoryCompare] = useState<{
       id: number | null;
       type: string;
       totalDuration: string;
+      organizationId?: string;
     } | null>(null);
     const [progressDataPairsLarge, setProgressDataPairsLarge] = useState<
       {
@@ -150,6 +153,7 @@ const AllocationTagCompare = memo(
                 id: item.tagId as number,
                 label: item.tagName as string,
                 value: item.percent,
+                organizationId: String(item.organizationId),
                 color:
                   lightenColor(colorData as string, item.percent) ||
                   getRandomColor(),
@@ -167,6 +171,8 @@ const AllocationTagCompare = memo(
                 id: compareItem.tagId as number,
                 label: compareItem.tagName as string,
                 value: compareItem.percent,
+                organizationId: String(compareItem.organizationId),
+
                 color:
                   lightenColor(colorData as string, compareItem.percent) ||
                   getRandomColor(),
@@ -228,71 +234,59 @@ const AllocationTagCompare = memo(
       }
     }, [statisticTagsList, statisticTagsCompareList]);
 
+    const getDuration = (
+      dataSource: StatisticsCategories,
+      type: EventWorkCategory,
+      tagId: number,
+      organizationId?: string,
+    ): string => {
+      const categoryMap = {
+        [EventWorkCategory.ALL]: dataSource?.largeCategories,
+        [EventWorkCategory.LARGE]: dataSource?.mediumCategories,
+        [EventWorkCategory.MEDIUM]: dataSource?.smallCategories,
+        [EventWorkCategory.SMALL]: dataSource?.category,
+      };
+
+      const categoryList = categoryMap[type] || [];
+
+      const item = categoryList?.find(
+        (item: any) =>
+          item.tagId === tagId &&
+          (!organizationId || String(item.organizationId) === organizationId),
+      );
+
+      return item?.duration || '00:00:00';
+    };
+
     const handleClickTooltip = (
       id: number | null,
-      type: string,
-      isCompare: boolean,
-    ) => {
-      let duration: string = '00:00:00';
-      if (isCompare) {
-        if (type === EventWorkCategory.ALL) {
-          duration =
-            statisticTagsCompareList?.largeCategories.find(
-              (item) => item.tagId == id,
-            )?.duration || '00:00:00';
-        }
-        if (type === EventWorkCategory.LARGE) {
-          duration =
-            statisticTagsCompareList?.mediumCategories?.find(
-              (item) => item.tagId == id,
-            )?.duration || '00:00:00';
-        }
-        if (type === EventWorkCategory.MEDIUM) {
-          duration =
-            statisticTagsCompareList?.smallCategories?.find(
-              (item) => item.tagId == id,
-            )?.duration || '00:00:00';
-        }
-        if (type === EventWorkCategory.SMALL) {
-          duration =
-            statisticTagsCompareList?.category?.find((item) => item.tagId == id)
-              ?.duration || '00:00:00';
-        }
-        setDetailCategoryCompare({
-          id: id,
-          type: type,
-          totalDuration: duration,
-        });
+      type: EventWorkCategory,
 
+      isCompare: boolean,
+      organizationId?: string,
+    ) => {
+      const dataSource = isCompare
+        ? statisticTagsCompareList
+        : statisticTagsList;
+      const duration = getDuration(
+        dataSource as StatisticsCategories,
+        type,
+        id as number,
+        organizationId,
+      );
+
+      const detailData = {
+        id,
+        type,
+        totalDuration: duration,
+        organizationId,
+      };
+
+      if (isCompare) {
+        setDetailCategoryCompare(detailData);
         setIsShowModalCompare(true);
       } else {
-        if (type === EventWorkCategory.ALL) {
-          duration =
-            statisticTagsList?.largeCategories.find((item) => item.tagId == id)
-              ?.duration || '00:00:00';
-        }
-        if (type === EventWorkCategory.LARGE) {
-          duration =
-            statisticTagsList?.mediumCategories?.find(
-              (item) => item.tagId == id,
-            )?.duration || '00:00:00';
-        }
-        if (type === EventWorkCategory.MEDIUM) {
-          duration =
-            statisticTagsList?.smallCategories?.find((item) => item.tagId == id)
-              ?.duration || '00:00:00';
-        }
-        if (type === EventWorkCategory.SMALL) {
-          duration =
-            statisticTagsList?.category?.find((item) => item.tagId == id)
-              ?.duration || '00:00:00';
-        }
-        setDetailCategory({
-          id: id,
-          type: type,
-          totalDuration: duration,
-        });
-
+        setDetailCategory(detailData);
         setIsShowModal(true);
       }
     };
@@ -506,11 +500,15 @@ const AllocationTagCompare = memo(
                                 <ProgressBarStatistic
                                   key={index}
                                   classProgressClass="h-[20px] rounded-[4px]"
-                                  handleClickTooltip={(id: number | null) => {
+                                  handleClickTooltip={(
+                                    id: number | null,
+                                    organizationId?: string,
+                                  ) => {
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.ALL,
                                       false,
+                                      organizationId,
                                     );
                                   }}
                                   handleClickChart={(
@@ -529,15 +527,23 @@ const AllocationTagCompare = memo(
                                   showInfo={false}
                                   startDate={startDate}
                                   endDate={endDate}
+                                  organizationId={
+                                    pair.main?.organizationId ||
+                                    pair.compare?.organizationId
+                                  }
                                 />
                                 <ProgressBarStatistic
                                   key={index}
                                   classProgressClass="h-[20px] rounded-[4px]"
-                                  handleClickTooltip={(id: number | null) => {
+                                  handleClickTooltip={(
+                                    id: number | null,
+                                    organizationId?: string,
+                                  ) => {
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.ALL,
                                       true,
+                                      organizationId,
                                     );
                                   }}
                                   handleClickChart={(
@@ -558,6 +564,10 @@ const AllocationTagCompare = memo(
                                   showInfo={false}
                                   startDateCompare={startDateCompare}
                                   endDateCompare={endDateCompare}
+                                  organizationId={
+                                    pair.main?.organizationId ||
+                                    pair.compare?.organizationId
+                                  }
                                 />
                               </div>
                             );
@@ -691,6 +701,10 @@ const AllocationTagCompare = memo(
                                   showInfo={false}
                                   startDate={startDate}
                                   endDate={endDate}
+                                  organizationId={
+                                    pair.main?.organizationId ||
+                                    pair.compare?.organizationId
+                                  }
                                 />
                                 <ProgressBarStatistic
                                   key={index}
@@ -720,6 +734,10 @@ const AllocationTagCompare = memo(
                                   showInfo={false}
                                   startDateCompare={startDateCompare}
                                   endDateCompare={endDateCompare}
+                                  organizationId={
+                                    pair.main?.organizationId ||
+                                    pair.compare?.organizationId
+                                  }
                                 />
                               </div>
                             );

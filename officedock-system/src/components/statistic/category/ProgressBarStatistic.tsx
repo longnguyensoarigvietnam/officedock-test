@@ -21,7 +21,9 @@ interface ProgressBarProps {
     value: number;
     duration: string;
     optionData: string[];
+    organizationId?: string;
   }[];
+  organizationId?: string;
   color?: string;
   classProgressClass?: string;
   className?: string;
@@ -30,7 +32,7 @@ interface ProgressBarProps {
   endDate?: Date | null;
   startDateCompare?: Date;
   endDateCompare?: Date | null;
-  handleClickTooltip: (id: number | null) => void;
+  handleClickTooltip: (id: number | null, organizationId?: string) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
 }
 
@@ -50,6 +52,7 @@ const ProgressBarStatistic = ({
   endDate,
   startDateCompare,
   endDateCompare,
+  organizationId,
   handleClickTooltip,
   handleClickChart,
 }: ProgressBarProps) => {
@@ -153,7 +156,7 @@ const ProgressBarStatistic = ({
                   <div className="flex w-full justify-end mt-3">
                     <div
                       onClick={() => {
-                        handleClickTooltip(id);
+                        handleClickTooltip(id, organizationId);
                       }}
                       className="bg-white flex items-center  justify-center gap-2 text-[12px] text-[#77858F] h-[34px] rounded-md">
                       <span>タスクを見る</span>
@@ -236,7 +239,10 @@ const ProgressBarStatistic = ({
                           <div className="flex w-full justify-end mt-3">
                             <div
                               onClick={() => {
-                                handleClickTooltip(item.id);
+                                handleClickTooltip(
+                                  item.id,
+                                  item.organizationId,
+                                );
                               }}
                               className="bg-white flex items-center  justify-center gap-2 text-[12px] text-[#77858F] h-[34px] rounded-md">
                               <span>タスクを見る</span>
