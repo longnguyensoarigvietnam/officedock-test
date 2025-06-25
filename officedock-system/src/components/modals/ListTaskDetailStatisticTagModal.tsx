@@ -75,19 +75,19 @@ const ListTaskDetailStatisticTagModal = ({
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId:
         detailCategory && detailCategory.type === EventWorkCategory.ALL
-          ? (detailCategory.id as number)
+          ? null
           : detailCategory && detailCategory.type !== ''
             ? (selectedLarge?.value as number)
             : null,
       mediumCategoryId:
         detailCategory && detailCategory.type === EventWorkCategory.LARGE
-          ? detailCategory && (detailCategory.id as number)
+          ? null
           : detailCategory && detailCategory.type !== EventWorkCategory.ALL
             ? (selectedMedium?.value as number)
             : null,
       smallCategoryId:
         detailCategory && detailCategory.type === EventWorkCategory.MEDIUM
-          ? (detailCategory.id as number)
+          ? null
           : detailCategory &&
               detailCategory.type !== EventWorkCategory.ALL &&
               detailCategory.type !== EventWorkCategory.LARGE
