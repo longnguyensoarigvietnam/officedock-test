@@ -499,14 +499,14 @@ const ProgressBarTeamTagCompare = ({
             {/* user item */}
             <div>
               <div className="mb-[10px]">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
+                <div className="flex justify-between items-center w-full">
+                  <div className="flex items-center gap-2 w-[calc(100%_-_96px)]">
                     <CustomUserAvatar
                       avatarUrl={itemUser.user.user.avatar || ''}
                       avatarColor={itemUser.user.user.avatarColor || ''}
                       size={30}
                     />
-                    <span className="text-sm font-medium truncate max-w-40">
+                    <span className="text-sm font-medium truncate max-w-[calc(100%_-_30px)]">
                       {itemUser.user.user.fullName}
                     </span>
                   </div>

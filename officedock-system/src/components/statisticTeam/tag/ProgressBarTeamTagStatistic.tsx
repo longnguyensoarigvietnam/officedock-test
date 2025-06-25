@@ -300,14 +300,14 @@ const ProgressBarTeamTagStatistic = ({
             className={`font-medium mt-3 text-sm text-black ${className}`}>
             <div className="mb-[10px]">
               {showInfo && (
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
+                <div className="flex justify-between items-center w-full">
+                  <div className="flex items-center gap-2 w-[calc(100%_-_96px)]">
                     <CustomUserAvatar
                       avatarUrl={item.user.avatar || ''}
                       avatarColor={item.user.avatarColor || ''}
                       size={30}
                     />
-                    <span className="text-sm font-medium truncate max-w-40">
+                    <span className="text-sm font-medium truncate max-w-[calc(100%_-_30px)]">
                       {item.user.fullName}
                     </span>
                   </div>

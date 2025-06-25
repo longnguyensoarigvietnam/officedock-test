@@ -415,3 +415,13 @@ export interface StatisticsUserTaskDuration {
     percentPerRange: number;
   }[];
 }
+
+export type ProgressDataType = {
+  id: number;
+  label: string;
+  value: number;
+  color: string;
+  duration: string;
+  optionData: string[];
+  mergedItems?: ProgressDataType[];
+};
