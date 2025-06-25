@@ -48,6 +48,9 @@ const useStatisticTableInTeamLineChartCompare = ({
     if (filter.endDate) {
       queryParams.push(`end_date=${filter.endDate}`);
     }
+    if (filter.organizationIds) {
+      queryParams.push(`organization_id=${filter.organizationIds}`);
+    }
     if (filter.organizationMemberId) {
       queryParams.push(
         `organization_get_members_id=${filter.organizationMemberId.toString()}`,
@@ -74,7 +77,7 @@ const useStatisticTableInTeamLineChartCompare = ({
     const queryString =
       queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
 
-    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM(parseInt(filter?.organizationIds))}${queryString}`;
+    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM}${queryString}`;
 
     const { data } = await api.get<StatisticsCategories[]>(apiUrl);
     return data;

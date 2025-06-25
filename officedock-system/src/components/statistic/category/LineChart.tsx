@@ -44,7 +44,7 @@ import {
   convertToStatisticJapaneseLabels,
   formatDateToYMD,
 } from '@utils/date';
-import { getLineChartEnableViews, getRandomColor, lightenColor } from '@utils';
+import { getLineChartEnableViews, getRandomColor, getStatisticMilestones, lightenColor } from '@utils';
 
 ChartJS.register(
   CategoryScale,
@@ -698,6 +698,7 @@ const LineChart = ({
 
     return allViews.filter((view) => !enabledViews.includes(view));
   };
+
   return (
     <div
       style={{
@@ -901,7 +902,19 @@ const LineChart = ({
             <div
               style={{ position: 'relative' }}
               className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
-              <Line data={lineChartData} options={options} />
+              <Line
+                data={{
+                  datasets: lineChartData?.datasets || [],
+                  labels: lineChartData?.labels.length
+                    ? lineChartData?.labels
+                    : getStatisticMilestones(
+                        `${formatDateToYMD(startDate)}`,
+                        `${formatDateToYMD(endDate || '')}`,
+                        lineChartViewBy?.value as StatisticViewOptions,
+                      ),
+                }}
+                options={options}
+              />
               <div
                 ref={tooltipRef}
                 style={{ position: 'absolute', opacity: 0 }}
@@ -933,12 +946,12 @@ const LineChart = ({
                 className={`!h-[200px] mt-5 w-full mx-auto`}
               />
             ) : (
-              <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+              <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md max-h-[500px] overflow-y-auto">
                 <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr
                       key={headerGroup.id}
-                      className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                      className="sticky top-0 z-10 text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
                       {headerGroup.headers.map((header, index) => (
                         <th
                           key={header.id}

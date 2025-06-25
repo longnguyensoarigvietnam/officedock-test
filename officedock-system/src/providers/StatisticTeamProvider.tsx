@@ -12,7 +12,7 @@ import { OptionDropdownType } from '@interfaces/common';
 import { getAdjustedStartDateDefault } from '@utils/date';
 
 import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
-import { TableRowDetail } from '@interfaces/statistic';
+import { CategoryTableRowDetail } from '@interfaces/statistic';
 
 interface ContextValue {
   selectedOrganization: OptionDropdownType | null;
@@ -123,8 +123,10 @@ interface ContextValue {
   // View by
   lineChartViewBy: OptionDropdownType | null;
   setLineChartViewBy: Dispatch<SetStateAction<OptionDropdownType | null>>;
-  tableDataArea: TableRowDetail[];
-  setTableDataArea: Dispatch<SetStateAction<TableRowDetail[]>>;
+
+  // Table data
+  areaTableData: CategoryTableRowDetail[];
+  setAreaTableData: Dispatch<SetStateAction<CategoryTableRowDetail[]>>;
 }
 
 const defaultValue: ContextValue = {
@@ -209,8 +211,9 @@ const defaultValue: ContextValue = {
 
   lineChartViewBy: null,
   setLineChartViewBy: () => {},
-  tableDataArea: [],
-  setTableDataArea: () => {},
+
+  areaTableData: [],
+  setAreaTableData: () => {},
 };
 
 export const StatisticTeamStateContext =
@@ -238,13 +241,13 @@ export const StatisticTeamStateProvider = ({
   ] = useState(false);
 
   const [smallOptions, setSmallOptions] = useState<OptionDropdownType[]>([]);
-
   const [largeOptions, setLargeOptions] = useState<OptionDropdownType[]>([]);
   const [mediumOptions, setMediumOptions] = useState<OptionDropdownType[]>([]);
   const [listOptionsOrganization, setListOptionsOrganization] = useState<
     OptionDropdownType[]
   >([]);
-  const [tableDataArea, setTableDataArea] = useState<TableRowDetail[]>([]);
+
+  const [areaTableData, setAreaTableData] = useState<CategoryTableRowDetail[]>([]);
 
   // Select
   const [selectedOrganization, setSelectedOrganization] =
@@ -420,8 +423,9 @@ export const StatisticTeamStateProvider = ({
 
     lineChartViewBy,
     setLineChartViewBy,
-    tableDataArea,
-    setTableDataArea,
+
+    areaTableData,
+    setAreaTableData,
   };
 
   return (

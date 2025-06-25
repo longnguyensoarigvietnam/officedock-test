@@ -77,6 +77,7 @@ const StatisticTeamTagBoard = () => {
     setIsLoadingMediumCompare,
     setIsLoadingSmallCompare,
     setCurrentPage,
+    setAreaTableData,
   } = useContext(StatisticTeamTagsStateContext);
   const {
     organizationTeamList,
@@ -263,6 +264,7 @@ const StatisticTeamTagBoard = () => {
 
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
+    setAreaTableData([]);
     if (data.value !== selectedOrganization?.value) {
       setIsLoadingOrganization(true);
       if (isCheckCompare) {
@@ -352,6 +354,7 @@ const StatisticTeamTagBoard = () => {
         setIsLoadingLargeCompare(true);
       }
     }
+    setAreaTableData([]);
     setCurrentPage(1);
 
     setSelectedLarge(data);
@@ -384,6 +387,7 @@ const StatisticTeamTagBoard = () => {
         setIsLoadingMediumCompare(true);
       }
     }
+    setAreaTableData([]);
     setCurrentPage(1);
 
     setSelectedMedium(data);
@@ -422,6 +426,7 @@ const StatisticTeamTagBoard = () => {
       }
     }
     setCurrentPage(1);
+    setAreaTableData([]);
 
     setSelectedSmall(data);
   };

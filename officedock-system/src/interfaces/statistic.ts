@@ -407,7 +407,7 @@ export interface StatisticsUserTaskDuration {
     fullName: string;
     avatarColor: string;
     avatar: string | null;
-  };
+  } | null;
   totalDuration: string;
   durations: {
     startDate: string;
@@ -427,12 +427,28 @@ export type ProgressDataType = {
   mergedItems?: ProgressDataType[];
   organizationId?: string;
 };
-export interface TableRowDetail {
+export interface CategoryTableRowDetail {
   categoryId: number;
   organizationId: number;
   categoryName: string;
   categoryDuration: string;
   categoryPercent: number;
+  userList: {
+    userId: number;
+    userName: string;
+    userAvatar?: string | null;
+    userAvatarColor: string;
+    userDuration: string;
+    userPercent: number;
+  }[];
+}
+
+export interface TagTableRowDetail {
+  tagId: number;
+  tagName: string;
+  tagDuration: string;
+  tagPercent: number;
+  organizationId: number;
   userList: {
     userId: number;
     userName: string;
