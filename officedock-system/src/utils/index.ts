@@ -17,7 +17,12 @@ import { PASSWORD_REGEX, URL_REGEX } from '@constants/regex';
 
 import { JwtDecode } from '@interfaces/auth';
 import { Organizations } from '@interfaces/organization';
-import { dataTaskDaily, dataTaskDailyTable } from '@interfaces/statistic';
+import {
+  dataTaskDaily,
+  dataTaskDailyTable,
+  ProgressDataType,
+  StatisticCategoryInfo,
+} from '@interfaces/statistic';
 import {
   ResultTeam,
   StatusSummary,
@@ -36,6 +41,7 @@ import {
   formatTime24h,
   getJapaneseDayName,
   getJapaneseWeekDay,
+  sumDurationsChart,
 } from './date';
 
 export function hasPermissionInArray(
@@ -1068,7 +1074,13 @@ export const createStyledAvatarWithMargin = (
 
       // Optional border
       ctx.beginPath();
-      ctx.arc(displaySize / 2, displaySize / 2, displaySize / 2 - 0.5, 0, Math.PI * 2);
+      ctx.arc(
+        displaySize / 2,
+        displaySize / 2,
+        displaySize / 2 - 0.5,
+        0,
+        Math.PI * 2,
+      );
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 1;
       ctx.stroke();
@@ -1209,4 +1221,63 @@ export const getSafeTooltipLeft = ({
   }
 
   return left;
+};
+
+export const mapStatisticCategoryInfoToProgressData = ({
+  data,
+  mergeLabel = 'その他',
+  mergeColor = '#83919E',
+  threshold = 10,
+  colorData,
+}: {
+  data: StatisticCategoryInfo[];
+  mergeLabel?: string;
+  mergeColor?: string;
+  threshold?: number;
+  colorData?: string;
+}): {
+  finalData: ProgressDataType[];
+} => {
+  const progressData: ProgressDataType[] = data.map((item) => ({
+    id: item.categoryId,
+    label: item.categoryName,
+    value: item.percent,
+    color:
+      item.categoryColor ||
+      (colorData && lightenColor(colorData, item.percent)) ||
+      '',
+    duration: item.duration,
+    optionData: item.tasks.slice(0, 3).map((task) => task.title),
+  }));
+
+  const mergedItems = progressData.filter((item) => item.value < threshold);
+  const mainItems = progressData.filter((item) => item.value >= threshold);
+
+  if (mergedItems.length === 0) {
+    return {
+      finalData: mainItems,
+    };
+  }
+
+  const totalMergedPercent = mergedItems.reduce(
+    (sum, item) => sum + item.value,
+    0,
+  );
+  const durations = mergedItems.map((item) => item.duration);
+
+  const totalDuration = sumDurationsChart(durations);
+
+  const mergedItem: ProgressDataType = {
+    id: -1,
+    label: mergeLabel,
+    value: totalMergedPercent,
+    color: mergeColor,
+    duration: totalDuration,
+    optionData: mergedItems.flatMap((item) => item.optionData),
+    mergedItems,
+  };
+
+  return {
+    finalData: [...mainItems, mergedItem],
+  };
 };

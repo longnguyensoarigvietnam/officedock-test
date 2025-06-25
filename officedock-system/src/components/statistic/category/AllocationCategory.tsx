@@ -6,11 +6,14 @@ import { SkeletonElement } from '@components/common/SkeletonLoading';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
-import { StatisticsCategories } from '@interfaces/statistic';
+import {
+  ProgressDataType,
+  StatisticsCategories,
+} from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
 import { formatTimeToJapanese } from '@utils/date';
-import { getRandomColor, lightenColor } from '@utils';
+import { mapStatisticCategoryInfoToProgressData } from '@utils';
 
 import { EventWorkCategory } from '@constants/enums';
 
@@ -27,15 +30,6 @@ type Props = {
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
-};
-
-type ProgressDataType = {
-  id: number;
-  label: string;
-  value: number;
-  color: string;
-  duration: string;
-  optionData: string[];
 };
 
 const AllocationCategory = memo(
@@ -88,20 +82,15 @@ const AllocationCategory = memo(
       setTotalDurationCategory,
     } = useContext(StatisticStateContext);
 
+    
+
     useEffect(() => {
       if (statisticCategoryList) {
         if (statisticCategoryList.largeCategories) {
-          const listDataLarge = statisticCategoryList.largeCategories.map(
-            (item) => ({
-              id: item.categoryId,
-              label: item.categoryName,
-              value: item.percent,
-              color: item.categoryColor,
-              duration: item.duration,
-              optionData: item.tasks.slice(0, 3).map((task) => task.title),
-            }),
-          );
-          setProgressDataLarge(listDataLarge);
+          const { finalData } = mapStatisticCategoryInfoToProgressData({
+            data: statisticCategoryList.largeCategories,
+          });
+          setProgressDataLarge(finalData);
         } else {
           setProgressDataLarge([]);
         }
@@ -109,20 +98,11 @@ const AllocationCategory = memo(
           const color = statisticCategoryList.largeCategories.find(
             (item) => item.categoryId === selectedLarge?.value,
           )?.categoryColor;
-          const listDataMedium = statisticCategoryList.mediumCategories.map(
-            (item) => ({
-              label: item.categoryName,
-              value: item.percent,
-              color:
-                item.categoryColor ||
-                (color && lightenColor(color, item.percent)) ||
-                getRandomColor(),
-              duration: item.duration,
-              optionData: item.tasks.slice(0, 3).map((task) => task.title),
-              id: item.categoryId,
-            }),
-          );
-          setProgressDataMedium(listDataMedium);
+          const { finalData } = mapStatisticCategoryInfoToProgressData({
+            data: statisticCategoryList.mediumCategories,
+            colorData: color,
+          });
+          setProgressDataMedium(finalData);
         } else {
           setProgressDataMedium([]);
         }
@@ -130,21 +110,12 @@ const AllocationCategory = memo(
           const color = statisticCategoryList.largeCategories.find(
             (item) => item.categoryId === selectedLarge?.value,
           )?.categoryColor;
-          const listDataSmall = statisticCategoryList.smallCategories.map(
-            (item) => ({
-              id: item.categoryId,
-              label: item.categoryName,
-              value: item.percent,
-              color:
-                item.categoryColor ||
-                (color && lightenColor(color, item.percent)) ||
-                getRandomColor(),
-              duration: item.duration,
-              optionData: item.tasks.slice(0, 3).map((task) => task.title),
-            }),
-          );
+          const { finalData } = mapStatisticCategoryInfoToProgressData({
+            data: statisticCategoryList.smallCategories,
+            colorData: color,
+          });
 
-          setProgressDataSmall(listDataSmall);
+          setProgressDataSmall(finalData);
         } else {
           setProgressDataSmall([]);
         }
