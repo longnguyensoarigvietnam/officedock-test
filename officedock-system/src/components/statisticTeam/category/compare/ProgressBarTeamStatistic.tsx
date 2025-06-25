@@ -527,9 +527,9 @@ const ProgressBarTeamStatisticCompare = ({
                 </div>
               </div>
               <div
-                className={`w-full group relative h-[10px] bg-gray-300  rounded-[4px]  ${classProgressUserClass}`}>
+                className={`w-full group relative h-[10px] bg-gray-300 ${classProgressUserClass}`}>
                 <div
-                  className="h-full rounded-[4px] overflow-hidden transition-all duration-500 "
+                  className="h-full overflow-hidden transition-all duration-500 "
                   style={{
                     width: `${itemUser.user.percent}%`,
                     backgroundColor: itemUser.user.user.avatarColor,
@@ -621,7 +621,7 @@ const ProgressBarTeamStatisticCompare = ({
             {/* user item compare */}
             <div className="mt-[6px]">
               <div
-                className={`w-full group relative h-[10px] bg-gray-300 rounded-[4px]  ${classProgressUserClass}`}>
+                className={`w-full group relative h-[10px] bg-gray-300  ${classProgressUserClass}`}>
                 <div
                   className="h-full transition-all duration-500 "
                   style={{

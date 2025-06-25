@@ -245,7 +245,7 @@ const ProgressBarTeamStatistic = ({
             <div
               className={`w-full group relative h-[10px] bg-gray-300 ${classProgressUserClass}`}>
               <div
-                className="h-full transition-all duration-500 rounded-[4px]"
+                className="h-full transition-all duration-500"
                 style={{
                   width: `${item.percent}%`,
                   backgroundColor: color,
