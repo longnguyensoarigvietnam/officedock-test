@@ -21,7 +21,7 @@ interface FilterProps {
   tagIds?: OptionDropdownType[];
   statisticBy?: string;
   isTagPage?: boolean;
-  selectedOrganization?: string;
+  selectedOrganization?: string | number;
   organizationMemberId?: string;
 }
 

@@ -3,7 +3,7 @@
 const nextConfig = {
   experimental: {
     missingSuspenseWithCSRBailout: false,
-    proxyTimeout: 1800000
+    proxyTimeout: 1800000,
   },
   async rewrites() {
     return [

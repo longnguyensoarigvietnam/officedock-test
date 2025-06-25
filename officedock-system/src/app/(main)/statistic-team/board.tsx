@@ -88,6 +88,7 @@ const StatisticTeamBoard = () => {
     setIsLoadingLargeCompare,
     setIsLoadingMediumCompare,
     setCurrentPage,
+    setTableDataArea,
   } = useContext(StatisticTeamStateContext);
   const {
     organizationTeamList,
@@ -320,6 +321,7 @@ const StatisticTeamBoard = () => {
 
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
+    setTableDataArea([]);
     if (data.value !== selectedOrganization?.value) {
       setIsLoadingOrganization(true);
       if (isCheckCompare) {
@@ -407,7 +409,7 @@ const StatisticTeamBoard = () => {
   // Handle Choose organization with option large
   const handleSelectOrganizationCustom = (data: OptionDropdownType) => {
     setCurrentPage(1);
-
+    setTableDataArea([]);
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
@@ -449,6 +451,8 @@ const StatisticTeamBoard = () => {
 
   // Handle Choose LARGE
   const handleSelectLarge = (data: OptionDropdownType) => {
+    if (selectedOrganization?.label === ALL_TEAM_STATISTIC) return;
+    setTableDataArea([]);
     if (data.value !== selectedLarge?.value) {
       setIsLoadingLarge(true);
       if (isCheckCompare) {
@@ -482,6 +486,9 @@ const StatisticTeamBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
+    if (selectedOrganization?.label === ALL_TEAM_STATISTIC) return;
+    setTableDataArea([]);
+
     if (data.value !== selectedMedium?.value) {
       setIsLoadingMedium(true);
       if (isCheckCompare) {
@@ -520,6 +527,7 @@ const StatisticTeamBoard = () => {
 
   const handleSelectSmall = (data: OptionDropdownType) => {
     setCurrentPage(1);
+    setTableDataArea([]);
 
     setSelectedSmall(data);
   };

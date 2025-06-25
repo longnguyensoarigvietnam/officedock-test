@@ -548,10 +548,10 @@ export const apiRouters = {
   STATISTICS_PERCENT_CHART: '/statistics/percent-change/',
 
   // STATISTICS TEAM
-  STATISTICS_CATEGORIES_TEAM: (id: number) =>
-    `/organization-statistics/${id}/categories/`,
-  STATISTICS_TAGS_TEAM: (id: number) => `/organization-statistics/${id}/tags/`,
-  STATISTICS_USER_TASK_DURATIONS: (id: number) => `/organization-statistics/${id}/user-task-durations/`,
+  STATISTICS_CATEGORIES_TEAM: `/organization-statistics/categories/`,
+  STATISTICS_TAGS_TEAM: `/organization-statistics/tags/`,
+  STATISTICS_USER_TASK_DURATIONS: (id: number) =>
+    `/organization-statistics/${id}/user-task-durations/`,
 
   // ORGANIZATION CATEGORY HIERARCHIES
   ORGANIZATION_CATEGORY_HIERARCHY_DETAIL: (id: number) =>

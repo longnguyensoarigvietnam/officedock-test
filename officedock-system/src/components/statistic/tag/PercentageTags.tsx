@@ -68,6 +68,7 @@ const PercentageTags = ({
     id: number | null;
     type: string;
     totalDuration: string;
+    organizationId?: string;
   } | null>(null);
 
   const [dataChartLarge, setDataChartLarge] = useState<DataChartType>({
@@ -80,7 +81,6 @@ const PercentageTags = ({
     listDuration: [],
     mergedItems: [],
   });
-
   const [dataChartMedium, setDataChartMedium] = useState<DataChartType>({
     actualValue: [],
     colors: [],
@@ -128,10 +128,12 @@ const PercentageTags = ({
     };
 
     const filteredCategories = categories.filter((item) => {
-      if (item.percent < 10) {
+      // No merger with my dock tag
+      if (item.percent < 0) {
         mergedItems.push({ ...item });
         mergedCategory.percent += item.percent;
         mergedCategory.duration += item.duration;
+        mergedCategory.organizationId = item.organizationId;
         mergedCategory.categoryColor =
           (colorData && lightenColor(colorData, item.percent)) ||
           getRandomColor();
@@ -173,6 +175,9 @@ const PercentageTags = ({
     const listDuration = categories.map(
       (item) => item.tasks && item.tasks.map((task) => task.totalDuration),
     );
+    const listDataOrganizations = categories.map((org) =>
+      String(org.organizationId),
+    );
 
     return {
       colors: listColor,
@@ -182,6 +187,7 @@ const PercentageTags = ({
       optionData: listDataOptions,
       listId: listDataIds,
       listDuration: listDuration,
+      dataOrganization: listDataOrganizations,
       mergedItems: mergedItems,
     };
   };
@@ -261,34 +267,46 @@ const PercentageTags = ({
       }
     }
   }, [statisticTagsList]);
+  const getDuration = (
+    dataSource: any,
+    type: EventWorkCategory,
+    tagId: number,
+    organizationId?: string,
+  ): string => {
+    const categoryMap = {
+      [EventWorkCategory.ALL]: dataSource?.largeCategories,
+      [EventWorkCategory.LARGE]: dataSource?.mediumCategories,
+      [EventWorkCategory.MEDIUM]: dataSource?.smallCategories,
+      [EventWorkCategory.SMALL]: dataSource?.category,
+    };
 
-  const handleClickTooltip = (id: number | null, type: string) => {
-    let duration: string = '00:00:00';
-    if (type === EventWorkCategory.ALL) {
-      duration =
-        statisticTagsList?.largeCategories.find((item) => item.tagId == id)
-          ?.duration || '00:00:00';
-    }
+    const categoryList = categoryMap[type] || [];
 
-    if (type === EventWorkCategory.LARGE) {
-      duration =
-        statisticTagsList?.mediumCategories?.find((item) => item.tagId == id)
-          ?.duration || '00:00:00';
-    }
-    if (type === EventWorkCategory.MEDIUM) {
-      duration =
-        statisticTagsList?.smallCategories?.find((item) => item.tagId == id)
-          ?.duration || '00:00:00';
-    }
-    if (type === EventWorkCategory.SMALL) {
-      duration =
-        statisticTagsList?.category?.find((item) => item.tagId == id)
-          ?.duration || '00:00:00';
-    }
+    const item = categoryList?.find(
+      (item: any) =>
+        item.tagId === tagId &&
+        (!organizationId || String(item.organizationId) === organizationId),
+    );
+
+    return item?.duration || '00:00:00';
+  };
+
+  const handleClickTooltip = (
+    id: number | null,
+    type: EventWorkCategory,
+    organizationId?: string,
+  ) => {
+    const duration = getDuration(
+      statisticTagsList,
+      type,
+      id as number,
+      organizationId,
+    );
     setDetailCategory({
       id: id,
       type: type,
       totalDuration: duration,
+      organizationId,
     });
 
     setTimeout(() => {
@@ -432,8 +450,16 @@ const PercentageTags = ({
                           className="w-[220px] h-[220px] "
                           optionsData={dataChartLarge.optionData}
                           listIdData={dataChartLarge.listId}
-                          handleClickTooltip={(id: number | null) => {
-                            handleClickTooltip(id, EventWorkCategory.ALL);
+                          dataOrganization={dataChartLarge.dataOrganization}
+                          handleClickTooltip={(
+                            id: number | null,
+                            organizationId?: string,
+                          ) => {
+                            handleClickTooltip(
+                              id,
+                              EventWorkCategory.ALL,
+                              organizationId,
+                            );
                           }}
                           handleClickChart={(_data: OptionDropdownType) => {}}
                         />

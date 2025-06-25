@@ -56,6 +56,7 @@ interface TableRowDetail {
   tagName: string;
   tagDuration: string;
   tagPercent: number;
+  organizationId: number;
   userList: {
     userId: number;
     userName: string;
@@ -72,6 +73,7 @@ const buildTableDetail = (
     tagName?: string;
     percent: number;
     duration: string;
+    organizationId?: number;
     users?: {
       user: {
         id: number;
@@ -89,6 +91,8 @@ const buildTableDetail = (
     tagName: String(tag.tagName),
     tagPercent: tag.percent,
     tagDuration: tag.duration,
+    organizationId: tag.organizationId ?? 0,
+
     userList:
       tag.users && tag.users.length > 0
         ? tag.users.map((user) => {
@@ -172,6 +176,8 @@ const StackedAreaTeamTagChart = ({
     useState<string>('');
   const [durationSortingStatus, setDurationSortingStatus] =
     useState<string>('');
+  const [selectedOrganizationInTable, setSelectedOrganizationInTable] =
+    useState<number>(0);
 
   // Table data
   const [tableData, setTableData] = useState<TableRowDetail[]>([]);
@@ -186,6 +192,7 @@ const StackedAreaTeamTagChart = ({
   const [selectedTag, setSelectedTag] = useState<{
     id: number;
     name: string;
+    organizationId: number;
   } | null>(null);
 
   // Filter options
@@ -197,7 +204,7 @@ const StackedAreaTeamTagChart = ({
     mediumCategoryId?: string | number;
     smallCategoryId?: string | number;
     statisticBy: string;
-    selectedOrganization: string;
+    selectedOrganization: number;
     tagIds: { label: string; value: number }[];
     organizationMemberId?: string;
   }>({
@@ -208,7 +215,7 @@ const StackedAreaTeamTagChart = ({
     mediumCategoryId: selectedMedium?.value,
     smallCategoryId: selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: `${selectedOrganization?.value}`,
+    selectedOrganization: 0,
     tagIds: [],
     organizationMemberId:
       selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
@@ -222,7 +229,9 @@ const StackedAreaTeamTagChart = ({
       setSelectedTag({
         id: Number(firstTag.tagId),
         name: String(firstTag.tagName),
+        organizationId: Number(firstTag.organizationId),
       });
+      setSelectedOrganizationInTable(Number(firstTag.organizationId));
       setFilter((prev) => {
         return {
           ...prev,
@@ -232,6 +241,7 @@ const StackedAreaTeamTagChart = ({
               value: Number(firstTag.tagId),
             },
           ],
+          selectedOrganization: Number(firstTag.organizationId),
         };
       });
     } else {
@@ -240,6 +250,7 @@ const StackedAreaTeamTagChart = ({
         return {
           ...prev,
           tagIds: [],
+          selectedOrganization: 0,
         };
       });
     }
@@ -343,7 +354,7 @@ const StackedAreaTeamTagChart = ({
       mediumCategoryId: selectedMedium?.value,
       smallCategoryId: selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: `${selectedOrganization?.value}`,
+      selectedOrganization: selectedOrganizationInTable,
       tagIds: selectedTag
         ? [
             {
@@ -369,6 +380,7 @@ const StackedAreaTeamTagChart = ({
     selectedTag,
     selectedOrganization?.label,
     selectedOrganizationSideBar?.value,
+    selectedOrganizationInTable,
   ]);
 
   useEffect(() => {
@@ -616,13 +628,21 @@ const StackedAreaTeamTagChart = ({
           <div className="flex items-start px-[18px]">
             <RadioButton
               name="tagName"
-              isChecked={info.row.original.tagId == selectedTag?.id}
+              isChecked={
+                info.row.original.tagId == selectedTag?.id &&
+                info.row.original.organizationId == selectedTag?.organizationId
+              }
               onChange={(e: any) => {
                 if (e) {
                   setSelectedTag({
                     id: info.row.original.tagId,
                     name: info.row.original.tagName,
+                    organizationId: info.row.original.organizationId,
                   });
+                  setSelectedOrganizationInTable(
+                    info.row.original.organizationId,
+                  );
+
                   setFilter((prev) => {
                     return {
                       ...prev,

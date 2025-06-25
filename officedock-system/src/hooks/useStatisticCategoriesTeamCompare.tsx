@@ -52,6 +52,8 @@ const useStatisticCategoriesTeamCompare = ({
 
     if (filter.fromDate) params.append('from_date', String(filter.fromDate));
     if (filter.endDate) params.append('end_date', String(filter.endDate));
+    if (filter.organizationIds)
+      params.append('organization_id', filter?.organizationIds.toString());
     if (filter.organizationMemberId)
       params.append(
         'organization_get_members_id',
@@ -78,8 +80,7 @@ const useStatisticCategoriesTeamCompare = ({
       params.append('user_ids', userIds);
     }
 
-    const orgId = parseInt(filter.organizationIds);
-    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM(orgId)}?${params.toString()}`;
+    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM}?${params.toString()}`;
 
     const { data } = await api.get<StatisticsCategories[]>(apiUrl);
     return data;

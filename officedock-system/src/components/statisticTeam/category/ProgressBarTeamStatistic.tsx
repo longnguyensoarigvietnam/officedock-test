@@ -26,6 +26,8 @@ interface ProgressBarProps {
     duration: string;
     optionData: UserListStatisticType[];
   }[];
+  organizationId?: string;
+
   color?: string;
   classProgressClass?: string;
   classProgressUserClass?: string;
@@ -39,11 +41,13 @@ interface ProgressBarProps {
     categoryId,
     duration,
     userDuration,
+    organizationId,
   }: {
     userId: number;
     categoryId: number;
     duration: string;
     userDuration: string;
+    organizationId?: string;
   }) => void;
 }
 
@@ -62,6 +66,7 @@ const ProgressBarTeamStatistic = ({
   showInfo = true,
   startDate,
   endDate,
+  organizationId,
   handleClickChart,
   handleClickTooltip,
 }: ProgressBarProps) => {
@@ -309,6 +314,7 @@ const ProgressBarTeamStatistic = ({
                           categoryId: id,
                           userDuration: item.duration,
                           duration: duration,
+                          organizationId: organizationId,
                         })
                       }
                       className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">

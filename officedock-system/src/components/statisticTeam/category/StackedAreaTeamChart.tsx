@@ -1,5 +1,11 @@
 'use client';
-import React, { Fragment, useContext, useEffect, useState } from 'react';
+import React, {
+  Fragment,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import Chart from 'react-apexcharts';
 import Image from 'next/image';
 import {
@@ -24,16 +30,14 @@ import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatis
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
-import {
-  STATISTIC_CHART_VIEW_OPTIONS,
-  TEAM_CALENDAR_ORGANIZATION,
-} from '@constants';
+import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
   StatisticCategoryInfo,
   StatisticsCategories,
+  TableRowDetail,
 } from '@interfaces/statistic';
 import { getLineChartEnableViews } from '@utils';
 import {
@@ -46,6 +50,7 @@ import {
 } from '@utils/date';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { useGenericDebounce } from '@hooks/useGenericDebounce';
 
 type Props = {
   startDate: Date;
@@ -58,25 +63,13 @@ type Props = {
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
 };
-interface TableRowDetail {
-  categoryId: number;
-  categoryName: string;
-  categoryDuration: string;
-  categoryPercent: number;
-  userList: {
-    userId: number;
-    userName: string;
-    userAvatar?: string | null;
-    userAvatarColor: string;
-    userDuration: string;
-    userPercent: number;
-  }[];
-}
 
 const buildTableDetail = (
   categories: {
     categoryId: number;
     categoryName: string;
+    organizationId?: number;
+
     percent: number;
     duration: string;
     users?: {
@@ -96,6 +89,7 @@ const buildTableDetail = (
     categoryName: category.categoryName,
     categoryPercent: category.percent,
     categoryDuration: category.duration,
+    organizationId: category.organizationId ?? 0,
     userList:
       category.users && category.users.length > 0
         ? category.users.map((user) => {
@@ -141,6 +135,8 @@ const StackedAreaTeamChart = ({
     listMemberTeam,
     orderingOptions,
     lineChartViewBy,
+    tableDataArea,
+    setTableDataArea,
     setLineChartViewBy,
   } = useContext(StatisticTeamStateContext);
   const { selectedOrganization: selectedOrganizationSideBar } =
@@ -158,6 +154,7 @@ const StackedAreaTeamChart = ({
 
   const [isExtendData, setIsExtendData] = useState(true);
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
+  const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
 
   // Sorting
   const [percentageSortingStatus, setPercentageSortingStatus] =
@@ -165,8 +162,6 @@ const StackedAreaTeamChart = ({
   const [durationSortingStatus, setDurationSortingStatus] =
     useState<string>('');
 
-  // Table data
-  const [tableData, setTableData] = useState<TableRowDetail[]>([]);
   // Collapse statuses
   const [categoryCollapseStatuses, setCategoryCollapseStatuses] = useState<
     {
@@ -174,6 +169,8 @@ const StackedAreaTeamChart = ({
       status: boolean;
     }[]
   >([]);
+  const [selectedOrganizationInTable, setSelectedOrganizationInTable] =
+    useState<number>(0);
 
   // Filter options
   const [filter, setFilter] = useState({
@@ -185,12 +182,9 @@ const StackedAreaTeamChart = ({
     mediumCategoryId: selectedMedium?.value,
     smallCategoryId: selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: `${selectedOrganization?.value}`,
+    selectedOrganization: selectedOrganization?.value,
     tagIds: orderingOptions?.tag_ids || [],
-    organizationMemberId:
-      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
-        ? String(selectedOrganizationSideBar?.value || '')
-        : undefined,
+    organizationMemberId: String(selectedOrganizationSideBar?.value || ''),
   });
 
   const handleCategorySelection = (
@@ -202,8 +196,60 @@ const StackedAreaTeamChart = ({
         id: firstCategory.categoryId,
         name: firstCategory.categoryName,
       });
+      setSelectedOrganizationInTable(Number(firstCategory.organizationId));
+      if (selectedOrganization && !selectedLarge && !selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            largeCategoryId: firstCategory.categoryId,
+            selectedOrganization: Number(firstCategory.organizationId),
+          };
+        });
+      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            mediumCategoryId: firstCategory.categoryId,
+            selectedOrganization: Number(firstCategory.organizationId),
+          };
+        });
+      } else if (selectedOrganization && selectedLarge && selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            smallCategoryId: firstCategory.categoryId,
+            selectedOrganization: Number(firstCategory.organizationId),
+          };
+        });
+      }
     } else {
       setSelectedCategory(null);
+      setSelectedOrganizationInTable(0);
+      if (selectedOrganization && !selectedLarge && !selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            largeCategoryId: undefined,
+            selectedOrganization: 0,
+          };
+        });
+      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            mediumCategoryId: undefined,
+            selectedOrganization: 0,
+          };
+        });
+      } else if (selectedOrganization && selectedLarge && selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            smallCategoryId: undefined,
+            selectedOrganization: 0,
+          };
+        });
+      }
     }
   };
 
@@ -213,7 +259,12 @@ const StackedAreaTeamChart = ({
     isLoadingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
     filter,
-    condition: [Boolean(tableData.length > 0)],
+    condition: [
+      Boolean(
+        tableDataArea.length > 0 &&
+          (filter.largeCategoryId || filter.mediumCategoryId),
+      ),
+    ],
   });
 
   const [dataChart, setDataChart] = useState<
@@ -269,7 +320,7 @@ const StackedAreaTeamChart = ({
         }),
       );
 
-      setTableData(tableDetail);
+      setTableDataArea(tableDetail);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -278,48 +329,61 @@ const StackedAreaTeamChart = ({
     selectedLarge,
     selectedMedium,
   ]);
-
-  useEffect(() => {
-    setFilter({
+  // Handle listen to filter option changes
+  const memoizedFilter = useMemo(() => {
+    return {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-      userIds: selectedMemberList,
+      userIds:
+        orderingOptions?.user_ids.map((item) => item.value).join(',') || '',
       largeCategoryId:
-        selectedOrganization && !selectedLarge && !selectedMedium
+        selectedOrganizationInTable && !selectedLarge && !selectedMedium
           ? selectedCategory?.id
           : selectedLarge?.value,
       mediumCategoryId:
-        selectedOrganization && selectedLarge && !selectedMedium
+        selectedOrganizationInTable && selectedLarge && !selectedMedium
           ? selectedCategory?.id
           : selectedMedium?.value,
       smallCategoryId:
-        selectedOrganization && selectedLarge && selectedMedium
+        selectedOrganizationInTable && selectedLarge && selectedMedium
           ? selectedCategory?.id
           : selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: `${selectedOrganization?.value}`,
+      selectedOrganization: selectedOrganizationInTable,
       tagIds: orderingOptions?.tag_ids || [],
-      organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
-          ? String(selectedOrganizationSideBar?.value || '')
-          : undefined,
-    });
+      organizationMemberId: String(selectedOrganizationSideBar?.value || ''),
+    };
   }, [
     startDate,
     endDate,
     orderingOptions,
-    lineChartViewBy?.value,
-    selectedOrganization?.value,
-    selectedLarge?.value,
-    selectedMedium?.value,
-    selectedSmall?.value,
-    selectedMemberList,
-    selectedOrganization,
+
+    selectedOrganizationInTable,
     selectedLarge,
     selectedMedium,
     selectedCategory?.id,
+    selectedSmall?.value,
+    lineChartViewBy?.value,
     selectedOrganizationSideBar?.value,
   ]);
+
+  const debouncedFilter = useGenericDebounce(memoizedFilter, 1000);
+
+  useEffect(() => {
+    if (
+      isOrganizationChanging &&
+      orderingOptions &&
+      orderingOptions.user_ids.length > 0
+    ) {
+      setIsOrganizationChanging(false); // Done
+    }
+  }, [orderingOptions, isOrganizationChanging]);
+
+  useEffect(() => {
+    if (!isOrganizationChanging) {
+      setFilter(debouncedFilter); // Trigger API only when everything is ready
+    }
+  }, [debouncedFilter, isOrganizationChanging]);
 
   useEffect(() => {
     if (
@@ -505,7 +569,7 @@ const StackedAreaTeamChart = ({
         ? rowAPercentage - rowBPercentage
         : rowBPercentage - rowAPercentage;
     });
-    setTableData(sortedArr);
+    setTableDataArea(sortedArr);
   };
 
   // Sort by duration difference
@@ -525,7 +589,7 @@ const StackedAreaTeamChart = ({
         ? rowADuration - rowBDuration
         : rowBDuration - rowADuration;
     });
-    setTableData(sortedArr);
+    setTableDataArea(sortedArr);
   };
 
   // Columns definition
@@ -557,6 +621,9 @@ const StackedAreaTeamChart = ({
                     id: info.row.original.categoryId,
                     name: info.row.original.categoryName,
                   });
+                  setSelectedOrganizationInTable(
+                    info.row.original.organizationId,
+                  );
                   if (
                     selectedOrganization &&
                     !selectedLarge &&
@@ -674,10 +741,10 @@ const StackedAreaTeamChart = ({
                 durationSortingStatus == SortingType.DESC
               ) {
                 setDurationSortingStatus(SortingType.ASC);
-                sortByDurationDifference(tableData, SortingType.ASC);
+                sortByDurationDifference(tableDataArea, SortingType.ASC);
               } else {
                 setDurationSortingStatus(SortingType.DESC);
-                sortByDurationDifference(tableData, SortingType.DESC);
+                sortByDurationDifference(tableDataArea, SortingType.DESC);
               }
             }}>
             <p className="!text-xs font-medium !text-[#77858F]">計測時間</p>
@@ -756,10 +823,10 @@ const StackedAreaTeamChart = ({
                 percentageSortingStatus == SortingType.DESC
               ) {
                 setPercentageSortingStatus(SortingType.ASC);
-                sortByPercentDifference(tableData, SortingType.ASC);
+                sortByPercentDifference(tableDataArea, SortingType.ASC);
               } else {
                 setPercentageSortingStatus(SortingType.DESC);
-                sortByPercentDifference(tableData, SortingType.DESC);
+                sortByPercentDifference(tableDataArea, SortingType.DESC);
               }
             }}>
             <p className="!text-xs font-medium !text-[#77858F]">割合</p>
@@ -831,7 +898,7 @@ const StackedAreaTeamChart = ({
   ];
 
   const table = useReactTable({
-    data: tableData,
+    data: tableDataArea,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -1022,7 +1089,11 @@ const StackedAreaTeamChart = ({
                     classNameOption="!text-sm"
                     options={listOptionsOrganization}
                     selectedOption={selectedOrganization || undefined}
-                    onChange={(data) => handleSelectOrganization(data)}
+                    onChange={(data) => {
+                      setTableDataArea([]);
+                      setIsOrganizationChanging(true);
+                      handleSelectOrganization(data);
+                    }}
                   />
                 </div>
               </div>

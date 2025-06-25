@@ -6,10 +6,7 @@ import { SkeletonElement } from '@components/common/SkeletonLoading';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
-import {
-  ProgressDataType,
-  StatisticsCategories,
-} from '@interfaces/statistic';
+import { ProgressDataType, StatisticsCategories } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
 import { formatTimeToJapanese } from '@utils/date';
@@ -49,6 +46,7 @@ const AllocationCategory = memo(
       id: number | null;
       type: string;
       totalDuration: string;
+      organizationId?: string;
     } | null>(null);
 
     const [progressDataLarge, setProgressDataLarge] = useState<
@@ -81,8 +79,6 @@ const AllocationCategory = memo(
       setTotalDurationTask,
       setTotalDurationCategory,
     } = useContext(StatisticStateContext);
-
-    
 
     useEffect(() => {
       if (statisticCategoryList) {
@@ -122,7 +118,11 @@ const AllocationCategory = memo(
       }
     }, [statisticCategoryList]);
 
-    const handleClickTooltip = (id: number | null, type: string) => {
+    const handleClickTooltip = (
+      id: number | null,
+      type: string,
+      organizationId?: string,
+    ) => {
       let duration: string = '00:00:00';
       if (isLoadingLarge || isLoadingMedium || isLoadingOrganization) return;
 
@@ -148,6 +148,7 @@ const AllocationCategory = memo(
         id: id,
         type: type,
         totalDuration: duration,
+        organizationId,
       });
 
       setTimeout(() => {
@@ -346,9 +347,17 @@ const AllocationCategory = memo(
                               <ProgressBarStatistic
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={(id: number | null) => {
-                                  handleClickTooltip(id, EventWorkCategory.ALL);
+                                handleClickTooltip={(
+                                  id: number | null,
+                                  organizationId?: string,
+                                ) => {
+                                  handleClickTooltip(
+                                    id,
+                                    EventWorkCategory.ALL,
+                                    organizationId,
+                                  );
                                 }}
+                                organizationId={item.organizationId}
                                 handleClickChart={(
                                   data: OptionDropdownType,
                                 ) => {

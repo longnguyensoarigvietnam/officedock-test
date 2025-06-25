@@ -54,7 +54,6 @@ import {
   DEFAULT_TIME_TEXT,
   EVERYONE_OPTION_LABEL,
   STATISTIC_CHART_VIEW_OPTIONS,
-  TEAM_CALENDAR_ORGANIZATION,
 } from '@constants';
 
 import {
@@ -109,6 +108,7 @@ interface TableRowDetail {
   categoryName: string;
   categoryDuration: string;
   categoryPercent: number;
+  organizationId: number;
   userList: {
     userId: number;
     userName: string;
@@ -152,13 +152,15 @@ const LineChartByTeam = ({
   const { expanded, selectedOrganization: selectedOrganizationSideBar } =
     useContext(GlobalStateContext);
 
-  // Selected members and category
+  // Selected members, category, organization
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<{
     id: number;
     name: string;
   } | null>(null);
   const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
+  const [selectedOrganizationInTable, setSelectedOrganizationInTable] =
+    useState<number>(0);
 
   // Filter options
   const [filter, setFilter] = useState({
@@ -178,12 +180,9 @@ const LineChartByTeam = ({
         ? selectedCategory?.id
         : selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: `${selectedOrganization?.value}`,
+    selectedOrganization: 0,
     tagIds: orderingOptions?.tag_ids || [],
-    organizationMemberId:
-      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
-        ? String(selectedOrganizationSideBar?.value || '')
-        : undefined,
+    organizationMemberId: String(selectedOrganizationSideBar?.value || ''),
   });
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const [memberOptions, setMemberOptions] = useState<
@@ -227,7 +226,7 @@ const LineChartByTeam = ({
   // Collapse statuses
   const [categoryCollapseStatuses, setCategoryCollapseStatuses] = useState<
     {
-      categoryId: number;
+      categoryName: string;
       status: boolean;
     }[]
   >([]);
@@ -249,6 +248,7 @@ const LineChartByTeam = ({
     categories: {
       categoryId: number;
       categoryName: string;
+      organizationId?: number;
       percent: number;
       duration: string;
       users?: {
@@ -268,6 +268,7 @@ const LineChartByTeam = ({
       categoryName: category.categoryName,
       categoryPercent: category.percent,
       categoryDuration: category.duration,
+      organizationId: category.organizationId ?? 0,
       userList:
         allLabelUser.length > 0
           ? allLabelUser.map((userInfo) => {
@@ -305,11 +306,13 @@ const LineChartByTeam = ({
         id: firstCategory.categoryId,
         name: firstCategory.categoryName,
       });
+      setSelectedOrganizationInTable(Number(firstCategory.organizationId));
       if (selectedOrganization && !selectedLarge && !selectedMedium) {
         setFilter((prev) => {
           return {
             ...prev,
             largeCategoryId: firstCategory.categoryId,
+            selectedOrganization: Number(firstCategory.organizationId),
           };
         });
       } else if (selectedOrganization && selectedLarge && !selectedMedium) {
@@ -317,6 +320,7 @@ const LineChartByTeam = ({
           return {
             ...prev,
             mediumCategoryId: firstCategory.categoryId,
+            selectedOrganization: Number(firstCategory.organizationId),
           };
         });
       } else if (selectedOrganization && selectedLarge && selectedMedium) {
@@ -324,16 +328,19 @@ const LineChartByTeam = ({
           return {
             ...prev,
             smallCategoryId: firstCategory.categoryId,
+            selectedOrganization: Number(firstCategory.organizationId),
           };
         });
       }
     } else {
       setSelectedCategory(null);
+      setSelectedOrganizationInTable(0);
       if (selectedOrganization && !selectedLarge && !selectedMedium) {
         setFilter((prev) => {
           return {
             ...prev,
             largeCategoryId: undefined,
+            selectedOrganization: 0,
           };
         });
       } else if (selectedOrganization && selectedLarge && !selectedMedium) {
@@ -341,6 +348,7 @@ const LineChartByTeam = ({
           return {
             ...prev,
             mediumCategoryId: undefined,
+            selectedOrganization: 0,
           };
         });
       } else if (selectedOrganization && selectedLarge && selectedMedium) {
@@ -348,6 +356,7 @@ const LineChartByTeam = ({
           return {
             ...prev,
             smallCategoryId: undefined,
+            selectedOrganization: 0,
           };
         });
       }
@@ -364,10 +373,7 @@ const LineChartByTeam = ({
         largeCategoryId: selectedLarge?.value as number,
         mediumCategoryId: selectedMedium?.value as number,
         orderingOptions: orderingOptions,
-        organizationMemberId:
-          selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
-            ? String(selectedOrganizationSideBar?.value || '')
-            : undefined,
+        organizationMemberId: String(selectedOrganizationSideBar?.value || ''),
         userIds:
           orderingOptions?.user_ids?.length == 0
             ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
@@ -390,7 +396,7 @@ const LineChartByTeam = ({
         setCategoryCollapseStatuses(
           tableDetail.map((category) => {
             return {
-              categoryId: category.categoryId,
+              categoryName: category.categoryName,
               status: false,
             };
           }),
@@ -460,30 +466,27 @@ const LineChartByTeam = ({
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
       userIds: selectedMembers?.filter(Boolean).join(','),
       largeCategoryId:
-        selectedOrganization && !selectedLarge && !selectedMedium
+        selectedOrganizationInTable && !selectedLarge && !selectedMedium
           ? selectedCategory?.id
           : selectedLarge?.value,
       mediumCategoryId:
-        selectedOrganization && selectedLarge && !selectedMedium
+        selectedOrganizationInTable && selectedLarge && !selectedMedium
           ? selectedCategory?.id
           : selectedMedium?.value,
       smallCategoryId:
-        selectedOrganization && selectedLarge && selectedMedium
+        selectedOrganizationInTable && selectedLarge && selectedMedium
           ? selectedCategory?.id
           : selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: `${selectedOrganization?.value}`,
+      selectedOrganization: selectedOrganizationInTable,
       tagIds: orderingOptions?.tag_ids || [],
-      organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
-          ? String(selectedOrganizationSideBar?.value || '')
-          : undefined,
+      organizationMemberId: String(selectedOrganizationSideBar?.value || ''),
     };
   }, [
     startDate,
     endDate,
     selectedMembers,
-    selectedOrganization,
+    selectedOrganizationInTable,
     selectedLarge,
     selectedMedium,
     selectedCategory?.id,
@@ -943,19 +946,25 @@ const LineChartByTeam = ({
         const collapseStatus =
           categoryCollapseStatuses.find(
             (categoryCollapseStatus) =>
-              categoryCollapseStatus.categoryId == info.row.original.categoryId,
+              categoryCollapseStatus.categoryName ==
+              info.row.original.categoryName,
           )?.status || false;
         return (
           <div className="flex items-start px-[18px]">
             <RadioButton
               name="lineChartCategoryName"
-              isChecked={info.row.original.categoryId == selectedCategory?.id}
+              isChecked={
+                info.row.original.categoryName == selectedCategory?.name
+              }
               onChange={(e: any) => {
                 if (e) {
                   setSelectedCategory({
                     id: info.row.original.categoryId,
                     name: info.row.original.categoryName,
                   });
+                  setSelectedOrganizationInTable(
+                    info.row.original.organizationId,
+                  );
                   if (
                     selectedOrganization &&
                     !selectedLarge &&
@@ -965,6 +974,7 @@ const LineChartByTeam = ({
                       return {
                         ...prev,
                         largeCategoryId: info.row.original.categoryId,
+                        selectedOrganization: info.row.original.organizationId,
                       };
                     });
                   } else if (
@@ -976,6 +986,7 @@ const LineChartByTeam = ({
                       return {
                         ...prev,
                         mediumCategoryId: info.row.original.categoryId,
+                        selectedOrganization: info.row.original.organizationId,
                       };
                     });
                   } else if (
@@ -987,6 +998,7 @@ const LineChartByTeam = ({
                       return {
                         ...prev,
                         smallCategoryId: info.row.original.categoryId,
+                        selectedOrganization: info.row.original.organizationId,
                       };
                     });
                   }
@@ -1017,7 +1029,7 @@ const LineChartByTeam = ({
                     onClick={() => {
                       setCategoryCollapseStatuses((prev) => {
                         return prev.map((item) =>
-                          item.categoryId == info.row.original.categoryId
+                          item.categoryName == info.row.original.categoryName
                             ? { ...item, status: !item.status }
                             : item,
                         );
@@ -1094,7 +1106,8 @@ const LineChartByTeam = ({
         const collapseStatus =
           categoryCollapseStatuses.find(
             (categoryCollapseStatus) =>
-              categoryCollapseStatus.categoryId == info.row.original.categoryId,
+              categoryCollapseStatus.categoryName ==
+              info.row.original.categoryName,
           )?.status || false;
 
         return (
@@ -1172,7 +1185,8 @@ const LineChartByTeam = ({
         const collapseStatus =
           categoryCollapseStatuses.find(
             (categoryCollapseStatus) =>
-              categoryCollapseStatus.categoryId == info.row.original.categoryId,
+              categoryCollapseStatus.categoryName ==
+              info.row.original.categoryName,
           )?.status || false;
 
         return (

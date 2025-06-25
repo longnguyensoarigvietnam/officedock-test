@@ -418,16 +418,38 @@ const KanbanBoardTaskTeam = () => {
     }
     // Move concurrent task to another status then return
     if (sourceUserId === destUserId && destStatus !== sourceStatus) {
-      const movedItem = listTaskNoSetting[source.index];
-      if (movedItem.isCrossTeamTask) {
+      const newUsers = listDataKanbanTeam.map((user) => ({
+        ...user,
+        statuses: { ...user.statuses },
+      }));
+      const sourceUser = newUsers.find((user) => user.id === sourceUserId);
+      if (!sourceUser) return;
+
+      const sourceTasks = [
+        ...sourceUser.statuses[sourceStatus as keyof TransformedStatuses],
+      ];
+
+      const [movedTask] = sourceTasks.splice(source.index, 1);
+      if (movedTask.isCrossTeamTask) {
         return;
       }
     }
 
     // Move concurrent task to another user then return
     if (sourceUserId !== destUserId) {
-      const movedItem = listTaskNoSetting[source.index];
-      if (movedItem.isCrossTeamTask) {
+      const newUsers = listDataKanbanTeam.map((user) => ({
+        ...user,
+        statuses: { ...user.statuses },
+      }));
+      const sourceUser = newUsers.find((user) => user.id === sourceUserId);
+      if (!sourceUser) return;
+
+      const sourceTasks = [
+        ...sourceUser.statuses[sourceStatus as keyof TransformedStatuses],
+      ];
+
+      const [movedTask] = sourceTasks.splice(source.index, 1);
+      if (movedTask.isCrossTeamTask) {
         return;
       }
     }

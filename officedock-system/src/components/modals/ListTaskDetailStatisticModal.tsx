@@ -11,7 +11,7 @@ import {
 import { Table, TableBody } from '@components/common/Table';
 
 import useStatisticTask from '@hooks/useStatisticTask';
-import { PAGINATION_PAGE_SIZE_SMALL } from '@constants';
+import { ALL_TEAM_STATISTIC, PAGINATION_PAGE_SIZE_SMALL } from '@constants';
 import { EventWorkCategory, OrderingDataType } from '@constants/enums';
 
 import { formatDateToYMD, formatTimeToJapanese } from '@utils/date';
@@ -30,6 +30,7 @@ type Props = {
     userDuration?: string;
     type: string;
     userId?: number;
+    organizationId?: string;
   } | null;
   selectedOrganization: OptionDropdownType | null;
   statisticCategoryList: StatisticsCategories | undefined;
@@ -76,6 +77,10 @@ const ListTaskDetailStatisticModal = ({
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
+      organizationId:
+        selectedOrganization?.value === ALL_TEAM_STATISTIC
+          ? detailCategory?.organizationId
+          : undefined,
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId:
         detailCategory && detailCategory.type === EventWorkCategory.ALL
@@ -321,20 +326,21 @@ const ListTaskDetailStatisticModal = ({
         <div className="w-fit  text-[#77858F] left-0 text-xs font-normal">
           タスク数 {count}
         </div>
-
-        <div className={`${isDisable && 'hidden'}`}>
-          <div className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F]  font-medium  h-[20px] rounded-md">
-            <span className="text-xs">タスク一覧へ</span>
-            <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
-              <ImageRound
-                onClick={handleScroll}
-                className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
-                src="/icons/right-statistic.svg"
-                name="right"
-              />
+        {selectedOrganization?.label !== ALL_TEAM_STATISTIC && (
+          <div className={`${isDisable && 'hidden'}`}>
+            <div className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F]  font-medium  h-[20px] rounded-md">
+              <span className="text-xs">タスク一覧へ</span>
+              <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
+                <ImageRound
+                  onClick={handleScroll}
+                  className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
+                  src="/icons/right-statistic.svg"
+                  name="right"
+                />
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </Modal>
   );

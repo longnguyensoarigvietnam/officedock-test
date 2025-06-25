@@ -27,7 +27,10 @@ type Props = {
   data: number[];
   mergedItems: StatisticCategoryInfo[];
   listIdData: number[];
-  handleClickTooltip: ((id: number | null) => void) | undefined;
+  dataOrganization: string[] | undefined;
+  handleClickTooltip:
+    | ((id: number | null, organizationId?: string) => void)
+    | undefined;
 };
 
 const ModalCustomTooltip = ({
@@ -40,6 +43,7 @@ const ModalCustomTooltip = ({
   actualValues,
   listIdData,
   mergedItems,
+  dataOrganization,
   handleClickTooltip,
 }: Props) => {
   const label = labels[tooltipData.value];
@@ -49,6 +53,10 @@ const ModalCustomTooltip = ({
 
   const option = optionsData[tooltipData.value];
   const actualValue = actualValues[tooltipData.value];
+  const organizationId =
+    dataOrganization && dataOrganization.length > tooltipData.value
+      ? dataOrganization[tooltipData.value]
+      : undefined;
 
   return (
     <div className="py-5">
@@ -112,7 +120,10 @@ const ModalCustomTooltip = ({
                       <button
                         onClick={() =>
                           handleClickTooltip &&
-                          handleClickTooltip(item.categoryId)
+                          handleClickTooltip(
+                            item.categoryId,
+                            String(item.organizationId),
+                          )
                         }
                         className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">
                         <span>タスクを見る</span>
@@ -184,7 +195,10 @@ const ModalCustomTooltip = ({
             {!isTeam && (
               <div className="mt-4 px-5 flex items-center justify-end">
                 <button
-                  onClick={() => handleClickTooltip && handleClickTooltip(id)}
+                  onClick={() => {
+                    handleClickTooltip &&
+                      handleClickTooltip(id, organizationId);
+                  }}
                   className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">
                   <span>タスクを見る</span>
                   <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full text-[#77858F]">

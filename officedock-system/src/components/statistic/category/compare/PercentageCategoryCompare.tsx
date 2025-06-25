@@ -14,6 +14,7 @@ import {
 } from '@interfaces/statistic';
 import { getRandomColor, lightenColor } from '@utils';
 import { StatisticStateContext } from '@providers/StatisticProvider';
+import { ALL_TEAM_STATISTIC } from '@constants';
 
 type Props = {
   startDate: Date;
@@ -80,12 +81,14 @@ const PercentageCategoryCompare = ({
     id: number | null;
     type: string;
     totalDuration: string;
+    organizationId?: string;
   } | null>(null);
 
   const [detailCategoryCompare, setDetailCategoryCompare] = useState<{
     id: number | null;
     type: string;
     totalDuration: string;
+    organizationId?: string;
   } | null>(null);
 
   // Data value
@@ -143,6 +146,7 @@ const PercentageCategoryCompare = ({
       id: item.categoryId,
       label: item.categoryName,
       percentage: item.percent,
+      organizationId: item.organizationId,
       color:
         item.categoryColor ||
         lightenColor(colorData as string, item.percent) ||
@@ -218,6 +222,7 @@ const PercentageCategoryCompare = ({
     id: number | null,
     type: string,
     isCompare: boolean,
+    organizationId?: string,
   ) => {
     let duration: string = '00:00:00';
     if (isCompare) {
@@ -250,6 +255,7 @@ const PercentageCategoryCompare = ({
         id: id,
         type: type,
         totalDuration: duration,
+        organizationId,
       });
 
       setIsShowModalCompare(true);
@@ -278,6 +284,7 @@ const PercentageCategoryCompare = ({
         id: id,
         type: type,
         totalDuration: duration,
+        organizationId,
       });
 
       setTimeout(() => {
@@ -545,6 +552,12 @@ const PercentageCategoryCompare = ({
                         endDateCompare={endDateCompare}
                         dataCompare={dataChartLargeCompare}
                         handleClickChart={(data: number) => {
+                          if (
+                            selectedOrganization?.value === ALL_TEAM_STATISTIC
+                          ) {
+                            return;
+                          }
+
                           const select = largeOptions.find(
                             (item) => item.value === data,
                           );
@@ -559,11 +572,13 @@ const PercentageCategoryCompare = ({
                         handleClickTooltip={(
                           id: number | null,
                           isCompare: boolean,
+                          organizationId?: string,
                         ) => {
                           handleClickTooltip(
                             id,
                             EventWorkCategory.ALL,
                             isCompare,
+                            organizationId,
                           );
                         }}
                       />

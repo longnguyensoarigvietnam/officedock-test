@@ -1248,6 +1248,7 @@ export const mapStatisticCategoryInfoToProgressData = ({
       '',
     duration: item.duration,
     optionData: item.tasks.slice(0, 3).map((task) => task.title),
+    organizationId: String(item.organizationId),
   }));
 
   const mergedItems = progressData.filter((item) => item.value < threshold);

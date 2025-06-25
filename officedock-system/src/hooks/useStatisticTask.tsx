@@ -26,6 +26,7 @@ interface FilterProps {
   mediumCategoryId?: number | null;
   smallCategoryId?: number | null;
   organizationIds?: string;
+  organizationId?: string;
   tagIds?: OptionDropdownType[];
   totalDuration?: string;
   ordering: string;
@@ -87,6 +88,8 @@ const useStatisticTask = ({
       params.append('medium_category_id', String(filter.mediumCategoryId));
     if (filter?.smallCategoryId)
       params.append('small_category_id', String(filter.smallCategoryId));
+    if (filter?.organizationId)
+      params.append('organization_id', filter.organizationId);
     if (filter?.organizationIds)
       params.append('organization_ids', filter.organizationIds);
     if (filter?.tagIds)

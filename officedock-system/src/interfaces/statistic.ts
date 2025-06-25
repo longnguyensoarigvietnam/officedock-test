@@ -271,6 +271,7 @@ export interface StatisticCategoryInfo {
   categoryColor: string;
   tasks: DataTaskModalStatisticType[];
   users?: UserListStatisticType[];
+  organizationId?: number;
 }
 export interface CreationStatisticType {
   id: number;
@@ -424,4 +425,20 @@ export type ProgressDataType = {
   duration: string;
   optionData: string[];
   mergedItems?: ProgressDataType[];
+  organizationId?: string;
 };
+export interface TableRowDetail {
+  categoryId: number;
+  organizationId: number;
+  categoryName: string;
+  categoryDuration: string;
+  categoryPercent: number;
+  userList: {
+    userId: number;
+    userName: string;
+    userAvatar?: string | null;
+    userAvatarColor: string;
+    userDuration: string;
+    userPercent: number;
+  }[];
+}

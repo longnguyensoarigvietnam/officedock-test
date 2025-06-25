@@ -54,6 +54,7 @@ type ProgressDataType = {
   duration: string;
   optionData: UserListStatisticType[];
   mergedItems?: ProgressDataType[];
+  organizationId?: string;
 };
 type ProgressDataCompareItem = {
   item: ProgressDataType;
@@ -83,6 +84,7 @@ function transformAndMergeProgressData({
       '',
     duration: item.duration,
     optionData: item.users || [],
+    organizationId: String(item.organizationId),
   }));
 
   const mergedItems = progressData.filter((item) => item.value < threshold);
@@ -245,6 +247,7 @@ const AllocationTeamCategoryCompare = memo(
       totalDuration: string;
       userDuration: string;
       totalTask?: string;
+      organizationId?: string;
     } | null>(null);
 
     const [progressDataLarge, setProgressDataLarge] = useState<
@@ -332,6 +335,7 @@ const AllocationTeamCategoryCompare = memo(
       isCompare,
       userDuration,
       totalTask,
+      organizationId,
     }: {
       id: number;
       userId: number;
@@ -340,6 +344,7 @@ const AllocationTeamCategoryCompare = memo(
       isCompare?: boolean;
       userDuration: string;
       totalTask?: string;
+      organizationId?: string;
     }) => {
       if (isCompare) {
         setIsModalCompare(true);
@@ -353,6 +358,7 @@ const AllocationTeamCategoryCompare = memo(
         totalDuration: duration,
         userDuration,
         totalTask,
+        organizationId,
       });
 
       setTimeout(() => {
@@ -675,6 +681,7 @@ const AllocationTeamCategoryCompare = memo(
                                   isCompare,
                                   userDuration,
                                   totalTask,
+                                  organizationId,
                                 }: {
                                   userId: number;
                                   categoryId: number;
@@ -682,6 +689,7 @@ const AllocationTeamCategoryCompare = memo(
                                   isCompare?: boolean;
                                   userDuration: string;
                                   totalTask?: string;
+                                  organizationId?: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: categoryId,
@@ -691,6 +699,7 @@ const AllocationTeamCategoryCompare = memo(
                                     isCompare,
                                     userDuration,
                                     totalTask,
+                                    organizationId,
                                   });
                                 }}
                                 handleClickChart={(

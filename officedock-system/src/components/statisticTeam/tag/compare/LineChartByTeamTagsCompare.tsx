@@ -122,6 +122,7 @@ interface TableRowDetail {
   tagName: string;
   tagDuration: string;
   tagPercent: number;
+  organizationId: number;
   userList: {
     userId: number;
     userName: string;
@@ -136,6 +137,7 @@ interface TableRowDetail {
 interface MergedTableTag {
   tagId: number;
   tagName: string;
+  organizationId: number;
   standardInfo?: {
     tagDuration: string;
     tagPercent: number;
@@ -209,8 +211,11 @@ const LineChartByTeamTagsCompare = ({
   const [selectedTag, setSelectedTag] = useState<{
     id: number;
     name: string;
+    organizationId: number;
   } | null>(null);
   const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
+  const [selectedOrganizationInTable, setSelectedOrganizationInTable] =
+    useState<number>(0);
 
   // Filter options
   const [filter, setFilter] = useState<{
@@ -221,7 +226,7 @@ const LineChartByTeamTagsCompare = ({
     mediumCategoryId?: string | number;
     smallCategoryId?: string | number;
     statisticBy: string;
-    selectedOrganization: string;
+    selectedOrganization: number;
     tagIds: { label: string; value: number }[];
     organizationMemberId?: string;
   }>({
@@ -232,7 +237,7 @@ const LineChartByTeamTagsCompare = ({
     mediumCategoryId: selectedMedium?.value,
     smallCategoryId: selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: `${selectedOrganization?.value}`,
+    selectedOrganization: 0,
     tagIds: [],
     organizationMemberId:
       selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
@@ -248,7 +253,7 @@ const LineChartByTeamTagsCompare = ({
     mediumCategoryId?: string | number;
     smallCategoryId?: string | number;
     statisticBy: string;
-    selectedOrganization: string;
+    selectedOrganization: number;
     tagIds: { label: string; value: number }[];
     organizationMemberId?: string;
   }>({
@@ -259,7 +264,7 @@ const LineChartByTeamTagsCompare = ({
     mediumCategoryId: selectedMedium?.value,
     smallCategoryId: selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: `${selectedOrganization?.value}`,
+    selectedOrganization: 0,
     tagIds: [],
     organizationMemberId:
       selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
@@ -327,6 +332,7 @@ const LineChartByTeamTagsCompare = ({
     {
       tagId: number;
       status: boolean;
+      organizationId: number;
     }[]
   >([]);
 
@@ -350,6 +356,7 @@ const LineChartByTeamTagsCompare = ({
       tagName?: string;
       percent: number;
       duration: string;
+      organizationId?: number;
       users?: {
         user: {
           id: number;
@@ -368,6 +375,7 @@ const LineChartByTeamTagsCompare = ({
       tagName: String(tag.tagName),
       tagPercent: tag.percent,
       tagDuration: tag.duration,
+      organizationId: tag.organizationId ?? 0,
       type,
       userList:
         allLabelUser.length > 0
@@ -403,7 +411,9 @@ const LineChartByTeamTagsCompare = ({
       setSelectedTag({
         id: firstTag.tagId,
         name: firstTag.tagName,
+        organizationId: Number(firstTag.organizationId),
       });
+      setSelectedOrganizationInTable(Number(firstTag.organizationId));
       setFilter((prev) => {
         return {
           ...prev,
@@ -413,6 +423,7 @@ const LineChartByTeamTagsCompare = ({
               value: Number(firstTag.tagId),
             },
           ],
+          selectedOrganization: Number(firstTag.organizationId),
         };
       });
     } else {
@@ -421,6 +432,7 @@ const LineChartByTeamTagsCompare = ({
         return {
           ...prev,
           tagIds: [],
+          selectedOrganization: 0,
         };
       });
     }
@@ -463,15 +475,16 @@ const LineChartByTeamTagsCompare = ({
   });
 
   const mergeCategories = (data: TableRowDetail[]): MergedTableTag[] => {
-    const grouped: Record<number, MergedTableTag> = {};
+    const grouped: Record<string, MergedTableTag> = {};
 
     data.forEach((item) => {
-      const tagId = item.tagId;
+      const key = `${item.tagId}::${item.organizationId}`;
 
-      if (!grouped[tagId]) {
-        grouped[tagId] = {
+      if (!grouped[key]) {
+        grouped[key] = {
           tagId: item.tagId,
           tagName: item.tagName,
+          organizationId: item.organizationId,
           userList: [],
         };
       }
@@ -483,14 +496,14 @@ const LineChartByTeamTagsCompare = ({
       };
 
       if (item.type === StatisticChartType.STANDARD) {
-        grouped[tagId].standardInfo = tagInfo;
+        grouped[key].standardInfo = tagInfo;
       } else if (item.type === StatisticChartType.COMPARE) {
-        grouped[tagId].compareInfo = tagInfo;
+        grouped[key].compareInfo = tagInfo;
       }
 
       // Merge userList
       item.userList.forEach((user) => {
-        const existingUser = grouped[tagId].userList.find(
+        const existingUser = grouped[key].userList.find(
           (u) => u.userId === user.userId,
         );
 
@@ -506,7 +519,7 @@ const LineChartByTeamTagsCompare = ({
             existingUser.compareInfo = userInfo;
           }
         } else {
-          grouped[tagId].userList.push({
+          grouped[key].userList.push({
             userId: user.userId,
             userName: user.userName,
             userAvatar: user.userAvatar,
@@ -559,7 +572,7 @@ const LineChartByTeamTagsCompare = ({
       mediumCategoryId: selectedMedium?.value,
       smallCategoryId: selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: `${selectedOrganization?.value}`,
+      selectedOrganization: selectedOrganizationInTable,
       tagIds: selectedTag
         ? [
             {
@@ -568,7 +581,7 @@ const LineChartByTeamTagsCompare = ({
             },
           ]
         : [],
-      organizationId:
+      organizationMemberId:
         selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
@@ -577,6 +590,8 @@ const LineChartByTeamTagsCompare = ({
     startDate,
     endDate,
     selectedMembers,
+    lineChartViewBy?.value,
+    selectedOrganizationInTable,
     selectedLarge?.value,
     selectedMedium?.value,
     selectedSmall?.value,
@@ -596,7 +611,7 @@ const LineChartByTeamTagsCompare = ({
       mediumCategoryId: selectedMedium?.value,
       smallCategoryId: selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: `${selectedOrganization?.value}`,
+      selectedOrganization: selectedOrganizationInTable,
       tagIds: selectedTag
         ? [
             {
@@ -605,7 +620,7 @@ const LineChartByTeamTagsCompare = ({
             },
           ]
         : [],
-      organizationId:
+      organizationMemberId:
         selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
@@ -614,6 +629,8 @@ const LineChartByTeamTagsCompare = ({
     startDateCompare,
     endDateCompare,
     selectedMembers,
+    lineChartViewBy?.value,
+    selectedOrganizationInTable,
     selectedLarge?.value,
     selectedMedium?.value,
     selectedSmall?.value,
@@ -807,6 +824,7 @@ const LineChartByTeamTagsCompare = ({
         return {
           tagId: tag.tagId,
           status: false,
+          organizationId: tag.organizationId,
         };
       }),
     );
@@ -1344,19 +1362,28 @@ const LineChartByTeamTagsCompare = ({
         const collapseStatus =
           tagCollapseStatuses.find(
             (tagCollapseStatus) =>
-              tagCollapseStatus.tagId == info.row.original.tagId,
+              tagCollapseStatus.tagId == info.row.original.tagId &&
+              info.row.original.organizationId ==
+                tagCollapseStatus?.organizationId,
           )?.status || false;
         return (
           <div className="flex items-start px-[18px]">
             <RadioButton
               name="lineChartTagName"
-              isChecked={info.row.original.tagId == selectedTag?.id}
+              isChecked={
+                info.row.original.tagId == selectedTag?.id &&
+                info.row.original.organizationId == selectedTag?.organizationId
+              }
               onChange={(e: any) => {
                 if (e) {
                   setSelectedTag({
                     id: info.row.original.tagId,
                     name: info.row.original.tagName,
+                    organizationId: info.row.original.organizationId,
                   });
+                  setSelectedOrganizationInTable(
+                    info.row.original.organizationId,
+                  );
                   setFilter((prev) => {
                     return {
                       ...prev,
@@ -1366,6 +1393,7 @@ const LineChartByTeamTagsCompare = ({
                           value: info.row.original.tagId,
                         },
                       ],
+                      selectedOrganization: info.row.original.organizationId,
                     };
                   });
                   setCompareFilter((prev) => {
@@ -1377,6 +1405,7 @@ const LineChartByTeamTagsCompare = ({
                           value: info.row.original.tagId,
                         },
                       ],
+                      selectedOrganization: info.row.original.organizationId,
                     };
                   });
                 }
@@ -1407,7 +1436,9 @@ const LineChartByTeamTagsCompare = ({
                       onClick={() => {
                         setTagCollapseStatuses((prev) => {
                           return prev.map((item) =>
-                            item.tagId == info.row.original.tagId
+                            item.tagId == info.row.original.tagId &&
+                            item.organizationId ==
+                              info.row.original.organizationId
                               ? { ...item, status: !item.status }
                               : item,
                           );
@@ -1539,7 +1570,9 @@ const LineChartByTeamTagsCompare = ({
         const collapseStatus =
           tagCollapseStatuses.find(
             (tagCollapseStatus) =>
-              tagCollapseStatus.tagId == info.row.original.tagId,
+              tagCollapseStatus.tagId == info.row.original.tagId &&
+              info.row.original.organizationId ==
+                tagCollapseStatus?.organizationId,
           )?.status || false;
 
         return (
@@ -1677,7 +1710,9 @@ const LineChartByTeamTagsCompare = ({
         const collapseStatus =
           tagCollapseStatuses.find(
             (tagCollapseStatus) =>
-              tagCollapseStatus.tagId == info.row.original.tagId,
+              tagCollapseStatus.tagId == info.row.original.tagId &&
+              info.row.original.organizationId ==
+                tagCollapseStatus?.organizationId,
           )?.status || false;
 
         const standardPercent =

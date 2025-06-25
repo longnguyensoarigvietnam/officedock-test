@@ -51,6 +51,9 @@ const useStatisticTableInTeamTagLineChart = ({
         `organization_get_members_id=${filter.organizationMemberId.toString()}`,
       );
     }
+    if (filter.organizationIds) {
+      queryParams.push(`organization_id=${filter.organizationIds}`);
+    }
     if (filter.largeCategoryId) {
       queryParams.push(`large_category_id=${filter.largeCategoryId}`);
     }
@@ -72,7 +75,7 @@ const useStatisticTableInTeamTagLineChart = ({
     const queryString =
       queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
 
-    const apiUrl = `${apiRouters.STATISTICS_TAGS_TEAM(parseInt(filter?.organizationIds))}${queryString}`;
+    const apiUrl = `${apiRouters.STATISTICS_TAGS_TEAM}${queryString}`;
 
     const { data } = await api.get<StatisticsCategories[]>(apiUrl);
     return data;
