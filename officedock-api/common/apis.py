@@ -23,10 +23,11 @@ from organizations.serializers import (
     OrganizationDetailSerializer,
 )
 from skills.serializers import SkillSerializer
+from stat_data.constants import ALL_TEAM
 from tags.serializers import BaseTagSerializer
 
 from users.serializers import RoleSerializer
-from users.models import Role, RoleDetail
+from users.models import Role, RoleDetail, User
 from tasks.models import TaskStatus, Task, TaskDuration
 from tasks.constants import (
     TaskTypes,
@@ -53,6 +54,7 @@ from .utils import (
     transform_statistic_categories,
     check_task_overtime,
     add_default_entries_to_categories,
+    get_organizations_of_user_by_screen_role,
 )
 
 
@@ -462,16 +464,18 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         ).first():
             organizations = [organization]
         data = {}
-        tags = (
-            request.user.company.tags.filter(
-                is_hidden=False,
-                organizations__in=organizations,
-            )
-            .order_by("created_at")
-            .all()
-            .distinct()
-        )
         calendar_org = user.company.get_calendar_organization()
+
+        def _get_tags_by_organizations(input_organizations):
+            return (
+                request.user.company.tags.filter(
+                    is_hidden=False,
+                    organizations__in=input_organizations,
+                )
+                .order_by("created_at")
+                .all()
+                .distinct()
+            )
 
         def _handle_get_data_organization_of_task(data):
             data[
@@ -482,6 +486,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             data["members"] = CreationDataUserSerializer(
                 organizations[0].users.order_by("created_at"), many=True
             ).data
+            tags = _get_tags_by_organizations(organizations)
             data["tags"] = BaseTagSerializer(tags, many=True).data
             return data
 
@@ -507,6 +512,29 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     org["statistic_categories"]
                 )
                 org["members"] = members[org["id"]]
+            organizations_by_role = get_organizations_of_user_by_screen_role(
+                user, Screens.TEAMDOCK.value, Actions.VIEW.value
+            )
+            users = User.objects.filter(
+                organizations__in=organizations_by_role
+            ).distinct()
+
+            # Insert option all team to pulldown choose organization for statistic to start of a list
+            tags = _get_tags_by_organizations(organizations_by_role)
+            data["organizations"].insert(
+                0,
+                {
+                    "id": ALL_TEAM,
+                    "name": ALL_TEAM,
+                    "statistic_categories": [],
+                    "tags": CreationDataTagSerializer(
+                        tags, many=True, context={"user": user}
+                    ).data,
+                    "members": CreationDataUserSerializer(
+                        users, many=True
+                    ).data,
+                },
+            )
             return data
 
         def _handle_get_data_organization_my_statistic(data):
@@ -520,6 +548,25 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 CreationDataOrganizationWithStructCategorySerializer(
                     calendar_org, context={"user": user}
                 ).data
+            )
+            tags = (
+                user.company.tags.filter(
+                    is_hidden=False, organizations__in=organizations
+                )
+                .all()
+                .distinct()
+            )
+            # Insert option all team to pulldown choose organization for statistic to start of a list
+            data["organizations"].insert(
+                0,
+                {
+                    "id": ALL_TEAM,
+                    "name": ALL_TEAM,
+                    "statistic_categories": [],
+                    "tags": CreationDataTagSerializer(
+                        tags, many=True, context={"user": user}
+                    ).data,
+                },
             )
             for org in data["organizations"]:
                 org["statistic_categories"] = add_default_entries_to_categories(
