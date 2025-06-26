@@ -677,6 +677,7 @@
 }
 .schedule-custom .fc-resourceTimeGridDay-view .fc-event-main {
   left: 10px !important;
+  top: 5px;
 }
 .schedule-custom .fc-daygrid-day-frame .fc-event-main {
   left: 0 !important;

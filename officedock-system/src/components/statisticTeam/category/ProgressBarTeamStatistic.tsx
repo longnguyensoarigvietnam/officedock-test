@@ -10,6 +10,7 @@ import {
   formatTimeToJapanese,
   getJapaneseDayName,
 } from '@utils/date';
+import DetailProgressData from './detail/DetailProgressData';
 
 interface ProgressBarProps {
   label: string;
@@ -25,6 +26,7 @@ interface ProgressBarProps {
     value: number;
     duration: string;
     optionData: UserListStatisticType[];
+    organizationId?: string;
   }[];
   organizationId?: string;
 
@@ -86,18 +88,16 @@ const ProgressBarTeamStatistic = ({
                 <span className="text-sm font-medium truncate max-w-24">
                   {duration && formatTimeToJapanese(duration)}
                 </span>
-                {id !== -1 && (
-                  <ImageRound
-                    src="/icons/extend-calendar.svg"
-                    name="Extend calendar"
-                    className={`!w-3 !h-3 hover:cursor-pointer ${
-                      isExtendUser ? '-rotate-90' : 'rotate-90'
-                    }`}
-                    onClick={() => {
-                      setExtendUser(!isExtendUser);
-                    }}
-                  />
-                )}
+                <ImageRound
+                  src="/icons/extend-calendar.svg"
+                  name="Extend calendar"
+                  className={`!w-3 !h-3 hover:cursor-pointer ${
+                    isExtendUser ? '-rotate-90' : 'rotate-90'
+                  }`}
+                  onClick={() => {
+                    setExtendUser(!isExtendUser);
+                  }}
+                />
               </div>
             </div>
           )}
@@ -164,12 +164,12 @@ const ProgressBarTeamStatistic = ({
                 <p className="text-xs text-start font-medium text-[#77858F] mb-3 px-5">
                   その他
                 </p>
-                <div className="max-h-[450px] overflow-y-auto">
+                <div className="max-h-[350px] overflow-y-auto">
                   {mergedItems &&
                     mergedItems?.length > 0 &&
                     mergedItems.map((item, index) => {
                       return (
-                        <div key={index}>
+                        <div key={index} className="">
                           <div className="flex items-center gap-1 px-5">
                             <div
                               style={{
@@ -213,6 +213,7 @@ const ProgressBarTeamStatistic = ({
                               ))}
                             </ul>
                           </div>
+                          <div className=" w-full mb-5  border-b border-[#D2DBE1]"></div>
                         </div>
                       );
                     })}
@@ -333,6 +334,28 @@ const ProgressBarTeamStatistic = ({
             </div>
           </div>
         ))}
+      {isExtendUser &&
+        id === -1 &&
+        mergedItems?.length &&
+        mergedItems.map((cate) => {
+          return (
+            <div
+              key={cate.id}
+              className={`font-medium text-sm text-black ${className}`}>
+              <DetailProgressData
+                cate={cate}
+                showInfo
+                startDate={startDate}
+                endDate={endDate}
+                className={className}
+                classProgressClass={classProgressClass}
+                classProgressUserClass={classProgressUserClass}
+                handleClickChart={handleClickChart}
+                handleClickTooltip={handleClickTooltip}
+              />
+            </div>
+          );
+        })}
     </>
   );
 };

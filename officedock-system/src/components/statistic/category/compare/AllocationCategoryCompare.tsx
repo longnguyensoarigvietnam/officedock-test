@@ -179,7 +179,7 @@ const AllocationCategoryCompare = memo(
               optionData: item.tasks.slice(0, 3).map((task) => task.title),
             };
 
-            if (item.percent < 10) {
+            if (item.percent < 0) {
               smallMainCategories.push(mainData);
             } else {
               mergedMap.set(item.categoryId, { main: mainData, compare: null });

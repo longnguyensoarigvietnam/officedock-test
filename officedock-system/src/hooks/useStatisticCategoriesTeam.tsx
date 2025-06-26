@@ -47,7 +47,11 @@ const useStatisticCategoriesTeam = ({
   } = useContext(StatisticTeamStateContext);
 
   // Handle call API get statistic category list team
-  const getStatisticCategoryListTeam = async () => {
+  const getStatisticCategoryListTeam = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds) return [];
 
     const params = new URLSearchParams();
@@ -84,7 +88,9 @@ const useStatisticCategoriesTeam = ({
     }
 
     const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM}?${params.toString()}`;
-    const { data } = await api.get<StatisticsCategories[]>(apiUrl);
+    const { data } = await api.get<StatisticsCategories[]>(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -95,7 +101,7 @@ const useStatisticCategoriesTeam = ({
     isFetched: isFetchedStatisticCategoryListTeam,
   } = useQuery({
     queryKey: ['getStatisticCategoryListTeam', [filter]],
-    queryFn: getStatisticCategoryListTeam,
+    queryFn: ({ signal }) => getStatisticCategoryListTeam({ signal }),
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

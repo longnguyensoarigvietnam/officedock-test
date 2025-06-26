@@ -279,7 +279,7 @@ const StatisticTeamBoard = () => {
 
         const mainItem =
           data.organizations.find((item) => item.isMain) ||
-          data.organizations[0];
+          data.organizations[1];
         const optionsTagList = mainItem.tags.map((item) => ({
           label: item.name,
           value: item.id,

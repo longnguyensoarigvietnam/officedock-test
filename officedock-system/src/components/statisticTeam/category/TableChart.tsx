@@ -33,7 +33,7 @@ import {
   OrderingDataType,
   ScreenName,
 } from '@constants/enums';
-import { NO_SETTING } from '@constants';
+import { ALL_TEAM_STATISTIC, NO_SETTING } from '@constants';
 import { ERROR_UPDATE_MESSAGE } from '@constants/message';
 import { apiRouters } from '@constants/routers';
 
@@ -45,6 +45,7 @@ import {
 import api from '@base/api';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
+import useCreationDataStatisticAllTeam from '@hooks/useCreationDataStatisticAllTeam';
 
 interface ListTaskStatistic {
   id: number;
@@ -60,6 +61,7 @@ interface ListTaskStatistic {
 interface TableChartProps {
   ordering: string;
   totalDuration: string;
+  selectedMember: number | null;
   taskList: DataTaskListStatisticListType[];
   listOptionsOrganization: OptionDropdownType[];
   creationDataStatisticData: CreationStatisticType | undefined;
@@ -143,6 +145,7 @@ const TableChart = ({
   ordering,
   totalDuration,
   taskList,
+  selectedMember,
   creationDataStatisticData,
   listOptionsOrganization,
   setOrdering,
@@ -164,6 +167,13 @@ const TableChart = ({
   const [statisticTaskList, setStatisticTaskList] = useState<
     ListTaskStatistic[]
   >([]);
+
+  const { creationDataStatisticDataAllTeam } = useCreationDataStatisticAllTeam({
+    userId: String(selectedMember),
+    condition: [
+      !!selectedMember && selectedOrganization?.label === ALL_TEAM_STATISTIC,
+    ],
+  });
 
   //  Handle call api edit task
   const handleEditCategoryInline = async (dataTask: {
@@ -396,7 +406,12 @@ const TableChart = ({
         );
 
         // Find organization
-        const organization = creationDataStatisticData;
+        const organization =
+          selectedOrganization?.value === ALL_TEAM_STATISTIC
+            ? creationDataStatisticDataAllTeam?.organizations.find(
+                (org) => org.id === rowData.organization,
+              )
+            : creationDataStatisticData;
 
         let largeCategories: OptionDropdownType[] = [];
         let mediumCategories: OptionDropdownType[] = [];
