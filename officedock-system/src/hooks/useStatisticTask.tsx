@@ -67,7 +67,11 @@ const useStatisticTask = ({
   );
 
   // Handle call API get statistic category list
-  const getStatisticCategoryList = async () => {
+  const getStatisticCategoryList = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds) return null;
 
     if (filter?.totalDuration === '') return null;
@@ -110,8 +114,9 @@ const useStatisticTask = ({
 
     const apiUrl = `${apiRouters.STATISTICS_TASKS}?${params.toString()}`;
 
-    const { data } =
-      await api.get<BasePagination<DataTaskListStatisticListType[]>>(apiUrl);
+    const { data } = await api.get<
+      BasePagination<DataTaskListStatisticListType[]>
+    >(apiUrl, { signal });
     return data;
   };
 
@@ -122,7 +127,8 @@ const useStatisticTask = ({
     isFetched: isFetchedStatisticCategoryList,
   } = useQuery({
     queryKey: ['getStatisticTaskList', [filter]],
-    queryFn: getStatisticCategoryList,
+    queryFn: ({ signal }) => getStatisticCategoryList({ signal }),
+
     retry: 0,
     enabled: !!parentData && !!token,
     refetchOnMount: true,

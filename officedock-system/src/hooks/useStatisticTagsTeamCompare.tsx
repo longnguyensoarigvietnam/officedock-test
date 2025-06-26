@@ -45,7 +45,11 @@ const useStatisticTagsTeamCompare = ({
   } = useContext(StatisticTeamTagsStateContext);
 
   // Handle call API get statistic category list team
-  const getStatisticTagsListTeamCompare = async () => {
+  const getStatisticTagsListTeamCompare = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds || !filter?.isCompare) return [];
 
     const params = new URLSearchParams();
@@ -74,7 +78,7 @@ const useStatisticTagsTeamCompare = ({
 
     const apiUrl = `${apiRouters.STATISTICS_TAGS_TEAM}?${params.toString()}`;
 
-    const { data } = await api.get<StatisticsCategories[]>(apiUrl);
+    const { data } = await api.get<StatisticsCategories[]>(apiUrl, { signal });
     return data;
   };
 
@@ -85,7 +89,8 @@ const useStatisticTagsTeamCompare = ({
     isFetched: isFetchedStatisticTagsListTeamCompare,
   } = useQuery({
     queryKey: ['getStatisticTagsListTeamCompare', [filter]],
-    queryFn: getStatisticTagsListTeamCompare,
+    queryFn: ({ signal }) => getStatisticTagsListTeamCompare({ signal }),
+
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

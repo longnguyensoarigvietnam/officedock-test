@@ -34,7 +34,11 @@ const useStatisticTagTaskDurations = ({
   const token = session?.accessToken;
 
   // Handle call API get statistic task duration list
-  const getStatisticTagTaskDurations = async () => {
+  const getStatisticTagTaskDurations = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds) return [];
     const apiUrl = `${apiRouters.STATISTICS_TASK_DURATIONS}?is_tag_page=true&${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
@@ -56,7 +60,9 @@ const useStatisticTagTaskDurations = ({
         : ''
     }${filter?.statisticBy ? `&statistic_by=${filter.statisticBy}` : '&statistic_by=WEEK'}${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
-    const { data } = await api.get<StatisticsTagTaskDuration[]>(apiUrl);
+    const { data } = await api.get<StatisticsTagTaskDuration[]>(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -67,7 +73,7 @@ const useStatisticTagTaskDurations = ({
     isFetched: isFetchedStatisticTagTaskDurationsList,
   } = useQuery({
     queryKey: ['getStatisticTagTaskDurations', [filter]],
-    queryFn: getStatisticTagTaskDurations,
+    queryFn: ({ signal }) => getStatisticTagTaskDurations({ signal }),
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

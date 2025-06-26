@@ -1945,10 +1945,11 @@ const TimeSchedule = memo(
             const hasOverlap = taskTimeScheduleList.some((item) => {
               return (
                 newStartChange &&
-                newStartChange.getTime() < item.end.getTime() &&
-                newEndChange.getTime() > item.start.getTime() &&
+                newStartChange.getTime() < new Date(item.end).getTime() &&
+                newEndChange.getTime() > new Date(item.start).getTime() &&
                 Number(item.taskId) ===
-                  Number(droppedEvent.extendedProps.taskId)
+                  Number(droppedEvent.extendedProps.taskId) &&
+                item.resourceId === ItemScheduleType.ACTUAL
               );
             });
             if (!hasOverlap) {
