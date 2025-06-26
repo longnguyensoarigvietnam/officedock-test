@@ -50,6 +50,7 @@ import {
   getCompareLineChartEnableViews,
   getRandomColor,
   getSafeTooltipLeft,
+  getStatisticMilestones,
   lightenColor,
 } from '@utils';
 
@@ -1398,7 +1399,16 @@ const LineChartCompare = ({
               className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
               <Line
                 key={standardDateLabels.join('-') + compareDateLabels.join('-')}
-                data={lineChartData}
+                data={{
+                  datasets: lineChartData?.datasets || [],
+                  labels: lineChartData?.labels.length
+                    ? lineChartData?.labels
+                    : getStatisticMilestones(
+                        `${formatDateToYMD(startDate)}`,
+                        `${formatDateToYMD(endDate || '')}`,
+                        lineChartViewBy?.value as StatisticViewOptions,
+                      ),
+                }}
                 options={options}
               />
               <div
@@ -1456,12 +1466,12 @@ const LineChartCompare = ({
 
             {isFetchedStatisticTagTaskDurationsCompareList &&
             isFetchedStatisticTagTaskDurationsList ? (
-              <Table className="w-full border border-gray-300 mt-5 !rounded-md">
+              <Table className="w-full border border-gray-300 mt-5 !rounded-md max-h-[500px] overflow-y-auto">
                 <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr
                       key={headerGroup.id}
-                      className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                      className="sticky top-0 z-10 text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
                       {headerGroup.headers.map((header, index) => (
                         <th
                           key={header.id}

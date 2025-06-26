@@ -48,7 +48,10 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 
 import { OptionDropdownType } from '@interfaces/common';
-import { StatisticCategoryInfo } from '@interfaces/statistic';
+import {
+  StatisticCategoryInfo,
+  StatisticsUserTaskDuration,
+} from '@interfaces/statistic';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
 import {
@@ -66,12 +69,11 @@ import {
   totalDurationsForStatistic,
 } from '@utils/date';
 import {
-  createStyledAvatarWithMargin,
-  getAvatarIconSvg,
-  getFileURL,
+  createLineChartAvatarImage,
   getLineChartEnableViews,
   getRandomColor,
   getSafeTooltipLeft,
+  getStatisticMilestones,
   toRGBA,
 } from '@utils';
 
@@ -770,25 +772,15 @@ const LineChartByTeamTags = ({
     ) {
       const loadImages = async () => {
         const imagePromises = statisticUserTaskDurationsList.map(
-          async (userTaskDuration) => {
-            const { user } = userTaskDuration;
-            let avatarUrl = '';
-
-            if (user.avatar) {
-              avatarUrl = getFileURL(user.avatar);
-            } else {
-              const svgString = getAvatarIconSvg(user.avatarColor, 24);
-              const blob = new Blob([svgString], { type: 'image/svg+xml' });
-              avatarUrl = URL.createObjectURL(blob);
-            }
-
-            const styledAvatar = await createStyledAvatarWithMargin(
-              avatarUrl,
-              24,
-              30,
-            );
-            return styledAvatar;
-          },
+          (userTaskDuration: StatisticsUserTaskDuration) =>
+            createLineChartAvatarImage(
+              userTaskDuration?.user || {
+                avatar: null,
+                avatarColor: getRandomColor(),
+                id: 0,
+                fullName: '',
+              },
+            ),
         );
 
         const loadedImages = await Promise.all(imagePromises);
@@ -841,53 +833,56 @@ const LineChartByTeamTags = ({
         }
       });
       statisticUserTaskDurationsList.forEach((userTaskDuration) => {
-        legendList.push({
-          color: userTaskDuration.user.avatarColor || getRandomColor(),
-          name: userTaskDuration.user.fullName,
-        });
-        datasets.push({
-          label: userTaskDuration.user.fullName,
-          data: userTaskDuration.durations.flatMap((duration, index) => [
-            {
-              x: duration.startDate,
-              y: duration.duration
-                ? convertTimeToDecimal(duration.duration)
-                : 0,
-              endDate: duration.endDate,
-              avatarColor: userTaskDuration.user.avatarColor,
-              avatar: userTaskDuration.user.avatar || '',
-              userId: userTaskDuration.user.id,
-              label: userTaskDuration.user.fullName,
-            },
-            ...(index === userTaskDuration.durations.length - 1 &&
-            String(duration.endDate) != String(duration.startDate)
-              ? [
-                  {
-                    x: duration.endDate,
-                    y: duration.duration
-                      ? convertTimeToDecimal(duration.duration)
-                      : 0,
-                    endDate: duration.endDate,
-                    avatarColor: userTaskDuration.user.avatarColor,
-                    avatar: userTaskDuration.user.avatar || '',
-                    userId: userTaskDuration.user.id,
-                    label: userTaskDuration.user.fullName,
-                  },
-                ]
-              : []),
-          ]),
-          borderColor: userTaskDuration.user.avatarColor || getRandomColor(),
-          backgroundColor: 'transparent',
-          fill: true,
-          tension: 0,
-          pointRadius: 4,
-          pointBorderColor: 'transparent',
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor:
-            userTaskDuration.user.avatarColor || getRandomColor(),
-          pointHoverBorderColor: 'transparent',
-          pointHoverBorderWidth: 2,
-        });
+        if (userTaskDuration?.user) {
+          legendList.push({
+            color: userTaskDuration?.user?.avatarColor || getRandomColor(),
+            name: userTaskDuration?.user?.fullName,
+          });
+          datasets.push({
+            label: userTaskDuration?.user?.fullName,
+            data: userTaskDuration.durations.flatMap((duration, index) => [
+              {
+                x: duration.startDate,
+                y: duration.duration
+                  ? convertTimeToDecimal(duration.duration)
+                  : 0,
+                endDate: duration.endDate,
+                avatarColor: userTaskDuration?.user?.avatarColor,
+                avatar: userTaskDuration?.user?.avatar || '',
+                userId: userTaskDuration?.user?.id,
+                label: userTaskDuration?.user?.fullName,
+              },
+              ...(index === userTaskDuration.durations.length - 1 &&
+              String(duration.endDate) != String(duration.startDate)
+                ? [
+                    {
+                      x: duration.endDate,
+                      y: duration.duration
+                        ? convertTimeToDecimal(duration.duration)
+                        : 0,
+                      endDate: duration.endDate,
+                      avatarColor: userTaskDuration?.user?.avatarColor,
+                      avatar: userTaskDuration?.user?.avatar || '',
+                      userId: userTaskDuration?.user?.id,
+                      label: userTaskDuration?.user?.fullName,
+                    },
+                  ]
+                : []),
+            ]),
+            borderColor:
+              userTaskDuration?.user?.avatarColor || getRandomColor(),
+            backgroundColor: 'transparent',
+            fill: true,
+            tension: 0,
+            pointRadius: 4,
+            pointBorderColor: 'transparent',
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor:
+              userTaskDuration.user.avatarColor || getRandomColor(),
+            pointHoverBorderColor: 'transparent',
+            pointHoverBorderWidth: 2,
+          });
+        }
       });
       setLineChartData({
         labels: labelList,
@@ -1677,7 +1672,20 @@ const LineChartByTeamTags = ({
             <div
               style={{ position: 'relative' }}
               className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
-              <Line ref={chartRef} data={lineChartData} options={options} />
+              <Line
+                ref={chartRef}
+                data={{
+                  datasets: lineChartData?.datasets || [],
+                  labels: lineChartData?.labels.length
+                    ? lineChartData?.labels
+                    : getStatisticMilestones(
+                        `${formatDateToYMD(startDate)}`,
+                        `${formatDateToYMD(endDate || '')}`,
+                        lineChartViewBy?.value as StatisticViewOptions,
+                      ),
+                }}
+                options={options}
+              />
               <div
                 ref={tooltipRef}
                 style={{ position: 'absolute', opacity: 0 }}
@@ -1709,12 +1717,12 @@ const LineChartByTeamTags = ({
                 className={`!h-[200px] mt-5 w-full mx-auto`}
               />
             ) : (
-              <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+              <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md max-h-[500px] overflow-y-auto">
                 <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr
                       key={headerGroup.id}
-                      className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                      className="sticky top-0 z-10 text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
                       {headerGroup.headers.map((header, index) => (
                         <th
                           key={header.id}

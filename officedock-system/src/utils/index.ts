@@ -1088,7 +1088,6 @@ export const createStyledAvatarWithMargin = (
       resolve(canvas);
     };
 
-    img.onerror = () => reject(new Error('Failed to load avatar'));
     img.src = url.startsWith('blob')
       ? url
       : `/api/image-proxy?url=${encodeURIComponent(url)}`;
@@ -1281,4 +1280,77 @@ export const mapStatisticCategoryInfoToProgressData = ({
   return {
     finalData: [...mainItems, mergedItem],
   };
+};
+// Parse to ISO Date locally
+export function parseISODateLocally(str: string): Date {
+  const [year, month, day] = str.split('-').map(Number);
+  return new Date(year, month - 1, day); // month is 0-based
+}
+// Format date to YMD format
+export function formatDateToYMDFormat(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+// Get statistic milestones
+export function getStatisticMilestones(
+  fromDate: string,
+  endDate: string,
+  statisticBy: 'DAY' | 'WEEK' | 'MONTH',
+): string[] {
+  const result: string[] = [];
+
+  const start = parseISODateLocally(fromDate);
+  const end = parseISODateLocally(endDate);
+
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+
+  result.push(formatDateToYMDFormat(start));
+
+  const current = new Date(start);
+
+  while (true) {
+    if (statisticBy === 'DAY') {
+      current.setDate(current.getDate() + 1);
+    } else if (statisticBy === 'WEEK') {
+      const day = current.getDay();
+      const daysUntilNextMonday = (8 - day) % 7 || 7;
+      current.setDate(current.getDate() + daysUntilNextMonday);
+    } else if (statisticBy === 'MONTH') {
+      current.setMonth(current.getMonth() + 1);
+      current.setDate(1);
+    }
+
+    if (current > end) break;
+
+    result.push(formatDateToYMDFormat(current));
+  }
+
+  const formattedEnd = formatDateToYMDFormat(end);
+  if (result[result.length - 1] !== formattedEnd) {
+    result.push(formattedEnd);
+  }
+
+  return result;
+}
+
+export const createLineChartAvatarImage = async (user: {
+  id: number;
+  fullName: string;
+  avatarColor: string;
+  avatar: string | null;
+}) => {
+  let avatarUrl = '';
+
+  if (user?.avatar) {
+    avatarUrl = getFileURL(user?.avatar);
+  } else {
+    const svgString = getAvatarIconSvg(user?.avatarColor || getRandomColor(), 24);
+    const blob = new Blob([svgString], { type: 'image/svg+xml' });
+    avatarUrl = URL.createObjectURL(blob);
+  }
+
+  return await createStyledAvatarWithMargin(avatarUrl, 24, 30);
 };

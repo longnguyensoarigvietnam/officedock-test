@@ -1190,12 +1190,12 @@ const StackedAreaChart = ({
           )}
 
           <div className="px-[30px]">
-            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md max-h-[500px] overflow-y-auto">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr
                     key={headerGroup.id}
-                    className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                    className="sticky top-0 z-10 text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
                     {headerGroup.headers.map((header, index) => (
                       <th
                         key={header.id}

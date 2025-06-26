@@ -73,12 +73,11 @@ import {
   totalDurationsForStatistic,
 } from '@utils/date';
 import {
-  createStyledAvatarWithMargin,
-  getAvatarIconSvg,
+  createLineChartAvatarImage,
   getCompareLineChartEnableViews,
-  getFileURL,
   getRandomColor,
   getSafeTooltipLeft,
+  getStatisticMilestones,
   toRGBA,
 } from '@utils';
 
@@ -1061,27 +1060,15 @@ const LineChartByTeamTagsCompare = ({
       statisticUserTaskDurationsList?.length > 0
     ) {
       const loadImages = async () => {
-        const createAvatarImage = async (user: {
-          id: number;
-          fullName: string;
-          avatarColor: string;
-          avatar: string | null;
-        }) => {
-          let avatarUrl = '';
-
-          if (user.avatar) {
-            avatarUrl = getFileURL(user.avatar);
-          } else {
-            const svgString = getAvatarIconSvg(user.avatarColor, 24);
-            const blob = new Blob([svgString], { type: 'image/svg+xml' });
-            avatarUrl = URL.createObjectURL(blob);
-          }
-
-          return await createStyledAvatarWithMargin(avatarUrl, 24, 30);
-        };
-
         const imagePromises = statisticUserTaskDurationsList.map((item) =>
-          createAvatarImage(item.user),
+          createLineChartAvatarImage(
+            item?.user || {
+              avatar: null,
+              avatarColor: getRandomColor(),
+              id: 0,
+              fullName: '',
+            },
+          ),
         );
 
         const loadedImages = await Promise.all(imagePromises);
@@ -1224,66 +1211,72 @@ const LineChartByTeamTagsCompare = ({
     statisticUserTaskDurationsList &&
       statisticUserTaskDurationsList?.length > 0 &&
       statisticUserTaskDurationsList.forEach((userTaskDuration) => {
-        standardLabels.push({
-          color: userTaskDuration.user.avatarColor || getRandomColor(),
-          name: userTaskDuration.user.fullName,
-        });
-        const compareUser = statisticUserTaskDurationsCompareList?.find(
-          (c) => c.user.id == userTaskDuration.user.id,
-        );
-        datasets.push({
-          label: userTaskDuration.user.fullName,
-          data: generateDataWithAlignment(
-            userTaskDuration.durations,
-            compareUser?.durations ?? [],
-            StatisticChartType.STANDARD,
-            userTaskDuration.user,
-          ),
-          borderColor: userTaskDuration.user.avatarColor || getRandomColor(),
-          backgroundColor: 'transparent',
-          fill: true,
-          tension: 0,
-          pointRadius: 4,
-          pointBorderColor: 'transparent',
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor:
-            userTaskDuration.user.avatarColor || getRandomColor(),
-          pointHoverBorderColor: 'transparent',
-          pointHoverBorderWidth: 2,
-        });
+        if (userTaskDuration.user) {
+          standardLabels.push({
+            color: userTaskDuration?.user?.avatarColor || getRandomColor(),
+            name: userTaskDuration?.user?.fullName,
+          });
+          const compareUser = statisticUserTaskDurationsCompareList?.find(
+            (compare) => compare?.user?.id == userTaskDuration?.user?.id,
+          );
+          datasets.push({
+            label: userTaskDuration?.user?.fullName,
+            data: generateDataWithAlignment(
+              userTaskDuration.durations,
+              compareUser?.durations ?? [],
+              StatisticChartType.STANDARD,
+              userTaskDuration?.user,
+            ),
+            borderColor:
+              userTaskDuration?.user?.avatarColor || getRandomColor(),
+            backgroundColor: 'transparent',
+            fill: true,
+            tension: 0,
+            pointRadius: 4,
+            pointBorderColor: 'transparent',
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor:
+              userTaskDuration?.user?.avatarColor || getRandomColor(),
+            pointHoverBorderColor: 'transparent',
+            pointHoverBorderWidth: 2,
+          });
+        }
       });
 
     statisticUserTaskDurationsCompareList &&
       statisticUserTaskDurationsCompareList?.length > 0 &&
       statisticUserTaskDurationsCompareList.forEach((userTaskDuration) => {
-        comparedLabels.push({
-          color: userTaskDuration.user.avatarColor || getRandomColor(),
-          name: userTaskDuration.user.fullName,
-        });
-        const standardUser = statisticUserTaskDurationsList?.find(
-          (c) => c.user.id == userTaskDuration.user.id,
-        );
-        datasets.push({
-          label: userTaskDuration.user.fullName,
-          data: generateDataWithAlignment(
-            standardUser?.durations ?? [],
-            userTaskDuration.durations,
-            StatisticChartType.COMPARE,
-            userTaskDuration.user,
-          ),
-          borderColor: userTaskDuration.user.avatarColor || getRandomColor(),
-          backgroundColor: 'transparent',
-          borderDash: [3, 3],
-          fill: true,
-          tension: 0,
-          pointRadius: 4,
-          pointBorderColor: 'transparent',
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor:
-            userTaskDuration.user.avatarColor || getRandomColor(),
-          pointHoverBorderColor: 'transparent',
-          pointHoverBorderWidth: 2,
-        });
+        if (userTaskDuration?.user) {
+          comparedLabels.push({
+            color: userTaskDuration?.user?.avatarColor || getRandomColor(),
+            name: userTaskDuration?.user?.fullName,
+          });
+          const standardUser = statisticUserTaskDurationsList?.find(
+            (compare) => compare?.user?.id == userTaskDuration?.user?.id,
+          );
+          datasets.push({
+            label: userTaskDuration?.user?.fullName,
+            data: generateDataWithAlignment(
+              standardUser?.durations ?? [],
+              userTaskDuration.durations,
+              StatisticChartType.COMPARE,
+              userTaskDuration?.user,
+            ),
+            borderColor:
+              userTaskDuration?.user?.avatarColor || getRandomColor(),
+            backgroundColor: 'transparent',
+            borderDash: [3, 3],
+            fill: true,
+            tension: 0,
+            pointRadius: 4,
+            pointBorderColor: 'transparent',
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor:
+              userTaskDuration?.user?.avatarColor || getRandomColor(),
+            pointHoverBorderColor: 'transparent',
+            pointHoverBorderWidth: 2,
+          });
+        }
       });
 
     setStandardDateLabels(standardDateLabels);
@@ -2271,7 +2264,16 @@ const LineChartByTeamTagsCompare = ({
               <Line
                 key={standardDateLabels.join('-') + compareDateLabels.join('-')}
                 ref={chartRef}
-                data={lineChartData}
+                data={{
+                  datasets: lineChartData?.datasets || [],
+                  labels: lineChartData?.labels.length
+                    ? lineChartData?.labels
+                    : getStatisticMilestones(
+                        `${formatDateToYMD(startDate)}`,
+                        `${formatDateToYMD(endDate || '')}`,
+                        lineChartViewBy?.value as StatisticViewOptions,
+                      ),
+                }}
                 options={options}
               />
               <div
@@ -2329,12 +2331,12 @@ const LineChartByTeamTagsCompare = ({
 
             {!isLoadingStatisticTableInTeamTagLineChart &&
             !isLoadingStatisticTableInTeamTagLineChartCompare ? (
-              <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+              <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md max-h-[500px] overflow-y-auto">
                 <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr
                       key={headerGroup.id}
-                      className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                      className="sticky top-0 z-10 text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
                       {headerGroup.headers.map((header, index) => (
                         <th
                           key={header.id}

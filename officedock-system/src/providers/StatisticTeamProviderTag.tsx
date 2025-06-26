@@ -10,6 +10,7 @@ import {
 import { OptionDropdownType } from '@interfaces/common';
 import { getAdjustedStartDateDefault } from '@utils/date';
 import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
+import { TagTableRowDetail } from '@interfaces/statistic';
 
 interface ContextValue {
   selectedOrganization: OptionDropdownType | null;
@@ -122,6 +123,10 @@ interface ContextValue {
   // View by
   lineChartViewBy: OptionDropdownType | null;
   setLineChartViewBy: Dispatch<SetStateAction<OptionDropdownType | null>>;
+
+  // Table data
+  areaTableData: TagTableRowDetail[];
+  setAreaTableData: Dispatch<SetStateAction<TagTableRowDetail[]>>;
 }
 
 const defaultValue: ContextValue = {
@@ -208,6 +213,9 @@ const defaultValue: ContextValue = {
 
   lineChartViewBy: null,
   setLineChartViewBy: () => {},
+
+  areaTableData: [],
+  setAreaTableData: () => {},
 };
 
 export const StatisticTeamTagsStateContext =
@@ -235,12 +243,13 @@ export const StatisticTeamTagsStateProvider = ({
     useState(false);
 
   const [smallOptions, setSmallOptions] = useState<OptionDropdownType[]>([]);
-
   const [largeOptions, setLargeOptions] = useState<OptionDropdownType[]>([]);
   const [mediumOptions, setMediumOptions] = useState<OptionDropdownType[]>([]);
   const [listOptionsOrganization, setListOptionsOrganization] = useState<
     OptionDropdownType[]
   >([]);
+
+  const [areaTableData, setAreaTableData] = useState<TagTableRowDetail[]>([]);
 
   // Select
   const [selectedOrganization, setSelectedOrganization] =
@@ -412,6 +421,9 @@ export const StatisticTeamTagsStateProvider = ({
 
     lineChartViewBy,
     setLineChartViewBy,
+
+    areaTableData,
+    setAreaTableData,
   };
 
   return (

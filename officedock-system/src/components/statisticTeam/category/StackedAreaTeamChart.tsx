@@ -35,9 +35,9 @@ import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations'
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
+  CategoryTableRowDetail,
   StatisticCategoryInfo,
   StatisticsCategories,
-  TableRowDetail,
 } from '@interfaces/statistic';
 import { getLineChartEnableViews } from '@utils';
 import {
@@ -57,7 +57,6 @@ type Props = {
   endDate: Date | null;
   removeTag: (selected: OptionDropdownType) => void;
   removeUser: (selected: OptionDropdownType) => void;
-
   statisticTeamCategoryList: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
@@ -135,17 +134,16 @@ const StackedAreaTeamChart = ({
     listMemberTeam,
     orderingOptions,
     lineChartViewBy,
-    tableDataArea,
-    setTableDataArea,
+    areaTableData,
+    setAreaTableData,
     setLineChartViewBy,
   } = useContext(StatisticTeamStateContext);
   const { selectedOrganization: selectedOrganizationSideBar } =
     useContext(GlobalStateContext);
 
-  const selectedMemberList =
-    orderingOptions?.user_ids && orderingOptions.user_ids.length > 0
-      ? orderingOptions.user_ids.map((user) => user.value).join(',')
-      : listMemberTeam.map((user) => user.id).join(',');
+  const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
+  const [isTableDataRendered, setIsTableDataRendered] =
+    useState<boolean>(false);
 
   const [selectedCategory, setSelectedCategory] = useState<{
     id: number;
@@ -165,24 +163,43 @@ const StackedAreaTeamChart = ({
   // Collapse statuses
   const [categoryCollapseStatuses, setCategoryCollapseStatuses] = useState<
     {
-      categoryId: number;
+      categoryName: string;
       status: boolean;
     }[]
   >([]);
   const [selectedOrganizationInTable, setSelectedOrganizationInTable] =
     useState<number>(0);
 
+  // Get initial member options
+  useEffect(() => {
+    if (orderingOptions?.user_ids && orderingOptions?.user_ids.length > 0) {
+      setSelectedMembers(
+        orderingOptions?.user_ids.map((user) => Number(user.value)),
+      );
+    } else {
+      setSelectedMembers(listMemberTeam.map((user) => Number(user.id)));
+    }
+  }, [orderingOptions?.user_ids, listMemberTeam]);
+
   // Filter options
   const [filter, setFilter] = useState({
     fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
     endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-    userIds: selectedMemberList,
-
-    largeCategoryId: selectedLarge?.value,
-    mediumCategoryId: selectedMedium?.value,
-    smallCategoryId: selectedSmall?.value,
+    userIds: selectedMembers.join(','),
+    largeCategoryId:
+      selectedOrganization && !selectedLarge && !selectedMedium
+        ? selectedCategory?.id
+        : selectedLarge?.value,
+    mediumCategoryId:
+      selectedOrganization && selectedLarge && !selectedMedium
+        ? selectedCategory?.id
+        : selectedMedium?.value,
+    smallCategoryId:
+      selectedOrganization && selectedLarge && selectedMedium
+        ? selectedCategory?.id
+        : selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: selectedOrganization?.value,
+    selectedOrganization: 0,
     tagIds: orderingOptions?.tag_ids || [],
     organizationMemberId: String(selectedOrganizationSideBar?.value || ''),
   });
@@ -261,7 +278,8 @@ const StackedAreaTeamChart = ({
     filter,
     condition: [
       Boolean(
-        tableDataArea.length > 0 &&
+        areaTableData.length > 0 &&
+          isTableDataRendered &&
           (filter.largeCategoryId || filter.mediumCategoryId),
       ),
     ],
@@ -293,7 +311,7 @@ const StackedAreaTeamChart = ({
   // Get table info (statistic team categories)
   useEffect(() => {
     if (statisticTeamCategoryList) {
-      let tableDetail: TableRowDetail[] = [];
+      let tableDetail: CategoryTableRowDetail[] = [];
       if (selectedOrganization && !selectedLarge && !selectedMedium) {
         tableDetail = buildTableDetail(
           statisticTeamCategoryList.largeCategories,
@@ -314,28 +332,31 @@ const StackedAreaTeamChart = ({
       setCategoryCollapseStatuses(
         tableDetail.map((category) => {
           return {
-            categoryId: category.categoryId,
+            categoryName: category.categoryName,
             status: false,
           };
         }),
       );
-
-      setTableDataArea(tableDetail);
+      setTimeout(() => {
+        setIsTableDataRendered(true);
+      }, 2000);
+      setAreaTableData(tableDetail);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     statisticTeamCategoryList,
+    isTableDataRendered,
     selectedOrganization,
     selectedLarge,
     selectedMedium,
   ]);
+
   // Handle listen to filter option changes
   const memoizedFilter = useMemo(() => {
     return {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-      userIds:
-        orderingOptions?.user_ids.map((item) => item.value).join(',') || '',
+      userIds: selectedMembers?.filter(Boolean).join(',') || '',
       largeCategoryId:
         selectedOrganizationInTable && !selectedLarge && !selectedMedium
           ? selectedCategory?.id
@@ -356,8 +377,8 @@ const StackedAreaTeamChart = ({
   }, [
     startDate,
     endDate,
-    orderingOptions,
-
+    selectedMembers,
+    orderingOptions?.tag_ids,
     selectedOrganizationInTable,
     selectedLarge,
     selectedMedium,
@@ -370,15 +391,10 @@ const StackedAreaTeamChart = ({
   const debouncedFilter = useGenericDebounce(memoizedFilter, 1000);
 
   useEffect(() => {
-    if (
-      isOrganizationChanging &&
-      orderingOptions &&
-      orderingOptions.user_ids.length > 0
-    ) {
+    if (isOrganizationChanging && selectedMembers.length > 0) {
       setIsOrganizationChanging(false); // Done
     }
-  }, [orderingOptions, isOrganizationChanging]);
-
+  }, [selectedMembers, isOrganizationChanging]);
   useEffect(() => {
     if (!isOrganizationChanging) {
       setFilter(debouncedFilter); // Trigger API only when everything is ready
@@ -412,12 +428,12 @@ const StackedAreaTeamChart = ({
         const percents = userData.durations.map((d) => d.percentPerRange);
         const duplicated = [percents[0], ...percents];
         return {
-          name: userData.user.fullName,
+          name: userData?.user?.fullName || '',
           data: duplicated,
         };
       });
       const colors = statisticUserTaskDurationsList.map(
-        (userData) => userData.user.avatarColor || '#000',
+        (userData) => userData?.user?.avatarColor || '#000',
       );
 
       setDataChart(chartData);
@@ -558,7 +574,7 @@ const StackedAreaTeamChart = ({
 
   // Sort by percent difference
   const sortByPercentDifference = (
-    data: TableRowDetail[],
+    data: CategoryTableRowDetail[],
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
@@ -569,12 +585,12 @@ const StackedAreaTeamChart = ({
         ? rowAPercentage - rowBPercentage
         : rowBPercentage - rowAPercentage;
     });
-    setTableDataArea(sortedArr);
+    setAreaTableData(sortedArr);
   };
 
   // Sort by duration difference
   const sortByDurationDifference = (
-    data: TableRowDetail[],
+    data: CategoryTableRowDetail[],
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
@@ -589,11 +605,11 @@ const StackedAreaTeamChart = ({
         ? rowADuration - rowBDuration
         : rowBDuration - rowADuration;
     });
-    setTableDataArea(sortedArr);
+    setAreaTableData(sortedArr);
   };
 
   // Columns definition
-  const columns: ColumnDef<TableRowDetail>[] = [
+  const columns: ColumnDef<CategoryTableRowDetail>[] = [
     {
       accessorKey: 'categoryName',
       header: () => {
@@ -608,13 +624,15 @@ const StackedAreaTeamChart = ({
         const collapseStatus =
           categoryCollapseStatuses.find(
             (categoryCollapseStatus) =>
-              categoryCollapseStatus.categoryId == info.row.original.categoryId,
+              categoryCollapseStatus.categoryName == info.row.original.categoryName,
           )?.status || false;
         return (
           <div className="flex items-start px-[18px]">
             <RadioButton
               name="categoryNameArea"
-              isChecked={info.row.original.categoryId == selectedCategory?.id}
+              isChecked={
+                info.row.original.categoryName == selectedCategory?.name
+              }
               onChange={(e: any) => {
                 if (e) {
                   setSelectedCategory({
@@ -633,6 +651,7 @@ const StackedAreaTeamChart = ({
                       return {
                         ...prev,
                         largeCategoryId: info.row.original.categoryId,
+                        selectedOrganization: info.row.original.organizationId,
                       };
                     });
                   } else if (
@@ -644,6 +663,7 @@ const StackedAreaTeamChart = ({
                       return {
                         ...prev,
                         mediumCategoryId: info.row.original.categoryId,
+                        selectedOrganization: info.row.original.organizationId,
                       };
                     });
                   } else if (
@@ -655,6 +675,7 @@ const StackedAreaTeamChart = ({
                       return {
                         ...prev,
                         smallCategoryId: info.row.original.categoryId,
+                        selectedOrganization: info.row.original.organizationId,
                       };
                     });
                   }
@@ -666,7 +687,7 @@ const StackedAreaTeamChart = ({
                 className={`flex justify-between items-center w-full ${
                   collapseStatus &&
                   info.row.original?.userList?.filter((user) =>
-                    selectedMemberList.includes(String(user.userId)),
+                    selectedMembers.join(',').includes(String(user.userId)),
                   ).length > 0 &&
                   'mb-3'
                 }`}>
@@ -685,7 +706,7 @@ const StackedAreaTeamChart = ({
                     onClick={() => {
                       setCategoryCollapseStatuses((prev) => {
                         return prev.map((item) =>
-                          item.categoryId == info.row.original.categoryId
+                          item.categoryName == info.row.original.categoryName
                             ? { ...item, status: !item.status }
                             : item,
                         );
@@ -741,10 +762,10 @@ const StackedAreaTeamChart = ({
                 durationSortingStatus == SortingType.DESC
               ) {
                 setDurationSortingStatus(SortingType.ASC);
-                sortByDurationDifference(tableDataArea, SortingType.ASC);
+                sortByDurationDifference(areaTableData, SortingType.ASC);
               } else {
                 setDurationSortingStatus(SortingType.DESC);
-                sortByDurationDifference(tableDataArea, SortingType.DESC);
+                sortByDurationDifference(areaTableData, SortingType.DESC);
               }
             }}>
             <p className="!text-xs font-medium !text-[#77858F]">計測時間</p>
@@ -766,7 +787,7 @@ const StackedAreaTeamChart = ({
         const collapseStatus =
           categoryCollapseStatuses.find(
             (categoryCollapseStatus) =>
-              categoryCollapseStatus.categoryId == info.row.original.categoryId,
+              categoryCollapseStatus.categoryName == info.row.original.categoryName,
           )?.status || false;
 
         return (
@@ -775,7 +796,7 @@ const StackedAreaTeamChart = ({
               className={`flex justify-center ${
                 collapseStatus &&
                 info.row.original?.userList?.filter((user) =>
-                  selectedMemberList.includes(String(user.userId)),
+                  selectedMembers.join(',').includes(String(user.userId)),
                 ).length > 0 &&
                 'mb-3'
               }`}>
@@ -823,10 +844,10 @@ const StackedAreaTeamChart = ({
                 percentageSortingStatus == SortingType.DESC
               ) {
                 setPercentageSortingStatus(SortingType.ASC);
-                sortByPercentDifference(tableDataArea, SortingType.ASC);
+                sortByPercentDifference(areaTableData, SortingType.ASC);
               } else {
                 setPercentageSortingStatus(SortingType.DESC);
-                sortByPercentDifference(tableDataArea, SortingType.DESC);
+                sortByPercentDifference(areaTableData, SortingType.DESC);
               }
             }}>
             <p className="!text-xs font-medium !text-[#77858F]">割合</p>
@@ -850,7 +871,7 @@ const StackedAreaTeamChart = ({
         const collapseStatus =
           categoryCollapseStatuses.find(
             (categoryCollapseStatus) =>
-              categoryCollapseStatus.categoryId == info.row.original.categoryId,
+              categoryCollapseStatus.categoryName == info.row.original.categoryName,
           )?.status || false;
 
         return (
@@ -859,7 +880,7 @@ const StackedAreaTeamChart = ({
               className={`flex justify-center ${
                 collapseStatus &&
                 info.row.original?.userList?.filter((user) =>
-                  selectedMemberList.includes(String(user.userId)),
+                  selectedMembers.join(',').includes(String(user.userId)),
                 ).length > 0 &&
                 'mb-3'
               }`}>
@@ -898,7 +919,7 @@ const StackedAreaTeamChart = ({
   ];
 
   const table = useReactTable({
-    data: tableDataArea,
+    data: areaTableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -911,9 +932,9 @@ const StackedAreaTeamChart = ({
 
       return {
         user: {
-          fullName: userData.user.fullName,
-          avatarColor: userData.user.avatarColor,
-          avatar: userData.user.avatar,
+          fullName: userData?.user?.fullName,
+          avatarColor: userData?.user?.avatarColor,
+          avatar: userData?.user?.avatar,
         },
         startDate: duration?.startDate || null,
         endDate: duration?.endDate || null,
@@ -1090,7 +1111,9 @@ const StackedAreaTeamChart = ({
                     options={listOptionsOrganization}
                     selectedOption={selectedOrganization || undefined}
                     onChange={(data) => {
-                      setTableDataArea([]);
+                      setSelectedMembers([]);
+                      setAreaTableData([]);
+                      setIsTableDataRendered(false);
                       setIsOrganizationChanging(true);
                       handleSelectOrganization(data);
                     }}
@@ -1113,7 +1136,10 @@ const StackedAreaTeamChart = ({
                     classNameOption="!text-sm"
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
-                    onChange={(data) => handleSelectLarge(data)}
+                    onChange={(data) => {
+                      setAreaTableData([]);
+                      handleSelectLarge(data);
+                    }}
                     disabled={!selectedOrganization}
                   />
                 </div>
@@ -1134,7 +1160,10 @@ const StackedAreaTeamChart = ({
                     classNameOption="!text-sm"
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
-                    onChange={(data) => handleSelectMedium(data)}
+                    onChange={(data) => {
+                      setAreaTableData([]);
+                      handleSelectMedium(data);
+                    }}
                     disabled={!selectedLarge}
                   />
                 </div>
@@ -1170,6 +1199,7 @@ const StackedAreaTeamChart = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
+                    setAreaTableData([]);
                     setLineChartViewBy({
                       label: e.label,
                       value: e.value,
@@ -1276,12 +1306,12 @@ const StackedAreaTeamChart = ({
             </div>
           )}
           <div className="px-[30px]">
-            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md max-h-[500px] overflow-y-auto">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr
                     key={headerGroup.id}
-                    className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                    className="sticky top-0 z-10 text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
                     {headerGroup.headers.map((header, index) => (
                       <th
                         key={header.id}
