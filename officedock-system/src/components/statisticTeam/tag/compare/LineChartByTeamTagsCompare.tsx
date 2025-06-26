@@ -585,6 +585,7 @@ const LineChartByTeamTagsCompare = ({
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     startDate,
     endDate,
@@ -624,6 +625,7 @@ const LineChartByTeamTagsCompare = ({
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     startDateCompare,
     endDateCompare,
@@ -2331,7 +2333,7 @@ const LineChartByTeamTagsCompare = ({
 
             {!isLoadingStatisticTableInTeamTagLineChart &&
             !isLoadingStatisticTableInTeamTagLineChartCompare ? (
-              <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md max-h-[500px] overflow-y-auto">
+              <Table className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>
                 <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr

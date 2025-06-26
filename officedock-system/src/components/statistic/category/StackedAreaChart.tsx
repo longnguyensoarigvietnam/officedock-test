@@ -29,7 +29,11 @@ import {
   StatisticsCategories,
 } from '@interfaces/statistic';
 import { StatisticStateContext } from '@providers/StatisticProvider';
-import { getLineChartEnableViews, lightenColor } from '@utils';
+import {
+  getLineChartEnableViews,
+  getStatisticMilestones,
+  lightenColor,
+} from '@utils';
 import {
   convertDurationToTotalMinutes,
   convertToJapaneseDateRange,
@@ -144,8 +148,32 @@ const StackedAreaChart = ({
 
   useEffect(() => {
     if (!statisticPercentChartList || statisticPercentChartList.length === 0) {
-      setTimeRange([]);
-      setDataChart([]);
+      const timeMilestones = getStatisticMilestones(
+        `${formatDateToYMD(startDate)}`,
+        `${formatDateToYMD(endDate || '')}`,
+        lineChartViewBy?.value as StatisticViewOptions,
+      );
+
+      const uniqueSortedDates = Array.from(new Set(timeMilestones)).sort(
+        (pre, next) => new Date(pre).getTime() - new Date(next).getTime(),
+      );
+
+      const transformedDates = uniqueSortedDates.map((date, index, arr) => {
+        const isEdge = index === 0 || index === arr.length - 1;
+        return convertToStatisticJapaneseLabels(
+          date,
+          lineChartViewBy?.value as string,
+          isEdge,
+        );
+      });
+
+      setTimeRange(transformedDates);
+      setDataChart([
+        {
+          name: '',
+          data: Array(timeMilestones.length).fill(0),
+        },
+      ]);
       setTableData([]);
       return;
     }
@@ -388,7 +416,7 @@ const StackedAreaChart = ({
       },
     },
     legend: {
-      show: true,
+      show: !(dataChart.length == 1 && !dataChart[0].name), // Not show legend with fake data
       showForSingleSeries: true,
       position: 'bottom',
       horizontalAlign: 'right',
@@ -886,81 +914,85 @@ const StackedAreaChart = ({
               />
               <div
                 className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'}  pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
-                {timeRange.slice(1).map((item, idx) => {
-                  const actualIndex = idx + 1;
-                  const isHovered = hoveredIndex === actualIndex;
+                {!(dataChart.length == 1 && !dataChart[0].name) &&
+                  timeRange.slice(1).map((item, idx) => {
+                    const actualIndex = idx + 1;
+                    const isHovered = hoveredIndex === actualIndex;
 
-                  const dataDetail =
-                    statisticPercentChartList && statisticPercentChartList[idx];
-                  const dataDetailDate =
-                    statisticPercentChartList && statisticPercentChartList[idx];
+                    const dataDetail =
+                      statisticPercentChartList &&
+                      statisticPercentChartList[idx];
+                    const dataDetailDate =
+                      statisticPercentChartList &&
+                      statisticPercentChartList[idx];
 
-                  return (
-                    <div
-                      key={actualIndex}
-                      onMouseEnter={() => setHoveredIndex(actualIndex)}
-                      onMouseLeave={() => setHoveredIndex(null)}
-                      style={{
-                        flex: 1,
-                        textAlign: 'center',
-                        backgroundColor:
-                          hoveredIndex === null
-                            ? 'transparent'
-                            : isHovered
+                    return (
+                      <div
+                        key={actualIndex}
+                        onMouseEnter={() => setHoveredIndex(actualIndex)}
+                        onMouseLeave={() => setHoveredIndex(null)}
+                        style={{
+                          flex: 1,
+                          textAlign: 'center',
+                          backgroundColor:
+                            hoveredIndex === null
                               ? 'transparent'
-                              : '#F8FAFCA6',
-                        transition: 'background-color 0.2s',
-                      }}
-                      className="group relative">
-                      {statisticPercentChartList && (
-                        <div
-                          style={{
-                            boxShadow: '0px 2px 8px 0px #0000001A',
-                          }}
-                          className={`bg-white absolute p-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
-                          <p className="text-sm font-normal text-[#77858F] mb-1 text-center w-full block">
-                            {convertToJapaneseDateRange(
-                              dataDetailDate?.startDate as string,
-                              dataDetailDate?.endDate as string,
-                            )}
-                          </p>
-                          {dataDetail?.categories.map((cate, cateIndex) => {
-                            const colorDefault = tableData.find(
-                              (itemFind) =>
-                                itemFind.categoryId === cate.categoryId,
-                            );
-                            return (
-                              <div
-                                key={cateIndex}
-                                className="flex items-center gap-1.5">
+                              : isHovered
+                                ? 'transparent'
+                                : '#F8FAFCA6',
+                          transition: 'background-color 0.2s',
+                        }}
+                        className="group relative">
+                        {statisticPercentChartList && (
+                          <div
+                            style={{
+                              boxShadow: '0px 2px 8px 0px #0000001A',
+                            }}
+                            className={`bg-white absolute p-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                            <p className="text-sm font-normal text-[#77858F] mb-1 text-center w-full block">
+                              {convertToJapaneseDateRange(
+                                dataDetailDate?.startDate as string,
+                                dataDetailDate?.endDate as string,
+                              )}
+                            </p>
+                            {dataDetail?.categories.map((cate, cateIndex) => {
+                              const colorDefault = tableData.find(
+                                (itemFind) =>
+                                  itemFind.categoryId === cate.categoryId,
+                              );
+                              return (
                                 <div
-                                  className="w-3 h-3 rounded-sm"
-                                  style={{
-                                    backgroundColor:
-                                      cate.categoryColor ||
-                                      colorDefault?.categoryColor ||
-                                      '',
-                                  }}
-                                />
-                                <div className="flex flex-grow items-center justify-between text-base font-medium">
-                                  <div className=" text-black w-fit  max-w-[180px] line-clamp-3 break-words">
-                                    {cate.categoryName}
+                                  key={cateIndex}
+                                  className="flex items-center gap-1.5">
+                                  <div
+                                    className="w-3 h-3 rounded-sm"
+                                    style={{
+                                      backgroundColor:
+                                        cate.categoryColor ||
+                                        colorDefault?.categoryColor ||
+                                        '',
+                                    }}
+                                  />
+                                  <div className="flex flex-grow items-center justify-between text-base font-medium">
+                                    <div className=" text-black w-fit  max-w-[180px] line-clamp-3 break-words">
+                                      {cate.categoryName}
+                                    </div>
+                                    <div>{cate.percent}%</div>
                                   </div>
-                                  <div>{cate.percent}%</div>
                                 </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
               </div>
             </div>
           )}
           <div className="px-[30px]">
-            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md max-h-[500px] overflow-y-auto">
+            <Table
+              className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr
