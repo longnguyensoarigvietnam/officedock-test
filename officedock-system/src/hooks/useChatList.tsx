@@ -22,12 +22,14 @@ const useChatList = (pagination?: PaginationProps) => {
   const token = session?.accessToken;
 
   // Handle call API get Chat list
-  const getChatList = async () => {
+  const getChatList = async ({ signal }: { signal?: AbortSignal }) => {
     const apiUrl = pagination?.page
       ? `${apiRouters.CHAT_LIST}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_DEFAULT}`
       : `${apiRouters.CHAT_LIST}`;
 
-    const { data } = await api.get<BasePagination<ChatRoomItem[]>>(apiUrl);
+    const { data } = await api.get<BasePagination<ChatRoomItem[]>>(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -38,7 +40,7 @@ const useChatList = (pagination?: PaginationProps) => {
     isFetched: isFetchedChat,
   } = useQuery({
     queryKey: ['getChatList', pagination],
-    queryFn: getChatList,
+    queryFn: ({ signal }) => getChatList({ signal }),
     retry: 0,
     enabled: !!token,
     refetchOnMount: false,

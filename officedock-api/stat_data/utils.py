@@ -212,13 +212,17 @@ def aggregate_durations(
         )
 
         category_name = large_category.name if large_category else NONE_CATEGORY
-        category_id = large_category.id if large_category else None
+        category_id = large_category.id if large_category else NONE_CATEGORY
         org_category = OrganizationsStatisticCategories.objects.filter(
             organization=organization,
             large_statistic_category=large_category,
         )
         # Case: No category IDs provided
-        if not large_category_id and not medium_category_id:
+        if (
+            not large_category_id
+            and not medium_category_id
+            and org_category.exists()
+        ):
             category_color = org_category.values_list(
                 "color", flat=True
             ).first()
@@ -227,13 +231,15 @@ def aggregate_durations(
             category_name = (
                 medium_category.name if medium_category else NONE_CATEGORY
             )
-            category_id = medium_category.id if medium_category else None
+            category_id = (
+                medium_category.id if medium_category else NONE_CATEGORY
+            )
         # Case: Both large and medium category IDs are provided
         elif large_category_id and medium_category_id:
             category_name = (
                 small_category.name if small_category else NONE_CATEGORY
             )
-            category_id = small_category.id if small_category else None
+            category_id = small_category.id if small_category else NONE_CATEGORY
 
         if organization_ids_param == ALL_TEAM:
             category_name = organization.name + " " + category_name

@@ -41,7 +41,7 @@ const useStatisticsTags = ({
   } = useContext(StatisticTagStateContext);
 
   // Handle call API get statistic tags list
-  const getStatisticTagsList = async () => {
+  const getStatisticTagsList = async ({ signal }: { signal?: AbortSignal }) => {
     if (!filter?.organizationIds) return [];
 
     const apiUrl = `${apiRouters.STATISTICS_TAGS}?${
@@ -64,7 +64,9 @@ const useStatisticsTags = ({
         : ''
     }${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
-    const { data } = await api.get<StatisticsCategories[]>(apiUrl);
+    const { data } = await api.get<StatisticsCategories[]>(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -75,7 +77,8 @@ const useStatisticsTags = ({
     isFetched: isFetchedStatisticTagsList,
   } = useQuery({
     queryKey: ['getStatisticTagsList', [filter]],
-    queryFn: getStatisticTagsList,
+    queryFn: ({ signal }) => getStatisticTagsList({ signal }),
+
     retry: 0,
     enabled: !!token,
     staleTime: 0,

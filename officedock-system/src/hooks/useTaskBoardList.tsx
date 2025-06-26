@@ -42,7 +42,7 @@ const useTaskBoardList = (
     { id: string; count: number; numPages: number; hasMores: boolean }[]
   >([]);
   // Handle call API get task board list
-  const getTaskBoardList = async () => {
+  const getTaskBoardList = async ({ signal }: { signal?: AbortSignal }) => {
     setIsLoadingDataTask(true);
     if (!statusList || statusList.length === 0) {
       setIsLoadingDataTask(true);
@@ -75,7 +75,7 @@ const useTaskBoardList = (
 
       const apiUrl = `${apiRouters.TASK_BOARD_LIST}?${params.toString()}`;
 
-      const { data } = await api.get<KanbanDataResponse>(apiUrl);
+      const { data } = await api.get<KanbanDataResponse>(apiUrl, { signal });
       return {
         statusId,
         numberPages: data.numPages,
@@ -111,7 +111,8 @@ const useTaskBoardList = (
     queryKey: isReadyToFetch
       ? ['getTaskBoardList', filter, ordering, statusList, orderingOptions]
       : ['getTaskBoardList'],
-    queryFn: getTaskBoardList,
+    queryFn: ({ signal }) => getTaskBoardList({ signal }),
+
     retry: 0,
     enabled: isReadyToFetch && !!token,
     refetchOnMount: true,

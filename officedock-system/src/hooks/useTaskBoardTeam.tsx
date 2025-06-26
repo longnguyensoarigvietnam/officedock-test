@@ -45,7 +45,7 @@ const useTaskBoardTeam = ({
 
   const token = session?.accessToken;
   // Handle call API get task board list
-  const getTaskBoardListTeam = async () => {
+  const getTaskBoardListTeam = async ({ signal }: { signal?: AbortSignal }) => {
     if (!organization_id) return null;
 
     setIsLoadingDataTask(true);
@@ -66,7 +66,7 @@ const useTaskBoardTeam = ({
 
     const apiUrl = `${apiRouters.TASK_TEAM_LIST}?${params.toString()}`;
 
-    const { data } = await api.get<KanbanDataTeamResponse>(apiUrl);
+    const { data } = await api.get<KanbanDataTeamResponse>(apiUrl, { signal });
     return data;
   };
 
@@ -79,7 +79,7 @@ const useTaskBoardTeam = ({
     queryKey: isReadyToFetch
       ? ['getTaskTeamList', [filter, ordering, organization_id]]
       : ['getTaskTeamList'],
-    queryFn: getTaskBoardListTeam,
+    queryFn: ({ signal }) => getTaskBoardListTeam({ signal }),
     retry: 0,
     enabled: isReadyToFetch && !!token,
     refetchOnMount: true,
