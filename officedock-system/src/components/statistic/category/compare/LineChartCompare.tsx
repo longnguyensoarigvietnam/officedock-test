@@ -1387,7 +1387,7 @@ const LineChartCompare = ({
 
             {isFetchedStatisticTaskDurationsList &&
             isFetchedStatisticTaskDurationsCompareList ? (
-              <Table className="w-full border border-gray-300 mt-5 rounded-md max-h-[500px] overflow-y-auto">
+              <Table className={`w-full border border-gray-300 mt-5 rounded-md ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>
                 <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr

@@ -1028,7 +1028,7 @@ export const createStyledAvatarWithMargin = (
   marginRight = 0,
 ): Promise<HTMLCanvasElement> => {
   return new Promise((resolve, reject) => {
-    const scale = window.devicePixelRatio || 1;
+    const scale = 1;
     const totalWidth = displaySize + marginRight;
 
     const img = new Image();

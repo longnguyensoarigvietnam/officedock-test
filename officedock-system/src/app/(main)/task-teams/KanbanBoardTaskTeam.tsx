@@ -9,7 +9,7 @@ import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
-import { useMutation } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { AxiosError } from 'axios';
 
 import Button from '@components/common/Button';
@@ -114,6 +114,8 @@ const KanbanBoardTaskTeam = () => {
   const showErrorToast = useErrorToast();
 
   const { data: session } = useSession();
+
+  const queryClient = useQueryClient();
 
   // Param
   const searchParams = useSearchParams();
@@ -1568,6 +1570,7 @@ const KanbanBoardTaskTeam = () => {
       }
 
       handleRemoveParam();
+      queryClient.refetchQueries(['getTaskDurationDetail']);
       setPendingTaskData(null);
       setCloseAction(null);
       showToast({
@@ -1645,7 +1648,7 @@ const KanbanBoardTaskTeam = () => {
           hasNext: totalNoSetting ? totalNoSetting.hasNext : false,
         });
       }
-
+      queryClient.refetchQueries(['getTaskDurationDetail']);
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
       });

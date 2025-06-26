@@ -376,7 +376,7 @@ const BoardChat = () => {
     <>
       <Metadata
         metadata={`${pageRouters.CHAT_MANAGEMENT.name}${totalNotifications > 0 ? `(${totalNotifications})` : ''}`}
-        taskDurationText={`${taskDurationDetail?.taskDuration ? `${elapsedTime} - ${taskDurationDetail.title}` : ''}`}
+        taskDurationText={`${taskDurationDetail?.taskDuration && taskDurationDetail.isStart ? `${elapsedTime} - ${taskDurationDetail.title}` : ''}`}
       />
       <ListChatUsers
         hasMore={hasMore}
