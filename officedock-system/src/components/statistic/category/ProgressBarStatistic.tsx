@@ -89,9 +89,9 @@ const ProgressBarStatistic = ({
                 });
             }}></div>
           {percentage > 0 && (
-            <div className="absolute -top-[25%] left-[40%] w-[250px] rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+            <div className="absolute -top-[25%] left-[40%] w-[250px] rounded-md py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
               {id != -1 ? (
-                <div>
+                <div className="px-5">
                   {startDate && endDate && (
                     <div className="flex items-center mb-3">
                       <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
@@ -172,11 +172,11 @@ const ProgressBarStatistic = ({
                 </div>
               ) : (
                 <div>
-                  <p className="text-xs text-start font-medium text-[#77858F] mb-3">
+                  <p className="text-xs px-5 text-start font-medium text-[#77858F] mb-3">
                     その他
                   </p>
                   {startDate && endDate && (
-                    <div className="flex items-center mb-3">
+                    <div className="flex items-center mb-3 px-5">
                       <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
                         基準期間
                       </p>
@@ -194,7 +194,7 @@ const ProgressBarStatistic = ({
                     </div>
                   )}
                   {startDateCompare && endDateCompare && (
-                    <div className="flex items-center mb-3">
+                    <div className="flex items-center mb-3 px-5">
                       <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
                         比較期間
                       </p>
@@ -213,51 +213,53 @@ const ProgressBarStatistic = ({
                       </div>
                     </div>
                   )}
-
-                  {mergedItems &&
-                    mergedItems?.length > 0 &&
-                    mergedItems.map((item, index) => {
-                      return (
-                        <div key={index}>
-                          <div className="flex items-center gap-1">
-                            <div
-                              style={{
-                                backgroundColor: item.color,
-                              }}
-                              className="w-3 h-3"></div>
-                            <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
-                              {item.label}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-[10px] font-normal text-sm my-2">
-                            <span>{item.value}%</span>
-                            <span>
-                              {item.duration &&
-                                formatTimeToJapanese(item.duration)}
-                            </span>
-                          </div>
-                          <div className="flex w-full justify-end mt-3">
-                            <div
-                              onClick={() => {
-                                handleClickTooltip(
-                                  item.id,
-                                  item.organizationId,
-                                );
-                              }}
-                              className="bg-white flex items-center  justify-center gap-2 text-[12px] text-[#77858F] h-[34px] rounded-md">
-                              <span>タスクを見る</span>
-                              <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
-                                <ImageRound
-                                  className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
-                                  src="/icons/right-statistic.svg"
-                                  name="right"
-                                />
+                  <div className="max-h-[350px] overflow-y-auto px-5">
+                    {mergedItems &&
+                      mergedItems?.length > 0 &&
+                      mergedItems.map((item, index) => {
+                        return (
+                          <div key={index}>
+                            <div className="flex items-center gap-1">
+                              <div
+                                style={{
+                                  backgroundColor: item.color,
+                                }}
+                                className="w-3 h-3"></div>
+                              <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
+                                {item.label}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-[10px] font-normal text-sm my-2">
+                              <span>{item.value}%</span>
+                              <span>
+                                {item.duration &&
+                                  formatTimeToJapanese(item.duration)}
+                              </span>
+                            </div>
+                            <div className="flex w-full justify-end mt-3">
+                              <div
+                                onClick={() => {
+                                  handleClickTooltip(
+                                    item.id,
+                                    item.organizationId,
+                                  );
+                                }}
+                                className="bg-white flex items-center  justify-center gap-2 text-[12px] text-[#77858F] h-[34px] rounded-md">
+                                <span>タスクを見る</span>
+                                <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
+                                  <ImageRound
+                                    className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
+                                    src="/icons/right-statistic.svg"
+                                    name="right"
+                                  />
+                                </div>
                               </div>
                             </div>
+                            <div className=" w-full mb-5  border-b border-[#D2DBE1]"></div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                  </div>
                 </div>
               )}
             </div>

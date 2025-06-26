@@ -535,6 +535,7 @@ const TaskListStatisticTeamTags = ({
                     ? getTotalDurationCompare()
                     : getTotalDuration()
                 }
+                selectedMember={selectedMember}
                 listOptionsOrganization={listOptionsOrganization}
                 creationDataStatisticData={creationDataStatisticData}
                 setOrdering={(ord: string) => {

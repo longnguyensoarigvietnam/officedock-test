@@ -39,7 +39,11 @@ const useStatisticTableInTeamLineChart = ({
   const token = session?.accessToken;
 
   // Handle call API get statistic table in team line chart
-  const getStatisticTableInTeamLineChart = async () => {
+  const getStatisticTableInTeamLineChart = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds || !filter.userIds) return [];
     const queryParams = [];
     if (filter.fromDate) {
@@ -79,7 +83,7 @@ const useStatisticTableInTeamLineChart = ({
 
     const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM}${queryString}`;
 
-    const { data } = await api.get<StatisticsCategories[]>(apiUrl);
+    const { data } = await api.get<StatisticsCategories[]>(apiUrl, { signal });
     return data;
   };
 
@@ -91,7 +95,7 @@ const useStatisticTableInTeamLineChart = ({
     isFetched: isFetchedStatisticTableInTeamLineChart,
   } = useQuery({
     queryKey: ['getStatisticTableInTeamLineChart', [filter]],
-    queryFn: getStatisticTableInTeamLineChart,
+    queryFn: ({ signal }) => getStatisticTableInTeamLineChart({ signal }),
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

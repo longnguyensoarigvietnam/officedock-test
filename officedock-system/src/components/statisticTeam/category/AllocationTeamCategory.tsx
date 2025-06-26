@@ -139,6 +139,7 @@ const AllocationTeamCategory = memo(
     const [progressDataLarge, setProgressDataLarge] = useState<
       ProgressDataType[]
     >([]);
+
     const [progressDataMedium, setProgressDataMedium] = useState<
       ProgressDataType[]
     >([]);

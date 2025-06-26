@@ -37,7 +37,11 @@ const useStatisticTableInTeamTagLineChartCompare = ({
   const token = session?.accessToken;
 
   // Handle call API get statistic table in team tag line chart
-  const getStatisticTableInTeamTagLineChartCompare = async () => {
+  const getStatisticTableInTeamTagLineChartCompare = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds || !filter?.userIds) return [];
     const queryParams = [];
     if (filter.fromDate) {
@@ -77,7 +81,7 @@ const useStatisticTableInTeamTagLineChartCompare = ({
 
     const apiUrl = `${apiRouters.STATISTICS_TAGS_TEAM}${queryString}`;
 
-    const { data } = await api.get<StatisticsCategories[]>(apiUrl);
+    const { data } = await api.get<StatisticsCategories[]>(apiUrl, { signal });
     return data;
   };
 
@@ -88,7 +92,9 @@ const useStatisticTableInTeamTagLineChartCompare = ({
     isLoading: isLoadingStatisticTableInTeamTagLineChartCompare,
   } = useQuery({
     queryKey: ['getStatisticTableInTeamTagLineChartCompare', [filter]],
-    queryFn: getStatisticTableInTeamTagLineChartCompare,
+    queryFn: ({ signal }) =>
+      getStatisticTableInTeamTagLineChartCompare({ signal }),
+
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

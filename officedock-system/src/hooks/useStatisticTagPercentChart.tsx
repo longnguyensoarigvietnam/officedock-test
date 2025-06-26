@@ -35,7 +35,11 @@ const useStatisticTagPercentChart = ({
   const token = session?.accessToken;
 
   // Handle call API get statistic task duration list
-  const getStatisticPercentChart = async () => {
+  const getStatisticPercentChart = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds) return [];
     const apiUrl = `${apiRouters.STATISTICS_PERCENT_CHART}?is_tag_page=true&${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
@@ -57,7 +61,9 @@ const useStatisticTagPercentChart = ({
         : ''
     }${filter?.statisticBy ? `&statistic_by=${filter.statisticBy}` : '&statistic_by=WEEK'}${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
-    const { data } = await api.get<StatisticsTagPercentChart[]>(apiUrl);
+    const { data } = await api.get<StatisticsTagPercentChart[]>(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -69,7 +75,7 @@ const useStatisticTagPercentChart = ({
     isLoading: isLoadingStatisticTagPercentChartList,
   } = useQuery({
     queryKey: ['getStatisticTagPercentChart', [filter]],
-    queryFn: getStatisticPercentChart,
+    queryFn: ({ signal }) => getStatisticPercentChart({ signal }),
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

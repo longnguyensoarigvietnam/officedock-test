@@ -103,70 +103,72 @@ const PercentageBarCompareTeam = ({
                         <p className="text-xs text-start font-medium text-[#77858F] mb-5 px-5">
                           その他
                         </p>
-
-                        {item.mergedItems.map((mergeItem, indexMerge) => {
-                          return (
-                            <div key={mergeItem.categoryId}>
-                              <div className="flex items-center gap-1 px-5">
-                                <div
-                                  style={{
-                                    backgroundColor: mergeItem.categoryColor,
-                                  }}
-                                  className="w-3 h-3"></div>
-                                <span className="truncate max-w-[180px] font-bold text-base text-black">
-                                  {mergeItem.categoryName || mergeItem.tagName}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-[10px] font-normal text-base mt-4 px-5">
-                                <span className="text-black">
-                                  {mergeItem.percent}%
-                                </span>
-                                <span className="text-black">
-                                  {mergeItem.duration &&
-                                    formatTimeToJapanese(mergeItem.duration)}
-                                </span>
-                              </div>
-                              <div className="max-h-[250px] overflow-y-auto px-5">
-                                <ul className="mt-2">
-                                  {mergeItem.users &&
-                                    mergeItem.users.map(
-                                      (itemMer, indexMerge) => {
-                                        return (
-                                          <li
-                                            key={indexMerge}
-                                            className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-2">
-                                              <div>
-                                                <CustomUserAvatar
-                                                  avatarUrl={
-                                                    itemMer.user?.avatar || ''
-                                                  }
-                                                  avatarColor={
-                                                    itemMer.user?.avatarColor ||
-                                                    ''
-                                                  }
-                                                  size={30}
-                                                />
+                        <div className="max-h-[350px] overflow-y-auto">
+                          {item.mergedItems.map((mergeItem, indexMerge) => {
+                            return (
+                              <div key={mergeItem.categoryId}>
+                                <div className="flex items-center gap-1 px-5">
+                                  <div
+                                    style={{
+                                      backgroundColor: mergeItem.categoryColor,
+                                    }}
+                                    className="w-3 h-3"></div>
+                                  <span className="truncate max-w-[180px] font-bold text-base text-black">
+                                    {mergeItem.categoryName ||
+                                      mergeItem.tagName}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-[10px] font-normal text-base mt-4 px-5">
+                                  <span className="text-black">
+                                    {mergeItem.percent}%
+                                  </span>
+                                  <span className="text-black">
+                                    {mergeItem.duration &&
+                                      formatTimeToJapanese(mergeItem.duration)}
+                                  </span>
+                                </div>
+                                <div className="max-h-[250px] overflow-y-auto px-5">
+                                  <ul className="mt-2">
+                                    {mergeItem.users &&
+                                      mergeItem.users.map(
+                                        (itemMer, indexMerge) => {
+                                          return (
+                                            <li
+                                              key={indexMerge}
+                                              className="flex items-center justify-between mb-2">
+                                              <div className="flex items-center gap-2">
+                                                <div>
+                                                  <CustomUserAvatar
+                                                    avatarUrl={
+                                                      itemMer.user?.avatar || ''
+                                                    }
+                                                    avatarColor={
+                                                      itemMer.user
+                                                        ?.avatarColor || ''
+                                                    }
+                                                    size={30}
+                                                  />
+                                                </div>
+                                                <span className="inline-block ml-3 max-w-[180px] text-black overflow-hidden whitespace-nowrap text-ellipsis">
+                                                  {itemMer.user.fullName}
+                                                </span>
                                               </div>
-                                              <span className="inline-block ml-3 max-w-[180px] text-black overflow-hidden whitespace-nowrap text-ellipsis">
-                                                {itemMer.user.fullName}
+                                              <span className="text-black">
+                                                {itemMer.percent}%
                                               </span>
-                                            </div>
-                                            <span className="text-black">
-                                              {itemMer.percent}%
-                                            </span>
-                                          </li>
-                                        );
-                                      },
-                                    )}
-                                </ul>
-                              </div>
+                                            </li>
+                                          );
+                                        },
+                                      )}
+                                  </ul>
+                                </div>
 
-                              <div
-                                className={`${indexMerge === item.mergedItems.length - 1 && 'hidden'} w-full my-5  border-b px-5 border-[#D2DBE1]`}></div>
-                            </div>
-                          );
-                        })}
+                                <div
+                                  className={`${indexMerge === item.mergedItems.length - 1 && 'hidden'} w-full my-5  border-b px-5 border-[#D2DBE1]`}></div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </>
                     ) : (
                       <>
@@ -279,67 +281,68 @@ const PercentageBarCompareTeam = ({
                         <p className="text-xs text-start font-medium text-[#77858F] mb-5 px-5">
                           その他
                         </p>
-
-                        {item.mergedItems.map((mergeItem, indexMerge) => {
-                          return (
-                            <div key={mergeItem.categoryId}>
-                              <div className="flex items-center gap-1 px-5">
-                                <div
-                                  style={{
-                                    backgroundColor: mergeItem.categoryColor,
-                                  }}
-                                  className="w-3 h-3"></div>
-                                <span className="truncate max-w-[180px] font-bold text-base text-black">
-                                  {mergeItem.categoryName}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-[10px] font-normal text-base mt-4 px-5">
-                                <span className="text-black">
-                                  {mergeItem.percent}%
-                                </span>
-                                <span className="text-black">
-                                  {mergeItem.duration &&
-                                    formatTimeToJapanese(mergeItem.duration)}
-                                </span>
-                              </div>
-                              <div className="max-h-[250px] overflow-y-auto px-5">
-                                <ul className="mt-2">
-                                  {mergeItem.users &&
-                                    mergeItem.users.map((item, index) => {
-                                      return (
-                                        <li
-                                          key={index}
-                                          className="flex items-center justify-between mb-2">
-                                          <div className="flex items-center gap-2">
-                                            <div>
-                                              <CustomUserAvatar
-                                                avatarUrl={
-                                                  item.user?.avatar || ''
-                                                }
-                                                avatarColor={
-                                                  item?.user.avatarColor || ''
-                                                }
-                                                size={30}
-                                              />
+                        <div className="max-h-[350px] overflow-y-auto">
+                          {item.mergedItems.map((mergeItem, indexMerge) => {
+                            return (
+                              <div key={mergeItem.categoryId}>
+                                <div className="flex items-center gap-1 px-5">
+                                  <div
+                                    style={{
+                                      backgroundColor: mergeItem.categoryColor,
+                                    }}
+                                    className="w-3 h-3"></div>
+                                  <span className="truncate max-w-[180px] font-bold text-base text-black">
+                                    {mergeItem.categoryName}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-[10px] font-normal text-base mt-4 px-5">
+                                  <span className="text-black">
+                                    {mergeItem.percent}%
+                                  </span>
+                                  <span className="text-black">
+                                    {mergeItem.duration &&
+                                      formatTimeToJapanese(mergeItem.duration)}
+                                  </span>
+                                </div>
+                                <div className="max-h-[250px] overflow-y-auto px-5">
+                                  <ul className="mt-2">
+                                    {mergeItem.users &&
+                                      mergeItem.users.map((item, index) => {
+                                        return (
+                                          <li
+                                            key={index}
+                                            className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                              <div>
+                                                <CustomUserAvatar
+                                                  avatarUrl={
+                                                    item.user?.avatar || ''
+                                                  }
+                                                  avatarColor={
+                                                    item?.user.avatarColor || ''
+                                                  }
+                                                  size={30}
+                                                />
+                                              </div>
+                                              <span className="inline-block text-black  ml-3 max-w-[180px] overflow-hidden whitespace-nowrap text-ellipsis">
+                                                {item.user.fullName}
+                                              </span>
                                             </div>
-                                            <span className="inline-block text-black  ml-3 max-w-[180px] overflow-hidden whitespace-nowrap text-ellipsis">
-                                              {item.user.fullName}
+                                            <span className="text-black">
+                                              {item.percent}%
                                             </span>
-                                          </div>
-                                          <span className="text-black">
-                                            {item.percent}%
-                                          </span>
-                                        </li>
-                                      );
-                                    })}
-                                </ul>
-                              </div>
+                                          </li>
+                                        );
+                                      })}
+                                  </ul>
+                                </div>
 
-                              <div
-                                className={`${indexMerge === item.mergedItems.length - 1 && 'hidden'} px-5 w-full my-5  border-b border-[#D2DBE1]`}></div>
-                            </div>
-                          );
-                        })}
+                                <div
+                                  className={`${indexMerge === item.mergedItems.length - 1 && 'hidden'} px-5 w-full my-5  border-b border-[#D2DBE1]`}></div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </>
                     ) : (
                       <>

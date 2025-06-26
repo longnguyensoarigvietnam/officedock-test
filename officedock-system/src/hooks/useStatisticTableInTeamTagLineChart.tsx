@@ -37,7 +37,11 @@ const useStatisticTableInTeamTagLineChart = ({
   const token = session?.accessToken;
 
   // Handle call API get statistic table in team tag line chart
-  const getStatisticTableInTeamTagLineChart = async () => {
+  const getStatisticTableInTeamTagLineChart = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds || !filter?.userIds) return [];
     const queryParams = [];
     if (filter.fromDate) {
@@ -77,7 +81,9 @@ const useStatisticTableInTeamTagLineChart = ({
 
     const apiUrl = `${apiRouters.STATISTICS_TAGS_TEAM}${queryString}`;
 
-    const { data } = await api.get<StatisticsCategories[]>(apiUrl);
+    const { data } = await api.get<StatisticsCategories[]>(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -88,7 +94,7 @@ const useStatisticTableInTeamTagLineChart = ({
     isLoading: isLoadingStatisticTableInTeamTagLineChart,
   } = useQuery({
     queryKey: ['getStatisticTableInTeamTagLineChart', [filter]],
-    queryFn: getStatisticTableInTeamTagLineChart,
+    queryFn: ({ signal }) => getStatisticTableInTeamTagLineChart({ signal }),
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,
