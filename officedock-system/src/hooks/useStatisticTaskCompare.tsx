@@ -59,7 +59,11 @@ const useStatisticTaskCompare = ({
   );
 
   // Handle call API get statistic category list
-  const getStatisticCategoryList = async () => {
+  const getStatisticCategoryList = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.isCompare) return [];
     if (filter?.totalDuration === '') return null;
 
@@ -98,8 +102,11 @@ const useStatisticTaskCompare = ({
 
     const apiUrl = `${apiRouters.STATISTICS_TASKS}?${params.toString()}`;
 
-    const { data } =
-      await api.get<BasePagination<DataTaskListStatisticListType[]>>(apiUrl);
+    const { data } = await api.get<
+      BasePagination<DataTaskListStatisticListType[]>
+    >(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -110,7 +117,8 @@ const useStatisticTaskCompare = ({
     isFetched: isFetchedStatisticCategoryList,
   } = useQuery({
     queryKey: ['getStatisticTaskListCompare', [filter]],
-    queryFn: getStatisticCategoryList,
+    queryFn: ({ signal }) => getStatisticCategoryList({ signal }),
+
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

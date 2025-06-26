@@ -126,7 +126,7 @@ const PercentageTagsCompare = ({
     colorData?: string,
   ) => {
     if (!dataCategories) return [];
-    const categories = dataCategories.filter((item) => item.percent > 0);
+    const categories = dataCategories.filter((item) => item.percent >= 0);
 
     const otherItems = categories.filter((item) => item.percent < 0);
     const mainItems = categories.filter((item) => item.percent >= 0);
@@ -161,7 +161,7 @@ const PercentageTagsCompare = ({
 
     return [
       ...mappedMainItems,
-      ...(otherItem.percentage > 0 ? [otherItem] : []),
+      ...(otherItem.percentage >= 0 ? [otherItem] : []),
     ];
   };
 

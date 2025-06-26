@@ -40,7 +40,11 @@ const useTaskNoSettingTeam = ({
 
   const token = session?.accessToken;
   // Handle call API get task board list
-  const getTaskBoardNoSettingTeam = async () => {
+  const getTaskBoardNoSettingTeam = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!organization_id) return null;
 
     const params = new URLSearchParams({
@@ -56,7 +60,7 @@ const useTaskNoSettingTeam = ({
 
     const apiUrl = `${apiRouters.TASK_TEAM_NO_SETTING}?${params.toString()}&curren_screen=teamdock`;
 
-    const { data } = await api.get<KanbanDataResponse>(apiUrl);
+    const { data } = await api.get<KanbanDataResponse>(apiUrl, { signal });
     return data;
   };
 
@@ -69,7 +73,7 @@ const useTaskNoSettingTeam = ({
     queryKey: isReadyToFetch
       ? ['getTaskTeamNoSetting', [filter, ordering, organization_id]]
       : ['getTaskTeamNoSetting'],
-    queryFn: getTaskBoardNoSettingTeam,
+    queryFn: ({ signal }) => getTaskBoardNoSettingTeam({ signal }),
     retry: 0,
     enabled: isReadyToFetch && !!token,
     refetchOnMount: true,

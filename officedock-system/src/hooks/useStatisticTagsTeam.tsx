@@ -47,7 +47,11 @@ const useStatisticTagsTeam = ({
   } = useContext(StatisticTeamTagsStateContext);
 
   // Handle call API get statistic tags list team
-  const getStatisticTagsListTeam = async () => {
+  const getStatisticTagsListTeam = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds) return [];
 
     const params = new URLSearchParams();
@@ -76,7 +80,7 @@ const useStatisticTagsTeam = ({
 
     const apiUrl = `${apiRouters.STATISTICS_TAGS_TEAM}?${params.toString()}`;
 
-    const { data } = await api.get<StatisticsCategories[]>(apiUrl);
+    const { data } = await api.get<StatisticsCategories[]>(apiUrl, { signal });
     return data;
   };
 
@@ -87,7 +91,8 @@ const useStatisticTagsTeam = ({
     isFetched: isFetchedStatisticTagsListTeam,
   } = useQuery({
     queryKey: ['getStatisticTagsListTeam', [filter]],
-    queryFn: getStatisticTagsListTeam,
+    queryFn: ({ signal }) => getStatisticTagsListTeam({ signal }),
+
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

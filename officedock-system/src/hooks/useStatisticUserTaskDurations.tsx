@@ -39,7 +39,11 @@ const useStatisticUserTaskDurations = ({
   const token = session?.accessToken;
 
   // Handle call API get statistic task duration list
-  const getStatisticUserTaskDurations = async () => {
+  const getStatisticUserTaskDurations = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (
       !filter?.selectedOrganization ||
       isNaN(Number(filter?.selectedOrganization))
@@ -84,7 +88,9 @@ const useStatisticUserTaskDurations = ({
       queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
     const apiUrl = `${apiRouters.STATISTICS_USER_TASK_DURATIONS(Number(filter.selectedOrganization))}${queryString}`;
 
-    const { data } = await api.get<StatisticsUserTaskDuration[]>(apiUrl);
+    const { data } = await api.get<StatisticsUserTaskDuration[]>(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -95,7 +101,7 @@ const useStatisticUserTaskDurations = ({
     isLoading: isLoadingStatisticUserTaskDurationsList,
   } = useQuery({
     queryKey: ['getStatisticUserTaskDurations', [filter]],
-    queryFn: getStatisticUserTaskDurations,
+    queryFn: ({ signal }) => getStatisticUserTaskDurations({ signal }),
     retry: 0,
     enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,
