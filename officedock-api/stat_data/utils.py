@@ -245,6 +245,7 @@ def aggregate_durations(
         category_name = (
             category_name
             if not organization_ids_param == ALL_TEAM
+            and category_name != none_category
             else organization.name + category_name
         )
         key = category_name + "_" + str(organization.id)

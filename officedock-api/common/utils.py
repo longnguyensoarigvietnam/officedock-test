@@ -617,10 +617,13 @@ def get_organizations_of_user_by_screen_role(user, screen_name, action):
     role_permissions = RoleDetail.objects.filter(
         role__users=user, permission__name=permission_name
     ).all()
-
     if not role_permissions:
         return None
-
+    selection_results = [item.selection_result for item in role_permissions]
+    if SelectionResultOptions.ALLOWED.value in selection_results:
+        return Organization.all_objects.filter(
+            company=user.company
+        ).values_list("id", flat=True)
     org_ids = list(
         Organization.all_objects.filter(users=user).values_list("id", flat=True)
     )

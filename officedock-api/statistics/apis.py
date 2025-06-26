@@ -1,3 +1,5 @@
+import math
+from collections import defaultdict
 from datetime import datetime, time, timedelta
 from itertools import chain
 
@@ -33,9 +35,9 @@ from common.utils import (
     split_id_from_string,
     get_organizations_of_user_by_screen_role,
 )
-from organizations.constants import CategoryColors, OrganizationTypes
+from organizations.constants import OrganizationTypes
 from organizations.models import Organization
-from stat_data.constants import ALL_TEAM, FilterTime, NONE_CATEGORY
+from stat_data.constants import ALL_TEAM, FilterTime
 from stat_data.serializers import (
     StatisticTaskSerializer,
     StatisticEventSerializer,
@@ -445,10 +447,7 @@ class StatisticViewSet(BaseAPIViewSet):
             return durations
 
         if medium_category_id and calendar_org.id in organization_ids:
-            durations = get_list_durations_by_users(
-                start_of_day=None,
-                end_of_day=None,
-            )
+            return self.response_ok(data)
 
         if is_tag_page:
             total_duration, tag_list = process_merge_card_per_tag(
@@ -459,17 +458,8 @@ class StatisticViewSet(BaseAPIViewSet):
 
             if not tag_list:
                 # Return empty data
-                data.append(
-                    {
-                        "tag_id": None,
-                        "tag_name": NONE_CATEGORY,
-                        "duration": "00:00:00",
-                        "durations": _get_durations_by_time(
-                            None, 100, "00:00:00"
-                        ),
-                    }
-                )
                 return self.response_ok(data)
+
             percent = 0
             # Handle get list duration by ranges
             for index, tag in enumerate(tag_list):
@@ -522,15 +512,6 @@ class StatisticViewSet(BaseAPIViewSet):
         )
         if not category_list:
             # Return empty data
-            data = [
-                {
-                    "category_id": None,
-                    "category_name": NONE_CATEGORY,
-                    "category_color": CategoryColors.GRAY.value,
-                    "duration": "00:00:00",
-                    "durations": _get_durations_by_time(None, 100, "00:00:00"),
-                }
-            ]
             return self.response_ok(data)
 
         percent = 0
@@ -1598,11 +1579,13 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 None, ranges, durations
             )
             return self.response_ok(
-                {
-                    "user": None,
-                    "total_duration": format_duration(timedelta(0)),
-                    "durations": user_durations,
-                }
+                [
+                    {
+                        "user": None,
+                        "total_duration": format_duration(timedelta(0)),
+                        "durations": user_durations,
+                    }
+                ]
             )
 
         filter_with_category_durations = get_list_durations_by_users(
@@ -1621,7 +1604,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 continue
             user_total_duration = get_total_durations(filter_durations)
             user_durations = self._get_durations_by_range(
-                filter_durations, ranges, durations
+                filter_durations, ranges, filter_with_category_durations
             )
             data.append(
                 {
@@ -1631,7 +1614,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 }
             )
 
-        return self.response_ok(data)
+        return self.response_ok(self._normalize_percent_per_range(data))
 
     def _get_durations_by_range(self, filter_durations, ranges, root_durations):
         """
@@ -1687,9 +1670,8 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             percent_per_range, percent = percentage_calculation_of_duration(
                 total_duration.total_seconds(),
                 duration.total_seconds(),
-                percent,
-                is_last_element,
             )
+
             durations.append(
                 {
                     "start_date": start_date_min.strftime(BASE_DATE_FORMAT),
@@ -1700,3 +1682,33 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             )
 
         return durations
+
+    def _normalize_percent_per_range(self, data):
+        """
+        Handle normalize percent per range if total percent < 100%
+        """
+        # Map: (startDate, endDate) -> list of (user, duration_dict)
+        range_users = defaultdict(list)
+
+        for user in data:
+            for duration in user.get("durations", []):
+                key = (duration["start_date"], duration["end_date"])
+                range_users[key].append((user, duration))
+
+        # Normalize
+        for key, user_durations in range_users.items():
+            total = sum(
+                duration["percent_per_range"] for _, duration in user_durations
+            )
+
+            if total != 100 and total > 0:
+                count = len(user_durations)
+                base = math.floor(100 / count)
+                remainder = 100 - (base * count)
+
+                for idx, (_, duration) in enumerate(user_durations):
+                    duration["percent_per_range"] = base + (
+                        1 if idx < remainder else 0
+                    )
+
+        return data
