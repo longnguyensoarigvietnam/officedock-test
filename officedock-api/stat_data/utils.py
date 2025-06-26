@@ -197,13 +197,9 @@ def aggregate_durations(
         else:
             model_object = get_object_or_404(Schedule, id=card.get("schedule"))
         organization = model_object.organization
-        category_color = None  # Default for unsetting category
-        none_category = (
-            NONE_CATEGORY
-            if not organization_ids_param == ALL_TEAM
-            else organization.name + " " + NONE_CATEGORY
-        )
-
+        category_color = (
+            CategoryColors.GRAY.value
+        )  # Set default color for unsetting category
         categories = model_object.categories.first()
         large_category = (
             categories.large_statistic_category if categories else None
@@ -215,7 +211,7 @@ def aggregate_durations(
             categories.small_statistic_category if categories else None
         )
 
-        category_name = large_category.name if large_category else none_category
+        category_name = large_category.name if large_category else NONE_CATEGORY
         category_id = large_category.id if large_category else None
         org_category = OrganizationsStatisticCategories.objects.filter(
             organization=organization,
@@ -229,25 +225,19 @@ def aggregate_durations(
         # Case: Large category ID is provided, no medium category ID
         elif large_category_id and not medium_category_id:
             category_name = (
-                medium_category.name if medium_category else none_category
+                medium_category.name if medium_category else NONE_CATEGORY
             )
             category_id = medium_category.id if medium_category else None
         # Case: Both large and medium category IDs are provided
         elif large_category_id and medium_category_id:
             category_name = (
-                small_category.name if small_category else none_category
+                small_category.name if small_category else NONE_CATEGORY
             )
             category_id = small_category.id if small_category else None
-        # Set default color for unsetting category
-        if not category_id:
-            category_color = CategoryColors.GRAY.value
 
-        category_name = (
-            category_name
-            if not organization_ids_param == ALL_TEAM
-            and category_name != none_category
-            else organization.name + category_name
-        )
+        if organization_ids_param == ALL_TEAM:
+            category_name = organization.name + " " + category_name
+
         key = category_name + "_" + str(organization.id)
         if key in category_dict:
             category_dict[key]["duration"] += card["total_duration"]
