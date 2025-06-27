@@ -8,9 +8,10 @@ import {
 } from 'react';
 
 import { OptionDropdownType } from '@interfaces/common';
+import { MergedTableTag, TagTableRowDetail } from '@interfaces/statistic';
+
 import { getAdjustedStartDateDefault } from '@utils/date';
 import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
-import { TagTableRowDetail } from '@interfaces/statistic';
 
 interface ContextValue {
   selectedOrganization: OptionDropdownType | null;
@@ -127,6 +128,10 @@ interface ContextValue {
   // Table data
   areaTableData: TagTableRowDetail[];
   setAreaTableData: Dispatch<SetStateAction<TagTableRowDetail[]>>;
+  lineChartTableData: TagTableRowDetail[];
+  setLineChartTableData: Dispatch<SetStateAction<TagTableRowDetail[]>>;
+  mergedTableData: MergedTableTag[]
+  setMergedTableData: Dispatch<SetStateAction<MergedTableTag[]>>
 }
 
 const defaultValue: ContextValue = {
@@ -216,6 +221,10 @@ const defaultValue: ContextValue = {
 
   areaTableData: [],
   setAreaTableData: () => {},
+  lineChartTableData: [],
+  setLineChartTableData: () => {},
+  mergedTableData: [],
+  setMergedTableData: () => {},
 };
 
 export const StatisticTeamTagsStateContext =
@@ -249,7 +258,14 @@ export const StatisticTeamTagsStateProvider = ({
     OptionDropdownType[]
   >([]);
 
+  // Table data
   const [areaTableData, setAreaTableData] = useState<TagTableRowDetail[]>([]);
+  const [lineChartTableData, setLineChartTableData] = useState<
+    TagTableRowDetail[]
+  >([]);
+  const [mergedTableData, setMergedTableData] = useState<MergedTableTag[]>(
+    [],
+  );
 
   // Select
   const [selectedOrganization, setSelectedOrganization] =
@@ -424,6 +440,10 @@ export const StatisticTeamTagsStateProvider = ({
 
     areaTableData,
     setAreaTableData,
+    lineChartTableData,
+    setLineChartTableData,
+    mergedTableData,
+    setMergedTableData
   };
 
   return (

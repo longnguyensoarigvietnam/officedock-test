@@ -46,7 +46,8 @@ const useStatisticUserTaskDurations = ({
   }) => {
     if (
       !filter?.selectedOrganization ||
-      isNaN(Number(filter?.selectedOrganization))
+      isNaN(Number(filter?.selectedOrganization)) ||
+      !filter.userIds
     )
       return [];
     const queryParams = [];

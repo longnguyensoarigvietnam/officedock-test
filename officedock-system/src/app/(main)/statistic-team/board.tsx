@@ -89,6 +89,8 @@ const StatisticTeamBoard = () => {
     setIsLoadingMediumCompare,
     setCurrentPage,
     setAreaTableData,
+    setLineChartTableData,
+    setMergedTableData
   } = useContext(StatisticTeamStateContext);
   const {
     organizationTeamList,
@@ -322,6 +324,8 @@ const StatisticTeamBoard = () => {
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
     setAreaTableData([]);
+    setLineChartTableData([])
+    setMergedTableData([])
     if (data.value !== selectedOrganization?.value) {
       setIsLoadingOrganization(true);
       if (isCheckCompare) {
@@ -410,6 +414,8 @@ const StatisticTeamBoard = () => {
   const handleSelectOrganizationCustom = (data: OptionDropdownType) => {
     setCurrentPage(1);
     setAreaTableData([]);
+    setLineChartTableData([])
+    setMergedTableData([])
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
@@ -459,6 +465,8 @@ const StatisticTeamBoard = () => {
       }
     }
     setAreaTableData([]);
+    setLineChartTableData([])
+    setMergedTableData([])
     setCurrentPage(1);
 
     setSelectedLarge(data);
@@ -494,6 +502,8 @@ const StatisticTeamBoard = () => {
       }
     }
     setAreaTableData([]);
+    setLineChartTableData([])
+    setMergedTableData([])
     setCurrentPage(1);
 
     setSelectedMedium(data);
@@ -527,6 +537,8 @@ const StatisticTeamBoard = () => {
   const handleSelectSmall = (data: OptionDropdownType) => {
     setCurrentPage(1);
     setAreaTableData([]);
+    setLineChartTableData([])
+    setMergedTableData([])
 
     setSelectedSmall(data);
   };

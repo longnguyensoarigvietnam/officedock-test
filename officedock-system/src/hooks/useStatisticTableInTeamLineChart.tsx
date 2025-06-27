@@ -14,15 +14,11 @@ import api from '@base/api';
 interface FilterProps {
   endDate: string | Date;
   fromDate: string | Date;
-  largeCategoryId?: number;
-  mediumCategoryId?: number;
-  smallCategoryId?: number;
-  organizationIds?: string;
+  largeCategoryId?: string | number;
+  mediumCategoryId?: string | number;
+  organizationId?: string | number;
   organizationMemberId?: string;
-
-  orderingOptions: {
-    tag_ids: OptionDropdownType[];
-  } | null;
+  tagIds?: OptionDropdownType[];
   userIds: string;
 }
 
@@ -44,7 +40,7 @@ const useStatisticTableInTeamLineChart = ({
   }: {
     signal?: AbortSignal;
   }) => {
-    if (!filter?.organizationIds || !filter.userIds) return [];
+    if (!filter?.organizationId || !filter.userIds) return [];
     const queryParams = [];
     if (filter.fromDate) {
       queryParams.push(`from_date=${filter.fromDate}`);
@@ -52,8 +48,8 @@ const useStatisticTableInTeamLineChart = ({
     if (filter.endDate) {
       queryParams.push(`end_date=${filter.endDate}`);
     }
-    if (filter.organizationIds) {
-      queryParams.push(`organization_id=${filter.organizationIds}`);
+    if (filter.organizationId) {
+      queryParams.push(`organization_id=${filter.organizationId}`);
     }
     if (filter.organizationMemberId) {
       queryParams.push(
@@ -66,15 +62,12 @@ const useStatisticTableInTeamLineChart = ({
     if (filter.mediumCategoryId) {
       queryParams.push(`medium_category_id=${filter.mediumCategoryId}`);
     }
-    if (filter.smallCategoryId) {
-      queryParams.push(`small_category_id=${filter.smallCategoryId}`);
-    }
     if (filter.userIds) {
       queryParams.push(`user_ids=${filter.userIds}`);
     }
-    if (filter.orderingOptions?.tag_ids) {
+    if (filter.tagIds && filter.tagIds?.length > 0) {
       queryParams.push(
-        `tag_ids=${filter?.orderingOptions?.tag_ids.map((item) => item.value).join(',')}`,
+        `tag_ids=${filter?.tagIds.map((item) => item.value).join(',')}`,
       );
     }
 

@@ -51,7 +51,9 @@ import { OptionDropdownType } from '@interfaces/common';
 import {
   StatisticCategoryInfo,
   StatisticsUserTaskDuration,
+  TagTableRowDetail,
 } from '@interfaces/statistic';
+import { TooltipDiv } from '@interfaces/tooltip';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
 import {
@@ -104,26 +106,6 @@ type Props = {
   handleSelectSmall: (data: OptionDropdownType) => void;
 };
 
-interface TooltipDiv extends HTMLDivElement {
-  _reactRoot?: ReactDOM.Root;
-}
-
-interface TableRowDetail {
-  tagId: number;
-  tagName: string;
-  tagDuration: string;
-  tagPercent: number;
-  organizationId: number;
-  userList: {
-    userId: number;
-    userName: string;
-    userAvatar?: string | null;
-    userAvatarColor: string;
-    userDuration: string;
-    userPercent: number;
-  }[];
-}
-
 const LineChartByTeamTags = ({
   startDate,
   endDate,
@@ -153,6 +135,7 @@ const LineChartByTeamTags = ({
     allLabelUser,
     isCheckCompare,
     orderingOptions,
+    lineChartTableData,
     setIsLoadingLarge,
     setIsLoadingMedium,
     setIsLoadingSmall,
@@ -163,7 +146,9 @@ const LineChartByTeamTags = ({
     setIsLoadingOrganizationCompare,
     setLineChartViewBy,
     setSelectedTags,
+    setLineChartTableData
   } = useContext(StatisticTeamTagsStateContext);
+  
   const { expanded, selectedOrganization: selectedOrganizationSideBar } =
     useContext(GlobalStateContext);
   // Selected members and category
@@ -213,9 +198,6 @@ const LineChartByTeamTags = ({
       avatarUrl: string;
     }[]
   >([]);
-
-  // Table data
-  const [tableData, setTableData] = useState<TableRowDetail[]>([]);
 
   // Chart
   const chartRef = useRef<any>(null);
@@ -364,7 +346,7 @@ const LineChartByTeamTags = ({
           ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
           : filter.userIds,
     },
-    condition: [Boolean(tableData.length > 0 && filter.tagIds?.length > 0)],
+    condition: [Boolean(lineChartTableData.length > 0 && filter.tagIds?.length > 0)],
   });
 
   // Get table info (statistic team categories)
@@ -373,7 +355,7 @@ const LineChartByTeamTags = ({
       filter: {
         fromDate: formatDateToYMD(startDate) || '',
         endDate: formatDateToYMD(`${endDate}`) || '',
-        organizationIds: String(selectedOrganization?.value || ''),
+        organizationId: String(selectedOrganization?.value || ''),
         largeCategoryId: selectedLarge?.value as number,
         mediumCategoryId: selectedMedium?.value as number,
         smallCategoryId: selectedSmall?.value as number,
@@ -390,7 +372,7 @@ const LineChartByTeamTags = ({
       onSuccess: (data) => {
         if (!data) return;
 
-        let tableDetail: TableRowDetail[] = [];
+        let tableDetail: TagTableRowDetail[] = [];
         if (
           selectedOrganization &&
           !selectedLarge &&
@@ -435,7 +417,7 @@ const LineChartByTeamTags = ({
           }),
         );
 
-        setTableData(tableDetail);
+        setLineChartTableData(tableDetail);
 
         // Calculate total duration
         const totalDurationList = (tableDetail || [])
@@ -900,7 +882,7 @@ const LineChartByTeamTags = ({
 
   // Sort by percent difference
   const sortByPercentDifference = (
-    data: TableRowDetail[],
+    data: TagTableRowDetail[],
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
@@ -911,12 +893,12 @@ const LineChartByTeamTags = ({
         ? rowAPercentage - rowBPercentage
         : rowBPercentage - rowAPercentage;
     });
-    setTableData(sortedArr);
+    setLineChartTableData(sortedArr);
   };
 
   // Sort by duration difference
   const sortByDurationDifference = (
-    data: TableRowDetail[],
+    data: TagTableRowDetail[],
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
@@ -931,11 +913,11 @@ const LineChartByTeamTags = ({
         ? rowADuration - rowBDuration
         : rowBDuration - rowADuration;
     });
-    setTableData(sortedArr);
+    setLineChartTableData(sortedArr);
   };
 
   // Columns definition
-  const columns: ColumnDef<TableRowDetail>[] = [
+  const columns: ColumnDef<TagTableRowDetail>[] = [
     {
       accessorKey: 'tagName',
       header: () => {
@@ -1066,10 +1048,10 @@ const LineChartByTeamTags = ({
                 durationSortingStatus == SortingType.DESC
               ) {
                 setDurationSortingStatus(SortingType.ASC);
-                sortByDurationDifference(tableData, SortingType.ASC);
+                sortByDurationDifference(lineChartTableData, SortingType.ASC);
               } else {
                 setDurationSortingStatus(SortingType.DESC);
-                sortByDurationDifference(tableData, SortingType.DESC);
+                sortByDurationDifference(lineChartTableData, SortingType.DESC);
               }
             }}>
             <p className="!text-xs font-medium !text-[#77858F]">計測時間</p>
@@ -1144,10 +1126,10 @@ const LineChartByTeamTags = ({
                 percentageSortingStatus == SortingType.DESC
               ) {
                 setPercentageSortingStatus(SortingType.ASC);
-                sortByPercentDifference(tableData, SortingType.ASC);
+                sortByPercentDifference(lineChartTableData, SortingType.ASC);
               } else {
                 setPercentageSortingStatus(SortingType.DESC);
-                sortByPercentDifference(tableData, SortingType.DESC);
+                sortByPercentDifference(lineChartTableData, SortingType.DESC);
               }
             }}>
             <p className="!text-xs font-medium !text-[#77858F]">割合</p>
@@ -1217,7 +1199,7 @@ const LineChartByTeamTags = ({
   ];
 
   const table = useReactTable({
-    data: tableData,
+    data: lineChartTableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -1429,7 +1411,7 @@ const LineChartByTeamTags = ({
                     selectedOption={selectedOrganization || undefined}
                     onChange={(data) => {
                       setSelectedMembers([]);
-                      setTableData([]);
+                      setLineChartTableData([]);
                       setSelectedTag(null);
                       setIsOrganizationChanging(true);
                       handleSelectOrganization(data);
@@ -1466,7 +1448,7 @@ const LineChartByTeamTags = ({
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => {
-                      setTableData([]);
+                      setLineChartTableData([]);
                       setSelectedTag(null);
                       handleSelectLarge(data);
                     }}
@@ -1502,7 +1484,7 @@ const LineChartByTeamTags = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => {
-                      setTableData([]);
+                      setLineChartTableData([]);
                       setSelectedTag(null);
                       handleSelectMedium(data);
                     }}
@@ -1538,7 +1520,7 @@ const LineChartByTeamTags = ({
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => {
-                      setTableData([]);
+                      setLineChartTableData([]);
                       setSelectedTag(null);
                       handleSelectSmall(data);
                     }}
@@ -1577,7 +1559,7 @@ const LineChartByTeamTags = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
-                    setTableData([]);
+                    setLineChartTableData([]);
                     setLineChartViewBy({
                       label: e.label,
                       value: e.value,
@@ -1604,7 +1586,7 @@ const LineChartByTeamTags = ({
                         isChecked={selectedMembers.includes(member.id)}
                         color={member.color}
                         onChange={(state) => {
-                          setTableData([]);
+                          setLineChartTableData([]);
                           if (state) {
                             setSelectedMembers((prev) => {
                               if (member.id) {
@@ -1717,7 +1699,7 @@ const LineChartByTeamTags = ({
                 className={`!h-[200px] mt-5 w-full mx-auto`}
               />
             ) : (
-              <Table className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>
+              <Table className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${lineChartTableData.length && 'max-h-[500px] overflow-y-auto'}`}>
                 <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr

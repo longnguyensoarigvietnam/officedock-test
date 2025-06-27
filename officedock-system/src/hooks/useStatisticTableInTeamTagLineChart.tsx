@@ -14,12 +14,11 @@ import api from '@base/api';
 interface FilterProps {
   endDate: string | Date;
   fromDate: string | Date;
-  largeCategoryId?: number;
-  mediumCategoryId?: number;
-  smallCategoryId?: number;
-  organizationIds?: string;
+  largeCategoryId?: string | number;
+  mediumCategoryId?: string | number;
+  smallCategoryId?: string | number;
+  organizationId?: string;
   organizationMemberId?: string;
-
   selectedTags: OptionDropdownType[];
   userIds: string;
 }
@@ -42,7 +41,7 @@ const useStatisticTableInTeamTagLineChart = ({
   }: {
     signal?: AbortSignal;
   }) => {
-    if (!filter?.organizationIds || !filter?.userIds) return [];
+    if (!filter?.organizationId || !filter?.userIds) return [];
     const queryParams = [];
     if (filter.fromDate) {
       queryParams.push(`from_date=${filter.fromDate}`);
@@ -55,8 +54,8 @@ const useStatisticTableInTeamTagLineChart = ({
         `organization_get_members_id=${filter.organizationMemberId.toString()}`,
       );
     }
-    if (filter.organizationIds) {
-      queryParams.push(`organization_id=${filter.organizationIds}`);
+    if (filter.organizationId) {
+      queryParams.push(`organization_id=${filter.organizationId}`);
     }
     if (filter.largeCategoryId) {
       queryParams.push(`large_category_id=${filter.largeCategoryId}`);
