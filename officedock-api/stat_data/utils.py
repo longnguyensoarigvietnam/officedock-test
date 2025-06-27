@@ -306,7 +306,7 @@ def process_categories(
         category_color = cat["category_color"]
         if is_with_tasks or is_with_users:
             filter_key = filter_duration_by_type_category[category_type]
-            if category_id:
+            if category_id != NONE_CATEGORY:
                 filter_durations = get_list_durations_by_users(
                     durations=durations,
                     **{filter_key: category_id},
@@ -368,7 +368,7 @@ def process_categories(
         )
         data.update(
             {
-                "category_id": category_id if category_id else NONE_CATEGORY,
+                "category_id": category_id,
                 "category_name": category_name,
                 "category_color": category_color,
                 "duration": category_duration,
