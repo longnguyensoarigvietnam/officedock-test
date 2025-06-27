@@ -133,7 +133,6 @@ const ProgressBarTeamStatisticCompare = ({
   handleClickTooltip,
 }: ProgressBarProps) => {
   const [isExtendUser, setExtendUser] = useState(false);
-
   const userCompareRows = buildUserCompareData(item, itemCompare);
 
   return (
@@ -278,7 +277,7 @@ const ProgressBarTeamStatisticCompare = ({
                                     backgroundColor: mergeItem.color,
                                   }}
                                   className="w-3 h-3"></div>
-                                <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
+                                <span className="truncate max-w-[calc(100%_-_50px)] font-bold text-[16px]">
                                   {mergeItem.label}
                                 </span>
                               </div>
@@ -310,9 +309,9 @@ const ProgressBarTeamStatisticCompare = ({
                                               customClassName={`${!user.user?.avatar && '!mt-0'}`}
                                             />
                                           </div>
-                                          <span className="inline-block w-[130px] overflow-hidden whitespace-nowrap text-ellipsis">
+                                          <p className="w-[90px] overflow-hidden whitespace-nowrap text-ellipsis">
                                             {user.user.fullName}
-                                          </span>
+                                          </p>
                                         </div>
                                         <span>{user.percent}%</span>
                                       </li>
@@ -450,7 +449,7 @@ const ProgressBarTeamStatisticCompare = ({
                                     backgroundColor: itemUser.color,
                                   }}
                                   className="w-3 h-3"></div>
-                                <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
+                                <span className="truncate max-w-[calc(100%_-_50px)] font-bold text-[16px]">
                                   {itemUser.label}
                                 </span>
                               </div>
@@ -482,7 +481,7 @@ const ProgressBarTeamStatisticCompare = ({
                                               customClassName={`${!user.user?.avatar && '!mt-0'}`}
                                             />
                                           </div>
-                                          <span className="inline-block w-[130px] overflow-hidden whitespace-nowrap text-ellipsis">
+                                          <span className="inline-block w-[120px] overflow-hidden whitespace-nowrap text-ellipsis">
                                             {user.user.fullName}
                                           </span>
                                         </div>

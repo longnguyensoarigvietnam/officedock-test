@@ -74,6 +74,7 @@ import {
   isTodaySchedule,
 } from '@utils/date';
 import { OptionDropdownType } from '@interfaces/common';
+import { NO_SETTING } from '@constants';
 
 const ScheduleTeamBoard = () => {
   // Context
@@ -298,9 +299,11 @@ const ScheduleTeamBoard = () => {
                 className={` flex gap-2 items-center overflow-hidden !w-[calc(100%_-_1px)] py-0.5 text-[12px] font-normal px-1`}>
                 <p
                   className={`truncate max-w-[calc(100%)] font-semibold mt-0.5 pt-0.5 h-[25px] ${eventContent.event.extendedProps.type !== ItemStartType.TASK && '!text-[#0068B6]'}`}>
-                  {eventContent.event.title !== 'null'
-                    ? eventContent.event.title
-                    : ''}
+                  {eventContent.event.extendedProps.isCrossTeamTask
+                    ? `${eventContent.event.extendedProps.largeCategory}タスク`
+                    : eventContent.event.title !== 'null'
+                      ? eventContent.event.title
+                      : ''}
                 </p>
                 <div className="flex gap-2">
                   <p>終日</p>
@@ -333,9 +336,11 @@ const ScheduleTeamBoard = () => {
               <div className={`  font-medium px-1 pt-1 text-[14px]`}>
                 <p
                   className={`truncate max-w-[calc(100%)] font-semibold min-h-5 ${eventContent.event.extendedProps.type !== ItemStartType.TASK && '!text-[#0068B6]'}`}>
-                  {eventContent.event.title != 'null'
-                    ? eventContent.event.title
-                    : ''}
+                  {eventContent.event.extendedProps.isCrossTeamTask
+                    ? `${eventContent.event.extendedProps.largeCategory}タスク`
+                    : eventContent.event.title != 'null'
+                      ? eventContent.event.title
+                      : ''}
                 </p>
               </div>{' '}
               <div className="flex items-center">
@@ -584,6 +589,12 @@ const ScheduleTeamBoard = () => {
               const endTimeCustom = event.endDate
                 ? endDateActual
                 : getNext30MinuteSlot(startDateActual);
+              const largeCategory =
+                (event.categories &&
+                  event.categories.find(
+                    (item) => item.type === EventWorkCategory.LARGE,
+                  )?.name) ||
+                NO_SETTING;
 
               return {
                 title: event.title,
@@ -601,7 +612,8 @@ const ScheduleTeamBoard = () => {
                 locationId: data.location
                   ? String((data.location as OptionDropdownType)?.value)
                   : '',
-
+                isCrossTeamTask: event.isCrossTeamTask,
+                largeCategory: largeCategory,
                 largeColor: largeColor,
                 planStartDate: `${event.startDate}`,
                 planEndDate: event.endDate
@@ -684,6 +696,12 @@ const ScheduleTeamBoard = () => {
                 event.categories.find(
                   (item) => item.type === EventWorkCategory.LARGE,
                 )?.color;
+              const largeCategory =
+                (event.categories &&
+                  event.categories.find(
+                    (item) => item.type === EventWorkCategory.LARGE,
+                  )?.name) ||
+                NO_SETTING;
               return {
                 title: event.title,
                 start: `${event.startDate}`,
@@ -697,6 +715,8 @@ const ScheduleTeamBoard = () => {
                 locationId: data.location
                   ? String((data.location as OptionDropdownType)?.value)
                   : '',
+                isCrossTeamTask: event.isCrossTeamTask,
+                largeCategory: largeCategory,
                 largeColor: largeColor,
                 resourceIds: [
                   ...(event.participants?.map(

@@ -1920,9 +1920,21 @@ const TimeSchedule = memo(
         selectedEvents.length > 1 &&
         selectedEvents.includes(droppedEvent.extendedProps.uuid as string)
       ) {
-        moveMultipleEvents(droppedEvent);
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        setTimeout(() => setIsInteracting(false), 200);
+        if (searchParams.get('view') === ViewOptions.WEEK) {
+          if (!resourcePlanWeek) {
+            const oldStart = info.oldEvent.start;
+            const oldEnd = info.oldEvent.end;
+            info.event.setDates(oldStart as Date, oldEnd);
+          } else {
+            moveMultipleEvents(droppedEvent);
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            setTimeout(() => setIsInteracting(false), 200);
+          }
+        } else {
+          moveMultipleEvents(droppedEvent);
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          setTimeout(() => setIsInteracting(false), 200);
+        }
       } else {
         if (
           draggedResourceId &&

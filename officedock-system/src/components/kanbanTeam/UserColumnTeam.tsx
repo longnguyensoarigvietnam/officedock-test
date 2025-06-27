@@ -27,6 +27,7 @@ const statuses: (keyof TransformedStatuses)[] = [
   'IN_PROGRESS',
   'CONFIRMING',
   'COMPLETED',
+  'MY_ROUTINE',
 ];
 
 const UserColumnTeam = ({
@@ -162,30 +163,60 @@ const UserColumnTeam = ({
             </div>
           </div>
           <div className="flex flex-col gap-6 mt-[14px]">
-            {statuses.map((status) => (
-              <StatusColumn
-                key={`${user.id}-${status}`}
-                status={status}
-                user={user}
-                handleSetParamEditTask={(id: number) => {
-                  handleSetParam({
-                    id: `${id}`,
-                    action: ActionTask.EDIT,
-                  });
-                }}
-                handleSetParamCopyTask={(id: number) => {
-                  handleSetParam({
-                    id: `${id}`,
-                    action: ActionTask.COPY,
-                  });
-                }}
-                pinItemToTop={(id: string | number) => {
-                  pinItemToTop(id, user.id.replace('user_', ''));
-                }}
-                onUpdateInline={onUpdateInline}
-                updateTaskIsStart={updateTaskIsStart}
-              />
-            ))}
+            {statuses.map((status) => {
+              if ((status as string) !== 'MY_ROUTINE') return;
+              return (
+                <StatusColumn
+                  key={`${user.id}-${status}`}
+                  status={status}
+                  user={user}
+                  handleSetParamEditTask={(id: number) => {
+                    handleSetParam({
+                      id: `${id}`,
+                      action: ActionTask.EDIT,
+                    });
+                  }}
+                  handleSetParamCopyTask={(id: number) => {
+                    handleSetParam({
+                      id: `${id}`,
+                      action: ActionTask.COPY,
+                    });
+                  }}
+                  pinItemToTop={(id: string | number) => {
+                    pinItemToTop(id, user.id.replace('user_', ''));
+                  }}
+                  onUpdateInline={onUpdateInline}
+                  updateTaskIsStart={updateTaskIsStart}
+                />
+              );
+            })}
+            {statuses.map((status) => {
+              if ((status as string) === 'MY_ROUTINE') return;
+              return (
+                <StatusColumn
+                  key={`${user.id}-${status}`}
+                  status={status}
+                  user={user}
+                  handleSetParamEditTask={(id: number) => {
+                    handleSetParam({
+                      id: `${id}`,
+                      action: ActionTask.EDIT,
+                    });
+                  }}
+                  handleSetParamCopyTask={(id: number) => {
+                    handleSetParam({
+                      id: `${id}`,
+                      action: ActionTask.COPY,
+                    });
+                  }}
+                  pinItemToTop={(id: string | number) => {
+                    pinItemToTop(id, user.id.replace('user_', ''));
+                  }}
+                  onUpdateInline={onUpdateInline}
+                  updateTaskIsStart={updateTaskIsStart}
+                />
+              );
+            })}
           </div>
         </div>
       ) : (

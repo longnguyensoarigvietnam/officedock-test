@@ -199,7 +199,11 @@ const TableChart = ({
         setIsLoadingMedium(true);
         setIsLoadingSmall(true);
         setIsLoadingOrganization(true);
-
+        if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
+          queryClient.invalidateQueries({
+            predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
+          });
+        }
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTagsListTeam',
@@ -209,7 +213,12 @@ const TableChart = ({
           setIsLoadingMediumCompare(true);
           setIsLoadingSmallCompare(true);
           setIsLoadingOrganizationCompare(true);
-
+          if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticTaskListCompare',
+            });
+          }
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTagsListTeamCompare',
@@ -247,7 +256,11 @@ const TableChart = ({
         setIsLoadingMedium(true);
         setIsLoadingSmall(true);
         setIsLoadingOrganization(true);
-
+        if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
+          queryClient.invalidateQueries({
+            predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
+          });
+        }
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTagsListTeam',
@@ -257,7 +270,12 @@ const TableChart = ({
           setIsLoadingMediumCompare(true);
           setIsLoadingSmallCompare(true);
           setIsLoadingOrganizationCompare(true);
-
+          if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticTaskListCompare',
+            });
+          }
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTagsListTeamCompare',

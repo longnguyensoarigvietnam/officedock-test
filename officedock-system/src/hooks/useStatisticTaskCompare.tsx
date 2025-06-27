@@ -36,12 +36,14 @@ const useStatisticTaskCompare = ({
   filter,
   isTeam = false,
   is_tag_page = false,
+  conditions,
   onSuccess,
   onError,
 }: {
   filter?: FilterProps;
   isTeam?: boolean;
   is_tag_page?: boolean;
+  conditions?: boolean[];
 
   onSuccess?: (data: BasePagination<DataTaskListStatisticListType[]>) => void;
   onError?: (error: AxiosError) => void;
@@ -121,7 +123,7 @@ const useStatisticTaskCompare = ({
     queryFn: ({ signal }) => getStatisticCategoryList({ signal }),
 
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && conditions?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (data: BasePagination<DataTaskListStatisticListType[]>) => {
