@@ -1,6 +1,7 @@
 'use client';
 import { useQuery } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 
 import { apiRouters } from '@constants/routers';
@@ -25,7 +26,7 @@ const useListDailyReport = ({
   onError,
   onSettled,
 }: UseListDailyReportHooksProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
   const { setIsLoading } = useContext(LoadingContext);
 

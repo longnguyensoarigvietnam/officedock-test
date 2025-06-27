@@ -1,10 +1,11 @@
 'use client';
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 import { LoadingContext } from '@providers/LoadingProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ServerStatusCode } from '@constants/enums';
@@ -27,7 +28,7 @@ const useOrganizationOptions = ({
   is_with_skill,
   current_screen,
 }: OrganizationOptionsProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
   const token = session?.accessToken;
   const { setIsLoading } = useContext(LoadingContext);

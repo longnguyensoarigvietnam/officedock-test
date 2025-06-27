@@ -5,7 +5,7 @@ import { formatISO } from 'date-fns';
 import { useQueryClient } from 'react-query';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
@@ -113,7 +113,7 @@ const ListViewItem = ({
     mode: 'onSubmit',
   });
 
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const searchParams = useSearchParams();
 

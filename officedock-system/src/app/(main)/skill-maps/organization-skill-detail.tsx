@@ -1,4 +1,5 @@
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { useContext, useEffect, useRef, useState } from 'react';
 import { useMutation } from 'react-query';
 import { AxiosError } from 'axios';
@@ -14,7 +15,12 @@ import ImageRound from '@components/common/ImageRound';
 import Input from '@components/common/Input';
 import { Table } from '@components/common/Table';
 
-import { ActionsModal, PermissionsSystem, SkillMapLookBackType, SkillMapTypeInterval } from '@constants/enums';
+import {
+  ActionsModal,
+  PermissionsSystem,
+  SkillMapLookBackType,
+  SkillMapTypeInterval,
+} from '@constants/enums';
 import {
   ERROR_UPDATE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
@@ -143,14 +149,14 @@ export const OrganizationSkillDetail = ({
   const [isEditStepDefinitionMode, setIsEditStepDefinitionMode] =
     useState<boolean>(false);
 
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();
   const { showToast } = useToast();
 
   const stepDefitionBoxRef = useRef<HTMLDivElement | null>(null);
   const isEditingRef = useRef(false);
-  
+
   const { register, watch, reset } = useForm<OrganizationDefineSteps>({
     mode: 'onSubmit',
   });

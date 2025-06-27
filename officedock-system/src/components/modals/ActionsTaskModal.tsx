@@ -15,7 +15,8 @@ import {
   useForm,
   useWatch,
 } from 'react-hook-form';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import {
   DragDropContext,
   Draggable,
@@ -136,7 +137,7 @@ const ActionsTaskModal = ({
   const [minDatePlans, setMinDatePlans] = useState<{
     [key: number]: Date | null;
   }>({});
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const modalRef = useRef<HTMLFormElement | null>(null);
 

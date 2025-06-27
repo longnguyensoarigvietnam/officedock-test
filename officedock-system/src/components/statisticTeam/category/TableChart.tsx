@@ -198,9 +198,7 @@ const TableChart = ({
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
-        queryClient.invalidateQueries({
-          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
-        });
+
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryListTeam',
@@ -209,10 +207,7 @@ const TableChart = ({
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingOrganizationCompare(true);
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              query.queryKey[0] === 'getStatisticTaskListCompare',
-          });
+
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
@@ -253,9 +248,7 @@ const TableChart = ({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryListTeam',
         });
-        queryClient.invalidateQueries({
-          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
-        });
+
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
         });
@@ -267,10 +260,7 @@ const TableChart = ({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
           });
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              query.queryKey[0] === 'getStatisticTaskListCompare',
-          });
+
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTagsListCompare',
@@ -412,6 +402,11 @@ const TableChart = ({
                 (org) => org.id === rowData.organization,
               )
             : creationDataStatisticData;
+        const listOptionAllTeamOrg =
+          creationDataStatisticDataAllTeam?.organizations.map((org) => ({
+            label: org.name,
+            value: org.id,
+          }));
 
         let largeCategories: OptionDropdownType[] = [];
         let mediumCategories: OptionDropdownType[] = [];
@@ -461,19 +456,26 @@ const TableChart = ({
               <SingleSelect
                 className="statistic-custom border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
-                  listOptionsOrganization &&
-                  listOptionsOrganization.find(
-                    (element) => element.value === rowData.organization,
-                  )
+                  selectedOrganization?.value === ALL_TEAM_STATISTIC
+                    ? listOptionAllTeamOrg &&
+                      listOptionAllTeamOrg.find(
+                        (element) => element.value === rowData.organization,
+                      )
+                    : listOptionsOrganization &&
+                      listOptionsOrganization.find(
+                        (element) => element.value === rowData.organization,
+                      )
                 }
                 placeholder=""
                 showArrow
                 options={
-                  selectedOrganization
-                    ? listOptionsOrganization.filter(
-                        (item) => item.value === selectedOrganization.value,
-                      )
-                    : []
+                  selectedOrganization?.value === ALL_TEAM_STATISTIC
+                    ? listOptionAllTeamOrg
+                    : selectedOrganization
+                      ? listOptionsOrganization.filter(
+                          (item) => item.value === selectedOrganization.value,
+                        )
+                      : []
                 }
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {

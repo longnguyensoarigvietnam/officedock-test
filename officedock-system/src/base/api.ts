@@ -9,44 +9,43 @@ const instance: AxiosInstance = axios.create({
   timeout: 3600000, // Request timeout in milliseconds
 });
 
-// TODO: Implement for refresh token
+let cachedSession: Awaited<ReturnType<typeof getSession>> | null = null;
 
-// Add an interceptor to include the session token in all requests
+const getCachedSession = async () => {
+  if (!cachedSession || new Date(cachedSession.expires) <= new Date()) {
+    cachedSession = await getSession();
+  }
+  return cachedSession;
+};
+
 instance.interceptors.request.use(async (config) => {
-  const session = await getSession();
+  const session = await getCachedSession();
 
-  if (session?.accessToken && new Date(session.expires) >= new Date()) {
+  if (session?.accessToken) {
     config.headers.Authorization = `Bearer ${session.accessToken}`;
   }
+
   return config;
 });
+
 instance.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   async (error) => {
-    if (error.response?.status === ServerStatusCode.UNAUTHORIZED) {
-      const session = await getSession();
+    const status = error.response?.status;
+
+    if (
+      status === ServerStatusCode.UNAUTHORIZED ||
+      status === ServerStatusCode.LOCKED
+    ) {
+      const session = await getCachedSession();
       if (session) {
-        await signOut({
-          redirect: false,
-        });
+        await signOut({ redirect: false });
         window.location.href = pageRouters.LOGIN.href;
       }
     }
-    if (error.response?.status === ServerStatusCode.FORBIDDEN) {
-      // TODO: Update logic redirect to page or sign out
-    }
-    if (error.response?.status === ServerStatusCode.LOCKED) {
-      const session = await getSession();
-      if (session) {
-        await signOut({
-          redirect: false,
-        });
-        window.location.href = pageRouters.LOGIN.href;
-      }
-    }
+
     return Promise.reject(error);
   },
 );
+
 export default instance;

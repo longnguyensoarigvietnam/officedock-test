@@ -1,7 +1,7 @@
 import React, { MutableRefObject, useContext, useEffect } from 'react';
 import { isSameDay } from 'date-fns';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import ImageRound from '@components/common/ImageRound';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
@@ -38,7 +38,7 @@ const DetailEventPlanModal = ({
   onClose,
   onDelete,
 }: Props) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const router = useRouter();
 

@@ -13,7 +13,8 @@ import {
   useState,
 } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import moment from 'moment';
 import { useMutation, useQueryClient } from 'react-query';
 import { v4 as uuidv4 } from 'uuid';
@@ -204,7 +205,7 @@ const TimeSchedule = memo(
     handleUpdateItemStart,
     handleEditShowClockItem,
   }: TypeDateTimeSchedule) => {
-    const { data: session } = useSession();
+    const { data: session } = useSessionCache();
     const { showToast } = useToast();
     const calendarRef = useRef<FullCalendar | null>(null);
     const popoverRef = useRef<HTMLDivElement | null>(null);

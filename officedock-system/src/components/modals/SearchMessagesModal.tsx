@@ -7,7 +7,8 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import Image from 'next/image';
@@ -115,7 +116,7 @@ export const SearchMessagesModal = ({
   onClose,
   handleBookmark,
 }: SearchMessagesModalProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
 
   const resultsContainerRef = useRef<HTMLDivElement | null>(null);

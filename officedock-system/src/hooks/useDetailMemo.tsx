@@ -1,6 +1,6 @@
 'use client';
 import { useQuery } from 'react-query';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
 
@@ -11,6 +11,7 @@ import { apiRouters, pageRouters } from '@constants/routers';
 import { ServerStatusCode } from '@constants/enums';
 
 import api from '@base/api';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 interface UseMemoDetailHooksProps {
   conditions?: boolean[];
@@ -18,8 +19,12 @@ interface UseMemoDetailHooksProps {
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
 }
-const useMemoDetail = ({ onSuccess, onSettled, conditions }: UseMemoDetailHooksProps) => {
-  const { data: session } = useSession();
+const useMemoDetail = ({
+  onSuccess,
+  onSettled,
+  conditions,
+}: UseMemoDetailHooksProps) => {
+  const { data: session } = useSessionCache();
   const router = useRouter();
   const token = session?.accessToken;
 

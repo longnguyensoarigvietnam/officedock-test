@@ -377,7 +377,9 @@ const ItemTeam = ({
                               fontSize: '12px',
                             }}
                             disabled={
-                              content.status?.id === StatusValueTask.COMPLETED
+                              content.status?.id ===
+                                StatusValueTask.COMPLETED ||
+                              content.isCrossTeamTask
                             }
                             options={
                               content.status?.id === StatusValueTask.MY_ROUTINE

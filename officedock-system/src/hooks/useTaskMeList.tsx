@@ -1,10 +1,12 @@
 'use client';
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 import { LoadingContext } from '@providers/LoadingProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ServerStatusCode } from '@constants/enums';
 import { Task } from '@interfaces/task';
@@ -12,7 +14,7 @@ import { ResponseError } from '@interfaces/response';
 import api from '@base/api';
 
 const useTaskMeList = () => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
   const token = session?.accessToken;
 

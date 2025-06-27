@@ -2,7 +2,7 @@
 
 import { useContext, useState } from 'react';
 import { useQuery } from 'react-query';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 import api from '@base/api';
@@ -14,6 +14,7 @@ import { KanbanDataResponse, StatusTask } from '@interfaces/task';
 import { TaskContext } from '@providers/TaskProvider';
 import { ResponseError } from '@interfaces/response';
 import { OptionDropdownType } from '@interfaces/common';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 interface FilterProps {
   userId?: string;
@@ -32,7 +33,7 @@ const useTaskBoardList = (
     organization_ids: OptionDropdownType[];
   } | null,
 ) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
   const token = session?.accessToken;
 

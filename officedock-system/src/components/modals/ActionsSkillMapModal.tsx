@@ -1,7 +1,8 @@
 'use client';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import {
   Controller,
   SubmitHandler,
@@ -71,7 +72,7 @@ const ActionsSkillMapModal = ({
   onClose,
   onEdit,
 }: ActionsSkillMapModalProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const searchParams = useSearchParams();
   const organizationId = searchParams.get('organization');
   const { showToast } = useToast();
@@ -295,10 +296,13 @@ const ActionsSkillMapModal = ({
 
             if (!selectedMedium) return [];
 
-            return selectedMedium.SMALL && selectedMedium.SMALL.map((small) => ({
-              label: small.name,
-              value: small.id,
-            }));
+            return (
+              selectedMedium.SMALL &&
+              selectedMedium.SMALL.map((small) => ({
+                label: small.name,
+                value: small.id,
+              }))
+            );
           });
           setDataOptionsCategoryMedium((prev) => ({
             ...prev,

@@ -3,16 +3,13 @@ import React, { useContext, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
 
 import { SCREEN_LIST } from '@constants';
-import {
-  PermissionsSystem,
-  ServerStatusCode,
-} from '@constants/enums';
+import { PermissionsSystem, ServerStatusCode } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
@@ -25,7 +22,7 @@ import { hasPermissionInArray } from '@utils';
 
 const DetailRoleTable = () => {
   const params = useParams<{ id: string }>();
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
   const { showToast } = useToast();
   const { setIsLoading } = useContext(LoadingContext);

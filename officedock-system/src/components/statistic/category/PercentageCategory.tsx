@@ -82,7 +82,6 @@ const PercentageCategory = ({
     listDuration: [],
     mergedItems: [],
   });
-
   const [dataChartMedium, setDataChartMedium] = useState<DataChartType>({
     actualValue: [],
     colors: [],
@@ -142,7 +141,7 @@ const PercentageCategory = ({
       return true;
     });
 
-    if (mergedCategory.percent >= 0) {
+    if (mergedCategory.percent > 0) {
       filteredCategories.push(mergedCategory);
     }
 

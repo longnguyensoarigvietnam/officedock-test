@@ -12,7 +12,8 @@ import useDebounceText from '@hooks/useDebounceText';
 import { formatDateServer } from '@utils/date';
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { useParams } from 'next/navigation';
 
 interface ResizeType {
@@ -35,7 +36,7 @@ const ResizeTextArea = ({
   const { showToast } = useToast();
 
   const { setIsLoading } = useContext(LoadingContext);
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const [remarkData, setRemarkData] = useState<string>('');
 

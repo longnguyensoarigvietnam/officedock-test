@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import {
   Controller,
   SubmitHandler,
@@ -67,7 +68,7 @@ const ActionsUserModal = ({
   onCreate,
   onEdit,
 }: ActionsUserModalProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const [isOptionEmail, setOptionEmail] = useState<boolean>(true);
 

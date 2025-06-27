@@ -6,7 +6,8 @@ import {
   RefetchQueryFilters,
   useMutation,
 } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 import { Controller, useForm } from 'react-hook-form';
 
@@ -52,7 +53,7 @@ const ActionsChatMembersModal = memo(
     participantsList,
     code,
     dashboardMembers,
-    refetchChatRoomDetail
+    refetchChatRoomDetail,
   }: ActionsChatMembersModalProps) => {
     const [searchName, setSearchName] = useState<string>('');
     const { dashboardMemberList } = useDashboardMemberList();
@@ -67,7 +68,7 @@ const ActionsChatMembersModal = memo(
       },
     });
 
-    const { data: session } = useSession();
+    const { data: session } = useSessionCache();
 
     const handleUpdateMemberList = async (participantList: number[]) => {
       setIsLoading(true);

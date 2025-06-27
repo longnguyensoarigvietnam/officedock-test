@@ -3,7 +3,7 @@
 import { useQuery } from 'react-query';
 import { useContext } from 'react';
 import { AxiosError } from 'axios';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 
@@ -33,7 +33,7 @@ const useStatisticTagsTeam = ({
   onSuccess?: (data: StatisticsCategories) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
   const {
     setIsLoadingLarge,

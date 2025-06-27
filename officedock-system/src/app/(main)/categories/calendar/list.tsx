@@ -1,6 +1,7 @@
 'use client';
 import React, { Fragment, useContext, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import Link from 'next/link';
 
 import Button from '@components/common/Button';
@@ -26,28 +27,30 @@ interface HierarchyDetail {
 }
 
 const ListHierarchy = () => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const { setIsLoading } = useContext(LoadingContext);
 
-  const [hierarchyDetail, setHierarchyDetail] = useState<HierarchyDetail | null>(null);
+  const [hierarchyDetail, setHierarchyDetail] =
+    useState<HierarchyDetail | null>(null);
 
   useCalendarCategoryHierarchyDetail({
     onSuccess: (data) => {
-      const calendarCategoryHierarchy = data[0]
-      const statisticCategories = calendarCategoryHierarchy.statisticCategories.map((org) => ({
-        id: org.id,
-        large: {
-          label: org.largeStatisticCategory?.name || '',
-          value: org.largeStatisticCategory?.uuid || '',
-          showBy: AddCategoryHierarchyType.PULLDOWN,
-        },
-        medium: {
-          label: org.mediumStatisticCategory?.name || '',
-          value: org.mediumStatisticCategory?.uuid || '',
-          showBy: AddCategoryHierarchyType.PULLDOWN,
-        },
-        color: org.color,
-      }));
+      const calendarCategoryHierarchy = data[0];
+      const statisticCategories =
+        calendarCategoryHierarchy.statisticCategories.map((org) => ({
+          id: org.id,
+          large: {
+            label: org.largeStatisticCategory?.name || '',
+            value: org.largeStatisticCategory?.uuid || '',
+            showBy: AddCategoryHierarchyType.PULLDOWN,
+          },
+          medium: {
+            label: org.mediumStatisticCategory?.name || '',
+            value: org.mediumStatisticCategory?.uuid || '',
+            showBy: AddCategoryHierarchyType.PULLDOWN,
+          },
+          color: org.color,
+        }));
       setHierarchyDetail({
         id: calendarCategoryHierarchy.id,
         name: 'カレンダー',

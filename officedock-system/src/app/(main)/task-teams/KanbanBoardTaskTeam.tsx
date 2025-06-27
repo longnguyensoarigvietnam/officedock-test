@@ -6,7 +6,8 @@ import {
   Transition,
 } from '@headlessui/react';
 import React, { Fragment, useContext, useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { useRouter, useSearchParams } from 'next/navigation';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { useMutation, useQueryClient } from 'react-query';
@@ -113,7 +114,7 @@ const KanbanBoardTaskTeam = () => {
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
 
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const queryClient = useQueryClient();
 
@@ -419,7 +420,11 @@ const KanbanBoardTaskTeam = () => {
       return;
     }
     // Move concurrent task to another status then return
-    if (sourceUserId === destUserId && destStatus !== sourceStatus) {
+    if (
+      sourceUserId === destUserId &&
+      destStatus !== sourceStatus &&
+      sourceUserId !== COLUMN_ID_TASK
+    ) {
       const newUsers = listDataKanbanTeam.map((user) => ({
         ...user,
         statuses: { ...user.statuses },
@@ -438,7 +443,7 @@ const KanbanBoardTaskTeam = () => {
     }
 
     // Move concurrent task to another user then return
-    if (sourceUserId !== destUserId) {
+    if (sourceUserId !== destUserId && sourceUserId !== COLUMN_ID_TASK) {
       const newUsers = listDataKanbanTeam.map((user) => ({
         ...user,
         statuses: { ...user.statuses },
@@ -1040,7 +1045,9 @@ const KanbanBoardTaskTeam = () => {
   useEffect(() => {
     if (actionType && typeDetail === ItemStartType.TASK) {
       if (taskDetailId) {
-        getDataDetailTask(parseInt(taskDetailId));
+        setTimeout(() => {
+          getDataDetailTask(parseInt(taskDetailId));
+        }, 500);
       } else {
         setIsShowModalEditTeam(true);
       }

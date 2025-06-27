@@ -12,7 +12,8 @@ import {
   useState,
 } from 'react';
 import { debounce } from 'lodash';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Document } from '@tiptap/extension-document';
@@ -162,7 +163,7 @@ const ChatDetail = ({
   handleRemoveChatRoomParam,
   setSearchChatMsg,
 }: dataProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   // Params
   const searchParams = useSearchParams();

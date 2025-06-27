@@ -1,6 +1,6 @@
 'use client';
 import { ReactNode, useContext, useEffect, useState } from 'react';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 import Metadata from '@components/common/Metadata';
@@ -18,6 +18,7 @@ import useContinueCounterTime from '@hooks/useContinueCounterTime';
 import { TaskContext } from '@providers/TaskProvider';
 
 import Footer from './Footer';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 type MainLayoutProps = {
   children?: ReactNode;
@@ -35,7 +36,7 @@ const MainLayout = ({
   showFooter = true,
 }: MainLayoutProps) => {
   const { dataRunning } = useContext(TaskContext);
-  const { data: session, status, update } = useSession();
+  const { data: session, status, update } = useSessionCache();
   const router = useRouter();
   const { taskDurationDetail } = useTaskDurationDetail({
     item: {

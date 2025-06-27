@@ -2,7 +2,8 @@
 
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 
 import { apiRouters } from '@constants/routers';
@@ -45,7 +46,7 @@ const useStatisticTaskCompare = ({
   onSuccess?: (data: BasePagination<DataTaskListStatisticListType[]>) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
   const { setIsSkeletonCategoryTaskCompare } = useContext(
     StatisticStateContext,

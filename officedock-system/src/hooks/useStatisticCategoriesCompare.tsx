@@ -3,7 +3,7 @@
 import { AxiosError } from 'axios';
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 
@@ -32,7 +32,7 @@ const useStatisticCategoriesCompare = ({
   onSuccess?: (data: StatisticsCategories) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
   const {
     setIsLoadingLargeCompare,

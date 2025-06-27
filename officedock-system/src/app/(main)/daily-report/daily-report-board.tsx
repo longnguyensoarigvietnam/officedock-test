@@ -29,7 +29,8 @@ import {
 } from '@tanstack/react-table';
 import { EventContentArg } from '@fullcalendar/core/index.js';
 import { useMutation, useQueryClient } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 
 import Button from '@components/common/Button';
@@ -121,7 +122,7 @@ const DailyReportBoard = () => {
   const socket = useWebSocket();
   const queryClient = useQueryClient();
 
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const { showToast } = useToast();
 

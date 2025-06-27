@@ -1,6 +1,7 @@
 'use client';
 import { AxiosError } from 'axios';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { useQuery } from 'react-query';
 import { useContext } from 'react';
 
@@ -30,7 +31,7 @@ const useDataStatisticPDF = ({
   onError,
   onSettled,
 }: useDataStatisticPDFProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const { setIsLoading } = useContext(LoadingContext);
 
   const token = session?.accessToken;

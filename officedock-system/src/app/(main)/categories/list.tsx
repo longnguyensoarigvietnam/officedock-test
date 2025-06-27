@@ -7,7 +7,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -55,7 +56,7 @@ const ListCategory = () => {
     name: string;
   } | null>(null);
 
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const showErrorToast = useErrorToast();
 

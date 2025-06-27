@@ -1,6 +1,7 @@
 'use client';
 import React, { Fragment, useContext, useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { useMutation } from 'react-query';
 import Link from 'next/link';
 
@@ -33,7 +34,7 @@ interface HierarchyDetail {
 }
 
 const ListHierarchy = () => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const [hierarchyList, setHierarchyList] = useState<HierarchyDetail[]>([]);
   const { setIsLoading } = useContext(LoadingContext);

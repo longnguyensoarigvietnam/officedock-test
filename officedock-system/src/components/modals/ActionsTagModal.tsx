@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { SubmitHandler, useForm } from 'react-hook-form';
 
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
@@ -43,7 +44,7 @@ const ActionsTagModal = ({
   onDelete,
   onCreate,
 }: ActionsTagModalProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const {
     register,

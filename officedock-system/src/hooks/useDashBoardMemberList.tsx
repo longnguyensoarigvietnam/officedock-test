@@ -1,6 +1,6 @@
 'use client';
 import { useQuery } from 'react-query';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 import { Profile } from '@interfaces/user';
@@ -10,9 +10,10 @@ import { apiRouters, pageRouters } from '@constants/routers';
 import { ServerStatusCode } from '@constants/enums';
 
 import api from '@base/api';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 const useDashboardMemberList = () => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
   const token = session?.accessToken;
 
