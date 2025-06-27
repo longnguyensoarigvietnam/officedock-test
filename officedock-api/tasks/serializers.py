@@ -887,16 +887,15 @@ class TaskTeamdockSerializer(BaseUserSerializer):
         """
         request = self.context.get("request")
         user = request.user
+        params = request.query_params
         ordering_fields = self.context.get("ordering_fields")
-        organization_id = request.query_params.get("organization_id")
+        organization_id = params.get("organization_id")
         is_cross_team_task = (
-            request.query_params.get("is_cross_team_task", "").lower() == "true"
+            params.get("is_cross_team_task", "").lower() == "true"
         )
-        page_size = int(request.query_params.get("page_size", 5))
-        ordering = request.query_params.get("ordering", None)
-        statuses = TaskStatus.objects.exclude(
-            name=TaskStatusConstant.MY_ROUTINE.value
-        ).order_by("id")
+        page_size = int(params.get("page_size", 5))
+        ordering = params.get("ordering", None)
+        statuses = TaskStatus.objects.order_by("id")
 
         user_org_ids = (
             obj.organizations.all().values_list("id", flat=True)
@@ -1022,7 +1021,55 @@ class TaskTeamdockSerializer(BaseUserSerializer):
                         Value(REPLACE_NULL_DATE),
                         output_field=DateTimeField(),
                     ),
-                ).order_by("-coalesced_pin_at", "-index")
+                ).order_by("-coalesced_pin_at", "-index", "-created_at")
+
+                if is_cross_team_task:
+                    # Check if any tasks don't have team task index and create them
+                    current_min_index = INITIAL_INDEX_VALUE
+
+                    # Get existing team task indexes for this status to find the minimum index
+                    existing_indexes = TeamTaskIndex.objects.filter(
+                        team_id=organization_id,
+                        user=user,
+                        task__status=status,
+                        task__people_in_charge=obj,
+                    ).values_list("index", flat=True)
+
+                    if existing_indexes:
+                        current_min_index = min(existing_indexes) - 1
+
+                    # Check each task and create index if missing
+                    for task in tasks:
+                        team_task_index = TeamTaskIndex.objects.filter(
+                            task=task, team_id=organization_id, user=user
+                        ).first()
+
+                        if not team_task_index:
+                            # Create new team task index with index smaller than the previous one
+                            TeamTaskIndex.objects.create(
+                                task=task,
+                                team_id=organization_id,
+                                user=user,
+                                index=current_min_index,
+                            )
+                            current_min_index -= 1
+
+                    # Re-fetch tasks with updated indexes
+                    team_task_index_obj = TeamTaskIndex.objects.filter(
+                        task=OuterRef("pk"), team_id=organization_id, user=user
+                    )
+                    task_pin = team_task_index_obj.values("pin_at")[:1]
+                    task_index = team_task_index_obj.values("index")[:1]
+
+                    # Re-annotate tasks with updated task index and pin timestamp
+                    tasks = tasks.annotate(
+                        index=Subquery(task_index),
+                        coalesced_pin_at=Coalesce(
+                            Subquery(task_pin),
+                            Value(REPLACE_NULL_DATE),
+                            output_field=DateTimeField(),
+                        ),
+                    ).order_by("-coalesced_pin_at", "-index", "-created_at")
 
             # Append formatted status data
             results.append(
