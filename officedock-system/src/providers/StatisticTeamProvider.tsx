@@ -8,6 +8,7 @@ import {
 } from 'react';
 
 import { OptionDropdownType } from '@interfaces/common';
+import { CategoryTableRowDetail, MergedTableCategory } from '@interfaces/statistic';
 
 import { getAdjustedStartDateDefault } from '@utils/date';
 
@@ -122,6 +123,14 @@ interface ContextValue {
   // View by
   lineChartViewBy: OptionDropdownType | null;
   setLineChartViewBy: Dispatch<SetStateAction<OptionDropdownType | null>>;
+
+  // Table data
+  areaTableData: CategoryTableRowDetail[];
+  setAreaTableData: Dispatch<SetStateAction<CategoryTableRowDetail[]>>;
+  lineChartTableData: CategoryTableRowDetail[];
+  setLineChartTableData: Dispatch<SetStateAction<CategoryTableRowDetail[]>>;
+  mergedTableData: MergedTableCategory[]
+  setMergedTableData: Dispatch<SetStateAction<MergedTableCategory[]>>
 }
 
 const defaultValue: ContextValue = {
@@ -206,6 +215,13 @@ const defaultValue: ContextValue = {
 
   lineChartViewBy: null,
   setLineChartViewBy: () => {},
+
+  areaTableData: [],
+  setAreaTableData: () => {},
+  lineChartTableData: [],
+  setLineChartTableData: () => {},
+  mergedTableData: [],
+  setMergedTableData: () => {},
 };
 
 export const StatisticTeamStateContext =
@@ -233,12 +249,16 @@ export const StatisticTeamStateProvider = ({
   ] = useState(false);
 
   const [smallOptions, setSmallOptions] = useState<OptionDropdownType[]>([]);
-
   const [largeOptions, setLargeOptions] = useState<OptionDropdownType[]>([]);
   const [mediumOptions, setMediumOptions] = useState<OptionDropdownType[]>([]);
   const [listOptionsOrganization, setListOptionsOrganization] = useState<
     OptionDropdownType[]
   >([]);
+
+  // Table data
+  const [areaTableData, setAreaTableData] = useState<CategoryTableRowDetail[]>([]);
+  const [lineChartTableData, setLineChartTableData] = useState<CategoryTableRowDetail[]>([]);
+  const [mergedTableData, setMergedTableData] = useState<MergedTableCategory[]>([]);
 
   // Select
   const [selectedOrganization, setSelectedOrganization] =
@@ -414,6 +434,13 @@ export const StatisticTeamStateProvider = ({
 
     lineChartViewBy,
     setLineChartViewBy,
+
+    areaTableData,
+    setAreaTableData,
+    lineChartTableData,
+    setLineChartTableData,
+    mergedTableData,
+    setMergedTableData
   };
 
   return (

@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import Metadata from '@components/common/Metadata';
@@ -58,7 +58,7 @@ const BoardChat = () => {
   const [dataChatList, setDataChatList] = useState<ChatRoomItem[]>([]);
   const [filteredChatList, setFilteredChatList] = useState<ChatRoomItem[]>([]);
   const [searchChatMsg, setSearchChatMsg] = useState('');
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const [dashboardMembers, setDashboardMembers] = useState<
     ChatDashboardMember[]
   >([]);
@@ -376,7 +376,7 @@ const BoardChat = () => {
     <>
       <Metadata
         metadata={`${pageRouters.CHAT_MANAGEMENT.name}${totalNotifications > 0 ? `(${totalNotifications})` : ''}`}
-        taskDurationText={`${taskDurationDetail?.taskDuration ? `${elapsedTime} - ${taskDurationDetail.title}` : ''}`}
+        taskDurationText={`${taskDurationDetail?.taskDuration && taskDurationDetail.isStart ? `${elapsedTime} - ${taskDurationDetail.title}` : ''}`}
       />
       <ListChatUsers
         hasMore={hasMore}

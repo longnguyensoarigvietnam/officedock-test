@@ -1,14 +1,16 @@
 'use client';
 import { useQuery } from 'react-query';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 import { apiRouters, pageRouters } from '@constants/routers';
+
 import { ServerStatusCode } from '@constants/enums';
 
 import { KanbanDataResponse } from '@interfaces/task';
 import { ResponseError } from '@interfaces/response';
 import api from '@base/api';
-import { useRouter } from 'next/navigation';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 interface FilterProps {
   userId?: string;
@@ -22,7 +24,7 @@ const useTaskBoardListMore = (
   statusId?: string,
   page?: number,
 ) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
   const token = session?.accessToken;
   // Handle call API get task board list

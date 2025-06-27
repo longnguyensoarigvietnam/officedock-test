@@ -1,6 +1,7 @@
 'use client';
 import { useQuery } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 
 import api from '@base/api';
@@ -11,7 +12,7 @@ import { ChatMessageResponse } from '@interfaces/chat';
 
 interface UseBookMarkListHooksProps {
   page: number;
-  setLoadingState: () => void
+  setLoadingState: () => void;
   onSuccess?: (success: BasePagination<ChatMessageResponse[]>) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
@@ -24,12 +25,12 @@ const useBookMarkList = ({
   onError,
   onSettled,
 }: UseBookMarkListHooksProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   // Handle call API get Bookmark
   const getBookMarkList = async () => {
-    setLoadingState()
+    setLoadingState();
     const apiUrl = `${apiRouters.BOOKMARK_LIST}?is_bookmark=true&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}&page=${page}`;
 
     const { data } =

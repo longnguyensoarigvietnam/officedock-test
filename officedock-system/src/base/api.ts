@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import { getSession, signOut } from 'next-auth/react';
+import { Session } from 'next-auth';
 
 import { ServerStatusCode } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
@@ -9,44 +10,59 @@ const instance: AxiosInstance = axios.create({
   timeout: 3600000, // Request timeout in milliseconds
 });
 
-// TODO: Implement for refresh token
+let cachedSession: Awaited<ReturnType<typeof getSession>> | null = null;
+let isFetching = false;
+let waiting: ((value: Awaited<ReturnType<typeof getSession>>) => void)[] = [];
 
-// Add an interceptor to include the session token in all requests
-instance.interceptors.request.use(async (config) => {
-  const session = await getSession();
+const getCachedSession = async () => {
+  if (
+    !cachedSession ||
+    new Date(cachedSession.expires) <= new Date()
+  ) {
+    if (isFetching) {
+      return new Promise((resolve) => waiting.push(resolve));
+    }
 
-  if (session?.accessToken && new Date(session.expires) >= new Date()) {
-    config.headers.Authorization = `Bearer ${session.accessToken}`;
+    isFetching = true;
+    cachedSession = await getSession();
+
+    // Resolve all pending consumers
+    waiting.forEach((resolve) => resolve(cachedSession!));
+    waiting = [];
+    isFetching = false;
   }
+
+  return cachedSession;
+};
+
+instance.interceptors.request.use(async (config) => {
+  const session = await getCachedSession();
+
+  if ((session as Session)?.accessToken) {
+    config.headers.Authorization = `Bearer ${(session as Session).accessToken}`;
+  }
+
   return config;
 });
+
 instance.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   async (error) => {
-    if (error.response?.status === ServerStatusCode.UNAUTHORIZED) {
-      const session = await getSession();
+    const status = error.response?.status;
+
+    if (
+      status === ServerStatusCode.UNAUTHORIZED ||
+      status === ServerStatusCode.LOCKED
+    ) {
+      const session = await getCachedSession();
       if (session) {
-        await signOut({
-          redirect: false,
-        });
+        await signOut({ redirect: false });
         window.location.href = pageRouters.LOGIN.href;
       }
     }
-    if (error.response?.status === ServerStatusCode.FORBIDDEN) {
-      // TODO: Update logic redirect to page or sign out
-    }
-    if (error.response?.status === ServerStatusCode.LOCKED) {
-      const session = await getSession();
-      if (session) {
-        await signOut({
-          redirect: false,
-        });
-        window.location.href = pageRouters.LOGIN.href;
-      }
-    }
+
     return Promise.reject(error);
   },
 );
+
 export default instance;

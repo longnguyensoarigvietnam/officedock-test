@@ -2,13 +2,14 @@
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
 import { useRouter } from 'next/navigation';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 
 import { BasePagination } from '@interfaces/common';
 import { User } from '@interfaces/user';
 import { ResponseError } from '@interfaces/response';
 
 import { LoadingContext } from '@providers/LoadingProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import { PAGINATION_PAGE_SIZE_SMALL } from '@constants';
@@ -33,7 +34,7 @@ const useUserList = (
   filter?: FilterProps,
   ordering?: string,
 ) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
   const token = session?.accessToken;
 

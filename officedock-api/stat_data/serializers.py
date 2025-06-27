@@ -49,9 +49,15 @@ def _get_list_durations(obj, start_of_day, end_of_day, user=None):
     Handle get list durations
     """
     return obj.task_durations.filter(
-        Q(started_at__gte=start_of_day)
-        & Q(user=user)
-        & Q(Q(paused_at__lte=end_of_day) | Q(paused_at__isnull=True))
+        Q(user=user)
+        & Q(
+            Q(Q(started_at__gte=start_of_day) & Q(paused_at__lte=end_of_day))
+            | Q(
+                Q(started_at__lte=end_of_day)
+                & Q(started_at__gte=start_of_day)
+                & Q(paused_at__isnull=True)
+            )
+        )
     ).all()
 
 
@@ -248,7 +254,6 @@ class StatisticTaskSerializer(DailyTaskSerializer):
             "tags",
             "total_duration",
             "percent",
-            "task_durations",
             "categories",
             "type",
             "organization",
@@ -264,6 +269,7 @@ class StatisticTaskSerializer(DailyTaskSerializer):
         total_duration = self.context.get("total_duration")
         tag_ids = self.context.get("tag_ids")
         user = self.context.get("user")
+        current_total_percent = self.context.get("current_total_percent")
         if not total_duration:
             return None
 
@@ -282,17 +288,16 @@ class StatisticTaskSerializer(DailyTaskSerializer):
             related_tag_count = obj.tags.filter(id__in=tag_ids).count()
             duration = duration * related_tag_count
         duration = time_str_to_timedelta(format_duration(duration))
-
-        if time_str_to_timedelta(total_duration).total_seconds() > 0:
-            percent_per_total_duration = (
-                duration.total_seconds()
-                / time_str_to_timedelta(total_duration).total_seconds()
-                * 100
-            )
-        else:
-            percent_per_total_duration = 0
-
-        return min(round(percent_per_total_duration), 100)
+        total_sec = time_str_to_timedelta(total_duration).total_seconds()
+        duration_sec = duration.total_seconds()
+        if not total_sec or not duration_sec:
+            return 0
+        percent_per_total_duration = (duration_sec / total_sec) * 100
+        # Limit the amount we can add to keep percent <= 100
+        percent_per_total_duration = min(
+            round(percent_per_total_duration), 100 - current_total_percent
+        )
+        return percent_per_total_duration
 
 
 class StatisticEventSerializer(DailyEventSerializer):
@@ -308,7 +313,6 @@ class StatisticEventSerializer(DailyEventSerializer):
             "tags",
             "total_duration",
             "percent",
-            "task_durations",
             "categories",
             "organization",
             "type",
@@ -324,6 +328,7 @@ class StatisticEventSerializer(DailyEventSerializer):
         total_duration = self.context.get("total_duration")
         tag_ids = self.context.get("tag_ids")
         user = self.context.get("user")
+        current_total_percent = self.context.get("current_total_percent")
         if not total_duration:
             return None
         durations = _get_list_durations(obj, start_of_day, end_of_day, user)
@@ -340,15 +345,16 @@ class StatisticEventSerializer(DailyEventSerializer):
         if tag_ids:
             related_tag_count = obj.tags.filter(id__in=tag_ids).count()
             duration = duration * related_tag_count
-        if time_str_to_timedelta(total_duration).total_seconds() > 0:
-            percent_per_total_duration = (
-                duration.total_seconds()
-                / time_str_to_timedelta(total_duration).total_seconds()
-                * 100
-            )
-        else:
-            percent_per_total_duration = 0
-        return min(round(percent_per_total_duration), 100)
+        total_sec = time_str_to_timedelta(total_duration).total_seconds()
+        duration_sec = duration.total_seconds()
+        if not total_sec or not duration_sec:
+            return 0
+        percent_per_total_duration = (duration_sec / total_sec) * 100
+        # Limit the amount we can add to keep percent <= 100
+        percent_per_total_duration = min(
+            round(percent_per_total_duration), 100 - current_total_percent
+        )
+        return percent_per_total_duration
 
 
 class BaseStatisticTaskSerializer(StatisticTaskSerializer):

@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react';
 import { useInView } from 'react-intersection-observer';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import Item from './Item';
 import ItemRoutine from './ItemRoutine';
@@ -97,7 +97,7 @@ const Column = ({
   setNumberPagesData,
   saveExtendColumn,
 }: ColumnProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const isMyRoutine = columnId === `${StatusValueTask.MY_ROUTINE}`;
 
   const { columnWidth, extendByStatus, orderingOptions, setExtendByStatus } =

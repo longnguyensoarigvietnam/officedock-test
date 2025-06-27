@@ -22,7 +22,11 @@ interface Props {
   endDateCompare: Date | null;
   totalDuration: string;
   totalDurationCompare: string;
-  handleClickTooltip: (id: number | null, isCompare: boolean) => void;
+  handleClickTooltip: (
+    id: number | null,
+    isCompare: boolean,
+    organizationId?: string,
+  ) => void;
   handleClickChart: (data: number) => void;
 }
 
@@ -132,6 +136,7 @@ const PercentageBarCompare = ({
                                     handleClickTooltip(
                                       mergeItem.categoryId,
                                       false,
+                                      String(mergeItem.organizationId),
                                     );
                                   }}
                                   className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md">
@@ -199,7 +204,11 @@ const PercentageBarCompare = ({
                         <div className="flex w-full justify-end mt-3">
                           <div
                             onClick={() => {
-                              handleClickTooltip(item.id, false);
+                              handleClickTooltip(
+                                item.id,
+                                false,
+                                String(item.organizationId),
+                              );
                             }}
                             className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md">
                             <span>タスクを見る</span>
@@ -304,6 +313,7 @@ const PercentageBarCompare = ({
                                     handleClickTooltip(
                                       mergeItem.categoryId,
                                       true,
+                                      String(mergeItem.organizationId),
                                     );
                                   }}
                                   className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md">
@@ -372,7 +382,11 @@ const PercentageBarCompare = ({
                         <div className="flex w-full justify-end mt-3">
                           <div
                             onClick={() => {
-                              handleClickTooltip(item.id, true);
+                              handleClickTooltip(
+                                item.id,
+                                true,
+                                String(item.organizationId),
+                              );
                             }}
                             className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md">
                             <span>タスクを見る</span>

@@ -2,7 +2,7 @@
 
 import { useQuery } from 'react-query';
 import { AxiosError } from 'axios';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 
@@ -20,7 +20,7 @@ interface FilterProps {
   userIds?: string;
   tagIds?: OptionDropdownType[];
   statisticBy?: string;
-  selectedOrganization?: string;
+  selectedOrganization?: string | number;
   organizationMemberId?: string;
 }
 
@@ -35,12 +35,21 @@ const useStatisticUserTaskDurations = ({
   onSuccess?: (data: StatisticsUserTaskDuration[]) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   // Handle call API get statistic task duration list
-  const getStatisticUserTaskDurations = async () => {
-    if (!filter?.selectedOrganization) return [];
+  const getStatisticUserTaskDurations = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
+    if (
+      !filter?.selectedOrganization ||
+      isNaN(Number(filter?.selectedOrganization)) ||
+      !filter.userIds
+    )
+      return [];
     const queryParams = [];
     if (filter.fromDate) {
       queryParams.push(`from_date=${filter.fromDate}`);
@@ -80,7 +89,9 @@ const useStatisticUserTaskDurations = ({
       queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
     const apiUrl = `${apiRouters.STATISTICS_USER_TASK_DURATIONS(Number(filter.selectedOrganization))}${queryString}`;
 
-    const { data } = await api.get<StatisticsUserTaskDuration[]>(apiUrl);
+    const { data } = await api.get<StatisticsUserTaskDuration[]>(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -91,7 +102,7 @@ const useStatisticUserTaskDurations = ({
     isLoading: isLoadingStatisticUserTaskDurationsList,
   } = useQuery({
     queryKey: ['getStatisticUserTaskDurations', [filter]],
-    queryFn: getStatisticUserTaskDurations,
+    queryFn: ({ signal }) => getStatisticUserTaskDurations({ signal }),
     retry: 0,
     enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,

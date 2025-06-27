@@ -1,6 +1,7 @@
 'use client';
 import { useQuery } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 
 import api from '@base/api';
@@ -20,7 +21,7 @@ const useUserDetail = ({
   onError,
   onSettled,
 }: UseUserDetailHooksProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   // Handle call API get User detail

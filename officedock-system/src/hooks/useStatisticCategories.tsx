@@ -3,7 +3,7 @@
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
 import { AxiosError } from 'axios';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 
@@ -32,14 +32,18 @@ const useStatisticCategories = ({
   onSuccess?: (data: StatisticsCategories) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   const { setIsLoadingLarge, setIsLoadingMedium, setIsLoadingOrganization } =
     useContext(StatisticStateContext);
 
   // Handle call API get statistic category list
-  const getStatisticCategoryList = async () => {
+  const getStatisticCategoryList = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds) return [];
 
     const params = new URLSearchParams();
@@ -65,7 +69,7 @@ const useStatisticCategories = ({
     }
 
     const apiUrl = `${apiRouters.STATISTICS_CATEGORIES}?${params.toString()}`;
-    const { data } = await api.get<StatisticsCategories[]>(apiUrl);
+    const { data } = await api.get<StatisticsCategories[]>(apiUrl, { signal });
     return data;
   };
 
@@ -76,7 +80,8 @@ const useStatisticCategories = ({
     isFetched: isFetchedStatisticCategoryList,
   } = useQuery({
     queryKey: ['getStatisticCategoryList', [filter]],
-    queryFn: getStatisticCategoryList,
+    queryFn: ({ signal }) => getStatisticCategoryList({ signal }),
+
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

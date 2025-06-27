@@ -8,7 +8,8 @@ import {
   useState,
 } from 'react';
 import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import {
   DragDropContext,
   Draggable,
@@ -80,7 +81,7 @@ const ActionsTemplateModal = ({
   onClose,
   onDelete,
 }: ActionTemplateModalProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const modalRef = useRef<HTMLFormElement | null>(null);
 

@@ -12,7 +12,8 @@ import { EventClickArg } from '@fullcalendar/core';
 import multiMonthPlugin from '@fullcalendar/multimonth';
 import { Controller, useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { useRouter, useSearchParams } from 'next/navigation';
 import resourceTimeGridPlugin from '@fullcalendar/resource-timegrid';
 import resourcePlugin from '@fullcalendar/resource';
@@ -110,7 +111,7 @@ const EventCalendar = () => {
   const queryClient = useQueryClient();
 
   // Session
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   // Open modals
   const [openCreateEventModal, setOpenCreateEventModal] =

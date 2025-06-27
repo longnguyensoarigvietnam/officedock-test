@@ -1,5 +1,6 @@
 'use client';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { useMutation } from 'react-query';
 import { useEffect, useRef, useState } from 'react';
 
@@ -34,7 +35,7 @@ export const MessageHoverOptions = ({
   handleOpenDeleteMsgModal,
 }: MessageHoverOptionsProps) => {
   const optionRef = useRef<HTMLDivElement | null>(null);
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const [isShowReaction, setShowReaction] = useState(false);
 
   const [isBookmark, setIsBookmark] = useState(messageDetail.isBookmark);

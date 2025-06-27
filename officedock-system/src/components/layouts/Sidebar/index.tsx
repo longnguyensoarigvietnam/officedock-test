@@ -8,7 +8,8 @@ import {
   DisclosurePanel,
   TabPanel,
 } from '@headlessui/react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import lodash from 'lodash';
 
 import ImageRound from '@components/common/ImageRound';
@@ -80,7 +81,7 @@ const Sidebar = ({ className }: Props) => {
   >([]);
   const organizationId = searchParams.get('organization');
 
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const today = new Date();
 
   const { memberSelected, tagSelected, setMemberSelected, setTagSelected } =

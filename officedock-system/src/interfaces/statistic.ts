@@ -1,3 +1,4 @@
+import { StatisticChartType } from '@constants/enums';
 import { TagCreationStatisticType, Tags } from './tag';
 import { TodoItem } from './task';
 import { User } from './user';
@@ -271,6 +272,7 @@ export interface StatisticCategoryInfo {
   categoryColor: string;
   tasks: DataTaskModalStatisticType[];
   users?: UserListStatisticType[];
+  organizationId?: number;
 }
 export interface CreationStatisticType {
   id: number;
@@ -406,7 +408,7 @@ export interface StatisticsUserTaskDuration {
     fullName: string;
     avatarColor: string;
     avatar: string | null;
-  };
+  } | null;
   totalDuration: string;
   durations: {
     startDate: string;
@@ -414,4 +416,110 @@ export interface StatisticsUserTaskDuration {
     duration: string;
     percentPerRange: number;
   }[];
+}
+
+export type ProgressDataType = {
+  id: number;
+  label: string;
+  value: number;
+  color: string;
+  duration: string;
+  optionData: string[];
+  mergedItems?: ProgressDataType[];
+  organizationId?: string;
+};
+export interface CategoryTableRowDetail {
+  categoryId: number;
+  organizationId: number;
+  categoryName: string;
+  categoryDuration: string;
+  categoryPercent: number;
+  userList: {
+    userId: number;
+    userName: string;
+    userAvatar?: string | null;
+    userAvatarColor: string;
+    userDuration: string;
+    userPercent: number;
+  }[];
+}
+
+export interface TagTableRowDetail {
+  tagId: number;
+  tagName: string;
+  tagDuration: string;
+  tagPercent: number;
+  organizationId: number;
+  userList: {
+    userId: number;
+    userName: string;
+    userAvatar?: string | null;
+    userAvatarColor: string;
+    userDuration: string;
+    userPercent: number;
+  }[];
+}
+
+export interface MergedTableCategory {
+  categoryId: number;
+  categoryName: string;
+  organizationId: number;
+  standardInfo?: {
+    categoryDuration: string;
+    categoryPercent: number;
+  };
+  compareInfo?: {
+    categoryDuration: string;
+    categoryPercent: number;
+  };
+  userList: {
+    userId: number;
+    userName: string;
+    userAvatar?: string | null;
+    userAvatarColor: string;
+    standardInfo?: {
+      userDuration: string;
+      userPercent: number;
+    };
+    compareInfo?: {
+      userDuration: string;
+      userPercent: number;
+    };
+  }[];
+}
+
+export interface MergedTableTag {
+  tagId: number;
+  tagName: string;
+  organizationId: number;
+  standardInfo?: {
+    tagDuration: string;
+    tagPercent: number;
+  };
+  compareInfo?: {
+    tagDuration: string;
+    tagPercent: number;
+  };
+  userList: {
+    userId: number;
+    userName: string;
+    userAvatar?: string | null;
+    userAvatarColor: string;
+    standardInfo?: {
+      userDuration: string;
+      userPercent: number;
+    };
+    compareInfo?: {
+      userDuration: string;
+      userPercent: number;
+    };
+  }[];
+}
+
+export interface TagTableRowDetailWithType extends TagTableRowDetail{
+  type: StatisticChartType.STANDARD | StatisticChartType.COMPARE;
+}
+
+export interface CategoryTableRowDetailWithType extends CategoryTableRowDetail{
+  type: StatisticChartType.STANDARD | StatisticChartType.COMPARE;
 }

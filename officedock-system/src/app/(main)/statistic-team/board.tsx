@@ -88,6 +88,9 @@ const StatisticTeamBoard = () => {
     setIsLoadingLargeCompare,
     setIsLoadingMediumCompare,
     setCurrentPage,
+    setAreaTableData,
+    setLineChartTableData,
+    setMergedTableData,
   } = useContext(StatisticTeamStateContext);
   const {
     organizationTeamList,
@@ -278,7 +281,7 @@ const StatisticTeamBoard = () => {
 
         const mainItem =
           data.organizations.find((item) => item.isMain) ||
-          data.organizations[0];
+          data.organizations[1];
         const optionsTagList = mainItem.tags.map((item) => ({
           label: item.name,
           value: item.id,
@@ -318,8 +321,16 @@ const StatisticTeamBoard = () => {
     },
   });
 
+  // Reset table data
+  const handleResetTableData = () => {
+    setMergedTableData([]);
+    setAreaTableData([]);
+    setLineChartTableData([]);
+  };
+
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
+    handleResetTableData();
     if (data.value !== selectedOrganization?.value) {
       setIsLoadingOrganization(true);
       if (isCheckCompare) {
@@ -348,6 +359,7 @@ const StatisticTeamBoard = () => {
         label: item.name,
         value: item.id,
       }));
+
       setTagsOptions(optionsTagList);
       if (
         selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION &&
@@ -407,7 +419,7 @@ const StatisticTeamBoard = () => {
   // Handle Choose organization with option large
   const handleSelectOrganizationCustom = (data: OptionDropdownType) => {
     setCurrentPage(1);
-
+    handleResetTableData();
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
@@ -449,12 +461,14 @@ const StatisticTeamBoard = () => {
 
   // Handle Choose LARGE
   const handleSelectLarge = (data: OptionDropdownType) => {
+    if (selectedOrganization?.label === ALL_TEAM_STATISTIC) return;
     if (data.value !== selectedLarge?.value) {
       setIsLoadingLarge(true);
       if (isCheckCompare) {
         setIsLoadingLargeCompare(true);
       }
     }
+    handleResetTableData();
     setCurrentPage(1);
 
     setSelectedLarge(data);
@@ -482,12 +496,14 @@ const StatisticTeamBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
+    if (selectedOrganization?.label === ALL_TEAM_STATISTIC) return;
     if (data.value !== selectedMedium?.value) {
       setIsLoadingMedium(true);
       if (isCheckCompare) {
         setIsLoadingMediumCompare(true);
       }
     }
+    handleResetTableData();
     setCurrentPage(1);
 
     setSelectedMedium(data);
@@ -520,6 +536,7 @@ const StatisticTeamBoard = () => {
 
   const handleSelectSmall = (data: OptionDropdownType) => {
     setCurrentPage(1);
+    handleResetTableData();
 
     setSelectedSmall(data);
   };
@@ -534,6 +551,7 @@ const StatisticTeamBoard = () => {
     setIsLoadingLarge(true);
     setIsLoadingMedium(true);
     setIsLoadingOrganization(true);
+    handleResetTableData()
     if (isCheckCompare) {
       setIsLoadingLargeCompare(true);
       setIsLoadingMediumCompare(true);
@@ -554,6 +572,7 @@ const StatisticTeamBoard = () => {
     setIsLoadingLarge(true);
     setIsLoadingMedium(true);
     setIsLoadingOrganization(true);
+    handleResetTableData()
     if (isCheckCompare) {
       setIsLoadingLargeCompare(true);
       setIsLoadingMediumCompare(true);

@@ -40,6 +40,7 @@ type ProgressDataType = {
   duration: string;
   optionData: UserListStatisticType[];
   mergedItems?: ProgressDataType[];
+  organizationId?: string;
 };
 export function transformStatisticCategoryInfoToProgressData({
   data,
@@ -62,11 +63,15 @@ export function transformStatisticCategoryInfoToProgressData({
     color: lightenColor('#2E9267' as string, item.percent) || '',
     duration: item.duration,
     optionData: item.users || [],
+    organizationId: String(item.organizationId),
   }));
 
-  const mergedItems = progressData.filter((item) => item.value < threshold);
-  const mainItems = progressData.filter((item) => item.value >= threshold);
-
+  const mergedItems = progressData
+    .filter((item) => item.value < threshold)
+    .filter((item) => item.value > 0);
+  const mainItems = progressData
+    .filter((item) => item.value >= threshold)
+    .filter((item) => item.value > 0);
   if (mergedItems.length === 0) {
     return {
       finalData: mainItems,
@@ -115,6 +120,7 @@ const AllocationTeamTag = memo(
       userId: number;
       type: string;
       totalDuration: string;
+      organizationId?: string;
     } | null>(null);
 
     const [progressDataLarge, setProgressDataLarge] = useState<
@@ -202,17 +208,20 @@ const AllocationTeamTag = memo(
       userId,
       duration,
       type,
+      organizationId,
     }: {
       id: number;
       userId: number;
       duration: string;
       type: string;
+      organizationId?: string;
     }) => {
       setDetailCategory({
         id: id,
         userId: userId,
         type: type,
         totalDuration: duration,
+        organizationId,
       });
 
       setTimeout(() => {
@@ -362,20 +371,24 @@ const AllocationTeamTag = memo(
                               <ProgressBarTeamTagStatistic
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
+                                organizationId={item.organizationId}
                                 handleClickTooltip={({
                                   userId,
                                   tagId,
                                   duration,
+                                  organizationId,
                                 }: {
                                   userId: number;
                                   tagId: number;
                                   duration: string;
+                                  organizationId?: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: tagId,
                                     userId,
                                     duration,
                                     type: EventWorkCategory.ALL,
+                                    organizationId,
                                   });
                                 }}
                                 handleClickChart={(

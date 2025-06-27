@@ -17,7 +17,12 @@ import { PASSWORD_REGEX, URL_REGEX } from '@constants/regex';
 
 import { JwtDecode } from '@interfaces/auth';
 import { Organizations } from '@interfaces/organization';
-import { dataTaskDaily, dataTaskDailyTable } from '@interfaces/statistic';
+import {
+  dataTaskDaily,
+  dataTaskDailyTable,
+  ProgressDataType,
+  StatisticCategoryInfo,
+} from '@interfaces/statistic';
 import {
   ResultTeam,
   StatusSummary,
@@ -36,6 +41,7 @@ import {
   formatTime24h,
   getJapaneseDayName,
   getJapaneseWeekDay,
+  sumDurationsChart,
 } from './date';
 
 export function hasPermissionInArray(
@@ -634,6 +640,12 @@ export function transformDataTeamTask(result: ResultTeam[]): TransformedUser[] {
     avatar: user?.avatar || '',
     name: user.profile.fullName,
     statuses: {
+      MY_ROUTINE:
+        user.status
+          .find((status) => status.id === 5)
+          ?.tasks.map((task) => ({
+            ...task,
+          })) || [],
       NOT_STARTED:
         user.status
           .find((status) => status.id === 1)
@@ -1022,7 +1034,7 @@ export const createStyledAvatarWithMargin = (
   marginRight = 0,
 ): Promise<HTMLCanvasElement> => {
   return new Promise((resolve, reject) => {
-    const scale = window.devicePixelRatio || 1;
+    const scale = 1;
     const totalWidth = displaySize + marginRight;
 
     const img = new Image();
@@ -1068,7 +1080,13 @@ export const createStyledAvatarWithMargin = (
 
       // Optional border
       ctx.beginPath();
-      ctx.arc(displaySize / 2, displaySize / 2, displaySize / 2 - 0.5, 0, Math.PI * 2);
+      ctx.arc(
+        displaySize / 2,
+        displaySize / 2,
+        displaySize / 2 - 0.5,
+        0,
+        Math.PI * 2,
+      );
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 1;
       ctx.stroke();
@@ -1076,7 +1094,6 @@ export const createStyledAvatarWithMargin = (
       resolve(canvas);
     };
 
-    img.onerror = () => reject(new Error('Failed to load avatar'));
     img.src = url.startsWith('blob')
       ? url
       : `/api/image-proxy?url=${encodeURIComponent(url)}`;
@@ -1209,4 +1226,140 @@ export const getSafeTooltipLeft = ({
   }
 
   return left;
+};
+
+export const mapStatisticCategoryInfoToProgressData = ({
+  data,
+  mergeLabel = 'その他',
+  mergeColor = '#83919E',
+  threshold = 10,
+  colorData,
+}: {
+  data: StatisticCategoryInfo[];
+  mergeLabel?: string;
+  mergeColor?: string;
+  threshold?: number;
+  colorData?: string;
+}): {
+  finalData: ProgressDataType[];
+} => {
+  const progressData: ProgressDataType[] = data.map((item) => ({
+    id: item.categoryId,
+    label: item.categoryName,
+    value: item.percent,
+    color:
+      item.categoryColor ||
+      (colorData && lightenColor(colorData, item.percent)) ||
+      '',
+    duration: item.duration,
+    optionData: item.tasks.slice(0, 3).map((task) => task.title),
+    organizationId: String(item.organizationId),
+  }));
+
+  const mergedItems = progressData.filter((item) => item.value < threshold);
+  const mainItems = progressData.filter((item) => item.value >= threshold);
+
+  if (mergedItems.length === 0) {
+    return {
+      finalData: mainItems,
+    };
+  }
+
+  const totalMergedPercent = mergedItems.reduce(
+    (sum, item) => sum + item.value,
+    0,
+  );
+  const durations = mergedItems.map((item) => item.duration);
+
+  const totalDuration = sumDurationsChart(durations);
+
+  const mergedItem: ProgressDataType = {
+    id: -1,
+    label: mergeLabel,
+    value: totalMergedPercent,
+    color: mergeColor,
+    duration: totalDuration,
+    optionData: mergedItems.flatMap((item) => item.optionData),
+    mergedItems,
+  };
+
+  return {
+    finalData: [...mainItems, mergedItem],
+  };
+};
+// Parse to ISO Date locally
+export function parseISODateLocally(str: string): Date {
+  const [year, month, day] = str.split('-').map(Number);
+  return new Date(year, month - 1, day); // month is 0-based
+}
+// Format date to YMD format
+export function formatDateToYMDFormat(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+// Get statistic milestones
+export function getStatisticMilestones(
+  fromDate: string,
+  endDate: string,
+  statisticBy: 'DAY' | 'WEEK' | 'MONTH',
+): string[] {
+  const result: string[] = [];
+
+  const start = parseISODateLocally(fromDate);
+  const end = parseISODateLocally(endDate);
+
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+
+  result.push(formatDateToYMDFormat(start));
+
+  const current = new Date(start);
+
+  while (true) {
+    if (statisticBy === 'DAY') {
+      current.setDate(current.getDate() + 1);
+    } else if (statisticBy === 'WEEK') {
+      const day = current.getDay();
+      const daysUntilNextMonday = (8 - day) % 7 || 7;
+      current.setDate(current.getDate() + daysUntilNextMonday);
+    } else if (statisticBy === 'MONTH') {
+      current.setMonth(current.getMonth() + 1);
+      current.setDate(1);
+    }
+
+    if (current > end) break;
+
+    result.push(formatDateToYMDFormat(current));
+  }
+
+  const formattedEnd = formatDateToYMDFormat(end);
+  if (result[result.length - 1] !== formattedEnd) {
+    result.push(formattedEnd);
+  }
+
+  return result;
+}
+
+export const createLineChartAvatarImage = async (user: {
+  id: number;
+  fullName: string;
+  avatarColor: string;
+  avatar: string | null;
+}) => {
+  let avatarUrl = '';
+
+  if (user?.avatar) {
+    avatarUrl = getFileURL(user?.avatar);
+  } else {
+    const svgString = getAvatarIconSvg(
+      user?.avatarColor || getRandomColor(),
+      24,
+    );
+    const blob = new Blob([svgString], { type: 'image/svg+xml' });
+    avatarUrl = URL.createObjectURL(blob);
+  }
+
+  return await createStyledAvatarWithMargin(avatarUrl, 24, 30);
 };

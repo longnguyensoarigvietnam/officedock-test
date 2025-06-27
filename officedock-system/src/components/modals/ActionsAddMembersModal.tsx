@@ -3,7 +3,7 @@
 import { memo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { UseMutationResult } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import Modal from '../common/Modal';
 import InputSearch from '@components/common/InputSearch';
@@ -42,7 +42,7 @@ const ActionsAddMembersModal = memo(
     dashboardMembers,
     createChatMutation,
   }: ActionsAddMembersModalProps) => {
-    const { data: session } = useSession();
+    const { data: session } = useSessionCache();
 
     const [searchName, setSearchName] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState(false);

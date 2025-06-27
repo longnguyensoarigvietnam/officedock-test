@@ -2,7 +2,7 @@
 
 import { useQuery } from 'react-query';
 import { AxiosError } from 'axios';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 
@@ -14,15 +14,11 @@ import api from '@base/api';
 interface FilterProps {
   endDate: string | Date;
   fromDate: string | Date;
-  largeCategoryId?: number;
-  mediumCategoryId?: number;
-  smallCategoryId?: number;
-  organizationIds?: string;
+  largeCategoryId?: string | number
+  mediumCategoryId?: string | number;
+  organizationId?: string;
   organizationMemberId?: string;
-
-  orderingOptions: {
-    tag_ids: OptionDropdownType[];
-  } | null;
+  tagIds?: OptionDropdownType[];
   userIds: string;
 }
 
@@ -35,18 +31,25 @@ const useStatisticTableInTeamLineChartCompare = ({
   onSuccess?: (data: StatisticsCategories) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   // Handle call API get statistic table in team line chart
-  const getStatisticTableInTeamLineChartCompare = async () => {
-    if (!filter?.organizationIds) return [];
+  const getStatisticTableInTeamLineChartCompare = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
+    if (!filter?.organizationId || !filter.userIds) return [];
     const queryParams = [];
     if (filter.fromDate) {
       queryParams.push(`from_date=${filter.fromDate}`);
     }
     if (filter.endDate) {
       queryParams.push(`end_date=${filter.endDate}`);
+    }
+    if (filter.organizationId) {
+      queryParams.push(`organization_id=${filter.organizationId}`);
     }
     if (filter.organizationMemberId) {
       queryParams.push(
@@ -59,24 +62,23 @@ const useStatisticTableInTeamLineChartCompare = ({
     if (filter.mediumCategoryId) {
       queryParams.push(`medium_category_id=${filter.mediumCategoryId}`);
     }
-    if (filter.smallCategoryId) {
-      queryParams.push(`small_category_id=${filter.smallCategoryId}`);
-    }
     if (filter.userIds) {
       queryParams.push(`user_ids=${filter.userIds}`);
     }
-    if (filter.orderingOptions?.tag_ids) {
+    if (filter.tagIds && filter.tagIds?.length > 0) {
       queryParams.push(
-        `tag_ids=${filter?.orderingOptions?.tag_ids.map((item) => item.value).join(',')}`,
+        `tag_ids=${filter?.tagIds.map((item) => item.value).join(',')}`,
       );
     }
 
     const queryString =
       queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
 
-    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM(parseInt(filter?.organizationIds))}${queryString}`;
+    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM}${queryString}`;
 
-    const { data } = await api.get<StatisticsCategories[]>(apiUrl);
+    const { data } = await api.get<StatisticsCategories[]>(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -88,7 +90,9 @@ const useStatisticTableInTeamLineChartCompare = ({
     isFetched: isFetchedStatisticTableInTeamLineChartCompare,
   } = useQuery({
     queryKey: ['getStatisticTableInTeamLineChartCompare', [filter]],
-    queryFn: getStatisticTableInTeamLineChartCompare,
+    queryFn: ({ signal }) =>
+      getStatisticTableInTeamLineChartCompare({ signal }),
+
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

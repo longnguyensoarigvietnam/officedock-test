@@ -3,7 +3,7 @@
 import { useQuery } from 'react-query';
 import { AxiosError } from 'axios';
 import { useContext } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 
@@ -36,7 +36,7 @@ const useStatisticCategoriesTeamCompare = ({
   onSuccess?: (data: StatisticsCategories) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
   const {
     setIsLoadingLargeCompare,
@@ -45,13 +45,19 @@ const useStatisticCategoriesTeamCompare = ({
   } = useContext(StatisticTeamStateContext);
 
   // Handle call API get statistic category list team
-  const getStatisticCategoryListTeamCompare = async () => {
+  const getStatisticCategoryListTeamCompare = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds || !filter?.isCompare) return [];
 
     const params = new URLSearchParams();
 
     if (filter.fromDate) params.append('from_date', String(filter.fromDate));
     if (filter.endDate) params.append('end_date', String(filter.endDate));
+    if (filter.organizationIds)
+      params.append('organization_id', filter?.organizationIds.toString());
     if (filter.organizationMemberId)
       params.append(
         'organization_get_members_id',
@@ -78,10 +84,11 @@ const useStatisticCategoriesTeamCompare = ({
       params.append('user_ids', userIds);
     }
 
-    const orgId = parseInt(filter.organizationIds);
-    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM(orgId)}?${params.toString()}`;
+    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM}?${params.toString()}`;
 
-    const { data } = await api.get<StatisticsCategories[]>(apiUrl);
+    const { data } = await api.get<StatisticsCategories[]>(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -92,7 +99,7 @@ const useStatisticCategoriesTeamCompare = ({
     isFetched: isFetchedStatisticCategoryListTeamCompare,
   } = useQuery({
     queryKey: ['getStatisticCategoryListTeamCompare', [filter]],
-    queryFn: getStatisticCategoryListTeamCompare,
+    queryFn: ({ signal }) => getStatisticCategoryListTeamCompare({ signal }),
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

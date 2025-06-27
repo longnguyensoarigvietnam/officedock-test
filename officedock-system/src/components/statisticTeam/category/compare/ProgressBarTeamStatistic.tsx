@@ -19,6 +19,7 @@ type ProgressDataType = {
   duration: string;
   optionData: UserListStatisticType[];
   mergedItems?: ProgressDataType[];
+  organizationId?: string;
 };
 
 interface ProgressBarProps {
@@ -39,6 +40,7 @@ interface ProgressBarProps {
     isCompare,
     userDuration,
     totalTask,
+    organizationId,
   }: {
     userId: number;
     categoryId: number;
@@ -46,6 +48,7 @@ interface ProgressBarProps {
     isCompare?: boolean;
     userDuration: string;
     totalTask?: string;
+    organizationId?: string;
   }) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
 }
@@ -130,7 +133,6 @@ const ProgressBarTeamStatisticCompare = ({
   handleClickTooltip,
 }: ProgressBarProps) => {
   const [isExtendUser, setExtendUser] = useState(false);
-
   const userCompareRows = buildUserCompareData(item, itemCompare);
 
   return (
@@ -275,7 +277,7 @@ const ProgressBarTeamStatisticCompare = ({
                                     backgroundColor: mergeItem.color,
                                   }}
                                   className="w-3 h-3"></div>
-                                <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
+                                <span className="truncate max-w-[calc(100%_-_50px)] font-bold text-[16px]">
                                   {mergeItem.label}
                                 </span>
                               </div>
@@ -307,9 +309,9 @@ const ProgressBarTeamStatisticCompare = ({
                                               customClassName={`${!user.user?.avatar && '!mt-0'}`}
                                             />
                                           </div>
-                                          <span className="inline-block w-[130px] overflow-hidden whitespace-nowrap text-ellipsis">
+                                          <p className="w-[90px] overflow-hidden whitespace-nowrap text-ellipsis">
                                             {user.user.fullName}
-                                          </span>
+                                          </p>
                                         </div>
                                         <span>{user.percent}%</span>
                                       </li>
@@ -447,7 +449,7 @@ const ProgressBarTeamStatisticCompare = ({
                                     backgroundColor: itemUser.color,
                                   }}
                                   className="w-3 h-3"></div>
-                                <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
+                                <span className="truncate max-w-[calc(100%_-_50px)] font-bold text-[16px]">
                                   {itemUser.label}
                                 </span>
                               </div>
@@ -479,7 +481,7 @@ const ProgressBarTeamStatisticCompare = ({
                                               customClassName={`${!user.user?.avatar && '!mt-0'}`}
                                             />
                                           </div>
-                                          <span className="inline-block w-[130px] overflow-hidden whitespace-nowrap text-ellipsis">
+                                          <span className="inline-block w-[120px] overflow-hidden whitespace-nowrap text-ellipsis">
                                             {user.user.fullName}
                                           </span>
                                         </div>
@@ -527,9 +529,9 @@ const ProgressBarTeamStatisticCompare = ({
                 </div>
               </div>
               <div
-                className={`w-full group relative h-[10px] bg-gray-300  rounded-[4px]  ${classProgressUserClass}`}>
+                className={`w-full group relative h-[10px] bg-gray-300 ${classProgressUserClass}`}>
                 <div
-                  className="h-full rounded-[4px] overflow-hidden transition-all duration-500 "
+                  className="h-full overflow-hidden transition-all duration-500 "
                   style={{
                     width: `${itemUser.user.percent}%`,
                     backgroundColor: itemUser.user.user.avatarColor,
@@ -601,6 +603,7 @@ const ProgressBarTeamStatisticCompare = ({
                               itemUser.user.duration !== '-'
                                 ? itemUser.user.duration
                                 : '00:00:00',
+                            organizationId: item.organizationId,
                           })
                         }
                         className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">
@@ -621,7 +624,7 @@ const ProgressBarTeamStatisticCompare = ({
             {/* user item compare */}
             <div className="mt-[6px]">
               <div
-                className={`w-full group relative h-[10px] bg-gray-300 rounded-[4px]  ${classProgressUserClass}`}>
+                className={`w-full group relative h-[10px] bg-gray-300  ${classProgressUserClass}`}>
                 <div
                   className="h-full transition-all duration-500 "
                   style={{
@@ -698,6 +701,7 @@ const ProgressBarTeamStatisticCompare = ({
                             isCompare: true,
                             duration: itemCompare?.duration || '',
                             totalTask: item.duration,
+                            organizationId: item.organizationId,
                           })
                         }
                         className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">

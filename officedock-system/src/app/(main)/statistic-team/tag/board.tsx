@@ -77,6 +77,9 @@ const StatisticTeamTagBoard = () => {
     setIsLoadingMediumCompare,
     setIsLoadingSmallCompare,
     setCurrentPage,
+    setAreaTableData,
+    setLineChartTableData,
+    setMergedTableData,
   } = useContext(StatisticTeamTagsStateContext);
   const {
     organizationTeamList,
@@ -109,7 +112,7 @@ const StatisticTeamTagBoard = () => {
 
         const mainItem =
           data.organizations.find((item) => item.isMain) ||
-          data.organizations[0];
+          data.organizations[1];
         const optionsTagList = mainItem.tags.map((item) => ({
           label: item.name,
           value: item.id,
@@ -241,6 +244,13 @@ const StatisticTeamTagBoard = () => {
     },
   });
 
+  // Reset table data
+  const handleResetTableData = () => {
+    setMergedTableData([]);
+    setAreaTableData([]);
+    setLineChartTableData([]);
+  };
+
   // Remove tags
   const removeTag = (selected: OptionDropdownType) => {
     const currentTagIds = selectedTags || [];
@@ -251,6 +261,7 @@ const StatisticTeamTagBoard = () => {
     setIsLoadingMedium(true);
     setIsLoadingSmall(true);
     setIsLoadingOrganization(true);
+    handleResetTableData();
     if (isCheckCompare) {
       setIsLoadingLargeCompare(true);
       setIsLoadingMediumCompare(true);
@@ -263,6 +274,7 @@ const StatisticTeamTagBoard = () => {
 
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
+    handleResetTableData();
     if (data.value !== selectedOrganization?.value) {
       setIsLoadingOrganization(true);
       if (isCheckCompare) {
@@ -352,6 +364,7 @@ const StatisticTeamTagBoard = () => {
         setIsLoadingLargeCompare(true);
       }
     }
+    handleResetTableData();
     setCurrentPage(1);
 
     setSelectedLarge(data);
@@ -384,6 +397,7 @@ const StatisticTeamTagBoard = () => {
         setIsLoadingMediumCompare(true);
       }
     }
+    handleResetTableData();
     setCurrentPage(1);
 
     setSelectedMedium(data);
@@ -422,6 +436,7 @@ const StatisticTeamTagBoard = () => {
       }
     }
     setCurrentPage(1);
+    handleResetTableData();
 
     setSelectedSmall(data);
   };
@@ -473,6 +488,7 @@ const StatisticTeamTagBoard = () => {
     setOrderingOptions({
       user_ids: updatedUserIds,
     });
+    handleResetTableData();
   };
 
   return (

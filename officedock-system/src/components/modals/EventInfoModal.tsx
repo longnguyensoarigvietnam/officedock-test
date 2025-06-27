@@ -1,6 +1,7 @@
 import { memo, useContext, useEffect, useRef, useState } from 'react';
 import { isSameDay } from 'date-fns';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import tinycolor from 'tinycolor2';
 
 import ImageRound from '@components/common/ImageRound';
@@ -54,7 +55,7 @@ const EventInfoModal = memo(
     selectedScheduleUserIds,
   }: EventInfoModalProps) => {
     const popoverRef = useRef<HTMLDivElement | null>(null);
-    const { data: session } = useSession();
+    const { data: session } = useSessionCache();
     const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
     const [popupPosition, setPopupPosition] = useState<{
       top: number;

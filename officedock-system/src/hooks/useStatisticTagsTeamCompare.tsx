@@ -2,7 +2,8 @@
 
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 
 import { apiRouters } from '@constants/routers';
@@ -35,7 +36,7 @@ const useStatisticTagsTeamCompare = ({
   onSuccess?: (data: StatisticsCategories) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
   const {
     setIsLoadingLargeCompare,
@@ -45,13 +46,20 @@ const useStatisticTagsTeamCompare = ({
   } = useContext(StatisticTeamTagsStateContext);
 
   // Handle call API get statistic category list team
-  const getStatisticTagsListTeamCompare = async () => {
+  const getStatisticTagsListTeamCompare = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds || !filter?.isCompare) return [];
 
     const params = new URLSearchParams();
 
     if (filter.fromDate) params.append('from_date', String(filter.fromDate));
     if (filter.endDate) params.append('end_date', String(filter.endDate));
+    if (filter.organizationIds) {
+      params.append('organization_id', filter.organizationIds.toString());
+    }
     if (filter.organizationMemberId)
       params.append(
         'organization_get_members_id',
@@ -69,10 +77,9 @@ const useStatisticTagsTeamCompare = ({
       params.append('tag_ids', tagIds);
     }
 
-    const orgId = parseInt(filter.organizationIds);
-    const apiUrl = `${apiRouters.STATISTICS_TAGS_TEAM(orgId)}?${params.toString()}`;
+    const apiUrl = `${apiRouters.STATISTICS_TAGS_TEAM}?${params.toString()}`;
 
-    const { data } = await api.get<StatisticsCategories[]>(apiUrl);
+    const { data } = await api.get<StatisticsCategories[]>(apiUrl, { signal });
     return data;
   };
 
@@ -83,7 +90,8 @@ const useStatisticTagsTeamCompare = ({
     isFetched: isFetchedStatisticTagsListTeamCompare,
   } = useQuery({
     queryKey: ['getStatisticTagsListTeamCompare', [filter]],
-    queryFn: getStatisticTagsListTeamCompare,
+    queryFn: ({ signal }) => getStatisticTagsListTeamCompare({ signal }),
+
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

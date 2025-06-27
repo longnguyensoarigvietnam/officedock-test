@@ -2,7 +2,7 @@
 
 import { useQuery } from 'react-query';
 import { AxiosError } from 'axios';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 
@@ -30,11 +30,15 @@ const useStatisticTagTaskDurationsCompare = ({
   onSuccess?: (data: StatisticsTagTaskDuration[]) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   // Handle call API get statistic task duration list
-  const getStatisticTagTaskDurationsCompare = async () => {
+  const getStatisticTagTaskDurationsCompare = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds) return [];
     const apiUrl = `${apiRouters.STATISTICS_TASK_DURATIONS}?is_tag_page=true&${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
@@ -56,7 +60,9 @@ const useStatisticTagTaskDurationsCompare = ({
         : ''
     }${filter?.statisticBy ? `&statistic_by=${filter.statisticBy}` : '&statistic_by=WEEK'}${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
-    const { data } = await api.get<StatisticsTagTaskDuration[]>(apiUrl);
+    const { data } = await api.get<StatisticsTagTaskDuration[]>(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -67,7 +73,8 @@ const useStatisticTagTaskDurationsCompare = ({
     isFetched: isFetchedStatisticTagTaskDurationsCompareList,
   } = useQuery({
     queryKey: ['getStatisticTagTaskDurationsCompare', [filter]],
-    queryFn: getStatisticTagTaskDurationsCompare,
+    queryFn: ({ signal }) => getStatisticTagTaskDurationsCompare({ signal }),
+
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

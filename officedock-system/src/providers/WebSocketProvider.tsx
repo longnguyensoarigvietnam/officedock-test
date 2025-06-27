@@ -2,10 +2,14 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { apiRouters } from '@constants/routers';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
+
 import { WebSocketMessageData } from '@interfaces/chat';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import { SocketActions } from '@constants/enums';
+
+import { useSessionCache } from './SessionCacheProvider';
+
 const WebSocketContext = createContext<WebSocket | null>(null);
 export const useWebSocket = () => useContext(WebSocketContext);
 
@@ -13,7 +17,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   useEffect(() => {
     if (!session?.accessToken) return;

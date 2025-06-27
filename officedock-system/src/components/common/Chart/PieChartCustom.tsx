@@ -35,8 +35,9 @@ interface PieChartProps {
   }[][];
   listIdData?: number[];
   mergedItems: StatisticCategoryInfo[];
+  dataOrganization?: string[];
 
-  handleClickTooltip?: (id: number | null) => void;
+  handleClickTooltip?: (id: number | null, organizationId?: string) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
 }
 interface TooltipData {
@@ -58,6 +59,7 @@ const PieChartCustom = ({
   isLast = false,
   optionsData,
   listIdData,
+  dataOrganization,
   handleClickChart,
   handleClickTooltip,
 }: PieChartProps) => {
@@ -227,6 +229,7 @@ const PieChartCustom = ({
             data={data}
             mergedItems={mergedItems}
             listIdData={listIdData || []}
+            dataOrganization={dataOrganization}
             handleClickTooltip={handleClickTooltip}
           />
         </div>

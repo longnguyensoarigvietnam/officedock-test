@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useMutation } from 'react-query';
 import Link from 'next/link';
 import { validate as isUUID } from 'uuid';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 
 import Dropdown from '@components/common/Dropdown';
@@ -50,7 +51,7 @@ interface HierarchyDetail {
 }
 
 const EditHierarchyForm = () => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const [hierarchyList, setHierarchyList] = useState<HierarchyDetail[]>([]);
   const [categoryList, setCategoryList] = useState<OptionDropdownType[]>([]);
   const [selectedHierarchiesToDelete, setSelectedHierarchiesToDelete] =

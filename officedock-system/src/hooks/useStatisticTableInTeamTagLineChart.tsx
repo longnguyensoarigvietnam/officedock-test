@@ -2,7 +2,7 @@
 
 import { useQuery } from 'react-query';
 import { AxiosError } from 'axios';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 
@@ -14,12 +14,11 @@ import api from '@base/api';
 interface FilterProps {
   endDate: string | Date;
   fromDate: string | Date;
-  largeCategoryId?: number;
-  mediumCategoryId?: number;
-  smallCategoryId?: number;
-  organizationIds?: string;
+  largeCategoryId?: string | number;
+  mediumCategoryId?: string | number;
+  smallCategoryId?: string | number;
+  organizationId?: string;
   organizationMemberId?: string;
-
   selectedTags: OptionDropdownType[];
   userIds: string;
 }
@@ -33,12 +32,16 @@ const useStatisticTableInTeamTagLineChart = ({
   onSuccess?: (data: StatisticsCategories) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   // Handle call API get statistic table in team tag line chart
-  const getStatisticTableInTeamTagLineChart = async () => {
-    if (!filter?.organizationIds || !filter?.userIds) return [];
+  const getStatisticTableInTeamTagLineChart = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
+    if (!filter?.organizationId || !filter?.userIds) return [];
     const queryParams = [];
     if (filter.fromDate) {
       queryParams.push(`from_date=${filter.fromDate}`);
@@ -50,6 +53,9 @@ const useStatisticTableInTeamTagLineChart = ({
       queryParams.push(
         `organization_get_members_id=${filter.organizationMemberId.toString()}`,
       );
+    }
+    if (filter.organizationId) {
+      queryParams.push(`organization_id=${filter.organizationId}`);
     }
     if (filter.largeCategoryId) {
       queryParams.push(`large_category_id=${filter.largeCategoryId}`);
@@ -72,9 +78,11 @@ const useStatisticTableInTeamTagLineChart = ({
     const queryString =
       queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
 
-    const apiUrl = `${apiRouters.STATISTICS_TAGS_TEAM(parseInt(filter?.organizationIds))}${queryString}`;
+    const apiUrl = `${apiRouters.STATISTICS_TAGS_TEAM}${queryString}`;
 
-    const { data } = await api.get<StatisticsCategories[]>(apiUrl);
+    const { data } = await api.get<StatisticsCategories[]>(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -85,7 +93,7 @@ const useStatisticTableInTeamTagLineChart = ({
     isLoading: isLoadingStatisticTableInTeamTagLineChart,
   } = useQuery({
     queryKey: ['getStatisticTableInTeamTagLineChart', [filter]],
-    queryFn: getStatisticTableInTeamTagLineChart,
+    queryFn: ({ signal }) => getStatisticTableInTeamTagLineChart({ signal }),
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

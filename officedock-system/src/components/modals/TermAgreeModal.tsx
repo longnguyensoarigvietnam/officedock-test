@@ -2,7 +2,7 @@
 import { memo, useContext, useState } from 'react';
 import { useMutation } from 'react-query';
 import 'react-quill/dist/quill.snow.css';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import Checkbox from '@components/common/Checkbox';
 import Heading from '@components/common/Heading';
@@ -18,7 +18,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import api from '@base/api';
 
 const TermAgreeModal = memo(() => {
-  const { data: session, update } = useSession();
+  const { data: session, update } = useSessionCache();
   const { setIsLoading } = useContext(LoadingContext);
   const [currentStep, setCurrentStep] = useState(0);
   const [termsSteps, setTermsSteps] = useState<TermsStep[]>([]);

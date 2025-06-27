@@ -1,6 +1,7 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { memo, useContext, useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { useMutation, useQueryClient } from 'react-query';
 
 import Button from '@components/common/Button';
@@ -67,7 +68,7 @@ const TaskPageDataHeader = () => {
 
   const userIdTask = searchParams.get('user');
 
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const router = useRouter();
 

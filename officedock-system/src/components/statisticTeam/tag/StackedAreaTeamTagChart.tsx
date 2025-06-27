@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import Chart from 'react-apexcharts';
 import Image from 'next/image';
 import {
@@ -28,8 +28,9 @@ import { OptionDropdownType } from '@interfaces/common';
 import {
   StatisticCategoryInfo,
   StatisticsCategories,
+  TagTableRowDetail,
 } from '@interfaces/statistic';
-import { getLineChartEnableViews } from '@utils';
+import { getLineChartEnableViews, getStatisticMilestones } from '@utils';
 import {
   convertDurationToTotalMinutes,
   convertToJapaneseDateRange,
@@ -40,6 +41,7 @@ import {
 } from '@utils/date';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { useGenericDebounce } from '@hooks/useGenericDebounce';
 
 type Props = {
   startDate: Date;
@@ -51,20 +53,6 @@ type Props = {
   handleSelectMedium: (data: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
 };
-interface TableRowDetail {
-  tagId: number;
-  tagName: string;
-  tagDuration: string;
-  tagPercent: number;
-  userList: {
-    userId: number;
-    userName: string;
-    userAvatar?: string | null;
-    userAvatarColor: string;
-    userDuration: string;
-    userPercent: number;
-  }[];
-}
 
 const buildTableDetail = (
   tags: {
@@ -72,6 +60,7 @@ const buildTableDetail = (
     tagName?: string;
     percent: number;
     duration: string;
+    organizationId?: number;
     users?: {
       user: {
         id: number;
@@ -89,6 +78,8 @@ const buildTableDetail = (
     tagName: String(tag.tagName),
     tagPercent: tag.percent,
     tagDuration: tag.duration,
+    organizationId: tag.organizationId ?? 0,
+
     userList:
       tag.users && tag.users.length > 0
         ? tag.users.map((user) => {
@@ -133,6 +124,7 @@ const StackedAreaTeamTagChart = ({
     listMemberTeam,
     lineChartViewBy,
     isCheckCompare,
+    orderingOptions,
     setIsLoadingLarge,
     setIsLoadingMedium,
     setIsLoadingSmall,
@@ -143,6 +135,8 @@ const StackedAreaTeamTagChart = ({
     setIsLoadingOrganizationCompare,
     setLineChartViewBy,
     setSelectedTags,
+    areaTableData,
+    setAreaTableData,
   } = useContext(StatisticTeamTagsStateContext);
   const { selectedOrganization: selectedOrganizationSideBar } =
     useContext(GlobalStateContext);
@@ -163,7 +157,10 @@ const StackedAreaTeamTagChart = ({
     return '00:00:00';
   };
 
-  const selectedMemberList = listMemberTeam.map((user) => user.id).join(',');
+  const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
+  const [isTableDataRendered, setIsTableDataRendered] =
+    useState<boolean>(false);
+  const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
 
   const [isExtendData, setIsExtendData] = useState(true);
 
@@ -172,21 +169,33 @@ const StackedAreaTeamTagChart = ({
     useState<string>('');
   const [durationSortingStatus, setDurationSortingStatus] =
     useState<string>('');
-
-  // Table data
-  const [tableData, setTableData] = useState<TableRowDetail[]>([]);
+  const [selectedOrganizationInTable, setSelectedOrganizationInTable] =
+    useState<number>(0);
 
   // Collapse statuses
   const [tagCollapseStatuses, setTagCollapseStatuses] = useState<
     {
       tagId: number;
       status: boolean;
+      organizationId: number;
     }[]
   >([]);
   const [selectedTag, setSelectedTag] = useState<{
     id: number;
     name: string;
+    organizationId: number;
   } | null>(null);
+
+  // Get initial member options
+  useEffect(() => {
+    if (orderingOptions?.user_ids && orderingOptions?.user_ids.length > 0) {
+      setSelectedMembers(
+        orderingOptions?.user_ids.map((user) => Number(user.value)),
+      );
+    } else {
+      setSelectedMembers(listMemberTeam.map((user) => Number(user.id)));
+    }
+  }, [orderingOptions?.user_ids, listMemberTeam]);
 
   // Filter options
   const [filter, setFilter] = useState<{
@@ -197,18 +206,18 @@ const StackedAreaTeamTagChart = ({
     mediumCategoryId?: string | number;
     smallCategoryId?: string | number;
     statisticBy: string;
-    selectedOrganization: string;
+    selectedOrganization: number;
     tagIds: { label: string; value: number }[];
     organizationMemberId?: string;
   }>({
     fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
     endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-    userIds: selectedMemberList,
+    userIds: selectedMembers.join(','),
     largeCategoryId: selectedLarge?.value,
     mediumCategoryId: selectedMedium?.value,
     smallCategoryId: selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: `${selectedOrganization?.value}`,
+    selectedOrganization: 0,
     tagIds: [],
     organizationMemberId:
       selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
@@ -216,13 +225,26 @@ const StackedAreaTeamTagChart = ({
         : undefined,
   });
 
+  // Get initial member options
+  useEffect(() => {
+    if (orderingOptions?.user_ids && orderingOptions?.user_ids.length > 0) {
+      setSelectedMembers(
+        orderingOptions?.user_ids.map((user) => Number(user.value)),
+      );
+    } else {
+      setSelectedMembers(listMemberTeam.map((user) => Number(user.id)));
+    }
+  }, [orderingOptions?.user_ids, listMemberTeam]);
+
   const handleTagSelection = (tagList: StatisticCategoryInfo[] | undefined) => {
     if (tagList?.length) {
       const [firstTag] = tagList;
       setSelectedTag({
         id: Number(firstTag.tagId),
         name: String(firstTag.tagName),
+        organizationId: Number(firstTag.organizationId),
       });
+      setSelectedOrganizationInTable(Number(firstTag.organizationId));
       setFilter((prev) => {
         return {
           ...prev,
@@ -232,6 +254,7 @@ const StackedAreaTeamTagChart = ({
               value: Number(firstTag.tagId),
             },
           ],
+          selectedOrganization: Number(firstTag.organizationId),
         };
       });
     } else {
@@ -240,6 +263,7 @@ const StackedAreaTeamTagChart = ({
         return {
           ...prev,
           tagIds: [],
+          selectedOrganization: 0,
         };
       });
     }
@@ -251,7 +275,13 @@ const StackedAreaTeamTagChart = ({
     isLoadingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
     filter,
-    condition: [Boolean(filter.tagIds?.length > 0)],
+    condition: [
+      Boolean(
+        areaTableData.length > 0 &&
+          isTableDataRendered &&
+          filter.tagIds?.length > 0,
+      ),
+    ],
   });
 
   const [dataChart, setDataChart] = useState<
@@ -279,7 +309,7 @@ const StackedAreaTeamTagChart = ({
 
   useEffect(() => {
     if (statisticTagsListTeam) {
-      let tableDetail: TableRowDetail[] = [];
+      let tableDetail: TagTableRowDetail[] = [];
 
       if (
         selectedOrganization &&
@@ -320,30 +350,37 @@ const StackedAreaTeamTagChart = ({
           return {
             tagId: tag.tagId,
             status: false,
+            organizationId: tag.organizationId,
           };
         }),
       );
 
-      setTableData(tableDetail);
+      setTimeout(() => {
+        setIsTableDataRendered(true);
+      }, 2000);
+      setAreaTableData(tableDetail);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     statisticTagsListTeam,
+    setIsTableDataRendered,
     selectedLarge,
     selectedOrganization,
     selectedMedium,
     selectedSmall,
   ]);
-  useEffect(() => {
-    setFilter({
+
+  // Handle listen to filter option changes
+  const memoizedFilter = useMemo(() => {
+    return {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-      userIds: selectedMemberList,
+      userIds: selectedMembers?.filter(Boolean).join(',') || '',
       largeCategoryId: selectedLarge?.value,
       mediumCategoryId: selectedMedium?.value,
       smallCategoryId: selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: `${selectedOrganization?.value}`,
+      selectedOrganization: selectedOrganizationInTable,
       tagIds: selectedTag
         ? [
             {
@@ -356,20 +393,34 @@ const StackedAreaTeamTagChart = ({
         selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
-    });
+    };
   }, [
     startDate,
     endDate,
     lineChartViewBy?.value,
-    selectedOrganization?.value,
     selectedLarge?.value,
     selectedMedium?.value,
     selectedSmall?.value,
-    selectedMemberList,
+    selectedMembers,
     selectedTag,
     selectedOrganization?.label,
     selectedOrganizationSideBar?.value,
+    selectedOrganizationInTable,
   ]);
+
+  useEffect(() => {
+    if (isOrganizationChanging && selectedMembers.length > 0) {
+      setIsOrganizationChanging(false); // Done
+    }
+  }, [selectedMembers, isOrganizationChanging]);
+
+  const debouncedFilter = useGenericDebounce(memoizedFilter, 1000);
+
+  useEffect(() => {
+    if (!isOrganizationChanging) {
+      setFilter(debouncedFilter); // Trigger API only when everything is ready
+    }
+  }, [debouncedFilter, isOrganizationChanging]);
 
   useEffect(() => {
     if (
@@ -398,19 +449,43 @@ const StackedAreaTeamTagChart = ({
         const percents = userData.durations.map((d) => d.percentPerRange);
         const duplicated = [percents[0], ...percents];
         return {
-          name: userData.user.fullName,
+          name: userData?.user?.fullName || '',
           data: duplicated,
         };
       });
       const colors = statisticUserTaskDurationsList.map(
-        (userData) => userData.user.avatarColor || '#000',
+        (userData) => userData?.user?.avatarColor || '#000',
       );
 
       setDataChart(chartData);
       setColorList(colors);
     } else {
-      setTimeRange([]);
-      setDataChart([]);
+      const timeMilestones = getStatisticMilestones(
+        `${formatDateToYMD(startDate)}`,
+        `${formatDateToYMD(endDate || '')}`,
+        lineChartViewBy?.value as StatisticViewOptions,
+      );
+
+      const uniqueSortedDates = Array.from(new Set(timeMilestones)).sort(
+        (pre, next) => new Date(pre).getTime() - new Date(next).getTime(),
+      );
+
+      const transformedDates = uniqueSortedDates.map((date, index, arr) => {
+        const isEdge = index === 0 || index === arr.length - 1;
+        return convertToStatisticJapaneseLabels(
+          date,
+          lineChartViewBy?.value as string,
+          isEdge,
+        );
+      });
+
+      setTimeRange(transformedDates);
+      setDataChart([
+        {
+          name: '',
+          data: Array(timeMilestones.length).fill(0),
+        },
+      ]);
       return;
     }
   }, [statisticUserTaskDurationsList, lineChartViewBy]);
@@ -462,7 +537,7 @@ const StackedAreaTeamTagChart = ({
       },
     },
     legend: {
-      show: true,
+      show: !(dataChart.length == 1 && !dataChart[0].name), // Not show legend with fake data
       showForSingleSeries: true,
       position: 'bottom',
       horizontalAlign: 'right',
@@ -559,7 +634,7 @@ const StackedAreaTeamTagChart = ({
 
   // Sort by percent difference
   const sortByPercentDifference = (
-    data: TableRowDetail[],
+    data: TagTableRowDetail[],
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
@@ -570,12 +645,12 @@ const StackedAreaTeamTagChart = ({
         ? rowAPercentage - rowBPercentage
         : rowBPercentage - rowAPercentage;
     });
-    setTableData(sortedArr);
+    setAreaTableData(sortedArr);
   };
 
   // Sort by duration difference
   const sortByDurationDifference = (
-    data: TableRowDetail[],
+    data: TagTableRowDetail[],
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
@@ -590,11 +665,11 @@ const StackedAreaTeamTagChart = ({
         ? rowADuration - rowBDuration
         : rowBDuration - rowADuration;
     });
-    setTableData(sortedArr);
+    setAreaTableData(sortedArr);
   };
 
   // Columns definition
-  const columns: ColumnDef<TableRowDetail>[] = [
+  const columns: ColumnDef<TagTableRowDetail>[] = [
     {
       accessorKey: 'tagName',
       header: () => {
@@ -609,20 +684,29 @@ const StackedAreaTeamTagChart = ({
         const collapseStatus =
           tagCollapseStatuses.find(
             (tagCollapseStatus) =>
-              tagCollapseStatus.tagId == info.row.original.tagId,
+              tagCollapseStatus.tagId == info.row.original.tagId &&
+              info.row.original.organizationId ==
+                tagCollapseStatus?.organizationId,
           )?.status || false;
 
         return (
           <div className="flex items-start px-[18px]">
             <RadioButton
               name="tagName"
-              isChecked={info.row.original.tagId == selectedTag?.id}
+              isChecked={
+                info.row.original.tagId == selectedTag?.id &&
+                info.row.original.organizationId == selectedTag?.organizationId
+              }
               onChange={(e: any) => {
                 if (e) {
                   setSelectedTag({
                     id: info.row.original.tagId,
                     name: info.row.original.tagName,
+                    organizationId: info.row.original.organizationId,
                   });
+                  setSelectedOrganizationInTable(
+                    info.row.original.organizationId,
+                  );
                   setFilter((prev) => {
                     return {
                       ...prev,
@@ -632,6 +716,7 @@ const StackedAreaTeamTagChart = ({
                           value: info.row.original.tagId,
                         },
                       ],
+                      selectedOrganization: info.row.original.organizationId,
                     };
                   });
                 }
@@ -642,7 +727,7 @@ const StackedAreaTeamTagChart = ({
                 className={`flex justify-between items-center w-full ${
                   collapseStatus &&
                   info.row.original?.userList?.filter((user) =>
-                    selectedMemberList.includes(String(user.userId)),
+                    selectedMembers.join(',').includes(String(user.userId)),
                   ).length > 0 &&
                   'mb-3'
                 }`}>
@@ -661,7 +746,9 @@ const StackedAreaTeamTagChart = ({
                     onClick={() => {
                       setTagCollapseStatuses((prev) => {
                         return prev.map((item) =>
-                          item.tagId == info.row.original.tagId
+                          item.tagId == info.row.original.tagId &&
+                          item.organizationId ==
+                            info.row.original.organizationId
                             ? { ...item, status: !item.status }
                             : item,
                         );
@@ -676,7 +763,7 @@ const StackedAreaTeamTagChart = ({
                   <div className="flex flex-col">
                     {info.row.original?.userList
                       ?.filter((user) =>
-                        selectedMemberList.includes(String(user.userId)),
+                        selectedMembers.join(',').includes(String(user.userId)),
                       )
                       .map((user) => {
                         return (
@@ -715,10 +802,10 @@ const StackedAreaTeamTagChart = ({
                 durationSortingStatus == SortingType.DESC
               ) {
                 setDurationSortingStatus(SortingType.ASC);
-                sortByDurationDifference(tableData, SortingType.ASC);
+                sortByDurationDifference(areaTableData, SortingType.ASC);
               } else {
                 setDurationSortingStatus(SortingType.DESC);
-                sortByDurationDifference(tableData, SortingType.DESC);
+                sortByDurationDifference(areaTableData, SortingType.DESC);
               }
             }}>
             <p className="!text-xs font-medium !text-[#77858F]">計測時間</p>
@@ -740,7 +827,9 @@ const StackedAreaTeamTagChart = ({
         const collapseStatus =
           tagCollapseStatuses.find(
             (tagCollapseStatus) =>
-              tagCollapseStatus.tagId == info.row.original.tagId,
+              tagCollapseStatus.tagId == info.row.original.tagId &&
+              info.row.original.organizationId ==
+                tagCollapseStatus?.organizationId,
           )?.status || false;
 
         return (
@@ -749,7 +838,7 @@ const StackedAreaTeamTagChart = ({
               className={`flex justify-center ${
                 collapseStatus &&
                 info.row.original?.userList?.filter((user) =>
-                  selectedMemberList.includes(String(user.userId)),
+                  selectedMembers.join(',').includes(String(user.userId)),
                 ).length > 0 &&
                 'mb-3'
               }`}>
@@ -762,7 +851,7 @@ const StackedAreaTeamTagChart = ({
                 <div className="flex flex-col">
                   {info.row.original?.userList
                     ?.filter((user) =>
-                      selectedMemberList.includes(String(user.userId)),
+                      selectedMembers.join(',').includes(String(user.userId)),
                     )
                     .map((user) => {
                       return (
@@ -793,10 +882,10 @@ const StackedAreaTeamTagChart = ({
                 percentageSortingStatus == SortingType.DESC
               ) {
                 setPercentageSortingStatus(SortingType.ASC);
-                sortByPercentDifference(tableData, SortingType.ASC);
+                sortByPercentDifference(areaTableData, SortingType.ASC);
               } else {
                 setPercentageSortingStatus(SortingType.DESC);
-                sortByPercentDifference(tableData, SortingType.DESC);
+                sortByPercentDifference(areaTableData, SortingType.DESC);
               }
             }}>
             <p className="!text-xs font-medium !text-[#77858F]">割合</p>
@@ -820,7 +909,9 @@ const StackedAreaTeamTagChart = ({
         const collapseStatus =
           tagCollapseStatuses.find(
             (tagCollapseStatus) =>
-              tagCollapseStatus.tagId == info.row.original.tagId,
+              tagCollapseStatus.tagId == info.row.original.tagId &&
+              info.row.original.organizationId ==
+                tagCollapseStatus?.organizationId,
           )?.status || false;
 
         return (
@@ -829,7 +920,7 @@ const StackedAreaTeamTagChart = ({
               className={`flex justify-center ${
                 collapseStatus &&
                 info.row.original?.userList?.filter((user) =>
-                  selectedMemberList.includes(String(user.userId)),
+                  selectedMembers.join(',').includes(String(user.userId)),
                 ).length > 0 &&
                 'mb-3'
               }`}>
@@ -841,7 +932,7 @@ const StackedAreaTeamTagChart = ({
                 <div className="flex flex-col">
                   {info.row.original?.userList
                     ?.filter((user) =>
-                      selectedMemberList.includes(String(user.userId)),
+                      selectedMembers.join(',').includes(String(user.userId)),
                     )
                     .map((user) => {
                       return (
@@ -866,7 +957,7 @@ const StackedAreaTeamTagChart = ({
   ];
 
   const table = useReactTable({
-    data: tableData,
+    data: areaTableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -878,9 +969,9 @@ const StackedAreaTeamTagChart = ({
       const duration = userData.durations[index];
       return {
         user: {
-          fullName: userData.user.fullName,
-          avatarColor: userData.user.avatarColor,
-          avatar: userData.user.avatar,
+          fullName: userData?.user?.fullName,
+          avatarColor: userData?.user?.avatarColor,
+          avatar: userData?.user?.avatar,
         },
         startDate: duration?.startDate || null,
         endDate: duration?.endDate || null,
@@ -1002,7 +1093,13 @@ const StackedAreaTeamTagChart = ({
                   classNameOption="!text-sm"
                   options={listOptionsOrganization}
                   selectedOption={selectedOrganization || undefined}
-                  onChange={(data) => handleSelectOrganization(data)}
+                  onChange={(data) => {
+                    setSelectedMembers([]);
+                    setAreaTableData([]);
+                    setIsTableDataRendered(false);
+                    setIsOrganizationChanging(true);
+                    handleSelectOrganization(data);
+                  }}
                 />
               </div>
             </div>
@@ -1034,7 +1131,10 @@ const StackedAreaTeamTagChart = ({
                   classNameOption="!text-sm"
                   options={largeOptions}
                   selectedOption={selectedLarge || undefined}
-                  onChange={(data) => handleSelectLarge(data)}
+                  onChange={(data) => {
+                    setAreaTableData([]);
+                    handleSelectLarge(data);
+                  }}
                   disabled={!selectedOrganization}
                 />
               </div>
@@ -1066,7 +1166,10 @@ const StackedAreaTeamTagChart = ({
                   classNameOption="!text-sm"
                   options={mediumOptions}
                   selectedOption={selectedMedium || undefined}
-                  onChange={(data) => handleSelectMedium(data)}
+                  onChange={(data) => {
+                    setAreaTableData([]);
+                    handleSelectMedium(data);
+                  }}
                   disabled={!selectedLarge}
                 />
               </div>
@@ -1098,7 +1201,10 @@ const StackedAreaTeamTagChart = ({
                   classNameOption="!text-sm"
                   options={smallOptions}
                   selectedOption={selectedSmall || undefined}
-                  onChange={(data) => handleSelectSmall(data)}
+                  onChange={(data) => {
+                    setAreaTableData([]);
+                    handleSelectSmall(data);
+                  }}
                   disabled={!selectedMedium}
                 />
               </div>
@@ -1158,94 +1264,102 @@ const StackedAreaTeamTagChart = ({
               />
               <div
                 className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'} pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
-                {timeRange.slice(1).map((item, idx) => {
-                  const actualIndex = idx + 1;
-                  const isHovered = hoveredIndex === actualIndex;
+                {!(dataChart.length == 1 && !dataChart[0].name) &&
+                  timeRange
+                    .slice(timeRange.length > 1 ? 1 : 0)
+                    .map((item, idx) => {
+                      const actualIndex = idx + 1;
+                      const isHovered = hoveredIndex === actualIndex;
 
-                  const dataDetail = getDataByIndex(idx);
+                      const dataDetail = getDataByIndex(idx);
 
-                  const totalDuration = dataDetail
-                    ? sumDurationsChart(dataDetail.map((user) => user.duration))
-                    : '00:00:00';
+                      const totalDuration = dataDetail
+                        ? sumDurationsChart(
+                            dataDetail.map((user) => user.duration),
+                          )
+                        : '00:00:00';
 
-                  return (
-                    <div
-                      key={actualIndex}
-                      onMouseEnter={() => setHoveredIndex(actualIndex)}
-                      onMouseLeave={() => setHoveredIndex(null)}
-                      style={{
-                        flex: 1,
-                        textAlign: 'center',
-                        backgroundColor:
-                          hoveredIndex === null
-                            ? 'transparent'
-                            : isHovered
-                              ? 'transparent'
-                              : '#F8FAFCA6',
-                        transition: 'background-color 0.2s',
-                      }}
-                      className="group relative">
-                      {
+                      return (
                         <div
+                          key={actualIndex}
+                          onMouseEnter={() => setHoveredIndex(actualIndex)}
+                          onMouseLeave={() => setHoveredIndex(null)}
                           style={{
-                            boxShadow: '0px 2px 8px 0px #0000001A',
+                            flex: 1,
+                            textAlign: 'center',
+                            backgroundColor:
+                              hoveredIndex === null
+                                ? 'transparent'
+                                : isHovered
+                                  ? 'transparent'
+                                  : '#F8FAFCA6',
+                            transition: 'background-color 0.2s',
                           }}
-                          className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
-                          <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-start w-full block">
-                            {dataDetail &&
-                              dataDetail.length > 0 &&
-                              convertToJapaneseDateRange(
-                                dataDetail[0]?.startDate as string,
-                                dataDetail[0]?.endDate as string,
-                              )}
-                          </p>
-                          <p className="text-start px-5 mt-4">
-                            {selectedTag?.name}
-                          </p>
-                          <div className="flex text-base my-3 font-normal gap-[10px] px-5">
-                            <p>
-                              {totalDuration &&
-                                formatTimeToJapanese(totalDuration)}
-                            </p>
-                          </div>
-                          <div className="px-5 max-h-[250px] overflow-y-auto">
-                            {dataDetail &&
-                              dataDetail.length > 0 &&
-                              dataDetail?.map((user, userIndex) => {
-                                return (
-                                  <div
-                                    key={userIndex}
-                                    className="flex items-center gap-1.5 mb-1.5">
-                                    <CustomUserAvatar
-                                      avatarUrl={user.user.avatar || ''}
-                                      avatarColor={user.user.avatarColor || ''}
-                                      size={30}
-                                    />
-                                    <div className="flex flex-grow items-center justify-between text-base font-medium">
-                                      <div className=" text-black w-fit max-w-[140px] line-clamp-3 break-all text-left">
-                                        {user.user.fullName}
+                          className="group relative">
+                          {
+                            <div
+                              style={{
+                                boxShadow: '0px 2px 8px 0px #0000001A',
+                              }}
+                              className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                              <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-start w-full block">
+                                {dataDetail &&
+                                  dataDetail.length > 0 &&
+                                  convertToJapaneseDateRange(
+                                    dataDetail[0]?.startDate as string,
+                                    dataDetail[0]?.endDate as string,
+                                  )}
+                              </p>
+                              <p className="text-start px-5 mt-4">
+                                {selectedTag?.name}
+                              </p>
+                              <div className="flex text-base my-3 font-normal gap-[10px] px-5">
+                                <p>
+                                  {totalDuration &&
+                                    formatTimeToJapanese(totalDuration)}
+                                </p>
+                              </div>
+                              <div className="px-5 max-h-[250px] overflow-y-auto">
+                                {dataDetail &&
+                                  dataDetail.length > 0 &&
+                                  dataDetail?.map((user, userIndex) => {
+                                    return (
+                                      <div
+                                        key={userIndex}
+                                        className="flex items-center gap-1.5 mb-1.5">
+                                        <CustomUserAvatar
+                                          avatarUrl={user.user.avatar || ''}
+                                          avatarColor={
+                                            user.user.avatarColor || ''
+                                          }
+                                          size={30}
+                                        />
+                                        <div className="flex flex-grow items-center justify-between text-base font-medium">
+                                          <div className=" text-black w-fit max-w-[140px] line-clamp-3 break-all text-left">
+                                            {user.user.fullName}
+                                          </div>
+                                          <div>{user.percentPerRange}%</div>
+                                        </div>
                                       </div>
-                                      <div>{user.percentPerRange}%</div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                          </div>
+                                    );
+                                  })}
+                              </div>
+                            </div>
+                          }
                         </div>
-                      }
-                    </div>
-                  );
-                })}
+                      );
+                    })}
               </div>
             </div>
           )}
           <div className="px-[30px]">
-            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+            <Table
+              className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${areaTableData.length && 'max-h-[500px] overflow-y-auto'}`}>
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr
                     key={headerGroup.id}
-                    className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                    className="sticky top-0 z-10 text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
                     {headerGroup.headers.map((header, index) => (
                       <th
                         key={header.id}

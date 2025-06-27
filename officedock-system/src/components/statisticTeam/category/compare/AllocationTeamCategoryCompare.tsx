@@ -30,6 +30,7 @@ import {
 import { lightenColor } from '@utils';
 
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
+import { ALL_TEAM_STATISTIC } from '@constants';
 
 type Props = {
   startDate: Date;
@@ -54,6 +55,7 @@ type ProgressDataType = {
   duration: string;
   optionData: UserListStatisticType[];
   mergedItems?: ProgressDataType[];
+  organizationId?: string;
 };
 type ProgressDataCompareItem = {
   item: ProgressDataType;
@@ -83,6 +85,7 @@ function transformAndMergeProgressData({
       '',
     duration: item.duration,
     optionData: item.users || [],
+    organizationId: String(item.organizationId),
   }));
 
   const mergedItems = progressData.filter((item) => item.value < threshold);
@@ -110,18 +113,29 @@ function transformAndMergeProgressData({
 
   return [...mainItems, mergedItem];
 }
+const buildKey = (item: ProgressDataType, isAllTeam: boolean) =>
+  isAllTeam ? `${item.organizationId}-${item.id}` : `${item.id}`;
+
+const parseKey = (key: string, isAllTeam: boolean) => {
+  if (!isAllTeam) return { id: +key, orgId: undefined };
+  const [orgId, idStr] = key.split('-', 2);
+  return { id: +idStr, orgId };
+};
 
 export function buildProgressDataCompareWithMergedOthers({
   baseData,
   compareData,
   threshold = 10,
   colorData,
+  isAllTeam = false,
 }: {
   baseData: StatisticCategoryInfo[];
   compareData: StatisticCategoryInfo[];
   threshold?: number;
   colorData?: string;
+  isAllTeam?: boolean;
 }): ProgressDataCompareItem[] {
+  /* 1. Transfer & merge data for both sides */
   const isBaseEmpty = baseData.length === 0;
   const isCompareEmpty = compareData.length === 0;
 
@@ -151,68 +165,68 @@ export function buildProgressDataCompareWithMergedOthers({
     colorData,
   });
 
-  // Collect all unique IDs including from mergedItems
-  const allIds = new Set<number>();
-  const extractIds = (data: ProgressDataType[]) => {
-    data.forEach((item) => {
+  /* 2. Collect all unique keys */
+  const allKeys = new Set<string>();
+  const collectKeys = (arr: ProgressDataType[]) => {
+    arr.forEach((item) => {
+      allKeys.add(buildKey(item, isAllTeam));
+
       if (item.id === -1 && item.mergedItems) {
-        item.mergedItems.forEach((sub) => allIds.add(sub.id));
-      } else {
-        allIds.add(item.id);
+        item.mergedItems.forEach((sub) =>
+          allKeys.add(buildKey(sub, isAllTeam)),
+        );
       }
     });
   };
+  collectKeys(mergedBase);
+  collectKeys(mergedCompare);
 
-  extractIds(mergedBase);
-  extractIds(mergedCompare);
-
-  const findItemById = (
-    id: number,
-    data: ProgressDataType[],
+  /* 3. Function to find item by key (add organizationId if needed) */
+  const findByKey = (
+    key: string,
+    arr: ProgressDataType[],
   ): ProgressDataType | undefined => {
+    const { id, orgId } = parseKey(key, isAllTeam);
+    const matcher = (el: ProgressDataType) =>
+      el.id === id && (!isAllTeam || el.organizationId === orgId);
+
     return (
-      data.find((d) => d.id === id) ||
-      data
-        .find((d) => d.id === -1 && d.mergedItems?.some((m) => m.id === id))
-        ?.mergedItems?.find((m) => m.id === id)
+      arr.find(matcher) ||
+      arr
+        .find((d) => d.id === -1 && d.mergedItems?.some(matcher))
+        ?.mergedItems?.find(matcher)
     );
   };
 
-  const result: ProgressDataCompareItem[] = Array.from(allIds).map((id) => {
-    const item = findItemById(id, mergedBase);
-    const itemCompare = findItemById(id, mergedCompare);
+  /* 4. Merge results for each key */
+  const result: ProgressDataCompareItem[] = Array.from(allKeys)
+    .map((key) => {
+      const baseItem = findByKey(key, mergedBase);
+      const cmpItem = findByKey(key, mergedCompare);
+      const { id, orgId } = parseKey(key, isAllTeam);
 
-    const finalItem: ProgressDataType = item ?? {
-      id,
-      label: itemCompare?.label ?? '',
-      value: 0,
-      color: '#ccc',
-      duration: '00:00:00',
-      optionData: [],
-    };
+      const empty: ProgressDataType = {
+        id,
+        label: baseItem?.label ?? cmpItem?.label ?? '',
+        value: 0,
+        color: '#ccc',
+        duration: '00:00:00',
+        optionData: [],
+        organizationId: orgId,
+      };
 
-    const finalItemCompare: ProgressDataType = itemCompare ?? {
-      id,
-      label: item?.label ?? '',
-      value: 0,
-      color: '#ccc',
-      duration: '00:00:00',
-      optionData: [],
-    };
+      return {
+        item: baseItem ?? empty,
+        itemCompare: cmpItem ?? empty,
+      };
+    })
+    .filter(({ item, itemCompare }) => item.value > 0 || itemCompare.value > 0);
 
-    return {
-      item: finalItem,
-      itemCompare: finalItemCompare,
-    };
-  });
-
-  // Sort: "その他" item (id === -1) stays last
+  /* 5. Keep "その他" (id = -1) at the end of the list */
   result.sort((a, b) => {
-    const isAOther = a.item.id === -1;
-    const isBOther = b.item.id === -1;
-    if (isAOther && !isBOther) return 1;
-    if (!isAOther && isBOther) return -1;
-    return 0;
+    const aOther = a.item.id === -1;
+    const bOther = b.item.id === -1;
+    return aOther === bOther ? 0 : aOther ? 1 : -1;
   });
 
   return result;
@@ -245,6 +259,7 @@ const AllocationTeamCategoryCompare = memo(
       totalDuration: string;
       userDuration: string;
       totalTask?: string;
+      organizationId?: string;
     } | null>(null);
 
     const [progressDataLarge, setProgressDataLarge] = useState<
@@ -294,6 +309,7 @@ const AllocationTeamCategoryCompare = memo(
         const compareResult = buildProgressDataCompareWithMergedOthers({
           baseData: statisticTeamCategoryList.largeCategories || [],
           compareData: statisticCategoryListTeamCompare.largeCategories || [],
+          isAllTeam: selectedOrganization?.label === ALL_TEAM_STATISTIC,
         });
         const color =
           statisticTeamCategoryList.largeCategories?.find(
@@ -322,6 +338,7 @@ const AllocationTeamCategoryCompare = memo(
       statisticTeamCategoryList,
       statisticCategoryListTeamCompare,
       selectedLarge?.value,
+      selectedOrganization?.label,
     ]);
 
     const handleClickTooltip = ({
@@ -332,6 +349,7 @@ const AllocationTeamCategoryCompare = memo(
       isCompare,
       userDuration,
       totalTask,
+      organizationId,
     }: {
       id: number;
       userId: number;
@@ -340,6 +358,7 @@ const AllocationTeamCategoryCompare = memo(
       isCompare?: boolean;
       userDuration: string;
       totalTask?: string;
+      organizationId?: string;
     }) => {
       if (isCompare) {
         setIsModalCompare(true);
@@ -353,6 +372,7 @@ const AllocationTeamCategoryCompare = memo(
         totalDuration: duration,
         userDuration,
         totalTask,
+        organizationId,
       });
 
       setTimeout(() => {
@@ -675,6 +695,7 @@ const AllocationTeamCategoryCompare = memo(
                                   isCompare,
                                   userDuration,
                                   totalTask,
+                                  organizationId,
                                 }: {
                                   userId: number;
                                   categoryId: number;
@@ -682,6 +703,7 @@ const AllocationTeamCategoryCompare = memo(
                                   isCompare?: boolean;
                                   userDuration: string;
                                   totalTask?: string;
+                                  organizationId?: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: categoryId,
@@ -691,6 +713,7 @@ const AllocationTeamCategoryCompare = memo(
                                     isCompare,
                                     userDuration,
                                     totalTask,
+                                    organizationId,
                                   });
                                 }}
                                 handleClickChart={(

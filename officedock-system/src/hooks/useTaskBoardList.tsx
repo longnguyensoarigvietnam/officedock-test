@@ -2,7 +2,7 @@
 
 import { useContext, useState } from 'react';
 import { useQuery } from 'react-query';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 import api from '@base/api';
@@ -14,6 +14,7 @@ import { KanbanDataResponse, StatusTask } from '@interfaces/task';
 import { TaskContext } from '@providers/TaskProvider';
 import { ResponseError } from '@interfaces/response';
 import { OptionDropdownType } from '@interfaces/common';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 interface FilterProps {
   userId?: string;
@@ -32,7 +33,7 @@ const useTaskBoardList = (
     organization_ids: OptionDropdownType[];
   } | null,
 ) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
   const token = session?.accessToken;
 
@@ -42,7 +43,7 @@ const useTaskBoardList = (
     { id: string; count: number; numPages: number; hasMores: boolean }[]
   >([]);
   // Handle call API get task board list
-  const getTaskBoardList = async () => {
+  const getTaskBoardList = async ({ signal }: { signal?: AbortSignal }) => {
     setIsLoadingDataTask(true);
     if (!statusList || statusList.length === 0) {
       setIsLoadingDataTask(true);
@@ -75,7 +76,7 @@ const useTaskBoardList = (
 
       const apiUrl = `${apiRouters.TASK_BOARD_LIST}?${params.toString()}`;
 
-      const { data } = await api.get<KanbanDataResponse>(apiUrl);
+      const { data } = await api.get<KanbanDataResponse>(apiUrl, { signal });
       return {
         statusId,
         numberPages: data.numPages,
@@ -111,7 +112,8 @@ const useTaskBoardList = (
     queryKey: isReadyToFetch
       ? ['getTaskBoardList', filter, ordering, statusList, orderingOptions]
       : ['getTaskBoardList'],
-    queryFn: getTaskBoardList,
+    queryFn: ({ signal }) => getTaskBoardList({ signal }),
+
     retry: 0,
     enabled: isReadyToFetch && !!token,
     refetchOnMount: true,

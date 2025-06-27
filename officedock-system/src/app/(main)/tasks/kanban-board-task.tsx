@@ -18,7 +18,8 @@ import {
 } from '@headlessui/react';
 
 import { useMutation, useQueryClient } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -162,7 +163,7 @@ const KanbanBoardTask = () => {
 
   const { setIsLoading } = useContext(LoadingContext);
 
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const {
     searchValue,
     orderingOptions,

@@ -3,7 +3,8 @@ import { useMutation } from 'react-query';
 import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { AxiosError } from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import Link from 'next/link';
 
 import Button from '@components/common/Button';
@@ -54,7 +55,7 @@ import api from '@base/api';
 const ListSkillsMap = () => {
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const { showToast } = useToast();
 
   // Router

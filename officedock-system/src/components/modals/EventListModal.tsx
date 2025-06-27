@@ -1,4 +1,5 @@
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import {
   Dispatch,
   SetStateAction,
@@ -56,7 +57,7 @@ export const EventListModal = ({
   calendarView,
 }: EventListModalProps) => {
   const popoverRef = useRef<HTMLDivElement | null>(null);
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
   const [popupPosition, setPopupPosition] = useState<{
     top: number;

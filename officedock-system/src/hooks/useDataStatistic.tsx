@@ -1,6 +1,7 @@
 'use client';
 import { AxiosError } from 'axios';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { useQuery } from 'react-query';
 
 import { apiRouters } from '@constants/routers';
@@ -26,7 +27,7 @@ const useDataStatistic = ({
   current_screen,
   onError,
 }: useDataStatisticProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const token = session?.accessToken;
 

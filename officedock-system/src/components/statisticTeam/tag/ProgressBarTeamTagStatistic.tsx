@@ -8,6 +8,7 @@ import {
   getJapaneseDayName,
 } from '@utils/date';
 import React, { useState } from 'react';
+import DetailProgressData from './detail/DetailProgressData';
 
 interface ProgressBarProps {
   label: string;
@@ -23,11 +24,12 @@ interface ProgressBarProps {
     value: number;
     duration: string;
     optionData: UserListStatisticType[];
+    organizationId?: string;
   }[];
   color?: string;
   classProgressClass?: string;
   classProgressUserClass?: string;
-
+  organizationId?: string;
   className?: string;
   showInfo?: boolean;
   startDate?: Date;
@@ -38,10 +40,12 @@ interface ProgressBarProps {
     userId,
     tagId,
     duration,
+    organizationId,
   }: {
     userId: number;
     tagId: number;
     duration: string;
+    organizationId?: string;
   }) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
 }
@@ -61,6 +65,7 @@ const ProgressBarTeamTagStatistic = ({
   showInfo = true,
   startDate,
   endDate,
+  organizationId,
   startDateCompare,
   endDateCompare,
   handleClickTooltip,
@@ -69,6 +74,7 @@ const ProgressBarTeamTagStatistic = ({
   const [isExtendUser, setExtendUser] = useState(false);
 
   const percentage = Math.round(Math.min((value / maxValue) * 100, 100));
+
   return (
     <>
       <div className={`font-medium text-sm text-black ${className}`}>
@@ -82,18 +88,16 @@ const ProgressBarTeamTagStatistic = ({
                 <span className="text-sm font-medium truncate max-w-24">
                   {duration && formatTimeToJapanese(duration)}
                 </span>
-                {id !== -1 && (
-                  <ImageRound
-                    src="/icons/extend-calendar.svg"
-                    name="Extend calendar"
-                    className={`!w-3 !h-3 hover:cursor-pointer ${
-                      isExtendUser ? '-rotate-90' : 'rotate-90'
-                    }`}
-                    onClick={() => {
-                      setExtendUser(!isExtendUser);
-                    }}
-                  />
-                )}
+                <ImageRound
+                  src="/icons/extend-calendar.svg"
+                  name="Extend calendar"
+                  className={`!w-3 !h-3 hover:cursor-pointer ${
+                    isExtendUser ? '-rotate-90' : 'rotate-90'
+                  }`}
+                  onClick={() => {
+                    setExtendUser(!isExtendUser);
+                  }}
+                />
               </div>
             </div>
           )}
@@ -237,56 +241,60 @@ const ProgressBarTeamTagStatistic = ({
                     </div>
                   </div>
                 )}
-
-                {mergedItems &&
-                  mergedItems?.length > 0 &&
-                  mergedItems.map((item, index) => {
-                    return (
-                      <div key={index}>
-                        <div className="flex items-center gap-1 px-5">
-                          <div
-                            style={{
-                              backgroundColor: item.color,
-                            }}
-                            className="w-3 h-3"></div>
-                          <span className="truncate  max-w-[calc(100%_-_20px)] font-bold text-[16px]">
-                            {item.label}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-[10px] font-normal text-sm my-2 px-5">
-                          <span>{item.value}%</span>
-                          <span>
-                            {item.duration &&
-                              formatTimeToJapanese(item.duration)}
-                          </span>
-                        </div>
-                        <div className={`max-h-[250px] overflow-y-auto px-5`}>
-                          <ul>
-                            {item.optionData.map((user, userIndex) => (
-                              <li
-                                key={userIndex}
-                                className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <div>
-                                    <CustomUserAvatar
-                                      avatarUrl={user.user?.avatar || ''}
-                                      avatarColor={user.user?.avatarColor || ''}
-                                      size={30}
-                                      customClassName={`${!user.user?.avatar && '!mt-0'}`}
-                                    />
+                <div className="max-h-[350px] overflow-y-auto">
+                  {mergedItems &&
+                    mergedItems?.length > 0 &&
+                    mergedItems.map((item, index) => {
+                      return (
+                        <div key={index}>
+                          <div className="flex items-center gap-1 px-5">
+                            <div
+                              style={{
+                                backgroundColor: item.color,
+                              }}
+                              className="w-3 h-3"></div>
+                            <span className="truncate  max-w-[calc(100%_-_20px)] font-bold text-[16px]">
+                              {item.label}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-[10px] font-normal text-sm my-2 px-5">
+                            <span>{item.value}%</span>
+                            <span>
+                              {item.duration &&
+                                formatTimeToJapanese(item.duration)}
+                            </span>
+                          </div>
+                          <div className={`max-h-[250px] overflow-y-auto px-5`}>
+                            <ul>
+                              {item.optionData.map((user, userIndex) => (
+                                <li
+                                  key={userIndex}
+                                  className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <div>
+                                      <CustomUserAvatar
+                                        avatarUrl={user.user?.avatar || ''}
+                                        avatarColor={
+                                          user.user?.avatarColor || ''
+                                        }
+                                        size={30}
+                                        customClassName={`${!user.user?.avatar && '!mt-0'}`}
+                                      />
+                                    </div>
+                                    <span className="inline-block w-[130px] overflow-hidden whitespace-nowrap text-ellipsis">
+                                      {user.user.fullName}
+                                    </span>
                                   </div>
-                                  <span className="inline-block w-[130px] overflow-hidden whitespace-nowrap text-ellipsis">
-                                    {user.user.fullName}
-                                  </span>
-                                </div>
-                                <span>{user.percent}%</span>
-                              </li>
-                            ))}
-                          </ul>
+                                  <span>{user.percent}%</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div className=" w-full mb-5  border-b border-[#D2DBE1]"></div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                </div>
               </div>
             )}
           </div>
@@ -300,14 +308,14 @@ const ProgressBarTeamTagStatistic = ({
             className={`font-medium mt-3 text-sm text-black ${className}`}>
             <div className="mb-[10px]">
               {showInfo && (
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
+                <div className="flex justify-between items-center w-full">
+                  <div className="flex items-center gap-2 w-[calc(100%_-_96px)]">
                     <CustomUserAvatar
                       avatarUrl={item.user.avatar || ''}
                       avatarColor={item.user.avatarColor || ''}
                       size={30}
                     />
-                    <span className="text-sm font-medium truncate max-w-40">
+                    <span className="text-sm font-medium truncate max-w-[calc(100%_-_30px)]">
                       {item.user.fullName}
                     </span>
                   </div>
@@ -320,7 +328,7 @@ const ProgressBarTeamTagStatistic = ({
             <div
               className={`w-full group relative h-[10px] bg-gray-300 ${classProgressUserClass}`}>
               <div
-                className="h-full transition-all duration-500 rounded-[4px]"
+                className="h-full transition-all duration-500"
                 style={{
                   width: `${item.percent}%`,
                   backgroundColor: color,
@@ -383,6 +391,7 @@ const ProgressBarTeamTagStatistic = ({
                           userId: item.user.id,
                           tagId: id,
                           duration: item.duration,
+                          organizationId: organizationId,
                         })
                       }
                       className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">
@@ -401,6 +410,28 @@ const ProgressBarTeamTagStatistic = ({
             </div>
           </div>
         ))}
+      {isExtendUser &&
+        id === -1 &&
+        mergedItems?.length &&
+        mergedItems.map((cate) => {
+          return (
+            <div
+              key={cate.id}
+              className={`font-medium text-sm text-black ${className}`}>
+              <DetailProgressData
+                cate={cate}
+                showInfo
+                startDate={startDate}
+                endDate={endDate}
+                className={className}
+                classProgressClass={classProgressClass}
+                classProgressUserClass={classProgressUserClass}
+                handleClickChart={handleClickChart}
+                handleClickTooltip={handleClickTooltip}
+              />
+            </div>
+          );
+        })}
     </>
   );
 };

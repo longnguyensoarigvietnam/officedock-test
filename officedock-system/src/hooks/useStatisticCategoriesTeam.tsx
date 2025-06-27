@@ -3,7 +3,7 @@
 import { useQuery } from 'react-query';
 import { useContext } from 'react';
 import { AxiosError } from 'axios';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 
@@ -35,7 +35,7 @@ const useStatisticCategoriesTeam = ({
   onSuccess?: (data: StatisticsCategories) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
   const {
     setIsLoadingLargeCompare,
@@ -47,10 +47,16 @@ const useStatisticCategoriesTeam = ({
   } = useContext(StatisticTeamStateContext);
 
   // Handle call API get statistic category list team
-  const getStatisticCategoryListTeam = async () => {
+  const getStatisticCategoryListTeam = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds) return [];
 
     const params = new URLSearchParams();
+    if (filter.organizationIds)
+      params.append('organization_id', filter?.organizationIds.toString());
     if (filter.organizationMemberId)
       params.append(
         'organization_get_members_id',
@@ -81,8 +87,10 @@ const useStatisticCategoriesTeam = ({
       params.set('user_ids', userIds);
     }
 
-    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM(Number(filter.organizationIds))}?${params.toString()}`;
-    const { data } = await api.get<StatisticsCategories[]>(apiUrl);
+    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM}?${params.toString()}`;
+    const { data } = await api.get<StatisticsCategories[]>(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -93,7 +101,7 @@ const useStatisticCategoriesTeam = ({
     isFetched: isFetchedStatisticCategoryListTeam,
   } = useQuery({
     queryKey: ['getStatisticCategoryListTeam', [filter]],
-    queryFn: getStatisticCategoryListTeam,
+    queryFn: ({ signal }) => getStatisticCategoryListTeam({ signal }),
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

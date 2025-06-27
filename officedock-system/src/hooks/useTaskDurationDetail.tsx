@@ -1,6 +1,7 @@
 'use client';
 import { useQuery } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 
 import api from '@base/api';
@@ -25,7 +26,7 @@ const useTaskDurationDetail = ({
   onError,
   onSettled,
 }: UseTaskDurationDetailHooksProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   // Handle call API get task duration detail

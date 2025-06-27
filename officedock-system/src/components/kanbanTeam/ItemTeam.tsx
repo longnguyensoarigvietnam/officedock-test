@@ -13,6 +13,7 @@ import { OptionDropdownType } from '@interfaces/common';
 
 import { compareWithCurrentDate, formatShowDeadlineTask } from '@utils/date';
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
+import { NO_SETTING } from '@constants';
 
 interface ItemProps {
   id: string;
@@ -153,6 +154,7 @@ const ItemTeam = ({
 
   const handleClick = () => {
     if (isClicked) return;
+    if (content.isCrossTeamTask) return;
 
     setIsClicked(true);
     handleActionEditTask(parseInt(`${content.id}`));
@@ -164,6 +166,11 @@ const ItemTeam = ({
     content.categories &&
     content.categories.find((item) => item.type === EventWorkCategory.LARGE)
       ?.color;
+  const largeCategory =
+    (content.categories &&
+      content.categories.find((item) => item.type === EventWorkCategory.LARGE)
+        ?.name) ||
+    NO_SETTING;
 
   return (
     <>
@@ -275,7 +282,9 @@ const ItemTeam = ({
                     marginRight: `${(columnWidth / 247) * 12}px`,
                   }}
                   className={`!border-none leading-[1.4] break-all line-clamp-2 cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
-                  {content.title}
+                  {content.isCrossTeamTask
+                    ? `${largeCategory}タスク`
+                    : content.title}
                 </p>
               </div>
 
@@ -368,7 +377,9 @@ const ItemTeam = ({
                               fontSize: '12px',
                             }}
                             disabled={
-                              content.status?.id === StatusValueTask.COMPLETED
+                              content.status?.id ===
+                                StatusValueTask.COMPLETED ||
+                              content.isCrossTeamTask
                             }
                             options={
                               content.status?.id === StatusValueTask.MY_ROUTINE
@@ -469,7 +480,9 @@ const ItemTeam = ({
                     marginRight: `${(columnWidth / 247) * 12}px`,
                   }}
                   className={`!border-none leading-[1.4] break-all line-clamp-2 cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
-                  {content.title}
+                  {content.isCrossTeamTask
+                    ? `${largeCategory}タスク`
+                    : content.title}
                 </p>
               </div>
             </div>

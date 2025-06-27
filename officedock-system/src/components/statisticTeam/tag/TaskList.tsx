@@ -193,6 +193,7 @@ const TaskListStatisticTeamTags = ({
       isCompare: isCheckCompare && isShowCompare,
       user_id: selectedMember as number,
     },
+    conditions: [!isShowCompare],
     onSuccess: (data) => {
       if (data) {
         setTotalPagesCompare(data.numPages);
@@ -535,6 +536,7 @@ const TaskListStatisticTeamTags = ({
                     ? getTotalDurationCompare()
                     : getTotalDuration()
                 }
+                selectedMember={selectedMember}
                 listOptionsOrganization={listOptionsOrganization}
                 creationDataStatisticData={creationDataStatisticData}
                 setOrdering={(ord: string) => {

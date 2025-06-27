@@ -1,5 +1,6 @@
 import { isSameDay } from 'date-fns';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { useRouter } from 'next/navigation';
 import React, { useContext } from 'react';
 
@@ -31,7 +32,7 @@ type Props = {
 };
 
 const PopupDetailEvent = ({ dataEvent, onDelete }: Props) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
 
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);

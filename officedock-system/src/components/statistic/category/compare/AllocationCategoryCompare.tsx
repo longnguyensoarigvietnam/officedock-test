@@ -45,6 +45,8 @@ type ProgressDataType = {
   value: number;
   color: string;
   duration: string;
+  organizationId?: string;
+  dataOrganizationId?: string[];
   optionData: string[];
   mergedItems?: {
     color: string;
@@ -77,11 +79,13 @@ const AllocationCategoryCompare = memo(
       id: number | null;
       type: string;
       totalDuration: string;
+      organizationId?: string;
     } | null>(null);
     const [detailCategoryCompare, setDetailCategoryCompare] = useState<{
       id: number | null;
       type: string;
       totalDuration: string;
+      organizationId?: string;
     } | null>(null);
 
     const [progressDataPairsLarge, setProgressDataPairsLarge] = useState<
@@ -159,6 +163,8 @@ const AllocationCategoryCompare = memo(
               id: item.categoryId,
               label: item.categoryName,
               value: item.percent,
+              organizationId: String(item.organizationId),
+
               color:
                 item.categoryColor ||
                 (selectedLargeCategoryColor &&
@@ -176,7 +182,7 @@ const AllocationCategoryCompare = memo(
             if (item.percent < 10) {
               smallMainCategories.push(mainData);
             } else {
-              mergedMap.set(item.categoryId, { main: mainData, compare: null });
+              mergedMap.set(`${item.categoryId}-${item.organizationId}`, { main: mainData, compare: null });
             }
           });
 
@@ -186,6 +192,8 @@ const AllocationCategoryCompare = memo(
               id: compareItem.categoryId,
               label: compareItem.categoryName,
               value: compareItem.percent,
+              organizationId: String(compareItem.organizationId),
+
               color:
                 compareItem.categoryColor ||
                 (selectedLargeCategoryColor &&
@@ -207,10 +215,10 @@ const AllocationCategoryCompare = memo(
 
             if (compareItem.percent < 10) {
               smallCompareCategories.push(compareData);
-            } else if (mergedMap.has(compareItem.categoryId)) {
-              mergedMap.get(compareItem.categoryId)!.compare = compareData;
+            } else if (mergedMap.has(`${compareItem.categoryId}-${compareItem.organizationId}`)) {
+              mergedMap.get(`${compareItem.categoryId}-${compareItem.organizationId}`)!.compare = compareData;
             } else {
-              mergedMap.set(compareItem.categoryId, {
+              mergedMap.set(`${compareItem.categoryId}-${compareItem.organizationId}`, {
                 main: null,
                 compare: compareData,
               });
@@ -226,10 +234,12 @@ const AllocationCategoryCompare = memo(
               (acc, item) => acc + item.value,
               0,
             );
+
             const smallCompareCategoriesValue = smallCompareCategories.reduce(
               (acc, item) => acc + item.value,
               0,
             );
+
             mergedMap.set('その他', {
               main:
                 smallMainCategories.length > 0
@@ -360,6 +370,7 @@ const AllocationCategoryCompare = memo(
       id: number | null,
       type: string,
       isCompare: boolean,
+      organizationId?: string,
     ) => {
       let duration: string = '00:00:00';
       if (isCompare) {
@@ -392,6 +403,7 @@ const AllocationCategoryCompare = memo(
           id: id,
           type: type,
           totalDuration: duration,
+          organizationId,
         });
 
         setIsShowModalCompare(true);
@@ -420,6 +432,7 @@ const AllocationCategoryCompare = memo(
           id: id,
           type: type,
           totalDuration: duration,
+          organizationId,
         });
 
         setTimeout(() => {
@@ -752,11 +765,15 @@ const AllocationCategoryCompare = memo(
                                 <ProgressBarStatistic
                                   key={index}
                                   classProgressClass="h-[20px] rounded-[4px]"
-                                  handleClickTooltip={(id: number | null) => {
+                                  handleClickTooltip={(
+                                    id: number | null,
+                                    organizationId?: string,
+                                  ) => {
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.ALL,
                                       false,
+                                      organizationId,
                                     );
                                   }}
                                   handleClickChart={(
@@ -791,15 +808,23 @@ const AllocationCategoryCompare = memo(
                                   showInfo={false}
                                   startDate={startDate}
                                   endDate={endDate}
+                                  organizationId={
+                                    pair.main?.organizationId ||
+                                    pair.compare?.organizationId
+                                  }
                                 />
                                 <ProgressBarStatistic
                                   key={index}
                                   classProgressClass="h-[20px] rounded-[4px]"
-                                  handleClickTooltip={(id: number | null) => {
+                                  handleClickTooltip={(
+                                    id: number | null,
+                                    organizationId?: string,
+                                  ) => {
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.ALL,
                                       true,
+                                      organizationId,
                                     );
                                   }}
                                   handleClickChart={(
@@ -836,6 +861,10 @@ const AllocationCategoryCompare = memo(
                                   showInfo={false}
                                   startDateCompare={startDateCompare}
                                   endDateCompare={endDateCompare}
+                                  organizationId={
+                                    pair.main?.organizationId ||
+                                    pair.compare?.organizationId
+                                  }
                                 />
                               </div>
                             );

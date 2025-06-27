@@ -1,7 +1,7 @@
 'use client';
 import { useQuery } from 'react-query';
 import { useRouter } from 'next/navigation';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ServerStatusCode } from '@constants/enums';
@@ -12,6 +12,7 @@ import api from '@base/api';
 import { useContext } from 'react';
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 import { OptionDropdownType } from '@interfaces/common';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 interface FilterProps {
   userId?: OptionDropdownType[];
@@ -39,13 +40,13 @@ const useTaskBoardTeam = ({
 
   onSuccess?: (data: KanbanDataTeamResponse) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
   const { setIsLoadingDataTask } = useContext(TaskTeamStateContext);
 
   const token = session?.accessToken;
   // Handle call API get task board list
-  const getTaskBoardListTeam = async () => {
+  const getTaskBoardListTeam = async ({ signal }: { signal?: AbortSignal }) => {
     if (!organization_id) return null;
 
     setIsLoadingDataTask(true);
@@ -66,7 +67,7 @@ const useTaskBoardTeam = ({
 
     const apiUrl = `${apiRouters.TASK_TEAM_LIST}?${params.toString()}`;
 
-    const { data } = await api.get<KanbanDataTeamResponse>(apiUrl);
+    const { data } = await api.get<KanbanDataTeamResponse>(apiUrl, { signal });
     return data;
   };
 
@@ -79,7 +80,7 @@ const useTaskBoardTeam = ({
     queryKey: isReadyToFetch
       ? ['getTaskTeamList', [filter, ordering, organization_id]]
       : ['getTaskTeamList'],
-    queryFn: getTaskBoardListTeam,
+    queryFn: ({ signal }) => getTaskBoardListTeam({ signal }),
     retry: 0,
     enabled: isReadyToFetch && !!token,
     refetchOnMount: true,

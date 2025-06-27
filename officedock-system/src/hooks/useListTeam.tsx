@@ -1,6 +1,6 @@
 'use client';
 import { useQuery } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 import { Organizations } from '@interfaces/organization';
@@ -21,7 +21,7 @@ const useTeamList = ({
   onSettled,
   screenName,
 }: useTeamListProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
   // Handle call API get User list
   const getTeamList = async () => {

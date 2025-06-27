@@ -27,7 +27,10 @@ type Props = {
   data: number[];
   mergedItems: StatisticCategoryInfo[];
   listIdData: number[];
-  handleClickTooltip: ((id: number | null) => void) | undefined;
+  dataOrganization: string[] | undefined;
+  handleClickTooltip:
+    | ((id: number | null, organizationId?: string) => void)
+    | undefined;
 };
 
 const ModalCustomTooltip = ({
@@ -40,6 +43,7 @@ const ModalCustomTooltip = ({
   actualValues,
   listIdData,
   mergedItems,
+  dataOrganization,
   handleClickTooltip,
 }: Props) => {
   const label = labels[tooltipData.value];
@@ -49,89 +53,98 @@ const ModalCustomTooltip = ({
 
   const option = optionsData[tooltipData.value];
   const actualValue = actualValues[tooltipData.value];
+  const organizationId =
+    dataOrganization && dataOrganization.length > tooltipData.value
+      ? dataOrganization[tooltipData.value]
+      : undefined;
 
   return (
     <div className="py-5">
       {id == -1 ? (
         <div>
           <p className="text-xs font-medium text-[#77858F] mb-5 px-5">その他</p>
-          {mergedItems.map((item, index) => {
-            return (
-              <div key={item.categoryId}>
-                <div className="w-[250px] h-fit ">
-                  <div className="px-5">
-                    <div className="flex items-center gap-2 mb-[14px]">
-                      <div
-                        style={{
-                          backgroundColor: item.categoryColor,
-                        }}
-                        className="w-3 h-3 rounded-sm"></div>
-                      <span className="font-bold max-w-[205px] line-clamp-3">
-                        {item.categoryName || item.tagName}
-                      </span>
+          <div className="max-h-[300px] overflow-y-auto">
+            {mergedItems.map((item, index) => {
+              return (
+                <div key={item.categoryId}>
+                  <div className="w-[250px] h-fit ">
+                    <div className="px-5">
+                      <div className="flex items-center gap-2 mb-[14px]">
+                        <div
+                          style={{
+                            backgroundColor: item.categoryColor,
+                          }}
+                          className="w-3 h-3 rounded-sm"></div>
+                        <span className="font-bold max-w-[190px] line-clamp-3">
+                          {item.categoryName || item.tagName}
+                        </span>
+                      </div>
+                      <div className="flex gap-2 text-base font-normal">
+                        <span>{item.percent}% </span>
+                        <span>{convertToJapaneseTime(item.duration)}</span>
+                      </div>
                     </div>
-                    <div className="flex gap-2 text-base font-normal">
-                      <span>{item.percent}% </span>
-                      <span>{convertToJapaneseTime(item.duration)}</span>
-                    </div>
-                  </div>
-                  <div className=" max-h-[250px]  overflow-y-auto px-5">
-                    <ul className="font-normal mt-4 text-[#77858F] overflow-hidden break-words line-clamp-4">
-                      {isTeam ? (
-                        item &&
-                        item.users &&
-                        item.users.map((user) => {
-                          return (
-                            <li
-                              key={user.user.id}
-                              className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <div>
-                                  <CustomUserAvatar
-                                    avatarUrl={user.user?.avatar || ''}
-                                    avatarColor={user.user?.avatarColor || ''}
-                                    size={30}
-                                    customClassName={`${!user.user?.avatar && '!mt-0'}`}
-                                  />
+                    <div className=" max-h-[250px]  overflow-y-auto px-5">
+                      <ul className="font-normal mt-4 text-[#77858F] overflow-hidden break-words line-clamp-4">
+                        {isTeam ? (
+                          item &&
+                          item.users &&
+                          item.users.map((user) => {
+                            return (
+                              <li
+                                key={user.user.id}
+                                className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <div>
+                                    <CustomUserAvatar
+                                      avatarUrl={user.user?.avatar || ''}
+                                      avatarColor={user.user?.avatarColor || ''}
+                                      size={30}
+                                      customClassName={`${!user.user?.avatar && '!mt-0'}`}
+                                    />
+                                  </div>
+                                  <span className="inline-block w-[130px] overflow-hidden whitespace-nowrap text-ellipsis">
+                                    {user.user.fullName}
+                                  </span>
                                 </div>
-                                <span className="inline-block w-[130px] overflow-hidden whitespace-nowrap text-ellipsis">
-                                  {user.user.fullName}
-                                </span>
-                              </div>
-                              <span>{user.percent}%</span>
-                            </li>
-                          );
-                        })
-                      ) : (
-                        <div></div>
-                      )}
-                    </ul>
-                  </div>
-                  {!isTeam && (
-                    <div className="mt-4 px-5 flex items-center justify-end">
-                      <button
-                        onClick={() =>
-                          handleClickTooltip &&
-                          handleClickTooltip(item.categoryId)
-                        }
-                        className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">
-                        <span>タスクを見る</span>
-                        <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full text-[#77858F]">
-                          <ImageRound
-                            src="/icons/right-statistic.svg"
-                            className="h-2 w-fit  cursor-pointer relative"
-                            name={'redirect'}
-                          />
-                        </div>
-                      </button>
+                                <span>{user.percent}%</span>
+                              </li>
+                            );
+                          })
+                        ) : (
+                          <div></div>
+                        )}
+                      </ul>
                     </div>
-                  )}
+                    {!isTeam && (
+                      <div className="mt-4 px-5 flex items-center justify-end">
+                        <button
+                          onClick={() =>
+                            handleClickTooltip &&
+                            handleClickTooltip(
+                              item.categoryId,
+                              String(item.organizationId),
+                            )
+                          }
+                          className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">
+                          <span>タスクを見る</span>
+                          <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full text-[#77858F]">
+                            <ImageRound
+                              src="/icons/right-statistic.svg"
+                              className="h-2 w-fit  cursor-pointer relative"
+                              name={'redirect'}
+                            />
+                          </div>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div
+                    className={`${index === mergedItems.length - 1 && 'hidden'} w-full my-5  border-b border-[#D2DBE1]`}></div>
                 </div>
-                <div
-                  className={`${index === mergedItems.length - 1 && 'hidden'} w-full my-5  border-b border-[#D2DBE1]`}></div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       ) : (
         <>
@@ -143,7 +156,7 @@ const ModalCustomTooltip = ({
                     backgroundColor: color,
                   }}
                   className="w-3 h-3 rounded-sm"></div>
-                <span className="font-bold max-w-[224px] line-clamp-3">
+                <span className="font-bold max-w-[200px] line-clamp-3">
                   {label}
                 </span>
               </div>
@@ -184,7 +197,10 @@ const ModalCustomTooltip = ({
             {!isTeam && (
               <div className="mt-4 px-5 flex items-center justify-end">
                 <button
-                  onClick={() => handleClickTooltip && handleClickTooltip(id)}
+                  onClick={() => {
+                    handleClickTooltip &&
+                      handleClickTooltip(id, organizationId);
+                  }}
                   className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">
                   <span>タスクを見る</span>
                   <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full text-[#77858F]">

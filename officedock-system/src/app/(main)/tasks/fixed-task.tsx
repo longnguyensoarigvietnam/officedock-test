@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { UseMutateFunction, useMutation } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 
 import Column from '@components/kanban/Column';
@@ -87,7 +88,7 @@ const FixedTaskData = ({
   creationDataTaskData,
   handleConfirmDrop,
 }: PropsDataFixedTask) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const { showToast } = useToast();
 
   const [column, setColumn] = useState<ColumnType>(data);

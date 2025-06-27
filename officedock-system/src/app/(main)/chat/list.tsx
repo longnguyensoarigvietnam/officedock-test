@@ -11,7 +11,8 @@ import {
 
 import { useMutation } from 'react-query';
 import { useInView } from 'react-intersection-observer';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import {
   Popover,
   PopoverButton,
@@ -102,7 +103,7 @@ const ListChatUsers = ({
   const searchParams = useSearchParams();
   const room = searchParams.get('room');
 
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   // Load items
   const [hasMoreSearch, setHasMoreSearch] = useState<boolean>(true);

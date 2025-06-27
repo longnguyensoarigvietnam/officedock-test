@@ -2,7 +2,8 @@
 
 import { useQuery } from 'react-query';
 import { useContext } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 
 import { apiRouters } from '@constants/routers';
@@ -33,7 +34,7 @@ const useStatisticsTagsCompare = ({
   onSuccess?: (data: StatisticsCategories) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
   const {
     setIsLoadingLargeCompare,
@@ -43,7 +44,7 @@ const useStatisticsTagsCompare = ({
   } = useContext(StatisticTagStateContext);
 
   // Handle call API get statistic tags list
-  const getStatisticTagsList = async () => {
+  const getStatisticTagsList = async ({ signal }: { signal?: AbortSignal }) => {
     if (!filter?.isCompare) return [];
     if (!filter?.organizationIds) return [];
 
@@ -67,7 +68,7 @@ const useStatisticsTagsCompare = ({
         : ''
     }${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
-    const { data } = await api.get<StatisticsCategories[]>(apiUrl);
+    const { data } = await api.get<StatisticsCategories[]>(apiUrl, { signal });
     return data;
   };
 
@@ -78,7 +79,7 @@ const useStatisticsTagsCompare = ({
     isFetched: isFetchedStatisticTagsListCompare,
   } = useQuery({
     queryKey: ['getStatisticTagsListCompare', [filter]],
-    queryFn: getStatisticTagsList,
+    queryFn: ({ signal }) => getStatisticTagsList({ signal }),
     retry: 0,
     enabled: !!token,
     staleTime: 0,

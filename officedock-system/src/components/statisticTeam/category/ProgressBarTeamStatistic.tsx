@@ -10,6 +10,7 @@ import {
   formatTimeToJapanese,
   getJapaneseDayName,
 } from '@utils/date';
+import DetailProgressData from './detail/DetailProgressData';
 
 interface ProgressBarProps {
   label: string;
@@ -25,7 +26,10 @@ interface ProgressBarProps {
     value: number;
     duration: string;
     optionData: UserListStatisticType[];
+    organizationId?: string;
   }[];
+  organizationId?: string;
+
   color?: string;
   classProgressClass?: string;
   classProgressUserClass?: string;
@@ -39,11 +43,13 @@ interface ProgressBarProps {
     categoryId,
     duration,
     userDuration,
+    organizationId,
   }: {
     userId: number;
     categoryId: number;
     duration: string;
     userDuration: string;
+    organizationId?: string;
   }) => void;
 }
 
@@ -62,6 +68,7 @@ const ProgressBarTeamStatistic = ({
   showInfo = true,
   startDate,
   endDate,
+  organizationId,
   handleClickChart,
   handleClickTooltip,
 }: ProgressBarProps) => {
@@ -81,18 +88,16 @@ const ProgressBarTeamStatistic = ({
                 <span className="text-sm font-medium truncate max-w-24">
                   {duration && formatTimeToJapanese(duration)}
                 </span>
-                {id !== -1 && (
-                  <ImageRound
-                    src="/icons/extend-calendar.svg"
-                    name="Extend calendar"
-                    className={`!w-3 !h-3 hover:cursor-pointer ${
-                      isExtendUser ? '-rotate-90' : 'rotate-90'
-                    }`}
-                    onClick={() => {
-                      setExtendUser(!isExtendUser);
-                    }}
-                  />
-                )}
+                <ImageRound
+                  src="/icons/extend-calendar.svg"
+                  name="Extend calendar"
+                  className={`!w-3 !h-3 hover:cursor-pointer ${
+                    isExtendUser ? '-rotate-90' : 'rotate-90'
+                  }`}
+                  onClick={() => {
+                    setExtendUser(!isExtendUser);
+                  }}
+                />
               </div>
             </div>
           )}
@@ -159,12 +164,12 @@ const ProgressBarTeamStatistic = ({
                 <p className="text-xs text-start font-medium text-[#77858F] mb-3 px-5">
                   その他
                 </p>
-                <div className="max-h-[450px] overflow-y-auto">
+                <div className="max-h-[350px] overflow-y-auto">
                   {mergedItems &&
                     mergedItems?.length > 0 &&
                     mergedItems.map((item, index) => {
                       return (
-                        <div key={index}>
+                        <div key={index} className="">
                           <div className="flex items-center gap-1 px-5">
                             <div
                               style={{
@@ -208,6 +213,7 @@ const ProgressBarTeamStatistic = ({
                               ))}
                             </ul>
                           </div>
+                          <div className=" w-full mb-5  border-b border-[#D2DBE1]"></div>
                         </div>
                       );
                     })}
@@ -245,7 +251,7 @@ const ProgressBarTeamStatistic = ({
             <div
               className={`w-full group relative h-[10px] bg-gray-300 ${classProgressUserClass}`}>
               <div
-                className="h-full transition-all duration-500 rounded-[4px]"
+                className="h-full transition-all duration-500"
                 style={{
                   width: `${item.percent}%`,
                   backgroundColor: color,
@@ -309,6 +315,7 @@ const ProgressBarTeamStatistic = ({
                           categoryId: id,
                           userDuration: item.duration,
                           duration: duration,
+                          organizationId: organizationId,
                         })
                       }
                       className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">
@@ -327,6 +334,28 @@ const ProgressBarTeamStatistic = ({
             </div>
           </div>
         ))}
+      {isExtendUser &&
+        id === -1 &&
+        mergedItems?.length &&
+        mergedItems.map((cate) => {
+          return (
+            <div
+              key={cate.id}
+              className={`font-medium text-sm text-black ${className}`}>
+              <DetailProgressData
+                cate={cate}
+                showInfo
+                startDate={startDate}
+                endDate={endDate}
+                className={className}
+                classProgressClass={classProgressClass}
+                classProgressUserClass={classProgressUserClass}
+                handleClickChart={handleClickChart}
+                handleClickTooltip={handleClickTooltip}
+              />
+            </div>
+          );
+        })}
     </>
   );
 };

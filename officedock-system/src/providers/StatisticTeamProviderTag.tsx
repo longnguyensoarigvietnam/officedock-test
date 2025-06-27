@@ -8,6 +8,8 @@ import {
 } from 'react';
 
 import { OptionDropdownType } from '@interfaces/common';
+import { MergedTableTag, TagTableRowDetail } from '@interfaces/statistic';
+
 import { getAdjustedStartDateDefault } from '@utils/date';
 import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
 
@@ -122,6 +124,14 @@ interface ContextValue {
   // View by
   lineChartViewBy: OptionDropdownType | null;
   setLineChartViewBy: Dispatch<SetStateAction<OptionDropdownType | null>>;
+
+  // Table data
+  areaTableData: TagTableRowDetail[];
+  setAreaTableData: Dispatch<SetStateAction<TagTableRowDetail[]>>;
+  lineChartTableData: TagTableRowDetail[];
+  setLineChartTableData: Dispatch<SetStateAction<TagTableRowDetail[]>>;
+  mergedTableData: MergedTableTag[]
+  setMergedTableData: Dispatch<SetStateAction<MergedTableTag[]>>
 }
 
 const defaultValue: ContextValue = {
@@ -208,6 +218,13 @@ const defaultValue: ContextValue = {
 
   lineChartViewBy: null,
   setLineChartViewBy: () => {},
+
+  areaTableData: [],
+  setAreaTableData: () => {},
+  lineChartTableData: [],
+  setLineChartTableData: () => {},
+  mergedTableData: [],
+  setMergedTableData: () => {},
 };
 
 export const StatisticTeamTagsStateContext =
@@ -235,12 +252,20 @@ export const StatisticTeamTagsStateProvider = ({
     useState(false);
 
   const [smallOptions, setSmallOptions] = useState<OptionDropdownType[]>([]);
-
   const [largeOptions, setLargeOptions] = useState<OptionDropdownType[]>([]);
   const [mediumOptions, setMediumOptions] = useState<OptionDropdownType[]>([]);
   const [listOptionsOrganization, setListOptionsOrganization] = useState<
     OptionDropdownType[]
   >([]);
+
+  // Table data
+  const [areaTableData, setAreaTableData] = useState<TagTableRowDetail[]>([]);
+  const [lineChartTableData, setLineChartTableData] = useState<
+    TagTableRowDetail[]
+  >([]);
+  const [mergedTableData, setMergedTableData] = useState<MergedTableTag[]>(
+    [],
+  );
 
   // Select
   const [selectedOrganization, setSelectedOrganization] =
@@ -412,6 +437,13 @@ export const StatisticTeamTagsStateProvider = ({
 
     lineChartViewBy,
     setLineChartViewBy,
+
+    areaTableData,
+    setAreaTableData,
+    lineChartTableData,
+    setLineChartTableData,
+    mergedTableData,
+    setMergedTableData
   };
 
   return (

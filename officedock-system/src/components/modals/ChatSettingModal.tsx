@@ -2,7 +2,8 @@
 import { memo, useContext, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useMutation } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 
 import Modal from '../common/Modal';
@@ -16,7 +17,11 @@ import Input from '@components/common/Input';
 
 import { apiRouters } from '@constants/routers';
 
-import { ChatDashboardMember, ChatParticipant, ChatRoomDetail } from '@interfaces/chat';
+import {
+  ChatDashboardMember,
+  ChatParticipant,
+  ChatRoomDetail,
+} from '@interfaces/chat';
 import { OptionDropdownType } from '@interfaces/common';
 
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
@@ -39,7 +44,7 @@ export type ChatSettingModalProps = {
   onClose: () => void;
   openAddMemberModal: () => void;
   openConfirmRemoveModal: (id: number) => void;
-  chatRoomDetail: ChatRoomDetail | undefined
+  chatRoomDetail: ChatRoomDetail | undefined;
   code: string;
   dashboardMembers: ChatDashboardMember[];
 };
@@ -54,9 +59,9 @@ const ChatSettingModal = memo(
     openConfirmRemoveModal,
     dashboardMembers,
   }: ChatSettingModalProps) => {
-    const { data: session } = useSession();
+    const { data: session } = useSessionCache();
     const { dashboardMemberList } = useDashboardMemberList();
-    
+
     const [searchName, setSearchName] = useState<string>('');
     const { showToast } = useToast();
     const showErrorToast = useErrorToast();

@@ -69,6 +69,7 @@ const PercentageCategory = ({
     id: number | null;
     type: string;
     totalDuration: string;
+    organizationId?: string;
   } | null>(null);
 
   const [dataChartLarge, setDataChartLarge] = useState<DataChartType>({
@@ -81,7 +82,6 @@ const PercentageCategory = ({
     listDuration: [],
     mergedItems: [],
   });
-
   const [dataChartMedium, setDataChartMedium] = useState<DataChartType>({
     actualValue: [],
     colors: [],
@@ -107,7 +107,7 @@ const PercentageCategory = ({
     dataCategories: StatisticCategoryInfo[],
     colorData?: string,
   ) => {
-    const categories = dataCategories.filter((item) => item.percent > 0);
+    const categories = dataCategories.filter((item) => item.percent >= 0);
     const mergedItems: StatisticCategoryInfo[] = [];
     const mergedCategory: StatisticCategoryInfo = {
       categoryName: 'その他',
@@ -128,6 +128,7 @@ const PercentageCategory = ({
             getRandomColor(),
         });
         mergedCategory.percent += item.percent;
+        mergedCategory.organizationId = item.organizationId;
         mergedCategory.duration += item.duration;
         mergedCategory.categoryColor =
           item.categoryColor !== null
@@ -167,6 +168,11 @@ const PercentageCategory = ({
       })),
     );
 
+    // Get list Organization for all team
+    const listDataOrganizations = filteredCategories.map((org) =>
+      String(org.organizationId),
+    );
+
     // Get list id
     const listDataIds = filteredCategories.map((item) => item.categoryId);
     // Get list duration
@@ -182,6 +188,7 @@ const PercentageCategory = ({
       optionData: listDataOptions,
       listId: listDataIds,
       listDuration: listDuration,
+      dataOrganization: listDataOrganizations,
       mergedItems: mergedItems,
     };
   };
@@ -251,7 +258,15 @@ const PercentageCategory = ({
     }
   }, [statisticCategoryList]);
 
-  const handleClickTooltip = (id: number | null, type: string) => {
+  const handleClickTooltip = ({
+    id,
+    type,
+    organizationId,
+  }: {
+    id: number | null;
+    type: string;
+    organizationId?: string;
+  }) => {
     if (isLoadingLarge || isLoadingMedium || isLoadingOrganization) return;
     let duration: string = '00:00:00';
 
@@ -277,6 +292,7 @@ const PercentageCategory = ({
       id: id,
       type: type,
       totalDuration: duration,
+      organizationId: organizationId,
     });
 
     setTimeout(() => {
@@ -480,8 +496,16 @@ const PercentageCategory = ({
                               className="w-[280px] h-[280px]"
                               optionsData={dataChartLarge.optionData}
                               listIdData={dataChartLarge.listId}
-                              handleClickTooltip={(id: number | null) => {
-                                handleClickTooltip(id, EventWorkCategory.ALL);
+                              dataOrganization={dataChartLarge.dataOrganization}
+                              handleClickTooltip={(
+                                id: number | null,
+                                organizationId?: string,
+                              ) => {
+                                handleClickTooltip({
+                                  id,
+                                  type: EventWorkCategory.ALL,
+                                  organizationId: organizationId,
+                                });
                               }}
                               handleClickChart={(data: OptionDropdownType) => {
                                 selectedOrganization &&
@@ -549,8 +573,15 @@ const PercentageCategory = ({
                               optionsData={dataChartMedium.optionData}
                               className="w-[280px] h-[280px] "
                               listIdData={dataChartMedium.listId}
-                              handleClickTooltip={(id: number | null) => {
-                                handleClickTooltip(id, EventWorkCategory.LARGE);
+                              handleClickTooltip={(
+                                id: number | null,
+                                organizationId?: string,
+                              ) => {
+                                handleClickTooltip({
+                                  id,
+                                  type: EventWorkCategory.LARGE,
+                                  organizationId,
+                                });
                               }}
                               handleClickChart={(data: OptionDropdownType) => {
                                 handleSelectMedium(data);
@@ -614,11 +645,15 @@ const PercentageCategory = ({
                               className="w-[280px] h-[280px]"
                               optionsData={dataChartSmall.optionData}
                               listIdData={dataChartSmall.listId}
-                              handleClickTooltip={(id: number | null) => {
-                                handleClickTooltip(
+                              handleClickTooltip={(
+                                id: number | null,
+                                organizationId?: string,
+                              ) => {
+                                handleClickTooltip({
                                   id,
-                                  EventWorkCategory.MEDIUM,
-                                );
+                                  type: EventWorkCategory.MEDIUM,
+                                  organizationId,
+                                });
                               }}
                               isClickTooltip
                             />

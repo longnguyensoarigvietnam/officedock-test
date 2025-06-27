@@ -19,6 +19,7 @@ type ProgressDataType = {
   duration: string;
   optionData: UserListStatisticType[];
   mergedItems?: ProgressDataType[];
+  organizationId?: string;
 };
 
 interface ProgressBarProps {
@@ -26,7 +27,7 @@ interface ProgressBarProps {
   itemCompare?: ProgressDataType;
   classProgressClass?: string;
   classProgressUserClass?: string;
-
+  organizationId?: string;
   className?: string;
   startDate?: Date;
   endDate?: Date | null;
@@ -37,11 +38,13 @@ interface ProgressBarProps {
     categoryId,
     duration,
     isCompare,
+    organizationId,
   }: {
     userId: number;
     categoryId: number;
     duration: string;
     isCompare?: boolean;
+    organizationId?: string;
   }) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
 }
@@ -115,6 +118,7 @@ function buildUserCompareData(
 const ProgressBarTeamTagCompare = ({
   item,
   itemCompare,
+  organizationId,
   className,
   classProgressClass,
   classProgressUserClass,
@@ -499,14 +503,14 @@ const ProgressBarTeamTagCompare = ({
             {/* user item */}
             <div>
               <div className="mb-[10px]">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
+                <div className="flex justify-between items-center w-full">
+                  <div className="flex items-center gap-2 w-[calc(100%_-_96px)]">
                     <CustomUserAvatar
                       avatarUrl={itemUser.user.user.avatar || ''}
                       avatarColor={itemUser.user.user.avatarColor || ''}
                       size={30}
                     />
-                    <span className="text-sm font-medium truncate max-w-40">
+                    <span className="text-sm font-medium truncate max-w-[calc(100%_-_30px)]">
                       {itemUser.user.user.fullName}
                     </span>
                   </div>
@@ -517,7 +521,7 @@ const ProgressBarTeamTagCompare = ({
                 </div>
               </div>
               <div
-                className={`w-full group relative h-[10px] bg-gray-300 rounded-[4px]  ${classProgressUserClass}`}>
+                className={`w-full group relative h-[10px] bg-gray-300 ${classProgressUserClass}`}>
                 <div
                   className="h-full transition-all duration-500 "
                   style={{
@@ -587,6 +591,7 @@ const ProgressBarTeamTagCompare = ({
                             userId: itemUser.user.user.id,
                             categoryId: item.id,
                             duration: itemUser.user.duration,
+                            organizationId: organizationId,
                           })
                         }
                         className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">
@@ -609,7 +614,7 @@ const ProgressBarTeamTagCompare = ({
               <div
                 className={`w-full group relative h-[10px] bg-gray-300   ${classProgressUserClass}`}>
                 <div
-                  className="h-full transition-all rounded-[4px] overflow-hidden duration-500 "
+                  className="h-full transition-all overflow-hidden duration-500 "
                   style={{
                     width: `${itemUser.userCompare.percent}%`,
                     backgroundColor: itemUser.userCompare.user.avatarColor,
@@ -677,6 +682,7 @@ const ProgressBarTeamTagCompare = ({
                             categoryId: item.id,
                             duration: itemUser.userCompare.duration,
                             isCompare: true,
+                            organizationId: organizationId,
                           })
                         }
                         className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">

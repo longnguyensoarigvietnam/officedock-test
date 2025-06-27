@@ -48,13 +48,13 @@ import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { StatisticCategoryInfo } from '@interfaces/statistic';
+import { TooltipDiv } from '@interfaces/tooltip';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
 import {
   DEFAULT_TIME_TEXT,
   EVERYONE_OPTION_LABEL,
   STATISTIC_CHART_VIEW_OPTIONS,
-  TEAM_CALENDAR_ORGANIZATION,
 } from '@constants';
 
 import {
@@ -65,12 +65,11 @@ import {
   totalDurationsForStatistic,
 } from '@utils/date';
 import {
-  createStyledAvatarWithMargin,
-  getAvatarIconSvg,
-  getFileURL,
+  createLineChartAvatarImage,
   getLineChartEnableViews,
   getRandomColor,
   getSafeTooltipLeft,
+  getStatisticMilestones,
   toRGBA,
 } from '@utils';
 
@@ -100,15 +99,12 @@ type Props = {
   handleSelectMedium: (data: OptionDropdownType) => void;
 };
 
-interface TooltipDiv extends HTMLDivElement {
-  _reactRoot?: ReactDOM.Root;
-}
-
 interface TableRowDetail {
   categoryId: number;
   categoryName: string;
   categoryDuration: string;
   categoryPercent: number;
+  organizationId: number;
   userList: {
     userId: number;
     userName: string;
@@ -147,18 +143,22 @@ const LineChartByTeam = ({
     listMemberTeam,
     orderingOptions,
     lineChartViewBy,
+    lineChartTableData,
+    setLineChartTableData,
     setLineChartViewBy,
   } = useContext(StatisticTeamStateContext);
   const { expanded, selectedOrganization: selectedOrganizationSideBar } =
     useContext(GlobalStateContext);
 
-  // Selected members and category
+  // Selected members, category, organization
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<{
     id: number;
     name: string;
   } | null>(null);
   const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
+  const [selectedOrganizationInTable, setSelectedOrganizationInTable] =
+    useState<number>(0);
 
   // Filter options
   const [filter, setFilter] = useState({
@@ -178,12 +178,9 @@ const LineChartByTeam = ({
         ? selectedCategory?.id
         : selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: `${selectedOrganization?.value}`,
+    selectedOrganization: 0,
     tagIds: orderingOptions?.tag_ids || [],
-    organizationMemberId:
-      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
-        ? String(selectedOrganizationSideBar?.value || '')
-        : undefined,
+    organizationMemberId: String(selectedOrganizationSideBar?.value || ''),
   });
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const [memberOptions, setMemberOptions] = useState<
@@ -194,9 +191,6 @@ const LineChartByTeam = ({
       avatarUrl: string;
     }[]
   >([]);
-
-  // Table data
-  const [tableData, setTableData] = useState<TableRowDetail[]>([]);
 
   // Chart
   const chartRef = useRef<any>(null);
@@ -227,7 +221,7 @@ const LineChartByTeam = ({
   // Collapse statuses
   const [categoryCollapseStatuses, setCategoryCollapseStatuses] = useState<
     {
-      categoryId: number;
+      categoryName: string;
       status: boolean;
     }[]
   >([]);
@@ -249,6 +243,7 @@ const LineChartByTeam = ({
     categories: {
       categoryId: number;
       categoryName: string;
+      organizationId?: number;
       percent: number;
       duration: string;
       users?: {
@@ -268,6 +263,7 @@ const LineChartByTeam = ({
       categoryName: category.categoryName,
       categoryPercent: category.percent,
       categoryDuration: category.duration,
+      organizationId: category.organizationId ?? 0,
       userList:
         allLabelUser.length > 0
           ? allLabelUser.map((userInfo) => {
@@ -305,11 +301,13 @@ const LineChartByTeam = ({
         id: firstCategory.categoryId,
         name: firstCategory.categoryName,
       });
+      setSelectedOrganizationInTable(Number(firstCategory.organizationId));
       if (selectedOrganization && !selectedLarge && !selectedMedium) {
         setFilter((prev) => {
           return {
             ...prev,
             largeCategoryId: firstCategory.categoryId,
+            selectedOrganization: Number(firstCategory.organizationId),
           };
         });
       } else if (selectedOrganization && selectedLarge && !selectedMedium) {
@@ -317,6 +315,7 @@ const LineChartByTeam = ({
           return {
             ...prev,
             mediumCategoryId: firstCategory.categoryId,
+            selectedOrganization: Number(firstCategory.organizationId),
           };
         });
       } else if (selectedOrganization && selectedLarge && selectedMedium) {
@@ -324,16 +323,19 @@ const LineChartByTeam = ({
           return {
             ...prev,
             smallCategoryId: firstCategory.categoryId,
+            selectedOrganization: Number(firstCategory.organizationId),
           };
         });
       }
     } else {
       setSelectedCategory(null);
+      setSelectedOrganizationInTable(0);
       if (selectedOrganization && !selectedLarge && !selectedMedium) {
         setFilter((prev) => {
           return {
             ...prev,
             largeCategoryId: undefined,
+            selectedOrganization: 0,
           };
         });
       } else if (selectedOrganization && selectedLarge && !selectedMedium) {
@@ -341,6 +343,7 @@ const LineChartByTeam = ({
           return {
             ...prev,
             mediumCategoryId: undefined,
+            selectedOrganization: 0,
           };
         });
       } else if (selectedOrganization && selectedLarge && selectedMedium) {
@@ -348,6 +351,7 @@ const LineChartByTeam = ({
           return {
             ...prev,
             smallCategoryId: undefined,
+            selectedOrganization: 0,
           };
         });
       }
@@ -360,14 +364,11 @@ const LineChartByTeam = ({
       filter: {
         fromDate: formatDateToYMD(startDate) || '',
         endDate: formatDateToYMD(`${endDate}`) || '',
-        organizationIds: String(selectedOrganization?.value || ''),
+        organizationId: String(selectedOrganization?.value || ''),
         largeCategoryId: selectedLarge?.value as number,
         mediumCategoryId: selectedMedium?.value as number,
-        orderingOptions: orderingOptions,
-        organizationMemberId:
-          selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
-            ? String(selectedOrganizationSideBar?.value || '')
-            : undefined,
+        tagIds: orderingOptions?.tag_ids || [],
+        organizationMemberId: String(selectedOrganizationSideBar?.value || ''),
         userIds:
           orderingOptions?.user_ids?.length == 0
             ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
@@ -390,13 +391,13 @@ const LineChartByTeam = ({
         setCategoryCollapseStatuses(
           tableDetail.map((category) => {
             return {
-              categoryId: category.categoryId,
+              categoryName: category.categoryName,
               status: false,
             };
           }),
         );
 
-        setTableData(tableDetail);
+        setLineChartTableData(tableDetail);
 
         // Calculate total duration
         const totalDurationList = (tableDetail || [])
@@ -420,7 +421,7 @@ const LineChartByTeam = ({
     },
     condition: [
       Boolean(
-        tableData.length > 0 &&
+        lineChartTableData.length > 0 &&
           (filter.largeCategoryId || filter.mediumCategoryId),
       ),
     ],
@@ -460,30 +461,27 @@ const LineChartByTeam = ({
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
       userIds: selectedMembers?.filter(Boolean).join(','),
       largeCategoryId:
-        selectedOrganization && !selectedLarge && !selectedMedium
+        selectedOrganizationInTable && !selectedLarge && !selectedMedium
           ? selectedCategory?.id
           : selectedLarge?.value,
       mediumCategoryId:
-        selectedOrganization && selectedLarge && !selectedMedium
+        selectedOrganizationInTable && selectedLarge && !selectedMedium
           ? selectedCategory?.id
           : selectedMedium?.value,
       smallCategoryId:
-        selectedOrganization && selectedLarge && selectedMedium
+        selectedOrganizationInTable && selectedLarge && selectedMedium
           ? selectedCategory?.id
           : selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: `${selectedOrganization?.value}`,
+      selectedOrganization: selectedOrganizationInTable,
       tagIds: orderingOptions?.tag_ids || [],
-      organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
-          ? String(selectedOrganizationSideBar?.value || '')
-          : undefined,
+      organizationMemberId: String(selectedOrganizationSideBar?.value || ''),
     };
   }, [
     startDate,
     endDate,
     selectedMembers,
-    selectedOrganization,
+    selectedOrganizationInTable,
     selectedLarge,
     selectedMedium,
     selectedCategory?.id,
@@ -751,30 +749,16 @@ const LineChartByTeam = ({
       statisticUserTaskDurationsList.length > 0
     ) {
       const loadImages = async () => {
-        if (statisticUserTaskDurationsList.length === 0) {
-          return;
-        }
-
         const imagePromises = statisticUserTaskDurationsList.map(
-          async (userTaskDuration) => {
-            const { user } = userTaskDuration;
-            let avatarUrl = '';
-
-            if (user.avatar) {
-              avatarUrl = getFileURL(user.avatar);
-            } else {
-              const svgString = getAvatarIconSvg(user.avatarColor, 24);
-              const blob = new Blob([svgString], { type: 'image/svg+xml' });
-              avatarUrl = URL.createObjectURL(blob);
-            }
-
-            const styledAvatar = await createStyledAvatarWithMargin(
-              avatarUrl,
-              24,
-              30,
-            );
-            return styledAvatar;
-          },
+          (userTaskDuration) =>
+            createLineChartAvatarImage(
+              userTaskDuration?.user || {
+                avatar: null,
+                avatarColor: getRandomColor(),
+                id: 0,
+                fullName: '',
+              },
+            ),
         );
 
         const loadedImages = await Promise.all(imagePromises);
@@ -828,53 +812,55 @@ const LineChartByTeam = ({
       });
 
       statisticUserTaskDurationsList.forEach((userTaskDuration) => {
-        legendList.push({
-          color: userTaskDuration.user.avatarColor || getRandomColor(),
-          name: userTaskDuration.user.fullName,
-        });
-        datasets.push({
-          label: userTaskDuration.user.fullName,
-          data: userTaskDuration.durations.flatMap((duration, index) => [
-            {
-              x: duration.startDate,
-              y: duration.duration
-                ? convertTimeToDecimal(duration.duration)
-                : 0,
-              endDate: duration.endDate,
-              avatarColor: userTaskDuration.user.avatarColor,
-              avatar: userTaskDuration.user.avatar || '',
-              userId: userTaskDuration.user.id,
-              label: userTaskDuration.user.fullName,
-            },
-            ...(index === userTaskDuration.durations.length - 1 &&
-            String(duration.endDate) != String(duration.startDate)
-              ? [
-                  {
-                    x: duration.endDate,
-                    y: duration.duration
-                      ? convertTimeToDecimal(duration.duration)
-                      : 0,
-                    endDate: duration.endDate,
-                    avatarColor: userTaskDuration.user.avatarColor,
-                    avatar: userTaskDuration.user.avatar || '',
-                    userId: userTaskDuration.user.id,
-                    label: userTaskDuration.user.fullName,
-                  },
-                ]
-              : []),
-          ]),
-          borderColor: userTaskDuration.user.avatarColor || getRandomColor(),
-          backgroundColor: 'transparent',
-          fill: true,
-          tension: 0,
-          pointRadius: 4,
-          pointBorderColor: 'transparent',
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor:
-            userTaskDuration.user.avatarColor || getRandomColor(),
-          pointHoverBorderColor: 'transparent',
-          pointHoverBorderWidth: 2,
-        });
+        if (userTaskDuration?.user) {
+          legendList.push({
+            color: userTaskDuration?.user.avatarColor || getRandomColor(),
+            name: userTaskDuration?.user.fullName,
+          });
+          datasets.push({
+            label: userTaskDuration.user.fullName,
+            data: userTaskDuration.durations.flatMap((duration, index) => [
+              {
+                x: duration.startDate,
+                y: duration.duration
+                  ? convertTimeToDecimal(duration.duration)
+                  : 0,
+                endDate: duration.endDate,
+                avatarColor: userTaskDuration?.user?.avatarColor,
+                avatar: userTaskDuration?.user?.avatar || '',
+                userId: userTaskDuration?.user?.id,
+                label: userTaskDuration?.user?.fullName,
+              },
+              ...(index === userTaskDuration.durations.length - 1 &&
+              String(duration.endDate) != String(duration.startDate)
+                ? [
+                    {
+                      x: duration.endDate,
+                      y: duration.duration
+                        ? convertTimeToDecimal(duration.duration)
+                        : 0,
+                      endDate: duration.endDate,
+                      avatarColor: userTaskDuration?.user?.avatarColor,
+                      avatar: userTaskDuration?.user?.avatar || '',
+                      userId: userTaskDuration?.user?.id,
+                      label: userTaskDuration?.user?.fullName,
+                    },
+                  ]
+                : []),
+            ]),
+            borderColor: userTaskDuration.user.avatarColor || getRandomColor(),
+            backgroundColor: 'transparent',
+            fill: true,
+            tension: 0,
+            pointRadius: 4,
+            pointBorderColor: 'transparent',
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor:
+              userTaskDuration.user.avatarColor || getRandomColor(),
+            pointHoverBorderColor: 'transparent',
+            pointHoverBorderWidth: 2,
+          });
+        }
       });
 
       setLineChartData({
@@ -904,7 +890,7 @@ const LineChartByTeam = ({
         ? rowAPercentage - rowBPercentage
         : rowBPercentage - rowAPercentage;
     });
-    setTableData(sortedArr);
+    setLineChartTableData(sortedArr);
   };
 
   // Sort by duration difference
@@ -924,7 +910,7 @@ const LineChartByTeam = ({
         ? rowADuration - rowBDuration
         : rowBDuration - rowADuration;
     });
-    setTableData(sortedArr);
+    setLineChartTableData(sortedArr);
   };
 
   // Columns definition
@@ -943,19 +929,25 @@ const LineChartByTeam = ({
         const collapseStatus =
           categoryCollapseStatuses.find(
             (categoryCollapseStatus) =>
-              categoryCollapseStatus.categoryId == info.row.original.categoryId,
+              categoryCollapseStatus.categoryName ==
+              info.row.original.categoryName,
           )?.status || false;
         return (
           <div className="flex items-start px-[18px]">
             <RadioButton
               name="lineChartCategoryName"
-              isChecked={info.row.original.categoryId == selectedCategory?.id}
+              isChecked={
+                info.row.original.categoryName == selectedCategory?.name
+              }
               onChange={(e: any) => {
                 if (e) {
                   setSelectedCategory({
                     id: info.row.original.categoryId,
                     name: info.row.original.categoryName,
                   });
+                  setSelectedOrganizationInTable(
+                    info.row.original.organizationId,
+                  );
                   if (
                     selectedOrganization &&
                     !selectedLarge &&
@@ -965,6 +957,7 @@ const LineChartByTeam = ({
                       return {
                         ...prev,
                         largeCategoryId: info.row.original.categoryId,
+                        selectedOrganization: info.row.original.organizationId,
                       };
                     });
                   } else if (
@@ -976,6 +969,7 @@ const LineChartByTeam = ({
                       return {
                         ...prev,
                         mediumCategoryId: info.row.original.categoryId,
+                        selectedOrganization: info.row.original.organizationId,
                       };
                     });
                   } else if (
@@ -987,6 +981,7 @@ const LineChartByTeam = ({
                       return {
                         ...prev,
                         smallCategoryId: info.row.original.categoryId,
+                        selectedOrganization: info.row.original.organizationId,
                       };
                     });
                   }
@@ -1017,7 +1012,7 @@ const LineChartByTeam = ({
                     onClick={() => {
                       setCategoryCollapseStatuses((prev) => {
                         return prev.map((item) =>
-                          item.categoryId == info.row.original.categoryId
+                          item.categoryName == info.row.original.categoryName
                             ? { ...item, status: !item.status }
                             : item,
                         );
@@ -1069,10 +1064,10 @@ const LineChartByTeam = ({
                 durationSortingStatus == SortingType.DESC
               ) {
                 setDurationSortingStatus(SortingType.ASC);
-                sortByDurationDifference(tableData, SortingType.ASC);
+                sortByDurationDifference(lineChartTableData, SortingType.ASC);
               } else {
                 setDurationSortingStatus(SortingType.DESC);
-                sortByDurationDifference(tableData, SortingType.DESC);
+                sortByDurationDifference(lineChartTableData, SortingType.DESC);
               }
             }}>
             <p className="!text-xs font-medium !text-[#77858F]">計測時間</p>
@@ -1094,7 +1089,8 @@ const LineChartByTeam = ({
         const collapseStatus =
           categoryCollapseStatuses.find(
             (categoryCollapseStatus) =>
-              categoryCollapseStatus.categoryId == info.row.original.categoryId,
+              categoryCollapseStatus.categoryName ==
+              info.row.original.categoryName,
           )?.status || false;
 
         return (
@@ -1145,10 +1141,10 @@ const LineChartByTeam = ({
                 percentageSortingStatus == SortingType.DESC
               ) {
                 setPercentageSortingStatus(SortingType.ASC);
-                sortByPercentDifference(tableData, SortingType.ASC);
+                sortByPercentDifference(lineChartTableData, SortingType.ASC);
               } else {
                 setPercentageSortingStatus(SortingType.DESC);
-                sortByPercentDifference(tableData, SortingType.DESC);
+                sortByPercentDifference(lineChartTableData, SortingType.DESC);
               }
             }}>
             <p className="!text-xs font-medium !text-[#77858F]">割合</p>
@@ -1172,7 +1168,8 @@ const LineChartByTeam = ({
         const collapseStatus =
           categoryCollapseStatuses.find(
             (categoryCollapseStatus) =>
-              categoryCollapseStatus.categoryId == info.row.original.categoryId,
+              categoryCollapseStatus.categoryName ==
+              info.row.original.categoryName,
           )?.status || false;
 
         return (
@@ -1216,7 +1213,7 @@ const LineChartByTeam = ({
   ];
 
   const table = useReactTable({
-    data: tableData,
+    data: lineChartTableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -1402,7 +1399,7 @@ const LineChartByTeam = ({
                     selectedOption={selectedOrganization || undefined}
                     onChange={(data) => {
                       setSelectedMembers([]);
-                      setTableData([]);
+                      setLineChartTableData([]);
                       setIsOrganizationChanging(true);
                       handleSelectOrganization(data);
                     }}
@@ -1426,7 +1423,7 @@ const LineChartByTeam = ({
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => {
-                      setTableData([]);
+                      setLineChartTableData([]);
                       handleSelectLarge(data);
                     }}
                     disabled={!selectedOrganization}
@@ -1450,7 +1447,7 @@ const LineChartByTeam = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => {
-                      setTableData([]);
+                      setLineChartTableData([]);
                       handleSelectMedium(data);
                     }}
                     disabled={!selectedLarge}
@@ -1488,7 +1485,7 @@ const LineChartByTeam = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
-                    setTableData([]);
+                    setLineChartTableData([]);
                     setLineChartViewBy({
                       label: e.label,
                       value: e.value,
@@ -1515,7 +1512,7 @@ const LineChartByTeam = ({
                         isChecked={selectedMembers.includes(member.id)}
                         color={member.color}
                         onChange={(state) => {
-                          setTableData([]);
+                          setLineChartTableData([]);
                           if (state) {
                             setSelectedMembers((prev) => {
                               if (member.id) {
@@ -1579,7 +1576,20 @@ const LineChartByTeam = ({
             <div
               style={{ position: 'relative' }}
               className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
-              <Line ref={chartRef} data={lineChartData} options={options} />
+              <Line
+                ref={chartRef}
+                data={{
+                  datasets: lineChartData?.datasets || [],
+                  labels: lineChartData?.labels.length
+                    ? lineChartData?.labels
+                    : getStatisticMilestones(
+                        `${formatDateToYMD(startDate)}`,
+                        `${formatDateToYMD(endDate || '')}`,
+                        lineChartViewBy?.value as StatisticViewOptions,
+                      ),
+                }}
+                options={options}
+              />
               <div
                 ref={tooltipRef}
                 style={{ position: 'absolute', opacity: 0 }}
@@ -1617,12 +1627,12 @@ const LineChartByTeam = ({
                 className={`!h-[200px] mt-5 w-full mx-auto`}
               />
             ) : (
-              <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+              <Table className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${lineChartTableData.length && 'max-h-[500px] overflow-y-auto'}`}>
                 <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr
                       key={headerGroup.id}
-                      className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                      className="sticky top-0 z-10 text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
                       {headerGroup.headers.map((header, index) => (
                         <th
                           key={header.id}

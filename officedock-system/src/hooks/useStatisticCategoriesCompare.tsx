@@ -3,7 +3,7 @@
 import { AxiosError } from 'axios';
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 
@@ -32,7 +32,7 @@ const useStatisticCategoriesCompare = ({
   onSuccess?: (data: StatisticsCategories) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
   const {
     setIsLoadingLargeCompare,
@@ -41,7 +41,11 @@ const useStatisticCategoriesCompare = ({
   } = useContext(StatisticStateContext);
 
   // Handle call API get statistic category list
-  const getStatisticCategoryList = async () => {
+  const getStatisticCategoryList = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.isCompare) return [];
     if (!filter?.organizationIds) return [];
 
@@ -65,7 +69,9 @@ const useStatisticCategoriesCompare = ({
         : ''
     }${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
-    const { data } = await api.get<StatisticsCategories[]>(apiUrl);
+    const { data } = await api.get<StatisticsCategories[]>(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -76,7 +82,8 @@ const useStatisticCategoriesCompare = ({
     isFetched: isFetchedStatisticCategoryList,
   } = useQuery({
     queryKey: ['getStatisticCategoryCompareList', [filter]],
-    queryFn: getStatisticCategoryList,
+    queryFn: ({ signal }) => getStatisticCategoryList({ signal }),
+
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

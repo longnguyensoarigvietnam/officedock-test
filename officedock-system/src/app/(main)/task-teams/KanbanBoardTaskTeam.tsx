@@ -6,10 +6,11 @@ import {
   Transition,
 } from '@headlessui/react';
 import React, { Fragment, useContext, useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { useRouter, useSearchParams } from 'next/navigation';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
-import { useMutation } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { AxiosError } from 'axios';
 
 import Button from '@components/common/Button';
@@ -113,7 +114,9 @@ const KanbanBoardTaskTeam = () => {
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
 
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
+
+  const queryClient = useQueryClient();
 
   // Param
   const searchParams = useSearchParams();
@@ -417,17 +420,43 @@ const KanbanBoardTaskTeam = () => {
       return;
     }
     // Move concurrent task to another status then return
-    if (sourceUserId === destUserId && destStatus !== sourceStatus) {
-      const movedItem = listTaskNoSetting[source.index];
-      if (movedItem.isCrossTeamTask) {
+    if (
+      sourceUserId === destUserId &&
+      destStatus !== sourceStatus &&
+      sourceUserId !== COLUMN_ID_TASK
+    ) {
+      const newUsers = listDataKanbanTeam.map((user) => ({
+        ...user,
+        statuses: { ...user.statuses },
+      }));
+      const sourceUser = newUsers.find((user) => user.id === sourceUserId);
+      if (!sourceUser) return;
+
+      const sourceTasks = [
+        ...sourceUser.statuses[sourceStatus as keyof TransformedStatuses],
+      ];
+
+      const [movedTask] = sourceTasks.splice(source.index, 1);
+      if (movedTask.isCrossTeamTask) {
         return;
       }
     }
 
     // Move concurrent task to another user then return
-    if (sourceUserId !== destUserId) {
-      const movedItem = listTaskNoSetting[source.index];
-      if (movedItem.isCrossTeamTask) {
+    if (sourceUserId !== destUserId && sourceUserId !== COLUMN_ID_TASK) {
+      const newUsers = listDataKanbanTeam.map((user) => ({
+        ...user,
+        statuses: { ...user.statuses },
+      }));
+      const sourceUser = newUsers.find((user) => user.id === sourceUserId);
+      if (!sourceUser) return;
+
+      const sourceTasks = [
+        ...sourceUser.statuses[sourceStatus as keyof TransformedStatuses],
+      ];
+
+      const [movedTask] = sourceTasks.splice(source.index, 1);
+      if (movedTask.isCrossTeamTask) {
         return;
       }
     }
@@ -1016,7 +1045,9 @@ const KanbanBoardTaskTeam = () => {
   useEffect(() => {
     if (actionType && typeDetail === ItemStartType.TASK) {
       if (taskDetailId) {
-        getDataDetailTask(parseInt(taskDetailId));
+        setTimeout(() => {
+          getDataDetailTask(parseInt(taskDetailId));
+        }, 500);
       } else {
         setIsShowModalEditTeam(true);
       }
@@ -1546,6 +1577,7 @@ const KanbanBoardTaskTeam = () => {
       }
 
       handleRemoveParam();
+      queryClient.refetchQueries(['getTaskDurationDetail']);
       setPendingTaskData(null);
       setCloseAction(null);
       showToast({
@@ -1623,7 +1655,7 @@ const KanbanBoardTaskTeam = () => {
           hasNext: totalNoSetting ? totalNoSetting.hasNext : false,
         });
       }
-
+      queryClient.refetchQueries(['getTaskDurationDetail']);
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
       });

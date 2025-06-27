@@ -1,6 +1,7 @@
 import { memo, useState } from 'react';
 import { useMutation } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { useRouter } from 'next/navigation';
 
 import Modal from '../common/Modal';
@@ -24,7 +25,7 @@ import { hasPermissionInArray } from '@utils';
 export type DetailProfileMemberProps = {
   userId: string;
   avatarColor: string;
-  avatarUrl: string
+  avatarUrl: string;
   open: boolean;
   type: string;
   organizationId: string;
@@ -53,7 +54,7 @@ const DetailProfileMemberModal = memo(
     organizationId,
     onClose,
   }: DetailProfileMemberProps) => {
-    const { data: session } = useSession();
+    const { data: session } = useSessionCache();
     const router = useRouter();
     const [isCalling, setIsCalling] = useState(true);
     const { userDetail } = useUserDetail({

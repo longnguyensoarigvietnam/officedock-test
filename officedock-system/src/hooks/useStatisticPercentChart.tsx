@@ -2,7 +2,7 @@
 
 import { useQuery } from 'react-query';
 import { AxiosError } from 'axios';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 
@@ -31,11 +31,15 @@ const useStatisticPercentChart = ({
   onSuccess?: (data: StatisticsPercentChart[]) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   // Handle call API get statistic task duration list
-  const getStatisticPercentChart = async () => {
+  const getStatisticPercentChart = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds) return [];
     const apiUrl = `${apiRouters.STATISTICS_PERCENT_CHART}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
@@ -61,7 +65,9 @@ const useStatisticPercentChart = ({
         : ''
     }${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
-    const { data } = await api.get<StatisticsPercentChart[]>(apiUrl);
+    const { data } = await api.get<StatisticsPercentChart[]>(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -73,7 +79,7 @@ const useStatisticPercentChart = ({
     isLoading: isLoadingStatisticPercentChartList,
   } = useQuery({
     queryKey: ['getStatisticPercentChart', [filter]],
-    queryFn: getStatisticPercentChart,
+    queryFn: ({ signal }) => getStatisticPercentChart({ signal }),
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

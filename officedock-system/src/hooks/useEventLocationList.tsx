@@ -1,6 +1,7 @@
 'use client';
 import { useQuery } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 import { useContext } from 'react';
 
@@ -29,7 +30,7 @@ const useEventLocationList = ({
   onError,
   onSettled,
 }: UseEventLocationListHooksProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const { setIsLoading } = useContext(LoadingContext);
 
   const token = session?.accessToken;

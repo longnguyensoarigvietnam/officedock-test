@@ -2,7 +2,8 @@
 
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 
 import { apiRouters } from '@constants/routers';
@@ -35,17 +36,19 @@ const useStatisticTaskCompare = ({
   filter,
   isTeam = false,
   is_tag_page = false,
+  conditions,
   onSuccess,
   onError,
 }: {
   filter?: FilterProps;
   isTeam?: boolean;
   is_tag_page?: boolean;
+  conditions?: boolean[];
 
   onSuccess?: (data: BasePagination<DataTaskListStatisticListType[]>) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
   const { setIsSkeletonCategoryTaskCompare } = useContext(
     StatisticStateContext,
@@ -59,7 +62,11 @@ const useStatisticTaskCompare = ({
   );
 
   // Handle call API get statistic category list
-  const getStatisticCategoryList = async () => {
+  const getStatisticCategoryList = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.isCompare) return [];
     if (filter?.totalDuration === '') return null;
 
@@ -98,8 +105,11 @@ const useStatisticTaskCompare = ({
 
     const apiUrl = `${apiRouters.STATISTICS_TASKS}?${params.toString()}`;
 
-    const { data } =
-      await api.get<BasePagination<DataTaskListStatisticListType[]>>(apiUrl);
+    const { data } = await api.get<
+      BasePagination<DataTaskListStatisticListType[]>
+    >(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -110,9 +120,10 @@ const useStatisticTaskCompare = ({
     isFetched: isFetchedStatisticCategoryList,
   } = useQuery({
     queryKey: ['getStatisticTaskListCompare', [filter]],
-    queryFn: getStatisticCategoryList,
+    queryFn: ({ signal }) => getStatisticCategoryList({ signal }),
+
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && conditions?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (data: BasePagination<DataTaskListStatisticListType[]>) => {

@@ -2,7 +2,7 @@
 
 import { useQuery } from 'react-query';
 import { AxiosError } from 'axios';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 
@@ -31,11 +31,15 @@ const useStatisticTaskDurations = ({
   onSuccess?: (data: StatisticsTaskDuration[]) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   // Handle call API get statistic task duration list
-  const getStatisticTaskDurations = async () => {
+  const getStatisticTaskDurations = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds) return [];
     const apiUrl = `${apiRouters.STATISTICS_TASK_DURATIONS}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
@@ -61,7 +65,9 @@ const useStatisticTaskDurations = ({
         : ''
     }${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
-    const { data } = await api.get<StatisticsTaskDuration[]>(apiUrl);
+    const { data } = await api.get<StatisticsTaskDuration[]>(apiUrl, {
+      signal,
+    });
     return data;
   };
 
@@ -72,7 +78,8 @@ const useStatisticTaskDurations = ({
     isFetched: isFetchedStatisticTaskDurationsList,
   } = useQuery({
     queryKey: ['getStatisticTaskDurations', [filter]],
-    queryFn: getStatisticTaskDurations,
+    queryFn: ({ signal }) => getStatisticTaskDurations({ signal }),
+
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,

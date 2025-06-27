@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { format } from 'date-fns';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { useRouter } from 'next/navigation';
 import { Dispatch, Fragment, MutableRefObject, SetStateAction } from 'react';
 import { Editor } from '@tiptap/react';
@@ -128,7 +129,7 @@ export const MessageDetail = ({
   handleRemoveReactionClick,
   handleResetChatRoomNotification,
 }: MessageDetailProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
 
   // Delete message

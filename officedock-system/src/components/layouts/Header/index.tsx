@@ -1,7 +1,7 @@
 'use client';
 import { Fragment, useContext, useEffect, useState } from 'react';
 import lodash from 'lodash';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import {
   Popover,
   PopoverButton,
@@ -75,6 +75,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { TaskContext } from '@providers/TaskProvider';
 import { useToast } from '@providers/ToastProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import TaskPageDataHeader from './TaskPageDataHeader';
 import { addTimeToDate } from '@utils/date';
@@ -152,7 +153,7 @@ const Header = ({ className }: HeaderProps) => {
     useState(false);
 
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const [isShowModalTask, setShowModalTask] = useState<boolean>(false);
   const [openCreateEventModal, setOpenCreateEventModal] =
     useState<boolean>(false);

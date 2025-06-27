@@ -1,5 +1,11 @@
 'use client';
-import React, { Fragment, useContext, useEffect, useState } from 'react';
+import React, {
+  Fragment,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import Chart from 'react-apexcharts';
 import Image from 'next/image';
 import {
@@ -24,18 +30,16 @@ import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatis
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
-import {
-  STATISTIC_CHART_VIEW_OPTIONS,
-  TEAM_CALENDAR_ORGANIZATION,
-} from '@constants';
+import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
+  CategoryTableRowDetail,
   StatisticCategoryInfo,
   StatisticsCategories,
 } from '@interfaces/statistic';
-import { getLineChartEnableViews } from '@utils';
+import { getLineChartEnableViews, getStatisticMilestones } from '@utils';
 import {
   convertDurationToTotalMinutes,
   convertToJapaneseDateRange,
@@ -46,37 +50,25 @@ import {
 } from '@utils/date';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { useGenericDebounce } from '@hooks/useGenericDebounce';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
   removeTag: (selected: OptionDropdownType) => void;
   removeUser: (selected: OptionDropdownType) => void;
-
   statisticTeamCategoryList: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
 };
-interface TableRowDetail {
-  categoryId: number;
-  categoryName: string;
-  categoryDuration: string;
-  categoryPercent: number;
-  userList: {
-    userId: number;
-    userName: string;
-    userAvatar?: string | null;
-    userAvatarColor: string;
-    userDuration: string;
-    userPercent: number;
-  }[];
-}
 
 const buildTableDetail = (
   categories: {
     categoryId: number;
     categoryName: string;
+    organizationId?: number;
+
     percent: number;
     duration: string;
     users?: {
@@ -96,6 +88,7 @@ const buildTableDetail = (
     categoryName: category.categoryName,
     categoryPercent: category.percent,
     categoryDuration: category.duration,
+    organizationId: category.organizationId ?? 0,
     userList:
       category.users && category.users.length > 0
         ? category.users.map((user) => {
@@ -141,15 +134,16 @@ const StackedAreaTeamChart = ({
     listMemberTeam,
     orderingOptions,
     lineChartViewBy,
+    areaTableData,
+    setAreaTableData,
     setLineChartViewBy,
   } = useContext(StatisticTeamStateContext);
   const { selectedOrganization: selectedOrganizationSideBar } =
     useContext(GlobalStateContext);
 
-  const selectedMemberList =
-    orderingOptions?.user_ids && orderingOptions.user_ids.length > 0
-      ? orderingOptions.user_ids.map((user) => user.value).join(',')
-      : listMemberTeam.map((user) => user.id).join(',');
+  const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
+  const [isTableDataRendered, setIsTableDataRendered] =
+    useState<boolean>(false);
 
   const [selectedCategory, setSelectedCategory] = useState<{
     id: number;
@@ -158,6 +152,7 @@ const StackedAreaTeamChart = ({
 
   const [isExtendData, setIsExtendData] = useState(true);
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
+  const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
 
   // Sorting
   const [percentageSortingStatus, setPercentageSortingStatus] =
@@ -165,32 +160,48 @@ const StackedAreaTeamChart = ({
   const [durationSortingStatus, setDurationSortingStatus] =
     useState<string>('');
 
-  // Table data
-  const [tableData, setTableData] = useState<TableRowDetail[]>([]);
   // Collapse statuses
   const [categoryCollapseStatuses, setCategoryCollapseStatuses] = useState<
     {
-      categoryId: number;
+      categoryName: string;
       status: boolean;
     }[]
   >([]);
+  const [selectedOrganizationInTable, setSelectedOrganizationInTable] =
+    useState<number>(0);
+
+  // Get initial member options
+  useEffect(() => {
+    if (orderingOptions?.user_ids && orderingOptions?.user_ids.length > 0) {
+      setSelectedMembers(
+        orderingOptions?.user_ids.map((user) => Number(user.value)),
+      );
+    } else {
+      setSelectedMembers(listMemberTeam.map((user) => Number(user.id)));
+    }
+  }, [orderingOptions?.user_ids, listMemberTeam]);
 
   // Filter options
   const [filter, setFilter] = useState({
     fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
     endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-    userIds: selectedMemberList,
-
-    largeCategoryId: selectedLarge?.value,
-    mediumCategoryId: selectedMedium?.value,
-    smallCategoryId: selectedSmall?.value,
+    userIds: selectedMembers.join(','),
+    largeCategoryId:
+      selectedOrganization && !selectedLarge && !selectedMedium
+        ? selectedCategory?.id
+        : selectedLarge?.value,
+    mediumCategoryId:
+      selectedOrganization && selectedLarge && !selectedMedium
+        ? selectedCategory?.id
+        : selectedMedium?.value,
+    smallCategoryId:
+      selectedOrganization && selectedLarge && selectedMedium
+        ? selectedCategory?.id
+        : selectedSmall?.value,
     statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: `${selectedOrganization?.value}`,
+    selectedOrganization: 0,
     tagIds: orderingOptions?.tag_ids || [],
-    organizationMemberId:
-      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
-        ? String(selectedOrganizationSideBar?.value || '')
-        : undefined,
+    organizationMemberId: String(selectedOrganizationSideBar?.value || ''),
   });
 
   const handleCategorySelection = (
@@ -202,8 +213,60 @@ const StackedAreaTeamChart = ({
         id: firstCategory.categoryId,
         name: firstCategory.categoryName,
       });
+      setSelectedOrganizationInTable(Number(firstCategory.organizationId));
+      if (selectedOrganization && !selectedLarge && !selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            largeCategoryId: firstCategory.categoryId,
+            selectedOrganization: Number(firstCategory.organizationId),
+          };
+        });
+      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            mediumCategoryId: firstCategory.categoryId,
+            selectedOrganization: Number(firstCategory.organizationId),
+          };
+        });
+      } else if (selectedOrganization && selectedLarge && selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            smallCategoryId: firstCategory.categoryId,
+            selectedOrganization: Number(firstCategory.organizationId),
+          };
+        });
+      }
     } else {
       setSelectedCategory(null);
+      setSelectedOrganizationInTable(0);
+      if (selectedOrganization && !selectedLarge && !selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            largeCategoryId: undefined,
+            selectedOrganization: 0,
+          };
+        });
+      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            mediumCategoryId: undefined,
+            selectedOrganization: 0,
+          };
+        });
+      } else if (selectedOrganization && selectedLarge && selectedMedium) {
+        setFilter((prev) => {
+          return {
+            ...prev,
+            smallCategoryId: undefined,
+            selectedOrganization: 0,
+          };
+        });
+      }
     }
   };
 
@@ -213,7 +276,13 @@ const StackedAreaTeamChart = ({
     isLoadingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
     filter,
-    condition: [Boolean(tableData.length > 0)],
+    condition: [
+      Boolean(
+        areaTableData.length > 0 &&
+          isTableDataRendered &&
+          (filter.largeCategoryId || filter.mediumCategoryId),
+      ),
+    ],
   });
 
   const [dataChart, setDataChart] = useState<
@@ -242,7 +311,7 @@ const StackedAreaTeamChart = ({
   // Get table info (statistic team categories)
   useEffect(() => {
     if (statisticTeamCategoryList) {
-      let tableDetail: TableRowDetail[] = [];
+      let tableDetail: CategoryTableRowDetail[] = [];
       if (selectedOrganization && !selectedLarge && !selectedMedium) {
         tableDetail = buildTableDetail(
           statisticTeamCategoryList.largeCategories,
@@ -263,63 +332,74 @@ const StackedAreaTeamChart = ({
       setCategoryCollapseStatuses(
         tableDetail.map((category) => {
           return {
-            categoryId: category.categoryId,
+            categoryName: category.categoryName,
             status: false,
           };
         }),
       );
-
-      setTableData(tableDetail);
+      setTimeout(() => {
+        setIsTableDataRendered(true);
+      }, 2000);
+      setAreaTableData(tableDetail);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     statisticTeamCategoryList,
+    isTableDataRendered,
     selectedOrganization,
     selectedLarge,
     selectedMedium,
   ]);
 
-  useEffect(() => {
-    setFilter({
+  // Handle listen to filter option changes
+  const memoizedFilter = useMemo(() => {
+    return {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-      userIds: selectedMemberList,
+      userIds: selectedMembers?.filter(Boolean).join(',') || '',
       largeCategoryId:
-        selectedOrganization && !selectedLarge && !selectedMedium
+        selectedOrganizationInTable && !selectedLarge && !selectedMedium
           ? selectedCategory?.id
           : selectedLarge?.value,
       mediumCategoryId:
-        selectedOrganization && selectedLarge && !selectedMedium
+        selectedOrganizationInTable && selectedLarge && !selectedMedium
           ? selectedCategory?.id
           : selectedMedium?.value,
       smallCategoryId:
-        selectedOrganization && selectedLarge && selectedMedium
+        selectedOrganizationInTable && selectedLarge && selectedMedium
           ? selectedCategory?.id
           : selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: `${selectedOrganization?.value}`,
+      selectedOrganization: selectedOrganizationInTable,
       tagIds: orderingOptions?.tag_ids || [],
-      organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
-          ? String(selectedOrganizationSideBar?.value || '')
-          : undefined,
-    });
+      organizationMemberId: String(selectedOrganizationSideBar?.value || ''),
+    };
   }, [
     startDate,
     endDate,
-    orderingOptions,
-    lineChartViewBy?.value,
-    selectedOrganization?.value,
-    selectedLarge?.value,
-    selectedMedium?.value,
-    selectedSmall?.value,
-    selectedMemberList,
-    selectedOrganization,
+    selectedMembers,
+    orderingOptions?.tag_ids,
+    selectedOrganizationInTable,
     selectedLarge,
     selectedMedium,
     selectedCategory?.id,
+    selectedSmall?.value,
+    lineChartViewBy?.value,
     selectedOrganizationSideBar?.value,
   ]);
+
+  const debouncedFilter = useGenericDebounce(memoizedFilter, 1000);
+
+  useEffect(() => {
+    if (isOrganizationChanging && selectedMembers.length > 0) {
+      setIsOrganizationChanging(false); // Done
+    }
+  }, [selectedMembers, isOrganizationChanging]);
+  useEffect(() => {
+    if (!isOrganizationChanging) {
+      setFilter(debouncedFilter); // Trigger API only when everything is ready
+    }
+  }, [debouncedFilter, isOrganizationChanging]);
 
   useEffect(() => {
     if (
@@ -348,19 +428,43 @@ const StackedAreaTeamChart = ({
         const percents = userData.durations.map((d) => d.percentPerRange);
         const duplicated = [percents[0], ...percents];
         return {
-          name: userData.user.fullName,
+          name: userData?.user?.fullName || '',
           data: duplicated,
         };
       });
       const colors = statisticUserTaskDurationsList.map(
-        (userData) => userData.user.avatarColor || '#000',
+        (userData) => userData?.user?.avatarColor || '#000',
       );
 
       setDataChart(chartData);
       setColorList(colors);
     } else {
-      setTimeRange([]);
-      setDataChart([]);
+      const timeMilestones = getStatisticMilestones(
+        `${formatDateToYMD(startDate)}`,
+        `${formatDateToYMD(endDate || '')}`,
+        lineChartViewBy?.value as StatisticViewOptions,
+      );
+
+      const uniqueSortedDates = Array.from(new Set(timeMilestones)).sort(
+        (pre, next) => new Date(pre).getTime() - new Date(next).getTime(),
+      );
+
+      const transformedDates = uniqueSortedDates.map((date, index, arr) => {
+        const isEdge = index === 0 || index === arr.length - 1;
+        return convertToStatisticJapaneseLabels(
+          date,
+          lineChartViewBy?.value as string,
+          isEdge,
+        );
+      });
+
+      setTimeRange(transformedDates);
+      setDataChart([
+        {
+          name: '',
+          data: Array(timeMilestones.length).fill(0),
+        },
+      ]);
       return;
     }
   }, [statisticUserTaskDurationsList, lineChartViewBy]);
@@ -413,7 +517,7 @@ const StackedAreaTeamChart = ({
       },
     },
     legend: {
-      show: true,
+      show: !(dataChart.length == 1 && !dataChart[0].name), // Not show legend with fake data
       showForSingleSeries: true,
       position: 'bottom',
       horizontalAlign: 'right',
@@ -494,7 +598,7 @@ const StackedAreaTeamChart = ({
 
   // Sort by percent difference
   const sortByPercentDifference = (
-    data: TableRowDetail[],
+    data: CategoryTableRowDetail[],
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
@@ -505,12 +609,12 @@ const StackedAreaTeamChart = ({
         ? rowAPercentage - rowBPercentage
         : rowBPercentage - rowAPercentage;
     });
-    setTableData(sortedArr);
+    setAreaTableData(sortedArr);
   };
 
   // Sort by duration difference
   const sortByDurationDifference = (
-    data: TableRowDetail[],
+    data: CategoryTableRowDetail[],
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
@@ -525,11 +629,11 @@ const StackedAreaTeamChart = ({
         ? rowADuration - rowBDuration
         : rowBDuration - rowADuration;
     });
-    setTableData(sortedArr);
+    setAreaTableData(sortedArr);
   };
 
   // Columns definition
-  const columns: ColumnDef<TableRowDetail>[] = [
+  const columns: ColumnDef<CategoryTableRowDetail>[] = [
     {
       accessorKey: 'categoryName',
       header: () => {
@@ -544,19 +648,25 @@ const StackedAreaTeamChart = ({
         const collapseStatus =
           categoryCollapseStatuses.find(
             (categoryCollapseStatus) =>
-              categoryCollapseStatus.categoryId == info.row.original.categoryId,
+              categoryCollapseStatus.categoryName ==
+              info.row.original.categoryName,
           )?.status || false;
         return (
           <div className="flex items-start px-[18px]">
             <RadioButton
               name="categoryNameArea"
-              isChecked={info.row.original.categoryId == selectedCategory?.id}
+              isChecked={
+                info.row.original.categoryName == selectedCategory?.name
+              }
               onChange={(e: any) => {
                 if (e) {
                   setSelectedCategory({
                     id: info.row.original.categoryId,
                     name: info.row.original.categoryName,
                   });
+                  setSelectedOrganizationInTable(
+                    info.row.original.organizationId,
+                  );
                   if (
                     selectedOrganization &&
                     !selectedLarge &&
@@ -566,6 +676,7 @@ const StackedAreaTeamChart = ({
                       return {
                         ...prev,
                         largeCategoryId: info.row.original.categoryId,
+                        selectedOrganization: info.row.original.organizationId,
                       };
                     });
                   } else if (
@@ -577,6 +688,7 @@ const StackedAreaTeamChart = ({
                       return {
                         ...prev,
                         mediumCategoryId: info.row.original.categoryId,
+                        selectedOrganization: info.row.original.organizationId,
                       };
                     });
                   } else if (
@@ -588,6 +700,7 @@ const StackedAreaTeamChart = ({
                       return {
                         ...prev,
                         smallCategoryId: info.row.original.categoryId,
+                        selectedOrganization: info.row.original.organizationId,
                       };
                     });
                   }
@@ -599,7 +712,7 @@ const StackedAreaTeamChart = ({
                 className={`flex justify-between items-center w-full ${
                   collapseStatus &&
                   info.row.original?.userList?.filter((user) =>
-                    selectedMemberList.includes(String(user.userId)),
+                    selectedMembers.join(',').includes(String(user.userId)),
                   ).length > 0 &&
                   'mb-3'
                 }`}>
@@ -618,7 +731,7 @@ const StackedAreaTeamChart = ({
                     onClick={() => {
                       setCategoryCollapseStatuses((prev) => {
                         return prev.map((item) =>
-                          item.categoryId == info.row.original.categoryId
+                          item.categoryName == info.row.original.categoryName
                             ? { ...item, status: !item.status }
                             : item,
                         );
@@ -674,10 +787,10 @@ const StackedAreaTeamChart = ({
                 durationSortingStatus == SortingType.DESC
               ) {
                 setDurationSortingStatus(SortingType.ASC);
-                sortByDurationDifference(tableData, SortingType.ASC);
+                sortByDurationDifference(areaTableData, SortingType.ASC);
               } else {
                 setDurationSortingStatus(SortingType.DESC);
-                sortByDurationDifference(tableData, SortingType.DESC);
+                sortByDurationDifference(areaTableData, SortingType.DESC);
               }
             }}>
             <p className="!text-xs font-medium !text-[#77858F]">計測時間</p>
@@ -699,7 +812,8 @@ const StackedAreaTeamChart = ({
         const collapseStatus =
           categoryCollapseStatuses.find(
             (categoryCollapseStatus) =>
-              categoryCollapseStatus.categoryId == info.row.original.categoryId,
+              categoryCollapseStatus.categoryName ==
+              info.row.original.categoryName,
           )?.status || false;
 
         return (
@@ -708,7 +822,7 @@ const StackedAreaTeamChart = ({
               className={`flex justify-center ${
                 collapseStatus &&
                 info.row.original?.userList?.filter((user) =>
-                  selectedMemberList.includes(String(user.userId)),
+                  selectedMembers.join(',').includes(String(user.userId)),
                 ).length > 0 &&
                 'mb-3'
               }`}>
@@ -756,10 +870,10 @@ const StackedAreaTeamChart = ({
                 percentageSortingStatus == SortingType.DESC
               ) {
                 setPercentageSortingStatus(SortingType.ASC);
-                sortByPercentDifference(tableData, SortingType.ASC);
+                sortByPercentDifference(areaTableData, SortingType.ASC);
               } else {
                 setPercentageSortingStatus(SortingType.DESC);
-                sortByPercentDifference(tableData, SortingType.DESC);
+                sortByPercentDifference(areaTableData, SortingType.DESC);
               }
             }}>
             <p className="!text-xs font-medium !text-[#77858F]">割合</p>
@@ -783,7 +897,8 @@ const StackedAreaTeamChart = ({
         const collapseStatus =
           categoryCollapseStatuses.find(
             (categoryCollapseStatus) =>
-              categoryCollapseStatus.categoryId == info.row.original.categoryId,
+              categoryCollapseStatus.categoryName ==
+              info.row.original.categoryName,
           )?.status || false;
 
         return (
@@ -792,7 +907,7 @@ const StackedAreaTeamChart = ({
               className={`flex justify-center ${
                 collapseStatus &&
                 info.row.original?.userList?.filter((user) =>
-                  selectedMemberList.includes(String(user.userId)),
+                  selectedMembers.join(',').includes(String(user.userId)),
                 ).length > 0 &&
                 'mb-3'
               }`}>
@@ -831,7 +946,7 @@ const StackedAreaTeamChart = ({
   ];
 
   const table = useReactTable({
-    data: tableData,
+    data: areaTableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -844,9 +959,9 @@ const StackedAreaTeamChart = ({
 
       return {
         user: {
-          fullName: userData.user.fullName,
-          avatarColor: userData.user.avatarColor,
-          avatar: userData.user.avatar,
+          fullName: userData?.user?.fullName,
+          avatarColor: userData?.user?.avatarColor,
+          avatar: userData?.user?.avatar,
         },
         startDate: duration?.startDate || null,
         endDate: duration?.endDate || null,
@@ -1022,7 +1137,13 @@ const StackedAreaTeamChart = ({
                     classNameOption="!text-sm"
                     options={listOptionsOrganization}
                     selectedOption={selectedOrganization || undefined}
-                    onChange={(data) => handleSelectOrganization(data)}
+                    onChange={(data) => {
+                      setSelectedMembers([]);
+                      setAreaTableData([]);
+                      setIsTableDataRendered(false);
+                      setIsOrganizationChanging(true);
+                      handleSelectOrganization(data);
+                    }}
                   />
                 </div>
               </div>
@@ -1042,7 +1163,10 @@ const StackedAreaTeamChart = ({
                     classNameOption="!text-sm"
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
-                    onChange={(data) => handleSelectLarge(data)}
+                    onChange={(data) => {
+                      setAreaTableData([]);
+                      handleSelectLarge(data);
+                    }}
                     disabled={!selectedOrganization}
                   />
                 </div>
@@ -1063,7 +1187,10 @@ const StackedAreaTeamChart = ({
                     classNameOption="!text-sm"
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
-                    onChange={(data) => handleSelectMedium(data)}
+                    onChange={(data) => {
+                      setAreaTableData([]);
+                      handleSelectMedium(data);
+                    }}
                     disabled={!selectedLarge}
                   />
                 </div>
@@ -1099,6 +1226,7 @@ const StackedAreaTeamChart = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
+                    setAreaTableData([]);
                     setLineChartViewBy({
                       label: e.label,
                       value: e.value,
@@ -1124,93 +1252,101 @@ const StackedAreaTeamChart = ({
               />
               <div
                 className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'} pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
-                {timeRange.slice(1).map((item, idx) => {
-                  const actualIndex = idx + 1;
-                  const isHovered = hoveredIndex === actualIndex;
+                {!(dataChart.length == 1 && !dataChart[0].name) &&
+                  timeRange
+                    .slice(timeRange.length > 1 ? 1 : 0)
+                    .map((item, idx) => {
+                      const actualIndex = idx + 1;
+                      const isHovered = hoveredIndex === actualIndex;
 
-                  const dataDetail = getDataByIndex(idx);
-                  const totalDuration = dataDetail
-                    ? sumDurationsChart(dataDetail.map((user) => user.duration))
-                    : '00:00:00';
+                      const dataDetail = getDataByIndex(idx);
+                      const totalDuration = dataDetail
+                        ? sumDurationsChart(
+                            dataDetail.map((user) => user.duration),
+                          )
+                        : '00:00:00';
 
-                  return (
-                    <div
-                      key={actualIndex}
-                      onMouseEnter={() => setHoveredIndex(actualIndex)}
-                      onMouseLeave={() => setHoveredIndex(null)}
-                      style={{
-                        flex: 1,
-                        textAlign: 'center',
-                        backgroundColor:
-                          hoveredIndex === null
-                            ? 'transparent'
-                            : isHovered
-                              ? 'transparent'
-                              : '#F8FAFCA6',
-                        transition: 'background-color 0.2s',
-                      }}
-                      className="group relative">
-                      {
+                      return (
                         <div
+                          key={actualIndex}
+                          onMouseEnter={() => setHoveredIndex(actualIndex)}
+                          onMouseLeave={() => setHoveredIndex(null)}
                           style={{
-                            boxShadow: '0px 2px 8px 0px #0000001A',
+                            flex: 1,
+                            textAlign: 'center',
+                            backgroundColor:
+                              hoveredIndex === null
+                                ? 'transparent'
+                                : isHovered
+                                  ? 'transparent'
+                                  : '#F8FAFCA6',
+                            transition: 'background-color 0.2s',
                           }}
-                          className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
-                          <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-center w-full block">
-                            {dataDetail &&
-                              dataDetail.length > 0 &&
-                              convertToJapaneseDateRange(
-                                dataDetail[0]?.startDate as string,
-                                dataDetail[0]?.endDate as string,
-                              )}
-                          </p>
-                          <p className="text-start px-5 mt-4">
-                            {selectedCategory?.name}
-                          </p>
-                          <div className="flex text-base my-3 font-normal gap-[10px] px-5">
-                            <p>
-                              {totalDuration &&
-                                formatTimeToJapanese(totalDuration)}
-                            </p>
-                          </div>
-                          <div className="max-h-[200px] overflow-y-auto px-5">
-                            {dataDetail &&
-                              dataDetail.length > 0 &&
-                              dataDetail?.map((user, userIndex) => {
-                                return (
-                                  <div
-                                    key={userIndex}
-                                    className="flex items-center gap-1.5 mb-1.5">
-                                    <CustomUserAvatar
-                                      avatarUrl={user.user.avatar || ''}
-                                      avatarColor={user.user.avatarColor || ''}
-                                      size={30}
-                                    />
-                                    <div className="flex flex-grow items-center justify-between text-base font-medium">
-                                      <div className=" text-black w-fit  max-w-[140px] line-clamp-3 break-all text-left">
-                                        {user.user.fullName}
+                          className="group relative">
+                          {
+                            <div
+                              style={{
+                                boxShadow: '0px 2px 8px 0px #0000001A',
+                              }}
+                              className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                              <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-center w-full block">
+                                {dataDetail &&
+                                  dataDetail.length > 0 &&
+                                  convertToJapaneseDateRange(
+                                    dataDetail[0]?.startDate as string,
+                                    dataDetail[0]?.endDate as string,
+                                  )}
+                              </p>
+                              <p className="text-start px-5 mt-4">
+                                {selectedCategory?.name}
+                              </p>
+                              <div className="flex text-base my-3 font-normal gap-[10px] px-5">
+                                <p>
+                                  {totalDuration &&
+                                    formatTimeToJapanese(totalDuration)}
+                                </p>
+                              </div>
+                              <div className="max-h-[200px] overflow-y-auto px-5">
+                                {dataDetail &&
+                                  dataDetail.length > 0 &&
+                                  dataDetail?.map((user, userIndex) => {
+                                    return (
+                                      <div
+                                        key={userIndex}
+                                        className="flex items-center gap-1.5 mb-1.5">
+                                        <CustomUserAvatar
+                                          avatarUrl={user.user.avatar || ''}
+                                          avatarColor={
+                                            user.user.avatarColor || ''
+                                          }
+                                          size={30}
+                                        />
+                                        <div className="flex flex-grow items-center justify-between text-base font-medium">
+                                          <div className=" text-black w-fit  max-w-[140px] line-clamp-3 break-all text-left">
+                                            {user.user.fullName}
+                                          </div>
+                                          <div>{user.percentPerRange}%</div>
+                                        </div>
                                       </div>
-                                      <div>{user.percentPerRange}%</div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                          </div>
+                                    );
+                                  })}
+                              </div>
+                            </div>
+                          }
                         </div>
-                      }
-                    </div>
-                  );
-                })}
+                      );
+                    })}
               </div>
             </div>
           )}
           <div className="px-[30px]">
-            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
+            <Table
+              className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${areaTableData.length && 'max-h-[500px] overflow-y-auto'}`}>
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr
                     key={headerGroup.id}
-                    className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                    className="sticky top-0 z-10 text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
                     {headerGroup.headers.map((header, index) => (
                       <th
                         key={header.id}

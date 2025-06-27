@@ -2,6 +2,7 @@ from datetime import timedelta, datetime, time
 
 from django.db import transaction
 from django.db.models import Count, Q, F
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.timezone import now
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -17,16 +18,18 @@ from calendars.constants import (
 from calendars.models import Schedule
 from calendars.serializers import EventLocationSerializer
 from chat.constants import WebSocketEventType
+from dashboard.utils import separate_duration_while_keep_running
 from skills.models import StatisticCategory, Skill, SkillMapSkillLevel
 from organizations.serializers import (
     BaseStatisticCategorySerializer,
     OrganizationDetailSerializer,
 )
 from skills.serializers import SkillSerializer
+from stat_data.constants import ALL_TEAM
 from tags.serializers import BaseTagSerializer
 
 from users.serializers import RoleSerializer
-from users.models import Role, RoleDetail
+from users.models import Role, RoleDetail, User
 from tasks.models import TaskStatus, Task, TaskDuration
 from tasks.constants import (
     TaskTypes,
@@ -53,6 +56,7 @@ from .utils import (
     transform_statistic_categories,
     check_task_overtime,
     add_default_entries_to_categories,
+    get_organizations_of_user_by_screen_role,
 )
 
 
@@ -93,10 +97,12 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     Screens.CATEGORY_HIERARCHY.value,
                     Screens.SKILL_MAP.value,
                     Screens.USER.value,
+                    Screens.TEAMDOCK.value,
                 ],
             ),
             OpenApiParameter("is_with_staff", type=bool),
             OpenApiParameter("is_hierarchy", type=bool),
+            OpenApiParameter("user_id", type=str, required=False),
         ],
     )
     @action(
@@ -112,12 +118,28 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         is_with_staff = request.query_params.get("is_with_staff")
         is_hierarchy = request.query_params.get("is_hierarchy")
         screen = request.query_params.get("current_screen")
+        user_id = request.query_params.get("user_id")
         organizations = request.user.company.organizations.order_by(
             "-created_at"
         )
 
         # Filter organizations by role permissions
         if screen:
+            if screen == Screens.TEAMDOCK.value:
+                user = (
+                    get_object_or_404(User, id=user_id)
+                    if user_id
+                    else request.user
+                )
+                organizations = Organization.all_objects.filter(
+                    users=user
+                ).all()
+                data = {
+                    "organizations": CreationDataOrganizationWithStructCategorySerializer(
+                        organizations, many=True, context={"user": user}
+                    ).data,
+                }
+                return self.response_ok(data)
             action = Actions.ADD.value
             permission_name = f"{screen}_{action}"
 
@@ -134,7 +156,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     # organizations = organizations -> OLD CODE
                     organizations = (
                         request.user.organizations.all()
-                        if screen == "skill_map"
+                        if screen == Screens.SKILL_MAP.value
                         else organizations
                     )
                 elif (
@@ -462,16 +484,18 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         ).first():
             organizations = [organization]
         data = {}
-        tags = (
-            request.user.company.tags.filter(
-                is_hidden=False,
-                organizations__in=organizations,
-            )
-            .order_by("created_at")
-            .all()
-            .distinct()
-        )
         calendar_org = user.company.get_calendar_organization()
+
+        def _get_tags_by_organizations(input_organizations):
+            return (
+                request.user.company.tags.filter(
+                    is_hidden=False,
+                    organizations__in=input_organizations,
+                )
+                .order_by("created_at")
+                .all()
+                .distinct()
+            )
 
         def _handle_get_data_organization_of_task(data):
             data[
@@ -482,6 +506,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             data["members"] = CreationDataUserSerializer(
                 organizations[0].users.order_by("created_at"), many=True
             ).data
+            tags = _get_tags_by_organizations(organizations)
             data["tags"] = BaseTagSerializer(tags, many=True).data
             return data
 
@@ -507,6 +532,29 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     org["statistic_categories"]
                 )
                 org["members"] = members[org["id"]]
+            organizations_by_role = get_organizations_of_user_by_screen_role(
+                user, Screens.TEAMDOCK.value, Actions.VIEW.value
+            )
+            users = User.objects.filter(
+                organizations__in=organizations_by_role
+            ).distinct()
+
+            # Insert option all team to pulldown choose organization for statistic to start of a list
+            tags = _get_tags_by_organizations(organizations_by_role)
+            data["organizations"].insert(
+                0,
+                {
+                    "id": ALL_TEAM,
+                    "name": ALL_TEAM,
+                    "statistic_categories": [],
+                    "tags": CreationDataTagSerializer(
+                        tags, many=True, context={"user": user}
+                    ).data,
+                    "members": CreationDataUserSerializer(
+                        users, many=True
+                    ).data,
+                },
+            )
             return data
 
         def _handle_get_data_organization_my_statistic(data):
@@ -520,6 +568,25 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 CreationDataOrganizationWithStructCategorySerializer(
                     calendar_org, context={"user": user}
                 ).data
+            )
+            tags = (
+                user.company.tags.filter(
+                    is_hidden=False, organizations__in=organizations
+                )
+                .all()
+                .distinct()
+            )
+            # Insert option all team to pulldown choose organization for statistic to start of a list
+            data["organizations"].insert(
+                0,
+                {
+                    "id": ALL_TEAM,
+                    "name": ALL_TEAM,
+                    "statistic_categories": [],
+                    "tags": CreationDataTagSerializer(
+                        tags, many=True, context={"user": user}
+                    ).data,
+                },
             )
             for org in data["organizations"]:
                 org["statistic_categories"] = add_default_entries_to_categories(
@@ -581,9 +648,7 @@ class CronJobViewSet(BaseAPIViewSet):
         """
         Get remind notify of task
         """
-        tasks = Task.objects.filter(
-            remind_at__lte=timezone.now(), deadline__gt=timezone.now()
-        ).all()
+        # Check time process of skill map
         skill_map_levels = SkillMapSkillLevel.objects.filter(
             skill_map__is_valid=True, popup=True, is_complete=False
         ).all()
@@ -594,22 +659,37 @@ class CronJobViewSet(BaseAPIViewSet):
                     data,
                     user=skill_map_level.skill_map.staff,
                 )
-
-        for task in tasks:
-            if task.deadline and task.remind_at:
-                reminds = task.reminds
-                users = task.people_in_charge_tasks.all()
-                for user in users:
-                    send_web_socket_event(
-                        {
-                            "id": task.id,
-                            "title": task.title,
-                            "remind_countdown": reminds["countdown"],
-                            "remind_type": reminds["type"],
-                            "action": WebSocketEventType.REMIND_TASK.value,
-                        },
-                        user=user,
-                    )
+        # Check and separate duration
+        separate_task_duration = TaskDuration.objects.filter(
+            Q(paused_at__isnull=True)
+            & Q(Q(task__is_start=True) | Q(schedule__is_start=True))
+            & Q(started_at__date__lt=now().date())
+        )
+        if separate_task_duration.exists():
+            for duration in separate_task_duration.all():
+                separate_duration_while_keep_running(
+                    duration, now(), user=duration.user
+                )
+        # Check and send notify remind of task
+        tasks = Task.objects.filter(
+            remind_at__lte=timezone.now(), deadline__gt=timezone.now()
+        )
+        if tasks.exists():
+            for task in tasks.all():
+                if task.deadline and task.remind_at:
+                    reminds = task.reminds
+                    users = task.people_in_charge_tasks.all()
+                    for user in users:
+                        send_web_socket_event(
+                            {
+                                "id": task.id,
+                                "title": task.title,
+                                "remind_countdown": reminds["countdown"],
+                                "remind_type": reminds["type"],
+                                "action": WebSocketEventType.REMIND_TASK.value,
+                            },
+                            user=user,
+                        )
 
         return self.response_ok()
 

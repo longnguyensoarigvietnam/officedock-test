@@ -1,7 +1,8 @@
 'use client';
 
 import { useQuery } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { useContext } from 'react';
 import { AxiosError } from 'axios';
 
@@ -26,6 +27,7 @@ interface FilterProps {
   mediumCategoryId?: number | null;
   smallCategoryId?: number | null;
   organizationIds?: string;
+  organizationId?: string;
   tagIds?: OptionDropdownType[];
   totalDuration?: string;
   ordering: string;
@@ -40,6 +42,7 @@ const useStatisticTask = ({
   isTeam = false,
   is_tag_page = false,
   parentData,
+  conditions,
   onSuccess,
   onError,
 }: {
@@ -50,11 +53,11 @@ const useStatisticTask = ({
   cursor?: string;
   isTeam?: boolean;
   filter?: FilterProps;
-
+  conditions?: boolean[];
   onSuccess?: (data: BasePagination<DataTaskListStatisticListType[]>) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
   const { setIsSkeletonCategoryTask } = useContext(StatisticStateContext);
   const { setIsSkeletonTagTask } = useContext(StatisticTagStateContext);
@@ -66,7 +69,11 @@ const useStatisticTask = ({
   );
 
   // Handle call API get statistic category list
-  const getStatisticCategoryList = async () => {
+  const getStatisticCategoryList = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds) return null;
 
     if (filter?.totalDuration === '') return null;
@@ -87,6 +94,8 @@ const useStatisticTask = ({
       params.append('medium_category_id', String(filter.mediumCategoryId));
     if (filter?.smallCategoryId)
       params.append('small_category_id', String(filter.smallCategoryId));
+    if (filter?.organizationId)
+      params.append('organization_id', filter.organizationId);
     if (filter?.organizationIds)
       params.append('organization_ids', filter.organizationIds);
     if (filter?.tagIds)
@@ -107,8 +116,9 @@ const useStatisticTask = ({
 
     const apiUrl = `${apiRouters.STATISTICS_TASKS}?${params.toString()}`;
 
-    const { data } =
-      await api.get<BasePagination<DataTaskListStatisticListType[]>>(apiUrl);
+    const { data } = await api.get<
+      BasePagination<DataTaskListStatisticListType[]>
+    >(apiUrl, { signal });
     return data;
   };
 
@@ -119,9 +129,10 @@ const useStatisticTask = ({
     isFetched: isFetchedStatisticCategoryList,
   } = useQuery({
     queryKey: ['getStatisticTaskList', [filter]],
-    queryFn: getStatisticCategoryList,
+    queryFn: ({ signal }) => getStatisticCategoryList({ signal }),
+
     retry: 0,
-    enabled: !!parentData && !!token,
+    enabled: !!parentData && !!token && conditions?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (data: BasePagination<DataTaskListStatisticListType[]>) => {

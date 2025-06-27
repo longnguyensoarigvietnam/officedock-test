@@ -2,9 +2,10 @@
 
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
+import { useSessionCache } from '@providers/SessionCacheProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 
 import { apiRouters, pageRouters } from '@constants/routers';
@@ -20,7 +21,7 @@ interface FilterProps {
 }
 
 const useSkillMapByMembers = (filter?: FilterProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
   const token = session?.accessToken;
 

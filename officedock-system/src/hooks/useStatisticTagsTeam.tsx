@@ -3,7 +3,7 @@
 import { useQuery } from 'react-query';
 import { useContext } from 'react';
 import { AxiosError } from 'axios';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 
@@ -33,7 +33,7 @@ const useStatisticTagsTeam = ({
   onSuccess?: (data: StatisticsCategories) => void;
   onError?: (error: AxiosError) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
   const {
     setIsLoadingLarge,
@@ -47,13 +47,20 @@ const useStatisticTagsTeam = ({
   } = useContext(StatisticTeamTagsStateContext);
 
   // Handle call API get statistic tags list team
-  const getStatisticTagsListTeam = async () => {
+  const getStatisticTagsListTeam = async ({
+    signal,
+  }: {
+    signal?: AbortSignal;
+  }) => {
     if (!filter?.organizationIds) return [];
 
     const params = new URLSearchParams();
 
     if (filter.fromDate) params.append('from_date', String(filter.fromDate));
     if (filter.endDate) params.append('end_date', String(filter.endDate));
+    if (filter.organizationIds) {
+      params.append('organization_id', filter.organizationIds.toString());
+    }
     if (filter.organizationMemberId)
       params.append(
         'organization_get_members_id',
@@ -71,10 +78,9 @@ const useStatisticTagsTeam = ({
       params.append('tag_ids', tagIds);
     }
 
-    const orgId = parseInt(filter.organizationIds);
-    const apiUrl = `${apiRouters.STATISTICS_TAGS_TEAM(orgId)}?${params.toString()}`;
+    const apiUrl = `${apiRouters.STATISTICS_TAGS_TEAM}?${params.toString()}`;
 
-    const { data } = await api.get<StatisticsCategories[]>(apiUrl);
+    const { data } = await api.get<StatisticsCategories[]>(apiUrl, { signal });
     return data;
   };
 
@@ -85,7 +91,8 @@ const useStatisticTagsTeam = ({
     isFetched: isFetchedStatisticTagsListTeam,
   } = useQuery({
     queryKey: ['getStatisticTagsListTeam', [filter]],
-    queryFn: getStatisticTagsListTeam,
+    queryFn: ({ signal }) => getStatisticTagsListTeam({ signal }),
+
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,
