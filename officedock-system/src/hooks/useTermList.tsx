@@ -1,6 +1,6 @@
 'use client';
 import { useQuery } from 'react-query';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 import { ResponseError } from '@interfaces/response';
@@ -8,6 +8,7 @@ import { TermsStep } from '@interfaces/user';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ServerStatusCode } from '@constants/enums';
 import api from '@base/api';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 interface UseTermHooksProps {
   conditions?: boolean[];
@@ -15,7 +16,7 @@ interface UseTermHooksProps {
 }
 
 const useTermList = ({ onSuccess, conditions }: UseTermHooksProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
   const router = useRouter();
 

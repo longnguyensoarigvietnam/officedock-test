@@ -1,7 +1,7 @@
 'use client';
 import { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import MainLayout from '@components/layouts/MainLayout';
 import Button from '@components/common/Button';
@@ -13,7 +13,7 @@ import { hasPermissionInArray } from '@utils';
 
 const OrganizationPage = () => {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   return (
     <MainLayout

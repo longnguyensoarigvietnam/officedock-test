@@ -1,5 +1,5 @@
 'use client';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { useQuery } from 'react-query';
 import { useRouter } from 'next/navigation';
 
@@ -8,9 +8,10 @@ import { ServerStatusCode } from '@constants/enums';
 
 import { ResponseError } from '@interfaces/response';
 import api from '@base/api';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 const useFrequentlyTasks = () => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
   const token = session?.accessToken;
 

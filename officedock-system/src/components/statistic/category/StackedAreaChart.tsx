@@ -182,7 +182,9 @@ const StackedAreaChart = ({
     const dates: string[] = statisticPercentChartList.map(
       (item) => item.startDate,
     );
+
     const lastItem = statisticPercentChartList.at(-1);
+
     if (lastItem && lastItem.endDate !== lastItem.startDate) {
       dates.push(lastItem.endDate);
     }
@@ -205,7 +207,7 @@ const StackedAreaChart = ({
     // 2. Collect chart data percentage
     const categoryMap = new Map<string, number[]>();
 
-    for (let i = 0; i < uniqueSortedDates.length - 1; i++) {
+    for (let i = 0; i <= uniqueSortedDates.length - 1; i++) {
       const date = uniqueSortedDates[i];
       const weekItem = statisticPercentChartList.find(
         (item) => item.startDate === date,
@@ -233,7 +235,6 @@ const StackedAreaChart = ({
         data: [firstValue, ...data],
       };
     });
-
     // 3. Collect tableData (duration + percent)
     const categoryTableMap = new Map<
       string, // use key `${id}_${name}` to distinguish
@@ -915,78 +916,84 @@ const StackedAreaChart = ({
               <div
                 className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'}  pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
                 {!(dataChart.length == 1 && !dataChart[0].name) &&
-                  timeRange.slice(1).map((item, idx) => {
-                    const actualIndex = idx + 1;
-                    const isHovered = hoveredIndex === actualIndex;
+                  timeRange
+                    .slice(timeRange.length > 1 ? 1 : 0)
+                    .map((item, idx) => {
+                      const actualIndex = idx + 1;
+                      const isHovered = hoveredIndex === actualIndex;
 
-                    const dataDetail =
-                      statisticPercentChartList &&
-                      statisticPercentChartList[idx];
-                    const dataDetailDate =
-                      statisticPercentChartList &&
-                      statisticPercentChartList[idx];
+                      const dataDetail =
+                        statisticPercentChartList &&
+                        statisticPercentChartList[idx];
+                      const dataDetailDate =
+                        statisticPercentChartList &&
+                        statisticPercentChartList[idx];
 
-                    return (
-                      <div
-                        key={actualIndex}
-                        onMouseEnter={() => setHoveredIndex(actualIndex)}
-                        onMouseLeave={() => setHoveredIndex(null)}
-                        style={{
-                          flex: 1,
-                          textAlign: 'center',
-                          backgroundColor:
-                            hoveredIndex === null
-                              ? 'transparent'
-                              : isHovered
+                      return (
+                        <div
+                          key={actualIndex}
+                          onMouseEnter={() => setHoveredIndex(actualIndex)}
+                          onMouseLeave={() => setHoveredIndex(null)}
+                          style={{
+                            flex: 1,
+                            textAlign: 'center',
+                            backgroundColor:
+                              hoveredIndex === null
                                 ? 'transparent'
-                                : '#F8FAFCA6',
-                          transition: 'background-color 0.2s',
-                        }}
-                        className="group relative">
-                        {statisticPercentChartList && (
-                          <div
-                            style={{
-                              boxShadow: '0px 2px 8px 0px #0000001A',
-                            }}
-                            className={`bg-white absolute p-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
-                            <p className="text-sm font-normal text-[#77858F] mb-1 text-center w-full block">
-                              {convertToJapaneseDateRange(
-                                dataDetailDate?.startDate as string,
-                                dataDetailDate?.endDate as string,
-                              )}
-                            </p>
-                            {dataDetail?.categories.map((cate, cateIndex) => {
-                              const colorDefault = tableData.find(
-                                (itemFind) =>
-                                  itemFind.categoryId === cate.categoryId,
-                              );
-                              return (
-                                <div
-                                  key={cateIndex}
-                                  className="flex items-center gap-1.5">
-                                  <div
-                                    className="w-3 h-3 rounded-sm"
-                                    style={{
-                                      backgroundColor:
-                                        cate.categoryColor ||
-                                        colorDefault?.categoryColor ||
-                                        '',
-                                    }}
-                                  />
-                                  <div className="flex flex-grow items-center justify-between text-base font-medium">
-                                    <div className=" text-black w-fit  max-w-[180px] line-clamp-3 break-words">
-                                      {cate.categoryName}
-                                    </div>
-                                    <div>{cate.percent}%</div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                                : isHovered
+                                  ? 'transparent'
+                                  : '#F8FAFCA6',
+                            transition: 'background-color 0.2s',
+                          }}
+                          className="group relative">
+                          {statisticPercentChartList && (
+                            <div
+                              style={{
+                                boxShadow: '0px 2px 8px 0px #0000001A',
+                              }}
+                              className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                              <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-center w-full block">
+                                {convertToJapaneseDateRange(
+                                  dataDetailDate?.startDate as string,
+                                  dataDetailDate?.endDate as string,
+                                )}
+                              </p>
+                              <div className="max-h-[250px] overflow-y-auto px-5">
+                                {dataDetail?.categories.map(
+                                  (cate, cateIndex) => {
+                                    const colorDefault = tableData.find(
+                                      (itemFind) =>
+                                        itemFind.categoryId === cate.categoryId,
+                                    );
+                                    return (
+                                      <div
+                                        key={cateIndex}
+                                        className="flex items-center gap-1.5">
+                                        <div
+                                          className="w-3 h-3 rounded-sm"
+                                          style={{
+                                            backgroundColor:
+                                              cate.categoryColor ||
+                                              colorDefault?.categoryColor ||
+                                              '',
+                                          }}
+                                        />
+                                        <div className="flex flex-grow items-center justify-between text-base font-medium">
+                                          <div className=" text-black w-fit  max-w-[180px] line-clamp-3 break-words">
+                                            {cate.categoryName}
+                                          </div>
+                                          <div>{cate.percent}%</div>
+                                        </div>
+                                      </div>
+                                    );
+                                  },
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
               </div>
             </div>
           )}

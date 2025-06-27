@@ -22,7 +22,8 @@ import interactionPlugin from '@fullcalendar/interaction';
 import resourceTimeGridPlugin from '@fullcalendar/resource-timegrid';
 import resourcePlugin from '@fullcalendar/resource';
 import scrollgridPlugin from '@fullcalendar/scrollgrid';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import './styles/index.css';
 
 import Button from '@components/common/Button';
@@ -85,6 +86,7 @@ const ScheduleTeamBoard = () => {
   const { organizationTeamList, selectedOrganization } =
     useContext(GlobalStateContext);
   const { dataActualAddSchedule } = useContext(TaskContext);
+  const { isConcurrently } = useContext(TaskTeamStateContext);
 
   // State
   const searchParams = useSearchParams();
@@ -95,7 +97,7 @@ const ScheduleTeamBoard = () => {
   const organizationId = searchParams.get('organization');
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const screenHeight = window.innerHeight;
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const baseHeight = Math.round(43 * (screenHeight / 890));
   const baseSlider = Math.round(43 * (screenHeight / 890));
@@ -546,6 +548,8 @@ const ScheduleTeamBoard = () => {
       ...(organizationId && { organization_id: String(organizationId) }),
       start_date: startDate || String(currentRange.start),
       end_date: endDate || String(currentRange.end),
+      is_cross_team_task: String(isConcurrently),
+
       ...(orderingOptions?.user_ids?.length && {
         user_ids: orderingOptions.user_ids.map((item) => item.value).join(','),
       }),
@@ -656,6 +660,7 @@ const ScheduleTeamBoard = () => {
       ...(organizationId && { organization_id: String(organizationId) }),
       start_date: startDate || String(currentRange.start),
       end_date: endDate || String(currentRange.end),
+      is_cross_team_task: String(isConcurrently),
       ...(orderingOptions?.user_ids?.length && {
         user_ids: orderingOptions.user_ids.map((item) => item.value).join(','),
       }),

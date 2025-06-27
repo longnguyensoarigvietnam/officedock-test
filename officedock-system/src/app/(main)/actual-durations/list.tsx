@@ -4,7 +4,6 @@ import Link from 'next/link';
 import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { Transition } from '@headlessui/react';
-import { useSession } from 'next-auth/react';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
@@ -51,6 +50,7 @@ import useCreationDataTag from '@hooks/useCreationDataTag';
 import useCreationDataStatisticOrganization from '@hooks/useCreationDataStatisticOrganization';
 import api from '@base/api';
 import useActualDurationListByStaff from '@hooks/useActualDurationListByStaff';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 const ListActualDurations = () => {
   const { setIsLoading } = useContext(LoadingContext);
@@ -60,7 +60,7 @@ const ListActualDurations = () => {
 
   const { showToast } = useToast();
 
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const { expanded } = useContext(GlobalStateContext);
 
   const [showFilter, setShowFilter] = useState(true);

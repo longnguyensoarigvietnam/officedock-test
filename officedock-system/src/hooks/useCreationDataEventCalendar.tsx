@@ -1,7 +1,7 @@
 'use client';
 import { AxiosError } from 'axios';
 import { useQuery } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 import { CreationDataEventCalendar } from '@interfaces/calendar';
@@ -20,7 +20,7 @@ const useCreationDataEventCalendar = ({
   onError,
   onSettled,
 }: useCreationDataEventCalendarHooksProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   // Handle call API get creation data event calendar

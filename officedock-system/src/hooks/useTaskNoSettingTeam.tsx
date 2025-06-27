@@ -1,16 +1,17 @@
 'use client';
 import { useQuery } from 'react-query';
 import { useRouter } from 'next/navigation';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ServerStatusCode } from '@constants/enums';
+import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 
 import { KanbanDataResponse } from '@interfaces/task';
 import { ResponseError } from '@interfaces/response';
 import api from '@base/api';
 import { OptionDropdownType } from '@interfaces/common';
-import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 interface FilterProps {
   userId?: OptionDropdownType[];
@@ -35,7 +36,7 @@ const useTaskNoSettingTeam = ({
 
   onSuccess?: (data: KanbanDataResponse) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
 
   const token = session?.accessToken;

@@ -1,6 +1,7 @@
 'use client';
 import { ChangeEvent, useContext, useEffect, useMemo, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
 import { useMutation } from 'react-query';
 
@@ -143,7 +144,7 @@ const ActionsEventModal = ({
   const optionTimeInput = generateTimeOptionsAsObjects();
 
   // Session
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   // Context
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);

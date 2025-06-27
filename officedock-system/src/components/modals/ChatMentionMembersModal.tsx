@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { Editor } from '@tiptap/react';
 
 import Checkbox from '@components/common/Checkbox';
@@ -43,7 +44,7 @@ export const ChatMentionMembersList = ({
   const popoverRef = useRef<HTMLDivElement | null>(null);
   const [openMentionMembersModal, setOpenMentionMembersModal] =
     useState<boolean>(false);
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleClosePopover = (event: MouseEvent) => {

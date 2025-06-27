@@ -1,7 +1,7 @@
 'use client';
 
 import { Dispatch, SetStateAction } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Button from '@components/common/Button';
@@ -23,7 +23,7 @@ export const LevelUpListByOrganization = ({
   orgSubmitLevel,
   setSelectedSubmitLevel,
 }: LevelUpListByOrganizationProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   return (
     <div

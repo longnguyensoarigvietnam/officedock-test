@@ -1,7 +1,8 @@
 'use client';
 import { AxiosError } from 'axios';
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
@@ -33,7 +34,7 @@ import { SkillListByOrganizationPanel } from './skill-list-by-organization-panel
 
 const SkillList = () => {
   const { showToast } = useToast();
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const searchParams = useSearchParams();
   const tabId = searchParams.get('tabId');

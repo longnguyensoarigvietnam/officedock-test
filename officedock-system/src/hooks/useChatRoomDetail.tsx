@@ -1,6 +1,7 @@
 'use client';
 import { AxiosError } from 'axios';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { useQuery } from 'react-query';
 
 import api from '@base/api';
@@ -23,7 +24,7 @@ const useChatRoomDetail = ({
   onSettled,
   conditions,
 }: UseChatRoomDetailHookProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   const getChatRoomDetail = async (code: string) => {

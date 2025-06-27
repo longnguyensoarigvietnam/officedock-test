@@ -3,7 +3,6 @@ import KanbanBoardTaskTeam from './KanbanBoardTaskTeam';
 
 import { pageRouters } from '@constants/routers';
 import { PermissionsSystem } from '@constants/enums';
-import { TaskTeamStateProvider } from '@providers/TaskTeamProvider';
 
 const TaskPage = () => {
   return (
@@ -12,9 +11,7 @@ const TaskPage = () => {
       className="!py-0 pl-10 pr-0 !bg-[#EBF1F7] !overflow-hidden"
       permission={PermissionsSystem.TEAMDOCK_VIEW}
       showFooter={false}>
-      <TaskTeamStateProvider>
-        <KanbanBoardTaskTeam />
-      </TaskTeamStateProvider>
+      <KanbanBoardTaskTeam />
     </MainLayout>
   );
 };

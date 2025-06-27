@@ -1144,77 +1144,81 @@ const StackedAreaChart = ({
               <div
                 className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'} pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
                 {!(dataChart.length == 1 && !dataChart[0].name) &&
-                  timeRange.slice(1).map((item, idx) => {
-                    const actualIndex = idx + 1;
-                    const isHovered = hoveredIndex === actualIndex;
+                  timeRange
+                    .slice(timeRange.length > 1 ? 1 : 0)
+                    .map((item, idx) => {
+                      const actualIndex = idx + 1;
+                      const isHovered = hoveredIndex === actualIndex;
 
-                    const dataDetail =
-                      statisticTagPercentChartList &&
-                      statisticTagPercentChartList[idx];
-                    const dataDetailDate =
-                      statisticTagPercentChartList &&
-                      statisticTagPercentChartList[idx];
+                      const dataDetail =
+                        statisticTagPercentChartList &&
+                        statisticTagPercentChartList[idx];
+                      const dataDetailDate =
+                        statisticTagPercentChartList &&
+                        statisticTagPercentChartList[idx];
 
-                    return (
-                      <div
-                        key={actualIndex}
-                        onMouseEnter={() => setHoveredIndex(actualIndex)}
-                        onMouseLeave={() => setHoveredIndex(null)}
-                        style={{
-                          flex: 1,
-                          textAlign: 'center',
-                          backgroundColor:
-                            hoveredIndex === null
-                              ? 'transparent'
-                              : isHovered
+                      return (
+                        <div
+                          key={actualIndex}
+                          onMouseEnter={() => setHoveredIndex(actualIndex)}
+                          onMouseLeave={() => setHoveredIndex(null)}
+                          style={{
+                            flex: 1,
+                            textAlign: 'center',
+                            backgroundColor:
+                              hoveredIndex === null
                                 ? 'transparent'
-                                : '#F8FAFCA6',
-                          transition: 'background-color 0.2s',
-                        }}
-                        className="group relative">
-                        {statisticTagPercentChartList && (
-                          <div
-                            style={{
-                              boxShadow: '0px 2px 8px 0px #0000001A',
-                            }}
-                            className={`bg-white absolute p-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
-                            <p className="text-sm font-normal text-[#77858F] mb-1 text-start w-full block">
-                              {convertToJapaneseDateRange(
-                                dataDetailDate?.startDate as string,
-                                dataDetailDate?.endDate as string,
-                              )}
-                            </p>
-                            {dataDetail?.tags.map((tag, cateIndex) => {
-                              const tagItem = tableData.find(
-                                (itemFind) => itemFind.tagId === tag.tagId,
-                              );
-                              return (
-                                <div
-                                  key={cateIndex}
-                                  className="flex items-center gap-1.5">
-                                  <div
-                                    className="w-3 h-3 rounded-sm"
-                                    style={{
-                                      backgroundColor: lightenColor(
-                                        '#2E9267' as string,
-                                        Number(tagItem?.tagPercent || 0),
-                                      ),
-                                    }}
-                                  />
-                                  <div className="flex flex-grow items-center justify-between text-base font-medium">
-                                    <div className=" text-black w-fit  max-w-[180px] line-clamp-3 break-words">
-                                      {tag.tagName}
+                                : isHovered
+                                  ? 'transparent'
+                                  : '#F8FAFCA6',
+                            transition: 'background-color 0.2s',
+                          }}
+                          className="group relative">
+                          {statisticTagPercentChartList && (
+                            <div
+                              style={{
+                                boxShadow: '0px 2px 8px 0px #0000001A',
+                              }}
+                              className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                              <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-start w-full block">
+                                {convertToJapaneseDateRange(
+                                  dataDetailDate?.startDate as string,
+                                  dataDetailDate?.endDate as string,
+                                )}
+                              </p>
+                              <div className="max-h-[250px] overflow-y-auto px-5">
+                                {dataDetail?.tags.map((tag, cateIndex) => {
+                                  const tagItem = tableData.find(
+                                    (itemFind) => itemFind.tagId === tag.tagId,
+                                  );
+                                  return (
+                                    <div
+                                      key={cateIndex}
+                                      className="flex items-center gap-1.5">
+                                      <div
+                                        className="w-3 h-3 rounded-sm"
+                                        style={{
+                                          backgroundColor: lightenColor(
+                                            '#2E9267' as string,
+                                            Number(tagItem?.tagPercent || 0),
+                                          ),
+                                        }}
+                                      />
+                                      <div className="flex flex-grow items-center justify-between text-base font-medium">
+                                        <div className=" text-black w-fit  max-w-[180px] line-clamp-3 break-words">
+                                          {tag.tagName}
+                                        </div>
+                                        <div>{tag.percent}%</div>
+                                      </div>
                                     </div>
-                                    <div>{tag.percent}%</div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
               </div>
             </div>
           )}

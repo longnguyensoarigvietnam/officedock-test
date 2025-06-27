@@ -160,7 +160,7 @@ const PercentageCategoryCompare = ({
 
     return [
       ...mappedMainItems,
-      ...(otherItem.percentage >= 0 ? [otherItem] : []),
+      ...(otherItem.percentage > 0 ? [otherItem] : []),
     ];
   };
 

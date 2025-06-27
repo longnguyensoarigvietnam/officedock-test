@@ -1,7 +1,7 @@
 'use client';
 import { AxiosError } from 'axios';
 import { useQuery } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 import { ScreenName } from '@constants/enums';
@@ -25,7 +25,7 @@ const useCreationDataStatisticAllTeam = ({
   onError,
   onSettled,
 }: useCreationDataStatisticAllTeamHooksProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   // Handle call API get creation Statistic data

@@ -2,7 +2,8 @@
 
 import { Fragment, useContext, useEffect, useState } from 'react';
 import { useMutation } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -103,7 +104,7 @@ const FilterOrganizationComponent = ({
 
 const ListTags = () => {
   const { setIsLoading } = useContext(LoadingContext);
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
@@ -738,7 +739,7 @@ const ListTags = () => {
         onConfirm={handleConfirmDeleteTag}
         onClose={() => setOpenConfirmDeleteModal(false)}
       />
-      
+
       {openActionsTagModal && actionTypeParam && (
         <ActionsTagModal
           open={true}
@@ -749,7 +750,7 @@ const ListTags = () => {
             setOpenActionsTagModal(false);
             handleRemoveParam();
             setDataTagEdit(null);
-            setSelectedTagToUpdate(null)
+            setSelectedTagToUpdate(null);
           }}
           onCreate={(data) => {
             handleConfirmCreateTag(data);

@@ -1265,88 +1265,90 @@ const StackedAreaTeamTagChart = ({
               <div
                 className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'} pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
                 {!(dataChart.length == 1 && !dataChart[0].name) &&
-                  timeRange.slice(1).map((item, idx) => {
-                    const actualIndex = idx + 1;
-                    const isHovered = hoveredIndex === actualIndex;
+                  timeRange
+                    .slice(timeRange.length > 1 ? 1 : 0)
+                    .map((item, idx) => {
+                      const actualIndex = idx + 1;
+                      const isHovered = hoveredIndex === actualIndex;
 
-                    const dataDetail = getDataByIndex(idx);
+                      const dataDetail = getDataByIndex(idx);
 
-                    const totalDuration = dataDetail
-                      ? sumDurationsChart(
-                          dataDetail.map((user) => user.duration),
-                        )
-                      : '00:00:00';
+                      const totalDuration = dataDetail
+                        ? sumDurationsChart(
+                            dataDetail.map((user) => user.duration),
+                          )
+                        : '00:00:00';
 
-                    return (
-                      <div
-                        key={actualIndex}
-                        onMouseEnter={() => setHoveredIndex(actualIndex)}
-                        onMouseLeave={() => setHoveredIndex(null)}
-                        style={{
-                          flex: 1,
-                          textAlign: 'center',
-                          backgroundColor:
-                            hoveredIndex === null
-                              ? 'transparent'
-                              : isHovered
+                      return (
+                        <div
+                          key={actualIndex}
+                          onMouseEnter={() => setHoveredIndex(actualIndex)}
+                          onMouseLeave={() => setHoveredIndex(null)}
+                          style={{
+                            flex: 1,
+                            textAlign: 'center',
+                            backgroundColor:
+                              hoveredIndex === null
                                 ? 'transparent'
-                                : '#F8FAFCA6',
-                          transition: 'background-color 0.2s',
-                        }}
-                        className="group relative">
-                        {
-                          <div
-                            style={{
-                              boxShadow: '0px 2px 8px 0px #0000001A',
-                            }}
-                            className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
-                            <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-start w-full block">
-                              {dataDetail &&
-                                dataDetail.length > 0 &&
-                                convertToJapaneseDateRange(
-                                  dataDetail[0]?.startDate as string,
-                                  dataDetail[0]?.endDate as string,
-                                )}
-                            </p>
-                            <p className="text-start px-5 mt-4">
-                              {selectedTag?.name}
-                            </p>
-                            <div className="flex text-base my-3 font-normal gap-[10px] px-5">
-                              <p>
-                                {totalDuration &&
-                                  formatTimeToJapanese(totalDuration)}
+                                : isHovered
+                                  ? 'transparent'
+                                  : '#F8FAFCA6',
+                            transition: 'background-color 0.2s',
+                          }}
+                          className="group relative">
+                          {
+                            <div
+                              style={{
+                                boxShadow: '0px 2px 8px 0px #0000001A',
+                              }}
+                              className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                              <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-start w-full block">
+                                {dataDetail &&
+                                  dataDetail.length > 0 &&
+                                  convertToJapaneseDateRange(
+                                    dataDetail[0]?.startDate as string,
+                                    dataDetail[0]?.endDate as string,
+                                  )}
                               </p>
-                            </div>
-                            <div className="px-5 max-h-[250px] overflow-y-auto">
-                              {dataDetail &&
-                                dataDetail.length > 0 &&
-                                dataDetail?.map((user, userIndex) => {
-                                  return (
-                                    <div
-                                      key={userIndex}
-                                      className="flex items-center gap-1.5 mb-1.5">
-                                      <CustomUserAvatar
-                                        avatarUrl={user.user.avatar || ''}
-                                        avatarColor={
-                                          user.user.avatarColor || ''
-                                        }
-                                        size={30}
-                                      />
-                                      <div className="flex flex-grow items-center justify-between text-base font-medium">
-                                        <div className=" text-black w-fit max-w-[140px] line-clamp-3 break-all text-left">
-                                          {user.user.fullName}
+                              <p className="text-start px-5 mt-4">
+                                {selectedTag?.name}
+                              </p>
+                              <div className="flex text-base my-3 font-normal gap-[10px] px-5">
+                                <p>
+                                  {totalDuration &&
+                                    formatTimeToJapanese(totalDuration)}
+                                </p>
+                              </div>
+                              <div className="px-5 max-h-[250px] overflow-y-auto">
+                                {dataDetail &&
+                                  dataDetail.length > 0 &&
+                                  dataDetail?.map((user, userIndex) => {
+                                    return (
+                                      <div
+                                        key={userIndex}
+                                        className="flex items-center gap-1.5 mb-1.5">
+                                        <CustomUserAvatar
+                                          avatarUrl={user.user.avatar || ''}
+                                          avatarColor={
+                                            user.user.avatarColor || ''
+                                          }
+                                          size={30}
+                                        />
+                                        <div className="flex flex-grow items-center justify-between text-base font-medium">
+                                          <div className=" text-black w-fit max-w-[140px] line-clamp-3 break-all text-left">
+                                            {user.user.fullName}
+                                          </div>
+                                          <div>{user.percentPerRange}%</div>
                                         </div>
-                                        <div>{user.percentPerRange}%</div>
                                       </div>
-                                    </div>
-                                  );
-                                })}
+                                    );
+                                  })}
+                              </div>
                             </div>
-                          </div>
-                        }
-                      </div>
-                    );
-                  })}
+                          }
+                        </div>
+                      );
+                    })}
               </div>
             </div>
           )}

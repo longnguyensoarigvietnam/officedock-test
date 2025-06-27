@@ -1,5 +1,5 @@
 'use client';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { useQuery } from 'react-query';
 import { useRouter } from 'next/navigation';
 
@@ -10,6 +10,7 @@ import { ChatMessageResponse } from '@interfaces/chat';
 import { BasePagination } from '@interfaces/common';
 import { ResponseError } from '@interfaces/response';
 import api from '@base/api';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 interface PaginationProps {
   page?: number;
@@ -21,7 +22,7 @@ interface dataId {
 }
 
 const useChatMessages = (pagination: PaginationProps, dataItem: dataId) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
   const token = session?.accessToken;
 

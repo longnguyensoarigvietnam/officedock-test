@@ -1,7 +1,7 @@
 'use client';
 import { useQuery } from 'react-query';
 import { useRouter } from 'next/navigation';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ServerStatusCode } from '@constants/enums';
@@ -12,6 +12,7 @@ import api from '@base/api';
 import { useContext } from 'react';
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 import { OptionDropdownType } from '@interfaces/common';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 interface FilterProps {
   userId?: OptionDropdownType[];
@@ -39,7 +40,7 @@ const useTaskBoardTeam = ({
 
   onSuccess?: (data: KanbanDataTeamResponse) => void;
 }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
   const { setIsLoadingDataTask } = useContext(TaskTeamStateContext);
 

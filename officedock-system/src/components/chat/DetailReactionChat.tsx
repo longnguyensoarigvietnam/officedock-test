@@ -5,7 +5,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { useMutation } from 'react-query';
 import { createPortal } from 'react-dom';
 
@@ -39,7 +40,7 @@ const DetailReactionChat = ({
 
   const optionRef = useRef<HTMLDivElement | null>(null);
 
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const [isShowModalDetail, setIsShowModalDetail] = useState(false);
 
@@ -162,7 +163,11 @@ const DetailReactionChat = ({
           const iconSrc = getReactionSrc(reaction.icon);
           return (
             <DynamicTooltip
-              content={reaction.hasReacted ? 'リアクションを外す' : '同じリアクションをする'}
+              content={
+                reaction.hasReacted
+                  ? 'リアクションを外す'
+                  : '同じリアクションをする'
+              }
               key={reaction.icon}
               placement="top">
               <div

@@ -143,7 +143,7 @@ const PercentageTags = ({
       return true;
     });
 
-    if (mergedCategory.percent >= 0) {
+    if (mergedCategory.percent > 0) {
       filteredCategories.push(mergedCategory);
     }
 

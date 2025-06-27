@@ -1,7 +1,7 @@
 'use client';
 import { ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 
 import Footer from './Footer';
 import Metadata from '@components/common/Metadata';
@@ -9,6 +9,7 @@ import Metadata from '@components/common/Metadata';
 import { SessionStatus } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 import { SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 type AuthenticationLayoutProps = {
   children?: ReactNode;
@@ -23,7 +24,7 @@ const AuthenticationLayout = ({
   title,
   showFooter = true,
 }: AuthenticationLayoutProps) => {
-  const { status, data: session, update } = useSession();
+  const { status, data: session, update } = useSessionCache();
   const router = useRouter();
 
   const handleSignOut = async () => {

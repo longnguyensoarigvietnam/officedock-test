@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import MainLayout from '@components/layouts/MainLayout';
 import Button from '@components/common/Button';
@@ -13,7 +13,7 @@ import { hasPermissionInArray } from '@utils';
 import ListCategory from './list';
 
 const CategoryPage = () => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   return (
     <MainLayout

@@ -1,7 +1,7 @@
 'use client';
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 import { LoadingContext } from '@providers/LoadingProvider';
@@ -10,9 +10,10 @@ import { ServerStatusCode } from '@constants/enums';
 import { Tags } from '@interfaces/tag';
 import { ResponseError } from '@interfaces/response';
 import api from '@base/api';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 const useDashboardTagList = () => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
   const token = session?.accessToken;
 

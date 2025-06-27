@@ -11,7 +11,8 @@ import { useRouter } from 'next/navigation';
 import { useMutation } from 'react-query';
 import Link from 'next/link';
 import { validate as isUUID } from 'uuid';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 
 import Button from '@components/common/Button';
@@ -30,7 +31,6 @@ import {
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 
-
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
@@ -47,7 +47,7 @@ interface HierarchyDetail {
 }
 
 const EditHierarchyBoard = () => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const [hierarchyDetail, setHierarchyDetail] =
     useState<HierarchyDetail | null>(null);

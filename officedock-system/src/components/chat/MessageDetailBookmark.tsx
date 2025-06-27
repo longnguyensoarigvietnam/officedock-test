@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import { format } from 'date-fns';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
@@ -82,7 +83,7 @@ export const MessageDetailBookmark = ({
   onGotoMessage,
   handleRemoveItemBookmark,
 }: MessageDetailProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const router = useRouter();
 
   // Render user avatar

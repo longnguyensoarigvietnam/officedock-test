@@ -1,4 +1,5 @@
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQueryClient } from 'react-query';
@@ -81,7 +82,7 @@ const BookmarkList = ({
 }: BookmarkListProps) => {
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const { setIsLoading } = useContext(LoadingContext);
 
   const router = useRouter();

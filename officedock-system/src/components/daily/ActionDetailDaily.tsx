@@ -8,7 +8,7 @@ import {
   Droppable,
   DropResult,
 } from '@hello-pangea/dnd';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import Checkbox from '@components/common/Checkbox';
 import ImageRound from '@components/common/ImageRound';
@@ -37,7 +37,7 @@ const ActionDetailDaily = ({
   dataTagsList,
   setDataTaskDailyList,
 }: DataActionType) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const [todoList, setTodoList] = useState<TodoItem[]>([]);
 

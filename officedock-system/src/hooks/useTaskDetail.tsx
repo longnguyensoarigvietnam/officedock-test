@@ -1,7 +1,8 @@
 'use client';
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 
 import api from '@base/api';
@@ -23,7 +24,7 @@ const useTaskDetail = ({
   onError,
   onSettled,
 }: UseTaskDetailHooksProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   const { setIsLoading } = useContext(LoadingContext);

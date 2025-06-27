@@ -1,7 +1,7 @@
 'use client';
 import { AxiosError } from 'axios';
 import { useQuery } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
@@ -22,7 +22,7 @@ const useCreationDataTask = ({
   onError,
   onSettled,
 }: useCreationDataTaskHooksProps) => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   // Handle call API get creation task data

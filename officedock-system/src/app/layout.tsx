@@ -16,6 +16,7 @@ import { GlobalStateProvider } from '@providers/GlobalStateProvider';
 import { WebSocketProvider } from '@providers/WebSocketProvider';
 
 import { fontPrimary } from '@utils/fonts';
+import { SessionCacheProvider } from '@providers/SessionCacheProvider';
 
 export const metadata: Metadata = {
   title: '',
@@ -37,22 +38,24 @@ export default function RootLayout({
       {/* TODO: Config font and using in here */}
       <body
         className={`${fontPrimary.variable} font-primary bg-[#EBF1F7] overflow-y-hidden overflow-x-auto scrollbar-gutter-stable`}>
-        <GlobalStateProvider>
-          <AuthProvider>
-            <QueryProvider>
-              <WebSocketProvider>
-                <LoadingProvider>
-                  <ToastProvider>
-                    <TaskProvider>
-                      <DraggableLayout />
-                      {children}
-                    </TaskProvider>
-                  </ToastProvider>
-                </LoadingProvider>
-              </WebSocketProvider>
-            </QueryProvider>
-          </AuthProvider>
-        </GlobalStateProvider>
+        <AuthProvider>
+          <SessionCacheProvider>
+            <GlobalStateProvider>
+              <QueryProvider>
+                <WebSocketProvider>
+                  <LoadingProvider>
+                    <ToastProvider>
+                      <TaskProvider>
+                        <DraggableLayout />
+                        {children}
+                      </TaskProvider>
+                    </ToastProvider>
+                  </LoadingProvider>
+                </WebSocketProvider>
+              </QueryProvider>
+            </GlobalStateProvider>
+          </SessionCacheProvider>
+        </AuthProvider>
       </body>
     </html>
   );

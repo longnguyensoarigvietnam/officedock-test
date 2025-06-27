@@ -1,7 +1,8 @@
 'use client';
 import { Fragment, useContext, useEffect, useRef, useState } from 'react';
 import { useMutation } from 'react-query';
-import { useSession } from 'next-auth/react';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { AxiosError } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -40,7 +41,7 @@ import useDebounceText from '@hooks/useDebounceText';
 import api from '@base/api';
 
 const ListOrganizations = () => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
 
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();

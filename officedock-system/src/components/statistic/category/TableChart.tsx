@@ -30,7 +30,7 @@ import {
   OrderingDataType,
   ScreenName,
 } from '@constants/enums';
-import { NO_SETTING } from '@constants';
+import { ALL_TEAM_STATISTIC, NO_SETTING } from '@constants';
 import { ERROR_UPDATE_MESSAGE } from '@constants/message';
 import { apiRouters } from '@constants/routers';
 
@@ -149,6 +149,7 @@ const TableChart = ({
 }: TableChartProps) => {
   const {
     isCheckCompare,
+    selectedOrganization,
     setIsLoadingLarge,
     setIsLoadingLargeCompare,
     setIsLoadingMedium,
@@ -478,7 +479,13 @@ const TableChart = ({
                 }
                 placeholder=""
                 showArrow
-                options={listOptionsOrganization}
+                options={
+                  selectedOrganization?.label === ALL_TEAM_STATISTIC
+                    ? listOptionsOrganization.filter(
+                        (org) => org.label !== ALL_TEAM_STATISTIC,
+                      )
+                    : listOptionsOrganization
+                }
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({

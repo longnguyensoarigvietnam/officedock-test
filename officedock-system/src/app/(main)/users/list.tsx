@@ -1,7 +1,7 @@
 'use client';
 import { Fragment, useContext, useEffect, useState } from 'react';
 import { useMutation } from 'react-query';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { AxiosError } from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -45,6 +45,7 @@ import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { hasPermissionInArray } from '@utils';
 import { OptionDropdownType } from '@interfaces/common';
@@ -58,7 +59,7 @@ import { ResponseError } from '@interfaces/response';
 import api from '@base/api';
 
 const ListUsers = () => {
-  const { data: session } = useSession();
+  const { data: session } = useSessionCache();
   const { setIsLoading } = useContext(LoadingContext);
 
   const showErrorToast = useErrorToast();
