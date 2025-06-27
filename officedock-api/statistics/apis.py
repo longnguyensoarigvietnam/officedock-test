@@ -1621,9 +1621,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         Handle get duration by durations filter by category, tag...
         """
         durations = []
-        percent = 0
         for index, (start, end) in enumerate(ranges):
-            is_last_element = index == len(ranges) - 1
             start_date_min = datetime.combine(start, time.min)
             end_date_max = datetime.combine(end, time.max)
             duration = timedelta(0)

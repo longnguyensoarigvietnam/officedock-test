@@ -18,6 +18,7 @@ from calendars.constants import (
 from calendars.models import Schedule
 from calendars.serializers import EventLocationSerializer
 from chat.constants import WebSocketEventType
+from dashboard.utils import separate_duration_while_keep_running
 from skills.models import StatisticCategory, Skill, SkillMapSkillLevel
 from organizations.serializers import (
     BaseStatisticCategorySerializer,
@@ -647,9 +648,7 @@ class CronJobViewSet(BaseAPIViewSet):
         """
         Get remind notify of task
         """
-        tasks = Task.objects.filter(
-            remind_at__lte=timezone.now(), deadline__gt=timezone.now()
-        ).all()
+        # Check time process of skill map
         skill_map_levels = SkillMapSkillLevel.objects.filter(
             skill_map__is_valid=True, popup=True, is_complete=False
         ).all()
@@ -660,22 +659,37 @@ class CronJobViewSet(BaseAPIViewSet):
                     data,
                     user=skill_map_level.skill_map.staff,
                 )
-
-        for task in tasks:
-            if task.deadline and task.remind_at:
-                reminds = task.reminds
-                users = task.people_in_charge_tasks.all()
-                for user in users:
-                    send_web_socket_event(
-                        {
-                            "id": task.id,
-                            "title": task.title,
-                            "remind_countdown": reminds["countdown"],
-                            "remind_type": reminds["type"],
-                            "action": WebSocketEventType.REMIND_TASK.value,
-                        },
-                        user=user,
-                    )
+        # Check and separate duration
+        separate_task_duration = TaskDuration.objects.filter(
+            Q(paused_at__isnull=True)
+            & Q(Q(task__is_start=True) | Q(schedule__is_start=True))
+            & Q(started_at__date__lt=now().date())
+        )
+        if separate_task_duration.exists():
+            for duration in separate_task_duration.all():
+                separate_duration_while_keep_running(
+                    duration, now(), user=duration.user
+                )
+        # Check and send notify remind of task
+        tasks = Task.objects.filter(
+            remind_at__lte=timezone.now(), deadline__gt=timezone.now()
+        )
+        if tasks.exists():
+            for task in tasks.all():
+                if task.deadline and task.remind_at:
+                    reminds = task.reminds
+                    users = task.people_in_charge_tasks.all()
+                    for user in users:
+                        send_web_socket_event(
+                            {
+                                "id": task.id,
+                                "title": task.title,
+                                "remind_countdown": reminds["countdown"],
+                                "remind_type": reminds["type"],
+                                "action": WebSocketEventType.REMIND_TASK.value,
+                            },
+                            user=user,
+                        )
 
         return self.response_ok()
 
