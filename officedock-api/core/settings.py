@@ -273,7 +273,7 @@ DEFAULT_RENDERER_CLASSES = (
     "djangorestframework_camel_case.render.CamelCaseJSONRenderer",
 )
 
-if DEBUG:
+if DEBUG and not GOOGLE_CLOUD_PROJECT_ID:
     DEFAULT_RENDERER_CLASSES += (
         "djangorestframework_camel_case.render.CamelCaseBrowsableAPIRenderer",
     )
