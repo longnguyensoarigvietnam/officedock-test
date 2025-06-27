@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import { getSession, signOut } from 'next-auth/react';
+import { Session } from 'next-auth';
 
 import { ServerStatusCode } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
@@ -10,19 +11,35 @@ const instance: AxiosInstance = axios.create({
 });
 
 let cachedSession: Awaited<ReturnType<typeof getSession>> | null = null;
+let isFetching = false;
+let waiting: ((value: Awaited<ReturnType<typeof getSession>>) => void)[] = [];
 
 const getCachedSession = async () => {
-  if (!cachedSession || new Date(cachedSession.expires) <= new Date()) {
+  if (
+    !cachedSession ||
+    new Date(cachedSession.expires) <= new Date()
+  ) {
+    if (isFetching) {
+      return new Promise((resolve) => waiting.push(resolve));
+    }
+
+    isFetching = true;
     cachedSession = await getSession();
+
+    // Resolve all pending consumers
+    waiting.forEach((resolve) => resolve(cachedSession!));
+    waiting = [];
+    isFetching = false;
   }
+
   return cachedSession;
 };
 
 instance.interceptors.request.use(async (config) => {
   const session = await getCachedSession();
 
-  if (session?.accessToken) {
-    config.headers.Authorization = `Bearer ${session.accessToken}`;
+  if ((session as Session)?.accessToken) {
+    config.headers.Authorization = `Bearer ${(session as Session).accessToken}`;
   }
 
   return config;

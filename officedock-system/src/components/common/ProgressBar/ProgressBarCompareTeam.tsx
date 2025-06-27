@@ -217,7 +217,7 @@ const PercentageBarCompareTeam = ({
                                     avatarColor={itemOption?.avatarColor || ''}
                                     size={30}
                                   />
-                                  <span className="relative ml-3 max-w-[180px] truncate top-[-3px]">
+                                  <span className="relative ml-3 max-w-[160px] truncate top-[-3px]">
                                     {' '}
                                     {itemOption.label}
                                   </span>
@@ -393,7 +393,7 @@ const PercentageBarCompareTeam = ({
                                     avatarColor={item?.avatarColor || ''}
                                     size={30}
                                   />
-                                  <span className="relative ml-3 max-w-[180px] truncate top-[-3px]">
+                                  <span className="relative ml-3 max-w-[160px] truncate top-[-3px]">
                                     {' '}
                                     {item.label}
                                   </span>

@@ -179,10 +179,10 @@ const AllocationCategoryCompare = memo(
               optionData: item.tasks.slice(0, 3).map((task) => task.title),
             };
 
-            if (item.percent < 0) {
+            if (item.percent < 10) {
               smallMainCategories.push(mainData);
             } else {
-              mergedMap.set(item.categoryId, { main: mainData, compare: null });
+              mergedMap.set(`${item.categoryId}-${item.organizationId}`, { main: mainData, compare: null });
             }
           });
 
@@ -215,10 +215,10 @@ const AllocationCategoryCompare = memo(
 
             if (compareItem.percent < 10) {
               smallCompareCategories.push(compareData);
-            } else if (mergedMap.has(compareItem.categoryId)) {
-              mergedMap.get(compareItem.categoryId)!.compare = compareData;
+            } else if (mergedMap.has(`${compareItem.categoryId}-${compareItem.organizationId}`)) {
+              mergedMap.get(`${compareItem.categoryId}-${compareItem.organizationId}`)!.compare = compareData;
             } else {
-              mergedMap.set(compareItem.categoryId, {
+              mergedMap.set(`${compareItem.categoryId}-${compareItem.organizationId}`, {
                 main: null,
                 compare: compareData,
               });

@@ -90,7 +90,7 @@ const StatisticTeamBoard = () => {
     setCurrentPage,
     setAreaTableData,
     setLineChartTableData,
-    setMergedTableData
+    setMergedTableData,
   } = useContext(StatisticTeamStateContext);
   const {
     organizationTeamList,
@@ -321,11 +321,16 @@ const StatisticTeamBoard = () => {
     },
   });
 
+  // Reset table data
+  const handleResetTableData = () => {
+    setMergedTableData([]);
+    setAreaTableData([]);
+    setLineChartTableData([]);
+  };
+
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
-    setAreaTableData([]);
-    setLineChartTableData([])
-    setMergedTableData([])
+    handleResetTableData();
     if (data.value !== selectedOrganization?.value) {
       setIsLoadingOrganization(true);
       if (isCheckCompare) {
@@ -414,9 +419,7 @@ const StatisticTeamBoard = () => {
   // Handle Choose organization with option large
   const handleSelectOrganizationCustom = (data: OptionDropdownType) => {
     setCurrentPage(1);
-    setAreaTableData([]);
-    setLineChartTableData([])
-    setMergedTableData([])
+    handleResetTableData();
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
@@ -465,9 +468,7 @@ const StatisticTeamBoard = () => {
         setIsLoadingLargeCompare(true);
       }
     }
-    setAreaTableData([]);
-    setLineChartTableData([])
-    setMergedTableData([])
+    handleResetTableData();
     setCurrentPage(1);
 
     setSelectedLarge(data);
@@ -502,9 +503,7 @@ const StatisticTeamBoard = () => {
         setIsLoadingMediumCompare(true);
       }
     }
-    setAreaTableData([]);
-    setLineChartTableData([])
-    setMergedTableData([])
+    handleResetTableData();
     setCurrentPage(1);
 
     setSelectedMedium(data);
@@ -537,9 +536,7 @@ const StatisticTeamBoard = () => {
 
   const handleSelectSmall = (data: OptionDropdownType) => {
     setCurrentPage(1);
-    setAreaTableData([]);
-    setLineChartTableData([])
-    setMergedTableData([])
+    handleResetTableData();
 
     setSelectedSmall(data);
   };
@@ -554,6 +551,7 @@ const StatisticTeamBoard = () => {
     setIsLoadingLarge(true);
     setIsLoadingMedium(true);
     setIsLoadingOrganization(true);
+    handleResetTableData()
     if (isCheckCompare) {
       setIsLoadingLargeCompare(true);
       setIsLoadingMediumCompare(true);
@@ -574,6 +572,7 @@ const StatisticTeamBoard = () => {
     setIsLoadingLarge(true);
     setIsLoadingMedium(true);
     setIsLoadingOrganization(true);
+    handleResetTableData()
     if (isCheckCompare) {
       setIsLoadingLargeCompare(true);
       setIsLoadingMediumCompare(true);
