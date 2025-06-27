@@ -203,6 +203,10 @@ const TableChart = ({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryListTeam',
         });
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            query.queryKey[0] === 'getStatisticTableInTeamLineChart',
+        });
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
@@ -211,6 +215,10 @@ const TableChart = ({
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTableInTeamLineChartCompare',
           });
         }
       },
@@ -248,7 +256,10 @@ const TableChart = ({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryListTeam',
         });
-
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            query.queryKey[0] === 'getStatisticTableInTeamLineChart',
+        });
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
         });
@@ -260,7 +271,10 @@ const TableChart = ({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
           });
-
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTableInTeamLineChartCompare',
+          });
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTagsListCompare',

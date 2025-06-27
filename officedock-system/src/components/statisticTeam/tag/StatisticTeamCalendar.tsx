@@ -38,6 +38,9 @@ function StatisticTeamCalendar() {
     setIsLoadingSmallCompare,
     setIsLoadingOrganizationCompare,
     setLineChartViewBy,
+    setAreaTableData,
+    setLineChartTableData,
+    setMergedTableData,
   } = useContext(StatisticTeamTagsStateContext);
   const modalRef = useRef<HTMLDivElement | null>(null);
   const buttonPrev = useRef<HTMLDivElement | null>(null);
@@ -133,6 +136,13 @@ function StatisticTeamCalendar() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Reset table data
+  const handleResetTableData = () => {
+    setMergedTableData([]);
+    setAreaTableData([]);
+    setLineChartTableData([]);
+  };
 
   // Selection option time
   const handleSelectTimeOption = (option: TimeOptionsType) => {
@@ -273,6 +283,7 @@ function StatisticTeamCalendar() {
     setStartDate(dataStartDate);
     setEndDate(dataEndDate);
     setIsCheckCompare(isDataCheckCompare);
+    handleResetTableData()
     const enableViews = getLineChartEnableViews(
       dataStartDate,
       dataEndDate as Date,
@@ -360,6 +371,7 @@ function StatisticTeamCalendar() {
     setEndDateCompare(dataEndDateCompare);
     setIsCheckCompare(isDataCheckCompare);
     setIsOpenModal(false);
+    handleResetTableData()
 
     const enableViews = getCompareLineChartEnableViews(
       dataStartDate,

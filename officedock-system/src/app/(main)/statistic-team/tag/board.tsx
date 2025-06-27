@@ -244,6 +244,13 @@ const StatisticTeamTagBoard = () => {
     },
   });
 
+  // Reset table data
+  const handleResetTableData = () => {
+    setMergedTableData([]);
+    setAreaTableData([]);
+    setLineChartTableData([]);
+  };
+
   // Remove tags
   const removeTag = (selected: OptionDropdownType) => {
     const currentTagIds = selectedTags || [];
@@ -254,6 +261,7 @@ const StatisticTeamTagBoard = () => {
     setIsLoadingMedium(true);
     setIsLoadingSmall(true);
     setIsLoadingOrganization(true);
+    handleResetTableData();
     if (isCheckCompare) {
       setIsLoadingLargeCompare(true);
       setIsLoadingMediumCompare(true);
@@ -266,9 +274,7 @@ const StatisticTeamTagBoard = () => {
 
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
-    setAreaTableData([]);
-    setLineChartTableData([]);
-    setMergedTableData([]);
+    handleResetTableData();
     if (data.value !== selectedOrganization?.value) {
       setIsLoadingOrganization(true);
       if (isCheckCompare) {
@@ -358,9 +364,7 @@ const StatisticTeamTagBoard = () => {
         setIsLoadingLargeCompare(true);
       }
     }
-    setAreaTableData([]);
-    setLineChartTableData([]);
-    setMergedTableData([]);
+    handleResetTableData();
     setCurrentPage(1);
 
     setSelectedLarge(data);
@@ -393,9 +397,7 @@ const StatisticTeamTagBoard = () => {
         setIsLoadingMediumCompare(true);
       }
     }
-    setAreaTableData([]);
-    setLineChartTableData([]);
-    setMergedTableData([]);
+    handleResetTableData();
     setCurrentPage(1);
 
     setSelectedMedium(data);
@@ -434,9 +436,7 @@ const StatisticTeamTagBoard = () => {
       }
     }
     setCurrentPage(1);
-    setAreaTableData([]);
-    setLineChartTableData([]);
-    setMergedTableData([]);
+    handleResetTableData();
 
     setSelectedSmall(data);
   };
@@ -488,6 +488,7 @@ const StatisticTeamTagBoard = () => {
     setOrderingOptions({
       user_ids: updatedUserIds,
     });
+    handleResetTableData();
   };
 
   return (
