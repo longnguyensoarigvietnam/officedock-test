@@ -78,8 +78,13 @@ export function transformStatisticCategoryInfoToProgressData({
     organizationId: String(item.organizationId),
   }));
 
-  const mergedItems = progressData.filter((item) => item.value < threshold);
-  const mainItems = progressData.filter((item) => item.value >= threshold);
+  const mergedItems = progressData
+    .filter((item) => item.value < threshold)
+    .filter((item) => item.value > 0);
+
+  const mainItems = progressData
+    .filter((item) => item.value >= threshold)
+    .filter((item) => item.value > 0);
 
   if (mergedItems.length === 0) {
     return {

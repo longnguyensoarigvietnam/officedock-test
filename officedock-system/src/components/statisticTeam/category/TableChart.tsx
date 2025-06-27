@@ -203,6 +203,11 @@ const TableChart = ({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryListTeam',
         });
+        if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
+          queryClient.invalidateQueries({
+            predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
+          });
+        }
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTableInTeamLineChart',
@@ -211,7 +216,12 @@ const TableChart = ({
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingOrganizationCompare(true);
-
+          if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticTaskListCompare',
+            });
+          }
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
@@ -260,6 +270,11 @@ const TableChart = ({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTableInTeamLineChart',
         });
+        if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
+          queryClient.invalidateQueries({
+            predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
+          });
+        }
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
         });
@@ -271,6 +286,12 @@ const TableChart = ({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
           });
+          if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticTaskListCompare',
+            });
+          }
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTableInTeamLineChartCompare',

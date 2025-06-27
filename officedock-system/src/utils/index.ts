@@ -640,6 +640,12 @@ export function transformDataTeamTask(result: ResultTeam[]): TransformedUser[] {
     avatar: user?.avatar || '',
     name: user.profile.fullName,
     statuses: {
+      MY_ROUTINE:
+        user.status
+          .find((status) => status.id === 5)
+          ?.tasks.map((task) => ({
+            ...task,
+          })) || [],
       NOT_STARTED:
         user.status
           .find((status) => status.id === 1)
@@ -1347,7 +1353,10 @@ export const createLineChartAvatarImage = async (user: {
   if (user?.avatar) {
     avatarUrl = getFileURL(user?.avatar);
   } else {
-    const svgString = getAvatarIconSvg(user?.avatarColor || getRandomColor(), 24);
+    const svgString = getAvatarIconSvg(
+      user?.avatarColor || getRandomColor(),
+      24,
+    );
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
     avatarUrl = URL.createObjectURL(blob);
   }

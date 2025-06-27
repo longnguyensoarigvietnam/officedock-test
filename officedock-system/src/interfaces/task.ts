@@ -430,6 +430,7 @@ export interface TransformedStatuses {
   IN_PROGRESS: Task[];
   CONFIRMING: Task[];
   COMPLETED: Task[];
+  MY_ROUTINE: Task[];
 }
 
 export interface TransformedUser {

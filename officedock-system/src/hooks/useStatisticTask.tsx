@@ -42,6 +42,7 @@ const useStatisticTask = ({
   isTeam = false,
   is_tag_page = false,
   parentData,
+  conditions,
   onSuccess,
   onError,
 }: {
@@ -52,7 +53,7 @@ const useStatisticTask = ({
   cursor?: string;
   isTeam?: boolean;
   filter?: FilterProps;
-
+  conditions?: boolean[];
   onSuccess?: (data: BasePagination<DataTaskListStatisticListType[]>) => void;
   onError?: (error: AxiosError) => void;
 }) => {
@@ -131,7 +132,7 @@ const useStatisticTask = ({
     queryFn: ({ signal }) => getStatisticCategoryList({ signal }),
 
     retry: 0,
-    enabled: !!parentData && !!token,
+    enabled: !!parentData && !!token && conditions?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (data: BasePagination<DataTaskListStatisticListType[]>) => {

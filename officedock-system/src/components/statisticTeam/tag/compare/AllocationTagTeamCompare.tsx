@@ -24,6 +24,7 @@ import { EventWorkCategory } from '@constants/enums';
 
 import ProgressBarTeamTagCompare from './ProgressBarTeamTag';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
+import { ALL_TEAM_STATISTIC } from '@constants';
 
 type Props = {
   startDate: Date;
@@ -100,112 +101,118 @@ function transformAndMergeProgressData({
 
   return [...mainItems, mergedItem];
 }
+const buildKey = (item: ProgressDataType, isAll: boolean) =>
+  isAll ? `${item.organizationId}-${item.id}` : `${item.id}`;
+
+const parseKey = (key: string, isAll: boolean) => {
+  if (!isAll) return { id: +key, orgId: undefined as string | undefined };
+  const [orgId, idStr] = key.split('-', 2);
+  return { id: +idStr, orgId };
+};
 
 export function buildProgressDataCompareWithMergedOthers({
   baseData,
   compareData,
   threshold = 10,
+  isAllTeam = false,
 }: {
   baseData: StatisticCategoryInfo[];
   compareData: StatisticCategoryInfo[];
   threshold?: number;
+  isAllTeam?: boolean;
 }): ProgressDataCompareItem[] {
-  const isBaseEmpty = baseData.length === 0;
-  const isCompareEmpty = compareData.length === 0;
-
+  /* Step A – normalize & merge (<threshold) */
   const mergedBase = transformAndMergeProgressData({
-    data: isBaseEmpty
-      ? compareData.map((item) => ({
-          ...item,
-          percent: 0,
-          duration: '00:00:00',
-          users: [],
-        }))
-      : baseData,
+    data:
+      baseData.length === 0
+        ? compareData.map((i) => ({
+            ...i,
+            percent: 0,
+            duration: '00:00:00',
+            users: [],
+          }))
+        : baseData,
     threshold,
   });
 
   const mergedCompare = transformAndMergeProgressData({
-    data: isCompareEmpty
-      ? baseData.map((item) => ({
-          ...item,
-          percent: 0,
-          duration: '00:00:00',
-          users: [],
-        }))
-      : compareData,
+    data:
+      compareData.length === 0
+        ? baseData.map((i) => ({
+            ...i,
+            percent: 0,
+            duration: '00:00:00',
+            users: [],
+          }))
+        : compareData,
     threshold,
   });
 
-  // ✅ Collect IDs from both outside and within merged items (その他)
-  const allIds = new Set<number>();
-
-  const extractIds = (data: ProgressDataType[]) => {
-    data.forEach((item) => {
+  /* Step B – get the unique “key” (id or org‑id) */
+  const allKeys = new Set<string>();
+  const collectKeys = (arr: ProgressDataType[]) => {
+    arr.forEach((item) => {
+      allKeys.add(buildKey(item, isAllTeam));
       if (item.id === -1 && item.mergedItems) {
-        item.mergedItems.forEach((sub) => allIds.add(sub.id));
-      } else {
-        allIds.add(item.id);
+        item.mergedItems.forEach((sub) =>
+          allKeys.add(buildKey(sub, isAllTeam)),
+        );
       }
     });
   };
+  collectKeys(mergedBase);
+  collectKeys(mergedCompare);
 
-  extractIds(mergedBase);
-  extractIds(mergedCompare);
-
-  const findItemById = (
-    id: number,
-    data: ProgressDataType[],
+  /* Step C – function to find item by key */
+  const findByKey = (
+    key: string,
+    arr: ProgressDataType[],
   ): ProgressDataType | undefined => {
+    const { id, orgId } = parseKey(key, isAllTeam);
+    const match = (el: ProgressDataType) =>
+      el.id === id && (!isAllTeam || el.organizationId === orgId);
+
     return (
-      data.find((d) => d.id === id) ||
-      data
-        .find((d) => d.id === -1 && d.mergedItems?.some((m) => m.id === id))
-        ?.mergedItems?.find((m) => m.id === id)
+      arr.find(match) ||
+      arr
+        .find((d) => d.id === -1 && d.mergedItems?.some(match))
+        ?.mergedItems?.find(match)
     );
   };
 
-  // ✅ Map the results against fallback data if needed
-  const result: ProgressDataCompareItem[] = Array.from(allIds).map((id) => {
-    const item = findItemById(id, mergedBase);
-    const itemCompare = findItemById(id, mergedCompare);
+  /* Step D – concatenate results for each key */
+  const result: ProgressDataCompareItem[] = Array.from(allKeys)
+    .map((key) => {
+      const baseItem = findByKey(key, mergedBase);
+      const cmpItem = findByKey(key, mergedCompare);
+      const { id, orgId } = parseKey(key, isAllTeam);
 
-    const finalItem: ProgressDataType = item ?? {
-      id,
-      label: itemCompare?.label ?? '',
-      value: 0,
-      color: '#ccc',
-      duration: '00:00:00',
-      optionData: [],
-    };
+      const empty: ProgressDataType = {
+        id,
+        label: baseItem?.label ?? cmpItem?.label ?? '',
+        value: 0,
+        color: '#ccc',
+        duration: '00:00:00',
+        optionData: [],
+        organizationId: orgId,
+      };
 
-    const finalItemCompare: ProgressDataType = itemCompare ?? {
-      id,
-      label: item?.label ?? '',
-      value: 0,
-      color: '#ccc',
-      duration: '00:00:00',
-      optionData: [],
-    };
+      return {
+        item: baseItem ?? empty,
+        itemCompare: cmpItem ?? empty,
+      };
+    })
+    .filter(({ item, itemCompare }) => item.value > 0 || itemCompare.value > 0);
 
-    return {
-      item: finalItem,
-      itemCompare: finalItemCompare,
-    };
-  });
-
-  // ✅ Make sure the item with id === -1 ("その他") is always at the end
+  /* Step E – move “その他” (id = -1) to the end */
   result.sort((a, b) => {
-    const isAOther = a.item.id === -1;
-    const isBOther = b.item.id === -1;
-    if (isAOther && !isBOther) return 1;
-    if (!isAOther && isBOther) return -1;
-    return 0;
+    const aOther = a.item.id === -1;
+    const bOther = b.item.id === -1;
+    return aOther === bOther ? 0 : aOther ? 1 : -1;
   });
 
   return result;
 }
-
 const AllocationTagTeamCompare = memo(
   ({
     startDate,
@@ -291,6 +298,7 @@ const AllocationTagTeamCompare = memo(
         const compareResult = buildProgressDataCompareWithMergedOthers({
           baseData: statisticTagsList.largeCategories || [],
           compareData: statisticTagsCompareList.largeCategories || [],
+          isAllTeam: selectedOrganization?.label === ALL_TEAM_STATISTIC,
         });
         const compareResultMedium = buildProgressDataCompareWithMergedOthers({
           baseData: statisticTagsList.mediumCategories || [],
@@ -311,7 +319,11 @@ const AllocationTagTeamCompare = memo(
         setProgressDataPairsSmall(compareResultSmall);
         setProgressDataPairsCategory(compareResultCategory);
       }
-    }, [statisticTagsList, statisticTagsCompareList]);
+    }, [
+      statisticTagsList,
+      statisticTagsCompareList,
+      selectedOrganization?.label,
+    ]);
 
     const handleClickTooltip = ({
       id,

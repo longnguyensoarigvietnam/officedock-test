@@ -162,6 +162,7 @@ const TaskListTeamStatistic = ({
       isCompare: isCheckCompare && isShowCompare,
       user_id: selectedMember as number,
     },
+    conditions: [!isShowCompare],
     onSuccess: (data) => {
       if (data) {
         setTotalPagesCompare(data.numPages);

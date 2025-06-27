@@ -177,6 +177,7 @@ export interface EventCalendarProps {
     schedule: number;
     uuid: string;
   }[];
+  isCrossTeamTask?: boolean;
 }
 
 export interface TaskCalendarProps {
