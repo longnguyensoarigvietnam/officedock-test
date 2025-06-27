@@ -354,7 +354,6 @@ const StatisticTeamBoard = () => {
         label: item.name,
         value: item.id,
       }));
-      console.log(organization);
 
       setTagsOptions(optionsTagList);
       if (
