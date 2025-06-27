@@ -1,3 +1,4 @@
+import { StatisticChartType } from '@constants/enums';
 import { TagCreationStatisticType, Tags } from './tag';
 import { TodoItem } from './task';
 import { User } from './user';
@@ -457,4 +458,68 @@ export interface TagTableRowDetail {
     userDuration: string;
     userPercent: number;
   }[];
+}
+
+export interface MergedTableCategory {
+  categoryId: number;
+  categoryName: string;
+  organizationId: number;
+  standardInfo?: {
+    categoryDuration: string;
+    categoryPercent: number;
+  };
+  compareInfo?: {
+    categoryDuration: string;
+    categoryPercent: number;
+  };
+  userList: {
+    userId: number;
+    userName: string;
+    userAvatar?: string | null;
+    userAvatarColor: string;
+    standardInfo?: {
+      userDuration: string;
+      userPercent: number;
+    };
+    compareInfo?: {
+      userDuration: string;
+      userPercent: number;
+    };
+  }[];
+}
+
+export interface MergedTableTag {
+  tagId: number;
+  tagName: string;
+  organizationId: number;
+  standardInfo?: {
+    tagDuration: string;
+    tagPercent: number;
+  };
+  compareInfo?: {
+    tagDuration: string;
+    tagPercent: number;
+  };
+  userList: {
+    userId: number;
+    userName: string;
+    userAvatar?: string | null;
+    userAvatarColor: string;
+    standardInfo?: {
+      userDuration: string;
+      userPercent: number;
+    };
+    compareInfo?: {
+      userDuration: string;
+      userPercent: number;
+    };
+  }[];
+}
+
+export interface TagTableRowDetailWithType extends TagTableRowDetail{
+  type: StatisticChartType.STANDARD | StatisticChartType.COMPARE;
+}
+
+export interface CategoryTableRowDetailWithType extends CategoryTableRowDetail{
+  type: StatisticChartType.STANDARD | StatisticChartType.COMPARE;
 }

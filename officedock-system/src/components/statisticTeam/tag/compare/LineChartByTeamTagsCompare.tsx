@@ -48,6 +48,8 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 
 import { OptionDropdownType } from '@interfaces/common';
+import { MergedTableTag, TagTableRowDetailWithType } from '@interfaces/statistic';
+import { TooltipDiv } from '@interfaces/tooltip';
 
 import {
   SortingType,
@@ -83,7 +85,6 @@ import {
 
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 import useStatisticUserTaskDurationsCompare from '@hooks/useStatisticUserTaskDurationsCompare';
-import useDebounceText from '@hooks/useDebounceText';
 import useStatisticTableInTeamTagLineChartCompare from '@hooks/useStatisticTableInTeamTagLineChartCompare';
 import useStatisticTableInTeamTagLineChart from '@hooks/useStatisticTableInTeamTagLineChart';
 import { useGenericDebounce } from '@hooks/useGenericDebounce';
@@ -112,53 +113,17 @@ type Props = {
   handleSelectSmall: (data: OptionDropdownType) => void;
 };
 
-interface TooltipDiv extends HTMLDivElement {
-  _reactRoot?: ReactDOM.Root;
-}
-
-interface TableRowDetail {
-  tagId: number;
-  tagName: string;
-  tagDuration: string;
-  tagPercent: number;
-  organizationId: number;
-  userList: {
-    userId: number;
-    userName: string;
-    userAvatar?: string | null;
-    userAvatarColor: string;
-    userDuration: string;
-    userPercent: number;
-  }[];
-  type: StatisticChartType.STANDARD | StatisticChartType.COMPARE;
-}
-
-interface MergedTableTag {
-  tagId: number;
-  tagName: string;
-  organizationId: number;
-  standardInfo?: {
-    tagDuration: string;
-    tagPercent: number;
-  };
-  compareInfo?: {
-    tagDuration: string;
-    tagPercent: number;
-  };
-  userList: {
-    userId: number;
-    userName: string;
-    userAvatar?: string | null;
-    userAvatarColor: string;
-    standardInfo?: {
-      userDuration: string;
-      userPercent: number;
-    };
-    compareInfo?: {
-      userDuration: string;
-      userPercent: number;
-    };
-  }[];
+interface UserTaskDurationFilter {
+  fromDate: string;
+  endDate: string;
+  userIds?: string;
+  largeCategoryId?: string | number;
+  mediumCategoryId?: string | number;
+  smallCategoryId?: string | number;
+  statisticBy: string;
+  selectedOrganization: number;
+  tagIds: { label: string; value: number }[];
+  organizationMemberId?: string;
 }
 
 const LineChartByTeamTagsCompare = ({
@@ -192,6 +157,7 @@ const LineChartByTeamTagsCompare = ({
     lineChartViewBy,
     isCheckCompare,
     orderingOptions,
+    mergedTableData,
     setIsLoadingLarge,
     setIsLoadingMedium,
     setIsLoadingSmall,
@@ -202,6 +168,7 @@ const LineChartByTeamTagsCompare = ({
     setIsLoadingOrganizationCompare,
     setLineChartViewBy,
     setSelectedTags,
+    setMergedTableData,
   } = useContext(StatisticTeamTagsStateContext);
   const { expanded, selectedOrganization: selectedOrganizationSideBar } =
     useContext(GlobalStateContext);
@@ -217,18 +184,7 @@ const LineChartByTeamTagsCompare = ({
     useState<number>(0);
 
   // Filter options
-  const [filter, setFilter] = useState<{
-    fromDate: string;
-    endDate: string;
-    userIds?: string;
-    largeCategoryId?: string | number;
-    mediumCategoryId?: string | number;
-    smallCategoryId?: string | number;
-    statisticBy: string;
-    selectedOrganization: number;
-    tagIds: { label: string; value: number }[];
-    organizationMemberId?: string;
-  }>({
+  const [filter, setFilter] = useState<UserTaskDurationFilter>({
     fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
     endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
     userIds: selectedMembers?.filter(Boolean).join(','),
@@ -243,19 +199,38 @@ const LineChartByTeamTagsCompare = ({
         ? String(selectedOrganizationSideBar?.value || '')
         : undefined,
   });
+  // Category filter options
+  const [categoryFilter, setCategoryFilter] = useState({
+    fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
+    endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
+    organizationId: '',
+    largeCategoryId: selectedLarge?.value,
+    mediumCategoryId: selectedMedium?.value,
+    smallCategoryId: selectedSmall?.value,
+    selectedTags: [] as OptionDropdownType[],
+    userIds: selectedMembers?.filter(Boolean).join(','),
+    organizationMemberId:
+      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        ? String(selectedOrganizationSideBar?.value || '')
+        : undefined,
+  });
+  // Compare category filter options
+  const [compareCategoryFilter, setCompareCategoryFilter] = useState({
+    fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
+    endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
+    organizationId: '',
+    largeCategoryId: selectedLarge?.value,
+    mediumCategoryId: selectedMedium?.value,
+    smallCategoryId: selectedSmall?.value,
+    selectedTags: [] as OptionDropdownType[],
+    userIds: selectedMembers?.filter(Boolean).join(','),
+    organizationMemberId:
+      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        ? String(selectedOrganizationSideBar?.value || '')
+        : undefined,
+  });
   // Compare filter options
-  const [compareFilter, setCompareFilter] = useState<{
-    fromDate: string;
-    endDate: string;
-    userIds?: string;
-    largeCategoryId?: string | number;
-    mediumCategoryId?: string | number;
-    smallCategoryId?: string | number;
-    statisticBy: string;
-    selectedOrganization: number;
-    tagIds: { label: string; value: number }[];
-    organizationMemberId?: string;
-  }>({
+  const [compareFilter, setCompareFilter] = useState<UserTaskDurationFilter>({
     fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
     endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
     userIds: selectedMembers?.filter(Boolean).join(','),
@@ -279,15 +254,18 @@ const LineChartByTeamTagsCompare = ({
       avatarUrl: string;
     }[]
   >([]);
+  const [hasFetchedStandardCategories, setHasFetchedStandardCategories] =
+    useState(false);
+  const [hasFetchedCompareCategories, setHasFetchedCompareCategories] =
+    useState(false);
 
   // Table data
-  const [standardTableData, setStandardTableData] = useState<TableRowDetail[]>(
+  const [standardTableData, setStandardTableData] = useState<TagTableRowDetailWithType[]>(
     [],
   );
-  const [compareTableData, setCompareTableData] = useState<TableRowDetail[]>(
+  const [compareTableData, setCompareTableData] = useState<TagTableRowDetailWithType[]>(
     [],
   );
-  const [tableData, setTableData] = useState<MergedTableTag[]>([]);
 
   // Chart
   const chartRef = useRef<any>(null);
@@ -343,10 +321,6 @@ const LineChartByTeamTagsCompare = ({
 
   // Others
   const [isExtendData, setIsExtendData] = useState(true);
-  const debouncedSelectedMembers = useDebounceText(
-    selectedMembers?.filter(Boolean).join(','),
-    1000,
-  );
   const tooltipRef = useRef<HTMLDivElement | null>(null);
 
   const buildTableDetail = (
@@ -453,7 +427,9 @@ const LineChartByTeamTagsCompare = ({
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     },
-    condition: [Boolean(tableData.length > 0 && filter.tagIds?.length > 0)],
+    condition: [
+      Boolean(mergedTableData.length > 0 && filter.tagIds?.length > 0),
+    ],
   });
 
   // Get user task durations (compared)
@@ -469,11 +445,11 @@ const LineChartByTeamTagsCompare = ({
           : compareFilter.userIds,
     },
     condition: [
-      Boolean(tableData.length > 0 && compareFilter.tagIds?.length > 0),
+      Boolean(mergedTableData.length > 0 && compareFilter.tagIds?.length > 0),
     ],
   });
 
-  const mergeCategories = (data: TableRowDetail[]): MergedTableTag[] => {
+  const mergeCategories = (data: TagTableRowDetailWithType[]): MergedTableTag[] => {
     const grouped: Record<string, MergedTableTag> = {};
 
     data.forEach((item) => {
@@ -585,7 +561,7 @@ const LineChartByTeamTagsCompare = ({
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     startDate,
     endDate,
@@ -600,6 +576,72 @@ const LineChartByTeamTagsCompare = ({
     selectedOrganization?.label,
     selectedTag,
     selectedOrganizationSideBar?.value,
+  ]);
+
+  const memoizedCategoryFilter = useMemo(() => {
+    return {
+      fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
+      endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : selectedMembers?.filter(Boolean).join(','),
+      largeCategoryId: selectedLarge?.value,
+      mediumCategoryId: selectedMedium?.value,
+      smallCategoryId: selectedSmall?.value,
+      organizationId: String(selectedOrganization?.value),
+      selectedTags: selectedTags || [],
+      organizationMemberId:
+        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
+    };
+  }, [
+    startDate,
+    endDate,
+    selectedMembers,
+    selectedOrganization?.value,
+    selectedLarge,
+    selectedMedium,
+    selectedSmall,
+    orderingOptions,
+    selectedTags,
+    selectedOrganization?.label,
+    selectedOrganizationSideBar?.value,
+    listMemberTeam,
+  ]);
+
+  const memoizedCategoryCompareFilter = useMemo(() => {
+    return {
+      fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
+      endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : selectedMembers?.filter(Boolean).join(','),
+      largeCategoryId: selectedLarge?.value,
+      mediumCategoryId: selectedMedium?.value,
+      smallCategoryId: selectedSmall?.value,
+      organizationId: String(selectedOrganization?.value),
+      selectedTags: selectedTags || [],
+      organizationMemberId:
+        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
+    };
+  }, [
+    startDateCompare,
+    endDateCompare,
+    selectedMembers,
+    selectedOrganization?.value,
+    selectedLarge,
+    selectedMedium,
+    selectedSmall,
+    orderingOptions,
+    selectedTags,
+    selectedOrganization?.label,
+    selectedOrganizationSideBar?.value,
+    listMemberTeam,
   ]);
 
   const memoizedCompareFilter = useMemo(() => {
@@ -625,7 +667,7 @@ const LineChartByTeamTagsCompare = ({
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     startDateCompare,
     endDateCompare,
@@ -653,37 +695,39 @@ const LineChartByTeamTagsCompare = ({
     memoizedCompareFilter,
     1000,
   );
+  const debouncedCategoryFilter = useGenericDebounce(
+    memoizedCategoryFilter,
+    1000,
+  );
+  const debouncedCategoryCompareFilter = useGenericDebounce(
+    memoizedCategoryCompareFilter,
+    1000,
+  );
 
   useEffect(() => {
     if (!isOrganizationChanging) {
       setFilter(debouncedFilter); // Trigger API only when everything is ready
       setCompareFilter(debouncedCompareFilter); // Trigger API only when everything is ready
+      setCategoryFilter(debouncedCategoryFilter); // Trigger API only when everything is ready
+      setCompareCategoryFilter(debouncedCategoryCompareFilter); // Trigger API only when everything is ready
     }
-  }, [debouncedFilter, debouncedCompareFilter, isOrganizationChanging]);
+  }, [
+    debouncedFilter,
+    debouncedCompareFilter,
+    debouncedCategoryFilter,
+    debouncedCategoryCompareFilter,
+    isOrganizationChanging,
+  ]);
 
   // Get table info (statistic team standard categories)
   const { isLoadingStatisticTableInTeamTagLineChart } =
     useStatisticTableInTeamTagLineChart({
       filter: {
-        fromDate: formatDateToYMD(startDate) || '',
-        endDate: formatDateToYMD(`${endDate}`) || '',
-        organizationIds: String(selectedOrganization?.value || ''),
-        largeCategoryId: selectedLarge?.value as number,
-        mediumCategoryId: selectedMedium?.value as number,
-        smallCategoryId: selectedSmall?.value as number,
-        selectedTags: selectedTags,
-        userIds:
-          orderingOptions?.user_ids?.length == 0
-            ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
-            : debouncedSelectedMembers,
-        organizationMemberId:
-          selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
-            ? String(selectedOrganizationSideBar?.value || '')
-            : undefined,
+        ...categoryFilter
       },
       onSuccess: (data) => {
         if (!data) return;
-        let tableDetail: TableRowDetail[] = [];
+        let tableDetail: TagTableRowDetailWithType[] = [];
         if (
           selectedOrganization &&
           !selectedLarge &&
@@ -727,6 +771,7 @@ const LineChartByTeamTagsCompare = ({
         }
 
         setStandardTableData(tableDetail);
+        setHasFetchedStandardCategories(true);
       },
     });
 
@@ -734,25 +779,11 @@ const LineChartByTeamTagsCompare = ({
   const { isLoadingStatisticTableInTeamTagLineChartCompare } =
     useStatisticTableInTeamTagLineChartCompare({
       filter: {
-        fromDate: formatDateToYMD(startDateCompare) || '',
-        endDate: formatDateToYMD(`${endDateCompare}`) || '',
-        organizationIds: String(selectedOrganization?.value || ''),
-        largeCategoryId: selectedLarge?.value as number,
-        mediumCategoryId: selectedMedium?.value as number,
-        smallCategoryId: selectedSmall?.value as number,
-        selectedTags: selectedTags,
-        userIds:
-          orderingOptions?.user_ids?.length == 0
-            ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
-            : debouncedSelectedMembers,
-        organizationMemberId:
-          selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
-            ? String(selectedOrganizationSideBar?.value || '')
-            : undefined,
+        ...compareCategoryFilter,
       },
       onSuccess: (data) => {
         if (!data) return;
-        let tableDetail: TableRowDetail[] = [];
+        let tableDetail: TagTableRowDetailWithType[] = [];
         if (
           selectedOrganization &&
           !selectedLarge &&
@@ -796,41 +827,52 @@ const LineChartByTeamTagsCompare = ({
         }
 
         setCompareTableData(tableDetail);
+        setHasFetchedCompareCategories(true);
       },
     });
 
   useEffect(() => {
-    const tableData = mergeCategories([
-      ...(standardTableData || []),
-      ...(compareTableData || []),
-    ]);
-    const totalStandardDurationList = (standardTableData || [])
-      .map((item) => item.tagDuration)
-      .filter(Boolean); // remove null, undefined, ''
+    if (hasFetchedStandardCategories && hasFetchedCompareCategories) {
+      const mergedTableData = mergeCategories([
+        ...(standardTableData || []),
+        ...(compareTableData || []),
+      ]);
+      const totalStandardDurationList = (standardTableData || [])
+        .map((item) => item.tagDuration)
+        .filter(Boolean); // remove null, undefined, ''
 
-    const totalCompareDurationList = (compareTableData || [])
-      .map((item) => item.tagDuration)
-      .filter(Boolean);
+      const totalCompareDurationList = (compareTableData || [])
+        .map((item) => item.tagDuration)
+        .filter(Boolean);
 
-    setTotalStandardDuration(
-      totalDurationsForStatistic(totalStandardDurationList),
-    );
-    setTotalCompareDuration(
-      totalDurationsForStatistic(totalCompareDurationList),
-    );
+      setTotalStandardDuration(
+        totalDurationsForStatistic(totalStandardDurationList),
+      );
+      setTotalCompareDuration(
+        totalDurationsForStatistic(totalCompareDurationList),
+      );
 
-    setTableData(tableData);
-    setTagCollapseStatuses(
-      tableData.map((tag) => {
-        return {
-          tagId: tag.tagId,
-          status: false,
-          organizationId: tag.organizationId,
-        };
-      }),
-    );
-    handleTagSelection(tableData);
-  }, [standardTableData, compareTableData]);
+      setMergedTableData(mergedTableData);
+      setTagCollapseStatuses(
+        mergedTableData.map((tag) => {
+          return {
+            tagId: tag.tagId,
+            status: false,
+            organizationId: tag.organizationId,
+          };
+        }),
+      );
+      handleTagSelection(mergedTableData);
+      setHasFetchedStandardCategories(false);
+      setHasFetchedCompareCategories(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    hasFetchedCompareCategories,
+    hasFetchedCompareCategories,
+    standardTableData,
+    compareTableData,
+  ]);
 
   // Hide tooltip when mouse leave over 80px
   useEffect(() => {
@@ -1309,7 +1351,7 @@ const LineChartByTeamTagsCompare = ({
         ? rowADiff - rowBDiff
         : rowBDiff - rowADiff;
     });
-    setTableData(sortedArr);
+    setMergedTableData(sortedArr);
   };
 
   // Sort by duration difference
@@ -1338,7 +1380,7 @@ const LineChartByTeamTagsCompare = ({
         ? rowADiff - rowBDiff
         : rowBDiff - rowADiff;
     });
-    setTableData(sortedArr);
+    setMergedTableData(sortedArr);
   };
 
   // Columns definition
@@ -1541,10 +1583,10 @@ const LineChartByTeamTagsCompare = ({
                 durationSortingStatus == SortingType.DESC
               ) {
                 setDurationSortingStatus(SortingType.ASC);
-                sortByDurationDifference(tableData, SortingType.ASC);
+                sortByDurationDifference(mergedTableData, SortingType.ASC);
               } else {
                 setDurationSortingStatus(SortingType.DESC);
-                sortByDurationDifference(tableData, SortingType.DESC);
+                sortByDurationDifference(mergedTableData, SortingType.DESC);
               }
             }}>
             <p className="!text-xs font-medium !text-[#77858F]">計測時間</p>
@@ -1679,10 +1721,10 @@ const LineChartByTeamTagsCompare = ({
                 percentageSortingStatus == SortingType.DESC
               ) {
                 setPercentageSortingStatus(SortingType.ASC);
-                sortByPercentDifference(tableData, SortingType.ASC);
+                sortByPercentDifference(mergedTableData, SortingType.ASC);
               } else {
                 setPercentageSortingStatus(SortingType.DESC);
-                sortByPercentDifference(tableData, SortingType.DESC);
+                sortByPercentDifference(mergedTableData, SortingType.DESC);
               }
             }}>
             <p className="!text-xs font-medium !text-[#77858F]">割合</p>
@@ -1778,7 +1820,7 @@ const LineChartByTeamTagsCompare = ({
   ];
 
   const table = useReactTable({
-    data: tableData,
+    data: mergedTableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -1995,7 +2037,7 @@ const LineChartByTeamTagsCompare = ({
                     selectedOption={selectedOrganization || undefined}
                     onChange={(data) => {
                       setSelectedMembers([]);
-                      setTableData([]);
+                      setMergedTableData([]);
                       setIsOrganizationChanging(true);
                       handleSelectOrganization(data);
                     }}
@@ -2031,7 +2073,7 @@ const LineChartByTeamTagsCompare = ({
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => {
-                      setTableData([]);
+                      setMergedTableData([]);
                       handleSelectLarge(data);
                     }}
                     disabled={!selectedOrganization}
@@ -2066,7 +2108,7 @@ const LineChartByTeamTagsCompare = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => {
-                      setTableData([]);
+                      setMergedTableData([]);
                       handleSelectMedium(data);
                     }}
                     disabled={!selectedLarge}
@@ -2101,7 +2143,7 @@ const LineChartByTeamTagsCompare = ({
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => {
-                      setTableData([]);
+                      setMergedTableData([]);
                       handleSelectSmall(data);
                     }}
                     disabled={!selectedMedium}
@@ -2172,7 +2214,7 @@ const LineChartByTeamTagsCompare = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
-                    setTableData([]);
+                    setMergedTableData([]);
                     setLineChartViewBy({
                       label: e.label,
                       value: e.value,
@@ -2199,7 +2241,7 @@ const LineChartByTeamTagsCompare = ({
                         isChecked={selectedMembers.includes(member.id)}
                         color={member.color}
                         onChange={(state) => {
-                          setTableData([]);
+                          setMergedTableData([]);
                           if (state) {
                             setSelectedMembers((prev) => {
                               if (member.id) {
@@ -2333,7 +2375,8 @@ const LineChartByTeamTagsCompare = ({
 
             {!isLoadingStatisticTableInTeamTagLineChart &&
             !isLoadingStatisticTableInTeamTagLineChartCompare ? (
-              <Table className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>
+              <Table
+                className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${mergedTableData.length && 'max-h-[500px] overflow-y-auto'}`}>
                 <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr

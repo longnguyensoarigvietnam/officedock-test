@@ -8,11 +8,11 @@ import {
 } from 'react';
 
 import { OptionDropdownType } from '@interfaces/common';
+import { CategoryTableRowDetail, MergedTableCategory } from '@interfaces/statistic';
 
 import { getAdjustedStartDateDefault } from '@utils/date';
 
 import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
-import { CategoryTableRowDetail } from '@interfaces/statistic';
 
 interface ContextValue {
   selectedOrganization: OptionDropdownType | null;
@@ -127,6 +127,10 @@ interface ContextValue {
   // Table data
   areaTableData: CategoryTableRowDetail[];
   setAreaTableData: Dispatch<SetStateAction<CategoryTableRowDetail[]>>;
+  lineChartTableData: CategoryTableRowDetail[];
+  setLineChartTableData: Dispatch<SetStateAction<CategoryTableRowDetail[]>>;
+  mergedTableData: MergedTableCategory[]
+  setMergedTableData: Dispatch<SetStateAction<MergedTableCategory[]>>
 }
 
 const defaultValue: ContextValue = {
@@ -214,6 +218,10 @@ const defaultValue: ContextValue = {
 
   areaTableData: [],
   setAreaTableData: () => {},
+  lineChartTableData: [],
+  setLineChartTableData: () => {},
+  mergedTableData: [],
+  setMergedTableData: () => {},
 };
 
 export const StatisticTeamStateContext =
@@ -247,7 +255,10 @@ export const StatisticTeamStateProvider = ({
     OptionDropdownType[]
   >([]);
 
+  // Table data
   const [areaTableData, setAreaTableData] = useState<CategoryTableRowDetail[]>([]);
+  const [lineChartTableData, setLineChartTableData] = useState<CategoryTableRowDetail[]>([]);
+  const [mergedTableData, setMergedTableData] = useState<MergedTableCategory[]>([]);
 
   // Select
   const [selectedOrganization, setSelectedOrganization] =
@@ -426,6 +437,10 @@ export const StatisticTeamStateProvider = ({
 
     areaTableData,
     setAreaTableData,
+    lineChartTableData,
+    setLineChartTableData,
+    mergedTableData,
+    setMergedTableData
   };
 
   return (

@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
+import * as ReactDOM from 'react-dom/client';
 import Image from 'next/image';
 import { Line } from 'react-chartjs-2';
 import {
@@ -24,6 +25,7 @@ import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Dropdown from '@components/common/Dropdown';
 import { Table, TableBody } from '@components/common/Table';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
+import { MyDockLineChartTooltip } from '@components/tooltip/MyDockLineChartTooltip';
 
 import { OptionDropdownType } from '@interfaces/common';
 
@@ -32,18 +34,22 @@ import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 
 import {
   convertDurationToTotalMinutes,
-  convertFromNumberToJapaneseTime,
   convertTimeToDecimal,
-  convertToJapaneseDateRange,
   convertToStatisticJapaneseLabels,
   formatDateToYMD,
 } from '@utils/date';
-import { getLineChartEnableViews, getRandomColor, getStatisticMilestones, lightenColor } from '@utils';
+import {
+  getLineChartEnableViews,
+  getRandomColor,
+  getStatisticMilestones,
+  lightenColor,
+} from '@utils';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 import useStatisticTagTaskDurations from '@hooks/useStatisticTagTaskDurations';
+import { TooltipDiv } from '@interfaces/tooltip';
 
 ChartJS.register(
   CategoryScale,
@@ -137,24 +143,64 @@ const LineChart = ({
 
   const tooltipRef = useRef<HTMLDivElement | null>(null);
 
+  // Hide tooltip when mouse leave over 80px
   useEffect(() => {
-    const tooltipEl = tooltipRef.current;
-    if (!tooltipEl) return;
+    let hideTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    tooltipEl.style.opacity = '0'; // Initially hide
-    tooltipEl.style.position = 'absolute';
-    tooltipEl.style.pointerEvents = 'none';
-    tooltipEl.style.transition = 'opacity 0.2s ease-in-out';
+    const handleMouseMove = (e: MouseEvent) => {
+      const tooltipEl = tooltipRef.current;
+      if (!tooltipEl || tooltipEl.style.opacity === '0') {
+        if (hideTimeout) {
+          clearTimeout(hideTimeout);
+          hideTimeout = null;
+        }
+        return;
+      }
+
+      const rect = tooltipEl.getBoundingClientRect();
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
+
+      const distance = Math.max(
+        rect.left - mouseX,
+        mouseX - rect.right,
+        rect.top - mouseY,
+        mouseY - rect.bottom,
+        0,
+      );
+      if (distance > 80) {
+        if (!hideTimeout) {
+          hideTimeout = setTimeout(() => {
+            if (tooltipRef.current) {
+              tooltipRef.current.style.display = 'none';
+            }
+            hideTimeout = null;
+          }, 250); // delay before hiding tooltip
+        }
+      } else {
+        // Mouse came back within 80px: cancel hide
+        if (hideTimeout) {
+          clearTimeout(hideTimeout);
+          hideTimeout = null;
+        }
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      if (hideTimeout) clearTimeout(hideTimeout);
+      document.removeEventListener('mousemove', handleMouseMove);
+    };
   }, []);
 
   const externalTooltipHandler = (context: any) => {
     const tooltipModel = context.tooltip;
-    const tooltipEl = tooltipRef.current;
+    const tooltipEl = tooltipRef.current as TooltipDiv;
 
     if (!tooltipEl || !tooltipModel) return;
 
     if (!tooltipModel.dataPoints || tooltipModel.dataPoints.length === 0) {
-      tooltipEl.style.opacity = '0';
+      tooltipEl.style.display = 'none';
       return;
     }
 
@@ -164,24 +210,19 @@ const LineChart = ({
     const dataset = context.chart.data.datasets[datasetIndex];
 
     if (!dataset?.data || dataIndex === undefined) {
-      tooltipEl.style.opacity = '0';
+      tooltipEl.style.display = 'none';
       return;
     }
 
     // Hide tooltip for the last data point
     if (dataIndex === dataset.data.length - 1) {
-      tooltipEl.style.opacity = '0';
-      return;
-    }
-
-    if (tooltipModel.opacity === 0) {
-      tooltipEl.style.opacity = '0';
+      tooltipEl.style.display = 'none';
       return;
     }
 
     const dataPoint = tooltipModel.dataPoints[0]?.raw;
     if (!dataPoint) {
-      tooltipEl.style.opacity = '0';
+      tooltipEl.style.display = 'none';
       return;
     }
 
@@ -194,65 +235,20 @@ const LineChart = ({
         ),
     );
 
-    const tooltipContent = matchingDataPoints
-      .map((point: any, index: number) => {
-        const isNotLast = index != matchingDataPoints.length - 1;
-        const containerStyle = `
-          ${isNotLast ? 'margin-bottom: 8px; border-bottom: 1px solid #D2DBE1;' : ''}
-        `.trim();
-
-        return `
-          <div style="${containerStyle}">
-            <div style="color: #77858F; font-weight: 400; font-size: 14px; margin-bottom: 8px">
-              ${convertToJapaneseDateRange(point.x, point.endDate)}
-            </div>
-    
-            <div style="display: flex; align-items: center; margin-bottom: 8px">
-              <div style="
-                background-color: ${point.color};
-                margin-right: 4px;
-                width: 12px;
-                height: 12px;
-                border-radius: 2px;
-                min-width: 12px;">
-              </div>
-              <p style="
-                font-weight: 700;
-                font-size: 16px;
-                max-width: 200px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;">
-                ${point.label}
-              </p>
-            </div>
-    
-            <p style="margin-bottom: 8px; font-weight: 400; font-size: 16px">
-              ${convertFromNumberToJapaneseTime(point.y).formattedHours}時間
-              ${convertFromNumberToJapaneseTime(point.y).formattedMinutes}分
-            </p>
-          </div>
-        `;
-      })
-      .join('');
-
-    tooltipEl.innerHTML = `
-      <div style="
-        padding: 20px;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0px 2px 8px 0px #0000001A;
-        width: 220px;">
-        ${tooltipContent}
-      </div>
-    `;
+    if (!tooltipEl._reactRoot) {
+      tooltipEl._reactRoot = ReactDOM.createRoot(tooltipEl);
+    }
+    tooltipEl._reactRoot.render(
+      <MyDockLineChartTooltip data={matchingDataPoints} />,
+    );
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
     tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 60}px`;
     tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
     tooltipEl.style.opacity = '1';
+    tooltipEl.style.display = 'block';
     tooltipEl.style.zIndex = '9999';
-    tooltipEl.style.pointerEvents = 'none';
+    tooltipEl.style.pointerEvents = 'auto';
   };
 
   const options: any = {
@@ -1016,7 +1012,8 @@ const LineChart = ({
                 className={`!h-[200px] mt-5 w-full mx-auto`}
               />
             ) : (
-              <Table className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>
+              <Table
+                className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>
                 <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr

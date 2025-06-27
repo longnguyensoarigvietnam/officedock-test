@@ -48,6 +48,7 @@ import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { StatisticCategoryInfo } from '@interfaces/statistic';
+import { TooltipDiv } from '@interfaces/tooltip';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
 import {
@@ -98,10 +99,6 @@ type Props = {
   handleSelectMedium: (data: OptionDropdownType) => void;
 };
 
-interface TooltipDiv extends HTMLDivElement {
-  _reactRoot?: ReactDOM.Root;
-}
-
 interface TableRowDetail {
   categoryId: number;
   categoryName: string;
@@ -146,6 +143,8 @@ const LineChartByTeam = ({
     listMemberTeam,
     orderingOptions,
     lineChartViewBy,
+    lineChartTableData,
+    setLineChartTableData,
     setLineChartViewBy,
   } = useContext(StatisticTeamStateContext);
   const { expanded, selectedOrganization: selectedOrganizationSideBar } =
@@ -192,9 +191,6 @@ const LineChartByTeam = ({
       avatarUrl: string;
     }[]
   >([]);
-
-  // Table data
-  const [tableData, setTableData] = useState<TableRowDetail[]>([]);
 
   // Chart
   const chartRef = useRef<any>(null);
@@ -368,10 +364,10 @@ const LineChartByTeam = ({
       filter: {
         fromDate: formatDateToYMD(startDate) || '',
         endDate: formatDateToYMD(`${endDate}`) || '',
-        organizationIds: String(selectedOrganization?.value || ''),
+        organizationId: String(selectedOrganization?.value || ''),
         largeCategoryId: selectedLarge?.value as number,
         mediumCategoryId: selectedMedium?.value as number,
-        orderingOptions: orderingOptions,
+        tagIds: orderingOptions?.tag_ids || [],
         organizationMemberId: String(selectedOrganizationSideBar?.value || ''),
         userIds:
           orderingOptions?.user_ids?.length == 0
@@ -401,7 +397,7 @@ const LineChartByTeam = ({
           }),
         );
 
-        setTableData(tableDetail);
+        setLineChartTableData(tableDetail);
 
         // Calculate total duration
         const totalDurationList = (tableDetail || [])
@@ -425,7 +421,7 @@ const LineChartByTeam = ({
     },
     condition: [
       Boolean(
-        tableData.length > 0 &&
+        lineChartTableData.length > 0 &&
           (filter.largeCategoryId || filter.mediumCategoryId),
       ),
     ],
@@ -894,7 +890,7 @@ const LineChartByTeam = ({
         ? rowAPercentage - rowBPercentage
         : rowBPercentage - rowAPercentage;
     });
-    setTableData(sortedArr);
+    setLineChartTableData(sortedArr);
   };
 
   // Sort by duration difference
@@ -914,7 +910,7 @@ const LineChartByTeam = ({
         ? rowADuration - rowBDuration
         : rowBDuration - rowADuration;
     });
-    setTableData(sortedArr);
+    setLineChartTableData(sortedArr);
   };
 
   // Columns definition
@@ -1068,10 +1064,10 @@ const LineChartByTeam = ({
                 durationSortingStatus == SortingType.DESC
               ) {
                 setDurationSortingStatus(SortingType.ASC);
-                sortByDurationDifference(tableData, SortingType.ASC);
+                sortByDurationDifference(lineChartTableData, SortingType.ASC);
               } else {
                 setDurationSortingStatus(SortingType.DESC);
-                sortByDurationDifference(tableData, SortingType.DESC);
+                sortByDurationDifference(lineChartTableData, SortingType.DESC);
               }
             }}>
             <p className="!text-xs font-medium !text-[#77858F]">計測時間</p>
@@ -1145,10 +1141,10 @@ const LineChartByTeam = ({
                 percentageSortingStatus == SortingType.DESC
               ) {
                 setPercentageSortingStatus(SortingType.ASC);
-                sortByPercentDifference(tableData, SortingType.ASC);
+                sortByPercentDifference(lineChartTableData, SortingType.ASC);
               } else {
                 setPercentageSortingStatus(SortingType.DESC);
-                sortByPercentDifference(tableData, SortingType.DESC);
+                sortByPercentDifference(lineChartTableData, SortingType.DESC);
               }
             }}>
             <p className="!text-xs font-medium !text-[#77858F]">割合</p>
@@ -1217,7 +1213,7 @@ const LineChartByTeam = ({
   ];
 
   const table = useReactTable({
-    data: tableData,
+    data: lineChartTableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -1403,7 +1399,7 @@ const LineChartByTeam = ({
                     selectedOption={selectedOrganization || undefined}
                     onChange={(data) => {
                       setSelectedMembers([]);
-                      setTableData([]);
+                      setLineChartTableData([]);
                       setIsOrganizationChanging(true);
                       handleSelectOrganization(data);
                     }}
@@ -1427,7 +1423,7 @@ const LineChartByTeam = ({
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => {
-                      setTableData([]);
+                      setLineChartTableData([]);
                       handleSelectLarge(data);
                     }}
                     disabled={!selectedOrganization}
@@ -1451,7 +1447,7 @@ const LineChartByTeam = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => {
-                      setTableData([]);
+                      setLineChartTableData([]);
                       handleSelectMedium(data);
                     }}
                     disabled={!selectedLarge}
@@ -1489,7 +1485,7 @@ const LineChartByTeam = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
-                    setTableData([]);
+                    setLineChartTableData([]);
                     setLineChartViewBy({
                       label: e.label,
                       value: e.value,
@@ -1516,7 +1512,7 @@ const LineChartByTeam = ({
                         isChecked={selectedMembers.includes(member.id)}
                         color={member.color}
                         onChange={(state) => {
-                          setTableData([]);
+                          setLineChartTableData([]);
                           if (state) {
                             setSelectedMembers((prev) => {
                               if (member.id) {
@@ -1631,7 +1627,7 @@ const LineChartByTeam = ({
                 className={`!h-[200px] mt-5 w-full mx-auto`}
               />
             ) : (
-              <Table className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>
+              <Table className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${lineChartTableData.length && 'max-h-[500px] overflow-y-auto'}`}>
                 <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr
