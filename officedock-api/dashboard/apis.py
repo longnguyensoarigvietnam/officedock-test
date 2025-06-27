@@ -42,13 +42,16 @@ from dashboard.serializers import (
     UpdateDurationSerializer,
     ActualDurationDetailSerializer,
 )
-from dashboard.utils import separate_duration
+from dashboard.utils import (
+    separate_duration,
+    separate_duration_while_keep_running,
+)
 from roles.constants import Screens
 from stat_data.utils import get_total_durations
 from tasks.constants import TaskStatus, CalculateSkillMapProcessCases
 from tasks.models import Task, TaskDuration, TaskSchedule
 from tasks.serializers import TaskCalendarSerializer
-from tasks.utils import split_date_range, calculate_progress_skill_map
+from tasks.utils import calculate_progress_skill_map
 
 
 @extend_schema(tags=["System > Dashboard"])
@@ -624,9 +627,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         ).all()
 
         for duration in separate_task_duration:
-            self._separate_duration_while_keep_running(
-                duration, now(), user=user
-            )
+            separate_duration_while_keep_running(duration, now(), user=user)
 
         start_of_today = datetime.combine(timezone.now().date(), time.min)
         if task_id or schedule_id:
@@ -684,37 +685,6 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             }
 
         return self.response_ok(data)
-
-    def _separate_duration_while_keep_running(
-        self, duration, end_date, user=None
-    ):
-        """
-        Handle update and create duration by intervals
-        """
-        if duration.started_at.date() < timezone.now().date():
-            intervals = split_date_range(duration.started_at, end_date)
-            _, first_end_time = intervals.pop(0)
-            duration.paused_at = first_end_time
-            duration.save()
-            if len(intervals) >= 1:
-                last_date_start, _ = intervals.pop(-1)
-                # Create duration continue running
-                TaskDuration.objects.create(
-                    task_id=duration.task_id,
-                    schedule=duration.schedule,
-                    started_at=last_date_start,
-                    paused_at=None,
-                    user=user,
-                )
-            if intervals is not []:
-                for start, end in intervals:
-                    TaskDuration.objects.create(
-                        task_id=duration.task_id,
-                        schedule=duration.schedule,
-                        started_at=start,
-                        paused_at=end,
-                        user=user,
-                    )
 
     @extend_schema(
         parameters=[
