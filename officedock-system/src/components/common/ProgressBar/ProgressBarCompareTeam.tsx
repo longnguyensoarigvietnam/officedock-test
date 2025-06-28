@@ -292,7 +292,8 @@ const PercentageBarCompareTeam = ({
                                     }}
                                     className="w-3 h-3"></div>
                                   <span className="truncate max-w-[180px] font-bold text-base text-black">
-                                    {mergeItem.categoryName}
+                                    {mergeItem.categoryName ||
+                                      mergeItem.tagName}
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-[10px] font-normal text-base mt-4 px-5">

@@ -482,6 +482,7 @@ const TableChart = ({
                       )
                     : listOptionsOrganization
                 }
+                isDisabled={rowData.organization === 292}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({

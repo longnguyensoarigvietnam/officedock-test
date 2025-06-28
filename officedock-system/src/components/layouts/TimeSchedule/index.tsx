@@ -1953,7 +1953,8 @@ const TimeSchedule = memo(
             draggedResourceId === ItemScheduleType.PLANS &&
             info.event.extendedProps.type !== EventCalendarType.SCHEDULE &&
             newEndChange &&
-            newEndChange?.getTime() <= new Date().getTime()
+            newEndChange?.getTime() <= new Date().getTime() &&
+            !areDatesDifferent(`${newStartChange}`, `${newEndChange}`)
           ) {
             const hasOverlap = taskTimeScheduleList.some((item) => {
               return (

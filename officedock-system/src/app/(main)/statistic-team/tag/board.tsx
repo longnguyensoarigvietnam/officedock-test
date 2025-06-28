@@ -80,6 +80,7 @@ const StatisticTeamTagBoard = () => {
     setAreaTableData,
     setLineChartTableData,
     setMergedTableData,
+    setIsSkeletonTagTeamTask,
   } = useContext(StatisticTeamTagsStateContext);
   const {
     organizationTeamList,
@@ -168,6 +169,9 @@ const StatisticTeamTagBoard = () => {
           : undefined,
     },
     onSuccess: (data) => {
+      if (selectedOrganization?.value !== ALL_TEAM_STATISTIC) {
+        setIsSkeletonTagTeamTask(false);
+      }
       if (creationDataStatisticData?.organizations.length === 0) {
         return;
       }
@@ -228,6 +232,9 @@ const StatisticTeamTagBoard = () => {
           : undefined,
     },
     onSuccess: (data) => {
+      if (selectedOrganization?.value !== ALL_TEAM_STATISTIC) {
+        setIsSkeletonTagTeamTask(false);
+      }
       setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
       setTotalDurationMediumCompare(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmallCompare(sumDurations(data.smallCategories ?? []));
