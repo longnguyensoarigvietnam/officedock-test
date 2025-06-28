@@ -56,7 +56,7 @@ from chat.serializers import (
     ReactionSerializer,
 )
 from chat.utils import remove_chat_files
-from common.utils import StripTags, send_web_socket_event
+from common.utils import StripTags, generate_file_name, send_web_socket_event
 from base.permissions import ActionPermission
 from roles.constants import Screens
 
@@ -101,6 +101,9 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+        chunk_file = validated_data.get("chunk_file")
+        chunk_file.name = generate_file_name(None)
         serializer.save()
         return self.response_ok()
 

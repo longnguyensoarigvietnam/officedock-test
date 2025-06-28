@@ -481,14 +481,15 @@ class StripTags(Func):
     template = "%(function)s(%(expressions)s, {}, '', 'g')".format(STRIP_TAGS)
 
 
-def generate_file_name(file_name=None) -> str:
+def generate_file_name(file_name="png") -> str:
     """
     Generate file name.
     """
-    ext = file_name.split(".")[-1] if file_name and "." in file_name else "png"
+    name = file_name.split(".")[-1] if file_name and "." in file_name else "png"
+    ext = f".{name}" if file_name else ""
     current_time = datetime.now().strftime("%Y%m%d%H%M%S%f")
     random_number = random.randint(10000, 99999)
-    return f"{current_time}{random_number}.{ext}"
+    return f"{current_time}{random_number}{ext}"
 
 
 def check_task_overtime(model, task_duration, limit_time=None):
@@ -639,3 +640,16 @@ def get_organizations_of_user_by_screen_role(user, screen_name, action):
         org_ids = set(org_ids)
 
     return Organization.all_objects.filter(id__in=org_ids).all()
+
+
+def delete_file(file_path: str) -> None:
+    """Delete a file from storage.
+
+    Args:
+        file_path (str): Path to the file to delete
+
+    Note:
+        Silently handles non-existent files and empty paths
+    """
+    if file_path and default_storage.exists(file_path):
+        default_storage.delete(file_path)

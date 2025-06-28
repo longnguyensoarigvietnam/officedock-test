@@ -44,7 +44,7 @@ from tasks.models import TaskSchedule, TaskDuration, Task
 from base.permissions import ActionPermission
 from roles.constants import Screens
 from common.serializers import CreationDataUserSerializer
-from tasks.constants import TaskStatus, FrequencyMap, LIMIT_DAY
+from tasks.constants import FrequencyMap, LIMIT_DAY
 from organizations.models import Organization
 
 
@@ -969,12 +969,11 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
             "schedule"
         ).filter(
             schedule__organization_id=calendar_org.id if calendar_org else None,
+            schedule__deleted_at__isnull=True,
             company=company,
         )
-        task_schedules = (
-            TaskSchedule.objects.select_related("task")
-            .filter(task__organization_id__in=org_ids, company=company)
-            .exclude(task__status__name=TaskStatus.MY_ROUTINE.value)
+        task_schedules = TaskSchedule.objects.select_related("task").filter(
+            task__organization_id__in=org_ids, company=company
         )
 
         # Handle filter search
@@ -1156,18 +1155,16 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
         else:
             org_ids = [organization_id]
 
-        durations = (
-            TaskDuration.objects.select_related("task", "schedule")
-            .filter(
-                Q(task__organization_id__in=org_ids)
-                | Q(
-                    schedule__organization_id=calendar_org.id
-                    if calendar_org
-                    else None
-                )
+        durations = TaskDuration.objects.select_related(
+            "task", "schedule"
+        ).filter(
+            Q(task__organization_id__in=org_ids)
+            | Q(
+                schedule__organization_id=calendar_org.id
+                if calendar_org
+                else None,
+                schedule__deleted_at__isnull=True,
             )
-            .exclude(task__status__name=TaskStatus.MY_ROUTINE.value)
-            .all()
         )
 
         # Handle filter search
