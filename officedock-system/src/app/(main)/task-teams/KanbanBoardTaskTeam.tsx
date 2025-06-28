@@ -224,6 +224,7 @@ const KanbanBoardTaskTeam = () => {
       }
     },
   });
+
   useTaskNoSettingTeam({
     organization_id: organizationId as string,
     filter: {
@@ -1382,12 +1383,7 @@ const KanbanBoardTaskTeam = () => {
       categoryIds: newWorkCategories,
       isImportant: data.isImportant,
       todoList: todoListData,
-      taskSchedules:
-        data.statusId?.value != StatusValueTask.MY_ROUTINE
-          ? planList && planList.length
-            ? planList
-            : []
-          : null,
+      taskSchedules: planList && planList.length ? planList : null,
       oldIdStatus: data.oldIdStatus,
       oldNameStatus: data.oldNameStatus,
       oldIdPeople: data.oldIdPeople,
