@@ -96,6 +96,13 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         user = self.request.user
         company = user.company
+        if self.action in ["members"]:
+            return (
+                Organization.objects.filter(company=company)
+                .annotate(user_count=Count("users"))
+                .order_by("-created_at")
+                .all()
+            )
 
         return super().get_queryset().filter(company=company)
 
