@@ -1194,7 +1194,7 @@ const StackedAreaChart = ({
                                   return (
                                     <div
                                       key={cateIndex}
-                                      className="flex items-center gap-1.5">
+                                      className="flex items-baseline gap-1.5">
                                       <div
                                         className="w-3 h-3 rounded-sm"
                                         style={{
@@ -1204,11 +1204,11 @@ const StackedAreaChart = ({
                                           ),
                                         }}
                                       />
-                                      <div className="flex flex-grow items-center justify-between text-base font-medium">
-                                        <div className=" text-black w-fit  max-w-[180px] line-clamp-3 break-words">
+                                      <div className="flex flex-grow items-baseline justify-between text-base font-medium w-full">
+                                        <div className=" text-black w-[calc(100%_-_60px)] max-w-[calc(100%_-_60px)] line-clamp-3 break-all text-left">
                                           {tag.tagName}
                                         </div>
-                                        <div>{tag.percent}%</div>
+                                        <p className='w-[50px] text-right'>{tag.percent}%</p>
                                       </div>
                                     </div>
                                   );

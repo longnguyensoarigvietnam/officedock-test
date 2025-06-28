@@ -952,7 +952,7 @@ const StackedAreaChart = ({
                                 boxShadow: '0px 2px 8px 0px #0000001A',
                               }}
                               className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
-                              <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-center w-full block">
+                              <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-center w-full block"> 
                                 {convertToJapaneseDateRange(
                                   dataDetailDate?.startDate as string,
                                   dataDetailDate?.endDate as string,
@@ -968,7 +968,7 @@ const StackedAreaChart = ({
                                     return (
                                       <div
                                         key={cateIndex}
-                                        className="flex items-center gap-1.5">
+                                        className="flex items-baseline gap-1.5">
                                         <div
                                           className="w-3 h-3 rounded-sm"
                                           style={{
@@ -978,11 +978,11 @@ const StackedAreaChart = ({
                                               '',
                                           }}
                                         />
-                                        <div className="flex flex-grow items-center justify-between text-base font-medium">
-                                          <div className=" text-black w-fit  max-w-[180px] line-clamp-3 break-words">
+                                        <div className="flex flex-grow items-baseline justify-between text-base font-medium w-full">
+                                          <div className=" text-black w-[calc(100%_-_60px)] max-w-[calc(100%_-_60px)] line-clamp-3 break-all text-left">
                                             {cate.categoryName}
                                           </div>
-                                          <div>{cate.percent}%</div>
+                                          <p className='w-[50px] text-right'>{cate.percent}%</p>
                                         </div>
                                       </div>
                                     );
