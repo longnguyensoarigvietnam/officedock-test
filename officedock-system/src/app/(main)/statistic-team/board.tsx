@@ -91,6 +91,7 @@ const StatisticTeamBoard = () => {
     setAreaTableData,
     setLineChartTableData,
     setMergedTableData,
+    setIsSkeletonCategoryTeamTask,
   } = useContext(StatisticTeamStateContext);
   const {
     organizationTeamList,
@@ -128,6 +129,10 @@ const StatisticTeamBoard = () => {
           : undefined,
     },
     onSuccess: (data) => {
+      if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
+        setIsSkeletonCategoryTeamTask(false);
+      }
+
       if (creationDataStatisticData?.organizations.length === 0) {
         return;
       }
@@ -218,6 +223,9 @@ const StatisticTeamBoard = () => {
             : undefined,
       },
       onSuccess: (data) => {
+        if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
+          setIsSkeletonCategoryTeamTask(false);
+        }
         setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
         setTotalDurationMediumCompare(
           sumDurations(data.mediumCategories ?? []),
@@ -551,7 +559,7 @@ const StatisticTeamBoard = () => {
     setIsLoadingLarge(true);
     setIsLoadingMedium(true);
     setIsLoadingOrganization(true);
-    handleResetTableData()
+    handleResetTableData();
     if (isCheckCompare) {
       setIsLoadingLargeCompare(true);
       setIsLoadingMediumCompare(true);
@@ -572,7 +580,7 @@ const StatisticTeamBoard = () => {
     setIsLoadingLarge(true);
     setIsLoadingMedium(true);
     setIsLoadingOrganization(true);
-    handleResetTableData()
+    handleResetTableData();
     if (isCheckCompare) {
       setIsLoadingLargeCompare(true);
       setIsLoadingMediumCompare(true);

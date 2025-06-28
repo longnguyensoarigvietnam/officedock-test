@@ -170,7 +170,6 @@ const TaskListStatisticTags = ({
       tagIds: selectedTags,
       isCompare: isCheckCompare && isShowCompare,
     },
-    conditions: [!isShowCompare],
     onSuccess: (data) => {
       if (data) {
         setTotalPagesCompare(data.numPages);

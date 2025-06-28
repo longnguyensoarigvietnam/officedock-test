@@ -6,7 +6,6 @@ import { PermissionsSystem } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 
 import ScheduleTeamBoard from './board';
-import { TaskTeamStateProvider } from '@providers/TaskTeamProvider';
 
 const ScheduleTeamPage = () => {
   return (
@@ -15,9 +14,7 @@ const ScheduleTeamPage = () => {
       permission={PermissionsSystem.TEAMDOCK_VIEW}
       className="!py-0 px-0 !bg-[#EBF1F7] !overflow-hidden"
       showFooter={false}>
-      <TaskTeamStateProvider>
-        <ScheduleTeamBoard />
-      </TaskTeamStateProvider>
+      <ScheduleTeamBoard />
     </MainLayout>
   );
 };

@@ -154,6 +154,7 @@ const TableChart = ({
   const {
     isCheckCompare,
     selectedOrganization,
+    setIsSkeletonTagTeamTask,
     setIsLoadingLarge,
     setIsLoadingLargeCompare,
     setIsLoadingMedium,
@@ -199,6 +200,7 @@ const TableChart = ({
         setIsLoadingMedium(true);
         setIsLoadingSmall(true);
         setIsLoadingOrganization(true);
+        setIsSkeletonTagTeamTask(true);
         if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
           queryClient.invalidateQueries({
             predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
@@ -256,7 +258,9 @@ const TableChart = ({
         setIsLoadingMedium(true);
         setIsLoadingSmall(true);
         setIsLoadingOrganization(true);
-        if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
+        setIsSkeletonTagTeamTask(true);
+
+        if (selectedOrganization?.label === ALL_TEAM_STATISTIC) {
           queryClient.invalidateQueries({
             predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
           });
@@ -270,7 +274,7 @@ const TableChart = ({
           setIsLoadingMediumCompare(true);
           setIsLoadingSmallCompare(true);
           setIsLoadingOrganizationCompare(true);
-          if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
+          if (selectedOrganization?.label === ALL_TEAM_STATISTIC) {
             queryClient.invalidateQueries({
               predicate: (query) =>
                 query.queryKey[0] === 'getStatisticTaskListCompare',
@@ -492,6 +496,7 @@ const TableChart = ({
                         )
                       : []
                 }
+                isDisabled={rowData.organization === 292}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({

@@ -52,3 +52,10 @@
 .css-19bb58m input:focus {
   caret-color: transparent;
 }
+.css-olqui2-singleValue {
+  font-size: 12px !important;
+  color: black !important;
+  text-align: start !important;
+  position: relative !important;
+  top: -3px !important;
+}

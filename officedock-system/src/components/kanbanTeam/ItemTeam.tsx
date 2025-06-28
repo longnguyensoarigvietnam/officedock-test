@@ -229,7 +229,7 @@ const ItemTeam = ({
       {selectedOptionZoom.value !== 25 ? (
         <div>
           <div
-            className={`relative ${selectedOptionZoom.value !== 50 && 'gap-2'} ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid    bg-white shadow-common rounded-md text-xs flex flex-col  mb-2 `}>
+            className={`relative ${content.status?.id === StatusValueTask.MY_ROUTINE && 'min-h-[81px]'} ${selectedOptionZoom.value !== 50 && 'gap-2'} ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid    bg-white shadow-common rounded-md text-xs flex flex-col  mb-2 `}>
             <div
               className={`absolute left-[-1px] h-[98.5%] top-1/2 -translate-y-1/2 w-[2.5px] overflow-hidden rounded-l-md`}
               style={{ backgroundColor: largeColor || 'white' }}></div>
@@ -443,9 +443,7 @@ const ItemTeam = ({
                                   ? dataOptionsStatus.filter(
                                       (item) =>
                                         item.value !==
-                                          StatusValueTask.MY_ROUTINE &&
-                                        item.value !==
-                                          StatusValueTask.COMPLETED,
+                                        StatusValueTask.COMPLETED,
                                     )
                                   : dataOptionsStatus.filter(
                                       (item) =>
