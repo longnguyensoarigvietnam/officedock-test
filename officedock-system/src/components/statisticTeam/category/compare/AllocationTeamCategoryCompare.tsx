@@ -48,7 +48,7 @@ type Props = {
 };
 
 type ProgressDataType = {
-  id: number;
+  id: number | string;
   label: string;
   value: number;
   color: string;
@@ -117,9 +117,9 @@ const buildKey = (item: ProgressDataType, isAllTeam: boolean) =>
   isAllTeam ? `${item.organizationId}-${item.id}` : `${item.id}`;
 
 const parseKey = (key: string, isAllTeam: boolean) => {
-  if (!isAllTeam) return { id: +key, orgId: undefined };
+  if (!isAllTeam) return { id: key, orgId: undefined };
   const [orgId, idStr] = key.split('-', 2);
-  return { id: +idStr, orgId };
+  return { id: idStr, orgId };
 };
 
 export function buildProgressDataCompareWithMergedOthers({
@@ -135,7 +135,6 @@ export function buildProgressDataCompareWithMergedOthers({
   colorData?: string;
   isAllTeam?: boolean;
 }): ProgressDataCompareItem[] {
-  /* 1. Transfer & merge data for both sides */
   const isBaseEmpty = baseData.length === 0;
   const isCompareEmpty = compareData.length === 0;
 
@@ -165,12 +164,10 @@ export function buildProgressDataCompareWithMergedOthers({
     colorData,
   });
 
-  /* 2. Collect all unique keys */
   const allKeys = new Set<string>();
   const collectKeys = (arr: ProgressDataType[]) => {
     arr.forEach((item) => {
       allKeys.add(buildKey(item, isAllTeam));
-
       if (item.id === -1 && item.mergedItems) {
         item.mergedItems.forEach((sub) =>
           allKeys.add(buildKey(sub, isAllTeam)),
@@ -181,14 +178,13 @@ export function buildProgressDataCompareWithMergedOthers({
   collectKeys(mergedBase);
   collectKeys(mergedCompare);
 
-  /* 3. Function to find item by key (add organizationId if needed) */
   const findByKey = (
     key: string,
     arr: ProgressDataType[],
   ): ProgressDataType | undefined => {
     const { id, orgId } = parseKey(key, isAllTeam);
     const matcher = (el: ProgressDataType) =>
-      el.id === id && (!isAllTeam || el.organizationId === orgId);
+      String(el.id) == id && (!isAllTeam || el.organizationId == orgId);
 
     return (
       arr.find(matcher) ||
@@ -198,7 +194,6 @@ export function buildProgressDataCompareWithMergedOthers({
     );
   };
 
-  /* 4. Merge results for each key */
   const result: ProgressDataCompareItem[] = Array.from(allKeys)
     .map((key) => {
       const baseItem = findByKey(key, mergedBase);
@@ -222,7 +217,6 @@ export function buildProgressDataCompareWithMergedOthers({
     })
     .filter(({ item, itemCompare }) => item.value > 0 || itemCompare.value > 0);
 
-  /* 5. Keep "その他" (id = -1) at the end of the list */
   result.sort((a, b) => {
     const aOther = a.item.id === -1;
     const bOther = b.item.id === -1;
@@ -265,6 +259,7 @@ const AllocationTeamCategoryCompare = memo(
     const [progressDataLarge, setProgressDataLarge] = useState<
       ProgressDataCompareItem[]
     >([]);
+
     const [progressDataMedium, setProgressDataMedium] = useState<
       ProgressDataCompareItem[]
     >([]);

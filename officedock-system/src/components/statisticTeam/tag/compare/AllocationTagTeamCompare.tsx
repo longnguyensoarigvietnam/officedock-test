@@ -41,7 +41,7 @@ type Props = {
 };
 
 type ProgressDataType = {
-  id: number;
+  id: number | string; // Allow string for merged items
   label: string;
   value: number;
   color: string;
@@ -105,9 +105,9 @@ const buildKey = (item: ProgressDataType, isAll: boolean) =>
   isAll ? `${item.organizationId}-${item.id}` : `${item.id}`;
 
 const parseKey = (key: string, isAll: boolean) => {
-  if (!isAll) return { id: +key, orgId: undefined as string | undefined };
+  if (!isAll) return { id: key, orgId: undefined };
   const [orgId, idStr] = key.split('-', 2);
-  return { id: +idStr, orgId };
+  return { id: idStr, orgId };
 };
 
 export function buildProgressDataCompareWithMergedOthers({
@@ -170,7 +170,7 @@ export function buildProgressDataCompareWithMergedOthers({
   ): ProgressDataType | undefined => {
     const { id, orgId } = parseKey(key, isAllTeam);
     const match = (el: ProgressDataType) =>
-      el.id === id && (!isAllTeam || el.organizationId === orgId);
+      String(el.id) == id && (!isAllTeam || el.organizationId == orgId);
 
     return (
       arr.find(match) ||

@@ -12,7 +12,7 @@ import {
 } from '@utils/date';
 
 type ProgressDataType = {
-  id: number;
+  id: number | string;
   label: string;
   value: number;
   color: string;
@@ -589,7 +589,7 @@ const ProgressBarTeamTagCompare = ({
                         onClick={() =>
                           handleClickTooltip({
                             userId: itemUser.user.user.id,
-                            categoryId: item.id,
+                            categoryId: item.id as number,
                             duration: itemUser.user.duration,
                             organizationId: organizationId,
                           })
@@ -679,7 +679,7 @@ const ProgressBarTeamTagCompare = ({
                         onClick={() =>
                           handleClickTooltip({
                             userId: itemUser.userCompare.user.id,
-                            categoryId: item.id,
+                            categoryId: item.id as number,
                             duration: itemUser.userCompare.duration,
                             isCompare: true,
                             organizationId: organizationId,
