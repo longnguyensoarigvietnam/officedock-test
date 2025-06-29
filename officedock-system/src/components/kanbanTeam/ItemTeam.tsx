@@ -443,7 +443,9 @@ const ItemTeam = ({
                                   ? dataOptionsStatus.filter(
                                       (item) =>
                                         item.value !==
-                                        StatusValueTask.COMPLETED,
+                                          StatusValueTask.COMPLETED &&
+                                        item.value !==
+                                          StatusValueTask.MY_ROUTINE,
                                     )
                                   : dataOptionsStatus.filter(
                                       (item) =>

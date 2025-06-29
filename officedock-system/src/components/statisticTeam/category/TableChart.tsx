@@ -506,7 +506,7 @@ const TableChart = ({
                       )
                 }
                 placeholder=""
-                showArrow
+                showArrow={rowData.organization !== 292}
                 options={
                   selectedOrganization?.value === ALL_TEAM_STATISTIC
                     ? listOptionAllTeamOrg

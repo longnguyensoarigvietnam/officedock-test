@@ -106,6 +106,7 @@ const StatisticTeamTagBoard = () => {
 
     onSuccess: (data) => {
       if (!data) return;
+
       const result = (() => {
         if (data.organizations.length === 0) {
           return { label: '', value: '' };
@@ -118,6 +119,7 @@ const StatisticTeamTagBoard = () => {
           label: item.name,
           value: item.id,
         }));
+
         setTagsOptions(optionsTagList);
         setSelectedTags(optionsTagList);
 
@@ -311,6 +313,7 @@ const StatisticTeamTagBoard = () => {
         value: item.id,
       }));
       setTagsOptions(optionsTagList);
+      setSelectedTags(optionsTagList);
       if (
         selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION &&
         organizationMember
