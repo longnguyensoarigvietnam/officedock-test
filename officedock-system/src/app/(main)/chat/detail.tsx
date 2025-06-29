@@ -3244,6 +3244,10 @@ const ChatDetail = ({
             }
             setUploadFiles([]);
             setOpenUploadFilesModal(false);
+            // Reset file input (prevent same file selection issue)
+            if (fileInputRef.current) {
+              fileInputRef.current.value = '';
+            }
           }}
           onClose={() => {
             setOpenUploadFilesModal(false);
@@ -3252,6 +3256,10 @@ const ChatDetail = ({
             setMsgIdUpdated && setMsgIdUpdated(undefined);
             setMentionMembers([]);
             setMessage('');
+            // Reset file input (prevent same file selection issue)
+            if (fileInputRef.current) {
+              fileInputRef.current.value = '';
+            }
           }}
         />
       )}

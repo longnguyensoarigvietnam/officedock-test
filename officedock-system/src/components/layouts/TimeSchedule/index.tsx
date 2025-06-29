@@ -560,7 +560,11 @@ const TimeSchedule = memo(
             setTaskTimeScheduleList((prevEvents) => {
               const updatedEvents = [...prevEvents];
               const myTasks = updatedEvents.filter(
-                (event) => event.type == EventCalendarType.TASK,
+                (event) =>
+                  event.type == EventCalendarType.TASK &&
+                  !tasksTimeSchedule.find( 
+                    (timeSchedule) => timeSchedule.taskId == event.taskId,
+                  ), // Filter out tasks that are already in tasksTimeSchedule
               );
               return [...myTasks, ...eventsTimeSchedule, ...tasksTimeSchedule];
             });

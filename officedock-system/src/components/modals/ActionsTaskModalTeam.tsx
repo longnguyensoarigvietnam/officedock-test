@@ -366,7 +366,14 @@ const ActionsTaskModalTeam = ({
       isImportant: false,
       plans: [],
 
-      repeatType: undefined,
+      repeatType: {
+        label: TaskRepetitiveType.ONCE,
+        value: String(
+          TASK_REPETITIVE_OPTIONS.find(
+            (option) => option.label == TaskRepetitiveType.ONCE,
+          )?.value,
+        ),
+      },
       repeatInterval: undefined,
       repeatStartTime: '',
       repeatEndTime: '',
@@ -426,10 +433,7 @@ const ActionsTaskModalTeam = ({
             label: `${dataTask.repeatInterval}`,
             value: dataTask.repeatInterval,
           }
-        : {
-            label: '',
-            value: '',
-          };
+        : undefined;
 
       value.repeatType = dataTask.repeatType
         ? {
@@ -439,10 +443,7 @@ const ActionsTaskModalTeam = ({
               )?.label || '',
             value: dataTask.repeatType,
           }
-        : {
-            label: '',
-            value: '',
-          };
+        : undefined;
 
       value.repeatStartTime = dataTask.planStartDate
         ? convertToTimeString(dataTask.planStartDate)
@@ -456,30 +457,22 @@ const ActionsTaskModalTeam = ({
             label: `${dataTask.month}`,
             value: dataTask.month,
           }
-        : {
-            label: '',
-            value: '',
-          };
+        : undefined;
 
       value.monthDay = dataTask.monthDay
         ? {
             label: `${dataTask.monthDay}`,
             value: dataTask.monthDay,
           }
-        : {
-            label: '',
-            value: '',
-          };
+        : undefined;
 
-      value.weekDay = dataTask.weekDay
-        ? {
-            label: `${dataTask.weekDay}`,
-            value: dataTask.weekDay,
-          }
-        : {
-            label: '',
-            value: '',
-          };
+      value.weekDay =
+        dataTask.weekDay != undefined && dataTask.weekDay != null
+          ? {
+              label: `${dataTask.weekDay}`,
+              value: dataTask.weekDay,
+            }
+          : undefined;
 
       if (dataTask.tags) {
         value.tagIds = dataTask.tags.map((tag) => {
