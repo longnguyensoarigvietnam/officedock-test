@@ -80,6 +80,7 @@ const StatisticTeamTagBoard = () => {
     setAreaTableData,
     setLineChartTableData,
     setMergedTableData,
+    setIsSkeletonTagTeamTask,
   } = useContext(StatisticTeamTagsStateContext);
   const {
     organizationTeamList,
@@ -105,6 +106,7 @@ const StatisticTeamTagBoard = () => {
 
     onSuccess: (data) => {
       if (!data) return;
+
       const result = (() => {
         if (data.organizations.length === 0) {
           return { label: '', value: '' };
@@ -117,6 +119,7 @@ const StatisticTeamTagBoard = () => {
           label: item.name,
           value: item.id,
         }));
+
         setTagsOptions(optionsTagList);
         setSelectedTags(optionsTagList);
 
@@ -168,6 +171,9 @@ const StatisticTeamTagBoard = () => {
           : undefined,
     },
     onSuccess: (data) => {
+      if (selectedOrganization?.value !== ALL_TEAM_STATISTIC) {
+        setIsSkeletonTagTeamTask(false);
+      }
       if (creationDataStatisticData?.organizations.length === 0) {
         return;
       }
@@ -228,6 +234,9 @@ const StatisticTeamTagBoard = () => {
           : undefined,
     },
     onSuccess: (data) => {
+      if (selectedOrganization?.value !== ALL_TEAM_STATISTIC) {
+        setIsSkeletonTagTeamTask(false);
+      }
       setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
       setTotalDurationMediumCompare(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmallCompare(sumDurations(data.smallCategories ?? []));
@@ -304,6 +313,7 @@ const StatisticTeamTagBoard = () => {
         value: item.id,
       }));
       setTagsOptions(optionsTagList);
+      setSelectedTags(optionsTagList);
       if (
         selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION &&
         organizationMember

@@ -4,7 +4,9 @@ import {
   Dispatch,
   memo,
   SetStateAction,
+  useEffect,
   useRef,
+  useState,
 } from 'react';
 import { Editor, EditorContent, useEditor } from '@tiptap/react';
 import { Paragraph } from '@tiptap/extension-paragraph';
@@ -13,11 +15,14 @@ import { Text } from '@tiptap/extension-text';
 import { Mention } from '@tiptap/extension-mention';
 import { Placeholder } from '@tiptap/extension-placeholder';
 
-import Modal from '../common/Modal';
 import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import { CustomReaction } from '@components/chat/CustomIcon';
 
-import { ChatRoomType } from '@constants/enums';
+import { ChatRoomType, ReactionIconValue } from '@constants/enums';
+import { REACTION_LIST } from '@constants';
+
 import {
   ChatDashboardMember,
   ChatParticipant,
@@ -25,8 +30,9 @@ import {
 } from '@interfaces/chat';
 
 import { trimUnnecessaryLineBreaks } from '@utils';
+
 import { ChatMentionMembersList } from './ChatMentionMembersModal';
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import Modal from '../common/Modal';
 
 export type ChatUploadingFilesModalProps = {
   message: string;
@@ -106,6 +112,10 @@ const ChatUploadingFilesModal = memo(
   }: ChatUploadingFilesModalProps) => {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+    // Icon
+    const [isShowListIcon, setIsShowListIcon] = useState(false);
+    const optionIconRef = useRef<HTMLDivElement | null>(null);
+
     const editor = useEditor({
       extensions: [
         Document,
@@ -119,12 +129,48 @@ const ChatUploadingFilesModal = memo(
         Placeholder.configure({
           placeholder: 'メッセージを入力',
         }),
+        CustomReaction,
       ],
       content: message,
       onUpdate: ({ editor }: { editor: Editor }) => {
         setMessage(editor.getHTML());
       },
     });
+
+    // Function to insert reaction into editor
+    const insertReaction = (reaction: {
+      name: string;
+      src: string;
+      value: ReactionIconValue;
+    }) => {
+      editor
+        ?.chain()
+        .focus()
+        .insertContent({
+          type: 'customReaction',
+          attrs: {
+            src: reaction.src,
+            name: reaction.name,
+          },
+        })
+        .run();
+    };
+
+    useEffect(() => {
+      const handleClickOutside = (event: any) => {
+        if (
+          optionIconRef.current &&
+          !optionIconRef.current.contains(event.target)
+        ) {
+          setIsShowListIcon(false);
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, []);
 
     return (
       <Modal
@@ -158,20 +204,48 @@ const ChatUploadingFilesModal = memo(
                 />
               </>
             )}
-            <DynamicTooltip
-              content={'リアクション'}
-              placement="top">
-              <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
-                <ImageRound
-                  name="Smile"
-                  src="/icons/smile.svg"
-                  className="w-[16px] h-[16px]"
-                />
-              </div>
-            </DynamicTooltip>
-            <DynamicTooltip
-              content={'書式設定'}
-              placement="top">
+            <div
+              onClick={() => setIsShowListIcon(!isShowListIcon)}
+              className="relative">
+              <DynamicTooltip content={'リアクション'} placement="top">
+                <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                  <ImageRound
+                    name="Smile"
+                    src="/icons/smile.svg"
+                    className="w-[16px] h-[16px]"
+                  />
+                </div>
+              </DynamicTooltip>
+              {isShowListIcon && (
+                <div
+                  style={{
+                    boxShadow: '0px 4px 8px 0px #0000000F',
+                  }}
+                  ref={optionIconRef}
+                  className="w-[190px] h-[44px] absolute after:content-[''] after:absolute  after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white rounded-lg top-[-54px] bg-white flex items-center gap-3 justify-center left-[-81px]">
+                  {REACTION_LIST.map((icon) => {
+                    return (
+                      <DynamicTooltip
+                        content={icon.tooltipContent}
+                        key={icon.name}
+                        placement="top">
+                        <div
+                          onClick={() => insertReaction(icon)}
+                          className={` rounded-ful`}>
+                          <ImageRound
+                            name={icon.name}
+                            src={icon.src}
+                            className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
+                          />
+                        </div>
+                      </DynamicTooltip>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <DynamicTooltip content={'書式設定'} placement="top">
               <p className="!font-thin text-[#77858F] hover:bg-[#77858F26] rounded-full p-[3px] hover:cursor-pointer flex justify-between items-center w-8 h-8">
                 <span className="w-[20px] ml-1 mt-[-3px]">Aa</span>
               </p>
@@ -195,9 +269,7 @@ const ChatUploadingFilesModal = memo(
                   <p className="text-black text-sm font-normal max-w-[500px] truncate">
                     {uploadFile.file.name}
                   </p>
-                  <DynamicTooltip
-                    content={'取り消し'}
-                    placement="top">
+                  <DynamicTooltip content={'取り消し'} placement="top">
                     <div>
                       <ImageRound
                         className={`mt-1 w-5 h-5 hover:cursor-pointer`}

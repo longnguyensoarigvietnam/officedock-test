@@ -224,6 +224,7 @@ const KanbanBoardTaskTeam = () => {
       }
     },
   });
+
   useTaskNoSettingTeam({
     organization_id: organizationId as string,
     filter: {
@@ -1198,7 +1199,7 @@ const KanbanBoardTaskTeam = () => {
           : null,
       weekDay:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.weekDay && data.weekDay.value
+          ? data.weekDay && data.weekDay.label != ''
             ? Number(data.weekDay.value)
             : null
           : null,
@@ -1382,12 +1383,7 @@ const KanbanBoardTaskTeam = () => {
       categoryIds: newWorkCategories,
       isImportant: data.isImportant,
       todoList: todoListData,
-      taskSchedules:
-        data.statusId?.value != StatusValueTask.MY_ROUTINE
-          ? planList && planList.length
-            ? planList
-            : []
-          : null,
+      taskSchedules: planList && planList.length ? planList : null,
       oldIdStatus: data.oldIdStatus,
       oldNameStatus: data.oldNameStatus,
       oldIdPeople: data.oldIdPeople,
@@ -1415,19 +1411,19 @@ const KanbanBoardTaskTeam = () => {
           : null,
       weekDay:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.weekDay && data.weekDay.value
+          ? data.weekDay != undefined && data.weekDay.label != ''
             ? Number(data.weekDay.value)
             : null
           : null,
       monthDay:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.monthDay && data.monthDay.value
+          ? data.monthDay && data.monthDay.value != ''
             ? Number(data.monthDay.value)
             : null
           : null,
       month:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.month && data.month.value
+          ? data.month && data.month.value != ''
             ? Number(data.month.value)
             : null
           : null,

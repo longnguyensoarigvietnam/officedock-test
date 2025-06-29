@@ -166,41 +166,17 @@ const AllocationTag = memo(
       }
     }, [statisticTagsList]);
 
-    const getDuration = (
-      dataSource: any,
-      type: EventWorkCategory,
-      tagId: number,
-      organizationId?: string,
-    ): string => {
-      const categoryMap = {
-        [EventWorkCategory.ALL]: dataSource?.largeCategories,
-        [EventWorkCategory.LARGE]: dataSource?.mediumCategories,
-        [EventWorkCategory.MEDIUM]: dataSource?.smallCategories,
-        [EventWorkCategory.SMALL]: dataSource?.category,
-      };
-
-      const categoryList = categoryMap[type] || [];
-
-      const item = categoryList?.find(
-        (item: any) =>
-          item.tagId === tagId &&
-          (!organizationId || String(item.organizationId) === organizationId),
-      );
-
-      return item?.duration || '00:00:00';
-    };
-
-    const handleClickTooltip = (
-      id: number | null,
-      type: EventWorkCategory,
-      organizationId?: string,
-    ) => {
-      const duration = getDuration(
-        statisticTagsList,
-        type,
-        id as number,
-        organizationId,
-      );
+    const handleClickTooltip = ({
+      id,
+      type,
+      organizationId,
+      duration,
+    }: {
+      id: number | null;
+      type: EventWorkCategory;
+      organizationId?: string;
+      duration: string;
+    }) => {
       setDetailCategory({
         id: id,
         type: type,
@@ -346,12 +322,14 @@ const AllocationTag = memo(
                                 handleClickTooltip={(
                                   id: number | null,
                                   organizationId?: string,
+                                  duration?: string,
                                 ) => {
-                                  handleClickTooltip(
+                                  handleClickTooltip({
                                     id,
-                                    EventWorkCategory.ALL,
+                                    type: EventWorkCategory.ALL,
                                     organizationId,
-                                  );
+                                    duration: duration || item.duration,
+                                  });
                                 }}
                                 handleClickChart={(
                                   _data: OptionDropdownType,
@@ -403,11 +381,16 @@ const AllocationTag = memo(
                               <ProgressBarStatistic
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={(id: number | null) => {
-                                  handleClickTooltip(
+                                handleClickTooltip={(
+                                  id: number | null,
+                                  _organizationId?: string,
+                                  duration?: string,
+                                ) => {
+                                  handleClickTooltip({
                                     id,
-                                    EventWorkCategory.LARGE,
-                                  );
+                                    type: EventWorkCategory.LARGE,
+                                    duration: duration || item.duration,
+                                  });
                                 }}
                                 handleClickChart={(
                                   _data: OptionDropdownType,
@@ -459,11 +442,16 @@ const AllocationTag = memo(
                               <ProgressBarStatistic
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={(id: number | null) => {
-                                  handleClickTooltip(
+                                handleClickTooltip={(
+                                  id: number | null,
+                                  _organizationId?: string,
+                                  duration?: string,
+                                ) => {
+                                  handleClickTooltip({
                                     id,
-                                    EventWorkCategory.MEDIUM,
-                                  );
+                                    type: EventWorkCategory.MEDIUM,
+                                    duration: duration || item.duration,
+                                  });
                                 }}
                                 {...item}
                               />
@@ -512,11 +500,16 @@ const AllocationTag = memo(
                               <ProgressBarStatistic
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={(id: number | null) => {
-                                  handleClickTooltip(
+                                handleClickTooltip={(
+                                  id: number | null,
+                                  _organizationId?: string,
+                                  duration?: string,
+                                ) => {
+                                  handleClickTooltip({
                                     id,
-                                    EventWorkCategory.SMALL,
-                                  );
+                                    type: EventWorkCategory.SMALL,
+                                    duration: duration || item.duration,
+                                  });
                                 }}
                                 {...item}
                               />

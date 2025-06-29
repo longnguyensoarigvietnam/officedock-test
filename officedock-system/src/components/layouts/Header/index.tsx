@@ -891,6 +891,7 @@ const Header = ({ className }: HeaderProps) => {
           }),
           queryClient.invalidateQueries({ queryKey: ['getTaskTeamList'] }),
         ]);
+        setEditPasswordErrorMessage('')
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
@@ -1109,6 +1110,7 @@ const Header = ({ className }: HeaderProps) => {
           open={openEditProfileModal}
           onClose={() => {
             setOpenEditProfileModal(false);
+            setEditPasswordErrorMessage('')
           }}
           onEdit={handleConfirmEditProfile}
           setOpenErrorUploadFileModal={setOpenErrorUploadFileModal}

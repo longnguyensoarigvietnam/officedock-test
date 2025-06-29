@@ -2223,7 +2223,7 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     Value(REPLACE_NULL_DATE),
                     output_field=DateTimeField(),
                 ),
-            ).order_by("-coalesced_pin_at", "-index")
+            ).order_by("-coalesced_pin_at", "-index", "-created_at")
 
         return self.response_pagination(
             request,

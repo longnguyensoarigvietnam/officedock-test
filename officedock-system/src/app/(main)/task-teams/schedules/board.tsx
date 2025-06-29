@@ -82,6 +82,7 @@ const ScheduleTeamBoard = () => {
     isLoadingDataTask,
     setCreationDataTaskData,
     orderingOptions,
+    setIsLoadingDataTask,
     setOrderingOptions,
   } = useContext(TaskTeamStateContext);
   const { organizationTeamList, selectedOrganization } =
@@ -653,6 +654,7 @@ const ScheduleTeamBoard = () => {
         }
       },
       onSettled: () => {
+        setIsLoadingDataTask(false);
         setIsLoading(false);
       },
     },
@@ -752,6 +754,7 @@ const ScheduleTeamBoard = () => {
         }
       },
       onSettled: () => {
+        setIsLoadingDataTask(false);
         setIsLoading(false);
       },
     },

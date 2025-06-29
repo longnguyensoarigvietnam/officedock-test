@@ -434,7 +434,6 @@ def process_users(total_duration, durations=None):
         data = grouped_by_user[user_id]
 
         data["total_duration"] += record.duration or timedelta(0)
-
         if record.task_id and len(data["task_ids"]) < 5:  # limit 5 task
             data["task_ids"].add(record.task_id)
 
@@ -545,7 +544,7 @@ def process_tags(
 
 
 def process_merge_card_per_tag(
-    tag_ids, durations=None, organization_ids_param=None
+    tag_ids, durations=None, organization_ids_param=None, organization_ids=None
 ):
     """
     Handle process category per user.
@@ -556,7 +555,9 @@ def process_merge_card_per_tag(
     if durations is None or not durations.exists():
         return total_duration, []
     for tag in tags:
-        organizations = Organization.all_objects.filter(tags=tag).all()
+        organizations = Organization.all_objects.filter(
+            id__in=organization_ids
+        ).all()
         for organization in organizations:
             filter_durations = get_list_durations_by_users(
                 durations=durations, tags=[tag.id], organizations=[organization]

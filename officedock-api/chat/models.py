@@ -5,6 +5,7 @@ from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.db import models, transaction
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
 from base.models import BaseModel
 from chat.constants import (
@@ -13,7 +14,7 @@ from chat.constants import (
     ChatMessageTypes,
     ChatRoomTypes,
 )
-from common.utils import generate_file_name, generate_unique_code
+from common.utils import delete_file, generate_file_name, generate_unique_code
 from base.messages import ERROR_MESSAGES
 
 
@@ -241,69 +242,80 @@ class ChatFile(BaseModel):
         """
         Custom create method to handle file upload logic
         """
-        for uuid in uuids:
-            # Fetch all chunks
-            chunk_files = ChunkFile.objects.filter(file_uuid=uuid).order_by(
-                "chunk_index"
-            )
-
-            if not chunk_files.exists():
-                raise ValueError(
-                    {"detail": ERROR_MESSAGES["chunk_file_not_exists"]}
+        try:
+            for uuid in uuids:
+                # Fetch all chunks
+                chunk_files = ChunkFile.objects.filter(file_uuid=uuid).order_by(
+                    "chunk_index"
                 )
 
-            # Get file metadata from the first chunk
-            first_chunk = chunk_files.first()
-            file_size = float(first_chunk.file_size) / (
-                1024 * 1024
-            )  # Convert to MB
-            file_name = first_chunk.file_name
-            file_type = first_chunk.file_type
+                if not chunk_files.exists():
+                    raise ValueError(
+                        {"detail": ERROR_MESSAGES["chunk_file_not_exists"]}
+                    )
 
-            # Merge chunks into a single file
-            with io.BytesIO() as merged_file:
+                # Get file metadata from the first chunk
+                first_chunk = chunk_files.first()
+                file_size = float(first_chunk.file_size) / (
+                    1024 * 1024
+                )  # Convert to MB
+                file_name = first_chunk.file_name
+                file_type = first_chunk.file_type
+
+                # Merge chunks into a single file
+                with io.BytesIO() as merged_file:
+                    for chunk in chunk_files:
+                        with chunk.chunk_file.open("rb") as chunk_data:
+                            merged_file.write(chunk_data.read())
+
+                    # Reset stream position and get the merged data
+                    merged_file.seek(0)
+                    merged_data = merged_file.getvalue()
+
+                    # Define GCS storage path
+                    gcs_path = f"{CHAT_FILES_FOLDER_UPLOAD}/{room.code}/{generate_file_name(file_name)}"
+
+                    # Upload the merged file to GCS
+                    default_storage.save(gcs_path, ContentFile(merged_data))
+
+                    # Compress image if applicable using the stored data
+                    compressed_file = (
+                        cls.compress_image_static(io.BytesIO(merged_data))
+                        if file_type.startswith("image")
+                        else None
+                    )
+
+                # Create ChatFile record in a transaction
+                with transaction.atomic():
+                    ChatFile.objects.create(
+                        uuid=uuid,
+                        company=company,
+                        chat_room=room,
+                        chat_message=message,
+                        file_name=file_name,
+                        original_file=gcs_path,
+                        compressed_file=compressed_file,
+                        file_type=file_type,
+                        file_size=file_size,
+                    )
+
+                    # Delete chunk files after merging
+                    for chunk in chunk_files:
+                        delete_file(chunk.chunk_file.name)
+                    chunk_files.delete()
+
+            return cls
+        except Exception:
+            for uuid in uuids:
+                # Clean up
+                chunk_files = ChunkFile.objects.filter(file_uuid=uuid)
                 for chunk in chunk_files:
-                    with chunk.chunk_file.open("rb") as chunk_data:
-                        merged_file.write(chunk_data.read())
-
-                # Reset stream position before uploading
-                merged_file.seek(0)
-
-                # Define GCS storage path
-                gcs_path = f"{CHAT_FILES_FOLDER_UPLOAD}/{room.code}/{generate_file_name(file_name)}"
-
-                # Upload the merged file to GCS
-                default_storage.save(
-                    gcs_path, ContentFile(merged_file.getvalue())
-                )
-
-                # Compress image if applicable
-                compressed_file = (
-                    cls.compress_image_static(merged_file)
-                    if file_type.startswith("image")
-                    else None
-                )
-
-            # Create ChatFile record in a transaction
-            with transaction.atomic():
-                ChatFile.objects.create(
-                    uuid=uuid,
-                    company=company,
-                    chat_room=room,
-                    chat_message=message,
-                    file_name=file_name,
-                    original_file=gcs_path,
-                    compressed_file=compressed_file,
-                    file_type=file_type,
-                    file_size=file_size,
-                )
-
-                # Delete chunk files after merging
-                for chunk in chunk_files:
-                    chunk.chunk_file.delete()
+                    delete_file(chunk.chunk_file.name)
                 chunk_files.delete()
 
-        return cls
+            raise ValidationError(
+                {"detail": ERROR_MESSAGES["chunk_file_not_exists"]}
+            )
 
     @staticmethod
     def compress_image_static(

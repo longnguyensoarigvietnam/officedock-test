@@ -156,6 +156,7 @@ const TableChart = ({
   const {
     isCheckCompare,
     selectedOrganization,
+    setIsSkeletonCategoryTeamTask,
     setIsLoadingLarge,
     setIsLoadingLargeCompare,
     setIsLoadingMedium,
@@ -198,12 +199,13 @@ const TableChart = ({
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
+        setIsSkeletonCategoryTeamTask(true);
 
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryListTeam',
         });
-        if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
+        if (selectedOrganization?.label === ALL_TEAM_STATISTIC) {
           queryClient.invalidateQueries({
             predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
           });
@@ -212,11 +214,12 @@ const TableChart = ({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTableInTeamLineChart',
         });
+
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingOrganizationCompare(true);
-          if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
+          if (selectedOrganization?.label === ALL_TEAM_STATISTIC) {
             queryClient.invalidateQueries({
               predicate: (query) =>
                 query.queryKey[0] === 'getStatisticTaskListCompare',
@@ -262,6 +265,7 @@ const TableChart = ({
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
+        setIsSkeletonCategoryTeamTask(true);
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryListTeam',
@@ -502,7 +506,7 @@ const TableChart = ({
                       )
                 }
                 placeholder=""
-                showArrow
+                showArrow={rowData.organization !== 292}
                 options={
                   selectedOrganization?.value === ALL_TEAM_STATISTIC
                     ? listOptionAllTeamOrg
@@ -512,6 +516,7 @@ const TableChart = ({
                         )
                       : []
                 }
+                isDisabled={rowData.organization === 292}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({

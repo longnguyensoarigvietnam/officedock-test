@@ -7,11 +7,20 @@ import ImageRound from '@components/common/ImageRound';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import Dropdown from '@components/common/Dropdown';
 
-import { EventWorkCategory, StatusValueTask } from '@constants/enums';
+import {
+  EventWorkCategory,
+  StatusValueTask,
+  TaskRepetitiveValue,
+} from '@constants/enums';
 import { Task, TaskFormData } from '@interfaces/task';
 import { OptionDropdownType } from '@interfaces/common';
 
-import { compareWithCurrentDate, formatShowDeadlineTask } from '@utils/date';
+import {
+  compareWithCurrentDate,
+  convertToTimeString,
+  formatShowDeadlineTask,
+  getJapaneseWeekDay,
+} from '@utils/date';
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 import { NO_SETTING } from '@constants';
 
@@ -172,12 +181,55 @@ const ItemTeam = ({
         ?.name) ||
     NO_SETTING;
 
+  const displayRoutineTaskScheduleTitle = (item: Task) => {
+    let title = '';
+    const repeatStartTime = item.planStartDate
+      ? convertToTimeString(item.planStartDate)
+      : '';
+    const repeatEndTime = item.planEndDate
+      ? convertToTimeString(item.planEndDate)
+      : '';
+    switch (item.repeatType) {
+      case TaskRepetitiveValue.ONCE:
+        title = '';
+        break;
+      case TaskRepetitiveValue.DAILY:
+        title = '毎日' + repeatStartTime + '~' + repeatEndTime;
+        break;
+      case TaskRepetitiveValue.WEEKLY:
+        title =
+          '毎週' +
+          getJapaneseWeekDay(Number(item.weekDay || 0)) +
+          '曜日' +
+          repeatStartTime +
+          '~' +
+          repeatEndTime;
+        break;
+      case TaskRepetitiveValue.MONTHLY:
+        title =
+          '毎月' + item.monthDay + '日' + repeatStartTime + '~' + repeatEndTime;
+        break;
+      case TaskRepetitiveValue.YEARLY:
+        title =
+          '毎年' +
+          item.month +
+          '月' +
+          item.monthDay +
+          '日' +
+          repeatStartTime +
+          '~' +
+          repeatEndTime;
+        break;
+    }
+    return title;
+  };
+
   return (
     <>
       {selectedOptionZoom.value !== 25 ? (
         <div>
           <div
-            className={`relative ${selectedOptionZoom.value !== 50 && 'gap-2'} ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid    bg-white shadow-common rounded-md text-xs flex flex-col  mb-2 `}>
+            className={`relative ${content.status?.id === StatusValueTask.MY_ROUTINE && 'min-h-[81px]'} ${selectedOptionZoom.value !== 50 && 'gap-2'} ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid    bg-white shadow-common rounded-md text-xs flex flex-col  mb-2 `}>
             <div
               className={`absolute left-[-1px] h-[98.5%] top-1/2 -translate-y-1/2 w-[2.5px] overflow-hidden rounded-l-md`}
               style={{ backgroundColor: largeColor || 'white' }}></div>
@@ -287,7 +339,11 @@ const ItemTeam = ({
                     : content.title}
                 </p>
               </div>
-
+              {content.status?.id == StatusValueTask.MY_ROUTINE && (
+                <p className="text-[13px] font-normal">
+                  {displayRoutineTaskScheduleTitle(content)}
+                </p>
+              )}
               {content.status?.id !== StatusValueTask.MY_ROUTINE && (
                 <div className="flex items-center justify-between">
                   <div
@@ -337,99 +393,97 @@ const ItemTeam = ({
                   </div>
                 </div>
               )}
-              {selectedOptionZoom.value !== 50 && (
-                <div className="flex justify-between items-center mt-[2px]">
-                  <DynamicTooltip content="ステータスを変更" placement="top">
-                    <div
-                      className="w-20 max-w-20 h-[21px] rounded"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}>
-                      <Controller
-                        control={control}
-                        name={'statusId'}
-                        render={({ field: { value, onChange } }) => (
-                          <Dropdown
-                            openByDefault
-                            isStatusDropdown={true}
-                            className={`!py-1 border-none disabled:opacity-100  !shadow-none ${statusStyle}`}
-                            styleClass={{
-                              fontSize:
-                                (selectedOptionZoom.value as number) > 75
-                                  ? '12px'
-                                  : '9px',
-                              width:
-                                (selectedOptionZoom.value as number) > 75
-                                  ? '70px'
-                                  : '50px',
-                              height:
-                                (selectedOptionZoom.value as number) > 75
-                                  ? '22px'
-                                  : '16px',
-                              padding: `${(columnWidth / 247) * 6}px`,
-                              gap: `${(columnWidth / 247) * 10}px`,
-                              borderRadius: `${(columnWidth / 247) * 4}px`,
-                            }}
-                            classNameTextData={`!text-xs`}
-                            classNameOption={`!text-xs !w-[120px]`}
-                            classNameError={`!text-xs`}
-                            styleClassOption={{
-                              fontSize: '12px',
-                            }}
-                            disabled={
-                              content.status?.id ===
-                                StatusValueTask.COMPLETED ||
-                              content.isCrossTeamTask
-                            }
-                            options={
-                              content.status?.id === StatusValueTask.MY_ROUTINE
-                                ? dataOptionsStatus
-                                : content.status?.id !==
-                                    StatusValueTask.COMPLETED
+              {selectedOptionZoom.value !== 50 &&
+                content.status?.id != StatusValueTask.MY_ROUTINE && (
+                  <div className="flex justify-between items-center mt-[2px]">
+                    <DynamicTooltip content="ステータスを変更" placement="top">
+                      <div
+                        className="w-20 max-w-20 h-[21px] rounded"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}>
+                        <Controller
+                          control={control}
+                          name={'statusId'}
+                          render={({ field: { value, onChange } }) => (
+                            <Dropdown
+                              openByDefault
+                              isStatusDropdown={true}
+                              className={`!py-1 border-none disabled:opacity-100  !shadow-none ${statusStyle}`}
+                              styleClass={{
+                                fontSize:
+                                  (selectedOptionZoom.value as number) > 75
+                                    ? '12px'
+                                    : '9px',
+                                width:
+                                  (selectedOptionZoom.value as number) > 75
+                                    ? '70px'
+                                    : '50px',
+                                height:
+                                  (selectedOptionZoom.value as number) > 75
+                                    ? '22px'
+                                    : '16px',
+                                padding: `${(columnWidth / 247) * 6}px`,
+                                gap: `${(columnWidth / 247) * 10}px`,
+                                borderRadius: `${(columnWidth / 247) * 4}px`,
+                              }}
+                              classNameTextData={`!text-xs`}
+                              classNameOption={`!text-xs !w-[120px]`}
+                              classNameError={`!text-xs`}
+                              styleClassOption={{
+                                fontSize: '12px',
+                              }}
+                              disabled={
+                                content.status?.id ===
+                                  StatusValueTask.COMPLETED ||
+                                content.isCrossTeamTask
+                              }
+                              options={
+                                content.status?.id !== StatusValueTask.COMPLETED
                                   ? dataOptionsStatus.filter(
                                       (item) =>
                                         item.value !==
-                                          StatusValueTask.MY_ROUTINE &&
+                                          StatusValueTask.COMPLETED &&
                                         item.value !==
-                                          StatusValueTask.COMPLETED,
+                                          StatusValueTask.MY_ROUTINE,
                                     )
                                   : dataOptionsStatus.filter(
                                       (item) =>
                                         item.value !==
                                         StatusValueTask.MY_ROUTINE,
                                     )
-                            }
-                            selectedOption={dataOptionsStatus.find(
-                              (element) => element.value === value?.value,
-                            )}
-                            onChange={(e) => {
-                              if (
-                                (e.value !== StatusValueTask.COMPLETED &&
-                                  content.status?.id ===
-                                    StatusValueTask.COMPLETED) ||
-                                (e.value === StatusValueTask.COMPLETED &&
-                                  content.status?.id !==
-                                    StatusValueTask.COMPLETED)
-                              ) {
-                                return;
-                              } else {
-                                onChange(e);
-                                editTask({
-                                  oldIdStatus: `${content.status?.id}`,
-                                  status: watch('statusId')?.value as string,
-                                  task: content.id,
-                                  oldNameStatus: content.status?.name || '',
-                                });
                               }
-                            }}
-                            error={errors.statusId?.message}
-                          />
-                        )}
-                      />
-                    </div>
-                  </DynamicTooltip>
-                </div>
-              )}
+                              selectedOption={dataOptionsStatus.find(
+                                (element) => element.value === value?.value,
+                              )}
+                              onChange={(e) => {
+                                if (
+                                  (e.value !== StatusValueTask.COMPLETED &&
+                                    content.status?.id ===
+                                      StatusValueTask.COMPLETED) ||
+                                  (e.value === StatusValueTask.COMPLETED &&
+                                    content.status?.id !==
+                                      StatusValueTask.COMPLETED)
+                                ) {
+                                  return;
+                                } else {
+                                  onChange(e);
+                                  editTask({
+                                    oldIdStatus: `${content.status?.id}`,
+                                    status: watch('statusId')?.value as string,
+                                    task: content.id,
+                                    oldNameStatus: content.status?.name || '',
+                                  });
+                                }
+                              }}
+                              error={errors.statusId?.message}
+                            />
+                          )}
+                        />
+                      </div>
+                    </DynamicTooltip>
+                  </div>
+                )}
             </div>
           </div>
         </div>

@@ -478,7 +478,7 @@ const TableChart = ({
                   )
                 }
                 placeholder=""
-                showArrow
+                showArrow={rowData.organization !== 292}
                 options={
                   selectedOrganization?.label === ALL_TEAM_STATISTIC
                     ? listOptionsOrganization.filter(
@@ -486,6 +486,7 @@ const TableChart = ({
                       )
                     : listOptionsOrganization
                 }
+                isDisabled={rowData.organization === 292}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
