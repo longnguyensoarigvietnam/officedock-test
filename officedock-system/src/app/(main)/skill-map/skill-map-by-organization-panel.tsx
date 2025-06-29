@@ -70,8 +70,8 @@ export const SkillMapByOrganizationPanel = ({
 
   useSkillMapComment({
     skillMapId: Number(selectedSkillMapToViewComment),
-    onSuccess: (data) => {
-      setSkillMapCommentList(data);
+    onSuccess: (data: SkillMapComment[]) => {
+      setSkillMapCommentList(data.sort((preComment, nextComment) => preComment.id - nextComment.id));
       setOpenSkillMapCommentModal(true);
     },
   });

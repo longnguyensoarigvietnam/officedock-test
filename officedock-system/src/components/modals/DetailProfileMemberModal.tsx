@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 import { useMutation } from 'react-query';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import Modal from '../common/Modal';
 import Button from '@components/common/Button';
@@ -55,6 +55,7 @@ const DetailProfileMemberModal = memo(
     onClose,
   }: DetailProfileMemberProps) => {
     const { data: session } = useSessionCache();
+    const searchParams = useSearchParams();
     const router = useRouter();
     const [isCalling, setIsCalling] = useState(true);
     const { userDetail } = useUserDetail({
@@ -208,7 +209,15 @@ const DetailProfileMemberModal = memo(
                 {isPermissionSkillMapView && (
                   <Button
                     onClick={() => {
-                      router.push(pageRouters.SKILL_MAP.href);
+                      const params = new URLSearchParams(
+                        searchParams.toString(),
+                      );
+
+                      params.set('is_map', 'true');
+                      params.set('user_organization', organizationId);
+
+                      const newPath = `${pageRouters.SKILL_MAP_TEAM_DETAIL.href(Number(userDetail?.id))}?${params.toString()}`;
+                      router.push(newPath);
                     }}
                     className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2">
                     <ImageRound
