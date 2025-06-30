@@ -137,7 +137,10 @@ class StatisticViewSet(BaseAPIViewSet):
             if not user:
                 raise NotFound()
         if organization_ids_param is None or organization_ids_param == ALL_TEAM:
-            filter_orgs = Q(users=user)
+            organization_by_role = get_organizations_of_user_by_screen_role(
+                user, Screens.TEAMDOCK.value, Actions.VIEW.value
+            )
+            filter_orgs = Q(id__in=organization_by_role)
             # Filter a organization in all team
             if organization_id_param:
                 filter_orgs &= Q(id=organization_id_param)
