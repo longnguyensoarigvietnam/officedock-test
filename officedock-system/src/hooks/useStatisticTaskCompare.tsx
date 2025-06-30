@@ -30,6 +30,7 @@ interface FilterProps {
   isCompare: boolean;
   tagIds?: OptionDropdownType[];
   user_id?: number;
+  user_ids?: OptionDropdownType[];
 }
 
 const useStatisticTaskCompare = ({
@@ -102,6 +103,10 @@ const useStatisticTaskCompare = ({
     if (filter?.user_id) params.append('user_id', String(filter.user_id));
     if (is_tag_page) params.append('is_tag_page', String(is_tag_page));
     if (isTeam) params.append('current_screen', 'teamdock');
+    if (filter.user_ids) {
+      const tagValues = filter.user_ids.map((item) => item.value).join(',');
+      params.append('user_ids', tagValues);
+    }
 
     const apiUrl = `${apiRouters.STATISTICS_TASKS}?${params.toString()}`;
 

@@ -9,7 +9,10 @@ import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
 import TableChart from './TableChart';
 
 import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
-import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
+import {
+  PAGINATION_PAGE_SIZE_KANBAN,
+  TEAM_CALENDAR_ORGANIZATION,
+} from '@constants';
 
 import {
   CreationStatisticType,
@@ -125,7 +128,7 @@ const TaskListStatisticTags = ({
     return '';
   };
 
-  useStatisticTask({
+  const { statisticCategoryList } = useStatisticTask({
     is_tag_page: true,
     parentData: statisticTagsList,
 
@@ -152,33 +155,34 @@ const TaskListStatisticTags = ({
       }
     },
   });
-  useStatisticTaskCompare({
-    is_tag_page: true,
+  const { statisticCategoryList: statisticCategoryListCompare } =
+    useStatisticTaskCompare({
+      is_tag_page: true,
 
-    filter: {
-      fromDate: formatDateToYMD(startDateCompare) || '',
-      endDate: formatDateToYMD(`${endDateCompare}`) || '',
-      organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value as number,
-      mediumCategoryId: selectedMedium?.value as number,
-      smallCategoryId: selectedSmall?.value as number,
+      filter: {
+        fromDate: formatDateToYMD(startDateCompare) || '',
+        endDate: formatDateToYMD(`${endDateCompare}`) || '',
+        organizationIds: String(selectedOrganization?.value || ''),
+        largeCategoryId: selectedLarge?.value as number,
+        mediumCategoryId: selectedMedium?.value as number,
+        smallCategoryId: selectedSmall?.value as number,
 
-      page: currentPage,
-      totalDuration: getTotalDurationCompare(),
-      ordering: ordering,
-      pageSize: pageSize,
-      tagIds: selectedTags,
-      isCompare: isCheckCompare && isShowCompare,
-    },
-    onSuccess: (data) => {
-      if (data) {
-        setTotalPagesCompare(data.numPages);
-        if (data.results) {
-          setTaskListCompare(data.results);
+        page: currentPage,
+        totalDuration: getTotalDurationCompare(),
+        ordering: ordering,
+        pageSize: pageSize,
+        tagIds: selectedTags,
+        isCompare: isCheckCompare && isShowCompare,
+      },
+      onSuccess: (data) => {
+        if (data) {
+          setTotalPagesCompare(data.numPages);
+          if (data.results) {
+            setTaskListCompare(data.results);
+          }
         }
-      }
-    },
-  });
+      },
+    });
 
   const optionList = [
     {
@@ -468,8 +472,15 @@ const TaskListStatisticTags = ({
                 pageSize={pageSize}
                 totalDuration={
                   isCheckCompare && isShowCompare
-                    ? getTotalDurationCompare()
-                    : getTotalDuration()
+                    ? selectedOrganization?.label ===
+                        TEAM_CALENDAR_ORGANIZATION && selectedMedium?.value
+                      ? statisticCategoryListCompare?.totalDuration ||
+                        '00:00:00'
+                      : getTotalDurationCompare()
+                    : selectedOrganization?.label ===
+                          TEAM_CALENDAR_ORGANIZATION && selectedMedium?.value
+                      ? statisticCategoryList?.totalDuration || '00:00:00'
+                      : getTotalDuration()
                 }
                 listOptionsOrganization={listOptionsOrganization}
                 creationDataStatisticData={creationDataStatisticData}
