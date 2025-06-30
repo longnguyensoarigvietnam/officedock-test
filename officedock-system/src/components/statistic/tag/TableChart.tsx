@@ -30,7 +30,11 @@ import {
   OrderingDataType,
   ScreenName,
 } from '@constants/enums';
-import { ALL_TEAM_STATISTIC, NO_SETTING } from '@constants';
+import {
+  ALL_TEAM_STATISTIC,
+  NO_SETTING,
+  TEAM_CALENDAR_ORGANIZATION,
+} from '@constants';
 import { ERROR_UPDATE_MESSAGE } from '@constants/message';
 import { apiRouters } from '@constants/routers';
 
@@ -478,7 +482,9 @@ const TableChart = ({
                 options={
                   selectedOrganization?.label === ALL_TEAM_STATISTIC
                     ? listOptionsOrganization.filter(
-                        (org) => org.label !== ALL_TEAM_STATISTIC,
+                        (org) =>
+                          org.label !== ALL_TEAM_STATISTIC &&
+                          org.label !== TEAM_CALENDAR_ORGANIZATION,
                       )
                     : listOptionsOrganization
                 }

@@ -79,12 +79,12 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
           </span>
         </div>
       </div>
-      <div className="text-xs font-medium flex items-center justify-end gap-[14px] min-w-[240px]">
-        <span className="text-[#77858F]">合計時間</span>
-        <span className="text-black">
+      <div className="text-xs font-medium flex items-center justify-end gap-[14px] min-w-fit">
+        <p className="text-[#77858F] block">合計時間</p>
+        <p className="text-black break-all block">
           {userData.totalDuration &&
             convertToJapaneseTime(userData.totalDuration)}
-        </span>
+        </p>
         <Button
           onClick={() => {
             router.push(
