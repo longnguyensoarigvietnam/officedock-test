@@ -16,10 +16,10 @@ import { CreateCompanyFormData } from '@interfaces/company';
 import { OptionDropdownType } from '@interfaces/common';
 
 import { formatDateServer } from '@utils';
+import { emailRules } from '@utils/validators';
 
 import {
   COMPANY_NAME_REQUIRED_MESSAGE,
-  EMAIL_IS_REQUIRED_MESSAGE,
   END_DATE_REQUIRE_MESSAGE,
   ERROR_CREATE_MESSAGE,
   ERROR_EMAIL_AVAILABLE_MESSAGE,
@@ -152,9 +152,7 @@ const CreateCompanyForm = () => {
             label="メールアドレス"
             required
             placeholder="メールアドレスを入力してください"
-            register={register('email', {
-              required: EMAIL_IS_REQUIRED_MESSAGE,
-            })}
+            register={register('email', emailRules(true))}
             autoComplete="off"
             error={errors.email?.message}
           />
