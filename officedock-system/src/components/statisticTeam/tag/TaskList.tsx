@@ -171,6 +171,7 @@ const TaskListStatisticTeamTags = ({
         value: item.id,
       })),
     },
+    conditions: [listMemberTeam.length !== 0],
     onSuccess: (data) => {
       if (data) {
         setTotalPages(data.numPages);
@@ -205,6 +206,8 @@ const TaskListStatisticTeamTags = ({
           value: item.id,
         })),
       },
+      conditions: [listMemberTeam.length !== 0],
+
       onSuccess: (data) => {
         if (data) {
           setTotalPagesCompare(data.numPages);
