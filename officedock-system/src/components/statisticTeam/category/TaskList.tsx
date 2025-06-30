@@ -139,6 +139,7 @@ const TaskListTeamStatistic = ({
       user_ids: orderingOptions?.user_ids,
       tagIds: orderingOptions?.tag_ids,
     },
+    conditions: [listMemberTeam.length !== 0],
     onSuccess: (data) => {
       if (data) {
         setTotalPages(data.numPages);
@@ -167,6 +168,8 @@ const TaskListTeamStatistic = ({
         isCompare: isCheckCompare && isShowCompare,
         user_id: selectedMember as number,
       },
+      conditions: [listMemberTeam.length !== 0],
+
       onSuccess: (data) => {
         if (data) {
           setTotalPagesCompare(data.numPages);

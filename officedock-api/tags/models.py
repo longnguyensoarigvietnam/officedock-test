@@ -26,9 +26,9 @@ class Tag(BaseModel):
         """
         Get all organizations
         """
-        calendar_org = Organization.all_objects.filter(
+        calendar_org, _ = Organization.all_objects.get_or_create(
             company=self.company, type=OrganizationTypes.CALENDAR.value
-        ).first()
+        )
         return self.organization_tags.filter(organization=calendar_org).first()
 
 

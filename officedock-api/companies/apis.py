@@ -103,15 +103,15 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         # Remove all icon orgs
         for organization in instance.organizations.all():
             if organization.icon:
-                delete_file(user.icon.name)
+                delete_file(organization.icon.name)
 
         # Remove all file in chats
         for chat in instance.chat_files.all():
             if chat.original_file:
-                delete_file(user.original_file.name)
+                delete_file(chat.original_file.name)
 
             if chat.compressed_file:
-                delete_file(user.compressed_file.name)
+                delete_file(chat.compressed_file.name)
 
         instance.delete()
 

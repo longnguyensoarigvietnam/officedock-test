@@ -913,6 +913,7 @@ const DailyReportDetailBoard = () => {
                 isDisabled={!isPermissionAction}
                 placeholder=""
                 showArrow
+                forceMenuPlacementBottom
                 options={optionData}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
@@ -1047,6 +1048,7 @@ const DailyReportDetailBoard = () => {
                         : NO_OPTION_CATEGORY),
                   )}
                   showArrow
+                  forceMenuPlacementBottom
                   isDisabled={!isPermissionAction}
                   placeholder=""
                   options={optionMedium}
@@ -1207,6 +1209,7 @@ const DailyReportDetailBoard = () => {
               isDisabled={!isPermissionAction}
               placeholder=""
               showArrow
+              forceMenuPlacementBottom
               options={optionSmall}
               onChange={(e) => {
                 if (info.row.original.type === EventCalendarType.TASK) {
@@ -2273,7 +2276,7 @@ const DailyReportDetailBoard = () => {
                 </div>
                 <div className="flex text-lg items-center gap-1 h-full basis-1/2 py-1 justify-end">
                   <p className=" max-w-[170px] flex-shrink-0 w-fit font-medium break-all py-1 min-h-5">
-                    {dataStatisticPDF?.remark?.user?.organizations?.name}
+                    {dataStatisticPDF?.remark?.organizationName}
                   </p>
                   <span className=" max-w-[170px] flex-shrink-0 w-fit min-h-5 break-all ">
                     {dataStatisticPDF?.remark.user.fullName}
