@@ -2339,7 +2339,7 @@ const ActionsTaskModalTeam = ({
                   <div className="w-full max-w-[515px] flex flex-col gap-3 items-start">
                     <div className="w-full flex justify-between">
                       <div className="flex gap-3">
-                        <div className="w-[140px]">
+                        <div className="w-[140px]" style={{ zIndex: 500 }}>
                           <Controller
                             control={control}
                             name={'repeatType'}
@@ -2367,6 +2367,14 @@ const ActionsTaskModalTeam = ({
                                   setValue('weekDay', undefined);
                                   setValue('monthDay', undefined);
                                   setValue('month', undefined);
+                                  setValue('plans', [
+                                    {
+                                      planStartDate: null,
+                                      planEndTime: '',
+                                      planEndDate: null,
+                                      planStartTime: '',
+                                    },
+                                  ]);
                                 }}
                               />
                             )}
