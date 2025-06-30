@@ -895,6 +895,7 @@ const DailyReportBoard = () => {
                     });
                   }
                 }}
+                forceMenuPlacementBottom
               />
               <div className="flex items-center  w-3 h-[30px]">
                 <ImageRound
@@ -986,6 +987,7 @@ const DailyReportBoard = () => {
                   isDisabled={!isPermissionAction}
                   placeholder=""
                   options={optionMedium}
+                  forceMenuPlacementBottom
                   onChange={(e) => {
                     if (info.row.original.type === EventCalendarType.TASK) {
                       editCategoryInline({
@@ -1208,6 +1210,7 @@ const DailyReportBoard = () => {
                   });
                 }
               }}
+              forceMenuPlacementBottom
             />
           </div>
         );

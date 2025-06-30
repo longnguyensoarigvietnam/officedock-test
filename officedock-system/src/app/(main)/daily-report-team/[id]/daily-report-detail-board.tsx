@@ -913,6 +913,7 @@ const DailyReportDetailBoard = () => {
                 isDisabled={!isPermissionAction}
                 placeholder=""
                 showArrow
+                forceMenuPlacementBottom
                 options={optionData}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
@@ -1047,6 +1048,7 @@ const DailyReportDetailBoard = () => {
                         : NO_OPTION_CATEGORY),
                   )}
                   showArrow
+                  forceMenuPlacementBottom
                   isDisabled={!isPermissionAction}
                   placeholder=""
                   options={optionMedium}
@@ -1207,6 +1209,7 @@ const DailyReportDetailBoard = () => {
               isDisabled={!isPermissionAction}
               placeholder=""
               showArrow
+              forceMenuPlacementBottom
               options={optionSmall}
               onChange={(e) => {
                 if (info.row.original.type === EventCalendarType.TASK) {
