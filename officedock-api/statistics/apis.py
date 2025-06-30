@@ -135,9 +135,7 @@ class StatisticViewSet(BaseAPIViewSet):
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
         if user_id:
-            user = User.objects.filter(id=user_id).first()
-            if not user:
-                raise NotFound()
+            user = get_object_or_404(User, id=user_id)
         if organization_ids_param is None or organization_ids_param == ALL_TEAM:
             organization_by_role = get_organizations_of_user_by_screen_role(
                 user, Screens.TEAMDOCK.value, Actions.VIEW.value
@@ -1275,6 +1273,8 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
         data = {}
+        if not users:
+            return self.response_ok(data)
         tag_ids = split_id_from_string(tag_ids_param)
         durations = get_list_durations_by_users(
             start_of_day,
