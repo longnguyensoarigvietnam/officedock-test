@@ -310,7 +310,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
     def get_message(self, obj):
         """
-        Returns none message when deteled.
+        Returns none message when deleted.
         """
         return obj.message if obj.deleted_at is None else None
 
