@@ -16,7 +16,7 @@ import LineChart from '@components/statistic/category/LineChart';
 import StackedAreaChart from '@components/statistic/category/StackedAreaChart';
 import LineChartCompare from '@components/statistic/category/compare/LineChartCompare';
 
-import { ALL_TEAM_STATISTIC } from '@constants';
+import { ALL_TEAM_STATISTIC, TEAM_CALENDAR_ORGANIZATION } from '@constants';
 import { pageRouters } from '@constants/routers';
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 import useStatisticCategoriesCompare from '@hooks/useStatisticCategoriesCompare';
@@ -123,6 +123,14 @@ const StatisticBoard = () => {
               setTotalDurationTask(data.smallTotalDuration);
             }
           } else {
+            if (
+              selectedMedium &&
+              selectedMedium.value &&
+              selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+            ) {
+              setTotalDurationTask('00:00:00');
+              return;
+            }
             if (selectedSmall && selectedSmall.value) return;
 
             setTotalDurationTask(data.mediumTotalDuration);
@@ -169,6 +177,15 @@ const StatisticBoard = () => {
               setTotalDurationTaskCompare(data.smallTotalDuration);
             }
           } else {
+            if (
+              selectedMedium &&
+              selectedMedium.value &&
+              selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+            ) {
+              setTotalDurationTask('00:00:00');
+              return;
+            }
+
             if (selectedSmall && selectedSmall.value) return;
 
             setTotalDurationTaskCompare(data.mediumTotalDuration);

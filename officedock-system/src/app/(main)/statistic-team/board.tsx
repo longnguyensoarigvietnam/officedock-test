@@ -183,6 +183,14 @@ const StatisticTeamBoard = () => {
               setTotalDurationTask(data.smallTotalDuration);
             }
           } else {
+            if (
+              selectedMedium &&
+              selectedMedium.value &&
+              selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+            ) {
+              setTotalDurationTask('00:00:00');
+              return;
+            }
             if (selectedSmall && selectedSmall.value) return;
 
             setTotalDurationTask(data.mediumTotalDuration);
@@ -252,6 +260,14 @@ const StatisticTeamBoard = () => {
                 setTotalDurationTaskCompare(data.smallTotalDuration);
               }
             } else {
+              if (
+                selectedMedium &&
+                selectedMedium.value &&
+                selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+              ) {
+                setTotalDurationTask('00:00:00');
+                return;
+              }
               if (selectedSmall && selectedSmall.value) return;
 
               setTotalDurationTaskCompare(data.mediumTotalDuration);

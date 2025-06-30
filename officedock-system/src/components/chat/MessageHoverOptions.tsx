@@ -100,7 +100,9 @@ export const MessageHoverOptions = ({
     {
       onSuccess: async () => {},
       onError: () => {},
-      onSettled: () => {},
+      onSettled: () => {
+        setShowReaction(false);
+      },
     },
   );
 
@@ -121,7 +123,9 @@ export const MessageHoverOptions = ({
     {
       onSuccess: async () => {},
       onError: () => {},
-      onSettled: () => {},
+      onSettled: () => {
+        setShowReaction(false);
+      },
     },
   );
 
@@ -170,9 +174,12 @@ export const MessageHoverOptions = ({
 
                     if (exists) {
                       handleRemoveReactionClick(`${icon.value}`);
+                      setShowReaction(false);
                       moveReactionIcon(`${icon.value}`);
                     } else {
                       handleReactionClick(`${icon.value}`);
+                      setShowReaction(false);
+
                       reactionIcon(`${icon.value}`);
                     }
                   }}
