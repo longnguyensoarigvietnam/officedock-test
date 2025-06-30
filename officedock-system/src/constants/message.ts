@@ -85,6 +85,7 @@ export const ERROR_EMAIL_AVAILABLE_MESSAGE =
 export const ERROR_PERSON_IN_CHART_START =
   'この担当者が別のタスクを実施しています。';
 export const ERROR_NOT_FOUND_EVENT = '予定が見つかりません。';
+export const ERROR_NOT_FOUND_TASK = 'タスクが見つかりません。';
 
 export const ERROR_SAVE_ZOOM = '拡大縮小のエラーが出ました。';
 export const ERROR_EXTEND_COLUMN = 'タブの拡大縮小のエラーが出ました。';

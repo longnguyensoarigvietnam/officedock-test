@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import {
@@ -48,6 +48,7 @@ export type ActionsUserModalProps = {
   emailErrorMessage: string;
   usernameErrorMessage: string;
   passwordErrorMessage: string;
+  setPasswordErrorMessage: Dispatch<SetStateAction<string>>;
   onDelete?: (userToDelete: User) => void;
   onClose: () => void;
   onCreate?: (values: CreateUserFormData, isOptionEmail: boolean) => void;
@@ -63,6 +64,7 @@ const ActionsUserModal = ({
   emailErrorMessage,
   usernameErrorMessage,
   passwordErrorMessage,
+  setPasswordErrorMessage,
   onClose,
   onDelete,
   onCreate,
@@ -551,6 +553,9 @@ const ActionsUserModal = ({
                         placeholder="パスワードを入力"
                         register={register('password', {
                           ...passwordRegisterRules(false),
+                          onChange: () => {
+                            setPasswordErrorMessage('');
+                          },
                         })}
                         className={`h-[34px] w-full leading-[34px] !text-sm ${!passwordErrorMessage ? '!border-[#77858F]' : '!border-error'} rounded-md px-2 custom-password-mask`}
                       />
