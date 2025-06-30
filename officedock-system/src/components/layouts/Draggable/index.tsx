@@ -220,9 +220,9 @@ const DraggableLayout = () => {
                   bottomLeft: true,
                   topLeft: true,
                 }}
-                className={`z-30 ${hasSession ? 'absolute' : 'hidden'} `}>
+                className={`z-[9999] ${hasSession ? 'absolute' : 'hidden'} `}>
                 <div
-                  className={`font-primary bg-[#EAF8FF] flex flex-col justify-between h-full w-full  cursor-pointer rounded-sm rounded-br-[15px] shadow-common z-40  pt-2`}>
+                  className={`font-primary bg-[#EAF8FF] flex flex-col justify-between h-full w-full  cursor-pointer rounded-sm rounded-br-[15px] shadow-common z-[9999]  pt-2`}>
                   <div className="px-2 w-full h-full">
                     <div className="flex justify-between items-center">
                       <p className="text-[#0068B6] text-[10px] font-normal">
