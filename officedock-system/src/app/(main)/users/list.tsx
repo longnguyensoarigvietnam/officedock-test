@@ -792,6 +792,7 @@ const ListUsers = () => {
             emailErrorMessage={emailErrorMessage}
             usernameErrorMessage={usernameErrorMessage}
             passwordErrorMessage={passwordErrorMessage}
+            setPasswordErrorMessage={setPasswordErrorMessage}
             onClose={() => {
               handleRemoveParam();
               setOpenActionsUserModal(false);

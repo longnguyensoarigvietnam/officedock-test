@@ -79,6 +79,7 @@ import {
   ERROR_DELETE_MESSAGE,
   ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_NOT_FOUND_EVENT,
+  ERROR_NOT_FOUND_TASK,
   ERROR_SAVE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
@@ -940,10 +941,21 @@ const ChatDetail = ({
                   compressedFile: getFileURL(file.compressedFile || ''),
                 };
               });
-              setDataMessageDetail([
-                { ...data.chatMessage, chatFiles: chatFileList },
-                ...dataMessageDetail,
-              ]);
+              setDataMessageDetail((prev) => {
+                const newMessage = {
+                  ...data.chatMessage,
+                  chatFiles: chatFileList,
+                };
+                const allMessages = [newMessage, ...prev];
+
+                // Remove duplicates by id
+                const uniqueMessages = Array.from(
+                  new Map(allMessages.map((msg) => [msg.id, msg])).values(),
+                );
+
+                return uniqueMessages;
+              });
+
               setChatRoomNotifications({
                 notifications: data.chatRoom.unreadMessages,
                 roomCode: chatRoomCode,
@@ -2050,6 +2062,10 @@ const ChatDetail = ({
       },
       onError: () => {
         handleRemoveParam();
+        showToast({
+          variant: 'error',
+          description: ERROR_NOT_FOUND_TASK,
+        });
       },
       onSettled: () => {
         setTimeout(() => {
