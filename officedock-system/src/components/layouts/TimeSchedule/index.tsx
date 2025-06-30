@@ -562,7 +562,7 @@ const TimeSchedule = memo(
               const myTasks = updatedEvents.filter(
                 (event) =>
                   event.type == EventCalendarType.TASK &&
-                  !tasksTimeSchedule.find( 
+                  !tasksTimeSchedule.find(
                     (timeSchedule) => timeSchedule.taskId == event.taskId,
                   ), // Filter out tasks that are already in tasksTimeSchedule
               );
@@ -3347,7 +3347,7 @@ const TimeSchedule = memo(
         4: 848,
         5: 656,
         6: 464,
-        0: 272,
+        0: 464,
       };
       const todayNow = new Date();
       const currentDayNow = todayNow.getDay();
