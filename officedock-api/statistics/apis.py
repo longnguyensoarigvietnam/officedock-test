@@ -37,6 +37,7 @@ from common.utils import (
 )
 from organizations.constants import OrganizationTypes
 from organizations.models import Organization
+from skills.constants import DEFAULT_TIME
 from stat_data.constants import ALL_TEAM, FilterTime
 from stat_data.serializers import (
     StatisticTaskSerializer,
@@ -49,7 +50,6 @@ from stat_data.utils import (
     process_tags,
     process_merge_card_per_tag,
     split_ranges,
-    build_category_filters,
     get_list_durations_by_users,
     get_total_durations,
     get_duration_of_none_category,
@@ -159,6 +159,14 @@ class StatisticViewSet(BaseAPIViewSet):
             organization_ids,
             tags=tag_ids,
         )
+        durations = get_list_durations_by_users(
+            durations=durations,
+            large_id=large_category_id,
+            medium_id=medium_category_id,
+            small_id=small_category_id,
+        )
+        if total_duration == DEFAULT_TIME:
+            total_duration = format_duration(get_total_durations(durations))
         filters = Q(
             Q(task_durations__user=user)
             & Q(
@@ -224,13 +232,6 @@ class StatisticViewSet(BaseAPIViewSet):
             )
             .distinct()
         )
-        filters = build_category_filters(
-            large_category_id=large_category_id,
-            medium_category_id=medium_category_id,
-            small_category_id=small_category_id,
-        )
-        tasks = tasks.filter(filters)
-        events = events.filter(filters)
         merged_qs = sorted(
             chain(tasks, events),
             key=lambda x: (x.total_duration or timedelta(0), x.id),
@@ -288,8 +289,9 @@ class StatisticViewSet(BaseAPIViewSet):
 
         paginator = self.pagination_class()
         paginated_data = paginator.paginate_queryset(merged_duration, request)
-
-        return paginator.get_paginated_response(paginated_data)
+        return paginator.get_paginated_response(
+            paginated_data, total_duration=total_duration
+        )
 
     @extend_schema(
         parameters=[
@@ -938,10 +940,8 @@ class StatisticViewSet(BaseAPIViewSet):
             organization_ids_param=organization_ids_param,
         )
         if medium_category_id and calendar_org.id in organization_ids:
-            durations = get_list_durations_by_users(
-                start_of_day=None,
-                end_of_day=None,
-            )
+            return self.response_ok(data)
+
         data = self._handle_get_percent_per_range_time(
             ranges,
             durations,

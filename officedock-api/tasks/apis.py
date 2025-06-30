@@ -128,6 +128,15 @@ class TaskViewSet(
         """
         Allow the task in the logged in user's company
         """
+        if self.action in ["retrieve"]:
+            return (
+                super()
+                .get_queryset()
+                .filter(
+                    company=self.request.user.company, deleted_at__isnull=True
+                )
+            )
+
         return super().get_queryset().filter(company=self.request.user.company)
 
     @transaction.atomic()
