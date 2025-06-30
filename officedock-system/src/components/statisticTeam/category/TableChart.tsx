@@ -518,17 +518,46 @@ const TableChart = ({
                 }
                 isDisabled={rowData.organization === 292}
                 onChange={(e) => {
+                  if (e?.value === rowData.organization) return;
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
                       id: String(info.row.original.id),
                       organizationId:
                         e?.value == NO_SETTING ? null : (e?.value as number),
+                      categoryIds: [
+                        {
+                          categoryId: null,
+                          type: EventWorkCategory.LARGE,
+                        },
+                        {
+                          categoryId: null,
+                          type: EventWorkCategory.MEDIUM,
+                        },
+                        {
+                          categoryId: null,
+                          type: EventWorkCategory.SMALL,
+                        },
+                      ],
                     });
                   } else {
                     editCategoryEventInline({
                       id: String(info.row.original.id),
                       organizationId:
                         e?.value == NO_SETTING ? null : (e?.value as number),
+                      categoryIds: [
+                        {
+                          categoryId: null,
+                          type: EventWorkCategory.LARGE,
+                        },
+                        {
+                          categoryId: null,
+                          type: EventWorkCategory.MEDIUM,
+                        },
+                        {
+                          categoryId: null,
+                          type: EventWorkCategory.SMALL,
+                        },
+                      ],
                     });
                   }
                 }}
