@@ -96,7 +96,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         user = self.request.user
         company = user.company
-        if self.action in ["members"]:
+        if self.action in ["members", "list"]:
             return (
                 Organization.objects.filter(company=company)
                 .annotate(user_count=Count("users"))
