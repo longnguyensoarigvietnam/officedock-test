@@ -246,7 +246,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     sender = CreationDataUserWithMainOrganizationSerializer()
     task = TaskForChatMessageSerializer()
     submit_level = SubmitLevelForChatMessageSerializer()
-    tasks = TaskForChatMessageSerializer(many=True, read_only=True)
+    tasks = serializers.SerializerMethodField(read_only=True)
     reactions = serializers.SerializerMethodField(read_only=True)
     chat_files = ChatFileSerializer(many=True, read_only=True)
 
@@ -292,8 +292,21 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             representation["quote"].pop("message_uuid")
         if instance.reply:
             representation["reply"] = ChatMessageSerializer(instance.reply).data
-
+        if instance.task and instance.task.deleted_at is not None:
+            representation["task"] = None
+        if instance.schedule and instance.schedule.deleted_at is not None:
+            representation["schedule"] = None
         return representation
+
+    def get_tasks(self, obj):
+        """
+        Handle get list tasks of message
+        """
+        if not obj.tasks:
+            return []
+
+        tasks = obj.tasks.filter(deleted_at__isnull=True).all()
+        return TaskForChatMessageSerializer(tasks, many=True).data
 
     def get_message(self, obj):
         """

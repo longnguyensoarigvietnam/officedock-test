@@ -1054,7 +1054,6 @@ class TaskViewSet(
                 TaskIndex.update_max_index_for_user(
                     user=user, task=task, is_update=False
                 )
-
         elif people_in_charge_ids == []:
             task.people_in_charge.clear()
             TaskIndex.objects.filter(task=task).delete()
