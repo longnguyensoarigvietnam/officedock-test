@@ -80,7 +80,7 @@ const ListTaskDetailStatisticTagModal = ({
       largeCategoryId:
         selectedOrganization?.value === ALL_TEAM_STATISTIC
           ? undefined
-          : detailCategory && detailCategory.type !== EventWorkCategory.ALL
+          : detailCategory && detailCategory.type === EventWorkCategory.ALL
             ? null
             : detailCategory && detailCategory.type !== ''
               ? (selectedLarge?.value as number)

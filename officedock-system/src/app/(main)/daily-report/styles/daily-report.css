@@ -339,3 +339,6 @@
 .daily-custom .fc-timegrid-now-indicator-line {
   border: 1px solid #c32e2e !important;
 }
+.css-1o2rdgr-menu {
+  z-index: 999 !important;
+}

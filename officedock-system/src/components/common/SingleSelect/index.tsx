@@ -29,6 +29,7 @@ export type SingleSelectProps = {
     }>,
   ) => void;
   showArrow?: boolean;
+  forceMenuPlacementBottom?: boolean;
 };
 
 const SingleSelect = ({
@@ -40,6 +41,7 @@ const SingleSelect = ({
   defaultValue,
   onChange,
   showArrow = false,
+  forceMenuPlacementBottom = false,
 }: SingleSelectProps) => {
   const animatedComponents = makeAnimated();
   const [menuIsOpen, setMenuIsOpen] = useState(false);
@@ -49,7 +51,7 @@ const SingleSelect = ({
   const selectRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!menuIsOpen || !selectRef.current) return;
+    if (!menuIsOpen || !selectRef.current || forceMenuPlacementBottom) return;
 
     const rect = selectRef.current.controlRef.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
@@ -60,7 +62,7 @@ const SingleSelect = ({
         ? MenuPlacementType.TOP
         : MenuPlacementType.BOTTOM,
     );
-  }, [menuIsOpen]);
+  }, [forceMenuPlacementBottom, menuIsOpen]);
 
   const handleChange = (selectedOption: any) => {
     if (onChange) onChange(selectedOption);
@@ -133,7 +135,9 @@ const SingleSelect = ({
         menuIsOpen={menuIsOpen}
         onMenuOpen={() => setMenuIsOpen(true)}
         onMenuClose={() => setMenuIsOpen(false)}
-        menuPlacement={menuPlacement} // Dynamically apply placement
+        menuPlacement={
+          forceMenuPlacementBottom ? MenuPlacementType.BOTTOM : menuPlacement
+        }
       />
       {showArrow && (
         <div
