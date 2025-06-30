@@ -324,20 +324,13 @@ const ListUsers = () => {
       email: string[];
       password: string[];
     }>) => {
-      if (response?.data.username) {
+      const { username, email, password } = response?.data || {};
+      if (username) {
         setUsernameErrorMessage(ERROR_ID_AVAILABLE_MESSAGE);
-      }
-      if (response?.data.email) {
+      } else if (email) {
         setEmailErrorMessage(ERROR_EMAIL_AVAILABLE_MESSAGE);
-      }
-      if (response?.data.password[0]) {
-        setPasswordErrorMessage(response?.data.password[0]);
-      }
-      if (response?.status === ServerStatusCode.NOT_FOUND) {
-        showToast({
-          variant: 'error',
-          description: ERROR_COMMON_MESSAGE,
-        });
+      } else if (password?.[0]) {
+        setPasswordErrorMessage(password?.[0]);
       } else {
         showToast({
           variant: 'error',
@@ -425,17 +418,11 @@ const ListUsers = () => {
       onError: ({
         response,
       }: ResponseError<{ username: string; email: string }>) => {
-        if (response?.data.username) {
+        const { username, email } = response?.data || {};
+        if (username) {
           setUsernameErrorMessage(ERROR_ID_AVAILABLE_MESSAGE);
-        }
-        if (response?.data.email) {
+        } else if (email) {
           setEmailErrorMessage(ERROR_EMAIL_AVAILABLE_MESSAGE);
-        }
-        if (response?.status === ServerStatusCode.NOT_FOUND) {
-          showToast({
-            variant: 'error',
-            description: ERROR_COMMON_MESSAGE,
-          });
         } else {
           showToast({
             variant: 'error',
