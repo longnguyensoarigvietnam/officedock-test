@@ -27,9 +27,9 @@ class Company(BaseModel):
         """
         Get all organizations
         """
-        calendar_org = Organization.all_objects.filter(
+        calendar_org, _ = Organization.all_objects.get_or_create(
             company=self, type=OrganizationTypes.CALENDAR.value
-        ).first()
+        )
         return calendar_org
 
 
