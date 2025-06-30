@@ -850,7 +850,7 @@ const ActionsSkillMapModal = ({
                       ),
                     )}
                     className="shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
-                    placeholder="スキルの定義"
+                    placeholder="振り返り項目"
                   />
                 </div>
               </div>

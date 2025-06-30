@@ -10,7 +10,7 @@ from base.permissions import IsOperationAdminOnly
 from base.apis import BaseAPIViewSet
 
 from common.filters import CustomOrderFilter
-from common.utils import get_username_alias
+from common.utils import delete_file, get_username_alias
 from users.constants import RoleTypes, LoginTypes
 from users.models import Role, User, Profile
 from utils.mail import MailService
@@ -95,10 +95,23 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """Handle destroy company"""
         instance.organizations_statistic_categories.all().delete()
 
-        # Remove all avatar user
-        for user in instance.user.all():
+        # Remove all avatar users
+        for user in instance.users.all():
             if user.avatar:
-                user.avatar.delete()
+                delete_file(user.avatar.name)
+
+        # Remove all icon orgs
+        for organization in instance.organizations.all():
+            if organization.icon:
+                delete_file(user.icon.name)
+
+        # Remove all file in chats
+        for chat in instance.chat_files.all():
+            if chat.original_file:
+                delete_file(user.original_file.name)
+
+            if chat.compressed_file:
+                delete_file(user.compressed_file.name)
 
         instance.delete()
 

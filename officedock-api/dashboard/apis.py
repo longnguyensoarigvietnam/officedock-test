@@ -208,6 +208,10 @@ class DashboardViewSet(BaseAPIViewSet):
             Q(started_at__gte=start_date)
             & Q(Q(paused_at__lte=end_date) | Q(paused_at__isnull=True))
             & Q(user=request.user)
+            & Q(
+                Q(schedule__deleted_at__isnull=True)
+                & Q(task__deleted_at__isnull=True)
+            )
         )
         duration_cards = durations.exclude(
             schedule__in=[

@@ -8,7 +8,10 @@ import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
 import TableChart from './TableChart';
 
 import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
-import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
+import {
+  PAGINATION_PAGE_SIZE_KANBAN,
+  TEAM_CALENDAR_ORGANIZATION,
+} from '@constants';
 
 import {
   CreationStatisticType,
@@ -145,7 +148,7 @@ const TaskListStatisticTeamTags = ({
     }
   }, [listMemberTeam]);
 
-  useStatisticTask({
+  const { statisticCategoryList } = useStatisticTask({
     isTeam: true,
     is_tag_page: true,
     parentData: statisticTagsListTeam,
@@ -163,6 +166,10 @@ const TaskListStatisticTeamTags = ({
       pageSize: pageSize,
       tagIds: selectedTags,
       user_id: selectedMember as number,
+      user_ids: listMemberTeam.map((item) => ({
+        label: item.fullName,
+        value: item.id,
+      })),
     },
     onSuccess: (data) => {
       if (data) {
@@ -173,35 +180,40 @@ const TaskListStatisticTeamTags = ({
       }
     },
   });
-  useStatisticTaskCompare({
-    isTeam: true,
-    is_tag_page: true,
+  const { statisticCategoryList: statisticCategoryListCompare } =
+    useStatisticTaskCompare({
+      isTeam: true,
+      is_tag_page: true,
 
-    filter: {
-      fromDate: formatDateToYMD(startDateCompare) || '',
-      endDate: formatDateToYMD(`${endDateCompare}`) || '',
-      organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value as number,
-      mediumCategoryId: selectedMedium?.value as number,
-      smallCategoryId: selectedSmall?.value as number,
+      filter: {
+        fromDate: formatDateToYMD(startDateCompare) || '',
+        endDate: formatDateToYMD(`${endDateCompare}`) || '',
+        organizationIds: String(selectedOrganization?.value || ''),
+        largeCategoryId: selectedLarge?.value as number,
+        mediumCategoryId: selectedMedium?.value as number,
+        smallCategoryId: selectedSmall?.value as number,
 
-      page: currentPage,
-      totalDuration: getTotalDurationCompare(),
-      ordering: ordering,
-      pageSize: pageSize,
-      tagIds: selectedTags,
-      isCompare: isCheckCompare && isShowCompare,
-      user_id: selectedMember as number,
-    },
-    onSuccess: (data) => {
-      if (data) {
-        setTotalPagesCompare(data.numPages);
-        if (data.results) {
-          setTaskListCompare(data.results);
+        page: currentPage,
+        totalDuration: getTotalDurationCompare(),
+        ordering: ordering,
+        pageSize: pageSize,
+        tagIds: selectedTags,
+        isCompare: isCheckCompare && isShowCompare,
+        user_id: selectedMember as number,
+        user_ids: listMemberTeam.map((item) => ({
+          label: item.fullName,
+          value: item.id,
+        })),
+      },
+      onSuccess: (data) => {
+        if (data) {
+          setTotalPagesCompare(data.numPages);
+          if (data.results) {
+            setTaskListCompare(data.results);
+          }
         }
-      }
-    },
-  });
+      },
+    });
 
   const optionList = [
     {
@@ -532,8 +544,15 @@ const TaskListStatisticTeamTags = ({
                 }
                 totalDuration={
                   isCheckCompare && isShowCompare
-                    ? getTotalDurationCompare()
-                    : getTotalDuration()
+                    ? selectedOrganization?.label ===
+                        TEAM_CALENDAR_ORGANIZATION && selectedMedium?.value
+                      ? statisticCategoryListCompare?.totalDuration ||
+                        '00:00:00'
+                      : getTotalDurationCompare()
+                    : selectedOrganization?.label ===
+                          TEAM_CALENDAR_ORGANIZATION && selectedMedium?.value
+                      ? statisticCategoryList?.totalDuration || '00:00:00'
+                      : getTotalDuration()
                 }
                 selectedMember={selectedMember}
                 listOptionsOrganization={listOptionsOrganization}

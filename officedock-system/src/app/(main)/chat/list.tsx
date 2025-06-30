@@ -421,17 +421,6 @@ const ListChatUsers = ({
                 ) {
                   return 1;
                 } else {
-                  if (
-                    currentItem.type === ChatRoomType.TASK &&
-                    nextItem.type !== ChatRoomType.TASK
-                  ) {
-                    return -1;
-                  } else if (
-                    currentItem.type !== ChatRoomType.TASK &&
-                    nextItem.type === ChatRoomType.TASK
-                  ) {
-                    return 1;
-                  }
                   const currentItemDate = currentItem.lastMessageAt
                     ? new Date(currentItem.lastMessageAt)
                     : new Date(0);
@@ -452,30 +441,17 @@ const ListChatUsers = ({
             const unpinnedItems = prevDataChatList.filter(
               (item) => item.pinAt === null,
             );
-            const taskCardRoomIndex = unpinnedItems.findIndex(
-              (item) => item.type == ChatRoomType.TASK,
+            const allRooms = [
+              ...pinnedItems,
+              data.chatRoom,
+              ...unpinnedItems,
+            ];
+            // Remove duplicates by id
+            const uniqueRooms = Array.from(
+              new Map(allRooms.map((room) => [room.code, room])).values(),
             );
-            const skillRoomIndex = unpinnedItems.findIndex(
-              (item) => item.type == ChatRoomType.SKILL,
-            );
-            if (taskCardRoomIndex != -1 && skillRoomIndex != -1) {
-              return [
-                ...pinnedItems,
-                ...unpinnedItems.filter(
-                  (item) => item.type === ChatRoomType.TASK,
-                ),
-                ...unpinnedItems.filter(
-                  (item) => item.type === ChatRoomType.SKILL,
-                ),
-                data.chatRoom,
-                ...unpinnedItems.filter(
-                  (item) =>
-                    item.type !== ChatRoomType.TASK &&
-                    item.type !== ChatRoomType.SKILL,
-                ),
-              ];
-            }
-            return [...pinnedItems, data.chatRoom, ...unpinnedItems];
+
+            return uniqueRooms;
           });
         }
       }

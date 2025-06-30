@@ -21,6 +21,7 @@ export interface BasePagination<T> {
   numPages: number;
   results: T;
   hasNext?: boolean;
+  totalDuration?: string;
 }
 
 export interface OptionTabType {

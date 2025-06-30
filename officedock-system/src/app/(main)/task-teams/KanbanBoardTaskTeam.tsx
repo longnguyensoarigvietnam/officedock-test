@@ -41,12 +41,14 @@ import {
   ItemStartType,
   StatusTask,
   StatusValueTask,
+  TaskRepetitiveType,
 } from '@constants/enums';
 import {
   COLUMN_ID_TASK,
   INITIAL_INDEX_VALUE,
   INITIAL_INDEX_VALUE_STEP,
   NO_OPTION_CATEGORY,
+  TASK_REPETITIVE_OPTIONS,
 } from '@constants';
 import {
   ERROR_CREATE_MESSAGE,
@@ -926,6 +928,15 @@ const KanbanBoardTaskTeam = () => {
               id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
               name: StatusTask[destStatus as keyof typeof StatusTask],
             },
+            repeatType:
+                StatusValueTask[sourceStatus as keyof typeof StatusValueTask] !=
+                  StatusValueTask.MY_ROUTINE &&
+                StatusValueTask[destStatus as keyof typeof StatusValueTask] ==
+                  StatusValueTask.MY_ROUTINE
+                  ? TASK_REPETITIVE_OPTIONS.find(
+                      (option) => option.label == TaskRepetitiveType.ONCE,
+                    )?.value
+                  : movedTask.repeatType,
           });
         } else {
           const dateAtPrev = aboveItem ? aboveItem.pinAt : null;
@@ -940,6 +951,15 @@ const KanbanBoardTaskTeam = () => {
               id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
               name: StatusTask[destStatus as keyof typeof StatusTask],
             },
+            repeatType:
+                StatusValueTask[sourceStatus as keyof typeof StatusValueTask] !=
+                  StatusValueTask.MY_ROUTINE &&
+                StatusValueTask[destStatus as keyof typeof StatusValueTask] ==
+                  StatusValueTask.MY_ROUTINE
+                  ? TASK_REPETITIVE_OPTIONS.find(
+                      (option) => option.label == TaskRepetitiveType.ONCE,
+                    )?.value
+                  : movedTask.repeatType,
           });
         }
       } else {
@@ -961,6 +981,15 @@ const KanbanBoardTaskTeam = () => {
                 id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
                 name: StatusTask[destStatus as keyof typeof StatusTask],
               },
+              repeatType:
+                StatusValueTask[sourceStatus as keyof typeof StatusValueTask] !=
+                  StatusValueTask.MY_ROUTINE &&
+                StatusValueTask[destStatus as keyof typeof StatusValueTask] ==
+                  StatusValueTask.MY_ROUTINE
+                  ? TASK_REPETITIVE_OPTIONS.find(
+                      (option) => option.label == TaskRepetitiveType.ONCE,
+                    )?.value
+                  : movedTask.repeatType,
             });
           } else {
             newIndex = INITIAL_INDEX_VALUE * 1000;
@@ -973,6 +1002,15 @@ const KanbanBoardTaskTeam = () => {
                 id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
                 name: StatusTask[destStatus as keyof typeof StatusTask],
               },
+              repeatType:
+                StatusValueTask[sourceStatus as keyof typeof StatusValueTask] !=
+                  StatusValueTask.MY_ROUTINE &&
+                StatusValueTask[destStatus as keyof typeof StatusValueTask] ==
+                  StatusValueTask.MY_ROUTINE
+                  ? TASK_REPETITIVE_OPTIONS.find(
+                      (option) => option.label == TaskRepetitiveType.ONCE,
+                    )?.value
+                  : movedTask.repeatType,
             });
           }
         } else {
@@ -1003,6 +1041,15 @@ const KanbanBoardTaskTeam = () => {
               id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
               name: StatusTask[destStatus as keyof typeof StatusTask],
             },
+            repeatType:
+              StatusValueTask[sourceStatus as keyof typeof StatusValueTask] !=
+                StatusValueTask.MY_ROUTINE &&
+              StatusValueTask[destStatus as keyof typeof StatusValueTask] ==
+                StatusValueTask.MY_ROUTINE
+                ? TASK_REPETITIVE_OPTIONS.find(
+                    (option) => option.label == TaskRepetitiveType.ONCE,
+                  )?.value
+                : movedTask.repeatType,
           });
         }
       }

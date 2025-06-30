@@ -4,6 +4,8 @@ import { Transition } from '@headlessui/react';
 import { useContext, useEffect, useState } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 
+import Link from 'next/link';
+
 import ImageRound from '@components/common/ImageRound';
 import Input from '@components/common/Input';
 import DatePicker from '@components/common/DatePicker';
@@ -21,15 +23,18 @@ import {
 } from '@constants/message';
 import { STATUS_COMPANY } from '@constants/company';
 import { apiRouters, pageRouters } from '@constants/routers';
+import { StatusCompany } from '@constants/enums';
+
 import useCompanyList from '@hooks/useListCompany';
+
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
+
 import { Company } from '@interfaces/company';
 import { OptionDropdownType } from '@interfaces/common';
-import api from '@base/api';
+
 import { formatDateServer, renderDate } from '@utils';
-import Link from 'next/link';
-import { StatusCompany } from '@constants/enums';
+import api from '@base/api';
 
 interface FilterCompanyDataType {
   name: string;
@@ -108,7 +113,11 @@ const CompanyList = () => {
   };
   const { mutate: deleteCompany } = useMutation(postDeleteCompany, {
     onSuccess: async () => {
-      refetchCompanyList();
+      if (companyList?.results.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1)
+      } else {
+        refetchCompanyList();
+      }
       setOpenConfirmDeleteModal(false);
       showToast({
         description: SUCCESS_DELETE_MESSAGE,

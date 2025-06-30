@@ -30,7 +30,11 @@ import {
   OrderingDataType,
   ScreenName,
 } from '@constants/enums';
-import { ALL_TEAM_STATISTIC, NO_SETTING } from '@constants';
+import {
+  ALL_TEAM_STATISTIC,
+  NO_SETTING,
+  TEAM_CALENDAR_ORGANIZATION,
+} from '@constants';
 import { ERROR_UPDATE_MESSAGE } from '@constants/message';
 import { apiRouters } from '@constants/routers';
 
@@ -489,7 +493,9 @@ const TableChart = ({
                 showArrow={rowData.organization !== 292}
                 options={
                   selectedOrganization?.value === ALL_TEAM_STATISTIC
-                    ? listOptionAllTeamOrg
+                    ? listOptionAllTeamOrg?.filter(
+                        (item) => item.label !== TEAM_CALENDAR_ORGANIZATION,
+                      )
                     : selectedOrganization
                       ? listOptionsOrganization.filter(
                           (item) => item.value === selectedOrganization.value,
@@ -498,17 +504,47 @@ const TableChart = ({
                 }
                 isDisabled={rowData.organization === 292}
                 onChange={(e) => {
+                  if (e?.value === rowData.organization) return;
+
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
                       id: String(info.row.original.id),
                       organizationId:
                         e?.value == NO_SETTING ? null : (e?.value as number),
+                      categoryIds: [
+                        {
+                          categoryId: null,
+                          type: EventWorkCategory.LARGE,
+                        },
+                        {
+                          categoryId: null,
+                          type: EventWorkCategory.MEDIUM,
+                        },
+                        {
+                          categoryId: null,
+                          type: EventWorkCategory.SMALL,
+                        },
+                      ],
                     });
                   } else {
                     editCategoryEventInline({
                       id: String(info.row.original.id),
                       organizationId:
                         e?.value == NO_SETTING ? null : (e?.value as number),
+                      categoryIds: [
+                        {
+                          categoryId: null,
+                          type: EventWorkCategory.LARGE,
+                        },
+                        {
+                          categoryId: null,
+                          type: EventWorkCategory.MEDIUM,
+                        },
+                        {
+                          categoryId: null,
+                          type: EventWorkCategory.SMALL,
+                        },
+                      ],
                     });
                   }
                 }}

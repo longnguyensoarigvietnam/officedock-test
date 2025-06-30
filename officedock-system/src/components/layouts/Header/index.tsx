@@ -52,6 +52,7 @@ import {
   ERROR_DELETE_MESSAGE,
   ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_NOT_FOUND_EVENT,
+  ERROR_NOT_FOUND_TASK,
   ERROR_SAVE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
@@ -267,6 +268,10 @@ const Header = ({ className }: HeaderProps) => {
       },
       onError: () => {
         handleRemoveParam();
+        showToast({
+          variant: 'error',
+          description: ERROR_NOT_FOUND_TASK,
+        });
       },
       onSettled: () => {
         setTimeout(() => {
@@ -891,13 +896,16 @@ const Header = ({ className }: HeaderProps) => {
           }),
           queryClient.invalidateQueries({ queryKey: ['getTaskTeamList'] }),
         ]);
-        setEditPasswordErrorMessage('')
+        setEditPasswordErrorMessage('');
       },
       onError: (error: AxiosError<any>) => {
-        showErrorToast(error, ERROR_UPDATE_MESSAGE);
-        if (error.response) {
-          const errorDetail = error.response.data;
-          setEditPasswordErrorMessage(errorDetail?.password[0]);
+        const errorDetail = error.response?.data;
+
+        const passwordError = errorDetail?.password?.[0];
+        if (passwordError) {
+          setEditPasswordErrorMessage(passwordError);
+        } else {
+          showErrorToast(error, ERROR_UPDATE_MESSAGE);
         }
       },
       onSettled: () => {
@@ -1110,10 +1118,11 @@ const Header = ({ className }: HeaderProps) => {
           open={openEditProfileModal}
           onClose={() => {
             setOpenEditProfileModal(false);
-            setEditPasswordErrorMessage('')
+            setEditPasswordErrorMessage('');
           }}
           onEdit={handleConfirmEditProfile}
           setOpenErrorUploadFileModal={setOpenErrorUploadFileModal}
+          setEditPasswordErrorMessage={setEditPasswordErrorMessage}
           editPasswordErrorMessage={editPasswordErrorMessage}
           authenticatedUser={authenticatedUser}
         />

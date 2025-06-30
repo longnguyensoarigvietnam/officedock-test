@@ -1,5 +1,13 @@
 'use client';
-import { ChangeEvent, Dispatch, memo, SetStateAction, useEffect, useRef, useState } from 'react';
+import {
+  ChangeEvent,
+  Dispatch,
+  memo,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
 import Modal from '@components/common/Modal';
@@ -11,25 +19,31 @@ import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { User, UserProfileFormData } from '@interfaces/user';
 
 import { passwordRegisterRules } from '@utils/validators';
+
 import { ALLOWED_IMAGE_TYPES, MAX_AVATAR_IMAGE_FILE_SIZE } from '@constants';
 
 export type EditProfileModalProps = {
   open: boolean;
-  editPasswordErrorMessage: string
-  onClose: () => void;
+  editPasswordErrorMessage: string;
   authenticatedUser: User | undefined;
+  onClose: () => void;
+  setEditPasswordErrorMessage: Dispatch<SetStateAction<string>>;
   onEdit: (data: UserProfileFormData) => void;
-  setOpenErrorUploadFileModal: Dispatch<SetStateAction<boolean>>
+  setOpenErrorUploadFileModal: Dispatch<SetStateAction<boolean>>;
 };
 
 const EditProfileModal = memo(
-  ({ open, editPasswordErrorMessage, onClose, authenticatedUser, onEdit, setOpenErrorUploadFileModal }: EditProfileModalProps) => {
+  ({
+    open,
+    editPasswordErrorMessage,
+    authenticatedUser,
+    onClose,
+    setEditPasswordErrorMessage,
+    onEdit,
+    setOpenErrorUploadFileModal,
+  }: EditProfileModalProps) => {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const {
-      reset,
-      handleSubmit,
-      register,
-    } = useForm<UserProfileFormData>();
+    const { reset, handleSubmit, register } = useForm<UserProfileFormData>();
     const [previewAvatarUrl, setPreviewAvatarUrl] = useState<string | null>(
       null,
     );
@@ -57,7 +71,7 @@ const EditProfileModal = memo(
         return;
       }
 
-      if(file.size > MAX_AVATAR_IMAGE_FILE_SIZE){
+      if (file.size > MAX_AVATAR_IMAGE_FILE_SIZE) {
         setOpenErrorUploadFileModal(true);
         return;
       }
@@ -154,6 +168,9 @@ const EditProfileModal = memo(
                   className={`shadow-none text-sm leading-[56px] font-normal !pl-3 flex items-center !py-0 h-[34px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md ${editPasswordErrorMessage && '!border-error'}`}
                   register={register('password', {
                     ...passwordRegisterRules(false),
+                    onChange: () => {
+                      setEditPasswordErrorMessage('');
+                    },
                   })}
                 />
                 {editPasswordErrorMessage && (

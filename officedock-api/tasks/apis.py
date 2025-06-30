@@ -128,6 +128,15 @@ class TaskViewSet(
         """
         Allow the task in the logged in user's company
         """
+        if self.action in ["retrieve"]:
+            return (
+                super()
+                .get_queryset()
+                .filter(
+                    company=self.request.user.company, deleted_at__isnull=True
+                )
+            )
+
         return super().get_queryset().filter(company=self.request.user.company)
 
     @transaction.atomic()
@@ -1054,7 +1063,6 @@ class TaskViewSet(
                 TaskIndex.update_max_index_for_user(
                     user=user, task=task, is_update=False
                 )
-
         elif people_in_charge_ids == []:
             task.people_in_charge.clear()
             TaskIndex.objects.filter(task=task).delete()
