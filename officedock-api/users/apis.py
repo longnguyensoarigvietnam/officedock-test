@@ -515,9 +515,9 @@ class SystemAuthViewSet(BaseAPIViewSet):
         user.roles.add(role, through_defaults={"company": company})
 
         # Set default calendar organization
-        calendar_org = Organization.all_objects.filter(
+        calendar_org, _ = Organization.all_objects.get_or_create(
             type=OrganizationTypes.CALENDAR.value, company=company
-        ).first()
+        )
         user.organizations.add(
             calendar_org,
             through_defaults={
@@ -887,9 +887,9 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
 
         # Save calendar organization
-        calendar_org = Organization.all_objects.filter(
+        calendar_org, _ = Organization.all_objects.get_or_create(
             type=OrganizationTypes.CALENDAR.value, company=company
-        ).first()
+        )
         user.organizations.add(
             calendar_org,
             through_defaults={

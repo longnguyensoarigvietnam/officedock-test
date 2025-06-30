@@ -66,9 +66,9 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 organization, through_defaults={"company": company}
             )
         # Set calendar organization for tag if checked
-        calendar_org = Organization.all_objects.filter(
+        calendar_org, _ = Organization.all_objects.get_or_create(
             type=OrganizationTypes.CALENDAR.value, company=company
-        ).first()
+        )
         if calendar_organization_check and calendar_org:
             tag.organizations.add(
                 calendar_org, through_defaults={"company": company}
@@ -96,10 +96,10 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     organization, through_defaults={"company": tag.company}
                 )
         # Set calendar organization for tag if checked
-        calendar_org = Organization.all_objects.filter(
+        calendar_org, _ = Organization.all_objects.get_or_create(
             type=OrganizationTypes.CALENDAR.value,
             company=self.request.user.company,
-        ).first()
+        )
         if calendar_organization_check and calendar_org:
             tag.organizations.add(
                 calendar_org, through_defaults={"company": tag.company}
