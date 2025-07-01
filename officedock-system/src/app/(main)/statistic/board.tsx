@@ -8,13 +8,13 @@ import ImageRound from '@components/common/ImageRound';
 import StatisticCalendar from '@components/statistic/category/StatisticCalendar';
 import PercentageCategory from '@components/statistic/category/PercentageCategory';
 import TaskListStatistic from '@components/statistic/category/TaskList';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import AllocationCategory from '@components/statistic/category/AllocationCategory';
 import PercentageCategoryCompare from '@components/statistic/category/compare/PercentageCategoryCompare';
 import AllocationCategoryCompare from '@components/statistic/category/compare/AllocationCategoryCompare';
 import LineChart from '@components/statistic/category/LineChart';
 import StackedAreaChart from '@components/statistic/category/StackedAreaChart';
 import LineChartCompare from '@components/statistic/category/compare/LineChartCompare';
+import FilterStatistic from '@components/statistic/category/filter/FilterStatistic';
 
 import { ALL_TEAM_STATISTIC, TEAM_CALENDAR_ORGANIZATION } from '@constants';
 import { pageRouters } from '@constants/routers';
@@ -41,7 +41,6 @@ const StatisticBoard = () => {
     selectedMedium,
     selectedOrganization,
     selectedTags,
-    tagsOptions,
     selectedSmall,
     setSelectedTags,
     setSelectedLarge,
@@ -397,17 +396,6 @@ const StatisticBoard = () => {
     setSelectedSmall(data);
   };
 
-  // Remove tags
-  const removeTag = (selected: OptionDropdownType) => {
-    const currentTagIds = selectedTags || [];
-    const updatedTagIds = currentTagIds.filter(
-      (tag) => tag.value !== selected.value,
-    );
-    setCurrentPage(1);
-
-    setSelectedTags(updatedTagIds);
-  };
-
   return (
     <div className="pt-[30px] pr-10  font-medium ">
       <div className="flex items-center gap-5 mb-[33px]">
@@ -499,60 +487,8 @@ const StatisticBoard = () => {
           </div>
         </div>
         <div className="flex items-center mt-8  gap-1 mb-[30px]">
-          <div className="flex items-center gap-2">
-            <div className="w-[240px]  relative flex-shrink-0">
-              <MultiSelectDropdown
-                isShowIconFilter
-                options={tagsOptions}
-                placeholder="集計対象のタグを選択"
-                className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                optionClassName="!top-6"
-                labelOptionClass="break-all w-[190px]"
-                selectedOptions={selectedTags || []}
-                onChange={(selected) => {
-                  let updatedTagIds = [];
-                  const currentTagIds = selectedTags || [];
-                  const foundItemIndex = currentTagIds.findIndex(
-                    (tag) => tag.value == selected.value,
-                  );
-                  if (foundItemIndex == -1) {
-                    updatedTagIds = [...currentTagIds, selected];
-                  } else {
-                    updatedTagIds = currentTagIds.filter(
-                      (tag) => tag.value != selected.value,
-                    );
-                  }
-                  setSelectedTags(updatedTagIds);
-                }}
-              />
-              {selectedTags.length === 0 && (
-                <span className="text-xs absolute text-[#77858F] top-[2px] right-[135px]">
-                  タグの絞り込み
-                </span>
-              )}
-            </div>
-            <div className="relative right-[224px] flex-grow top-[-8px]">
-              <div className="flex gap-2 flex-wrap  w-full flex-shrink-0">
-                {selectedTags.map((item) => {
-                  return (
-                    <div
-                      key={item.value}
-                      className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                      <span className=" truncate">{item.label}</span>
-                      <ImageRound
-                        onClick={() => {
-                          removeTag(item);
-                        }}
-                        src={`/icons/close-white.svg`}
-                        name="close"
-                        className="w-fit h-fit cursor-pointer"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+          {/* Filter */}
+          <FilterStatistic />
         </div>
       </div>
 
@@ -562,7 +498,6 @@ const StatisticBoard = () => {
           <PercentageCategoryCompare
             startDate={startDate}
             endDate={endDate}
-            removeTag={removeTag}
             startDateCompare={startDateCompare}
             endDateCompare={endDateCompare}
             statisticCategoryList={statisticCategoryList}
@@ -577,7 +512,6 @@ const StatisticBoard = () => {
           <AllocationCategoryCompare
             startDate={startDate}
             endDate={endDate}
-            removeTag={removeTag}
             startDateCompare={startDateCompare}
             endDateCompare={endDateCompare}
             statisticCategoryList={statisticCategoryList}
@@ -593,7 +527,6 @@ const StatisticBoard = () => {
             endDate={endDate}
             startDateCompare={startDateCompare}
             endDateCompare={endDateCompare}
-            removeTag={removeTag}
             statisticCategoryList={statisticCategoryList}
             statisticCategoryCompareList={statisticCategoryCompareList}
             handleSelectOrganization={handleSelectOrganization}
@@ -607,7 +540,6 @@ const StatisticBoard = () => {
           <PercentageCategory
             startDate={startDate}
             endDate={endDate}
-            removeTag={removeTag}
             statisticCategoryList={statisticCategoryList}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectOrganizationCustom={handleSelectOrganizationCustom}
@@ -620,7 +552,6 @@ const StatisticBoard = () => {
             startDate={startDate}
             endDate={endDate}
             statisticCategoryList={statisticCategoryList}
-            removeTag={removeTag}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -630,7 +561,6 @@ const StatisticBoard = () => {
           <LineChart
             startDate={startDate}
             endDate={endDate}
-            removeTag={removeTag}
             statisticCategoryList={statisticCategoryList}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
@@ -641,7 +571,6 @@ const StatisticBoard = () => {
           <StackedAreaChart
             startDate={startDate}
             endDate={endDate}
-            removeTag={removeTag}
             statisticCategoryList={statisticCategoryList}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
@@ -662,7 +591,6 @@ const StatisticBoard = () => {
         handleSelectLarge={handleSelectLarge}
         handleSelectMedium={handleSelectMedium}
         handleSelectSmall={handleSelectSmall}
-        removeTag={removeTag}
         creationDataStatisticData={
           creationDataStatisticData?.organizations || []
         }
