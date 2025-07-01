@@ -1,9 +1,8 @@
-import Image from 'next/image';
-import { format } from 'date-fns';
-import { useSessionCache } from '@providers/SessionCacheProvider';
-
-import { useRouter } from 'next/navigation';
 import { Dispatch, Fragment, MutableRefObject, SetStateAction } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+
+import { format } from 'date-fns';
 import { Editor } from '@tiptap/react';
 
 import ImageRound from '@components/common/ImageRound';
@@ -40,6 +39,8 @@ import {
   ChatParticipant,
   ChatRoomDetail,
 } from '@interfaces/chat';
+
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import {
   displayRepetitiveEventTime,
@@ -427,6 +428,7 @@ export const MessageDetail = ({
     }
   };
 
+  // Render participants content
   const renderParticipantsContent = (messageDetail: ChatMessageResponse) => {
     return (
       <>
@@ -1149,7 +1151,7 @@ export const MessageDetail = ({
                 <div className="flex justify-between items-baseline pb-2">
                   <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <p className="max-w-full break-all">
-                      {messageDetail.sender.fullName}
+                      {messageDetail.sender.fullName}{' '}
                       <span className="font-medium text-xs text-[#77858F]">
                         {messageDetail.sender?.organizations?.name}
                       </span>

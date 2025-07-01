@@ -1,6 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState, Fragment, useContext } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  Fragment,
+  useContext,
+  useCallback,
+} from 'react';
 import { AxiosError } from 'axios';
 import { debounce } from 'lodash';
 import { isSameDay } from 'date-fns';
@@ -69,6 +76,7 @@ import {
   EventRequest,
 } from '@interfaces/calendar';
 import { OptionDropdownType } from '@interfaces/common';
+import { Profile } from '@interfaces/user';
 
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
@@ -219,6 +227,9 @@ const EventCalendar = () => {
   const [sliderValue, setSliderValue] = useState(baseSlider);
   const [slotHeight, setSlotHeight] = useState(baseHeight);
 
+  // Abort controller
+  const controllerRef = useRef<AbortController | null>(null);
+
   // Get authenticated user
   const { authenticatedUser } = useAuthenticatedUser({
     onSuccess: (data) => {
@@ -307,6 +318,46 @@ const EventCalendar = () => {
       1000,
     ),
   ).current;
+
+  const debouncedFilterSchedulesByUsers = useCallback(
+    debounce(
+      (
+        updatedUserIds: number[],
+        keySearch: string,
+        calendarRef: any,
+        dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[] | undefined,
+      ) => {
+        if (calendarRef.current) {
+          const calendarApi = calendarRef.current.getApi();
+          const startDateISOString = formatQueryStartDateForCalendar(
+            calendarApi.view.activeStart,
+          );
+          const endDateISOString = formatQueryEndDateForCalendar(
+            calendarApi.view.activeEnd,
+          );
+
+          getEventCalendarByUsers({
+            userId: updatedUserIds.join(','),
+            startDate: startDateISOString,
+            endDate: endDateISOString,
+            keySearch,
+          });
+        }
+
+        setCurrentResources(
+          updatedUserIds.map((userId) => ({
+            id: String(userId),
+            title:
+              dashboardMemberList?.find(
+                (member) => String(member.id) === String(userId),
+              )?.fullName || '',
+          })),
+        );
+      },
+      1500,
+    ), // debounce delay (ms)
+    [calendarRef, dashboardMemberList],
+  );
 
   // Handle prev
   const handlePrev = () => {
@@ -1110,11 +1161,11 @@ const EventCalendar = () => {
     return [];
   };
 
-  // Get events by users
   const handleGetEventCalendarByUsers = async ({
     userId,
     startDate,
     endDate,
+    keySearch,
   }: {
     userId: string;
     startDate: string;
@@ -1125,9 +1176,33 @@ const EventCalendar = () => {
     pageY?: number;
     keySearch: string;
   }) => {
-    const apiUrl = `${apiRouters.SCHEDULES}?${userId ? `&user_ids=${userId}` : ''}${startDate && `&start_date=${startDate}`}${endDate && `&end_date=${endDate}`}${keySearch ? `&search=${keySearch}` : ''}`;
-    const { data } = await api.get(apiUrl);
-    return data;
+    try {
+      // Cancel any in-flight request
+      if (controllerRef.current) {
+        controllerRef.current.abort();
+      }
+
+      // New abort controller
+      const controller = new AbortController();
+      controllerRef.current = controller;
+
+      // Build query params safely
+      const queryParams = new URLSearchParams();
+      if (userId) queryParams.append('user_ids', userId);
+      if (startDate) queryParams.append('start_date', startDate);
+      if (endDate) queryParams.append('end_date', endDate);
+      if (keySearch) queryParams.append('search', keySearch);
+
+      const apiUrl = `${apiRouters.SCHEDULES}?${queryParams.toString()}`;
+
+      const { data } = await api.get(apiUrl, {
+        signal: controller.signal,
+      });
+
+      return data;
+    } catch {
+      return [];
+    }
   };
 
   const { mutateAsync: getEventCalendarByUsers } = useMutation(
@@ -1302,35 +1377,13 @@ const EventCalendar = () => {
 
     setSelectedScheduleUserIds(updatedUserIds.join(','));
     setSelectedScheduleOrgIds(updatedOrgIds.join(','));
-    if (calendarRef.current) {
-      const calendarApi = calendarRef.current.getApi();
-      const startDateISOString = formatQueryStartDateForCalendar(
-        calendarApi.view.activeStart,
-      );
-      const endDateISOString = formatQueryEndDateForCalendar(
-        calendarApi.view.activeEnd,
-      );
-      getEventCalendarByUsers({
-        userId:
-          `${updatedUserIds.join(',')}`.length > 0
-            ? `${updatedUserIds.join(',')}`
-            : ``,
-        startDate: startDateISOString,
-        endDate: endDateISOString,
-        keySearch: keySearch,
-      });
-    }
-    setCurrentResources(() => {
-      return updatedUserIds.map((userId) => {
-        return {
-          id: String(userId),
-          title:
-            dashboardMemberList?.find(
-              (member) => String(member.id) == String(userId),
-            )?.fullName || '',
-        };
-      });
-    });
+
+    debouncedFilterSchedulesByUsers(
+      updatedUserIds,
+      keySearch,
+      calendarRef,
+      dashboardMemberList,
+    );
   };
 
   // Handle get all member events
@@ -1382,40 +1435,12 @@ const EventCalendar = () => {
       ].join(','),
     );
 
-    if (calendarRef.current) {
-      const calendarApi = calendarRef.current.getApi();
-      const startDateISOString = formatQueryStartDateForCalendar(
-        calendarApi.view.activeStart,
-      );
-      const endDateISOString = formatQueryEndDateForCalendar(
-        calendarApi.view.activeEnd,
-      );
-
-      getEventCalendarByUsers({
-        userId:
-          `${updatedParticipantIds.join(',')}`.length > 0
-            ? `${updatedParticipantIds.join(',')}`
-            : ``,
-        startDate: startDateISOString,
-        endDate: endDateISOString,
-        keySearch: keySearch,
-      });
-    }
-    setCurrentResources(() => {
-      const updatedResources: { id: string; title: string }[] = [];
-
-      [...updatedParticipantIds].forEach((userId) => {
-        updatedResources.push({
-          id: String(userId),
-          title:
-            dashboardMemberList?.find(
-              (member) => String(member.id) == String(userId),
-            )?.fullName || '',
-        });
-      });
-
-      return updatedResources;
-    });
+    debouncedFilterSchedulesByUsers(
+      updatedParticipantIds,
+      keySearch,
+      calendarRef,
+      dashboardMemberList,
+    );
   };
 
   // Handle remove all member events
@@ -1451,38 +1476,12 @@ const EventCalendar = () => {
     setSelectedScheduleUserIds(filteredParticipantIds.join(','));
     setSelectedScheduleOrgIds(filteredOrganizationIds.join(','));
 
-    if (calendarRef.current) {
-      const calendarApi = calendarRef.current.getApi();
-      const startDateISOString = formatQueryStartDateForCalendar(
-        calendarApi.view.activeStart,
-      );
-      const endDateISOString = formatQueryEndDateForCalendar(
-        calendarApi.view.activeEnd,
-      );
-
-      getEventCalendarByUsers({
-        userId: filteredParticipantIds.join(','),
-        startDate: startDateISOString,
-        endDate: endDateISOString,
-        keySearch: keySearch,
-      });
-    }
-
-    setCurrentResources(() => {
-      const updatedResources: { id: string; title: string }[] = [];
-
-      filteredParticipantIds.forEach((userId) => {
-        updatedResources.push({
-          id: String(userId),
-          title:
-            dashboardMemberList?.find(
-              (member) => String(member.id) == String(userId),
-            )?.fullName || '',
-        });
-      });
-
-      return updatedResources;
-    });
+    debouncedFilterSchedulesByUsers(
+      filteredParticipantIds.map((id) => Number(id)),
+      keySearch,
+      calendarRef,
+      dashboardMemberList,
+    );
   };
 
   // Get event detail
