@@ -90,6 +90,7 @@ interface ContextValue {
 
   currentPage: number;
   setCurrentPage: Dispatch<SetStateAction<number>>;
+  removeTag: (selected: OptionDropdownType) => void;
 }
 
 const defaultValue: ContextValue = {
@@ -171,6 +172,7 @@ const defaultValue: ContextValue = {
   setLineChartViewBy: () => {},
   currentPage: 1,
   setCurrentPage: () => {},
+  removeTag: () => {},
 };
 
 export const StatisticTagStateContext =
@@ -264,6 +266,16 @@ export const StatisticTagStateProvider = ({
       label: StatisticViewLabels.WEEK,
     });
 
+  // Remove tags
+  const removeTag = (selected: OptionDropdownType) => {
+    const currentTagIds = selectedTags || [];
+    const updatedTagIds = currentTagIds.filter(
+      (tag) => tag.value !== selected.value,
+    );
+    setCurrentPage(1);
+    setSelectedTags(updatedTagIds);
+  };
+
   const contextValue: ContextValue = {
     smallOptions,
     mediumOptions,
@@ -338,6 +350,7 @@ export const StatisticTagStateProvider = ({
     setLineChartViewBy,
     currentPage,
     setCurrentPage,
+    removeTag,
   };
 
   return (

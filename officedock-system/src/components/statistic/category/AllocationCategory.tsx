@@ -4,7 +4,6 @@ import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 import { ProgressDataType, StatisticsCategories } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
@@ -17,12 +16,12 @@ import { EventWorkCategory } from '@constants/enums';
 import { StatisticStateContext } from '@providers/StatisticProvider';
 
 import ProgressBarStatistic from './ProgressBarStatistic';
+import FilterStatistic from './filter/FilterStatistic';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticCategoryList: StatisticsCategories | undefined;
-  removeTag: (selected: OptionDropdownType) => void;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -34,7 +33,6 @@ const AllocationCategory = memo(
     startDate,
     endDate,
     statisticCategoryList,
-    removeTag,
     handleSelectOrganization,
     handleSelectLarge,
     handleSelectMedium,
@@ -71,11 +69,9 @@ const AllocationCategory = memo(
       selectedOrganization,
       selectedTags,
       selectedSmall,
-      tagsOptions,
       isLoadingLarge,
       isLoadingMedium,
       isLoadingOrganization,
-      setSelectedTags,
       setTotalDurationTask,
       setTotalDurationCategory,
     } = useContext(StatisticStateContext);
@@ -239,60 +235,8 @@ const AllocationCategory = memo(
                   各カテゴリーの時間配分
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-[240px] flex-shrink-0  relative">
-                  <MultiSelectDropdown
-                    isShowIconFilter
-                    options={tagsOptions}
-                    labelOptionClass="break-all w-[190px]"
-                    optionClassName="!top-6"
-                    placeholder="集計対象のタグを選択"
-                    className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
-                    selectedOptions={selectedTags || []}
-                    onChange={(selected) => {
-                      let updatedTagIds = [];
-                      const currentTagIds = selectedTags || [];
-                      const foundItemIndex = currentTagIds.findIndex(
-                        (tag) => tag.value == selected.value,
-                      );
-                      if (foundItemIndex == -1) {
-                        updatedTagIds = [...currentTagIds, selected];
-                      } else {
-                        updatedTagIds = currentTagIds.filter(
-                          (tag) => tag.value != selected.value,
-                        );
-                      }
-                      setSelectedTags(updatedTagIds);
-                    }}
-                  />
-                  {selectedTags.length === 0 && (
-                    <span className="text-xs absolute text-[#77858F] top-[2px] right-[135px]">
-                      タグの絞り込み
-                    </span>
-                  )}
-                </div>
-                <div className="relative flex-grow right-[224px] top-0">
-                  <div className="flex gap-2 w-full flex-shrink-0 flex-wrap ">
-                    {selectedTags.map((item) => {
-                      return (
-                        <div
-                          key={item.value}
-                          className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                          <span className=" truncate">{item.label}</span>
-                          <ImageRound
-                            onClick={() => {
-                              removeTag(item);
-                            }}
-                            src={`/icons/close-white.svg`}
-                            name="close"
-                            className="w-fit h-fit cursor-pointer"
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+              {/* Filter */}
+              <FilterStatistic />
             </div>
             <ImageRound
               src="/icons/extend-calendar.svg"
