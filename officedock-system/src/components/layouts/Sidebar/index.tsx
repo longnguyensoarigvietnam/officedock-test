@@ -96,6 +96,7 @@ const Sidebar = ({ className }: Props) => {
     setExpanded,
     setTotalNotifications,
     cancelUploadChatFiles,
+    setLastVisitedByTab,
   } = useContext(GlobalStateContext);
   const { dashboardUnreadMessages } = useDashboardUnreadMessages();
   const [showWarningChatUploadingModal, setShowWarningChatUploadingModal] =
@@ -261,11 +262,21 @@ const Sidebar = ({ className }: Props) => {
       setTagSelected('');
       setMemberSelected('');
       router.push(`${href}?view=day`);
+      setLastVisitedByTab((prev) => {
+        return {
+          ...prev,
+          firstTab: `${href}?view=day`,
+        };
+      });
     } else {
       params.delete('view');
-      {
-        router.push(`${href}?${params.toString()}`);
-      }
+      router.push(`${href}?${params.toString()}`);
+      setLastVisitedByTab((prev) => {
+        return {
+          ...prev,
+          firstTab: `${href}?${params.toString()}`,
+        };
+      });
     }
     setPendingPageChange(null);
     setPendingNavigationType(null);
@@ -276,6 +287,12 @@ const Sidebar = ({ className }: Props) => {
       setTagSelected('');
       setMemberSelected('');
       router.push(`${href}?view=day`);
+      setLastVisitedByTab((prev) => {
+        return {
+          ...prev,
+          secondTab: `${href}?view=day`,
+        };
+      });
     } else {
       if (
         pathname === pageRouters.CHAT_MANAGEMENT.href &&
@@ -324,6 +341,12 @@ const Sidebar = ({ className }: Props) => {
         params.delete('room');
 
         router.push(`${href}?${params.toString()}`);
+        setLastVisitedByTab((prev) => {
+          return {
+            ...prev,
+            secondTab: `${href}?${params.toString()}`,
+          };
+        });
       }
     }
     setPendingPageChange(null);
@@ -338,7 +361,7 @@ const Sidebar = ({ className }: Props) => {
 
   return (
     <aside
-      className={`overflow-x-hidden ${hour} overflow-y-hidden relative transition-all duration-300 ${expanded ? 'w-52 min-w-[208px]' : 'w-20 min-w-[70px]'} flex flex-col ${className}`}
+      className={`overflow-x-hidden overflow-y-hidden relative transition-all duration-300 ${expanded ? 'w-52 min-w-[208px]' : 'w-20 min-w-[70px]'} flex flex-col ${className}`}
       style={{
         background:
           today &&
