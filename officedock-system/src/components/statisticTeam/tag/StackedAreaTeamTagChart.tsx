@@ -15,7 +15,6 @@ import { Table, TableBody } from '@components/common/Table';
 import RadioButton from '@components/common/RadioButton';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
 import {
@@ -42,11 +41,11 @@ import {
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useGenericDebounce } from '@hooks/useGenericDebounce';
+import FilterTagTeam from './filter/FilterTagTeam';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
-  removeTag: (selected: OptionDropdownType) => void;
   statisticTagsListTeam: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
@@ -99,7 +98,6 @@ const StackedAreaTeamTagChart = ({
   statisticTagsListTeam,
   startDate,
   endDate,
-  removeTag,
   handleSelectOrganization,
   handleSelectLarge,
   handleSelectMedium,
@@ -119,22 +117,10 @@ const StackedAreaTeamTagChart = ({
     selectedMedium,
     selectedOrganization,
     selectedSmall,
-    selectedTags,
-    tagsOptions,
     listMemberTeam,
     lineChartViewBy,
-    isCheckCompare,
     orderingOptions,
-    setIsLoadingLarge,
-    setIsLoadingMedium,
-    setIsLoadingSmall,
-    setIsLoadingOrganization,
-    setIsLoadingLargeCompare,
-    setIsLoadingMediumCompare,
-    setIsLoadingSmallCompare,
-    setIsLoadingOrganizationCompare,
     setLineChartViewBy,
-    setSelectedTags,
     areaTableData,
     setAreaTableData,
   } = useContext(StatisticTeamTagsStateContext);
@@ -1017,63 +1003,8 @@ const StackedAreaTeamTagChart = ({
           {/* List tags  */}
           <div>
             <div className="flex justify-between w-full my-8 px-[30px]">
-              <div className="flex items-center gap-2">
-                <div className="w-[240px]">
-                  <MultiSelectDropdown
-                    options={tagsOptions}
-                    placeholder="集計対象のタグを選択"
-                    className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                    labelOptionClass="break-words w-[190px]"
-                    selectedOptions={selectedTags || []}
-                    onChange={(selected) => {
-                      let updatedTagIds = [];
-                      const currentTagIds = selectedTags || [];
-                      const foundItemIndex = currentTagIds.findIndex(
-                        (tag) => tag.value == selected.value,
-                      );
-                      if (foundItemIndex == -1) {
-                        updatedTagIds = [...currentTagIds, selected];
-                      } else {
-                        updatedTagIds = currentTagIds.filter(
-                          (tag) => tag.value != selected.value,
-                        );
-                      }
-                      setIsLoadingLarge(true);
-                      setIsLoadingMedium(true);
-                      setIsLoadingSmall(true);
-                      setIsLoadingOrganization(true);
-                      if (isCheckCompare) {
-                        setIsLoadingLargeCompare(true);
-                        setIsLoadingMediumCompare(true);
-                        setIsLoadingSmallCompare(true);
-                        setIsLoadingOrganizationCompare(true);
-                      }
-                      setSelectedTags(updatedTagIds);
-                    }}
-                  />
-                </div>
-                <div>
-                  <div className="flex gap-2 flex-wrap ">
-                    {selectedTags.map((item) => {
-                      return (
-                        <div
-                          key={item.value}
-                          className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                          <span className=" truncate">{item.label}</span>
-                          <ImageRound
-                            onClick={() => {
-                              removeTag(item);
-                            }}
-                            src={`/icons/close-white.svg`}
-                            name="close"
-                            className="w-fit h-fit cursor-pointer"
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+              {/* Filter tag */}
+              <FilterTagTeam />
             </div>
           </div>
           <div className="flex justify-between items-end px-[30px] text-sm font-medium">

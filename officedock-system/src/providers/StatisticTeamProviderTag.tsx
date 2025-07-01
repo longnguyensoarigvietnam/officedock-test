@@ -130,8 +130,12 @@ interface ContextValue {
   setAreaTableData: Dispatch<SetStateAction<TagTableRowDetail[]>>;
   lineChartTableData: TagTableRowDetail[];
   setLineChartTableData: Dispatch<SetStateAction<TagTableRowDetail[]>>;
-  mergedTableData: MergedTableTag[]
-  setMergedTableData: Dispatch<SetStateAction<MergedTableTag[]>>
+  mergedTableData: MergedTableTag[];
+  setMergedTableData: Dispatch<SetStateAction<MergedTableTag[]>>;
+
+  handleResetTableData: () => void;
+
+  removeTag: (selected: OptionDropdownType) => void;
 }
 
 const defaultValue: ContextValue = {
@@ -225,6 +229,8 @@ const defaultValue: ContextValue = {
   setLineChartTableData: () => {},
   mergedTableData: [],
   setMergedTableData: () => {},
+  handleResetTableData: () => {},
+  removeTag: () => {},
 };
 
 export const StatisticTeamTagsStateContext =
@@ -263,9 +269,7 @@ export const StatisticTeamTagsStateProvider = ({
   const [lineChartTableData, setLineChartTableData] = useState<
     TagTableRowDetail[]
   >([]);
-  const [mergedTableData, setMergedTableData] = useState<MergedTableTag[]>(
-    [],
-  );
+  const [mergedTableData, setMergedTableData] = useState<MergedTableTag[]>([]);
 
   // Select
   const [selectedOrganization, setSelectedOrganization] =
@@ -348,6 +352,34 @@ export const StatisticTeamTagsStateProvider = ({
   const firstThreeUser = allLabelUser.slice(0, 3);
 
   const remainingCountUser = allLabelUser.length - firstThreeUser.length;
+
+  // Reset table data
+  const handleResetTableData = () => {
+    setMergedTableData([]);
+    setAreaTableData([]);
+    setLineChartTableData([]);
+  };
+
+  // Remove tags
+  const removeTag = (selected: OptionDropdownType) => {
+    const currentTagIds = selectedTags || [];
+    const updatedTagIds = currentTagIds.filter(
+      (tag) => tag.value !== selected.value,
+    );
+    setIsLoadingLarge(true);
+    setIsLoadingMedium(true);
+    setIsLoadingSmall(true);
+    setIsLoadingOrganization(true);
+    handleResetTableData();
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingSmallCompare(true);
+      setIsLoadingOrganizationCompare(true);
+    }
+    setCurrentPage(1);
+    setSelectedTags(updatedTagIds);
+  };
 
   const contextValue: ContextValue = {
     smallOptions,
@@ -443,7 +475,10 @@ export const StatisticTeamTagsStateProvider = ({
     lineChartTableData,
     setLineChartTableData,
     mergedTableData,
-    setMergedTableData
+    setMergedTableData,
+
+    removeTag,
+    handleResetTableData,
   };
 
   return (
