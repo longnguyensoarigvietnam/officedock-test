@@ -40,7 +40,6 @@ import RowSkeleton from '@components/skeleton/RowSkeleton';
 import RadioButton from '@components/common/RadioButton';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import CustomStatisticUserCheckbox from '@components/common/Checkbox/CustomStatisticUserCheckbox';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { TeamDockCompareLineChartTooltip } from '@components/tooltip/TeamDockCompareLineChartTooltip';
 import ActionFilterTeamTagStatistic from '@components/modals/ActionFilterTeamTagStatistic';
 
@@ -48,7 +47,10 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 
 import { OptionDropdownType } from '@interfaces/common';
-import { MergedTableTag, TagTableRowDetailWithType } from '@interfaces/statistic';
+import {
+  MergedTableTag,
+  TagTableRowDetailWithType,
+} from '@interfaces/statistic';
 import { TooltipDiv } from '@interfaces/tooltip';
 
 import {
@@ -88,6 +90,7 @@ import useStatisticUserTaskDurationsCompare from '@hooks/useStatisticUserTaskDur
 import useStatisticTableInTeamTagLineChartCompare from '@hooks/useStatisticTableInTeamTagLineChartCompare';
 import useStatisticTableInTeamTagLineChart from '@hooks/useStatisticTableInTeamTagLineChart';
 import { useGenericDebounce } from '@hooks/useGenericDebounce';
+import FilterTagTeam from '../filter/FilterTagTeam';
 
 ChartJS.register(
   CategoryScale,
@@ -105,7 +108,6 @@ type Props = {
   endDate: Date | null;
   startDateCompare: Date;
   endDateCompare: Date | null;
-  removeTag: (selected: OptionDropdownType) => void;
   removeUser: (selected: OptionDropdownType) => void;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
@@ -131,7 +133,6 @@ const LineChartByTeamTagsCompare = ({
   endDate,
   startDateCompare,
   endDateCompare,
-  removeTag,
   removeUser,
   handleSelectOrganization,
   handleSelectLarge,
@@ -149,25 +150,14 @@ const LineChartByTeamTagsCompare = ({
     selectedOrganization,
     selectedSmall,
     selectedTags,
-    tagsOptions,
     firstThreeUser,
     allLabelUser,
     remainingCountUser,
     listMemberTeam,
     lineChartViewBy,
-    isCheckCompare,
     orderingOptions,
     mergedTableData,
-    setIsLoadingLarge,
-    setIsLoadingMedium,
-    setIsLoadingSmall,
-    setIsLoadingOrganization,
-    setIsLoadingLargeCompare,
-    setIsLoadingMediumCompare,
-    setIsLoadingSmallCompare,
-    setIsLoadingOrganizationCompare,
     setLineChartViewBy,
-    setSelectedTags,
     setMergedTableData,
   } = useContext(StatisticTeamTagsStateContext);
   const { expanded, selectedOrganization: selectedOrganizationSideBar } =
@@ -260,12 +250,12 @@ const LineChartByTeamTagsCompare = ({
     useState(false);
 
   // Table data
-  const [standardTableData, setStandardTableData] = useState<TagTableRowDetailWithType[]>(
-    [],
-  );
-  const [compareTableData, setCompareTableData] = useState<TagTableRowDetailWithType[]>(
-    [],
-  );
+  const [standardTableData, setStandardTableData] = useState<
+    TagTableRowDetailWithType[]
+  >([]);
+  const [compareTableData, setCompareTableData] = useState<
+    TagTableRowDetailWithType[]
+  >([]);
 
   // Chart
   const chartRef = useRef<any>(null);
@@ -449,7 +439,9 @@ const LineChartByTeamTagsCompare = ({
     ],
   });
 
-  const mergeCategories = (data: TagTableRowDetailWithType[]): MergedTableTag[] => {
+  const mergeCategories = (
+    data: TagTableRowDetailWithType[],
+  ): MergedTableTag[] => {
     const grouped: Record<string, MergedTableTag> = {};
 
     data.forEach((item) => {
@@ -723,7 +715,7 @@ const LineChartByTeamTagsCompare = ({
   const { isLoadingStatisticTableInTeamTagLineChart } =
     useStatisticTableInTeamTagLineChart({
       filter: {
-        ...categoryFilter
+        ...categoryFilter,
       },
       onSuccess: (data) => {
         if (!data) return;
@@ -1959,63 +1951,8 @@ const LineChartByTeamTagsCompare = ({
             {/* List tags  */}
             <div>
               <div className="flex justify-between w-full mb-[30px] px-[30px]">
-                <div className="flex items-center gap-2">
-                  <div className="w-[240px]">
-                    <MultiSelectDropdown
-                      options={tagsOptions}
-                      placeholder="集計対象のタグを選択"
-                      className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                      labelOptionClass="break-words w-[190px]"
-                      selectedOptions={selectedTags || []}
-                      onChange={(selected) => {
-                        let updatedTagIds = [];
-                        const currentTagIds = selectedTags || [];
-                        const foundItemIndex = currentTagIds.findIndex(
-                          (tag) => tag.value == selected.value,
-                        );
-                        if (foundItemIndex == -1) {
-                          updatedTagIds = [...currentTagIds, selected];
-                        } else {
-                          updatedTagIds = currentTagIds.filter(
-                            (tag) => tag.value != selected.value,
-                          );
-                        }
-                        setIsLoadingLarge(true);
-                        setIsLoadingMedium(true);
-                        setIsLoadingSmall(true);
-                        setIsLoadingOrganization(true);
-                        if (isCheckCompare) {
-                          setIsLoadingLargeCompare(true);
-                          setIsLoadingMediumCompare(true);
-                          setIsLoadingSmallCompare(true);
-                          setIsLoadingOrganizationCompare(true);
-                        }
-                        setSelectedTags(updatedTagIds);
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <div className="flex gap-2 flex-wrap ">
-                      {selectedTags.map((item) => {
-                        return (
-                          <div
-                            key={item.value}
-                            className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                            <span className=" truncate">{item.label}</span>
-                            <ImageRound
-                              onClick={() => {
-                                removeTag(item);
-                              }}
-                              src={`/icons/close-white.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
+                {/* Filter tag */}
+                <FilterTagTeam />
               </div>
             </div>
             <div className="flex justify-between items-end px-[30px] text-sm font-medium">

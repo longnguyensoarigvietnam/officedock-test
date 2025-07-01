@@ -1,15 +1,8 @@
-import React, { Fragment, useContext, useEffect, useState } from 'react';
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition,
-} from '@headlessui/react';
+import React, { useContext, useEffect, useState } from 'react';
 
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import PercentageBarCompareTeam from '@components/common/ProgressBar/ProgressBarCompareTeam';
-import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
 
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
@@ -20,6 +13,7 @@ import {
 import { getRandomColor, lightenColor } from '@utils';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
+import FilterTeamStatistic from '../filter/FilterTeamStatistic';
 
 type Props = {
   startDate: Date;
@@ -33,8 +27,6 @@ type Props = {
   handleSelectOrganizationCustom: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
-  removeTag: (selected: OptionDropdownType) => void;
-  removeUser: (selected: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
 };
 
@@ -50,8 +42,6 @@ const PercentageTeamCategoryCompare = ({
   handleSelectSmall,
   handleSelectOrganization,
   handleSelectOrganizationCustom,
-  removeTag,
-  removeUser,
 }: Props) => {
   const {
     largeOptions,
@@ -66,7 +56,6 @@ const PercentageTeamCategoryCompare = ({
     totalDurationLargeCompare,
     totalDurationMediumCompare,
     totalDurationSmallCompare,
-    tagsOptions,
     smallOptions,
     isLoadingLarge,
     isLoadingMedium,
@@ -74,13 +63,6 @@ const PercentageTeamCategoryCompare = ({
     isLoadingLargeCompare,
     isLoadingMediumCompare,
     isLoadingOrganizationCompare,
-    remainingCountUser,
-    remainingCountTag,
-    firstThreeUser,
-    allLabelUser,
-    allLabelTag,
-    firstThreeTag,
-    listMemberTeam,
   } = useContext(StatisticTeamStateContext);
   const { setIsLoading } = useContext(LoadingContext);
 
@@ -273,121 +255,11 @@ const PercentageTeamCategoryCompare = ({
                 カテゴリーの割合
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="flex-shrink-0 h-6 relative">
-                {/* Filter option modal */}
-                <Popover className="relative">
-                  {() => (
-                    <>
-                      <div className="flex items-center gap-2 relative top-[5px]">
-                        <PopoverButton
-                          onClick={() =>
-                            setIsOpenModalFilter(!isOpenModalFilter)
-                          }
-                          className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
-                          <ImageRound
-                            src="/icons/filter.svg"
-                            name="Filter icon"
-                            className="w-[14px] h-[14px]"
-                          />
-                        </PopoverButton>
-                      </div>
-                      <Transition
-                        as={Fragment}
-                        show={isOpenModalFilter}
-                        enter="transition ease-out duration-200"
-                        enterFrom="opacity-0 translate-y-1"
-                        enterTo="opacity-100 translate-y-0"
-                        leave="transition ease-in duration-150"
-                        leaveFrom="opacity-100 translate-y-0"
-                        leaveTo="opacity-0 translate-y-1">
-                        <PopoverPanel className="absolute left-[30px] top-[-5px] z-[1] w-[400px] transform">
-                          <ActionFilterStatisticTeam
-                            tagsOptions={tagsOptions}
-                            handleClose={() => setIsOpenModalFilter(false)}
-                            listMemberTeam={listMemberTeam}
-                          />
-                        </PopoverPanel>
-                      </Transition>
-                    </>
-                  )}
-                </Popover>
-              </div>
-              <div className=" flex-grow flex-shrink-0">
-                <div className="flex gap-2 flex-wrap  flex-shrink-0 ">
-                  <>
-                    {firstThreeUser.map((item, index) => {
-                      return (
-                        <div
-                          key={item.value}
-                          className="flex gap-[6px] items-center">
-                          {index === 0 && (
-                            <ImageRound
-                              src={`/icons/user-white.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
-                          )}
-                          <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                            <span className="min-w-[32px] max-w-[118px]  truncate">
-                              {item.label}
-                            </span>
-                            <ImageRound
-                              onClick={() => {
-                                removeUser(item);
-                              }}
-                              src={`/icons/close-white.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                    {allLabelUser.length > 3 && (
-                      <p className=" h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
-                        +{remainingCountUser}
-                      </p>
-                    )}
-                  </>
-                  <>
-                    {firstThreeTag.map((item, index) => {
-                      return (
-                        <div
-                          key={item.value}
-                          className="flex gap-[6px] items-center">
-                          {index === 0 && (
-                            <ImageRound
-                              src={`/icons/tag-white.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
-                          )}
-                          <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                            <span className="min-w-[32px] max-w-[118px]  truncate">
-                              {item.label}
-                            </span>
-                            <ImageRound
-                              onClick={() => {
-                                removeTag(item);
-                              }}
-                              src={`/icons/close-white.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                    {allLabelTag.length > 3 && (
-                      <p className="pr-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
-                        +{remainingCountTag}
-                      </p>
-                    )}
-                  </>
-                </div>
-              </div>
-            </div>
+            {/* Filter modal */}
+            <FilterTeamStatistic
+              open={isOpenModalFilter}
+              onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
+            />
           </div>
           <ImageRound
             src="/icons/extend-calendar.svg"
