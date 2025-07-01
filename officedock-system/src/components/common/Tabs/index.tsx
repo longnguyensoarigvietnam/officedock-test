@@ -1,13 +1,21 @@
 'use client';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useContext, useEffect, useState } from 'react';
 import { Tab, TabGroup, TabList, TabPanels } from '@headlessui/react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import Switch from '../Switch';
-import { OptionTabType } from '@interfaces/common';
-import { showToggleButtonColorByTime } from '@utils';
-import { TabType } from '@constants/enums';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+
+import { OptionTabType } from '@interfaces/common';
+
+import { deduplicateSearchParams, showToggleButtonColorByTime } from '@utils';
+
+import { PermissionsSystem, TabType } from '@constants/enums';
+import { SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
+import { pageRouters } from '@constants/routers';
+
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 type TabsProps = {
   defaultTab?: number;
@@ -39,16 +47,42 @@ const Tabs = ({
   children,
   onSelectedTab,
 }: TabsProps) => {
+  const { data: session } = useSessionCache();
+  const MENU_ITEMS = SYSTEM_PERMISSIONS_MENU.filter((menu) => {
+    if (menu.requiredPermission === PermissionsSystem.VIEW_ALL) {
+      return true;
+    }
+    return session?.user.permissions.includes(menu.requiredPermission);
+  });
+
   const [tabIdx, setTabIdx] = useState<number>(defaultTab);
   const [isTeamDockMenu, setIsTeamDockMenu] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   const tabIdParam = searchParams.get('tabId');
+  const { lastVisitedByTab, setLastVisitedByTab } =
+    useContext(GlobalStateContext);
 
   useEffect(() => {
     setTabIdx(tabIdParam ? Number(tabIdParam) : 0);
-  }, [tabIdParam]);
+
+    const dedupedParams = deduplicateSearchParams(
+      new URLSearchParams(searchParams.toString()),
+    );
+    const url = `${pathname}?${dedupedParams.toString()}`;
+    const filteredMenuItems = MENU_ITEMS.filter(
+      (item) =>
+        item.companyMenu == false &&
+        item.href !== pageRouters.MEMBER_MANAGEMENT.href,
+    );
+    if (Number(tabIdParam) == 1) {
+      setLastVisitedByTab((prev) => ({ ...prev, secondTab: url }));
+    } else if (filteredMenuItems.find((item) => item.href == pathname)) {
+      setLastVisitedByTab((prev) => ({ ...prev, firstTab: url }));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabIdParam, pathname, searchParams]);
 
   const onChangeTab = (idx: number) => {
     setTabIdx(idx);
@@ -57,7 +91,14 @@ const Tabs = ({
     if (idx) {
       const params = new URLSearchParams(searchParams.toString());
       params.set('tabId', String(idx));
-      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+      router.push(
+        `${lastVisitedByTab.secondTab ? `${lastVisitedByTab.secondTab}` : `${pathname}?${params.toString()}`}`,
+        {
+          scroll: false,
+        },
+      );
+    } else if (lastVisitedByTab.firstTab) {
+      router.push(lastVisitedByTab.firstTab);
     }
   };
 

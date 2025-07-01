@@ -408,7 +408,7 @@ const StatisticTeamBoard = () => {
         });
       } else {
         setListMemberTeam(
-          organization.members.map((member) => ({
+          organization.members?.map((member) => ({
             id: member.id,
             fullName: member.fullName,
             color: member?.avatarColor || '',
@@ -683,7 +683,7 @@ const StatisticTeamBoard = () => {
           </div>{' '}
         </div>
         <div className="flex items-center mt-[6px]">
-          {listMemberTeam.length > 0 && getParticipantAvatars(listMemberTeam)}
+          {listMemberTeam?.length > 0 && getParticipantAvatars(listMemberTeam)}
         </div>
       </div>
       <div>
