@@ -450,6 +450,7 @@ const AllocationTag = memo(
                               <ProgressBarStatistic
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
+                                isLast
                                 handleClickTooltip={(
                                   id: number | null,
                                   _organizationId?: string,

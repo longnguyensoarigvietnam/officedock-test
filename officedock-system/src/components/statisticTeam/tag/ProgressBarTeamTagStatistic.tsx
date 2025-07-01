@@ -36,6 +36,7 @@ interface ProgressBarProps {
   endDate?: Date | null;
   startDateCompare?: Date;
   endDateCompare?: Date | null;
+  isLast?: boolean;
   handleClickTooltip: ({
     userId,
     tagId,
@@ -63,6 +64,7 @@ const ProgressBarTeamTagStatistic = ({
   optionData,
   mergedItems,
   showInfo = true,
+  isLast,
   startDate,
   endDate,
   organizationId,
@@ -118,7 +120,8 @@ const ProgressBarTeamTagStatistic = ({
                   value: id || '',
                 });
             }}></div>
-          <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-md py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+          <div
+            className={`absolute -top-[25%]  ${isLast ? 'left-[10%]' : 'left-[40%]'} w-[288px] rounded-md py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
             {id != -1 ? (
               <div>
                 {startDate && endDate && (

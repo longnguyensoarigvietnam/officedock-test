@@ -970,6 +970,7 @@ const AllocationTagCompare = memo(
                                       false,
                                     );
                                   }}
+                                  isLast
                                   handleClickChart={(
                                     _data: OptionDropdownType,
                                   ) => {}}
@@ -989,6 +990,7 @@ const AllocationTagCompare = memo(
                                 />
                                 <ProgressBarStatistic
                                   key={index}
+                                  isLast
                                   classProgressClass="h-[20px] rounded-[4px]"
                                   handleClickTooltip={(id: number | null) => {
                                     handleClickTooltip(

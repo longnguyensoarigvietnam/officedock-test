@@ -15,7 +15,6 @@ import {
 import { getRandomColor, lightenColor } from '@utils';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import FilterTagTeam from '../filter/FilterTagTeam';
 
 type Props = {
@@ -72,9 +71,6 @@ const PercentageTeamTagsCompare = ({
     isLoadingSmallCompare,
   } = useContext(StatisticTeamTagsStateContext);
   const { setIsLoading } = useContext(LoadingContext);
-
-  const { selectedOrganization: selectedOrganizationTeamList } =
-    useContext(GlobalStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
   const [isShowModal, setIsShowModal] = useState(false);
@@ -569,11 +565,7 @@ const PercentageTeamTagsCompare = ({
                       options={smallOptions}
                       selectedOption={selectedSmall || undefined}
                       onChange={(data) => handleSelectSmall(data)}
-                      disabled={
-                        !selectedMedium ||
-                        selectedOrganization?.value !==
-                          selectedOrganizationTeamList?.value
-                      }
+                      disabled={!selectedMedium}
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
