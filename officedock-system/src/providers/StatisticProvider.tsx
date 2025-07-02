@@ -91,6 +91,11 @@ interface ContextValue {
   setCurrentPage: Dispatch<SetStateAction<number>>;
   removeTag: (selected: OptionDropdownType) => void;
   isHasLoading: boolean;
+
+  dataMediumCalendar: OptionDropdownType | undefined;
+  setDataMediumCalendar: Dispatch<
+    SetStateAction<OptionDropdownType | undefined>
+  >;
 }
 
 const defaultValue: ContextValue = {
@@ -174,6 +179,8 @@ const defaultValue: ContextValue = {
   currentPage: 1,
   setCurrentPage: () => {},
   removeTag: () => {},
+  dataMediumCalendar: undefined,
+  setDataMediumCalendar: () => {},
 };
 
 export const StatisticStateContext = createContext<ContextValue>(defaultValue);
@@ -255,6 +262,8 @@ export const StatisticStateProvider = ({
   // Page task list
 
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [dataMediumCalendar, setDataMediumCalendar] =
+    useState<OptionDropdownType>();
 
   // Data Date calendar compare
   const [endDateCompare, setEndDateCompare] = useState<Date | null>(new Date());
@@ -367,6 +376,8 @@ export const StatisticStateProvider = ({
     setCurrentPage,
     removeTag,
     isHasLoading,
+    dataMediumCalendar,
+    setDataMediumCalendar,
   };
 
   return (

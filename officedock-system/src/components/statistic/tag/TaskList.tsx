@@ -72,6 +72,8 @@ const TaskListStatisticTags = ({
     isSkeletonTagTask,
     isSkeletonTagTaskCompare,
     currentPage,
+    dataMediumCalendar,
+    setDataMediumCalendar,
     setCurrentPage,
   } = useContext(StatisticTagStateContext);
 
@@ -132,11 +134,19 @@ const TaskListStatisticTags = ({
       endDate: formatDateToYMD(`${endDate}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: selectedLarge?.value as number,
-      mediumCategoryId: selectedMedium?.value as number,
+      mediumCategoryId:
+        selectedOrganization?.type == OrganizationStatisticType.CALENDAR &&
+        dataMediumCalendar
+          ? (dataMediumCalendar?.value as number)
+          : (selectedMedium?.value as number),
       smallCategoryId: selectedSmall?.value as number,
 
       page: currentPage,
-      totalDuration: getTotalDuration(),
+      totalDuration:
+        selectedOrganization?.type == OrganizationStatisticType.CALENDAR &&
+        dataMediumCalendar
+          ? DEFAULT_TIME_TEXT
+          : getTotalDuration(),
       ordering: ordering,
       pageSize: pageSize,
       tagIds: selectedTags,
@@ -159,11 +169,19 @@ const TaskListStatisticTags = ({
         endDate: formatDateToYMD(`${endDateCompare}`) || '',
         organizationIds: String(selectedOrganization?.value || ''),
         largeCategoryId: selectedLarge?.value as number,
-        mediumCategoryId: selectedMedium?.value as number,
+        mediumCategoryId:
+          selectedOrganization?.type == OrganizationStatisticType.CALENDAR &&
+          dataMediumCalendar
+            ? (dataMediumCalendar?.value as number)
+            : (selectedMedium?.value as number),
         smallCategoryId: selectedSmall?.value as number,
 
         page: currentPage,
-        totalDuration: getTotalDurationCompare(),
+        totalDuration:
+          selectedOrganization?.type == OrganizationStatisticType.CALENDAR &&
+          dataMediumCalendar
+            ? DEFAULT_TIME_TEXT
+            : getTotalDurationCompare(),
         ordering: ordering,
         pageSize: pageSize,
         tagIds: selectedTags,
@@ -312,8 +330,22 @@ const TaskListStatisticTags = ({
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
                     classNameOption="!text-sm"
                     options={mediumOptions}
-                    selectedOption={selectedMedium || undefined}
-                    onChange={(data) => handleSelectMedium(data)}
+                    selectedOption={
+                      selectedOrganization?.type ===
+                      OrganizationStatisticType.CALENDAR
+                        ? dataMediumCalendar
+                        : selectedMedium || undefined
+                    }
+                    onChange={(data) => {
+                      if (
+                        selectedOrganization?.type ===
+                        OrganizationStatisticType.CALENDAR
+                      ) {
+                        setDataMediumCalendar(data);
+                      } else {
+                        handleSelectMedium(data);
+                      }
+                    }}
                     disabled={!selectedLarge || isHasLoading}
                   />
                 </div>
@@ -428,13 +460,23 @@ const TaskListStatisticTags = ({
                       selectedMedium?.value
                       ? statisticCategoryListCompare?.totalDuration ||
                         DEFAULT_TIME_TEXT
-                      : getTotalDurationCompare()
+                      : selectedOrganization?.type ===
+                            OrganizationStatisticType.CALENDAR &&
+                          dataMediumCalendar
+                        ? statisticCategoryListCompare?.totalDuration ||
+                          DEFAULT_TIME_TEXT
+                        : getTotalDurationCompare()
                     : selectedOrganization?.type ===
                           OrganizationStatisticType.CALENDAR &&
                         selectedMedium?.value
                       ? statisticCategoryList?.totalDuration ||
                         DEFAULT_TIME_TEXT
-                      : getTotalDuration()
+                      : selectedOrganization?.type ===
+                            OrganizationStatisticType.CALENDAR &&
+                          dataMediumCalendar
+                        ? statisticCategoryList?.totalDuration ||
+                          DEFAULT_TIME_TEXT
+                        : getTotalDuration()
                 }
                 listOptionsOrganization={listOptionsOrganization}
                 creationDataStatisticData={creationDataStatisticData}

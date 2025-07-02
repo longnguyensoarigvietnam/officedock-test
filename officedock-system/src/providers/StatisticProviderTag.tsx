@@ -92,6 +92,10 @@ interface ContextValue {
   currentPage: number;
   setCurrentPage: Dispatch<SetStateAction<number>>;
   removeTag: (selected: OptionDropdownType) => void;
+  dataMediumCalendar: OptionDropdownType | undefined;
+  setDataMediumCalendar: Dispatch<
+    SetStateAction<OptionDropdownType | undefined>
+  >;
 }
 
 const defaultValue: ContextValue = {
@@ -175,6 +179,8 @@ const defaultValue: ContextValue = {
   currentPage: 1,
   setCurrentPage: () => {},
   removeTag: () => {},
+  dataMediumCalendar: undefined,
+  setDataMediumCalendar: () => {},
 };
 
 export const StatisticTagStateContext =
@@ -229,6 +235,8 @@ export const StatisticTagStateProvider = ({
   // Page task list
 
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [dataMediumCalendar, setDataMediumCalendar] =
+    useState<OptionDropdownType>();
 
   // Total
   // Total duration
@@ -363,6 +371,8 @@ export const StatisticTagStateProvider = ({
     setCurrentPage,
     removeTag,
     isHasLoading,
+    dataMediumCalendar,
+    setDataMediumCalendar,
   };
 
   return (

@@ -69,6 +69,7 @@ const StatisticBoard = () => {
     setIsLoadingMediumCompare,
     setTagsOptions,
     setCurrentPage,
+    setDataMediumCalendar,
   } = useContext(StatisticStateContext);
 
   const [isMyTask, setIsMyTask] = useState(true);
@@ -257,6 +258,9 @@ const StatisticBoard = () => {
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === data.value,
     );
+    if (data.value === 292) {
+      setDataMediumCalendar(undefined);
+    }
 
     if (organization) {
       const largeCategories = organization.statisticCategories.map((stat) => ({
@@ -288,6 +292,9 @@ const StatisticBoard = () => {
     setSelectedLarge(null);
     setSelectedMedium(null);
     setSelectedSmall(null);
+    if (data.value === 292) {
+      setDataMediumCalendar(undefined);
+    }
 
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === data.value,
@@ -334,6 +341,9 @@ const StatisticBoard = () => {
 
     setSelectedMedium(null);
     setSelectedSmall(null);
+    if (data.value === 292) {
+      setDataMediumCalendar(undefined);
+    }
 
     const organization = creationDataStatisticData?.organizations.find(
       (org) => org.id === selectedOrganization?.value,

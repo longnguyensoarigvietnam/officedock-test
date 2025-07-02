@@ -64,6 +64,7 @@ const StatisticTagBoard = () => {
     setIsLoadingMediumCompare,
     setIsLoadingSmallCompare,
     setCurrentPage,
+    setDataMediumCalendar,
   } = useContext(StatisticTagStateContext);
   const [isMyTask, setIsMyTask] = useState(true);
   const router = useRouter();
@@ -169,6 +170,9 @@ const StatisticTagBoard = () => {
       }
     }
     setCurrentPage(1);
+    if (data.value === 292) {
+      setDataMediumCalendar(undefined);
+    }
 
     setSelectedOrganization(data);
     setSelectedLarge(null);
@@ -213,6 +217,9 @@ const StatisticTagBoard = () => {
       }
     }
     setCurrentPage(1);
+    if (data.value === 292) {
+      setDataMediumCalendar(undefined);
+    }
 
     setSelectedLarge(data);
     setSelectedMedium(null);

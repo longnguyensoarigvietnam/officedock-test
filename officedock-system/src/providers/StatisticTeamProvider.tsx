@@ -138,6 +138,11 @@ interface ContextValue {
   handleResetTableData: () => void;
   removeTag: (selected: OptionDropdownType) => void;
   removeUser: (selected: OptionDropdownType) => void;
+
+  dataMediumCalendar: OptionDropdownType | undefined;
+  setDataMediumCalendar: Dispatch<
+    SetStateAction<OptionDropdownType | undefined>
+  >;
 }
 
 const defaultValue: ContextValue = {
@@ -233,6 +238,9 @@ const defaultValue: ContextValue = {
   handleResetTableData: () => {},
   removeTag: () => {},
   removeUser: () => {},
+
+  dataMediumCalendar: undefined,
+  setDataMediumCalendar: () => {},
 };
 
 export const StatisticTeamStateContext =
@@ -294,6 +302,8 @@ export const StatisticTeamStateProvider = ({
 
   // Page task list
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [dataMediumCalendar, setDataMediumCalendar] =
+    useState<OptionDropdownType>();
 
   // Total
   // Total duration
@@ -522,6 +532,8 @@ export const StatisticTeamStateProvider = ({
     removeUser,
 
     isHasLoading,
+    dataMediumCalendar,
+    setDataMediumCalendar,
   };
 
   return (
