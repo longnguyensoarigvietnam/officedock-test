@@ -106,7 +106,7 @@ const LevelConditionDetail = ({
   }
   return (
     <div className="flex flex-col gap-3 w-full">
-      <p className="text-sm font-medium">{measureConditionText}</p>
+      <p className="text-sm font-medium text-nowrap">{measureConditionText}</p>
       <div
         className="flex gap-1 hover:cursor-pointer"
         onClick={() => {
@@ -154,7 +154,7 @@ export const OrganizationSkillDetail = ({
   const showErrorToast = useErrorToast();
   const { showToast } = useToast();
 
-  const stepDefitionBoxRef = useRef<HTMLDivElement | null>(null);
+  const stepDefinitionBoxRef = useRef<HTMLDivElement | null>(null);
   const isEditingRef = useRef(false);
 
   const { register, watch, reset } = useForm<OrganizationDefineSteps>({
@@ -185,7 +185,7 @@ export const OrganizationSkillDetail = ({
     {
       accessorKey: 'level1',
       header: () => (
-        <div className="flex gap-1 justify-start px-5">
+        <div className="flex gap-1 justify-start px-5 text-nowrap">
           <p className="font-medium text-xs text-[#0068B6]">レベル1→2</p>
           <p className="font-medium text-xs text-[#77858F]">
             のレベルアップ条件
@@ -196,7 +196,7 @@ export const OrganizationSkillDetail = ({
     {
       accessorKey: 'level2',
       header: () => (
-        <div className="flex gap-1 justify-start px-5">
+        <div className="flex gap-1 justify-start px-5 text-nowrap">
           <p className="font-medium text-xs text-[#0068B6]">レベル2→3</p>
           <p className="font-medium text-xs text-[#77858F]">
             のレベルアップ条件
@@ -207,7 +207,7 @@ export const OrganizationSkillDetail = ({
     {
       accessorKey: 'level3',
       header: () => (
-        <div className="flex gap-1 justify-start px-5">
+        <div className="flex gap-1 justify-start px-5 text-nowrap">
           <p className="font-medium text-xs text-[#0068B6]">レベル3→</p>
           <p className="font-medium text-xs text-[#77858F]">
             のレベルアップ条件
@@ -275,8 +275,8 @@ export const OrganizationSkillDetail = ({
     const handleClickOutside = (event: any) => {
       if (
         isEditStepDefinitionMode &&
-        stepDefitionBoxRef.current &&
-        !stepDefitionBoxRef.current.contains(event.target) &&
+        stepDefinitionBoxRef.current &&
+        !stepDefinitionBoxRef.current.contains(event.target) &&
         !isEditingRef.current
       ) {
         handleConfirmEditStepDefinitions({
@@ -306,7 +306,7 @@ export const OrganizationSkillDetail = ({
       {isEditStepDefinitionMode ? (
         <div
           className="border-[1px] border-[#D2DBE1] bg-white flex w-full py-[10px] px-[20px] mb-7 gap-5 items-center rounded-[6px]"
-          ref={stepDefitionBoxRef}>
+          ref={stepDefinitionBoxRef}>
           <div className="flex gap-5 w-[calc(100%_-_34px)]">
             <div className="flex gap-2 items-center w-1/3">
               <p className="bg-[#36ACDE] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
