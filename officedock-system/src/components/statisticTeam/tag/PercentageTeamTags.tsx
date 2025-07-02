@@ -18,7 +18,6 @@ import {
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import FilterTagTeam from './filter/FilterTagTeam';
 
 type Props = {
@@ -58,9 +57,6 @@ const PercentageTeamTags = ({
     isLoadingOrganization,
     isLoadingSmall,
   } = useContext(StatisticTeamTagsStateContext);
-
-  const { selectedOrganization: selectedOrganizationTeamList } =
-    useContext(GlobalStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
   const [isShowModal, setIsShowModal] = useState(false);
@@ -540,11 +536,7 @@ const PercentageTeamTags = ({
                       options={smallOptions}
                       selectedOption={selectedSmall || undefined}
                       onChange={(data) => handleSelectSmall(data)}
-                      disabled={
-                        !selectedMedium ||
-                        selectedOrganization?.value !==
-                          selectedOrganizationTeamList?.value
-                      }
+                      disabled={!selectedMedium}
                     />
                     {dataChartCategory.data.length > 0 ? (
                       <p className="text-sm text-black my-[26px]">

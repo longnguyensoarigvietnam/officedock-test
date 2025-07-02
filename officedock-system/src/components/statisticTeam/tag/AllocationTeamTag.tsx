@@ -506,6 +506,7 @@ const AllocationTeamTag = memo(
                             progressDataCategory.map((item, index) => (
                               <ProgressBarTeamTagStatistic
                                 key={index}
+                                isLast
                                 classProgressClass="h-[20px] rounded-[4px]"
                                 handleClickTooltip={({
                                   userId,
