@@ -2840,8 +2840,11 @@ const ChatDetail = ({
                                   )}
                               </div>
                             </div>
-                            <div className="mt-5">
-                              <EditorContent editor={editor} />
+                            <div className="mt-5 !max-w-full">
+                              <EditorContent
+                                editor={editor}
+                                className="w-full break-all whitespace-pre-wrap"
+                              />
                             </div>
                           </div>
                         ),

@@ -11,7 +11,10 @@ import { OptionTabType } from '@interfaces/common';
 import { deduplicateSearchParams, showToggleButtonColorByTime } from '@utils';
 
 import { PermissionsSystem, TabType } from '@constants/enums';
-import { SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
+import {
+  SYSTEM_PERMISSIONS_MENU,
+  SYSTEM_PERMISSIONS_MENU_TEAM,
+} from '@constants/menu';
 import { pageRouters } from '@constants/routers';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
@@ -54,6 +57,12 @@ const Tabs = ({
     }
     return session?.user.permissions.includes(menu.requiredPermission);
   });
+  const TEAM_MENU_ITEMS = SYSTEM_PERMISSIONS_MENU_TEAM.filter((menu) => {
+    if (menu.requiredPermission === PermissionsSystem.VIEW_ALL) {
+      return true;
+    }
+    return session?.user.permissions.includes(menu.requiredPermission);
+  });
 
   const [tabIdx, setTabIdx] = useState<number>(defaultTab);
   const [isTeamDockMenu, setIsTeamDockMenu] = useState<boolean>(false);
@@ -71,17 +80,24 @@ const Tabs = ({
       new URLSearchParams(searchParams.toString()),
     );
     const url = `${pathname}?${dedupedParams.toString()}`;
-    const filteredMenuItems = MENU_ITEMS.filter(
+
+    const isMyDockPage = MENU_ITEMS.filter(
       (item) =>
         item.companyMenu == false &&
         item.href !== pageRouters.MEMBER_MANAGEMENT.href,
-    );
-    if (Number(tabIdParam) == 1) {
+    ).some((item) => item.href === pathname);
+    const isTeamDockPage = TEAM_MENU_ITEMS.filter(
+      (item) =>
+        item.companyMenu == false &&
+        item.href !== pageRouters.MEMBER_MANAGEMENT.href,
+    ).some((item) => item.href === pathname);
+
+    if (Number(tabIdParam) == 1 && isTeamDockPage) {
       setLastVisitedByTab((prev) => ({ ...prev, secondTab: url }));
-    } else if (filteredMenuItems.find((item) => item.href == pathname)) {
+    } else if (!tabIdParam && isMyDockPage) {
       setLastVisitedByTab((prev) => ({ ...prev, firstTab: url }));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabIdParam, pathname, searchParams]);
 
   const onChangeTab = (idx: number) => {
