@@ -230,8 +230,13 @@ class UpdateDurationSerializer(serializers.ModelSerializer):
             ).exclude(id=instance.id)
 
             if overlapping_qs.exists():
+                data = (
+                    ActualDurationDetailSerializer(instance).data
+                    if instance
+                    else data
+                )
                 raise ValidationError(
-                    {"detail": ERROR_MESSAGES["exists_duration"]}
+                    {"detail": ERROR_MESSAGES["exists_duration"], "data": data}
                 )
 
         return data
@@ -278,6 +283,7 @@ class ActualDurationCreationSerializer(serializers.ModelSerializer):
         write_only=True,
     )
     uuid = serializers.UUIDField(required=False, allow_null=True)
+    current_date = serializers.DateField(required=False, allow_null=True)
 
     class Meta:
         model = TaskDuration
@@ -293,6 +299,7 @@ class ActualDurationCreationSerializer(serializers.ModelSerializer):
             "schedule_type",
             "started_at",
             "paused_at",
+            "current_date",
         ]
         read_only_fields = ["id"]
         extra_kwargs = {
@@ -349,6 +356,78 @@ class ActualDurationCreationSerializer(serializers.ModelSerializer):
 
         if overlapping_qs.exists():
             raise ValidationError({"detail": ERROR_MESSAGES["exists_duration"]})
+
+        return data
+
+
+class ActualDurationBulkCreationSerializer(serializers.Serializer):
+    """
+    Actual duration bulk creation serializer
+    """
+
+    actual_durations = ActualDurationCreationSerializer(many=True)
+
+    def validate(self, data):
+        """Validate data"""
+        durations = data["actual_durations"]
+
+        for i in range(len(durations)):
+            started_at = durations[i].get("started_at", None)
+            paused_at = durations[i].get("paused_at", None)
+            task = durations[i].get("task", None)
+            uuid = durations[i].get("uuid", None)
+            schedule = durations[i].get("schedule", None)
+            model = task or schedule
+            instance = self.instance
+            user = self.context.get("request").user
+            for j in range(i + 1, len(durations)):
+                next_task = durations[j]["task"]
+                next_started_at = durations[j]["started_at"]
+                next_paused_at = durations[j]["paused_at"]
+
+                if (
+                    task == next_task
+                    and started_at < next_paused_at
+                    and next_started_at < paused_at
+                ):
+                    raise ValidationError(
+                        {"detail": ERROR_MESSAGES["exists_duration"]}
+                    )
+            if task is None and schedule is None:
+                raise ValidationError(
+                    {"detail": ERROR_MESSAGES["task_and_event_not_exists"]}
+                )
+
+            if uuid and TaskDuration.objects.filter(uuid=uuid).exists():
+                raise ValidationError(
+                    {"detail": ERROR_MESSAGES["cannot_create"]}
+                )
+
+            check_valid_duration(started_at, paused_at, instance)
+            if instance:
+                paused_at = paused_at or instance.paused_at or now()
+                started_at = started_at or instance.started_at
+                user = instance.user
+            overlapping_qs = TaskDuration.objects.filter(
+                Q(
+                    task=model if isinstance(model, Task) else None,
+                    schedule=model if isinstance(model, Schedule) else None,
+                )
+                & Q(
+                    Q(started_at__lt=paused_at)
+                    & Q(Q(paused_at__gt=started_at) | Q(paused_at__isnull=True))
+                )
+                & Q(user=user)
+            )
+
+            # Exclude the current instance when updating
+            if instance:
+                overlapping_qs = overlapping_qs.exclude(id=instance.id)
+
+            if overlapping_qs.exists():
+                raise ValidationError(
+                    {"detail": ERROR_MESSAGES["exists_duration"]}
+                )
 
         return data
 
