@@ -15,6 +15,7 @@ from dashboard.serializers import ActualDurationListSerializer
 from tags.serializers import BaseTagSerializer
 from tasks.models import TaskDuration, Task
 from tasks.serializers import TaskCommonSerializer, TodoListSerializer
+from organizations.serializers import BaseOrganizationSerializer
 
 
 class DurationSerializer(serializers.ModelSerializer):
@@ -244,6 +245,7 @@ class DailyEventSerializer(serializers.ModelSerializer):
 class StatisticTaskSerializer(DailyTaskSerializer):
     """Statistic task serializer"""
 
+    organization = BaseOrganizationSerializer()
     percent = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -303,6 +305,7 @@ class StatisticTaskSerializer(DailyTaskSerializer):
 class StatisticEventSerializer(DailyEventSerializer):
     """Statistic event serializer"""
 
+    organization = BaseOrganizationSerializer()
     percent = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
