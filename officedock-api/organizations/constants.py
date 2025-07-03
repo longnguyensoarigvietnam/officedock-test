@@ -37,3 +37,6 @@ class OrganizationTypes(EnumChoices):
     NORMAL = "NORMAL"
     PROJECT = "PROJECT"
     CALENDAR = "CALENDAR"
+
+
+CALENDAR_ORGANIZATION_NAME = "カレンダーカテゴリー"

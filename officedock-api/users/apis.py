@@ -33,8 +33,6 @@ from common.utils import (
     send_web_socket_event,
 )
 from companies.models import Company, Contract
-from organizations.constants import OrganizationTypes
-from organizations.models import Organization
 from submit_levels.models import SubmitLevelHistory
 from users.constants import (
     RoleTypes,
@@ -515,9 +513,7 @@ class SystemAuthViewSet(BaseAPIViewSet):
         user.roles.add(role, through_defaults={"company": company})
 
         # Set default calendar organization
-        calendar_org, _ = Organization.all_objects.get_or_create(
-            type=OrganizationTypes.CALENDAR.value, company=company
-        )
+        calendar_org = company.get_calendar_organization()
         user.organizations.add(
             calendar_org,
             through_defaults={
@@ -887,9 +883,7 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
 
         # Save calendar organization
-        calendar_org, _ = Organization.all_objects.get_or_create(
-            type=OrganizationTypes.CALENDAR.value, company=company
-        )
+        calendar_org = company.get_calendar_organization()
         user.organizations.add(
             calendar_org,
             through_defaults={
