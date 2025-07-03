@@ -69,6 +69,16 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         role = Role.get_role(RoleTypes.SYSTEM_ADMIN.value)
         user.roles.add(role, through_defaults={"company": company})
 
+        # Save calendar organization
+        calendar_org = company.get_calendar_organization()
+        user.organizations.add(
+            calendar_org,
+            through_defaults={
+                "company": company,
+                "is_main": False,
+            },
+        )
+
         # Send mail to user
         mail_service = MailService()
         mail_service.send_admin_create_company_by_email(

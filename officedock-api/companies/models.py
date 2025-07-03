@@ -3,7 +3,10 @@ from django.db import models
 from base.models import BaseModel
 from companies.managers import AllCompanyManager, OnlyCompanyManager
 from companies.constants import ContractStatus
-from organizations.constants import OrganizationTypes
+from organizations.constants import (
+    CALENDAR_ORGANIZATION_NAME,
+    OrganizationTypes,
+)
 from organizations.models import Organization
 
 
@@ -28,7 +31,9 @@ class Company(BaseModel):
         Get all organizations
         """
         calendar_org, _ = Organization.all_objects.get_or_create(
-            company=self, type=OrganizationTypes.CALENDAR.value
+            company=self,
+            type=OrganizationTypes.CALENDAR.value,
+            defaults={"name": CALENDAR_ORGANIZATION_NAME},
         )
         return calendar_org
 

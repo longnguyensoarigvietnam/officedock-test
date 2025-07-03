@@ -23,7 +23,14 @@ class BaseOrganizationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ["id", "uuid", "name", "icon", "icon_color"]
+        fields = [
+            "id",
+            "uuid",
+            "name",
+            "icon",
+            "icon_color",
+            "type",
+        ]
 
     def to_representation(self, instance):
         """Override file URL representation to ensure consistency"""
@@ -189,6 +196,7 @@ class OrganizationSerializer(BaseOrganizationSerializer):
             "actions",
             "icon",
             "icon_color",
+            "type",
         ]
 
     def get_actions(self, obj):
@@ -280,6 +288,7 @@ class BaseOrganizationHierarchySerializer(serializers.ModelSerializer):
             "icon_color",
             "parent_uuid",
             "is_hierarchy",
+            "type",
         ]
 
 
@@ -352,6 +361,7 @@ class OrganizationHierarchySerializer(serializers.ModelSerializer):
             "icon",
             "icon_color",
             "children",
+            "type",
         ]
 
     def get_children(self, obj):
@@ -399,6 +409,7 @@ class OrganizationDetailSerializer(OrganizationSerializer):
             "actions",
             "icon",
             "icon_color",
+            "type",
         ]
 
     def get_statistic_categories(self, obj):
@@ -461,6 +472,7 @@ class OrganizationStatisticCategorySerializer(serializers.ModelSerializer):
             "small_statistic_category_uuid",
             "index",
             "skill_ids",
+            "type",
         ]
 
     def validate(self, data):
@@ -514,7 +526,15 @@ class OrganizationMemberSerializer(BaseOrganizationSerializer):
 
     class Meta:
         model = Organization
-        fields = ["id", "uuid", "name", "users", "icon", "icon_color"]
+        fields = [
+            "id",
+            "uuid",
+            "name",
+            "users",
+            "icon",
+            "icon_color",
+            "type",
+        ]
 
     def get_users(self, obj):
         """Get users in organization"""
@@ -549,6 +569,7 @@ class OrganizationCategoryHierarchySerializer(BaseOrganizationSerializer):
             "icon",
             "icon_color",
             "statistic_categories",
+            "type",
         ]
 
     def get_statistic_categories(self, obj):

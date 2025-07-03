@@ -1,7 +1,5 @@
 from django.db import models
 from base.models import BaseModel
-from organizations.constants import OrganizationTypes
-from organizations.models import Organization
 
 
 class Tag(BaseModel):
@@ -26,9 +24,7 @@ class Tag(BaseModel):
         """
         Get all organizations
         """
-        calendar_org, _ = Organization.all_objects.get_or_create(
-            company=self.company, type=OrganizationTypes.CALENDAR.value
-        )
+        calendar_org = self.company.get_calendar_organization()
         return self.organization_tags.filter(organization=calendar_org).first()
 
 

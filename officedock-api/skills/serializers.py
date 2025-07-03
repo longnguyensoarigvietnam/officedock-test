@@ -445,7 +445,16 @@ class BaseOrganizationWithSkillSerializer(BaseOrganizationSerializer):
 
     class Meta:
         model = Organization
-        fields = ["id", "uuid", "name", "icon", "icon_color", "skills", "steps"]
+        fields = [
+            "id",
+            "uuid",
+            "name",
+            "icon",
+            "icon_color",
+            "skills",
+            "steps",
+            "type",
+        ]
 
     def get_steps(self, obj):
         """Return steps of organization"""
@@ -497,7 +506,15 @@ class BaseOrganizationWithUserSkillMapSerializer(BaseOrganizationSerializer):
 
     class Meta:
         model = Organization
-        fields = ["id", "uuid", "name", "icon", "icon_color", "users"]
+        fields = [
+            "id",
+            "uuid",
+            "name",
+            "icon",
+            "icon_color",
+            "users",
+            "type",
+        ]
 
     def get_users(self, obj):
         """
