@@ -41,6 +41,7 @@ from dashboard.serializers import (
     DurationSerializer,
     UpdateDurationSerializer,
     ActualDurationDetailSerializer,
+    ActualDurationBulkCreationSerializer,
 )
 from dashboard.utils import (
     separate_duration,
@@ -50,7 +51,7 @@ from stat_data.utils import get_total_durations
 from tasks.constants import TaskStatus, CalculateSkillMapProcessCases
 from tasks.models import Task, TaskDuration, TaskSchedule
 from tasks.serializers import TaskCalendarSerializer
-from tasks.utils import calculate_progress_skill_map
+from tasks.utils import calculate_progress_skill_map, split_date_range
 
 
 @extend_schema(tags=["System > Dashboard"])
@@ -735,6 +736,8 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """Get serializer by action"""
         if self.action in ["create", "update", "partial_update"]:
             return ActualDurationCreationSerializer
+        if self.action == ["bulk_create"]:
+            return ActualDurationBulkCreationSerializer
 
         return super().get_serializer_class()
 
@@ -840,73 +843,18 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         return self.response_ok(data)
 
     @transaction.atomic
-    def perform_create(self, serializer):
+    def create(self, request):
         """
         Handle create actual duration task or schedule
         """
-        user = self.request.user
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
-        task = validated_data.pop("task", None)
-        schedule = validated_data.pop("schedule", None)
-        tags = validated_data.pop("tags", None)
-        categories = validated_data.pop("category_ids", None)
-        is_important = validated_data.pop("is_important", None)
-        schedule_type = validated_data.pop("schedule_type", None)
-        started_at = validated_data.pop("started_at", None)
-        paused_at = validated_data.pop("paused_at", None)
-        uuid = validated_data.pop("uuid", None)
-        model = task or schedule
+        durations = self._handle_create_actual_duration(validated_data)
 
-        # Create or update tags
-        if tags is not None:
-            # Remove all old tags and add new tag in request.
-            model.tags.clear()
-
-            for item in tags:
-                model.tags.add(
-                    item,
-                    through_defaults={"company": user.company},
-                )
-        elif tags == []:
-            model.tags.clear()
-
-        # Create or update categories
-        if categories is not None:
-            create_categories_by_model(model, categories)
-        elif categories == []:
-            model.categories.all().delete()
-
-        if isinstance(model, Task) and is_important is not None:
-            model.is_important = is_important
-            model.save()
-
-        if isinstance(model, Schedule) and schedule_type:
-            model.type = schedule_type
-            model.save()
-
-        uuid = uuid if uuid is not None else uuid4()
-
-        duration = serializer.save(
-            task=model if isinstance(model, Task) else None,
-            schedule=model if isinstance(model, Schedule) else None,
-            started_at=started_at,
-            paused_at=paused_at,
-            company=user.company,
-            user=user,
-            uuid=uuid,
+        return self.response_ok(
+            data=ActualDurationDetailSerializer(durations, many=True).data
         )
-        if duration.task:
-            total_duration = duration.paused_at - duration.started_at
-            for user in duration.task.people_in_charge.all():
-                # Plus total duration to skill map actual measure time
-                calculate_progress_skill_map(
-                    duration.task,
-                    user,
-                    duration_time=total_duration,
-                    case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
-                )
-        if started_at.date() != paused_at.date():
-            separate_duration(duration, duration.paused_at, user=user)
 
     @transaction.atomic
     def perform_update(self, serializer):
@@ -1007,3 +955,108 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 )
 
         instance.delete()
+
+    def _handle_create_actual_duration(self, item):
+        """
+        Handle create actual duration and calculate progress skill
+        """
+        user = self.request.user
+        task = item.pop("task", None)
+        schedule = item.pop("schedule", None)
+        tags = item.pop("tags", None)
+        categories = item.pop("category_ids", None)
+        is_important = item.pop("is_important", None)
+        schedule_type = item.pop("schedule_type", None)
+        started_at = item.pop("started_at", None)
+        paused_at = item.pop("paused_at", None)
+        uuid = item.pop("uuid", None)
+        model = task or schedule
+        # Create or update tags
+        if tags is not None:
+            # Remove all old tags and add new tag in request.
+            model.tags.clear()
+
+            for item in tags:
+                model.tags.add(
+                    item,
+                    through_defaults={"company": user.company},
+                )
+        elif not tags:
+            model.tags.clear()
+
+        # Create or update categories
+        if categories is not None:
+            create_categories_by_model(model, categories)
+        elif not categories:
+            model.categories.all().delete()
+
+        if isinstance(model, Task) and is_important is not None:
+            model.is_important = is_important
+            model.save()
+
+        if isinstance(model, Schedule) and schedule_type:
+            model.type = schedule_type
+            model.save()
+
+        durations = []
+        intervals = split_date_range(started_at, paused_at)
+        if started_at.date() != paused_at.date():
+            for start, end in intervals:
+                uuid = uuid4()
+                while TaskDuration.objects.filter(uuid=uuid).exists():
+                    uuid = uuid4()
+                task_duration = TaskDuration.objects.create(
+                    task=model if isinstance(model, Task) else None,
+                    schedule=model if isinstance(model, Schedule) else None,
+                    started_at=start,
+                    paused_at=end,
+                    company=user.company,
+                    user=user,
+                    uuid=uuid,
+                )
+                durations.append(task_duration)
+        else:
+            task_duration = TaskDuration.objects.create(
+                task=model if isinstance(model, Task) else None,
+                schedule=model if isinstance(model, Schedule) else None,
+                started_at=started_at,
+                paused_at=paused_at,
+                company=user.company,
+                user=user,
+                uuid=uuid,
+            )
+            durations.append(task_duration)
+
+        if isinstance(model, Task):
+            total_duration = paused_at - started_at
+            for user in model.people_in_charge.all():
+                # Plus total duration to skill map actual measure time
+                calculate_progress_skill_map(
+                    model,
+                    user,
+                    duration_time=total_duration,
+                    case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
+                )
+        return durations
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="bulk-create",
+        serializer_class=ActualDurationBulkCreationSerializer,
+    )
+    @transaction.atomic
+    def bulk_create(self, request):
+        """
+        Handle create multiple actual duration
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        actual_durations = serializer.validated_data["actual_durations"]
+        durations = []
+        for item in actual_durations:
+            durations += self._handle_create_actual_duration(item)
+
+        return self.response_ok(
+            data=ActualDurationDetailSerializer(durations, many=True).data
+        )

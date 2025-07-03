@@ -22,20 +22,13 @@ def separate_duration(
     duration.save()
     durations.append(duration)
     for start, end in intervals:
-        if duration.schedule_id:
-            task_duration = TaskDuration.objects.create(
-                schedule_id=duration.schedule_id,
-                started_at=start,
-                paused_at=end,
-                user=user,
-            )
-        elif duration.task_id:
-            task_duration = TaskDuration.objects.create(
-                task_id=duration.task_id,
-                started_at=start,
-                paused_at=end,
-                user=user,
-            )
+        task_duration = TaskDuration.objects.create(
+            task_id=duration.task_id,
+            schedule_id=duration.schedule_id,
+            started_at=start,
+            paused_at=end,
+            user=user,
+        )
         durations.append(task_duration)
     return durations if is_get_new_durations else True
 
