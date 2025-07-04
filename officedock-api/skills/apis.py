@@ -828,32 +828,29 @@ class SkillViewSet(
         skill.organizations_statistic_categories_skills.all().delete()
         if categories:
             for category in categories:
-                if (
-                    category["large_statistic_category"]
-                    == category["medium_statistic_category"]
-                    == category["small_statistic_category"]
-                    is None
-                ):
-                    continue
+                # Validate data category
+                large_category = category.get("large_statistic_category")
+                medium_category = category.get("medium_statistic_category")
+                small_category = category.get("small_statistic_category")
                 org_cat = OrganizationsStatisticCategories.objects.filter(
-                    large_statistic_category=category[
-                        "large_statistic_category"
-                    ],
-                    medium_statistic_category=category[
-                        "medium_statistic_category"
-                    ],
-                    small_statistic_category=category[
-                        "small_statistic_category"
-                    ],
-                    organization=skill.organization,
-                ).first()
-                if org_cat:
-                    OrganizationsStatisticCategoriesSkills.objects.create(
-                        skill=skill,
-                        organization_statistic_category=org_cat,
-                        organization=skill.organization,
-                        company=skill.company,
+                    large_statistic_category=large_category,
+                    medium_statistic_category=medium_category,
+                    small_statistic_category=small_category,
+                )
+                if not org_cat.exists():
+                    raise ValidationError(
+                        {
+                            "detail": ERROR_MESSAGES[
+                                "statistic_category_not_exists"
+                            ]
+                        }
                     )
+                OrganizationsStatisticCategoriesSkills.objects.create(
+                    skill=skill,
+                    organization_statistic_category=org_cat.first(),
+                    organization=skill.organization,
+                    company=skill.company,
+                )
         for level in levels:
             skill_level = level.pop("skill_level", None)
             SkillLevel.objects.update_or_create(

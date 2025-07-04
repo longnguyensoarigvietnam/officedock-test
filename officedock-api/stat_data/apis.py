@@ -140,13 +140,6 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         start_of_today = datetime.combine(now().date(), time.min)
         end_of_day = datetime.combine(date, time.max)
 
-        durations = TaskDuration.objects.filter(
-            Q(Q(user=user) & Q(paused_at__isnull=True))
-        )
-
-        for duration in durations:
-            self._separate_duration(duration, timezone.now(), user=user)
-
         if start_of_today == start_of_day:
             durations = TaskDuration.objects.filter(
                 Q(
