@@ -25,20 +25,19 @@ from common.utils import (
     transform_statistic_categories,
     split_id_from_string,
 )
-from organizations.constants import CategoryColors
-from organizations.models import Organization, OrganizationsStatisticCategories
+from organizations.models import Organization
 from organizations.serializers import OrganizationDetailSerializer
-from stat_data.constants import NONE_CATEGORY
+from stat_data.constants import ALL_TEAM
 from stat_data.serializers import (
     DailyEventSerializer,
     DailyTaskSerializer,
     DurationDetailForPDFSerializer,
 )
 from stat_data.utils import (
-    annotate_duration,
     get_total_durations,
     validate_date_by_regex_and_reformat,
     percentage_calculation_of_duration,
+    aggregate_durations,
 )
 from tasks.models import Task, TaskDuration
 from tasks.utils import split_date_range
@@ -205,85 +204,9 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 ] = transform_statistic_categories(categories)
 
         total_duration = get_total_durations(durations)
-
-        def get_category_durations(queryset):
-            """
-            Splits the queryset into two parts:
-            - One with a large statistic category
-            - One without a large statistic category
-            """
-            with_large = queryset.filter(
-                Q(categories__large_statistic_category__isnull=False)
-            ).values(
-                "categories__large_statistic_category__name",
-                "categories__large_statistic_category__id",
-                "organization__id",
-            )
-
-            return with_large.distinct()
-
         data["total_duration"] = format_duration(total_duration)
         data["categories"] = []
-        category_dict = {}
-
-        combine_cards = list(get_category_durations(tasks)) + list(
-            get_category_durations(events)
-        )
-        for card in combine_cards:
-            category_name = card["categories__large_statistic_category__name"]
-            category_id = card["categories__large_statistic_category__id"]
-            organization_id = card["organization__id"]
-            category_color = (
-                OrganizationsStatisticCategories.objects.filter(
-                    organization_id=organization_id,
-                    large_statistic_category__name=category_name,
-                )
-                .values_list("color", flat=True)
-                .first()
-            )
-            filter_durations = durations.filter(
-                Q(
-                    Q(
-                        task__categories__large_statistic_category__id=category_id
-                    )
-                    | Q(
-                        schedule__categories__large_statistic_category__id=category_id
-                    )
-                )
-                & Q(
-                    Q(task__organization__id=organization_id)
-                    | Q(schedule__organization__id=organization_id)
-                )
-            )
-            duration = annotate_duration(
-                filter_durations, start_of_day, end_of_day
-            )["total_duration"]
-
-            if category_id in category_dict:
-                category_dict[category_id]["duration"] += duration
-            else:
-                category_dict[category_id] = {
-                    "category_id": category_id,
-                    "category_name": category_name,
-                    "category_color": category_color,
-                    "duration": duration,
-                }
-        filter_durations = durations.filter(
-            Q(task__categories__large_statistic_category__isnull=True)
-            & Q(schedule__categories__large_statistic_category__isnull=True)
-        )
-        if filter_durations.exists():
-            category_dict["empty_category"] = {
-                "category_id": None,
-                "category_name": None,
-                "category_color": CategoryColors.GRAY.value,
-                "duration": annotate_duration(
-                    filter_durations, start_of_day, end_of_day
-                )["total_duration"],
-            }
-
-        category_list = list(category_dict.values())
-        total_duration = time_str_to_timedelta(format_duration(total_duration))
+        category_list = aggregate_durations(durations=durations)
         percent = 0
         for index, cat in enumerate(category_list):
             is_last_element = index == len(category_list) - 1
@@ -301,7 +224,6 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 percent,
                 is_last_element,
             )
-
             data["categories"].append(
                 {
                     "category_id": category_id,
@@ -384,11 +306,15 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     total_duration = timedelta()
                     durations = TaskDuration.objects.filter(
                         Q(
-                            Q(started_at__gte=start_of_day)
-                            & Q(user=user)
+                            Q(user=user)
                             & Q(
-                                Q(paused_at__lte=end_of_day)
-                                | Q(paused_at__isnull=True)
+                                Q(started_at__gte=start_of_day)
+                                & Q(paused_at__lte=end_of_day)
+                            )
+                            | Q(
+                                Q(started_at__lte=end_of_day)
+                                & Q(started_at__gte=start_of_day)
+                                & Q(paused_at__isnull=True)
                             )
                         )
                     )
@@ -456,13 +382,6 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         start_of_today = datetime.combine(now().date(), time.min)
         end_of_day = datetime.combine(date, time.max)
 
-        durations = TaskDuration.objects.filter(
-            Q(Q(user=user) & Q(paused_at__isnull=True))
-        )
-
-        for duration in durations:
-            self._separate_duration(duration, timezone.now(), user=user)
-
         if start_of_today == start_of_day:
             durations = TaskDuration.objects.filter(
                 Q(
@@ -508,60 +427,6 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         data["total_duration"] = format_duration(total_duration)
         data["categories"] = []
-        organization_dict = {}
-
-        combine_cards = list(get_category_durations(tasks)) + list(
-            get_category_durations(events)
-        )
-
-        for card in combine_cards:
-            category_name = card["categories__large_statistic_category__name"]
-            category_id = card["categories__large_statistic_category__id"]
-            organization_id = card["organization__id"]
-
-            # Get category color
-            category_color = (
-                OrganizationsStatisticCategories.objects.filter(
-                    organization_id=organization_id,
-                    large_statistic_category__name=category_name,
-                )
-                .values_list("color", flat=True)
-                .first()
-            )
-
-            # Filter durations for the category
-            filter_durations = durations.filter(
-                Q(
-                    Q(
-                        task__categories__large_statistic_category__id=category_id
-                    )
-                    | Q(
-                        schedule__categories__large_statistic_category__id=category_id
-                    )
-                )
-                & Q(
-                    Q(task__organization__id=organization_id)
-                    | Q(schedule__organization__id=organization_id)
-                )
-            )
-            duration = annotate_duration(
-                filter_durations, start_of_day, end_of_day
-            )["total_duration"]
-
-            # Update duration per category per organization
-            org_data = organization_dict.setdefault(organization_id, {})
-            category_data = org_data.setdefault(
-                category_id,
-                {
-                    "category_id": category_id,
-                    "category_name": category_name,
-                    "category_color": category_color,
-                    "duration": timedelta(0),
-                    "organization_id": organization_id,
-                },
-            )
-            category_data["duration"] += duration
-
         user_serializer = CreationDataUserWithMainOrganizationSerializer(
             user
         ).data
@@ -570,79 +435,48 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             if user_serializer["organizations"]
             else {"id": None}
         )
-
-        filter_durations = durations.filter(
-            task__categories__large_statistic_category__isnull=True,
-            schedule__categories__large_statistic_category__isnull=True,
+        category_list = aggregate_durations(
+            durations=durations,
+            organization_ids_param=ALL_TEAM,
+            is_daily_report=True,
         )
-        if filter_durations.exists():
-            for filter_duration in filter_durations:
-                model_object = filter_duration.task or filter_duration.schedule
-                org_id = getattr(
-                    getattr(model_object, "organization", None),
-                    "id",
-                    "none_organization",
-                )
-                paused_at = (
-                    filter_duration.paused_at
-                    if filter_duration.paused_at
-                    else now()
-                )
-                duration = paused_at - filter_duration.started_at
-
-                org_data = organization_dict.setdefault(org_id, {})
-                empty_cat = org_data.setdefault(
-                    "empty_category",
-                    {
-                        "category_id": None,
-                        "category_name": NONE_CATEGORY,
-                        "organization_id": org_id,
-                        "category_color": CategoryColors.GRAY.value,
-                        "duration": timedelta(0),
-                    },
-                )
-                empty_cat["duration"] += duration
-
         sub_duration = timedelta(0)
         total_duration = time_str_to_timedelta(format_duration(total_duration))
         percent = 0
-        for category in list(organization_dict.values()):
-            for index, cat in category.items():
-                is_last_element = index == len(list(category.values())) - 1
-                category_duration = format_duration(
-                    cat["duration"]
-                ) or timedelta(0)
-                category_name = cat["category_name"]
-                category_color = cat["category_color"]
-                category_id = cat["category_id"]
-                cate_organization_id = cat["organization_id"]
-                # Plus subt organization category duration
-                if cate_organization_id != main_organization["id"]:
-                    sub_duration += time_str_to_timedelta(category_duration)
+        for index, cat in enumerate(category_list):
+            is_last_element = index == len(category_list) - 1
+            category_duration = format_duration(cat["duration"]) or timedelta(0)
+            category_name = cat["category_name"]
+            category_color = cat["category_color"]
+            category_id = cat["category_id"]
+            cate_organization_id = cat["organization_id"]
+            # Plus subt organization category duration
+            if cate_organization_id != main_organization["id"]:
+                sub_duration += time_str_to_timedelta(category_duration)
 
-                (
-                    percent_per_total_duration,
-                    percent,
-                ) = percentage_calculation_of_duration(
-                    total_duration.total_seconds(),
-                    time_str_to_timedelta(category_duration).total_seconds(),
-                    percent,
-                    is_last_element,
-                )
+            (
+                percent_per_total_duration,
+                percent,
+            ) = percentage_calculation_of_duration(
+                total_duration.total_seconds(),
+                time_str_to_timedelta(category_duration).total_seconds(),
+                percent,
+                is_last_element,
+            )
 
-                data["categories"].append(
-                    {
-                        "category_id": category_id,
-                        "category_name": category_name,
-                        "category_color": category_color,
-                        "duration": category_duration,
-                        "percent": percent_per_total_duration,
-                        "is_of_main_organization": cate_organization_id
-                        == main_organization["id"]
-                        if cate_organization_id
-                        else False,
-                    }
-                )
+            data["categories"].append(
+                {
+                    "category_id": category_id,
+                    "category_name": category_name,
+                    "category_color": category_color,
+                    "duration": category_duration,
+                    "percent": percent_per_total_duration,
+                    "is_of_main_organization": cate_organization_id
+                    == main_organization["id"]
+                    if cate_organization_id
+                    else False,
+                }
+            )
         sub_percent, _ = percentage_calculation_of_duration(
             total_duration.total_seconds(), sub_duration.total_seconds()
         )
