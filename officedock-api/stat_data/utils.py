@@ -153,6 +153,7 @@ def aggregate_durations(
     medium_category_id=None,
     durations=None,
     organization_ids_param=None,
+    is_daily_report=False,
 ):
     """Aggregates durations from tasks or events into a single dictionary."""
     category_dict = {}
@@ -241,10 +242,18 @@ def aggregate_durations(
             )
             category_id = small_category.id if small_category else NONE_CATEGORY
 
-        if organization_ids_param == ALL_TEAM:
+        if (
+            organization_ids_param == ALL_TEAM
+            and organization
+            and not is_daily_report
+        ):
             category_name = organization.name + " " + category_name
 
-        key = category_name + "_" + str(organization.id)
+        key = (
+            category_name + "_" + str(organization.id)
+            if organization_ids_param == ALL_TEAM
+            else category_id
+        )
         if key in category_dict:
             category_dict[key]["duration"] += card["total_duration"]
         else:
