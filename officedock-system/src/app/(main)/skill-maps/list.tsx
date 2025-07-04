@@ -28,7 +28,7 @@ import {
   ServerStatusCode,
   SkillMapStep,
 } from '@constants/enums';
-import { ALL_TEAMS_OPTION } from '@constants';
+import { ALL_TEAMS_OPTION, NO_SETTING } from '@constants';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
@@ -206,9 +206,14 @@ const ListSkillsMap = () => {
             }))
           : [],
       categoryIds: step.rawCategories.map((cate) => ({
-        largeStatisticCategoryId: cate.LARGE.value as number,
-        mediumStatisticCategoryId: cate.MEDIUM.value as number,
-        smallStatisticCategoryId: cate.SMALL.value as number,
+        largeStatisticCategoryId:
+          cate.LARGE.value !== NO_SETTING ? (cate.LARGE.value as number) : null,
+        mediumStatisticCategoryId:
+          cate.MEDIUM.value !== NO_SETTING
+            ? (cate.MEDIUM.value as number)
+            : null,
+        smallStatisticCategoryId:
+          cate.SMALL.value !== NO_SETTING ? (cate.SMALL.value as number) : null,
       })),
     });
 
@@ -268,9 +273,14 @@ const ListSkillsMap = () => {
             }))
           : [],
       categoryIds: step.rawCategories.map((cate) => ({
-        largeStatisticCategoryId: cate.LARGE.value as number,
-        mediumStatisticCategoryId: cate.MEDIUM.value as number,
-        smallStatisticCategoryId: cate.SMALL.value as number,
+        largeStatisticCategoryId:
+          cate.LARGE.value !== NO_SETTING ? (cate.LARGE.value as number) : null,
+        mediumStatisticCategoryId:
+          cate.MEDIUM.value !== NO_SETTING
+            ? (cate.MEDIUM.value as number)
+            : null,
+        smallStatisticCategoryId:
+          cate.SMALL.value !== NO_SETTING ? (cate.SMALL.value as number) : null,
       })),
     });
 

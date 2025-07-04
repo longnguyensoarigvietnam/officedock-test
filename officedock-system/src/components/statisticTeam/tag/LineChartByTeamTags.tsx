@@ -54,12 +54,15 @@ import {
 } from '@interfaces/statistic';
 import { TooltipDiv } from '@interfaces/tooltip';
 
-import { SortingType, StatisticViewOptions } from '@constants/enums';
+import {
+  OrganizationStatisticType,
+  SortingType,
+  StatisticViewOptions,
+} from '@constants/enums';
 import {
   DEFAULT_TIME_TEXT,
   EVERYONE_OPTION_LABEL,
   STATISTIC_CHART_VIEW_OPTIONS,
-  TEAM_CALENDAR_ORGANIZATION,
 } from '@constants';
 
 import {
@@ -172,7 +175,7 @@ const LineChartByTeamTags = ({
     selectedOrganization: 0,
     tagIds: [],
     organizationMemberId:
-      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
         ? String(selectedOrganizationSideBar?.value || '')
         : undefined,
   });
@@ -354,7 +357,7 @@ const LineChartByTeamTags = ({
             ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
             : debouncedSelectedMembers,
         organizationMemberId:
-          selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ? String(selectedOrganizationSideBar?.value || '')
             : undefined,
       },
@@ -464,7 +467,7 @@ const LineChartByTeamTags = ({
           ]
         : [],
       organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     };
@@ -477,7 +480,7 @@ const LineChartByTeamTags = ({
     selectedLarge?.value,
     selectedMedium?.value,
     selectedSmall?.value,
-    selectedOrganization?.label,
+    selectedOrganization,
     selectedTag,
     selectedOrganizationSideBar?.value,
   ]);

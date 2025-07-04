@@ -54,9 +54,9 @@ export type StepFormDataDetail = BaseStepDetail & {
 export type StepRequestDataDetail = BaseStepDetail & {
   skillLevels: SkillLevelRequestDetail[];
   categoryIds: {
-    largeStatisticCategoryId: number;
-    mediumStatisticCategoryId: number;
-    smallStatisticCategoryId: number;
+    largeStatisticCategoryId: number | null;
+    mediumStatisticCategoryId: number | null;
+    smallStatisticCategoryId: number | null;
   }[];
 };
 
@@ -392,7 +392,7 @@ export interface SubmitLevelUpRequest {
   levelBeforeSubmit: string;
   stepBeforeSubmit: string;
   approverId: number | null;
-  status?: SubmitLevelStatus
+  status?: SubmitLevelStatus;
   items?: {
     item: string;
     isChecked: boolean;
@@ -449,7 +449,7 @@ export interface SubmitLevel {
     isComplete: boolean | null;
   };
   comment: string;
-  approver?: Staff
+  approver?: Staff;
 }
 
 export interface SubmitLevelByOrganization {

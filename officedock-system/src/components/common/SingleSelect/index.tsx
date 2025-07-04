@@ -49,6 +49,7 @@ const SingleSelect = ({
     MenuPlacementType.BOTTOM,
   );
   const selectRef = useRef<any>(null);
+  const optionRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!menuIsOpen || !selectRef.current || forceMenuPlacementBottom) return;
@@ -68,9 +69,21 @@ const SingleSelect = ({
     if (onChange) onChange(selectedOption);
     setMenuIsOpen(false);
   };
+  useEffect(() => {
+    const handleClickOutside = (event: any) => {
+      if (optionRef.current && !optionRef.current.contains(event.target)) {
+        setMenuIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
-    <div className={`h-full w-full relative ${className}`}>
+    <div ref={optionRef} className={`h-full w-full relative ${className}`}>
       <Select
         ref={selectRef}
         closeMenuOnSelect={closeMenuOnSelect}
@@ -139,7 +152,7 @@ const SingleSelect = ({
           forceMenuPlacementBottom ? MenuPlacementType.BOTTOM : menuPlacement
         }
       />
-      {showArrow && (
+      {showArrow && !isDisabled && (
         <div
           onClick={() => setMenuIsOpen(!menuIsOpen)}
           className="absolute top-1/2 -translate-y-1/2 right-1">

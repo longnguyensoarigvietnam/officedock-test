@@ -16,11 +16,12 @@ import RadioButton from '@components/common/RadioButton';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 
-import { SortingType, StatisticViewOptions } from '@constants/enums';
 import {
-  STATISTIC_CHART_VIEW_OPTIONS,
-  TEAM_CALENDAR_ORGANIZATION,
-} from '@constants';
+  OrganizationStatisticType,
+  SortingType,
+  StatisticViewOptions,
+} from '@constants/enums';
+import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 
 import { OptionDropdownType } from '@interfaces/common';
@@ -206,7 +207,7 @@ const StackedAreaTeamTagChart = ({
     selectedOrganization: 0,
     tagIds: [],
     organizationMemberId:
-      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
         ? String(selectedOrganizationSideBar?.value || '')
         : undefined,
   });
@@ -376,7 +377,7 @@ const StackedAreaTeamTagChart = ({
           ]
         : [],
       organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     };
@@ -389,7 +390,7 @@ const StackedAreaTeamTagChart = ({
     selectedSmall?.value,
     selectedMembers,
     selectedTag,
-    selectedOrganization?.label,
+    selectedOrganization,
     selectedOrganizationSideBar?.value,
     selectedOrganizationInTable,
   ]);

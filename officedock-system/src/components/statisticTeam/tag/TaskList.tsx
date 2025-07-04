@@ -7,10 +7,7 @@ import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
 import TableChart from './TableChart';
 
 import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
-import {
-  PAGINATION_PAGE_SIZE_KANBAN,
-  TEAM_CALENDAR_ORGANIZATION,
-} from '@constants';
+import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 
 import {
   CreationStatisticType,
@@ -24,6 +21,7 @@ import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderT
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import FilterTagTeam from './filter/FilterTagTeam';
+import { OrganizationStatisticType } from '@constants/enums';
 
 type Props = {
   isCheckCompare: boolean;
@@ -480,13 +478,15 @@ const TaskListStatisticTeamTags = ({
                 }
                 totalDuration={
                   isCheckCompare && isShowCompare
-                    ? selectedOrganization?.label ===
-                        TEAM_CALENDAR_ORGANIZATION && selectedMedium?.value
+                    ? selectedOrganization?.type ===
+                        OrganizationStatisticType.CALENDAR &&
+                      selectedMedium?.value
                       ? statisticCategoryListCompare?.totalDuration ||
                         '00:00:00'
                       : getTotalDurationCompare()
-                    : selectedOrganization?.label ===
-                          TEAM_CALENDAR_ORGANIZATION && selectedMedium?.value
+                    : selectedOrganization?.type ===
+                          OrganizationStatisticType.CALENDAR &&
+                        selectedMedium?.value
                       ? statisticCategoryList?.totalDuration || '00:00:00'
                       : getTotalDuration()
                 }

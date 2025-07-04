@@ -19,7 +19,7 @@ import FilterTeamStatistic from '@components/statisticTeam/category/filter/Filte
 
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { pageRouters } from '@constants/routers';
-import { ALL_TEAM_STATISTIC, TEAM_CALENDAR_ORGANIZATION } from '@constants';
+import { ALL_TEAM_STATISTIC } from '@constants';
 
 import useStatisticCategoriesTeam from '@hooks/useStatisticCategoriesTeam';
 import useStatisticCategoriesTeamCompare from '@hooks/useStatisticCategoriesTeamCompare';
@@ -32,6 +32,7 @@ import { formatDateToYMD, sumDurations } from '@utils/date';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { OrganizationStatisticType } from '@constants/enums';
 
 const StatisticTeamBoard = () => {
   const {
@@ -109,7 +110,7 @@ const StatisticTeamBoard = () => {
       smallCategoryId: selectedSmall?.value as number,
       orderingOptions: orderingOptions,
       organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     },
@@ -171,7 +172,7 @@ const StatisticTeamBoard = () => {
             if (
               selectedMedium &&
               selectedMedium.value &&
-              selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+              selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ) {
               setTotalDurationTask('00:00:00');
               return;
@@ -211,7 +212,7 @@ const StatisticTeamBoard = () => {
         isCompare: isCheckCompare,
         orderingOptions: orderingOptions,
         organizationMemberId:
-          selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ? String(selectedOrganizationSideBar?.value || '')
             : undefined,
       },
@@ -248,7 +249,8 @@ const StatisticTeamBoard = () => {
               if (
                 selectedMedium &&
                 selectedMedium.value &&
-                selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+                selectedOrganization?.type ===
+                  OrganizationStatisticType.CALENDAR
               ) {
                 setTotalDurationTask('00:00:00');
                 return;
@@ -325,6 +327,7 @@ const StatisticTeamBoard = () => {
         ...data.organizations.map((org) => ({
           value: org.id || '',
           label: org.name,
+          type: org.type,
         })),
       ]);
     },
@@ -364,7 +367,7 @@ const StatisticTeamBoard = () => {
 
       setTagsOptions(optionsTagList);
       if (
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION &&
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR &&
         organizationMember
       ) {
         setListMemberTeam(
