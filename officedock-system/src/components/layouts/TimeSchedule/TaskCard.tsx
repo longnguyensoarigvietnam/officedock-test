@@ -24,6 +24,7 @@ import {
 } from '@utils/date';
 import { TaskTimeSchedule } from '@interfaces/task';
 import { EventEditFormData } from '@interfaces/calendar';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 interface TaskCardProps {
   event: EventContentArg;
@@ -92,6 +93,7 @@ const TaskCard = ({
     setTaskSelected,
     setDataActualAddSchedule,
   } = useContext(TaskContext);
+  const { getDelay, recordHover } = useContext(GlobalStateContext);
 
   const searchParams = useSearchParams();
 
@@ -313,6 +315,7 @@ const TaskCard = ({
 
   const [isHovering, setIsHovering] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
+  const timeoutId = useRef<NodeJS.Timeout | null>(null);
 
   const handleMouseEnter = (e: any) => {
     setLocal({
@@ -509,18 +512,23 @@ const TaskCard = ({
             onMouseEnter={(e) => {
               if (isShiftPressed) return;
               if (isInteracting) return;
-              handleMouseEnter(e);
-              const fcEvent = containerRef.current?.closest(
-                '.fc-event',
-              ) as HTMLElement;
-              const resizer = fcEvent?.querySelector(
-                '.fc-event-resizer-end',
-              ) as HTMLElement;
-              if (resizer) {
-                resizer.style.setProperty('opacity', '0', 'important');
-              }
+              const delay = getDelay();
+              timeoutId.current = setTimeout(() => {
+                handleMouseEnter(e);
+                const fcEvent = containerRef.current?.closest(
+                  '.fc-event',
+                ) as HTMLElement;
+                const resizer = fcEvent?.querySelector(
+                  '.fc-event-resizer-end',
+                ) as HTMLElement;
+                if (resizer) {
+                  resizer.style.setProperty('opacity', '0', 'important');
+                }
+                recordHover();
+              }, delay);
             }}
             onMouseLeave={() => {
+              if (timeoutId.current) clearTimeout(timeoutId.current);
               handleMouseLeave();
               const fcEvent = containerRef.current?.closest(
                 '.fc-event',
