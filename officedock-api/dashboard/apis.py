@@ -981,13 +981,13 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     item,
                     through_defaults={"company": user.company},
                 )
-        elif not tags:
+        elif tags == []:
             model.tags.clear()
 
         # Create or update categories
         if categories is not None:
             create_categories_by_model(model, categories)
-        elif not categories:
+        elif categories == []:
             model.categories.all().delete()
 
         if isinstance(model, Task) and is_important is not None:
