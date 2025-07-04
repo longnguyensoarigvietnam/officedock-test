@@ -54,6 +54,7 @@ import {
 import { TooltipDiv } from '@interfaces/tooltip';
 
 import {
+  OrganizationStatisticType,
   SortingType,
   StatisticChartType,
   StatisticViewOptions,
@@ -62,7 +63,6 @@ import {
   DEFAULT_TIME_TEXT,
   EVERYONE_OPTION_LABEL,
   STATISTIC_CHART_VIEW_OPTIONS,
-  TEAM_CALENDAR_ORGANIZATION,
 } from '@constants';
 
 import {
@@ -185,7 +185,7 @@ const LineChartByTeamTagsCompare = ({
     selectedOrganization: 0,
     tagIds: [],
     organizationMemberId:
-      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
         ? String(selectedOrganizationSideBar?.value || '')
         : undefined,
   });
@@ -200,7 +200,7 @@ const LineChartByTeamTagsCompare = ({
     selectedTags: [] as OptionDropdownType[],
     userIds: selectedMembers?.filter(Boolean).join(','),
     organizationMemberId:
-      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
         ? String(selectedOrganizationSideBar?.value || '')
         : undefined,
   });
@@ -215,7 +215,7 @@ const LineChartByTeamTagsCompare = ({
     selectedTags: [] as OptionDropdownType[],
     userIds: selectedMembers?.filter(Boolean).join(','),
     organizationMemberId:
-      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
         ? String(selectedOrganizationSideBar?.value || '')
         : undefined,
   });
@@ -231,7 +231,7 @@ const LineChartByTeamTagsCompare = ({
     selectedOrganization: 0,
     tagIds: [],
     organizationMemberId:
-      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
         ? String(selectedOrganizationSideBar?.value || '')
         : undefined,
   });
@@ -413,7 +413,7 @@ const LineChartByTeamTagsCompare = ({
           ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
           : filter.userIds,
       organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     },
@@ -549,7 +549,7 @@ const LineChartByTeamTagsCompare = ({
           ]
         : [],
       organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     };
@@ -584,7 +584,7 @@ const LineChartByTeamTagsCompare = ({
       organizationId: String(selectedOrganization?.value),
       selectedTags: selectedTags || [],
       organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     };
@@ -592,13 +592,12 @@ const LineChartByTeamTagsCompare = ({
     startDate,
     endDate,
     selectedMembers,
-    selectedOrganization?.value,
     selectedLarge,
     selectedMedium,
     selectedSmall,
     orderingOptions,
     selectedTags,
-    selectedOrganization?.label,
+    selectedOrganization,
     selectedOrganizationSideBar?.value,
     listMemberTeam,
   ]);
@@ -617,7 +616,7 @@ const LineChartByTeamTagsCompare = ({
       organizationId: String(selectedOrganization?.value),
       selectedTags: selectedTags || [],
       organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     };
@@ -625,13 +624,12 @@ const LineChartByTeamTagsCompare = ({
     startDateCompare,
     endDateCompare,
     selectedMembers,
-    selectedOrganization?.value,
     selectedLarge,
     selectedMedium,
     selectedSmall,
     orderingOptions,
     selectedTags,
-    selectedOrganization?.label,
+    selectedOrganization,
     selectedOrganizationSideBar?.value,
     listMemberTeam,
   ]);
@@ -655,7 +653,7 @@ const LineChartByTeamTagsCompare = ({
           ]
         : [],
       organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     };

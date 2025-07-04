@@ -28,13 +28,10 @@ import {
   EventCalendarType,
   EventWorkCategory,
   OrderingDataType,
+  OrganizationStatisticType,
   ScreenName,
 } from '@constants/enums';
-import {
-  ALL_TEAM_STATISTIC,
-  NO_SETTING,
-  TEAM_CALENDAR_ORGANIZATION,
-} from '@constants';
+import { ALL_TEAM_STATISTIC, NO_SETTING } from '@constants';
 import { ERROR_UPDATE_MESSAGE } from '@constants/message';
 import { apiRouters } from '@constants/routers';
 
@@ -42,23 +39,13 @@ import { OptionDropdownType } from '@interfaces/common';
 import {
   CreationStatisticType,
   DataTaskListStatisticListType,
+  ListTaskStatistic,
 } from '@interfaces/statistic';
 import api from '@base/api';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useErrorToast } from '@hooks/useErrorToast';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import useCreationDataStatisticAllTeam from '@hooks/useCreationDataStatisticAllTeam';
-
-interface ListTaskStatistic {
-  id: number;
-  name: string;
-  duration: string;
-  ratio: string;
-  categories: OptionDropdownType[];
-  tags: OptionDropdownType[];
-  organization: number;
-  type: string;
-}
 
 interface TableChartProps {
   ordering: string;
@@ -429,6 +416,7 @@ const TableChart = ({
           creationDataStatisticDataAllTeam?.organizations.map((org) => ({
             label: org.name,
             value: org.id,
+            type: org.type,
           }));
 
         let largeCategories: OptionDropdownType[] = [];
@@ -490,11 +478,15 @@ const TableChart = ({
                       )
                 }
                 placeholder=""
-                showArrow={rowData.organization !== 292}
+                showArrow={
+                  rowData.organizationType !==
+                  OrganizationStatisticType.CALENDAR
+                }
                 options={
                   selectedOrganization?.value === ALL_TEAM_STATISTIC
                     ? listOptionAllTeamOrg?.filter(
-                        (item) => item.label !== TEAM_CALENDAR_ORGANIZATION,
+                        (item) =>
+                          item?.type !== OrganizationStatisticType.CALENDAR,
                       )
                     : selectedOrganization
                       ? listOptionsOrganization.filter(
@@ -502,7 +494,10 @@ const TableChart = ({
                         )
                       : []
                 }
-                isDisabled={rowData.organization === 292}
+                isDisabled={
+                  rowData.organizationType ===
+                  OrganizationStatisticType.CALENDAR
+                }
                 onChange={(e) => {
                   if (e?.value === rowData.organization) return;
 
@@ -801,7 +796,9 @@ const TableChart = ({
             duration: task.totalDuration,
             name: task.title,
             type: task.type,
-            organization: task.organization,
+            organization: task.organization?.id,
+            organizationName: task.organization?.name,
+            organizationType: task.organization?.type,
             ratio: String(task.percent),
             tags: task.tags.map((tag) => {
               return {

@@ -7,10 +7,7 @@ import Checkbox from '@components/common/Checkbox';
 import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
 import TableChart from './TableChart';
 
-import {
-  PAGINATION_PAGE_SIZE_KANBAN,
-  TEAM_CALENDAR_ORGANIZATION,
-} from '@constants';
+import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 import {
   CreationStatisticType,
   DataTaskListStatisticListType,
@@ -24,6 +21,7 @@ import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
 import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
 import { StatisticStateContext } from '@providers/StatisticProvider';
 import FilterStatistic from './filter/FilterStatistic';
+import { OrganizationStatisticType } from '@constants/enums';
 
 type Props = {
   isCheckCompare: boolean;
@@ -385,13 +383,15 @@ const TaskListStatistic = ({
                 pageSize={pageSize}
                 totalDuration={
                   isCheckCompare && isShowCompare
-                    ? selectedOrganization?.label ===
-                        TEAM_CALENDAR_ORGANIZATION && selectedMedium?.value
+                    ? selectedOrganization?.type ===
+                        OrganizationStatisticType.CALENDAR &&
+                      selectedMedium?.value
                       ? statisticCategoryListCompare?.totalDuration ||
                         '00:00:00'
                       : getTotalDurationCompare()
-                    : selectedOrganization?.label ===
-                          TEAM_CALENDAR_ORGANIZATION && selectedMedium?.value
+                    : selectedOrganization?.type ===
+                          OrganizationStatisticType.CALENDAR &&
+                        selectedMedium?.value
                       ? statisticCategoryListTask?.totalDuration || '00:00:00'
                       : getTotalDuration()
                 }

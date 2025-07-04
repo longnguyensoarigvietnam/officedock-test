@@ -570,3 +570,6 @@ export enum ChatMemoType {
   FILE = 'file',
   MEMBER = 'member',
 }
+export enum OrganizationStatisticType {
+  CALENDAR = 'CALENDAR',
+}

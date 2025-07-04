@@ -117,6 +117,7 @@ import {
   DataDetailEventType,
   DataDetailTaskType,
   Task,
+  TaskActualCalculationType,
   TaskActualType,
   TaskRequest,
   TaskTimeSchedule,
@@ -674,6 +675,7 @@ const TimeSchedule = memo(
           }
         },
         onError: (error: AxiosError<any>) => {
+          setTaskTimeScheduleList([...taskTimeScheduleList]);
           showErrorToast(error, ERROR_COMMON_MESSAGE);
         },
         onSettled: () => {
@@ -906,6 +908,49 @@ const TimeSchedule = memo(
         },
       },
     );
+
+    // Update multi actual for task
+    const handleUpdateMultiActualTime = async ({
+      actualDurations,
+    }: {
+      actualDurations: {
+        uuid: string;
+        taskId: number;
+        startedAt: string;
+        pausedAt: string;
+      }[];
+    }) => {
+      return await api.post(apiRouters.TASK_ACTUAL_MULTIPLE, {
+        actualDurations: actualDurations,
+      });
+    };
+    const { mutate: updateMultiActualTime } = useMutation(
+      'postUpdateMultiPlanTime',
+      handleUpdateMultiActualTime,
+      {
+        onSuccess: async () => {
+          queryClient.refetchQueries(['getDataTaskHeaderList']);
+          setSelectedEvents([]);
+        },
+        onError: (error: AxiosError<any>, task) => {
+          if (task.actualDurations) {
+            setTaskTimeScheduleList((prev) => {
+              const uuidsToRemove = task.actualDurations.map(
+                (item) => item.uuid,
+              );
+              return prev.filter(
+                (item) => !uuidsToRemove.includes(item.uuid || ''),
+              );
+            });
+          }
+          showErrorToast(error, ERROR_UPDATE_MESSAGE);
+        },
+        onSettled: () => {
+          setIsLoading(false);
+        },
+      },
+    );
+
     // Update actual for task
     const handleUpdateActualTime = async ({
       uuid,
@@ -913,8 +958,12 @@ const TimeSchedule = memo(
     }: {
       uuid: string;
       data: { startedAt: string | null; pausedAt: string | null };
+      isSchedule?: boolean;
     }) => {
-      return await api.patch(apiRouters.UPDATE_TASK_ACTUAL(`${uuid}`), data);
+      return await api.patch<TaskActualType[]>(
+        apiRouters.UPDATE_TASK_ACTUAL(`${uuid}`),
+        data,
+      );
     };
 
     const { mutate: updateActualTime } = useMutation(
@@ -922,6 +971,77 @@ const TimeSchedule = memo(
       handleUpdateActualTime,
       {
         onSuccess: async ({ data }, task) => {
+          if (data.length > 0 && task.isSchedule) {
+            const tasksActualSchedule = data
+              .filter((data) => data.planStartDate)
+              .map((task) => {
+                const startDateActual = new Date(
+                  convertToCurrentTimezone(`${task.planStartDate}`),
+                );
+                const endDateActual = new Date(
+                  convertToCurrentTimezone(`${task.planEndDate}`),
+                );
+                const endTimeCustom = task.planEndDate
+                  ? endDateActual
+                  : getNext30MinuteSlot(startDateActual);
+                const largeColor =
+                  task.categories &&
+                  task.categories.find(
+                    (item) => item.type === EventWorkCategory.LARGE,
+                  )?.color;
+                if (task.type === ItemStartType.TASK) {
+                  return {
+                    title: task.title,
+                    start: startDateActual,
+                    end: task.planEndDate
+                      ? adjustEndDate(startDateActual, endDateActual, 5)
+                      : adjustEndDate(startDateActual, endTimeCustom as Date),
+                    id: task.id.toString(),
+                    taskId: task.taskId,
+                    uuid: task.uuid,
+                    planStartDate: task.planStartDate,
+                    planEndDate: task.planEndDate
+                      ? task.planEndDate
+                      : `${endTimeCustom}`,
+                    startEditable: task.planEndDate ? true : false,
+                    resourceId: ItemScheduleType.ACTUAL,
+                    type: ItemStartType.TASK,
+                    isMyTask: false,
+                    isStart: false,
+                    isCalculation: task.planEndDate ? false : true,
+                    largeColor: largeColor,
+                  };
+                } else {
+                  return {
+                    title: task.title,
+                    start: startDateActual,
+                    end: task.planEndDate
+                      ? adjustEndDate(startDateActual, endDateActual, 5)
+                      : adjustEndDate(startDateActual, endTimeCustom as Date),
+                    id: task.id.toString(),
+                    taskId: task.taskId,
+                    uuid: task.uuid,
+                    planStartDate: task.planStartDate,
+                    planEndDate: task.planEndDate
+                      ? task.planEndDate
+                      : `${endTimeCustom}`,
+                    startEditable: task.planEndDate ? true : false,
+                    resourceId: ItemScheduleType.ACTUAL,
+                    type: ItemStartType.SCHEDULE_ACTUAL,
+                    scheduleId: task.scheduleId,
+                    isMyTask: false,
+                    isStart: false,
+                    isCalculation: task.planEndDate ? false : true,
+                    largeColor: largeColor,
+                  };
+                }
+              });
+            setTaskTimeScheduleList((prev) => {
+              const filtered = prev.filter((item) => item.uuid !== task.uuid);
+              return [...filtered, ...tasksActualSchedule];
+            });
+          }
+
           queryClient.refetchQueries(['getDataTaskHeaderList']);
           if (task.data.pausedAt === null && statusTaskSelected.isStart) {
             queryClient.refetchQueries(['getTaskHeaderStart']);
@@ -936,12 +1056,44 @@ const TimeSchedule = memo(
             if (statusTaskSelected.taskDurationRunningUuid === data[0].uuid) {
               setStatusTaskSelected({
                 ...statusTaskSelected,
-                taskDuration: data[0].totalDuration,
+                taskDuration: data[0].totalDuration || '',
               });
             }
           }
         },
-        onError: (error: AxiosError<any>) => {
+        onError: (error: AxiosError<any>, task) => {
+          const data = error.response?.data?.data as TaskActualCalculationType;
+          if (data && task.isSchedule) {
+            setTaskTimeScheduleList((prev) => {
+              return prev.map((item) => {
+                if (item.uuid === task.uuid) {
+                  const startDateActual = new Date(
+                    convertToCurrentTimezone(`${data?.startedAt}`),
+                  );
+                  const endDateActual = new Date(
+                    convertToCurrentTimezone(`${data?.pausedAt}`),
+                  );
+                  const endTimeCustom = data.pausedAt
+                    ? endDateActual
+                    : getNext30MinuteSlot(startDateActual);
+                  return {
+                    ...item,
+                    start: startDateActual,
+                    end: data.pausedAt
+                      ? adjustEndDate(startDateActual, endDateActual, 5)
+                      : adjustEndDate(startDateActual, endTimeCustom as Date),
+                    planStartDate: data.startedAt || '',
+                    planEndDate: data.pausedAt
+                      ? data.pausedAt
+                      : `${endTimeCustom}`,
+                  };
+                }
+
+                return item;
+              });
+            });
+          }
+
           showErrorToast(error, ERROR_UPDATE_MESSAGE);
         },
         onSettled: () => {
@@ -1906,6 +2058,7 @@ const TimeSchedule = memo(
 
       setTimeout(() => setIsInteracting(false), 200);
     };
+
     // Event drag & drop schedule
     const handleEventDrop = async (info: EventDropArg) => {
       const droppedEvent = info.event;
@@ -1926,18 +2079,24 @@ const TimeSchedule = memo(
       ) {
         if (searchParams.get('view') === ViewOptions.WEEK) {
           if (!resourcePlanWeek) {
-            const oldStart = info.oldEvent.start;
-            const oldEnd = info.oldEvent.end;
-            info.event.setDates(oldStart as Date, oldEnd);
+            moveMultipleEventsAddActual(droppedEvent);
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            setTimeout(() => setIsInteracting(false), 200);
           } else {
             moveMultipleEvents(droppedEvent);
             await new Promise((resolve) => setTimeout(resolve, 100));
             setTimeout(() => setIsInteracting(false), 200);
           }
         } else {
-          moveMultipleEvents(droppedEvent);
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          setTimeout(() => setIsInteracting(false), 200);
+          if (resourcePlanDay) {
+            moveMultipleEvents(droppedEvent);
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            setTimeout(() => setIsInteracting(false), 200);
+          } else {
+            moveMultipleEventsAddActual(droppedEvent);
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            setTimeout(() => setIsInteracting(false), 200);
+          }
         }
       } else {
         if (
@@ -2016,7 +2175,10 @@ const TimeSchedule = memo(
             const oldEnd = info.oldEvent.end;
             info.event.setDates(oldStart as Date, oldEnd);
           }
-          if (areDatesDifferent(`${startDrop}`, `${endDrop}`)) {
+          if (
+            areDatesDifferent(`${startDrop}`, `${endDrop}`) &&
+            resourcePlanDay
+          ) {
             const oldStart = info.oldEvent.start;
             const oldEnd = info.oldEvent.end;
             info.event.setDates(oldStart as Date, oldEnd);
@@ -2188,6 +2350,7 @@ const TimeSchedule = memo(
                   ) {
                     updateActualTime({
                       uuid: droppedEvent.extendedProps.uuid,
+                      isSchedule: true,
                       data: {
                         startedAt: convertDateString(`${droppedEvent.start}`),
                         pausedAt: convertDateString(
@@ -2213,133 +2376,129 @@ const TimeSchedule = memo(
                 const oldEnd = info.oldEvent.end;
 
                 info.event.setDates(oldStart as Date, oldEnd);
-              }
-              if (
-                matchData &&
-                matchData.resourceId === ItemScheduleType.ACTUAL &&
-                resourcePlanDay
-              ) {
-                const oldStart = info.oldEvent.start;
-                const oldEnd = info.oldEvent.end;
-
-                info.event.setDates(oldStart as Date, oldEnd);
-              }
-              if (
-                matchData &&
-                matchData.resourceId === ItemScheduleType.PLANS &&
-                !resourcePlanDay
-              ) {
-                const oldStart = info.oldEvent.start;
-                const oldEnd = info.oldEvent.end;
-
-                info.event.setDates(oldStart as Date, oldEnd);
-              }
-              if (
-                matchData &&
-                matchData.uuid !== droppedEvent.extendedProps.uuid
-              ) {
-                info.view.calendar.refetchEvents();
-              }
-              const isCheckDay = resourcePlanDay
-                ? ItemScheduleType.PLANS
-                : ItemScheduleType.ACTUAL;
-              if (!resourcePlanDay) {
-                // Check overlap actual
-
-                const hasOverlap = taskTimeScheduleList.some((item) => {
-                  if (item.uuid === droppedEvent.extendedProps.uuid) {
-                    return false;
-                  }
-
-                  return (
-                    startDrop < item.end &&
-                    endDrop > item.start &&
-                    item.resourceId === isCheckDay &&
-                    !resourcePlanDay &&
-                    item.taskId === droppedEvent.extendedProps.taskId
-                  );
-                });
-
-                if (hasOverlap) {
+              } else {
+                if (
+                  matchData &&
+                  matchData.resourceId === ItemScheduleType.PLANS &&
+                  !resourcePlanDay
+                ) {
                   const oldStart = info.oldEvent.start;
                   const oldEnd = info.oldEvent.end;
 
                   info.event.setDates(oldStart as Date, oldEnd);
                 }
-              }
-              const newDataTimeList = taskTimeScheduleList.map((event) => {
-                if (event.uuid === droppedEvent.extendedProps.uuid) {
-                  const newData = {
-                    ...event,
-                    resourceId: isCheckDay,
-                    start: droppedEvent.start || new Date(),
-                    end: droppedEvent.end || new Date(),
-                    planStartDate: String(droppedEvent.start) || '',
-                    planEndDate: String(droppedEvent.end) || '',
-                  };
-                  return newData;
-                } else {
-                  return event;
+                if (
+                  matchData &&
+                  matchData.uuid !== droppedEvent.extendedProps.uuid
+                ) {
+                  info.view.calendar.refetchEvents();
                 }
-              });
-              // Set data schedule
-              setTaskTimeScheduleList(newDataTimeList);
 
-              await new Promise((resolve) => setTimeout(resolve, 100));
+                const isCheckDay = resourcePlanDay
+                  ? ItemScheduleType.PLANS
+                  : ItemScheduleType.ACTUAL;
+                if (!resourcePlanDay) {
+                  // Check overlap actual
 
-              if (
-                matchData &&
-                matchData.resourceId === ItemScheduleType.PLANS &&
-                !resourcePlanDay &&
-                droppedEvent.extendedProps.taskId
-              ) {
-                createActualDuration({
-                  taskId: droppedEvent.extendedProps.taskId,
-                  uuid: droppedEvent.extendedProps.uuid,
-                  startedAt: convertDateString(`${startDrop}`),
-                  pausedAt: convertDateString(`${endDrop}`),
-                });
-                deletePlanTask(droppedEvent.extendedProps.uuid);
-              } else {
+                  const hasOverlap = taskTimeScheduleList.some((item) => {
+                    if (item.uuid === droppedEvent.extendedProps.uuid) {
+                      return false;
+                    }
+
+                    return (
+                      startDrop < item.end &&
+                      endDrop > item.start &&
+                      item.resourceId === isCheckDay &&
+                      !resourcePlanDay &&
+                      item.taskId === droppedEvent.extendedProps.taskId
+                    );
+                  });
+
+                  if (hasOverlap) {
+                    const oldStart = info.oldEvent.start;
+                    const oldEnd = info.oldEvent.end;
+
+                    info.event.setDates(oldStart as Date, oldEnd);
+                  }
+                } else {
+                  const newDataTimeList = taskTimeScheduleList.map((event) => {
+                    if (event.uuid === droppedEvent.extendedProps.uuid) {
+                      const newData = {
+                        ...event,
+                        resourceId: isCheckDay,
+                        start: droppedEvent.start || new Date(),
+                        end: droppedEvent.end || new Date(),
+                        planStartDate: String(droppedEvent.start) || '',
+                        planEndDate: String(droppedEvent.end) || '',
+                      };
+                      return newData;
+                    } else {
+                      return event;
+                    }
+                  });
+                  // Set data schedule
+                  setTaskTimeScheduleList(newDataTimeList);
+                }
+
+                await new Promise((resolve) => setTimeout(resolve, 100));
+
                 if (
                   matchData &&
                   matchData.resourceId === ItemScheduleType.PLANS &&
-                  resourcePlanDay
+                  !resourcePlanDay &&
+                  droppedEvent.extendedProps.taskId
                 ) {
-                  updatePlanTime({
+                  createActualDuration({
+                    taskId: droppedEvent.extendedProps.taskId,
                     uuid: droppedEvent.extendedProps.uuid,
-                    data: {
-                      planStartDate: convertDateString(`${droppedEvent.start}`),
-                      planEndDate: convertDateString(
-                        addTimeDifference(
-                          `${droppedEvent.extendedProps.planStartDate}`,
-                          `${droppedEvent.extendedProps.planEndDate}`,
-                          droppedEvent.start as Date,
-                          0,
-                        ),
-                      ),
-                    },
+                    startedAt: convertDateString(`${startDrop}`),
+                    pausedAt: convertDateString(`${endDrop}`),
                   });
-                }
-                if (
-                  matchData &&
-                  matchData.resourceId === ItemScheduleType.ACTUAL &&
-                  !resourcePlanDay
-                ) {
-                  updateActualTime({
-                    uuid: droppedEvent.extendedProps.uuid,
-                    data: {
-                      startedAt: convertDateString(`${droppedEvent.start}`),
-                      pausedAt: convertDateString(
-                        addTimeDifference(
-                          `${droppedEvent.extendedProps.planStartDate}`,
-                          `${droppedEvent.extendedProps.planEndDate}`,
-                          droppedEvent.start as Date,
-                          0,
+                  deletePlanTask(droppedEvent.extendedProps.uuid);
+                } else {
+                  if (
+                    matchData &&
+                    matchData.resourceId === ItemScheduleType.PLANS &&
+                    resourcePlanDay
+                  ) {
+                    updatePlanTime({
+                      uuid: droppedEvent.extendedProps.uuid,
+                      data: {
+                        planStartDate: convertDateString(
+                          `${droppedEvent.start}`,
                         ),
-                      ),
-                    },
-                  });
+                        planEndDate: convertDateString(
+                          addTimeDifference(
+                            `${droppedEvent.extendedProps.planStartDate}`,
+                            `${droppedEvent.extendedProps.planEndDate}`,
+                            droppedEvent.start as Date,
+                            0,
+                          ),
+                        ),
+                      },
+                    });
+                  }
+                  if (
+                    matchData &&
+                    matchData.resourceId === ItemScheduleType.ACTUAL &&
+                    !resourcePlanDay
+                  ) {
+                    updateActualTime({
+                      uuid: droppedEvent.extendedProps.uuid,
+                      isSchedule: true,
+                      data: {
+                        startedAt: convertDateString(`${droppedEvent.start}`),
+                        pausedAt: convertDateString(
+                          addTimeDifference(
+                            `${droppedEvent.extendedProps.planStartDate}`,
+                            `${droppedEvent.extendedProps.planEndDate}`,
+                            droppedEvent.start as Date,
+                            0,
+                          ),
+                        ),
+                      },
+                    });
+                  }
                 }
               }
             }
@@ -2440,6 +2599,100 @@ const TimeSchedule = memo(
           planStartDate: convertDateString(item.start),
           planEndDate: convertDateString(item.end),
         })),
+      });
+    };
+    const moveMultipleEventsAddActual = (event: EventImpl) => {
+      const draggedEvent = taskTimeScheduleList.find(
+        (e) => e.uuid === event.extendedProps.uuid,
+      );
+      if (!event.start || !draggedEvent) return;
+
+      const movedDelta =
+        event.start.getTime() - new Date(draggedEvent.start).getTime();
+
+      const changedEvents: TaskTimeSchedule[] = [];
+
+      const updatedEvents = taskTimeScheduleList.flatMap((e) => {
+        if (selectedEvents.includes(e.uuid as string)) {
+          const newStart = addMilliseconds(
+            new Date(e.start),
+            movedDelta,
+          ).toISOString();
+          const newEnd = addMilliseconds(
+            new Date(e.end),
+            movedDelta,
+          ).toISOString();
+
+          // Create new copy
+          const newUuid = uuidv4();
+          const newEvent = {
+            ...e,
+            uuid: newUuid,
+            id: newUuid,
+            start: new Date(newStart),
+            end: new Date(newEnd),
+            planStartDate: convertDateString(newStart) || '',
+            planEndDate: convertDateString(newEnd) || '',
+            resourceId: ItemScheduleType.ACTUAL,
+          };
+
+          changedEvents.push(newEvent);
+
+          // Return the original and the new version
+          return [e, newEvent];
+        }
+
+        return [e]; // keep as is if not selected
+      });
+
+      // 👇 Split multi-day event if needed
+      const { allEvents, splittedEvents } =
+        splitMultiDayEventsArray(updatedEvents);
+
+      const updatedAllEvents = allEvents.map((event) => {
+        if (isMidnight(event.start) && isMidnight(event.end)) {
+          return {
+            ...event,
+            end: new Date(event.end.getTime() + 1000 * 60),
+            planEndDate: convertDateString(event.planEndDate || ''),
+            planStartDate: convertDateString(event.planStartDate || ''),
+          };
+        }
+        return event;
+      });
+
+      const updatedSplittedEvents = splittedEvents.map((event) => {
+        if (isMidnight(event.start) && isMidnight(event.end)) {
+          return {
+            ...event,
+            end: new Date(event.end.getTime() + 1000 * 60),
+            planEndDate: convertDateString(event.planEndDate || ''),
+            planStartDate: convertDateString(event.planStartDate || ''),
+          };
+        }
+        return event;
+      });
+
+      setTaskTimeScheduleList(updatedAllEvents);
+
+      // ✅ Prepare data to send to API
+      const filteredChangeEvent = changedEvents.filter(
+        (item) => !updatedSplittedEvents.some((split) => split.id === item.id),
+      );
+      const updatedChangeEvent = [
+        ...filteredChangeEvent,
+        ...updatedSplittedEvents,
+      ];
+
+      // ✅ Send new time update API
+      updateMultiActualTime({
+        actualDurations: updatedChangeEvent.map((item) => ({
+          uuid: item.uuid as string,
+          taskId: item.taskId as number,
+          startedAt: convertDateString(item.start),
+          pausedAt: convertDateString(item.end),
+        })),
+        // allEvents: updatedAllEvents,
       });
     };
     const handleEventDragStop = (info: EventDragStopArg) => {

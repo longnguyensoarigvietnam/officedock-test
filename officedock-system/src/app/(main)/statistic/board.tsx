@@ -16,7 +16,7 @@ import StackedAreaChart from '@components/statistic/category/StackedAreaChart';
 import LineChartCompare from '@components/statistic/category/compare/LineChartCompare';
 import FilterStatistic from '@components/statistic/category/filter/FilterStatistic';
 
-import { ALL_TEAM_STATISTIC, TEAM_CALENDAR_ORGANIZATION } from '@constants';
+import { ALL_TEAM_STATISTIC } from '@constants';
 import { pageRouters } from '@constants/routers';
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 import useStatisticCategoriesCompare from '@hooks/useStatisticCategoriesCompare';
@@ -26,6 +26,7 @@ import useTeamList from '@hooks/useListTeam';
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
 import { StatisticStateContext } from '@providers/StatisticProvider';
+import { OrganizationStatisticType } from '@constants/enums';
 
 const StatisticBoard = () => {
   const {
@@ -125,7 +126,7 @@ const StatisticBoard = () => {
             if (
               selectedMedium &&
               selectedMedium.value &&
-              selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+              selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ) {
               setTotalDurationTask('00:00:00');
               return;
@@ -179,7 +180,7 @@ const StatisticBoard = () => {
             if (
               selectedMedium &&
               selectedMedium.value &&
-              selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+              selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ) {
               setTotalDurationTask('00:00:00');
               return;
@@ -227,6 +228,7 @@ const StatisticBoard = () => {
         ...data.organizations.map((org) => ({
           value: org.id || '',
           label: org.name,
+          type: org.type,
         })),
       ]);
     },

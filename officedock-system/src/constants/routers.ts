@@ -454,6 +454,7 @@ export const apiRouters = {
   TASK_HEADER_START: '/durations/running/',
   TASK_CALCULATE_DURATION: () => `/durations/calculate/`,
   UPDATE_TASK_ACTUAL: (uuid: string) => `/durations/${uuid}/`,
+  TASK_ACTUAL_MULTIPLE: `/actual-durations/bulk-create/`,
 
   // CHAT
   CHAT_MESSAGES: (code: string) => `/chat/${code}/messages/`,

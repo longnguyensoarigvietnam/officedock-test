@@ -20,6 +20,7 @@ import { ActionsModal, EventWorkCategory } from '@constants/enums';
 import { OptionDropdownType } from '@interfaces/common';
 import { StepKey } from '@interfaces/skill-map';
 import { CategoryStructure, SkillMapFormData } from '@interfaces/skills';
+import { NO_SETTING } from '@constants';
 
 type StepRawCategoriesProps = {
   action: string | null;
@@ -205,9 +206,16 @@ const CategoryStepRaw = ({
                 render={({ field: { value, onChange }, fieldState }) => {
                   let optionsData: OptionDropdownType[] = [];
                   let isDisabledOption = false;
+                  const defaultNoSetting = {
+                    label: NO_SETTING,
+                    value: NO_SETTING,
+                  };
                   // Get option data with size
                   if (size === EventWorkCategory.LARGE) {
-                    optionsData = dataOptionsCategoryLarge;
+                    optionsData = [
+                      defaultNoSetting,
+                      ...dataOptionsCategoryLarge,
+                    ];
                     isDisabledOption = false;
                   }
                   if (size === EventWorkCategory.MEDIUM) {
@@ -215,16 +223,22 @@ const CategoryStepRaw = ({
                       `${stepKey}.rawCategories.${index}.LARGE`,
                     )?.value;
                     optionsData = largeSelected
-                      ? mediumOptionsForCurrentStep[index] ?? []
-                      : [];
+                      ? [
+                          defaultNoSetting,
+                          ...(mediumOptionsForCurrentStep[index] ?? []),
+                        ]
+                      : [defaultNoSetting];
                     isDisabledOption = !largeSelected;
                   } else if (size === EventWorkCategory.SMALL) {
                     const mediumSelected = watch(
                       `${stepKey}.rawCategories.${index}.MEDIUM`,
                     )?.value;
                     optionsData = mediumOptionsForCurrentStep[index]
-                      ? smallOptionsForCurrentStep[index] ?? []
-                      : [];
+                      ? [
+                          defaultNoSetting,
+                          ...(smallOptionsForCurrentStep[index] ?? []),
+                        ]
+                      : [defaultNoSetting];
                     isDisabledOption = !mediumSelected;
                   }
                   return (

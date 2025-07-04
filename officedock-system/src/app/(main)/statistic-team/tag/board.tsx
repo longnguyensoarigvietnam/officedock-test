@@ -18,7 +18,7 @@ import FilterTagTeam from '@components/statisticTeam/tag/filter/FilterTagTeam';
 
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
-import { ALL_TEAM_STATISTIC, TEAM_CALENDAR_ORGANIZATION } from '@constants';
+import { ALL_TEAM_STATISTIC } from '@constants';
 
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useStatisticTagsTeam from '@hooks/useStatisticTagsTeam';
@@ -31,6 +31,7 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { OptionDropdownType } from '@interfaces/common';
 
 import { formatDateToYMD, sumDurations } from '@utils/date';
+import { OrganizationStatisticType } from '@constants/enums';
 
 const StatisticTeamTagBoard = () => {
   const {
@@ -146,6 +147,7 @@ const StatisticTeamTagBoard = () => {
         ...data.organizations.map((org) => ({
           value: org.id || '',
           label: org.name,
+          type: org.type,
         })),
       ]);
     },
@@ -162,7 +164,7 @@ const StatisticTeamTagBoard = () => {
 
       tagIds: selectedTags,
       organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     },
@@ -225,7 +227,7 @@ const StatisticTeamTagBoard = () => {
       tagIds: selectedTags,
       isCompare: isCheckCompare,
       organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     },
@@ -283,7 +285,7 @@ const StatisticTeamTagBoard = () => {
       setTagsOptions(optionsTagList);
       setSelectedTags(optionsTagList);
       if (
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION &&
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR &&
         organizationMember
       ) {
         setListMemberTeam(

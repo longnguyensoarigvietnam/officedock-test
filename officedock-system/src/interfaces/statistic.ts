@@ -2,6 +2,7 @@ import { StatisticChartType } from '@constants/enums';
 import { TagCreationStatisticType, Tags } from './tag';
 import { TodoItem } from './task';
 import { User } from './user';
+import { OptionDropdownType } from './common';
 
 export interface TaskTimeStatistic {
   uuid: string;
@@ -284,6 +285,7 @@ export interface CreationStatisticType {
     fullName: string;
     avatarColor: string;
   }[];
+  type?: string;
   iconColor?: string;
   tags: TagCreationStatisticType[];
   members: {
@@ -348,7 +350,11 @@ export interface DataTaskListStatisticListType {
     startedAt: string;
     pausedAt: string;
   }[];
-  organization: number;
+  organization: {
+    id: number;
+    name: string;
+    type?: string;
+  };
   createdAt: string;
 }
 
@@ -516,10 +522,23 @@ export interface MergedTableTag {
   }[];
 }
 
-export interface TagTableRowDetailWithType extends TagTableRowDetail{
+export interface TagTableRowDetailWithType extends TagTableRowDetail {
   type: StatisticChartType.STANDARD | StatisticChartType.COMPARE;
 }
 
-export interface CategoryTableRowDetailWithType extends CategoryTableRowDetail{
+export interface CategoryTableRowDetailWithType extends CategoryTableRowDetail {
   type: StatisticChartType.STANDARD | StatisticChartType.COMPARE;
+}
+
+export interface ListTaskStatistic {
+  id: number;
+  name: string;
+  duration: string;
+  ratio: string;
+  categories: OptionDropdownType[];
+  tags: OptionDropdownType[];
+  organization: number;
+  organizationName: string;
+  organizationType?: string;
+  type: string;
 }
