@@ -25,6 +25,12 @@ function StatisticCalendar() {
     endDateCompare,
     startDateCompare,
     isCheckCompare,
+    isLoadingLarge,
+    isLoadingLargeCompare,
+    isLoadingMedium,
+    isLoadingMediumCompare,
+    isLoadingOrganization,
+    isLoadingOrganizationCompare,
     setIsCheckCompare,
     setStartDate,
     setEndDate,
@@ -246,6 +252,8 @@ function StatisticCalendar() {
 
   // Save data time
   const handleSaveCalendar = () => {
+    setIsOpenModal(false);
+
     if (!dataEndDate) {
       setIsErrorData({
         ...isErrorData,
@@ -315,6 +323,7 @@ function StatisticCalendar() {
 
   // Save data time compare
   const handleSaveCalendarCompare = () => {
+    setIsOpenModal(false);
     if (!dataEndDate) {
       setIsErrorData({
         ...isErrorData,
@@ -473,6 +482,15 @@ function StatisticCalendar() {
         </div>
         <div
           onClick={() => {
+            if (
+              isLoadingLarge ||
+              isLoadingLargeCompare ||
+              isLoadingMedium ||
+              isLoadingMediumCompare ||
+              isLoadingOrganization ||
+              isLoadingOrganizationCompare
+            )
+              return;
             setIsOpenModal(!isOpenModal);
           }}
           className="w-fit h-fit min-h-[34px] flex flex-col gap-[6px]  px-3 py-2 border border-[#77858F] bg-white rounded-md  ">
