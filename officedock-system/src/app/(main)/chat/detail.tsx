@@ -948,9 +948,9 @@ const ChatDetail = ({
                 };
                 const allMessages = [newMessage, ...prev];
 
-                // Remove duplicates by id
+                // Remove duplicates by uuid
                 const uniqueMessages = Array.from(
-                  new Map(allMessages.map((msg) => [msg.id, msg])).values(),
+                  new Map(allMessages.map((msg) => [msg.uuid, msg])).values(),
                 );
 
                 return uniqueMessages;
