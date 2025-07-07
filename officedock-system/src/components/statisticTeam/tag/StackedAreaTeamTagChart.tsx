@@ -21,7 +21,7 @@ import {
   SortingType,
   StatisticViewOptions,
 } from '@constants/enums';
-import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
+import { DEFAULT_TIME_TEXT, STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 
 import { OptionDropdownType } from '@interfaces/common';
@@ -106,6 +106,7 @@ const StackedAreaTeamTagChart = ({
 }: Props) => {
   // Context
   const {
+    isHasLoading,
     totalDurationLarge,
     totalDurationMedium,
     totalDurationSmall,
@@ -141,7 +142,7 @@ const StackedAreaTeamTagChart = ({
       }
       return totalDurationLarge;
     }
-    return '00:00:00';
+    return DEFAULT_TIME_TEXT;
   };
 
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
@@ -642,10 +643,10 @@ const StackedAreaTeamTagChart = ({
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
       const rowADuration = convertDurationToTotalMinutes(
-        rowA.tagDuration || '00:00:00',
+        rowA.tagDuration || DEFAULT_TIME_TEXT,
       );
       const rowBDuration = convertDurationToTotalMinutes(
-        rowB.tagDuration || '00:00:00',
+        rowB.tagDuration || DEFAULT_TIME_TEXT,
       );
 
       return sortingType == SortingType.ASC
@@ -1019,6 +1020,7 @@ const StackedAreaTeamTagChart = ({
                 <Dropdown
                   label="チーム選択"
                   placeholder="-"
+                  disabled={isHasLoading}
                   placeholderClass="!text-black text-sm font-normal"
                   className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                   labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -1067,7 +1069,7 @@ const StackedAreaTeamTagChart = ({
                     setAreaTableData([]);
                     handleSelectLarge(data);
                   }}
-                  disabled={!selectedOrganization}
+                  disabled={!selectedOrganization || isHasLoading}
                 />
               </div>
             </div>
@@ -1102,7 +1104,7 @@ const StackedAreaTeamTagChart = ({
                     setAreaTableData([]);
                     handleSelectMedium(data);
                   }}
-                  disabled={!selectedLarge}
+                  disabled={!selectedLarge || isHasLoading}
                 />
               </div>
             </div>
@@ -1137,7 +1139,7 @@ const StackedAreaTeamTagChart = ({
                     setAreaTableData([]);
                     handleSelectSmall(data);
                   }}
-                  disabled={!selectedMedium}
+                  disabled={!selectedMedium || isHasLoading}
                 />
               </div>
             </div>
@@ -1209,7 +1211,7 @@ const StackedAreaTeamTagChart = ({
                         ? sumDurationsChart(
                             dataDetail.map((user) => user.duration),
                           )
-                        : '00:00:00';
+                        : DEFAULT_TIME_TEXT;
 
                       return (
                         <div

@@ -13,7 +13,7 @@ import {
 } from '@interfaces/statistic';
 import { getRandomColor, lightenColor } from '@utils';
 import { StatisticStateContext } from '@providers/StatisticProvider';
-import { ALL_TEAM_STATISTIC } from '@constants';
+import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT, NO_SETTING } from '@constants';
 import FilterStatistic from '../filter/FilterStatistic';
 
 type Props = {
@@ -44,6 +44,7 @@ const PercentageCategoryCompare = ({
   handleSelectOrganizationCustom,
 }: Props) => {
   const {
+    isHasLoading,
     largeOptions,
     mediumOptions,
     listOptionsOrganization,
@@ -220,7 +221,7 @@ const PercentageCategoryCompare = ({
     isCompare: boolean,
     organizationId?: string,
   ) => {
-    let duration: string = '00:00:00';
+    let duration: string = DEFAULT_TIME_TEXT;
     if (isCompare) {
       if (
         isLoadingLargeCompare ||
@@ -233,19 +234,19 @@ const PercentageCategoryCompare = ({
         duration =
           statisticCategoryCompareList?.largeCategories.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.LARGE) {
         duration =
           statisticCategoryCompareList?.mediumCategories?.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.MEDIUM) {
         duration =
           statisticCategoryCompareList?.smallCategories?.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       setDetailCategoryCompare({
         id: id,
@@ -262,19 +263,19 @@ const PercentageCategoryCompare = ({
         duration =
           statisticCategoryList?.largeCategories.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.LARGE) {
         duration =
           statisticCategoryList?.mediumCategories?.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.MEDIUM) {
         duration =
           statisticCategoryList?.smallCategories?.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       setDetailCategory({
         id: id,
@@ -296,10 +297,10 @@ const PercentageCategoryCompare = ({
       );
       item && handleSelectLarge(item);
       setTotalDurationTask(detailCategory.totalDuration);
-      if (String(detailCategory?.id) == '未設定') {
+      if (String(detailCategory?.id) == NO_SETTING) {
         handleSelectLarge({
-          label: '未設定',
-          value: '未設定',
+          label: NO_SETTING,
+          value: NO_SETTING,
         });
       }
     }
@@ -310,10 +311,10 @@ const PercentageCategoryCompare = ({
       item && handleSelectMedium(item);
       setTotalDurationTask(detailCategory.totalDuration);
 
-      if (String(detailCategory?.id) == '未設定') {
+      if (String(detailCategory?.id) == NO_SETTING) {
         handleSelectMedium({
-          label: '未設定',
-          value: '未設定',
+          label: NO_SETTING,
+          value: NO_SETTING,
         });
       }
     }
@@ -324,10 +325,10 @@ const PercentageCategoryCompare = ({
       item && handleSelectSmall(item);
       setTotalDurationTask(detailCategory.totalDuration);
 
-      if (String(detailCategory?.id) == '未設定') {
+      if (String(detailCategory?.id) == NO_SETTING) {
         handleSelectSmall({
-          label: '未設定',
-          value: '未設定',
+          label: NO_SETTING,
+          value: NO_SETTING,
         });
       }
     }
@@ -338,10 +339,10 @@ const PercentageCategoryCompare = ({
       item && handleSelectSmall(item);
       setTotalDurationTask(detailCategory.totalDuration);
 
-      if (String(detailCategory?.id) == '未設定') {
+      if (String(detailCategory?.id) == NO_SETTING) {
         handleSelectSmall({
-          label: '未設定',
-          value: '未設定',
+          label: NO_SETTING,
+          value: NO_SETTING,
         });
       }
     }
@@ -361,10 +362,10 @@ const PercentageCategoryCompare = ({
       item && handleSelectLarge(item);
       setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
 
-      if (String(detailCategoryCompare?.id) == '未設定') {
+      if (String(detailCategoryCompare?.id) == NO_SETTING) {
         handleSelectLarge({
-          label: '未設定',
-          value: '未設定',
+          label: NO_SETTING,
+          value: NO_SETTING,
         });
       }
     }
@@ -375,10 +376,10 @@ const PercentageCategoryCompare = ({
       item && handleSelectMedium(item);
       setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
 
-      if (String(detailCategoryCompare?.id) == '未設定') {
+      if (String(detailCategoryCompare?.id) == NO_SETTING) {
         handleSelectMedium({
-          label: '未設定',
-          value: '未設定',
+          label: NO_SETTING,
+          value: NO_SETTING,
         });
       }
     }
@@ -390,10 +391,10 @@ const PercentageCategoryCompare = ({
       item && handleSelectSmall(item);
       setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
 
-      if (String(detailCategoryCompare?.id) == '未設定') {
+      if (String(detailCategoryCompare?.id) == NO_SETTING) {
         handleSelectSmall({
-          label: '未設定',
-          value: '未設定',
+          label: NO_SETTING,
+          value: NO_SETTING,
         });
       }
     }
@@ -403,10 +404,10 @@ const PercentageCategoryCompare = ({
       );
       item && handleSelectSmall(item);
       setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
-      if (String(detailCategoryCompare?.id) == '未設定') {
+      if (String(detailCategoryCompare?.id) == NO_SETTING) {
         handleSelectSmall({
-          label: '未設定',
-          value: '未設定',
+          label: NO_SETTING,
+          value: NO_SETTING,
         });
       }
     }
@@ -474,6 +475,7 @@ const PercentageCategoryCompare = ({
                       <Dropdown
                         label="チーム選択"
                         placeholder="-"
+                        disabled={isHasLoading}
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -555,7 +557,7 @@ const PercentageCategoryCompare = ({
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
-                        disabled={!selectedOrganization}
+                        disabled={!selectedOrganization || isHasLoading}
                       />
                     </div>
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
@@ -619,7 +621,7 @@ const PercentageCategoryCompare = ({
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedLarge || isHasLoading}
                       />
                     </div>
                     <div className="min-h-[280px] mt-[10px] flex justify-center">

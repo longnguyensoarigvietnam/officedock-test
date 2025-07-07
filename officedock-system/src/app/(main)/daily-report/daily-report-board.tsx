@@ -60,7 +60,7 @@ import {
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
 } from '@constants/message';
-import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY } from '@constants';
+import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY, NO_SETTING } from '@constants';
 
 import './styles/daily-report.css';
 import useDataStatistic from '@hooks/useDataStatistic';
@@ -256,7 +256,7 @@ const DailyReportBoard = () => {
       // Add color for item
       const dataAddColor = dataStatistic.categories.map((item) => ({
         color: item.categoryColor,
-        categoryName: item.categoryName ? item.categoryName : '未設定',
+        categoryName: item.categoryName ? item.categoryName : NO_SETTING,
         duration: item.duration,
         percent: item.percent,
       }));
@@ -268,7 +268,7 @@ const DailyReportBoard = () => {
 
       // Get list label
       const listLabelChart = dataStatistic.categories.map(
-        (item) => item.categoryName || '未設定',
+        (item) => item.categoryName || NO_SETTING,
       );
 
       // Get list value
@@ -347,7 +347,7 @@ const DailyReportBoard = () => {
       // Prepare colored data
       const dataAddColor = mergedCategories.map((item) => ({
         color: item.isOfMainOrganization ? 'white' : '#83919E',
-        categoryName: item.categoryName || '未設定',
+        categoryName: item.categoryName || NO_SETTING,
         duration: item.duration,
         percent: item.percent,
         id: item.id,
@@ -362,7 +362,7 @@ const DailyReportBoard = () => {
             : '#83919E',
       );
       const listLabelChart = mergedCategories.map(
-        (item) => item.categoryName || '未設定',
+        (item) => item.categoryName || NO_SETTING,
       );
       const listValueChart = mergedCategories.map((item) => item.percent);
       const listValueActualChart = mergedCategories.map((item) =>

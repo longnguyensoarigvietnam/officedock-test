@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
 
+import { DEFAULT_TIME_TEXT } from '@constants';
+
 import { OptionDropdownType } from '@interfaces/common';
 import { UserListStatisticType } from '@interfaces/statistic';
 import {
@@ -100,7 +102,7 @@ function buildUserCompareData(
             user: userB!.user,
             tasks: [],
             percent: '0',
-            duration: '00:00:00',
+            duration: DEFAULT_TIME_TEXT,
           },
       userCompare: userB
         ? {
@@ -113,7 +115,7 @@ function buildUserCompareData(
             user: userA!.user,
             tasks: [],
             percent: '0',
-            duration: '00:00:00',
+            duration: DEFAULT_TIME_TEXT,
           },
     };
   });
@@ -602,7 +604,7 @@ const ProgressBarTeamStatisticCompare = ({
                             userDuration:
                               itemUser.user.duration !== '-'
                                 ? itemUser.user.duration
-                                : '00:00:00',
+                                : DEFAULT_TIME_TEXT,
                             organizationId: item.organizationId,
                           })
                         }
@@ -697,7 +699,7 @@ const ProgressBarTeamStatisticCompare = ({
                             userDuration:
                               itemUser.userCompare.duration !== '-'
                                 ? itemUser.userCompare.duration
-                                : '00:00:00',
+                                : DEFAULT_TIME_TEXT,
                             isCompare: true,
                             duration: itemCompare?.duration || '',
                             totalTask: item.duration,

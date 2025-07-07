@@ -14,6 +14,7 @@ import { getAdjustedStartDateDefault } from '@utils/date';
 import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
 
 interface ContextValue {
+  isHasLoading: boolean;
   selectedOrganization: OptionDropdownType | null;
   selectedLarge: OptionDropdownType | null;
   selectedMedium: OptionDropdownType | null;
@@ -139,6 +140,7 @@ interface ContextValue {
 }
 
 const defaultValue: ContextValue = {
+  isHasLoading: false,
   smallOptions: [],
   mediumOptions: [],
   largeOptions: [],
@@ -381,6 +383,16 @@ export const StatisticTeamTagsStateProvider = ({
     setSelectedTags(updatedTagIds);
   };
 
+  const isHasLoading =
+    isLoadingLarge ||
+    isLoadingMedium ||
+    isLoadingOrganization ||
+    isLoadingLargeCompare ||
+    isLoadingMediumCompare ||
+    isLoadingOrganizationCompare ||
+    isLoadingSmall ||
+    isLoadingSmallCompare;
+
   const contextValue: ContextValue = {
     smallOptions,
     mediumOptions,
@@ -479,6 +491,8 @@ export const StatisticTeamTagsStateProvider = ({
 
     removeTag,
     handleResetTableData,
+
+    isHasLoading,
   };
 
   return (

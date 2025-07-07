@@ -141,6 +141,7 @@ const LineChartByTeamTagsCompare = ({
 }: Props) => {
   // Context
   const {
+    isHasLoading,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -290,9 +291,9 @@ const LineChartByTeamTagsCompare = ({
   const [standardDateLabels, setStandardDateLabels] = useState<string[]>([]);
   const [compareDateLabels, setCompareDateLabels] = useState<string[]>([]);
   const [totalStandardDuration, setTotalStandardDuration] =
-    useState<string>('00:00:00');
+    useState<string>(DEFAULT_TIME_TEXT);
   const [totalCompareDuration, setTotalCompareDuration] =
-    useState<string>('00:00:00');
+    useState<string>(DEFAULT_TIME_TEXT);
 
   // Collapse statuses
   const [tagCollapseStatuses, setTagCollapseStatuses] = useState<
@@ -1351,18 +1352,18 @@ const LineChartByTeamTagsCompare = ({
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
       const rowAStandard = convertDurationToTotalMinutes(
-        rowA.standardInfo?.tagDuration || '00:00:00',
+        rowA.standardInfo?.tagDuration || DEFAULT_TIME_TEXT,
       );
       const rowACompare = convertDurationToTotalMinutes(
-        rowA.compareInfo?.tagDuration || '00:00:00',
+        rowA.compareInfo?.tagDuration || DEFAULT_TIME_TEXT,
       );
       const rowADiff = rowAStandard - rowACompare;
 
       const rowBStandard = convertDurationToTotalMinutes(
-        rowB.standardInfo?.tagDuration || '00:00:00',
+        rowB.standardInfo?.tagDuration || DEFAULT_TIME_TEXT,
       );
       const rowBCompare = convertDurationToTotalMinutes(
-        rowB.compareInfo?.tagDuration || '00:00:00',
+        rowB.compareInfo?.tagDuration || DEFAULT_TIME_TEXT,
       );
       const rowBDiff = rowBStandard - rowBCompare;
 
@@ -1640,8 +1641,10 @@ const LineChartByTeamTagsCompare = ({
               <div className="font-medium flex text-sm justify-end text-black">
                 <p>
                   {subtractDurations(
-                    info.row.original.standardInfo?.tagDuration || '00:00:00',
-                    info.row.original.compareInfo?.tagDuration || '00:00:00',
+                    info.row.original.standardInfo?.tagDuration ||
+                      DEFAULT_TIME_TEXT,
+                    info.row.original.compareInfo?.tagDuration ||
+                      DEFAULT_TIME_TEXT,
                   )}
                 </p>
               </div>
@@ -1684,8 +1687,10 @@ const LineChartByTeamTagsCompare = ({
                           <div className="font-medium flex text-sm justify-end text-black">
                             <p>
                               {subtractDurations(
-                                user?.standardInfo?.userDuration || '00:00:00',
-                                user?.compareInfo?.userDuration || '00:00:00',
+                                user?.standardInfo?.userDuration ||
+                                  DEFAULT_TIME_TEXT,
+                                user?.compareInfo?.userDuration ||
+                                  DEFAULT_TIME_TEXT,
                               )}
                             </p>
                           </div>
@@ -1964,6 +1969,7 @@ const LineChartByTeamTagsCompare = ({
                   <Dropdown
                     label="チーム選択"
                     placeholder="-"
+                    disabled={isHasLoading}
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -2011,7 +2017,7 @@ const LineChartByTeamTagsCompare = ({
                       setMergedTableData([]);
                       handleSelectLarge(data);
                     }}
-                    disabled={!selectedOrganization}
+                    disabled={!selectedOrganization || isHasLoading}
                   />
                 </div>
               </div>
@@ -2046,7 +2052,7 @@ const LineChartByTeamTagsCompare = ({
                       setMergedTableData([]);
                       handleSelectMedium(data);
                     }}
-                    disabled={!selectedLarge}
+                    disabled={!selectedLarge || isHasLoading}
                   />
                 </div>
               </div>
@@ -2081,7 +2087,7 @@ const LineChartByTeamTagsCompare = ({
                       setMergedTableData([]);
                       handleSelectSmall(data);
                     }}
-                    disabled={!selectedMedium}
+                    disabled={!selectedMedium || isHasLoading}
                   />
                 </div>
               </div>

@@ -19,7 +19,8 @@ import FilterTeamStatistic from '@components/statisticTeam/category/filter/Filte
 
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { pageRouters } from '@constants/routers';
-import { ALL_TEAM_STATISTIC } from '@constants';
+import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
+import { OrganizationStatisticType } from '@constants/enums';
 
 import useStatisticCategoriesTeam from '@hooks/useStatisticCategoriesTeam';
 import useStatisticCategoriesTeamCompare from '@hooks/useStatisticCategoriesTeamCompare';
@@ -32,10 +33,10 @@ import { formatDateToYMD, sumDurations } from '@utils/date';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import { OrganizationStatisticType } from '@constants/enums';
 
 const StatisticTeamBoard = () => {
   const {
+    isHasLoading,
     startDate,
     endDate,
     listMemberTeam,
@@ -163,7 +164,7 @@ const StatisticTeamBoard = () => {
               if (itemMap) {
                 setTotalDurationTask(itemMap.duration);
               } else {
-                setTotalDurationTask('00:00:00');
+                setTotalDurationTask(DEFAULT_TIME_TEXT);
               }
             } else {
               setTotalDurationTask(data.smallTotalDuration);
@@ -174,7 +175,7 @@ const StatisticTeamBoard = () => {
               selectedMedium.value &&
               selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ) {
-              setTotalDurationTask('00:00:00');
+              setTotalDurationTask(DEFAULT_TIME_TEXT);
               return;
             }
             if (selectedSmall && selectedSmall.value) return;
@@ -186,7 +187,7 @@ const StatisticTeamBoard = () => {
           setTotalDurationTask(data.largeTotalDuration);
         }
       } else {
-        setTotalDurationTask('00:00:00');
+        setTotalDurationTask(DEFAULT_TIME_TEXT);
       }
     },
     onError: () => {
@@ -240,7 +241,7 @@ const StatisticTeamBoard = () => {
                 if (itemMap) {
                   setTotalDurationTaskCompare(itemMap.duration);
                 } else {
-                  setTotalDurationTaskCompare('00:00:00');
+                  setTotalDurationTaskCompare(DEFAULT_TIME_TEXT);
                 }
               } else {
                 setTotalDurationTaskCompare(data.smallTotalDuration);
@@ -252,7 +253,7 @@ const StatisticTeamBoard = () => {
                 selectedOrganization?.type ===
                   OrganizationStatisticType.CALENDAR
               ) {
-                setTotalDurationTask('00:00:00');
+                setTotalDurationTask(DEFAULT_TIME_TEXT);
                 return;
               }
               if (selectedSmall && selectedSmall.value) return;
@@ -264,7 +265,7 @@ const StatisticTeamBoard = () => {
             setTotalDurationTaskCompare(data.largeTotalDuration);
           }
         } else {
-          setTotalDurationTaskCompare('00:00:00');
+          setTotalDurationTaskCompare(DEFAULT_TIME_TEXT);
         }
       },
       onError: () => {
@@ -631,6 +632,7 @@ const StatisticTeamBoard = () => {
               <Dropdown
                 options={listOptionsOrganization}
                 placeholder="-"
+                disabled={isHasLoading}
                 placeholderClass="!text-black text-sm font-normal"
                 className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                 labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -658,7 +660,7 @@ const StatisticTeamBoard = () => {
                 classNameOption="!text-sm"
                 selectedOption={selectedLarge || undefined}
                 onChange={(data) => handleSelectLarge(data)}
-                disabled={!selectedOrganization}
+                disabled={!selectedOrganization || isHasLoading}
               />
             </div>
             <div className="flex items-center  w-fit h-[30px]">
@@ -678,7 +680,7 @@ const StatisticTeamBoard = () => {
                 options={mediumOptions}
                 selectedOption={selectedMedium || undefined}
                 onChange={(data) => handleSelectMedium(data)}
-                disabled={!selectedLarge}
+                disabled={!selectedLarge || isHasLoading}
               />
             </div>
           </div>

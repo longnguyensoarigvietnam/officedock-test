@@ -14,9 +14,9 @@ import { NO_SETTING } from '@constants';
 import { ItemScheduleType, ItemStartType, ViewOptions } from '@constants/enums';
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import { TaskContext } from '@providers/TaskProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import {
   compareWithCurrentDate,
-  convertToCurrentTimezone,
   convertToTimeString,
   getMinuteDifference,
   isMoreThanFifteenMinutes,
@@ -24,7 +24,6 @@ import {
 } from '@utils/date';
 import { TaskTimeSchedule } from '@interfaces/task';
 import { EventEditFormData } from '@interfaces/calendar';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 interface TaskCardProps {
   event: EventContentArg;
@@ -196,12 +195,8 @@ const TaskCard = ({
       queryClient.refetchQueries(['getDataTaskHeaderList']);
 
       if (data) {
-        const startDateActual = new Date(
-          convertToCurrentTimezone(`${data.planStartDate}`),
-        );
-        const endDateActual = new Date(
-          convertToCurrentTimezone(`${data.planEndDate}`),
-        );
+        const startDateActual = new Date(`${data.planStartDate}`);
+        const endDateActual = new Date(`${data.planEndDate}`);
         setDataActualAddSchedule({
           ...data,
           start: startDateActual,

@@ -200,7 +200,7 @@ const KanbanBoardTaskTeam = () => {
   }, [organizationId]);
 
   // get list data team
-  const { isFetchedTaskBoards } = useTaskBoardTeam({
+  useTaskBoardTeam({
     current_screen: 'teamdock',
     organization_id: organizationId as string,
     filter: {
@@ -1297,7 +1297,6 @@ const KanbanBoardTaskTeam = () => {
     handleCreateTask,
     {
       onSuccess: async ({ data }: { data: Task }) => {
-        // queryClient.refetchQueries(['getDataTaskHeaderList']);
         if (data.peopleInCharge.length > 0) {
           if (actionType && actionType === ActionTask.COPY) {
             copyTaskInKanban({
@@ -2464,7 +2463,7 @@ const KanbanBoardTaskTeam = () => {
               <Checkbox
                 label="他チームを表示"
                 isChecked={isConcurrently}
-                disable={!isFetchedTaskBoards}
+                disable={isLoadingDataTask}
                 onChange={(data) => {
                   setIsConcurrently(data);
                 }}

@@ -20,6 +20,7 @@ import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 import ProgressBarStatistic from '../ProgressBarStatistic';
 import FilterTag from '../filter/FilterTag';
+import { DEFAULT_TIME_TEXT } from '@constants';
 
 type Props = {
   startDate: Date;
@@ -100,6 +101,7 @@ const AllocationTagCompare = memo(
     >([]);
 
     const {
+      isHasLoading,
       totalDurationLarge,
       totalDurationMedium,
       totalDurationSmall,
@@ -250,7 +252,7 @@ const AllocationTagCompare = memo(
           (!organizationId || String(item.organizationId) === organizationId),
       );
 
-      return item?.duration || '00:00:00';
+      return item?.duration || DEFAULT_TIME_TEXT;
     };
 
     const handleClickTooltip = (
@@ -362,6 +364,7 @@ const AllocationTagCompare = memo(
                       <Dropdown
                         label="チーム選択"
                         placeholder="-"
+                        disabled={isHasLoading}
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -443,7 +446,7 @@ const AllocationTagCompare = memo(
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
                                     {formatTimeToJapanese(
-                                      pair.main?.duration || '00:00:00',
+                                      pair.main?.duration || DEFAULT_TIME_TEXT,
                                     )}
                                   </span>
                                 </div>
@@ -546,7 +549,7 @@ const AllocationTagCompare = memo(
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
-                        disabled={!selectedOrganization}
+                        disabled={!selectedOrganization || isHasLoading}
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">
@@ -621,7 +624,7 @@ const AllocationTagCompare = memo(
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
                                     {formatTimeToJapanese(
-                                      pair.main?.duration || '00:00:00',
+                                      pair.main?.duration || DEFAULT_TIME_TEXT,
                                     )}
                                   </span>
                                 </div>
@@ -716,7 +719,7 @@ const AllocationTagCompare = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedLarge || isHasLoading}
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">
@@ -791,7 +794,7 @@ const AllocationTagCompare = memo(
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
                                     {formatTimeToJapanese(
-                                      pair.main?.duration || '00:00:00',
+                                      pair.main?.duration || DEFAULT_TIME_TEXT,
                                     )}
                                   </span>
                                 </div>
@@ -878,7 +881,7 @@ const AllocationTagCompare = memo(
                         options={smallOptions}
                         selectedOption={selectedSmall || undefined}
                         onChange={(data) => handleSelectSmall(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedMedium || isHasLoading}
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">
@@ -956,7 +959,7 @@ const AllocationTagCompare = memo(
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
                                     {formatTimeToJapanese(
-                                      pair.main?.duration || '00:00:00',
+                                      pair.main?.duration || DEFAULT_TIME_TEXT,
                                     )}
                                   </span>
                                 </div>

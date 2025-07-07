@@ -17,8 +17,9 @@ import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
-import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
+import { DEFAULT_TIME_TEXT, STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
+import { useGenericDebounce } from '@hooks/useGenericDebounce';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
@@ -37,7 +38,6 @@ import {
 } from '@utils/date';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import { useGenericDebounce } from '@hooks/useGenericDebounce';
 import FilterTeamStatistic from './filter/FilterTeamStatistic';
 
 type Props = {
@@ -112,6 +112,7 @@ const StackedAreaTeamChart = ({
     orderingOptions,
     lineChartViewBy,
     areaTableData,
+    isHasLoading,
     setAreaTableData,
     setLineChartViewBy,
   } = useContext(StatisticTeamStateContext);
@@ -596,10 +597,10 @@ const StackedAreaTeamChart = ({
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
       const rowADuration = convertDurationToTotalMinutes(
-        rowA.categoryDuration || '00:00:00',
+        rowA.categoryDuration || DEFAULT_TIME_TEXT,
       );
       const rowBDuration = convertDurationToTotalMinutes(
-        rowB.categoryDuration || '00:00:00',
+        rowB.categoryDuration || DEFAULT_TIME_TEXT,
       );
 
       return sortingType == SortingType.ASC
@@ -1000,6 +1001,7 @@ const StackedAreaTeamChart = ({
                   <Dropdown
                     label="チーム選択"
                     placeholder="-"
+                    disabled={isHasLoading}
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -1036,7 +1038,7 @@ const StackedAreaTeamChart = ({
                       setAreaTableData([]);
                       handleSelectLarge(data);
                     }}
-                    disabled={!selectedOrganization}
+                    disabled={!selectedOrganization || isHasLoading}
                   />
                 </div>
               </div>
@@ -1060,7 +1062,7 @@ const StackedAreaTeamChart = ({
                       setAreaTableData([]);
                       handleSelectMedium(data);
                     }}
-                    disabled={!selectedLarge}
+                    disabled={!selectedLarge || isHasLoading}
                   />
                 </div>
               </div>
@@ -1133,7 +1135,7 @@ const StackedAreaTeamChart = ({
                         ? sumDurationsChart(
                             dataDetail.map((user) => user.duration),
                           )
-                        : '00:00:00';
+                        : DEFAULT_TIME_TEXT;
 
                       return (
                         <div

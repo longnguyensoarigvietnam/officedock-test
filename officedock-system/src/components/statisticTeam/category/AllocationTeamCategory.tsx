@@ -7,6 +7,7 @@ import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStati
 import ProgressBarTeamStatistic from './ProgressBarTeamStatistic';
 
 import { EventWorkCategory } from '@constants/enums';
+import { NO_SETTING } from '@constants';
 
 import {
   StatisticCategoryInfo,
@@ -142,6 +143,7 @@ const AllocationTeamCategory = memo(
       ProgressDataType[]
     >([]);
     const {
+      isHasLoading,
       orderingOptions,
       totalDurationLarge,
       totalDurationMedium,
@@ -236,10 +238,10 @@ const AllocationTeamCategory = memo(
         item && handleSelectLarge(item);
 
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectLarge({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -249,10 +251,10 @@ const AllocationTeamCategory = memo(
         );
         item && handleSelectMedium(item);
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectMedium({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -262,10 +264,10 @@ const AllocationTeamCategory = memo(
         );
         item && handleSelectSmall(item);
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -274,10 +276,10 @@ const AllocationTeamCategory = memo(
           (item) => item.value === detailCategory?.id,
         );
         item && handleSelectSmall(item);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -343,6 +345,7 @@ const AllocationTeamCategory = memo(
                       <Dropdown
                         label="チーム選択"
                         placeholder="-"
+                        disabled={isHasLoading}
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -443,7 +446,7 @@ const AllocationTeamCategory = memo(
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
-                        disabled={!selectedOrganization}
+                        disabled={!selectedOrganization || isHasLoading}
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}
@@ -532,7 +535,7 @@ const AllocationTeamCategory = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedLarge || isHasLoading}
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}

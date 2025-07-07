@@ -48,6 +48,7 @@ const PercentageCategoryTeam = ({
     isLoadingLarge,
     isLoadingMedium,
     isLoadingOrganization,
+    isHasLoading,
   } = useContext(StatisticTeamStateContext);
   const { setIsLoading } = useContext(LoadingContext);
 
@@ -295,6 +296,7 @@ const PercentageCategoryTeam = ({
                       <Dropdown
                         label="チーム選択"
                         placeholder="-"
+                        disabled={isHasLoading}
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -362,7 +364,7 @@ const PercentageCategoryTeam = ({
                       options={largeOptions}
                       selectedOption={selectedLarge || undefined}
                       onChange={(data) => handleSelectLarge(data)}
-                      disabled={!selectedOrganization}
+                      disabled={!selectedOrganization || isHasLoading}
                     />
                     <p className="text-sm text-black my-[26px]">
                       合計{' '}
@@ -417,7 +419,7 @@ const PercentageCategoryTeam = ({
                       options={mediumOptions}
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}
-                      disabled={!selectedLarge}
+                      disabled={!selectedLarge || isHasLoading}
                     />
                     <p className="text-sm text-black my-[26px]">
                       合計{' '}

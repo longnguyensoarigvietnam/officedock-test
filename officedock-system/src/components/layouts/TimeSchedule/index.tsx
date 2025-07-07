@@ -110,6 +110,7 @@ import {
 import { useErrorToast } from '@hooks/useErrorToast';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
+import { useDebounceCallback } from '@hooks/useDebounceCallback';
 
 import api from '@base/api';
 import {
@@ -135,7 +136,6 @@ import {
   areDatesDifferent,
   combineDateAndTime,
   convertDateString,
-  convertToCurrentTimezone,
   convertToMinutesNumber,
   formatQueryEndDateForCalendar,
   formatQueryEndDateForCalendarCustom,
@@ -157,7 +157,6 @@ import {
   adjustPositionForViewportSchedule,
   hasPermissionInArray,
 } from '@utils';
-import { useDebounceCallback } from '@hooks/useDebounceCallback';
 
 const formatDateJp = (date: Date) => {
   return format(date, DATE_SCHEDULE_FORMAT, {
@@ -599,12 +598,8 @@ const TimeSchedule = memo(
             const tasksActualSchedule = data
               .filter((data) => data.planStartDate)
               .map((task) => {
-                const startDateActual = new Date(
-                  convertToCurrentTimezone(`${task.planStartDate}`),
-                );
-                const endDateActual = new Date(
-                  convertToCurrentTimezone(`${task.planEndDate}`),
-                );
+                const startDateActual = new Date(`${task.planStartDate}`);
+                const endDateActual = new Date(`${task.planEndDate}`);
                 const endTimeCustom = task.planEndDate
                   ? endDateActual
                   : getNext30MinuteSlot(startDateActual);
@@ -975,12 +970,8 @@ const TimeSchedule = memo(
             const tasksActualSchedule = data
               .filter((data) => data.planStartDate)
               .map((task) => {
-                const startDateActual = new Date(
-                  convertToCurrentTimezone(`${task.planStartDate}`),
-                );
-                const endDateActual = new Date(
-                  convertToCurrentTimezone(`${task.planEndDate}`),
-                );
+                const startDateActual = new Date(`${task.planStartDate}`);
+                const endDateActual = new Date(`${task.planEndDate}`);
                 const endTimeCustom = task.planEndDate
                   ? endDateActual
                   : getNext30MinuteSlot(startDateActual);
@@ -1067,12 +1058,8 @@ const TimeSchedule = memo(
             setTaskTimeScheduleList((prev) => {
               return prev.map((item) => {
                 if (item.uuid === task.uuid) {
-                  const startDateActual = new Date(
-                    convertToCurrentTimezone(`${data?.startedAt}`),
-                  );
-                  const endDateActual = new Date(
-                    convertToCurrentTimezone(`${data?.pausedAt}`),
-                  );
+                  const startDateActual = new Date(`${data?.startedAt}`);
+                  const endDateActual = new Date(`${data?.pausedAt}`);
                   const endTimeCustom = data.pausedAt
                     ? endDateActual
                     : getNext30MinuteSlot(startDateActual);
@@ -1230,7 +1217,7 @@ const TimeSchedule = memo(
               ...item,
               planEndDate: `${new Date()}`,
               end: adjustEndDate(
-                new Date(convertToCurrentTimezone(`${item.planStartDate}`)),
+                new Date(`${item.planStartDate}`),
                 new Date(),
                 5,
               ),
@@ -1284,12 +1271,8 @@ const TimeSchedule = memo(
       if (dataActualEdit) {
         const updatedList = taskTimeScheduleList.map((item) => {
           if (`${item.uuid}` === `${dataActualEdit.uuid}`) {
-            const startDateActual = new Date(
-              convertToCurrentTimezone(`${dataActualEdit.startDate}`),
-            );
-            const endDateActual = new Date(
-              convertToCurrentTimezone(`${item.planEndDate}`),
-            );
+            const startDateActual = new Date(`${dataActualEdit.startDate}`);
+            const endDateActual = new Date(`${item.planEndDate}`);
             const endTimeCustom = item.planEndDate
               ? endDateActual
               : getNext30MinuteSlot(startDateActual);
@@ -2072,8 +2055,27 @@ const TimeSchedule = memo(
         droppedEvent._def.resourceIds[0] === ItemScheduleType.PLANS;
       const draggedResourceId = info.oldResource?.id;
       const dropResourceId = info.newResource?.id;
-
       if (
+        draggedResourceId &&
+        dropResourceId &&
+        searchParams.get('view') !== ViewOptions.WEEK &&
+        areDatesDifferent(`${startDrop}`, `${endDrop}`) &&
+        draggedResourceId !== dropResourceId &&
+        !resourcePlanDay &&
+        !selectedEvents.includes(droppedEvent.extendedProps.uuid as string)
+      ) {
+        moveSingleEventAddActual(droppedEvent);
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        setTimeout(() => setIsInteracting(false), 200);
+      } else if (
+        searchParams.get('view') === ViewOptions.WEEK &&
+        areDatesDifferent(`${startDrop}`, `${endDrop}`) &&
+        !resourcePlanWeek
+      ) {
+        moveSingleEventAddActual(droppedEvent);
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        setTimeout(() => setIsInteracting(false), 200);
+      } else if (
         selectedEvents.length > 1 &&
         selectedEvents.includes(droppedEvent.extendedProps.uuid as string)
       ) {
@@ -2737,6 +2739,82 @@ const TimeSchedule = memo(
       }
       setTimeout(() => setIsInteracting(false), 200);
     };
+    const moveSingleEventAddActual = (event: EventImpl) => {
+      const draggedEvent = taskTimeScheduleList.find(
+        (e) => e.uuid === event.extendedProps.uuid,
+      );
+      if (!event.start || !draggedEvent) return;
+
+      const movedDelta =
+        event.start.getTime() - new Date(draggedEvent.start).getTime();
+
+      const newStart = addMilliseconds(
+        new Date(draggedEvent.start),
+        movedDelta,
+      ).toISOString();
+      const newEnd = addMilliseconds(
+        new Date(draggedEvent.end),
+        movedDelta,
+      ).toISOString();
+
+      const newUuid = uuidv4();
+      const newEvent: TaskTimeSchedule = {
+        ...draggedEvent,
+        uuid: newUuid,
+        id: newUuid,
+        start: new Date(newStart),
+        end: new Date(newEnd),
+        planStartDate: convertDateString(newStart) || '',
+        planEndDate: convertDateString(newEnd) || '',
+        resourceId: ItemScheduleType.ACTUAL,
+      };
+
+      const { allEvents, splittedEvents } = splitMultiDayEventsArray([
+        ...taskTimeScheduleList,
+        newEvent,
+      ]);
+
+      const updatedAllEvents = allEvents.map((event) => {
+        if (isMidnight(event.start) && isMidnight(event.end)) {
+          return {
+            ...event,
+            end: new Date(event.end.getTime() + 1000 * 60),
+            planEndDate: convertDateString(event.planEndDate || ''),
+            planStartDate: convertDateString(event.planStartDate || ''),
+          };
+        }
+        return event;
+      });
+
+      const updatedSplittedEvents = splittedEvents.map((event) => {
+        if (isMidnight(event.start) && isMidnight(event.end)) {
+          return {
+            ...event,
+            end: new Date(event.end.getTime() + 1000 * 60),
+            planEndDate: convertDateString(event.planEndDate || ''),
+            planStartDate: convertDateString(event.planStartDate || ''),
+          };
+        }
+        return event;
+      });
+
+      setTaskTimeScheduleList(updatedAllEvents);
+
+      const isSplit = updatedSplittedEvents.some(
+        (split) => split.id === newEvent.id,
+      );
+      const updatedChangeEvent = isSplit ? updatedSplittedEvents : [newEvent];
+
+      updateMultiActualTime({
+        actualDurations: updatedChangeEvent.map((item) => ({
+          uuid: item.uuid as string,
+          taskId: item.taskId as number,
+          startedAt: convertDateString(item.start),
+          pausedAt: convertDateString(item.end),
+        })),
+      });
+    };
+
     // Event permission
     const handleEventAllow = (
       dropInfo: DateSpanApi,
@@ -3272,7 +3350,7 @@ const TimeSchedule = memo(
                   ...item,
                   planEndDate: `${new Date()}`,
                   end: adjustEndDate(
-                    new Date(convertToCurrentTimezone(`${item.planStartDate}`)),
+                    new Date(`${item.planStartDate}`),
                     new Date(),
                     5,
                   ),
@@ -3408,7 +3486,7 @@ const TimeSchedule = memo(
                 ...item,
                 planEndDate: `${new Date()}`,
                 end: adjustEndDate(
-                  new Date(convertToCurrentTimezone(`${item.planStartDate}`)),
+                  new Date(`${item.planStartDate}`),
                   new Date(),
                   5,
                 ),

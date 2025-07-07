@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
 
+import { DEFAULT_TIME_TEXT } from '@constants';
+
 import { OptionDropdownType } from '@interfaces/common';
 import { UserListStatisticType } from '@interfaces/statistic';
 import {
@@ -96,7 +98,7 @@ function buildUserCompareData(
             user: userB!.user,
             tasks: [],
             percent: '0',
-            duration: '00:00:00',
+            duration: DEFAULT_TIME_TEXT,
           },
       userCompare: userB
         ? {
@@ -109,7 +111,7 @@ function buildUserCompareData(
             user: userA!.user,
             tasks: [],
             percent: '0',
-            duration: '00:00:00',
+            duration: DEFAULT_TIME_TEXT,
           },
     };
   });

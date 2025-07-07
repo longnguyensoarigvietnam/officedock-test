@@ -1,5 +1,6 @@
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
+import { DEFAULT_TIME_TEXT } from '@constants';
 
 import { StatisticChartType } from '@constants/enums';
 
@@ -22,15 +23,15 @@ export const TeamDockCompareLineChartTooltip = ({
         const isNotLast = index !== data.length - 1;
         const standardDuration =
           point.type == StatisticChartType.COMPARE
-            ? point.anotherDuration ?? '00:00:00'
-            : point.duration ?? '00:00:00';
+            ? point.anotherDuration ?? DEFAULT_TIME_TEXT
+            : point.duration ?? DEFAULT_TIME_TEXT;
         const compareDuration =
           point.type == StatisticChartType.COMPARE
-            ? point.duration ?? '00:00:00'
-            : point.anotherDuration ?? '00:00:00';
+            ? point.duration ?? DEFAULT_TIME_TEXT
+            : point.anotherDuration ?? DEFAULT_TIME_TEXT;
         const diffDuration = subtractDurations(
-          standardDuration || '00:00:00',
-          compareDuration || '00:00:00',
+          standardDuration || DEFAULT_TIME_TEXT,
+          compareDuration || DEFAULT_TIME_TEXT,
         );
 
         const displayIcon = (diffDuration: string) => {

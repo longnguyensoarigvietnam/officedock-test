@@ -35,7 +35,7 @@ import {
   StatisticChartType,
   StatisticViewOptions,
 } from '@constants/enums';
-import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
+import { DEFAULT_TIME_TEXT, STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 
 import {
   convertDurationToTotalMinutes,
@@ -118,6 +118,7 @@ const LineChartCompare = ({
   handleSelectSmall,
 }: Props) => {
   const {
+    isHasLoading,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -157,9 +158,9 @@ const LineChartCompare = ({
   });
   const [tableData, setTableData] = useState<MergedTableCategory[]>([]);
   const [totalStandardDuration, setTotalStandardDuration] =
-    useState<string>('00:00');
+    useState<string>(DEFAULT_TIME_TEXT);
   const [totalCompareDuration, setTotalCompareDuration] =
-    useState<string>('00:00');
+    useState<string>(DEFAULT_TIME_TEXT);
   const [standardLabelsInfo, setStandardLabelsInfo] = useState<
     {
       color: string;
@@ -762,18 +763,18 @@ const LineChartCompare = ({
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
       const rowAStandard = convertDurationToTotalMinutes(
-        rowA.standardInfo?.tagDuration || '00:00:00',
+        rowA.standardInfo?.tagDuration || DEFAULT_TIME_TEXT,
       );
       const rowACompare = convertDurationToTotalMinutes(
-        rowA.compareInfo?.tagDuration || '00:00:00',
+        rowA.compareInfo?.tagDuration || DEFAULT_TIME_TEXT,
       );
       const rowADiff = rowAStandard - rowACompare;
 
       const rowBStandard = convertDurationToTotalMinutes(
-        rowB.standardInfo?.tagDuration || '00:00:00',
+        rowB.standardInfo?.tagDuration || DEFAULT_TIME_TEXT,
       );
       const rowBCompare = convertDurationToTotalMinutes(
-        rowB.compareInfo?.tagDuration || '00:00:00',
+        rowB.compareInfo?.tagDuration || DEFAULT_TIME_TEXT,
       );
       const rowBDiff = rowBStandard - rowBCompare;
 
@@ -917,8 +918,10 @@ const LineChartCompare = ({
             <div className="font-medium flex text-[14px] justify-end text-black">
               <p>
                 {subtractDurations(
-                  info.row.original.standardInfo?.tagDuration || '00:00:00',
-                  info.row.original.compareInfo?.tagDuration || '00:00:00',
+                  info.row.original.standardInfo?.tagDuration ||
+                    DEFAULT_TIME_TEXT,
+                  info.row.original.compareInfo?.tagDuration ||
+                    DEFAULT_TIME_TEXT,
                 )}
               </p>
             </div>
@@ -1062,6 +1065,7 @@ const LineChartCompare = ({
                   <Dropdown
                     label="チーム選択"
                     placeholder="-"
+                    disabled={isHasLoading}
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -1100,7 +1104,7 @@ const LineChartCompare = ({
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => handleSelectLarge(data)}
-                    disabled={!selectedOrganization}
+                    disabled={!selectedOrganization || isHasLoading}
                   />
                 </div>
               </div>
@@ -1132,7 +1136,7 @@ const LineChartCompare = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
-                    disabled={!selectedLarge}
+                    disabled={!selectedLarge || isHasLoading}
                   />
                 </div>
               </div>
@@ -1164,7 +1168,7 @@ const LineChartCompare = ({
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
-                    disabled={!selectedMedium}
+                    disabled={!selectedMedium || isHasLoading}
                   />
                 </div>
               </div>

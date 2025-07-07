@@ -7,7 +7,8 @@ import Checkbox from '@components/common/Checkbox';
 import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
 import TableChart from './TableChart';
 
-import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
+import { DEFAULT_TIME_TEXT, PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
+import { OrganizationStatisticType } from '@constants/enums';
 import {
   CreationStatisticType,
   DataTaskListStatisticListType,
@@ -21,7 +22,6 @@ import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
 import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
 import { StatisticStateContext } from '@providers/StatisticProvider';
 import FilterStatistic from './filter/FilterStatistic';
-import { OrganizationStatisticType } from '@constants/enums';
 
 type Props = {
   isCheckCompare: boolean;
@@ -51,6 +51,7 @@ const TaskListStatistic = ({
   handleSelectOrganization,
 }: Props) => {
   const {
+    isHasLoading,
     smallOptions,
     largeOptions,
     mediumOptions,
@@ -210,6 +211,7 @@ const TaskListStatistic = ({
                   <Dropdown
                     label="チーム選択"
                     placeholder="-"
+                    disabled={isHasLoading}
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -248,7 +250,7 @@ const TaskListStatistic = ({
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => handleSelectLarge(data)}
-                    disabled={!selectedOrganization}
+                    disabled={!selectedOrganization || isHasLoading}
                   />
                 </div>
               </div>
@@ -280,7 +282,7 @@ const TaskListStatistic = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
-                    disabled={!selectedLarge}
+                    disabled={!selectedLarge || isHasLoading}
                   />
                 </div>
               </div>
@@ -312,7 +314,7 @@ const TaskListStatistic = ({
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
-                    disabled={!selectedMedium}
+                    disabled={!selectedMedium || isHasLoading}
                   />
                 </div>
               </div>
@@ -387,12 +389,13 @@ const TaskListStatistic = ({
                         OrganizationStatisticType.CALENDAR &&
                       selectedMedium?.value
                       ? statisticCategoryListCompare?.totalDuration ||
-                        '00:00:00'
+                        DEFAULT_TIME_TEXT
                       : getTotalDurationCompare()
                     : selectedOrganization?.type ===
                           OrganizationStatisticType.CALENDAR &&
                         selectedMedium?.value
-                      ? statisticCategoryListTask?.totalDuration || '00:00:00'
+                      ? statisticCategoryListTask?.totalDuration ||
+                        DEFAULT_TIME_TEXT
                       : getTotalDuration()
                 }
                 listOptionsOrganization={listOptionsOrganization}

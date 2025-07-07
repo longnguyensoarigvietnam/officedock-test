@@ -110,7 +110,6 @@ import { useToast } from '@providers/ToastProvider';
 import {
   addTimeToDate,
   convertDateStringFull,
-  convertToCurrentTimezone,
   formatDateServer,
   getRandomDateTimeBetween,
 } from '@utils/date';
@@ -1393,12 +1392,8 @@ const KanbanBoardTask = () => {
           };
         });
         if (data) {
-          const startDateActual = new Date(
-            convertToCurrentTimezone(`${data.planStartDate}`),
-          );
-          const endDateActual = new Date(
-            convertToCurrentTimezone(`${data.planEndDate}`),
-          );
+          const startDateActual = new Date(`${data.planStartDate}`);
+          const endDateActual = new Date(`${data.planEndDate}`);
           setDataActualAddSchedule({
             ...data,
             start: startDateActual,

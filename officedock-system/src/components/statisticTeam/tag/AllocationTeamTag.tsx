@@ -134,6 +134,7 @@ const AllocationTeamTag = memo(
       ProgressDataType[]
     >([]);
     const {
+      isHasLoading,
       totalDurationLarge,
       totalDurationMedium,
       totalDurationSmall,
@@ -275,6 +276,7 @@ const AllocationTeamTag = memo(
                       <Dropdown
                         label="チーム選択"
                         placeholder="-"
+                        disabled={isHasLoading}
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -352,7 +354,7 @@ const AllocationTeamTag = memo(
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
-                        disabled={!selectedOrganization}
+                        disabled={!selectedOrganization || isHasLoading}
                       />
                       {progressDataMedium.length > 0 && (
                         <p className="text-sm text-black my-[26px]">
@@ -420,7 +422,7 @@ const AllocationTeamTag = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedLarge || isHasLoading}
                       />
                       {progressDataSmall.length > 0 && (
                         <p className="text-sm text-black my-[26px]">
@@ -485,7 +487,7 @@ const AllocationTeamTag = memo(
                         options={smallOptions}
                         selectedOption={selectedSmall || undefined}
                         onChange={(data) => handleSelectSmall(data)}
-                        disabled={!selectedMedium}
+                        disabled={!selectedMedium || isHasLoading}
                       />
                       {progressDataCategory.length > 0 && (
                         <p className="text-sm text-black my-[26px]">

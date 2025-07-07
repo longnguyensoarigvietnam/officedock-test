@@ -19,6 +19,7 @@ import FilterTagTeam from '@components/statisticTeam/tag/filter/FilterTagTeam';
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { ALL_TEAM_STATISTIC } from '@constants';
+import { OrganizationStatisticType } from '@constants/enums';
 
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useStatisticTagsTeam from '@hooks/useStatisticTagsTeam';
@@ -31,7 +32,6 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { OptionDropdownType } from '@interfaces/common';
 
 import { formatDateToYMD, sumDurations } from '@utils/date';
-import { OrganizationStatisticType } from '@constants/enums';
 
 const StatisticTeamTagBoard = () => {
   const {
