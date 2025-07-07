@@ -10,6 +10,7 @@ type Props = {
 
 const FilterTagTeam = ({ className }: Props) => {
   const {
+    isHasLoading,
     tagsOptions,
     isCheckCompare,
     selectedTags,
@@ -39,6 +40,7 @@ const FilterTagTeam = ({ className }: Props) => {
         <MultiSelectDropdown
           placeholder="集計対象のタグを選択"
           options={tagsOptions}
+          disabled={isHasLoading}
           className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
           labelOptionClass="break-words w-[190px]"
           selectedOptions={selectedTags || []}
@@ -55,6 +57,7 @@ const FilterTagTeam = ({ className }: Props) => {
                 (tag) => tag.value != selected.value,
               );
             }
+
             setIsLoadingLarge(true);
             setIsLoadingMedium(true);
             setIsLoadingSmall(true);

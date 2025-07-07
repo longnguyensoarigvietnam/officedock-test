@@ -23,7 +23,7 @@ import { EventWorkCategory } from '@constants/enums';
 
 import ProgressBarTeamTagCompare from './ProgressBarTeamTag';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
-import { ALL_TEAM_STATISTIC } from '@constants';
+import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
 import FilterTagTeam from '../filter/FilterTagTeam';
 
 type Props = {
@@ -127,7 +127,7 @@ export function buildProgressDataCompareWithMergedOthers({
         ? compareData.map((i) => ({
             ...i,
             percent: 0,
-            duration: '00:00:00',
+            duration: DEFAULT_TIME_TEXT,
             users: [],
           }))
         : baseData,
@@ -140,7 +140,7 @@ export function buildProgressDataCompareWithMergedOthers({
         ? baseData.map((i) => ({
             ...i,
             percent: 0,
-            duration: '00:00:00',
+            duration: DEFAULT_TIME_TEXT,
             users: [],
           }))
         : compareData,
@@ -191,7 +191,7 @@ export function buildProgressDataCompareWithMergedOthers({
         label: baseItem?.label ?? cmpItem?.label ?? '',
         value: 0,
         color: '#ccc',
-        duration: '00:00:00',
+        duration: DEFAULT_TIME_TEXT,
         optionData: [],
         organizationId: orgId,
       };
@@ -253,6 +253,7 @@ const AllocationTagTeamCompare = memo(
     >([]);
 
     const {
+      isHasLoading,
       totalDurationLarge,
       totalDurationMedium,
       totalDurationSmall,
@@ -408,6 +409,7 @@ const AllocationTagTeamCompare = memo(
                       <Dropdown
                         label="チーム選択"
                         placeholder="-"
+                        disabled={isHasLoading}
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -557,7 +559,7 @@ const AllocationTagTeamCompare = memo(
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
-                        disabled={!selectedOrganization}
+                        disabled={!selectedOrganization || isHasLoading}
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">
@@ -683,7 +685,7 @@ const AllocationTagTeamCompare = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedLarge || isHasLoading}
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">
@@ -823,7 +825,7 @@ const AllocationTagTeamCompare = memo(
                         options={smallOptions}
                         selectedOption={selectedSmall || undefined}
                         onChange={(data) => handleSelectSmall(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedMedium || isHasLoading}
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">

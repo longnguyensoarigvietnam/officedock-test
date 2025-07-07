@@ -57,7 +57,7 @@ import {
   SocketActions,
   StatusValueTask,
 } from '@constants/enums';
-import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY } from '@constants';
+import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY, NO_SETTING } from '@constants';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
@@ -287,7 +287,7 @@ const DailyReportDetailBoard = () => {
       // Add color for item
       const dataAddColor = dataStatistic.categories.map((item) => ({
         color: item.categoryColor,
-        categoryName: item.categoryName ? item.categoryName : '未設定',
+        categoryName: item.categoryName ? item.categoryName : NO_SETTING,
         duration: item.duration,
         percent: item.percent,
       }));
@@ -299,7 +299,7 @@ const DailyReportDetailBoard = () => {
 
       // Get list label
       const listLableChart = dataStatistic.categories.map(
-        (item) => item.categoryName || '未設定',
+        (item) => item.categoryName || NO_SETTING,
       );
 
       // Get list value
@@ -385,7 +385,7 @@ const DailyReportDetailBoard = () => {
       // Prepare colored data
       const dataAddColor = mergedCategories.map((item) => ({
         color: item.isOfMainOrganization ? 'white' : '#83919E',
-        categoryName: item.categoryName || '未設定',
+        categoryName: item.categoryName || NO_SETTING,
         duration: item.duration,
         percent: item.percent,
         id: item.id,
@@ -400,7 +400,7 @@ const DailyReportDetailBoard = () => {
             : '#83919E',
       );
       const listLabelChart = mergedCategories.map(
-        (item) => item.categoryName || '未設定',
+        (item) => item.categoryName || NO_SETTING,
       );
       const listValueChart = mergedCategories.map((item) => item.percent);
       const listValueActualChart = mergedCategories.map((item) =>

@@ -6,6 +6,7 @@ import ImageRound from '@components/common/ImageRound';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 
+import { DEFAULT_TIME_TEXT, NO_SETTING } from '@constants';
 import { EventWorkCategory } from '@constants/enums';
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
@@ -40,6 +41,7 @@ const PercentageCategory = ({
   handleSelectOrganizationCustom,
 }: Props) => {
   const {
+    isHasLoading,
     largeOptions,
     mediumOptions,
     smallOptions,
@@ -264,25 +266,25 @@ const PercentageCategory = ({
     organizationId?: string;
   }) => {
     if (isLoadingLarge || isLoadingMedium || isLoadingOrganization) return;
-    let duration: string = '00:00:00';
+    let duration: string = DEFAULT_TIME_TEXT;
 
     if (type === EventWorkCategory.ALL) {
       duration =
         statisticCategoryList?.largeCategories.find(
           (item) => item.categoryId == id,
-        )?.duration || '00:00:00';
+        )?.duration || DEFAULT_TIME_TEXT;
     }
     if (type === EventWorkCategory.LARGE) {
       duration =
         statisticCategoryList?.mediumCategories?.find(
           (item) => item.categoryId == id,
-        )?.duration || '00:00:00';
+        )?.duration || DEFAULT_TIME_TEXT;
     }
     if (type === EventWorkCategory.MEDIUM) {
       duration =
         statisticCategoryList?.smallCategories?.find(
           (item) => item.categoryId == id,
-        )?.duration || '00:00:00';
+        )?.duration || DEFAULT_TIME_TEXT;
     }
     setDetailCategory({
       id: id,
@@ -304,10 +306,10 @@ const PercentageCategory = ({
       item && handleSelectLarge(item);
 
       setTotalDurationTask(detailCategory.totalDuration);
-      if (String(detailCategory?.id) == '未設定') {
+      if (String(detailCategory?.id) == NO_SETTING) {
         handleSelectLarge({
-          label: '未設定',
-          value: '未設定',
+          label: NO_SETTING,
+          value: NO_SETTING,
         });
       }
     }
@@ -317,10 +319,10 @@ const PercentageCategory = ({
       );
       item && handleSelectMedium(item);
       setTotalDurationTask(detailCategory.totalDuration);
-      if (String(detailCategory?.id) == '未設定') {
+      if (String(detailCategory?.id) == NO_SETTING) {
         handleSelectMedium({
-          label: '未設定',
-          value: '未設定',
+          label: NO_SETTING,
+          value: NO_SETTING,
         });
       }
     }
@@ -330,10 +332,10 @@ const PercentageCategory = ({
       );
       item && handleSelectSmall(item);
       setTotalDurationTask(detailCategory.totalDuration);
-      if (String(detailCategory?.id) == '未設定') {
+      if (String(detailCategory?.id) == NO_SETTING) {
         handleSelectSmall({
-          label: '未設定',
-          value: '未設定',
+          label: NO_SETTING,
+          value: NO_SETTING,
         });
       }
     }
@@ -342,10 +344,10 @@ const PercentageCategory = ({
         (item) => item.value === detailCategory?.id,
       );
       item && handleSelectSmall(item);
-      if (String(detailCategory?.id) == '未設定') {
+      if (String(detailCategory?.id) == NO_SETTING) {
         handleSelectSmall({
-          label: '未設定',
-          value: '未設定',
+          label: NO_SETTING,
+          value: NO_SETTING,
         });
         setTotalDurationCategory(detailCategory.totalDuration);
       }
@@ -410,6 +412,7 @@ const PercentageCategory = ({
                       <Dropdown
                         label="チーム選択"
                         placeholder="-"
+                        disabled={isHasLoading}
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -493,7 +496,7 @@ const PercentageCategory = ({
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
-                        disabled={!selectedOrganization}
+                        disabled={!selectedOrganization || isHasLoading}
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}
@@ -565,7 +568,7 @@ const PercentageCategory = ({
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedLarge || isHasLoading}
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}

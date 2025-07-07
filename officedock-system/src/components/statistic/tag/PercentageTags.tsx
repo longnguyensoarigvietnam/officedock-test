@@ -18,6 +18,7 @@ import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 import FilterTag from './filter/FilterTag';
+import { DEFAULT_TIME_TEXT } from '@constants';
 
 type Props = {
   startDate: Date;
@@ -39,6 +40,7 @@ const PercentageTags = ({
   handleSelectOrganization,
 }: Props) => {
   const {
+    isHasLoading,
     largeOptions,
     mediumOptions,
     smallOptions,
@@ -283,7 +285,7 @@ const PercentageTags = ({
         (!organizationId || String(item.organizationId) === organizationId),
     );
 
-    return item?.duration || '00:00:00';
+    return item?.duration || DEFAULT_TIME_TEXT;
   };
 
   const handleClickTooltip = (
@@ -372,6 +374,7 @@ const PercentageTags = ({
                       <Dropdown
                         label="チーム選択"
                         placeholder="-"
+                        disabled={isHasLoading}
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -440,7 +443,7 @@ const PercentageTags = ({
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
-                        disabled={!selectedOrganization}
+                        disabled={!selectedOrganization || isHasLoading}
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}
@@ -494,7 +497,7 @@ const PercentageTags = ({
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedLarge || isHasLoading}
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}
@@ -547,7 +550,7 @@ const PercentageTags = ({
                         options={smallOptions}
                         selectedOption={selectedSmall || undefined}
                         onChange={(data) => handleSelectSmall(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedMedium || isHasLoading}
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}

@@ -110,6 +110,7 @@ const LineChartByTeamCompare = ({
 }: Props) => {
   // Context
   const {
+    isHasLoading,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -253,9 +254,9 @@ const LineChartByTeamCompare = ({
   const [standardDateLabels, setStandardDateLabels] = useState<string[]>([]);
   const [compareDateLabels, setCompareDateLabels] = useState<string[]>([]);
   const [totalStandardDuration, setTotalStandardDuration] =
-    useState<string>('00:00:00');
+    useState<string>(DEFAULT_TIME_TEXT);
   const [totalCompareDuration, setTotalCompareDuration] =
-    useState<string>('00:00:00');
+    useState<string>(DEFAULT_TIME_TEXT);
 
   // Collapse statuses
   const [categoryCollapseStatuses, setCategoryCollapseStatuses] = useState<
@@ -1331,18 +1332,18 @@ const LineChartByTeamCompare = ({
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
       const rowAStandard = convertDurationToTotalMinutes(
-        rowA.standardInfo?.categoryDuration || '00:00:00',
+        rowA.standardInfo?.categoryDuration || DEFAULT_TIME_TEXT,
       );
       const rowACompare = convertDurationToTotalMinutes(
-        rowA.compareInfo?.categoryDuration || '00:00:00',
+        rowA.compareInfo?.categoryDuration || DEFAULT_TIME_TEXT,
       );
       const rowADiff = rowAStandard - rowACompare;
 
       const rowBStandard = convertDurationToTotalMinutes(
-        rowB.standardInfo?.categoryDuration || '00:00:00',
+        rowB.standardInfo?.categoryDuration || DEFAULT_TIME_TEXT,
       );
       const rowBCompare = convertDurationToTotalMinutes(
-        rowB.compareInfo?.categoryDuration || '00:00:00',
+        rowB.compareInfo?.categoryDuration || DEFAULT_TIME_TEXT,
       );
       const rowBDiff = rowBStandard - rowBCompare;
 
@@ -1653,9 +1654,9 @@ const LineChartByTeamCompare = ({
                 <p>
                   {subtractDurations(
                     info.row.original.standardInfo?.categoryDuration ||
-                      '00:00:00',
+                      DEFAULT_TIME_TEXT,
                     info.row.original.compareInfo?.categoryDuration ||
-                      '00:00:00',
+                      DEFAULT_TIME_TEXT,
                   )}
                 </p>
               </div>
@@ -1698,8 +1699,10 @@ const LineChartByTeamCompare = ({
                           <div className="font-medium flex text-sm justify-end text-black">
                             <p>
                               {subtractDurations(
-                                user?.standardInfo?.userDuration || '00:00:00',
-                                user?.compareInfo?.userDuration || '00:00:00',
+                                user?.standardInfo?.userDuration ||
+                                  DEFAULT_TIME_TEXT,
+                                user?.compareInfo?.userDuration ||
+                                  DEFAULT_TIME_TEXT,
                               )}
                             </p>
                           </div>
@@ -1898,6 +1901,7 @@ const LineChartByTeamCompare = ({
                   <Dropdown
                     label="チーム選択"
                     placeholder="-"
+                    disabled={isHasLoading}
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -1933,7 +1937,7 @@ const LineChartByTeamCompare = ({
                       setMergedTableData([]);
                       handleSelectLarge(data);
                     }}
-                    disabled={!selectedOrganization}
+                    disabled={!selectedOrganization || isHasLoading}
                   />
                 </div>
               </div>
@@ -1957,7 +1961,7 @@ const LineChartByTeamCompare = ({
                       setMergedTableData([]);
                       handleSelectMedium(data);
                     }}
-                    disabled={!selectedLarge}
+                    disabled={!selectedLarge || isHasLoading}
                   />
                 </div>
               </div>

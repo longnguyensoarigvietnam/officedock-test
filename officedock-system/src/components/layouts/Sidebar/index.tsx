@@ -16,6 +16,9 @@ import ImageRound from '@components/common/ImageRound';
 import Tabs from '@components/common/Tabs';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import Dropdown from '@components/common/Dropdown';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
+import ChatWarningUploadingFilesModal from '@components/modals/ChatWarningUploadingFilesModal';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import {
   SYSTEM_PERMISSIONS_MENU,
@@ -28,21 +31,18 @@ import {
   TabType,
 } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
+import { MAXIMUM_VISIBLE_NOTIFICATIONS } from '@constants';
+
+import useDashboardUnreadMessages from '@hooks/useDashboardUnreadMessages';
+import useTeamList from '@hooks/useListTeam';
 
 import { MenuItem } from '@interfaces/menu';
 import { OptionDropdownType, OptionTabType } from '@interfaces/common';
-
-import useDashboardUnreadMessages from '@hooks/useDashboardUnreadMessages';
 
 import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { WebSocketMessageData } from '@interfaces/chat';
 import { showBackgroundColorByTime } from '@utils';
-import GroupIconWithDynamicColor from '@components/common/GroupIcon';
-import ChatWarningUploadingFilesModal from '@components/modals/ChatWarningUploadingFilesModal';
-import useTeamList from '@hooks/useListTeam';
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
-import { MAXIMUM_VISIBLE_NOTIFICATIONS } from '@constants';
 
 type Props = {
   className?: string;

@@ -7,6 +7,7 @@ import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStati
 import ProgressBarTeamStatisticCompare from './ProgressBarTeamStatistic';
 
 import { EventWorkCategory } from '@constants/enums';
+import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT, NO_SETTING } from '@constants';
 
 import {
   StatisticCategoryInfo,
@@ -23,7 +24,6 @@ import {
 import { lightenColor } from '@utils';
 
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
-import { ALL_TEAM_STATISTIC } from '@constants';
 import FilterTeamStatistic from '../filter/FilterTeamStatistic';
 
 type Props = {
@@ -135,7 +135,7 @@ export function buildProgressDataCompareWithMergedOthers({
       ? compareData.map((item) => ({
           ...item,
           percent: 0,
-          duration: '00:00:00',
+          duration: DEFAULT_TIME_TEXT,
           users: [],
         }))
       : baseData,
@@ -148,7 +148,7 @@ export function buildProgressDataCompareWithMergedOthers({
       ? baseData.map((item) => ({
           ...item,
           percent: 0,
-          duration: '00:00:00',
+          duration: DEFAULT_TIME_TEXT,
           users: [],
         }))
       : compareData,
@@ -197,7 +197,7 @@ export function buildProgressDataCompareWithMergedOthers({
         label: baseItem?.label ?? cmpItem?.label ?? '',
         value: 0,
         color: '#ccc',
-        duration: '00:00:00',
+        duration: DEFAULT_TIME_TEXT,
         optionData: [],
         organizationId: orgId,
       };
@@ -257,6 +257,7 @@ const AllocationTeamCategoryCompare = memo(
       ProgressDataCompareItem[]
     >([]);
     const {
+      isHasLoading,
       orderingOptions,
       totalDurationLarge,
       totalDurationMedium,
@@ -369,10 +370,10 @@ const AllocationTeamCategoryCompare = memo(
             ? detailCategory.totalTask
             : detailCategory.totalDuration,
         );
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectLarge({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -382,10 +383,10 @@ const AllocationTeamCategoryCompare = memo(
         );
         item && handleSelectMedium(item);
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectMedium({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -395,10 +396,10 @@ const AllocationTeamCategoryCompare = memo(
         );
         item && handleSelectSmall(item);
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -407,10 +408,10 @@ const AllocationTeamCategoryCompare = memo(
           (item) => item.value === detailCategory?.id,
         );
         item && handleSelectSmall(item);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -476,6 +477,7 @@ const AllocationTeamCategoryCompare = memo(
                       <Dropdown
                         label="チーム選択"
                         placeholder="-"
+                        disabled={isHasLoading}
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -631,7 +633,7 @@ const AllocationTeamCategoryCompare = memo(
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
-                        disabled={!selectedOrganization}
+                        disabled={!selectedOrganization || isHasLoading}
                       />
 
                       {isLoadingLarge || isLoadingLargeCompare ? (
@@ -785,7 +787,7 @@ const AllocationTeamCategoryCompare = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedLarge || isHasLoading}
                       />
 
                       {isLoadingMedium || isLoadingMediumCompare ? (

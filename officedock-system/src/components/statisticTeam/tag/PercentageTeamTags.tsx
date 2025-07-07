@@ -7,6 +7,7 @@ import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailSt
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 
 import { EventWorkCategory } from '@constants/enums';
+import { DEFAULT_TIME_TEXT } from '@constants';
 
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
@@ -40,6 +41,7 @@ const PercentageTeamTags = ({
   handleSelectOrganization,
 }: Props) => {
   const {
+    isHasLoading,
     largeOptions,
     mediumOptions,
     smallOptions,
@@ -272,28 +274,28 @@ const PercentageTeamTags = ({
   }, [statisticTagsListTeam]);
 
   const handleClickTooltip = (id: number | null, type: string) => {
-    let duration: string = '00:00:00';
+    let duration: string = DEFAULT_TIME_TEXT;
     if (type === EventWorkCategory.ALL) {
       duration =
         statisticTagsListTeam?.largeCategories.find((item) => item.tagId == id)
-          ?.duration || '00:00:00';
+          ?.duration || DEFAULT_TIME_TEXT;
     }
 
     if (type === EventWorkCategory.LARGE) {
       duration =
         statisticTagsListTeam?.mediumCategories?.find(
           (item) => item.tagId == id,
-        )?.duration || '00:00:00';
+        )?.duration || DEFAULT_TIME_TEXT;
     }
     if (type === EventWorkCategory.MEDIUM) {
       duration =
         statisticTagsListTeam?.smallCategories?.find((item) => item.tagId == id)
-          ?.duration || '00:00:00';
+          ?.duration || DEFAULT_TIME_TEXT;
     }
     if (type === EventWorkCategory.SMALL) {
       duration =
         statisticTagsListTeam?.category?.find((item) => item.tagId == id)
-          ?.duration || '00:00:00';
+          ?.duration || DEFAULT_TIME_TEXT;
     }
     setDetailCategory({
       id: id,
@@ -364,6 +366,7 @@ const PercentageTeamTags = ({
                     <Dropdown
                       label="チーム選択"
                       placeholder="-"
+                      disabled={isHasLoading}
                       placeholderClass="!text-black text-sm font-normal"
                       className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -423,7 +426,7 @@ const PercentageTeamTags = ({
                       options={largeOptions}
                       selectedOption={selectedLarge || undefined}
                       onChange={(data) => handleSelectLarge(data)}
-                      disabled={!selectedOrganization}
+                      disabled={!selectedOrganization || isHasLoading}
                     />
                     {dataChartMedium.data.length > 0 ? (
                       <p className="text-sm text-black my-[26px]">
@@ -480,7 +483,7 @@ const PercentageTeamTags = ({
                       options={mediumOptions}
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}
-                      disabled={!selectedLarge}
+                      disabled={!selectedLarge || isHasLoading}
                     />
                     {dataChartSmall.data.length > 0 ? (
                       <p className="text-sm text-black my-[26px]">
@@ -536,7 +539,7 @@ const PercentageTeamTags = ({
                       options={smallOptions}
                       selectedOption={selectedSmall || undefined}
                       onChange={(data) => handleSelectSmall(data)}
-                      disabled={!selectedMedium}
+                      disabled={!selectedMedium || isHasLoading}
                     />
                     {dataChartCategory.data.length > 0 ? (
                       <p className="text-sm text-black my-[26px]">

@@ -16,9 +16,9 @@ import useTaskDurationDetail from '@hooks/useTaskDurationDetail';
 import useContinueCounterTime from '@hooks/useContinueCounterTime';
 
 import { TaskContext } from '@providers/TaskProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import Footer from './Footer';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 
 type MainLayoutProps = {
   children?: ReactNode;

@@ -18,6 +18,7 @@ import {
 } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
 
+import { DEFAULT_TIME_TEXT, NO_SETTING } from '@constants';
 import { EventWorkCategory } from '@constants/enums';
 
 import { StatisticStateContext } from '@providers/StatisticProvider';
@@ -108,6 +109,7 @@ const AllocationCategoryCompare = memo(
     >([]);
 
     const {
+      isHasLoading,
       totalDurationLarge,
       totalDurationMedium,
       totalDurationSmall,
@@ -380,7 +382,7 @@ const AllocationCategoryCompare = memo(
       isCompare: boolean,
       organizationId?: string,
     ) => {
-      let duration: string = '00:00:00';
+      let duration: string = DEFAULT_TIME_TEXT;
       if (isCompare) {
         if (
           isLoadingLargeCompare ||
@@ -393,19 +395,19 @@ const AllocationCategoryCompare = memo(
           duration =
             statisticCategoryCompareList?.largeCategories.find(
               (item) => item.categoryId == id,
-            )?.duration || '00:00:00';
+            )?.duration || DEFAULT_TIME_TEXT;
         }
         if (type === EventWorkCategory.LARGE) {
           duration =
             statisticCategoryCompareList?.mediumCategories?.find(
               (item) => item.categoryId == id,
-            )?.duration || '00:00:00';
+            )?.duration || DEFAULT_TIME_TEXT;
         }
         if (type === EventWorkCategory.MEDIUM) {
           duration =
             statisticCategoryCompareList?.smallCategories?.find(
               (item) => item.categoryId == id,
-            )?.duration || '00:00:00';
+            )?.duration || DEFAULT_TIME_TEXT;
         }
         setDetailCategoryCompare({
           id: id,
@@ -422,19 +424,19 @@ const AllocationCategoryCompare = memo(
           duration =
             statisticCategoryList?.largeCategories.find(
               (item) => item.categoryId == id,
-            )?.duration || '00:00:00';
+            )?.duration || DEFAULT_TIME_TEXT;
         }
         if (type === EventWorkCategory.LARGE) {
           duration =
             statisticCategoryList?.mediumCategories?.find(
               (item) => item.categoryId == id,
-            )?.duration || '00:00:00';
+            )?.duration || DEFAULT_TIME_TEXT;
         }
         if (type === EventWorkCategory.MEDIUM) {
           duration =
             statisticCategoryList?.smallCategories?.find(
               (item) => item.categoryId == id,
-            )?.duration || '00:00:00';
+            )?.duration || DEFAULT_TIME_TEXT;
         }
         setDetailCategory({
           id: id,
@@ -457,10 +459,10 @@ const AllocationCategoryCompare = memo(
         item && handleSelectLarge(item);
 
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectLarge({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -470,10 +472,10 @@ const AllocationCategoryCompare = memo(
         );
         item && handleSelectMedium(item);
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectMedium({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -483,10 +485,10 @@ const AllocationCategoryCompare = memo(
         );
         item && handleSelectSmall(item);
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -495,10 +497,10 @@ const AllocationCategoryCompare = memo(
           (item) => item.value === detailCategory?.id,
         );
         item && handleSelectSmall(item);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
           setTotalDurationCategory(detailCategory.totalDuration);
         }
@@ -520,10 +522,10 @@ const AllocationCategoryCompare = memo(
         item && handleSelectLarge(item);
         setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
 
-        if (String(detailCategoryCompare?.id) == '未設定') {
+        if (String(detailCategoryCompare?.id) == NO_SETTING) {
           handleSelectLarge({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -534,10 +536,10 @@ const AllocationCategoryCompare = memo(
         item && handleSelectMedium(item);
         setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
 
-        if (String(detailCategoryCompare?.id) == '未設定') {
+        if (String(detailCategoryCompare?.id) == NO_SETTING) {
           handleSelectMedium({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -549,10 +551,10 @@ const AllocationCategoryCompare = memo(
         item && handleSelectSmall(item);
         setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
 
-        if (String(detailCategoryCompare?.id) == '未設定') {
+        if (String(detailCategoryCompare?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -562,10 +564,10 @@ const AllocationCategoryCompare = memo(
         );
         item && handleSelectSmall(item);
         setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
-        if (String(detailCategoryCompare?.id) == '未設定') {
+        if (String(detailCategoryCompare?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -632,6 +634,7 @@ const AllocationCategoryCompare = memo(
                       <Dropdown
                         label="チーム選択"
                         placeholder="-"
+                        disabled={isHasLoading}
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -714,7 +717,7 @@ const AllocationCategoryCompare = memo(
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
                                     {formatTimeToJapanese(
-                                      pair.main?.duration || '00:00:00',
+                                      pair.main?.duration || DEFAULT_TIME_TEXT,
                                     )}
                                   </span>
                                 </div>
@@ -854,7 +857,7 @@ const AllocationCategoryCompare = memo(
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
-                        disabled={!selectedOrganization}
+                        disabled={!selectedOrganization || isHasLoading}
                       />
                       <div className={`mt-[14px] flex justify-between`}>
                         <div className="flex items-center">
@@ -929,7 +932,7 @@ const AllocationCategoryCompare = memo(
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
                                     {formatTimeToJapanese(
-                                      pair.main?.duration || '00:00:00',
+                                      pair.main?.duration || DEFAULT_TIME_TEXT,
                                     )}
                                   </span>
                                 </div>
@@ -1053,7 +1056,7 @@ const AllocationCategoryCompare = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedLarge || isHasLoading}
                       />
                       <div className={`mt-[14px] flex justify-between`}>
                         <div className="flex items-center">
@@ -1128,7 +1131,7 @@ const AllocationCategoryCompare = memo(
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
                                     {formatTimeToJapanese(
-                                      pair.main?.duration || '00:00:00',
+                                      pair.main?.duration || DEFAULT_TIME_TEXT,
                                     )}
                                   </span>
                                 </div>

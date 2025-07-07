@@ -452,5 +452,5 @@ export const OPTION_DEFAULT_TASK = {
   label: '未選択',
   value: '未選択',
   type: 'TASK',
-  totalData: '00:00:00',
+  totalData: DEFAULT_TIME_TEXT,
 };

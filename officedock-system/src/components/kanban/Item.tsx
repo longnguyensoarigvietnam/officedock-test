@@ -32,7 +32,6 @@ import { TaskContext } from '@providers/TaskProvider';
 import {
   addMinutesToDate,
   compareWithCurrentDate,
-  convertToCurrentTimezone,
   formatShowDeadlineTask,
 } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
@@ -219,12 +218,8 @@ const Item = ({
       ]);
       queryClient.refetchQueries(['getTaskHeaderStart']);
       if (data) {
-        const startDateActual = new Date(
-          convertToCurrentTimezone(`${data.planStartDate}`),
-        );
-        const endDateActual = new Date(
-          convertToCurrentTimezone(`${data.planEndDate}`),
-        );
+        const startDateActual = new Date(`${data.planStartDate}`);
+        const endDateActual = new Date(`${data.planEndDate}`);
         setDataActualAddSchedule({
           ...data,
           start: startDateActual,

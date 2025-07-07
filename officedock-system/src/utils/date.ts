@@ -13,6 +13,7 @@ import {
   DATE_FORMAT_SERVER,
   DATE_TIME_FORMAT,
   DATE_TIME_LOCAL,
+  DEFAULT_TIME_TEXT,
 } from '@constants';
 import { DateInfo, OptionDropdownType } from '@interfaces/common';
 import { StatisticCategoryInfo } from '@interfaces/statistic';
@@ -1079,7 +1080,7 @@ export function formatTimeToJapanese(time: string): string {
 }
 // Sum duration
 export function sumDurations(data: StatisticCategoryInfo[]): string {
-  if (data.length === 0) return '00:00:00';
+  if (data.length === 0) return DEFAULT_TIME_TEXT;
   let totalSeconds = 0;
 
   data.forEach((item) => {
@@ -1099,7 +1100,7 @@ export function sumDurations(data: StatisticCategoryInfo[]): string {
 }
 // Sum total duration with statistic
 export function sumDurationsChart(durations: string[]): string {
-  if (durations.length === 0) return '00:00:00';
+  if (durations.length === 0) return DEFAULT_TIME_TEXT;
 
   let totalSeconds = 0;
 
@@ -1685,7 +1686,7 @@ export const getTimeDifference = (
 
   const diffMs = pause.getTime() - start.getTime();
 
-  if (diffMs < 0) return '00:00:00';
+  if (diffMs < 0) return DEFAULT_TIME_TEXT;
 
   const totalSeconds = Math.floor(diffMs / 1000);
 

@@ -1,17 +1,17 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { TaskDuration } from '@interfaces/task';
+import { DEFAULT_TIME_TEXT } from '@constants';
 
-const defaultTextTime = '00:00:00';
 const useContinueCounterTime = (statusTaskSelected: TaskDuration) => {
   const [elapsedTime, setElapsedTime] = useState(
-    statusTaskSelected.taskDuration || defaultTextTime,
+    statusTaskSelected.taskDuration || DEFAULT_TIME_TEXT,
   );
 
   const startTimeRef = useRef(Date.now());
 
   const elapsedSecondsRef = useRef(
-    parseTimeToSeconds(statusTaskSelected.taskDuration || defaultTextTime),
+    parseTimeToSeconds(statusTaskSelected.taskDuration || DEFAULT_TIME_TEXT),
   );
 
   useEffect(() => {
@@ -32,10 +32,10 @@ const useContinueCounterTime = (statusTaskSelected: TaskDuration) => {
       return () => clearInterval(intervalId);
     } else {
       const initialSeconds = parseTimeToSeconds(
-        statusTaskSelected.taskDuration || defaultTextTime,
+        statusTaskSelected.taskDuration || DEFAULT_TIME_TEXT,
       );
       elapsedSecondsRef.current = initialSeconds;
-      setElapsedTime(statusTaskSelected.taskDuration || defaultTextTime);
+      setElapsedTime(statusTaskSelected.taskDuration || DEFAULT_TIME_TEXT);
     }
   }, [statusTaskSelected]);
 

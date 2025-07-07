@@ -11,7 +11,7 @@ import Switch from '@components/common/Switch';
 import { pageRouters } from '@constants/routers';
 import { EventWorkCategory, ServerStatusCode } from '@constants/enums';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
-import { DATE_FORMAT, NO_OPTION_CATEGORY } from '@constants';
+import { DATE_FORMAT, NO_OPTION_CATEGORY, NO_SETTING } from '@constants';
 
 import useActualDurationDetail from '@hooks/useActualDurationDetail';
 
@@ -89,8 +89,11 @@ const ActualDurationsDetail = () => {
   return (
     <div className="flex flex-col justify-between h-full">
       <div className="flex flex-col gap-4 items-center">
-        <ViewInfo label="タイトル名" className={`break-words`} childrenClassName={`${expanded ? '!w-[calc(100%_-_210px)]' : '!w-[calc(100%_-_60px)]'}`}>
-          {taskScheduleDetail?.title || '未設定'}{' '}
+        <ViewInfo
+          label="タイトル名"
+          className={`break-words`}
+          childrenClassName={`${expanded ? '!w-[calc(100%_-_210px)]' : '!w-[calc(100%_-_60px)]'}`}>
+          {taskScheduleDetail?.title || NO_SETTING}{' '}
         </ViewInfo>
         <ViewInfo label="業務の種類">
           {[
@@ -105,7 +108,7 @@ const ActualDurationsDetail = () => {
               ]
                 .filter(Boolean)
                 .join('＞')
-            : '未設定'}
+            : NO_SETTING}
         </ViewInfo>
 
         <ViewInfo label="集計タグ">
@@ -120,7 +123,7 @@ const ActualDurationsDetail = () => {
                   </span>
                 );
               })
-            : '未設定'}{' '}
+            : NO_SETTING}{' '}
         </ViewInfo>
         <ViewInfo label="計測時間">
           {actualDurationDetail && actualDurationDetail.startedAt
@@ -149,7 +152,7 @@ const ActualDurationsDetail = () => {
         )}
         {taskScheduleDetail?.scheduleId && (
           <ViewInfo label="重要">
-            {taskScheduleDetail.scheduleType?.label || '未設定'}
+            {taskScheduleDetail.scheduleType?.label || NO_SETTING}
           </ViewInfo>
         )}
       </div>

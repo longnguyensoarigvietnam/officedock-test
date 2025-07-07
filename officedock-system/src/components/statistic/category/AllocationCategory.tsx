@@ -12,6 +12,7 @@ import { formatTimeToJapanese } from '@utils/date';
 import { mapStatisticCategoryInfoToProgressData } from '@utils';
 
 import { EventWorkCategory } from '@constants/enums';
+import { DEFAULT_TIME_TEXT, NO_SETTING } from '@constants';
 
 import { StatisticStateContext } from '@providers/StatisticProvider';
 
@@ -57,6 +58,7 @@ const AllocationCategory = memo(
       ProgressDataType[]
     >([]);
     const {
+      isHasLoading,
       totalDurationLarge,
       totalDurationMedium,
       totalDurationSmall,
@@ -119,26 +121,26 @@ const AllocationCategory = memo(
       type: string,
       organizationId?: string,
     ) => {
-      let duration: string = '00:00:00';
+      let duration: string = DEFAULT_TIME_TEXT;
       if (isLoadingLarge || isLoadingMedium || isLoadingOrganization) return;
 
       if (type === EventWorkCategory.ALL) {
         duration =
           statisticCategoryList?.largeCategories.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.LARGE) {
         duration =
           statisticCategoryList?.mediumCategories?.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.MEDIUM) {
         duration =
           statisticCategoryList?.smallCategories?.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       setDetailCategory({
         id: id,
@@ -160,10 +162,10 @@ const AllocationCategory = memo(
         item && handleSelectLarge(item);
 
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectLarge({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -173,10 +175,10 @@ const AllocationCategory = memo(
         );
         item && handleSelectMedium(item);
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectMedium({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -186,10 +188,10 @@ const AllocationCategory = memo(
         );
         item && handleSelectSmall(item);
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -198,10 +200,10 @@ const AllocationCategory = memo(
           (item) => item.value === detailCategory?.id,
         );
         item && handleSelectSmall(item);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
           setTotalDurationCategory(detailCategory.totalDuration);
         }
@@ -264,6 +266,7 @@ const AllocationCategory = memo(
                       <Dropdown
                         label="チーム選択"
                         placeholder="-"
+                        disabled={isHasLoading}
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -350,7 +353,7 @@ const AllocationCategory = memo(
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
-                        disabled={!selectedOrganization}
+                        disabled={!selectedOrganization || isHasLoading}
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}
@@ -424,7 +427,7 @@ const AllocationCategory = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedLarge || isHasLoading}
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}

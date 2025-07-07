@@ -16,6 +16,7 @@ import { apiRouters, pageRouters } from '@constants/routers';
 import {
   NO_DATA_AVAILABLE,
   NO_OPTION_CATEGORY,
+  NO_SETTING,
   TASK_AND_EVENT_OPTIONS,
 } from '@constants';
 import {
@@ -642,7 +643,7 @@ const ListActualDurations = () => {
                           ]
                             .filter(Boolean)
                             .join('＞')
-                        : '未設定'}
+                        : NO_SETTING}
                     </p>
                   </div>
                   <div className="text-left w-[400px] border-b-[1px]">

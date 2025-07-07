@@ -121,6 +121,7 @@ const LineChartByTeam = ({
     orderingOptions,
     lineChartViewBy,
     lineChartTableData,
+    isHasLoading,
     setLineChartTableData,
     setLineChartViewBy,
   } = useContext(StatisticTeamStateContext);
@@ -193,7 +194,7 @@ const LineChartByTeam = ({
     labels: [],
     datasets: [],
   });
-  const [totalDuration, setTotalDuration] = useState<string>('00:00:00');
+  const [totalDuration, setTotalDuration] = useState<string>(DEFAULT_TIME_TEXT);
 
   // Collapse statuses
   const [categoryCollapseStatuses, setCategoryCollapseStatuses] = useState<
@@ -877,10 +878,10 @@ const LineChartByTeam = ({
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
       const rowADuration = convertDurationToTotalMinutes(
-        rowA.categoryDuration || '00:00:00',
+        rowA.categoryDuration || DEFAULT_TIME_TEXT,
       );
       const rowBDuration = convertDurationToTotalMinutes(
-        rowB.categoryDuration || '00:00:00',
+        rowB.categoryDuration || DEFAULT_TIME_TEXT,
       );
 
       return sortingType == SortingType.ASC
@@ -1260,6 +1261,7 @@ const LineChartByTeam = ({
                   <Dropdown
                     label="チーム選択"
                     placeholder="-"
+                    disabled={isHasLoading}
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -1295,7 +1297,7 @@ const LineChartByTeam = ({
                       setLineChartTableData([]);
                       handleSelectLarge(data);
                     }}
-                    disabled={!selectedOrganization}
+                    disabled={!selectedOrganization || isHasLoading}
                   />
                 </div>
               </div>
@@ -1319,7 +1321,7 @@ const LineChartByTeam = ({
                       setLineChartTableData([]);
                       handleSelectMedium(data);
                     }}
-                    disabled={!selectedLarge}
+                    disabled={!selectedLarge || isHasLoading}
                   />
                 </div>
               </div>

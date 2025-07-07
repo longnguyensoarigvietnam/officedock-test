@@ -90,9 +90,11 @@ interface ContextValue {
   currentPage: number;
   setCurrentPage: Dispatch<SetStateAction<number>>;
   removeTag: (selected: OptionDropdownType) => void;
+  isHasLoading: boolean;
 }
 
 const defaultValue: ContextValue = {
+  isHasLoading: false,
   smallOptions: [],
   mediumOptions: [],
   largeOptions: [],
@@ -277,6 +279,13 @@ export const StatisticStateProvider = ({
 
     setSelectedTags(updatedTagIds);
   };
+  const isHasLoading =
+    isLoadingLarge ||
+    isLoadingMedium ||
+    isLoadingOrganization ||
+    isLoadingLargeCompare ||
+    isLoadingMediumCompare ||
+    isLoadingOrganizationCompare;
 
   const contextValue: ContextValue = {
     smallOptions,
@@ -357,6 +366,7 @@ export const StatisticStateProvider = ({
     currentPage,
     setCurrentPage,
     removeTag,
+    isHasLoading,
   };
 
   return (

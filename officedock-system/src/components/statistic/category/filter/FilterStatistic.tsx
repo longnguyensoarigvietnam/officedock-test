@@ -10,6 +10,7 @@ type Props = {
 
 const FilterStatistic = ({ className }: Props) => {
   const {
+    isHasLoading,
     tagsOptions,
     selectedTags,
     isLoadingLarge,
@@ -27,6 +28,7 @@ const FilterStatistic = ({ className }: Props) => {
         <MultiSelectDropdown
           isShowIconFilter
           options={tagsOptions}
+          disabled={isHasLoading}
           placeholder="集計対象のタグを選択"
           className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
           optionClassName="!top-6"

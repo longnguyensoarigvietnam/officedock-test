@@ -6,6 +6,7 @@ import PercentageBarCompareTeam from '@components/common/ProgressBar/ProgressBar
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 
 import { EventWorkCategory } from '@constants/enums';
+import { DEFAULT_TIME_TEXT } from '@constants';
 
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
@@ -44,6 +45,7 @@ const PercentageTeamTagsCompare = ({
   handleSelectOrganization,
 }: Props) => {
   const {
+    isHasLoading,
     largeOptions,
     mediumOptions,
     listOptionsOrganization,
@@ -263,31 +265,31 @@ const PercentageTeamTagsCompare = ({
     type: string,
     isCompare: boolean,
   ) => {
-    let duration: string = '00:00:00';
+    let duration: string = DEFAULT_TIME_TEXT;
     if (isCompare) {
       if (type === EventWorkCategory.ALL) {
         duration =
           statisticTagsListTeamCompare?.largeCategories.find(
             (item) => item.tagId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.LARGE) {
         duration =
           statisticTagsListTeamCompare?.mediumCategories?.find(
             (item) => item.tagId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.MEDIUM) {
         duration =
           statisticTagsListTeamCompare?.smallCategories?.find(
             (item) => item.tagId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.SMALL) {
         duration =
           statisticTagsListTeamCompare?.category?.find(
             (item) => item.tagId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       setDetailCategoryCompare({
         id: id,
@@ -301,24 +303,24 @@ const PercentageTeamTagsCompare = ({
         duration =
           statisticTagsListTeam?.largeCategories.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.LARGE) {
         duration =
           statisticTagsListTeam?.mediumCategories?.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.MEDIUM) {
         duration =
           statisticTagsListTeam?.smallCategories?.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.SMALL) {
         duration =
           statisticTagsListTeam?.category?.find((item) => item.categoryId == id)
-            ?.duration || '00:00:00';
+            ?.duration || DEFAULT_TIME_TEXT;
       }
       setDetailCategory({
         id: id,
@@ -410,6 +412,7 @@ const PercentageTeamTagsCompare = ({
                     <Dropdown
                       label="チーム選択"
                       placeholder="-"
+                      disabled={isHasLoading}
                       placeholderClass="!text-black text-sm font-normal"
                       className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -465,7 +468,7 @@ const PercentageTeamTagsCompare = ({
                       options={largeOptions}
                       selectedOption={selectedLarge || undefined}
                       onChange={(data) => handleSelectLarge(data)}
-                      disabled={!selectedOrganization}
+                      disabled={!selectedOrganization || isHasLoading}
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
@@ -515,7 +518,7 @@ const PercentageTeamTagsCompare = ({
                       options={mediumOptions}
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}
-                      disabled={!selectedLarge}
+                      disabled={!selectedLarge || isHasLoading}
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
@@ -565,7 +568,7 @@ const PercentageTeamTagsCompare = ({
                       options={smallOptions}
                       selectedOption={selectedSmall || undefined}
                       onChange={(data) => handleSelectSmall(data)}
-                      disabled={!selectedMedium}
+                      disabled={!selectedMedium || isHasLoading}
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
