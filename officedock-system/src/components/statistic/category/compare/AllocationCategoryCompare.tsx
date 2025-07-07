@@ -4,7 +4,6 @@ import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 import {
   StatisticCategoryInfo,
@@ -19,11 +18,13 @@ import {
 } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
 
+import { DEFAULT_TIME_TEXT, NO_SETTING } from '@constants';
 import { EventWorkCategory } from '@constants/enums';
 
 import { StatisticStateContext } from '@providers/StatisticProvider';
 
 import ProgressBarStatistic from '../ProgressBarStatistic';
+import FilterStatistic from '../filter/FilterStatistic';
 
 type Props = {
   startDate: Date;
@@ -32,7 +33,6 @@ type Props = {
   statisticCategoryCompareList: StatisticsCategories | undefined;
   startDateCompare: Date;
   endDateCompare: Date | null;
-  removeTag: (selected: OptionDropdownType) => void;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -66,7 +66,6 @@ const AllocationCategoryCompare = memo(
     startDateCompare,
     endDateCompare,
     statisticCategoryCompareList,
-    removeTag,
     handleSelectOrganization,
     handleSelectLarge,
     handleSelectMedium,
@@ -110,6 +109,7 @@ const AllocationCategoryCompare = memo(
     >([]);
 
     const {
+      isHasLoading,
       totalDurationLarge,
       totalDurationMedium,
       totalDurationSmall,
@@ -125,14 +125,12 @@ const AllocationCategoryCompare = memo(
       selectedOrganization,
       selectedTags,
       selectedSmall,
-      tagsOptions,
       isLoadingLargeCompare,
       isLoadingMediumCompare,
       isLoadingOrganizationCompare,
       isLoadingLarge,
       isLoadingMedium,
       isLoadingOrganization,
-      setSelectedTags,
       setTotalDurationTask,
       setTotalDurationCategory,
       setTotalDurationTaskCompare,
@@ -182,7 +180,10 @@ const AllocationCategoryCompare = memo(
             if (item.percent < 10) {
               smallMainCategories.push(mainData);
             } else {
-              mergedMap.set(`${item.categoryId}-${item.organizationId}`, { main: mainData, compare: null });
+              mergedMap.set(`${item.categoryId}-${item.organizationId}`, {
+                main: mainData,
+                compare: null,
+              });
             }
           });
 
@@ -215,13 +216,22 @@ const AllocationCategoryCompare = memo(
 
             if (compareItem.percent < 10) {
               smallCompareCategories.push(compareData);
-            } else if (mergedMap.has(`${compareItem.categoryId}-${compareItem.organizationId}`)) {
-              mergedMap.get(`${compareItem.categoryId}-${compareItem.organizationId}`)!.compare = compareData;
+            } else if (
+              mergedMap.has(
+                `${compareItem.categoryId}-${compareItem.organizationId}`,
+              )
+            ) {
+              mergedMap.get(
+                `${compareItem.categoryId}-${compareItem.organizationId}`,
+              )!.compare = compareData;
             } else {
-              mergedMap.set(`${compareItem.categoryId}-${compareItem.organizationId}`, {
-                main: null,
-                compare: compareData,
-              });
+              mergedMap.set(
+                `${compareItem.categoryId}-${compareItem.organizationId}`,
+                {
+                  main: null,
+                  compare: compareData,
+                },
+              );
             }
           });
 
@@ -372,7 +382,7 @@ const AllocationCategoryCompare = memo(
       isCompare: boolean,
       organizationId?: string,
     ) => {
-      let duration: string = '00:00:00';
+      let duration: string = DEFAULT_TIME_TEXT;
       if (isCompare) {
         if (
           isLoadingLargeCompare ||
@@ -385,19 +395,19 @@ const AllocationCategoryCompare = memo(
           duration =
             statisticCategoryCompareList?.largeCategories.find(
               (item) => item.categoryId == id,
-            )?.duration || '00:00:00';
+            )?.duration || DEFAULT_TIME_TEXT;
         }
         if (type === EventWorkCategory.LARGE) {
           duration =
             statisticCategoryCompareList?.mediumCategories?.find(
               (item) => item.categoryId == id,
-            )?.duration || '00:00:00';
+            )?.duration || DEFAULT_TIME_TEXT;
         }
         if (type === EventWorkCategory.MEDIUM) {
           duration =
             statisticCategoryCompareList?.smallCategories?.find(
               (item) => item.categoryId == id,
-            )?.duration || '00:00:00';
+            )?.duration || DEFAULT_TIME_TEXT;
         }
         setDetailCategoryCompare({
           id: id,
@@ -414,19 +424,19 @@ const AllocationCategoryCompare = memo(
           duration =
             statisticCategoryList?.largeCategories.find(
               (item) => item.categoryId == id,
-            )?.duration || '00:00:00';
+            )?.duration || DEFAULT_TIME_TEXT;
         }
         if (type === EventWorkCategory.LARGE) {
           duration =
             statisticCategoryList?.mediumCategories?.find(
               (item) => item.categoryId == id,
-            )?.duration || '00:00:00';
+            )?.duration || DEFAULT_TIME_TEXT;
         }
         if (type === EventWorkCategory.MEDIUM) {
           duration =
             statisticCategoryList?.smallCategories?.find(
               (item) => item.categoryId == id,
-            )?.duration || '00:00:00';
+            )?.duration || DEFAULT_TIME_TEXT;
         }
         setDetailCategory({
           id: id,
@@ -449,10 +459,10 @@ const AllocationCategoryCompare = memo(
         item && handleSelectLarge(item);
 
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectLarge({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -462,10 +472,10 @@ const AllocationCategoryCompare = memo(
         );
         item && handleSelectMedium(item);
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectMedium({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -475,10 +485,10 @@ const AllocationCategoryCompare = memo(
         );
         item && handleSelectSmall(item);
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -487,10 +497,10 @@ const AllocationCategoryCompare = memo(
           (item) => item.value === detailCategory?.id,
         );
         item && handleSelectSmall(item);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
           setTotalDurationCategory(detailCategory.totalDuration);
         }
@@ -512,10 +522,10 @@ const AllocationCategoryCompare = memo(
         item && handleSelectLarge(item);
         setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
 
-        if (String(detailCategoryCompare?.id) == '未設定') {
+        if (String(detailCategoryCompare?.id) == NO_SETTING) {
           handleSelectLarge({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -526,10 +536,10 @@ const AllocationCategoryCompare = memo(
         item && handleSelectMedium(item);
         setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
 
-        if (String(detailCategoryCompare?.id) == '未設定') {
+        if (String(detailCategoryCompare?.id) == NO_SETTING) {
           handleSelectMedium({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -541,10 +551,10 @@ const AllocationCategoryCompare = memo(
         item && handleSelectSmall(item);
         setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
 
-        if (String(detailCategoryCompare?.id) == '未設定') {
+        if (String(detailCategoryCompare?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -554,10 +564,10 @@ const AllocationCategoryCompare = memo(
         );
         item && handleSelectSmall(item);
         setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
-        if (String(detailCategoryCompare?.id) == '未設定') {
+        if (String(detailCategoryCompare?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -595,60 +605,8 @@ const AllocationCategoryCompare = memo(
                   各カテゴリーの時間配分
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-[240px] flex-shrink-0  relative">
-                  <MultiSelectDropdown
-                    isShowIconFilter
-                    options={tagsOptions}
-                    labelOptionClass="break-all w-[190px]"
-                    placeholder="集計対象のタグを選択"
-                    optionClassName="!top-6"
-                    className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
-                    selectedOptions={selectedTags || []}
-                    onChange={(selected) => {
-                      let updatedTagIds = [];
-                      const currentTagIds = selectedTags || [];
-                      const foundItemIndex = currentTagIds.findIndex(
-                        (tag) => tag.value == selected.value,
-                      );
-                      if (foundItemIndex == -1) {
-                        updatedTagIds = [...currentTagIds, selected];
-                      } else {
-                        updatedTagIds = currentTagIds.filter(
-                          (tag) => tag.value != selected.value,
-                        );
-                      }
-                      setSelectedTags(updatedTagIds);
-                    }}
-                  />
-                  {selectedTags.length === 0 && (
-                    <span className="text-xs absolute text-[#77858F] top-[2px] right-[135px]">
-                      タグの絞り込み
-                    </span>
-                  )}
-                </div>
-                <div className="relative flex-grow right-[224px] top-0">
-                  <div className="flex w-full flex-shrink-0 gap-2 flex-wrap ">
-                    {selectedTags.map((item) => {
-                      return (
-                        <div
-                          key={item.value}
-                          className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                          <span className=" truncate">{item.label}</span>
-                          <ImageRound
-                            onClick={() => {
-                              removeTag(item);
-                            }}
-                            src={`/icons/close-white.svg`}
-                            name="close"
-                            className="w-fit h-fit cursor-pointer"
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+              {/* Filter */}
+              <FilterStatistic />
             </div>
             <ImageRound
               src="/icons/extend-calendar.svg"
@@ -676,6 +634,7 @@ const AllocationCategoryCompare = memo(
                       <Dropdown
                         label="チーム選択"
                         placeholder="-"
+                        disabled={isHasLoading}
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -758,7 +717,7 @@ const AllocationCategoryCompare = memo(
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
                                     {formatTimeToJapanese(
-                                      pair.main?.duration || '00:00:00',
+                                      pair.main?.duration || DEFAULT_TIME_TEXT,
                                     )}
                                   </span>
                                 </div>
@@ -898,7 +857,7 @@ const AllocationCategoryCompare = memo(
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
-                        disabled={!selectedOrganization}
+                        disabled={!selectedOrganization || isHasLoading}
                       />
                       <div className={`mt-[14px] flex justify-between`}>
                         <div className="flex items-center">
@@ -973,7 +932,7 @@ const AllocationCategoryCompare = memo(
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
                                     {formatTimeToJapanese(
-                                      pair.main?.duration || '00:00:00',
+                                      pair.main?.duration || DEFAULT_TIME_TEXT,
                                     )}
                                   </span>
                                 </div>
@@ -1097,7 +1056,7 @@ const AllocationCategoryCompare = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedLarge || isHasLoading}
                       />
                       <div className={`mt-[14px] flex justify-between`}>
                         <div className="flex items-center">
@@ -1172,7 +1131,7 @@ const AllocationCategoryCompare = memo(
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
                                     {formatTimeToJapanese(
-                                      pair.main?.duration || '00:00:00',
+                                      pair.main?.duration || DEFAULT_TIME_TEXT,
                                     )}
                                   </span>
                                 </div>

@@ -22,12 +22,14 @@ import {
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ERROR_TIME_START_MESSAGE } from '@constants/message';
+import { DEFAULT_TIME_TEXT, OPTION_DEFAULT_TASK } from '@constants';
 
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import useContinueCounterTime from '@hooks/useContinueCounterTime';
 import useTaskHeaderStart from '@hooks/useTaskHeaderStart';
 import useTaskDurationDetail from '@hooks/useTaskDurationDetail';
 import useDataHeaderTaskList from '@hooks/useDataHeaderTask';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { Task, TaskDuration, TaskRequest } from '@interfaces/task';
@@ -39,7 +41,6 @@ import {
   combineDateAndTime,
   convertDateString,
   convertDateStringWithFormat,
-  convertToCurrentTimezone,
   convertToMinutesNumber,
   formatCurrentDay,
   formatDateServer,
@@ -50,8 +51,6 @@ import {
   getTimeDifference,
   isTimeEarlier,
 } from '@utils/date';
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
-import { OPTION_DEFAULT_TASK } from '@constants';
 
 const ShowTimeCounter = memo(
   ({ statusTaskSelected }: { statusTaskSelected: TaskDuration }) => {
@@ -390,12 +389,8 @@ const TaskPageDataHeader = () => {
       }
 
       if (data) {
-        const startDateActual = new Date(
-          convertToCurrentTimezone(`${data.planStartDate}`),
-        );
-        const endDateActual = new Date(
-          convertToCurrentTimezone(`${data.planEndDate}`),
-        );
+        const startDateActual = new Date(`${data.planStartDate}`);
+        const endDateActual = new Date(`${data.planEndDate}`);
         setDataActualAddSchedule({
           ...data,
           start: startDateActual,
@@ -842,7 +837,7 @@ const TaskPageDataHeader = () => {
                   </div>
                 </div>
               ) : (
-                <span className="text-[#77858F]">{'00:00:00'}</span>
+                <span className="text-[#77858F]">{DEFAULT_TIME_TEXT}</span>
               )}
               {statusTaskSelected?.isStart &&
                 taskSelected.value &&

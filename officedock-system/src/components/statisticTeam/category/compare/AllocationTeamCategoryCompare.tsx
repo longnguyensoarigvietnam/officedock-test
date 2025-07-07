@@ -1,19 +1,13 @@
-import React, { Fragment, memo, useContext, useEffect, useState } from 'react';
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition,
-} from '@headlessui/react';
+import React, { memo, useContext, useEffect, useState } from 'react';
 
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
-import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import ProgressBarTeamStatisticCompare from './ProgressBarTeamStatistic';
 
 import { EventWorkCategory } from '@constants/enums';
+import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT, NO_SETTING } from '@constants';
 
 import {
   StatisticCategoryInfo,
@@ -30,7 +24,7 @@ import {
 import { lightenColor } from '@utils';
 
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
-import { ALL_TEAM_STATISTIC } from '@constants';
+import FilterTeamStatistic from '../filter/FilterTeamStatistic';
 
 type Props = {
   startDate: Date;
@@ -39,12 +33,10 @@ type Props = {
   endDateCompare: Date | null;
   statisticTeamCategoryList: StatisticsCategories | undefined;
   statisticCategoryListTeamCompare: StatisticsCategories | undefined;
-  removeTag: (selected: OptionDropdownType) => void;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
-  removeUser: (selected: OptionDropdownType) => void;
 };
 
 type ProgressDataType = {
@@ -143,7 +135,7 @@ export function buildProgressDataCompareWithMergedOthers({
       ? compareData.map((item) => ({
           ...item,
           percent: 0,
-          duration: '00:00:00',
+          duration: DEFAULT_TIME_TEXT,
           users: [],
         }))
       : baseData,
@@ -156,7 +148,7 @@ export function buildProgressDataCompareWithMergedOthers({
       ? baseData.map((item) => ({
           ...item,
           percent: 0,
-          duration: '00:00:00',
+          duration: DEFAULT_TIME_TEXT,
           users: [],
         }))
       : compareData,
@@ -205,7 +197,7 @@ export function buildProgressDataCompareWithMergedOthers({
         label: baseItem?.label ?? cmpItem?.label ?? '',
         value: 0,
         color: '#ccc',
-        duration: '00:00:00',
+        duration: DEFAULT_TIME_TEXT,
         optionData: [],
         organizationId: orgId,
       };
@@ -234,8 +226,6 @@ const AllocationTeamCategoryCompare = memo(
     endDateCompare,
     statisticTeamCategoryList,
     statisticCategoryListTeamCompare,
-    removeTag,
-    removeUser,
     handleSelectOrganization,
     handleSelectLarge,
     handleSelectMedium,
@@ -267,6 +257,7 @@ const AllocationTeamCategoryCompare = memo(
       ProgressDataCompareItem[]
     >([]);
     const {
+      isHasLoading,
       orderingOptions,
       totalDurationLarge,
       totalDurationMedium,
@@ -282,20 +273,12 @@ const AllocationTeamCategoryCompare = memo(
       selectedMedium,
       selectedSmall,
       selectedOrganization,
-      listMemberTeam,
-      tagsOptions,
       isLoadingLarge,
       isLoadingMedium,
       isLoadingOrganization,
       isLoadingLargeCompare,
       isLoadingMediumCompare,
       isLoadingOrganizationCompare,
-      firstThreeUser,
-      allLabelUser,
-      allLabelTag,
-      firstThreeTag,
-      remainingCountUser,
-      remainingCountTag,
       setTotalDurationTask,
     } = useContext(StatisticTeamStateContext);
 
@@ -387,10 +370,10 @@ const AllocationTeamCategoryCompare = memo(
             ? detailCategory.totalTask
             : detailCategory.totalDuration,
         );
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectLarge({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -400,10 +383,10 @@ const AllocationTeamCategoryCompare = memo(
         );
         item && handleSelectMedium(item);
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectMedium({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -413,10 +396,10 @@ const AllocationTeamCategoryCompare = memo(
         );
         item && handleSelectSmall(item);
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -425,10 +408,10 @@ const AllocationTeamCategoryCompare = memo(
           (item) => item.value === detailCategory?.id,
         );
         item && handleSelectSmall(item);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -462,121 +445,11 @@ const AllocationTeamCategoryCompare = memo(
                   カテゴリーの割合
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="flex-shrink-0 h-6 relative">
-                  {/* Filter option modal */}
-                  <Popover className="relative">
-                    {() => (
-                      <>
-                        <div className="flex items-center gap-2 relative top-[5px]">
-                          <PopoverButton
-                            onClick={() =>
-                              setIsOpenModalFilter(!isOpenModalFilter)
-                            }
-                            className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
-                            <ImageRound
-                              src="/icons/filter.svg"
-                              name="Filter icon"
-                              className="w-[14px] h-[14px]"
-                            />
-                          </PopoverButton>
-                        </div>
-                        <Transition
-                          as={Fragment}
-                          show={isOpenModalFilter}
-                          enter="transition ease-out duration-200"
-                          enterFrom="opacity-0 translate-y-1"
-                          enterTo="opacity-100 translate-y-0"
-                          leave="transition ease-in duration-150"
-                          leaveFrom="opacity-100 translate-y-0"
-                          leaveTo="opacity-0 translate-y-1">
-                          <PopoverPanel className="absolute left-[30px] top-[-5px] z-[1] w-[400px] transform">
-                            <ActionFilterStatisticTeam
-                              tagsOptions={tagsOptions}
-                              handleClose={() => setIsOpenModalFilter(false)}
-                              listMemberTeam={listMemberTeam}
-                            />
-                          </PopoverPanel>
-                        </Transition>
-                      </>
-                    )}
-                  </Popover>
-                </div>
-                <div className=" flex-grow flex-shrink-0">
-                  <div className="flex gap-2 flex-wrap  flex-shrink-0 ">
-                    <>
-                      {firstThreeUser.map((item, index) => {
-                        return (
-                          <div
-                            key={item.value}
-                            className="flex gap-[6px] items-center">
-                            {index === 0 && (
-                              <ImageRound
-                                src={`/icons/user-white.svg`}
-                                name="close"
-                                className="w-fit h-fit cursor-pointer"
-                              />
-                            )}
-                            <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                              <span className="min-w-[32px] max-w-[118px]  truncate">
-                                {item.label}
-                              </span>
-                              <ImageRound
-                                onClick={() => {
-                                  removeUser(item);
-                                }}
-                                src={`/icons/close-white.svg`}
-                                name="close"
-                                className="w-fit h-fit cursor-pointer"
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {allLabelUser.length > 3 && (
-                        <p className=" h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
-                          +{remainingCountUser}
-                        </p>
-                      )}
-                    </>
-                    <>
-                      {firstThreeTag.map((item, index) => {
-                        return (
-                          <div
-                            key={item.value}
-                            className="flex gap-[6px] items-center">
-                            {index === 0 && (
-                              <ImageRound
-                                src={`/icons/tag-white.svg`}
-                                name="close"
-                                className="w-fit h-fit cursor-pointer"
-                              />
-                            )}
-                            <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                              <span className="min-w-[32px] max-w-[118px]  truncate">
-                                {item.label}
-                              </span>
-                              <ImageRound
-                                onClick={() => {
-                                  removeTag(item);
-                                }}
-                                src={`/icons/close-white.svg`}
-                                name="close"
-                                className="w-fit h-fit cursor-pointer"
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {allLabelTag.length > 3 && (
-                        <p className="pr-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
-                          +{remainingCountTag}
-                        </p>
-                      )}
-                    </>
-                  </div>
-                </div>
-              </div>
+              {/* Filter modal */}
+              <FilterTeamStatistic
+                open={isOpenModalFilter}
+                onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
+              />
             </div>
             <ImageRound
               src="/icons/extend-calendar.svg"
@@ -604,6 +477,7 @@ const AllocationTeamCategoryCompare = memo(
                       <Dropdown
                         label="チーム選択"
                         placeholder="-"
+                        disabled={isHasLoading}
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -759,7 +633,7 @@ const AllocationTeamCategoryCompare = memo(
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
-                        disabled={!selectedOrganization}
+                        disabled={!selectedOrganization || isHasLoading}
                       />
 
                       {isLoadingLarge || isLoadingLargeCompare ? (
@@ -913,7 +787,7 @@ const AllocationTeamCategoryCompare = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedLarge || isHasLoading}
                       />
 
                       {isLoadingMedium || isLoadingMediumCompare ? (

@@ -3,16 +3,13 @@ import React, { useContext, useState } from 'react';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Checkbox from '@components/common/Checkbox';
 import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
 import TableChart from './TableChart';
 
 import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
-import {
-  PAGINATION_PAGE_SIZE_KANBAN,
-  TEAM_CALENDAR_ORGANIZATION,
-} from '@constants';
+import { DEFAULT_TIME_TEXT, PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
+import { OrganizationStatisticType } from '@constants/enums';
 
 import {
   CreationStatisticType,
@@ -24,6 +21,7 @@ import { OptionDropdownType } from '@interfaces/common';
 import useStatisticTask from '@hooks/useStatisticTask';
 import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
+import FilterTag from './filter/FilterTag';
 
 type Props = {
   isCheckCompare: boolean;
@@ -37,7 +35,6 @@ type Props = {
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
-  removeTag: (selected: OptionDropdownType) => void;
 };
 
 const TaskListStatisticTags = ({
@@ -48,13 +45,13 @@ const TaskListStatisticTags = ({
   isCheckCompare,
   creationDataStatisticData,
   statisticTagsList,
-  removeTag,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectSmall,
   handleSelectOrganization,
 }: Props) => {
   const {
+    isHasLoading,
     smallOptions,
     largeOptions,
     mediumOptions,
@@ -72,10 +69,8 @@ const TaskListStatisticTags = ({
     totalDurationMediumCompare,
     totalDurationSmallCompare,
     selectedTags,
-    tagsOptions,
     isSkeletonTagTask,
     isSkeletonTagTaskCompare,
-    setSelectedTags,
     currentPage,
     setCurrentPage,
   } = useContext(StatisticTagStateContext);
@@ -239,53 +234,8 @@ const TaskListStatisticTags = ({
             {/* List tags  */}
             <div className="">
               <div className="flex justify-between w-full mb-3 px-[30px]">
-                <div className="flex items-center gap-2">
-                  <div className="w-[240px]">
-                    <MultiSelectDropdown
-                      options={tagsOptions}
-                      placeholder="集計対象のタグを選択"
-                      className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                      labelOptionClass="break-words w-[190px]"
-                      selectedOptions={selectedTags || []}
-                      onChange={(selected) => {
-                        let updatedTagIds = [];
-                        const currentTagIds = selectedTags || [];
-                        const foundItemIndex = currentTagIds.findIndex(
-                          (tag) => tag.value == selected.value,
-                        );
-                        if (foundItemIndex == -1) {
-                          updatedTagIds = [...currentTagIds, selected];
-                        } else {
-                          updatedTagIds = currentTagIds.filter(
-                            (tag) => tag.value != selected.value,
-                          );
-                        }
-                        setSelectedTags(updatedTagIds);
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <div className="flex gap-2 flex-wrap">
-                      {selectedTags.map((item) => {
-                        return (
-                          <div
-                            key={item.value}
-                            className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                            <span className=" truncate">{item.label}</span>
-                            <ImageRound
-                              onClick={() => {
-                                removeTag(item);
-                              }}
-                              src={`/icons/close-white.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
+                {/* Filter tag */}
+                <FilterTag />
               </div>
             </div>
             <div className="flex items-end  justify-between px-[30px] text-sm font-medium">
@@ -294,6 +244,7 @@ const TaskListStatisticTags = ({
                   <Dropdown
                     label="チーム選択"
                     placeholder="-"
+                    disabled={isHasLoading}
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -332,7 +283,7 @@ const TaskListStatisticTags = ({
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => handleSelectLarge(data)}
-                    disabled={!selectedOrganization}
+                    disabled={!selectedOrganization || isHasLoading}
                   />
                 </div>
               </div>
@@ -363,7 +314,7 @@ const TaskListStatisticTags = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
-                    disabled={!selectedLarge}
+                    disabled={!selectedLarge || isHasLoading}
                   />
                 </div>
               </div>
@@ -395,7 +346,7 @@ const TaskListStatisticTags = ({
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
-                    disabled={!selectedMedium}
+                    disabled={!selectedMedium || isHasLoading}
                   />
                 </div>
               </div>
@@ -472,14 +423,17 @@ const TaskListStatisticTags = ({
                 pageSize={pageSize}
                 totalDuration={
                   isCheckCompare && isShowCompare
-                    ? selectedOrganization?.label ===
-                        TEAM_CALENDAR_ORGANIZATION && selectedMedium?.value
+                    ? selectedOrganization?.type ===
+                        OrganizationStatisticType.CALENDAR &&
+                      selectedMedium?.value
                       ? statisticCategoryListCompare?.totalDuration ||
-                        '00:00:00'
+                        DEFAULT_TIME_TEXT
                       : getTotalDurationCompare()
-                    : selectedOrganization?.label ===
-                          TEAM_CALENDAR_ORGANIZATION && selectedMedium?.value
-                      ? statisticCategoryList?.totalDuration || '00:00:00'
+                    : selectedOrganization?.type ===
+                          OrganizationStatisticType.CALENDAR &&
+                        selectedMedium?.value
+                      ? statisticCategoryList?.totalDuration ||
+                        DEFAULT_TIME_TEXT
                       : getTotalDuration()
                 }
                 listOptionsOrganization={listOptionsOrganization}

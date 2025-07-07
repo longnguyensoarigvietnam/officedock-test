@@ -1,9 +1,7 @@
 import ImageRound from '@components/common/ImageRound';
+import { DEFAULT_TIME_TEXT } from '@constants';
 import { StatisticChartType } from '@constants/enums';
-import {
-  convertToJapaneseDateRange,
-  subtractDurations,
-} from '@utils/date';
+import { convertToJapaneseDateRange, subtractDurations } from '@utils/date';
 
 export const MyDockCompareLineChartTooltip = ({ data }: { data: any[] }) => {
   return (
@@ -16,15 +14,15 @@ export const MyDockCompareLineChartTooltip = ({ data }: { data: any[] }) => {
         const isNotLast = index !== data.length - 1;
         const standardDuration =
           point.type == StatisticChartType.COMPARE
-            ? point.anotherDuration ?? '00:00:00'
-            : point.duration ?? '00:00:00';
+            ? point.anotherDuration ?? DEFAULT_TIME_TEXT
+            : point.duration ?? DEFAULT_TIME_TEXT;
         const compareDuration =
           point.type == StatisticChartType.COMPARE
-            ? point.duration ?? '00:00:00'
-            : point.anotherDuration ?? '00:00:00';
+            ? point.duration ?? DEFAULT_TIME_TEXT
+            : point.anotherDuration ?? DEFAULT_TIME_TEXT;
         const diffDuration = subtractDurations(
-          standardDuration || '00:00:00',
-          compareDuration || '00:00:00',
+          standardDuration || DEFAULT_TIME_TEXT,
+          compareDuration || DEFAULT_TIME_TEXT,
         );
 
         const displayIcon = (diffDuration: string) => {

@@ -4,9 +4,9 @@ import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import PercentageBarCompareTeam from '@components/common/ProgressBar/ProgressBarCompareTeam';
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 import { EventWorkCategory } from '@constants/enums';
+import { DEFAULT_TIME_TEXT } from '@constants';
 
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
@@ -16,7 +16,7 @@ import {
 import { getRandomColor, lightenColor } from '@utils';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import FilterTagTeam from '../filter/FilterTagTeam';
 
 type Props = {
   startDate: Date;
@@ -29,7 +29,6 @@ type Props = {
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
-  removeTag: (selected: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
 };
 
@@ -40,13 +39,13 @@ const PercentageTeamTagsCompare = ({
   endDateCompare,
   statisticTagsListTeamCompare,
   statisticTagsListTeam,
-  removeTag,
   handleSelectSmall,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectOrganization,
 }: Props) => {
   const {
+    isHasLoading,
     largeOptions,
     mediumOptions,
     listOptionsOrganization,
@@ -62,9 +61,6 @@ const PercentageTeamTagsCompare = ({
     totalDurationMediumCompare,
     totalDurationSmallCompare,
     totalDurationCategoryCompare,
-
-    selectedTags,
-    tagsOptions,
     smallOptions,
     selectedSmall,
     isLoadingLarge,
@@ -75,21 +71,8 @@ const PercentageTeamTagsCompare = ({
     isLoadingLargeCompare,
     isLoadingMediumCompare,
     isLoadingSmallCompare,
-    isCheckCompare,
-    setIsLoadingLarge,
-    setIsLoadingMedium,
-    setIsLoadingSmall,
-    setIsLoadingOrganization,
-    setIsLoadingLargeCompare,
-    setIsLoadingMediumCompare,
-    setIsLoadingSmallCompare,
-    setIsLoadingOrganizationCompare,
-    setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
   const { setIsLoading } = useContext(LoadingContext);
-
-  const { selectedOrganization: selectedOrganizationTeamList } =
-    useContext(GlobalStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
   const [isShowModal, setIsShowModal] = useState(false);
@@ -282,31 +265,31 @@ const PercentageTeamTagsCompare = ({
     type: string,
     isCompare: boolean,
   ) => {
-    let duration: string = '00:00:00';
+    let duration: string = DEFAULT_TIME_TEXT;
     if (isCompare) {
       if (type === EventWorkCategory.ALL) {
         duration =
           statisticTagsListTeamCompare?.largeCategories.find(
             (item) => item.tagId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.LARGE) {
         duration =
           statisticTagsListTeamCompare?.mediumCategories?.find(
             (item) => item.tagId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.MEDIUM) {
         duration =
           statisticTagsListTeamCompare?.smallCategories?.find(
             (item) => item.tagId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.SMALL) {
         duration =
           statisticTagsListTeamCompare?.category?.find(
             (item) => item.tagId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       setDetailCategoryCompare({
         id: id,
@@ -320,24 +303,24 @@ const PercentageTeamTagsCompare = ({
         duration =
           statisticTagsListTeam?.largeCategories.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.LARGE) {
         duration =
           statisticTagsListTeam?.mediumCategories?.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.MEDIUM) {
         duration =
           statisticTagsListTeam?.smallCategories?.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.SMALL) {
         duration =
           statisticTagsListTeam?.category?.find((item) => item.categoryId == id)
-            ?.duration || '00:00:00';
+            ?.duration || DEFAULT_TIME_TEXT;
       }
       setDetailCategory({
         id: id,
@@ -408,63 +391,8 @@ const PercentageTeamTagsCompare = ({
               {/* List tags  */}
               <div>
                 <div className="flex justify-between w-full">
-                  <div className="flex items-center gap-2">
-                    <div className="w-[240px]">
-                      <MultiSelectDropdown
-                        options={tagsOptions}
-                        placeholder="集計対象のタグを選択"
-                        className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                        labelOptionClass="break-words w-[190px]"
-                        selectedOptions={selectedTags || []}
-                        onChange={(selected) => {
-                          let updatedTagIds = [];
-                          const currentTagIds = selectedTags || [];
-                          const foundItemIndex = currentTagIds.findIndex(
-                            (tag) => tag.value == selected.value,
-                          );
-                          if (foundItemIndex == -1) {
-                            updatedTagIds = [...currentTagIds, selected];
-                          } else {
-                            updatedTagIds = currentTagIds.filter(
-                              (tag) => tag.value != selected.value,
-                            );
-                          }
-                          setIsLoadingLarge(true);
-                          setIsLoadingMedium(true);
-                          setIsLoadingSmall(true);
-                          setIsLoadingOrganization(true);
-                          if (isCheckCompare) {
-                            setIsLoadingLargeCompare(true);
-                            setIsLoadingMediumCompare(true);
-                            setIsLoadingSmallCompare(true);
-                            setIsLoadingOrganizationCompare(true);
-                          }
-                          setSelectedTags(updatedTagIds);
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <div className="flex gap-2  flex-wrap">
-                        {selectedTags.map((item) => {
-                          return (
-                            <div
-                              key={item.value}
-                              className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                              <span className=" truncate">{item.label}</span>
-                              <ImageRound
-                                onClick={() => {
-                                  removeTag(item);
-                                }}
-                                src={`/icons/close-white.svg`}
-                                name="close"
-                                className="w-fit h-fit cursor-pointer"
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
+                  {/* Filter tag */}
+                  <FilterTagTeam />
                 </div>
                 <div className="flex items-center mt-8  gap-1 mb-[30px]">
                   <ImageRound
@@ -484,6 +412,7 @@ const PercentageTeamTagsCompare = ({
                     <Dropdown
                       label="チーム選択"
                       placeholder="-"
+                      disabled={isHasLoading}
                       placeholderClass="!text-black text-sm font-normal"
                       className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -539,7 +468,7 @@ const PercentageTeamTagsCompare = ({
                       options={largeOptions}
                       selectedOption={selectedLarge || undefined}
                       onChange={(data) => handleSelectLarge(data)}
-                      disabled={!selectedOrganization}
+                      disabled={!selectedOrganization || isHasLoading}
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
@@ -589,7 +518,7 @@ const PercentageTeamTagsCompare = ({
                       options={mediumOptions}
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}
-                      disabled={!selectedLarge}
+                      disabled={!selectedLarge || isHasLoading}
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
@@ -639,11 +568,7 @@ const PercentageTeamTagsCompare = ({
                       options={smallOptions}
                       selectedOption={selectedSmall || undefined}
                       onChange={(data) => handleSelectSmall(data)}
-                      disabled={
-                        !selectedMedium ||
-                        selectedOrganization?.value !==
-                          selectedOrganizationTeamList?.value
-                      }
+                      disabled={!selectedMedium || isHasLoading}
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam

@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Button from '@components/common/Button';
 import StatisticTeamCalendar from '@components/statisticTeam/tag/StatisticTeamCalendar';
 import ImageRound from '@components/common/ImageRound';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import PercentageTeamTags from '@components/statisticTeam/tag/PercentageTeamTags';
 import PercentageTeamTagsCompare from '@components/statisticTeam/tag/compare/PercentageTeamTagsCompare';
 import TaskListStatisticTeamTags from '@components/statisticTeam/tag/TaskList';
@@ -15,10 +14,12 @@ import LineChartByTeamTagsCompare from '@components/statisticTeam/tag/compare/Li
 import AllocationTagTeamCompare from '@components/statisticTeam/tag/compare/AllocationTagTeamCompare';
 import AllocationTeamTag from '@components/statisticTeam/tag/AllocationTeamTag';
 import StackedAreaTeamTagChart from '@components/statisticTeam/tag/StackedAreaTeamTagChart';
+import FilterTagTeam from '@components/statisticTeam/tag/filter/FilterTagTeam';
 
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
-import { ALL_TEAM_STATISTIC, TEAM_CALENDAR_ORGANIZATION } from '@constants';
+import { ALL_TEAM_STATISTIC } from '@constants';
+import { OrganizationStatisticType } from '@constants/enums';
 
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useStatisticTagsTeam from '@hooks/useStatisticTagsTeam';
@@ -44,10 +45,8 @@ const StatisticTeamTagBoard = () => {
     selectedMedium,
     selectedOrganization,
     selectedTags,
-    tagsOptions,
     selectedSmall,
     orderingOptions,
-
     setOrderingOptions,
     setTagsOptions,
     setSelectedTags,
@@ -77,10 +76,8 @@ const StatisticTeamTagBoard = () => {
     setIsLoadingMediumCompare,
     setIsLoadingSmallCompare,
     setCurrentPage,
-    setAreaTableData,
-    setLineChartTableData,
-    setMergedTableData,
     setIsSkeletonTagTeamTask,
+    handleResetTableData,
   } = useContext(StatisticTeamTagsStateContext);
   const {
     organizationTeamList,
@@ -150,6 +147,7 @@ const StatisticTeamTagBoard = () => {
         ...data.organizations.map((org) => ({
           value: org.id || '',
           label: org.name,
+          type: org.type,
         })),
       ]);
     },
@@ -166,7 +164,7 @@ const StatisticTeamTagBoard = () => {
 
       tagIds: selectedTags,
       organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     },
@@ -229,7 +227,7 @@ const StatisticTeamTagBoard = () => {
       tagIds: selectedTags,
       isCompare: isCheckCompare,
       organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     },
@@ -252,34 +250,6 @@ const StatisticTeamTagBoard = () => {
       }
     },
   });
-
-  // Reset table data
-  const handleResetTableData = () => {
-    setMergedTableData([]);
-    setAreaTableData([]);
-    setLineChartTableData([]);
-  };
-
-  // Remove tags
-  const removeTag = (selected: OptionDropdownType) => {
-    const currentTagIds = selectedTags || [];
-    const updatedTagIds = currentTagIds.filter(
-      (tag) => tag.value !== selected.value,
-    );
-    setIsLoadingLarge(true);
-    setIsLoadingMedium(true);
-    setIsLoadingSmall(true);
-    setIsLoadingOrganization(true);
-    handleResetTableData();
-    if (isCheckCompare) {
-      setIsLoadingLargeCompare(true);
-      setIsLoadingMediumCompare(true);
-      setIsLoadingSmallCompare(true);
-      setIsLoadingOrganizationCompare(true);
-    }
-    setCurrentPage(1);
-    setSelectedTags(updatedTagIds);
-  };
 
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
@@ -315,7 +285,7 @@ const StatisticTeamTagBoard = () => {
       setTagsOptions(optionsTagList);
       setSelectedTags(optionsTagList);
       if (
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION &&
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR &&
         organizationMember
       ) {
         setListMemberTeam(
@@ -544,65 +514,8 @@ const StatisticTeamTagBoard = () => {
       </div>
       <div>
         <div className="flex justify-between w-full mb-[30px]">
-          <div className="flex items-center gap-2">
-            <div className="w-[240px]">
-              <MultiSelectDropdown
-                placeholder="集計対象のタグを選択"
-                options={tagsOptions}
-                className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                labelOptionClass="break-words w-[190px]"
-                selectedOptions={selectedTags || []}
-                onChange={(selected) => {
-                  let updatedTagIds = [];
-                  const currentTagIds = selectedTags || [];
-                  const foundItemIndex = currentTagIds.findIndex(
-                    (tag) => tag.value == selected.value,
-                  );
-                  if (foundItemIndex == -1) {
-                    updatedTagIds = [...currentTagIds, selected];
-                  } else {
-                    updatedTagIds = currentTagIds.filter(
-                      (tag) => tag.value != selected.value,
-                    );
-                  }
-                  setIsLoadingLarge(true);
-                  setIsLoadingMedium(true);
-                  setIsLoadingSmall(true);
-                  setIsLoadingOrganization(true);
-                  if (isCheckCompare) {
-                    setIsLoadingLargeCompare(true);
-                    setIsLoadingMediumCompare(true);
-                    setIsLoadingSmallCompare(true);
-                    setIsLoadingOrganizationCompare(true);
-                  }
-                  setSelectedTags(updatedTagIds);
-                }}
-              />
-            </div>
-            <div>
-              <div className="flex gap-2 flex-wrap max-w-[450px]">
-                {selectedTags.map((item) => {
-                  return (
-                    <div
-                      key={item.value}
-                      className="min-w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                      <span className="min-w-[32px] truncate">
-                        {item.label}
-                      </span>
-                      <ImageRound
-                        onClick={() => {
-                          removeTag(item);
-                        }}
-                        src={`/icons/close-white.svg`}
-                        name="close"
-                        className="w-fit h-fit cursor-pointer"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+          {/* Filter tag */}
+          <FilterTagTeam />
           <div>
             <StatisticTeamCalendar />
           </div>
@@ -616,7 +529,6 @@ const StatisticTeamTagBoard = () => {
             startDate={startDate}
             startDateCompare={startDateCompare}
             statisticTagsListTeamCompare={statisticTagsListTeamCompare}
-            removeTag={removeTag}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -633,7 +545,6 @@ const StatisticTeamTagBoard = () => {
             endDateCompare={endDateCompare}
             statisticTagsList={statisticTagsListTeam}
             statisticTagsCompareList={statisticTagsListTeamCompare}
-            removeTag={removeTag}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -646,7 +557,6 @@ const StatisticTeamTagBoard = () => {
             startDateCompare={startDateCompare}
             endDateCompare={endDateCompare}
             removeUser={removeUser}
-            removeTag={removeTag}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -660,7 +570,6 @@ const StatisticTeamTagBoard = () => {
             startDate={startDate}
             endDate={endDate}
             statisticTagsListTeam={statisticTagsListTeam}
-            removeTag={removeTag}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -671,7 +580,6 @@ const StatisticTeamTagBoard = () => {
             startDate={startDate}
             endDate={endDate}
             statisticTagsList={statisticTagsListTeam}
-            removeTag={removeTag}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -682,7 +590,6 @@ const StatisticTeamTagBoard = () => {
             startDate={startDate}
             endDate={endDate}
             removeUser={removeUser}
-            removeTag={removeTag}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -691,7 +598,6 @@ const StatisticTeamTagBoard = () => {
           <StackedAreaTeamTagChart
             startDate={startDate}
             endDate={endDate}
-            removeTag={removeTag}
             statisticTagsListTeam={statisticTagsListTeam}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
@@ -706,7 +612,6 @@ const StatisticTeamTagBoard = () => {
         <TaskListStatisticTeamTags
           startDate={startDate}
           endDate={endDate}
-          removeTag={removeTag}
           startDateCompare={startDateCompare}
           endDateCompare={endDateCompare}
           isCheckCompare={isCheckCompare}

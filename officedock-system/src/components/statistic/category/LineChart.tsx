@@ -21,7 +21,6 @@ import {
 } from '@tanstack/react-table';
 
 import ImageRound from '@components/common/ImageRound';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Dropdown from '@components/common/Dropdown';
 import { Table, TableBody } from '@components/common/Table';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
@@ -35,7 +34,7 @@ import { StatisticsCategories } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
-import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
+import { DEFAULT_TIME_TEXT, STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 
 import useStatisticTaskDurations from '@hooks/useStatisticTaskDurations';
 
@@ -51,6 +50,7 @@ import {
   getStatisticMilestones,
   lightenColor,
 } from '@utils';
+import FilterStatistic from './filter/FilterStatistic';
 
 ChartJS.register(
   CategoryScale,
@@ -66,7 +66,6 @@ ChartJS.register(
 type Props = {
   startDate: Date;
   endDate: Date | null;
-  removeTag: (selected: OptionDropdownType) => void;
   statisticCategoryList: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
@@ -77,12 +76,12 @@ const LineChart = ({
   statisticCategoryList,
   startDate,
   endDate,
-  removeTag,
   handleSelectOrganization,
   handleSelectLarge,
   handleSelectMedium,
 }: Props) => {
   const {
+    isHasLoading,
     totalDurationLarge,
     totalDurationMedium,
     totalDurationSmall,
@@ -94,9 +93,7 @@ const LineChart = ({
     selectedMedium,
     selectedOrganization,
     selectedTags,
-    tagsOptions,
     lineChartViewBy,
-    setSelectedTags,
     setLineChartViewBy,
   } = useContext(StatisticStateContext);
 
@@ -524,10 +521,10 @@ const LineChart = ({
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
       const rowADuration = convertDurationToTotalMinutes(
-        rowA.categoryDuration || '00:00:00',
+        rowA.categoryDuration || DEFAULT_TIME_TEXT,
       );
       const rowBDuration = convertDurationToTotalMinutes(
-        rowB.categoryDuration || '00:00:00',
+        rowB.categoryDuration || DEFAULT_TIME_TEXT,
       );
 
       return sortingType == SortingType.ASC
@@ -714,60 +711,8 @@ const LineChart = ({
               期間における時間の推移
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-[240px] flex-shrink-0 relative">
-              <MultiSelectDropdown
-                isShowIconFilter
-                options={tagsOptions}
-                optionClassName="!top-6"
-                labelOptionClass="break-words w-[190px]"
-                placeholder="集計対象のタグを選択"
-                className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
-                selectedOptions={selectedTags || []}
-                onChange={(selected) => {
-                  let updatedTagIds = [];
-                  const currentTagIds = selectedTags || [];
-                  const foundItemIndex = currentTagIds.findIndex(
-                    (tag) => tag.value == selected.value,
-                  );
-                  if (foundItemIndex == -1) {
-                    updatedTagIds = [...currentTagIds, selected];
-                  } else {
-                    updatedTagIds = currentTagIds.filter(
-                      (tag) => tag.value != selected.value,
-                    );
-                  }
-                  setSelectedTags(updatedTagIds);
-                }}
-              />
-              {selectedTags.length === 0 && (
-                <span className="text-xs absolute text-[#77858F] top-[2px] right-[135px]">
-                  タグの絞り込み
-                </span>
-              )}
-            </div>
-            <div className="relative flex-grow right-[224px] top-0">
-              <div className="flex gap-2 w-full flex-shrink-0 flex-wrap ">
-                {selectedTags.map((item) => {
-                  return (
-                    <div
-                      key={item.value}
-                      className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                      <span className=" truncate">{item.label}</span>
-                      <ImageRound
-                        onClick={() => {
-                          removeTag(item);
-                        }}
-                        src={`/icons/close-white.svg`}
-                        name="close"
-                        className="w-fit h-fit cursor-pointer"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+          {/* Filter */}
+          <FilterStatistic />
         </div>
         <ImageRound
           src="/icons/extend-calendar.svg"
@@ -796,6 +741,7 @@ const LineChart = ({
                   <Dropdown
                     label="チーム選択"
                     placeholder="-"
+                    disabled={isHasLoading}
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -823,7 +769,7 @@ const LineChart = ({
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => handleSelectLarge(data)}
-                    disabled={!selectedOrganization}
+                    disabled={!selectedOrganization || isHasLoading}
                   />
                 </div>
               </div>
@@ -844,7 +790,7 @@ const LineChart = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
-                    disabled={!selectedLarge}
+                    disabled={!selectedLarge || isHasLoading}
                   />
                 </div>
               </div>

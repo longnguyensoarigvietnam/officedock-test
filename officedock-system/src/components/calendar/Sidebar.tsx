@@ -1,6 +1,3 @@
-import { UseMutateAsyncFunction } from 'react-query';
-import { useSessionCache } from '@providers/SessionCacheProvider';
-
 import {
   Dispatch,
   MutableRefObject,
@@ -9,6 +6,8 @@ import {
   useEffect,
   useState,
 } from 'react';
+
+import { UseMutateAsyncFunction } from 'react-query';
 import FullCalendar from '@fullcalendar/react';
 
 import Checkbox from '@components/common/Checkbox';
@@ -18,6 +17,7 @@ import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { EventParticipant } from '@interfaces/calendar';
 
@@ -25,6 +25,7 @@ import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 
 import { EventParticipantType } from '@constants/enums';
 import { NO_DATA_AVAILABLE } from '@constants';
+
 import {
   formatQueryEndDateForCalendar,
   formatQueryStartDateForCalendar,
@@ -99,7 +100,6 @@ export const CalendarSidebar = ({
   const { data: session } = useSessionCache();
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
 
-  const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
   const [dataOptionsParticipants, setDataOptionsParticipants] = useState<
     EventParticipant[]
   >([]);
@@ -154,16 +154,6 @@ export const CalendarSidebar = ({
     dataOptionsOrganizations,
     isFetchedCreationDataStatistic,
   ]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setViewportWidth(window.innerWidth);
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   // Check is participant selected
   const checkIsParticipantSelected = (member: EventParticipant) => {
@@ -319,7 +309,7 @@ export const CalendarSidebar = ({
                       />
                     </div>
                     <div
-                      className={`flex flex-1 gap-3 items-center p-1.5 hover:cursor-pointer`}>
+                      className={`flex flex-1 gap-3 items-center p-1.5 hover:cursor-pointer !w-full`}>
                       {member.type == EventParticipantType.USER && (
                         <>{renderAvatar(String(member.id))}</>
                       )}
@@ -331,12 +321,8 @@ export const CalendarSidebar = ({
                         </div>
                       )}
                       <div className="!w-full">
-                        <p
-                          style={{
-                            maxWidth: `calc(${Math.max(viewportWidth, 1280) / 8 - 20}px )`,
-                          }}
-                          className={`truncate font-medium text-[15px] text-black`}>
-                          <span>{member.fullName}</span>
+                        <p className="line-clamp-3 break-all font-medium text-[15px] text-black">
+                          {member.fullName}
                           <span className="text-[#77858F] text-xs ml-1">
                             {member.mainOrganization}
                           </span>

@@ -228,7 +228,7 @@ const ActionsSkillMapDetailModal = ({
                       振り返り項目
                     </p>
                     {level.items.map((item, itemIndex) => (
-                      <li key={itemIndex}>・{item}</li>
+                      <li key={itemIndex} className='break-all'>・{item}</li>
                     ))}
                   </ul>
                 </div>

@@ -20,11 +20,11 @@ import {
 } from 'chart.js';
 
 import ImageRound from '@components/common/ImageRound';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Dropdown from '@components/common/Dropdown';
 import { Table, TableBody } from '@components/common/Table';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 
+import { DEFAULT_TIME_TEXT } from '@constants';
 import {
   SortingType,
   StatisticViewLabels,
@@ -53,6 +53,7 @@ import {
 } from '@utils';
 
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
+import FilterTag from './filter/FilterTag';
 
 ChartJS.register(
   CategoryScale,
@@ -68,7 +69,6 @@ ChartJS.register(
 type Props = {
   startDate: Date;
   endDate: Date | null;
-  removeTag: (selected: OptionDropdownType) => void;
   statisticTagsList: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
@@ -80,13 +80,13 @@ const StackedAreaChart = ({
   statisticTagsList,
   startDate,
   endDate,
-  removeTag,
   handleSelectOrganization,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectSmall,
 }: Props) => {
   const {
+    isHasLoading,
     totalDurationLarge,
     totalDurationMedium,
     totalDurationSmall,
@@ -100,9 +100,7 @@ const StackedAreaChart = ({
     selectedOrganization,
     selectedSmall,
     selectedTags,
-    tagsOptions,
     lineChartViewBy,
-    setSelectedTags,
     setLineChartViewBy,
   } = useContext(StatisticTagStateContext);
 
@@ -116,7 +114,7 @@ const StackedAreaChart = ({
       tagColor: string;
     }[]
   >([]);
-  const [totalDuration, setTotalDuration] = useState<string>('00:00');
+  const [totalDuration, setTotalDuration] = useState<string>(DEFAULT_TIME_TEXT);
 
   const [timeRange, setTimeRange] = useState<string[]>([]);
   const [timeRangeLabel, setTimeRangeLabel] = useState<string[]>([]);
@@ -177,7 +175,7 @@ const StackedAreaChart = ({
         lineChartViewBy?.value as StatisticViewOptions,
       );
 
-      const uniqueSortedDates = Array.from(new Set(timeMilestones)).sort(
+      const uniqueSortedDates = [...timeMilestones].sort(
         (pre, next) => new Date(pre).getTime() - new Date(next).getTime(),
       );
 
@@ -253,6 +251,9 @@ const StackedAreaChart = ({
         }
       }
     }
+    const isAddFirstValue =
+      statisticTagPercentChartList[0]?.startDate !==
+      statisticTagPercentChartList[0]?.endDate;
 
     let chartData: { name: string; data: number[] }[] = [];
 
@@ -268,7 +269,9 @@ const StackedAreaChart = ({
         const isEmpty = data.length === 0;
         const validData = isEmpty
           ? Array(transformedDates.length - 1).fill(0)
-          : [data.at(0) ?? 0, ...data];
+          : isAddFirstValue
+            ? [data.at(0) ?? 0, ...data]
+            : [...data];
 
         return {
           name,
@@ -480,6 +483,8 @@ const StackedAreaChart = ({
     selectedSmall,
     selectedOrganization?.value,
     totalDurationCategory,
+    startDate,
+    endDate,
   ]);
 
   const annotations = dataChart.map((s, seriesIndex) => {
@@ -703,10 +708,10 @@ const StackedAreaChart = ({
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
       const rowADuration = convertDurationToTotalMinutes(
-        rowA.tagDuration || '00:00:00',
+        rowA.tagDuration || DEFAULT_TIME_TEXT,
       );
       const rowBDuration = convertDurationToTotalMinutes(
-        rowB.tagDuration || '00:00:00',
+        rowB.tagDuration || DEFAULT_TIME_TEXT,
       );
 
       return sortingType == SortingType.ASC
@@ -920,53 +925,8 @@ const StackedAreaChart = ({
             {/* List tags  */}
             <div>
               <div className="flex justify-between w-full my-8 px-[30px]">
-                <div className="flex items-center gap-2">
-                  <div className="w-[240px]">
-                    <MultiSelectDropdown
-                      options={tagsOptions}
-                      placeholder="集計対象のタグを選択"
-                      className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                      labelOptionClass="break-words w-[190px]"
-                      selectedOptions={selectedTags || []}
-                      onChange={(selected) => {
-                        let updatedTagIds = [];
-                        const currentTagIds = selectedTags || [];
-                        const foundItemIndex = currentTagIds.findIndex(
-                          (tag) => tag.value == selected.value,
-                        );
-                        if (foundItemIndex == -1) {
-                          updatedTagIds = [...currentTagIds, selected];
-                        } else {
-                          updatedTagIds = currentTagIds.filter(
-                            (tag) => tag.value != selected.value,
-                          );
-                        }
-                        setSelectedTags(updatedTagIds);
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <div className="flex gap-2 flex-wrap ">
-                      {selectedTags.map((item) => {
-                        return (
-                          <div
-                            key={item.value}
-                            className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                            <span className=" truncate">{item.label}</span>
-                            <ImageRound
-                              onClick={() => {
-                                removeTag(item);
-                              }}
-                              src={`/icons/close-white.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
+                {/* Filter tag */}
+                <FilterTag />
               </div>
             </div>
             <div className="flex justify-between items-end px-[30px] text-sm font-medium">
@@ -980,6 +940,7 @@ const StackedAreaChart = ({
                   <Dropdown
                     label="チーム選択"
                     placeholder="-"
+                    disabled={isHasLoading}
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -1019,7 +980,7 @@ const StackedAreaChart = ({
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => handleSelectLarge(data)}
-                    disabled={!selectedOrganization}
+                    disabled={!selectedOrganization || isHasLoading}
                   />
                 </div>
               </div>
@@ -1051,7 +1012,7 @@ const StackedAreaChart = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
-                    disabled={!selectedLarge}
+                    disabled={!selectedLarge || isHasLoading}
                   />
                 </div>
               </div>
@@ -1083,7 +1044,7 @@ const StackedAreaChart = ({
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
-                    disabled={!selectedMedium}
+                    disabled={!selectedMedium || isHasLoading}
                   />
                 </div>
               </div>
@@ -1208,7 +1169,9 @@ const StackedAreaChart = ({
                                         <div className=" text-black w-[calc(100%_-_60px)] max-w-[calc(100%_-_60px)] line-clamp-3 break-all text-left">
                                           {tag.tagName}
                                         </div>
-                                        <p className='w-[50px] text-right'>{tag.percent}%</p>
+                                        <p className="w-[50px] text-right">
+                                          {tag.percent}%
+                                        </p>
                                       </div>
                                     </div>
                                   );

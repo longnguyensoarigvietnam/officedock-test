@@ -22,7 +22,6 @@ import {
 
 import ImageRound from '@components/common/ImageRound';
 import { Table, TableBody } from '@components/common/Table';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import Dropdown from '@components/common/Dropdown';
 import { MyDockCompareLineChartTooltip } from '@components/tooltip/MyDockCompareLineChartTooltip';
@@ -36,7 +35,7 @@ import {
   StatisticChartType,
   StatisticViewOptions,
 } from '@constants/enums';
-import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
+import { DEFAULT_TIME_TEXT, STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 
 import {
   convertDurationToTotalMinutes,
@@ -61,6 +60,7 @@ import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 import useStatisticTagTaskDurations from '@hooks/useStatisticTagTaskDurations';
 import useStatisticTagTaskDurationsCompare from '@hooks/useStatisticTagTaskDurationsCompare';
+import FilterTag from '../filter/FilterTag';
 
 ChartJS.register(
   CategoryScale,
@@ -78,7 +78,6 @@ type Props = {
   endDate: Date | null;
   startDateCompare: Date;
   endDateCompare: Date | null;
-  removeTag: (selected: OptionDropdownType) => void;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -113,13 +112,13 @@ const LineChartCompare = ({
   endDate,
   startDateCompare,
   endDateCompare,
-  removeTag,
   handleSelectOrganization,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectSmall,
 }: Props) => {
   const {
+    isHasLoading,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -129,7 +128,6 @@ const LineChartCompare = ({
     selectedSmall,
     selectedOrganization,
     selectedTags,
-    tagsOptions,
     totalDurationLarge,
     totalDurationMedium,
     totalDurationSmall,
@@ -139,7 +137,6 @@ const LineChartCompare = ({
     totalDurationSmallCompare,
     totalDurationCategoryCompare,
     lineChartViewBy,
-    setSelectedTags,
     setLineChartViewBy,
   } = useContext(StatisticTagStateContext);
 
@@ -161,9 +158,9 @@ const LineChartCompare = ({
   });
   const [tableData, setTableData] = useState<MergedTableCategory[]>([]);
   const [totalStandardDuration, setTotalStandardDuration] =
-    useState<string>('00:00');
+    useState<string>(DEFAULT_TIME_TEXT);
   const [totalCompareDuration, setTotalCompareDuration] =
-    useState<string>('00:00');
+    useState<string>(DEFAULT_TIME_TEXT);
   const [standardLabelsInfo, setStandardLabelsInfo] = useState<
     {
       color: string;
@@ -292,7 +289,7 @@ const LineChartCompare = ({
     );
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
-    
+
     const left = getSafeTooltipLeft({
       offsetLeft,
       caretX: tooltipModel.caretX,
@@ -766,18 +763,18 @@ const LineChartCompare = ({
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
       const rowAStandard = convertDurationToTotalMinutes(
-        rowA.standardInfo?.tagDuration || '00:00:00',
+        rowA.standardInfo?.tagDuration || DEFAULT_TIME_TEXT,
       );
       const rowACompare = convertDurationToTotalMinutes(
-        rowA.compareInfo?.tagDuration || '00:00:00',
+        rowA.compareInfo?.tagDuration || DEFAULT_TIME_TEXT,
       );
       const rowADiff = rowAStandard - rowACompare;
 
       const rowBStandard = convertDurationToTotalMinutes(
-        rowB.standardInfo?.tagDuration || '00:00:00',
+        rowB.standardInfo?.tagDuration || DEFAULT_TIME_TEXT,
       );
       const rowBCompare = convertDurationToTotalMinutes(
-        rowB.compareInfo?.tagDuration || '00:00:00',
+        rowB.compareInfo?.tagDuration || DEFAULT_TIME_TEXT,
       );
       const rowBDiff = rowBStandard - rowBCompare;
 
@@ -921,8 +918,10 @@ const LineChartCompare = ({
             <div className="font-medium flex text-[14px] justify-end text-black">
               <p>
                 {subtractDurations(
-                  info.row.original.standardInfo?.tagDuration || '00:00:00',
-                  info.row.original.compareInfo?.tagDuration || '00:00:00',
+                  info.row.original.standardInfo?.tagDuration ||
+                    DEFAULT_TIME_TEXT,
+                  info.row.original.compareInfo?.tagDuration ||
+                    DEFAULT_TIME_TEXT,
                 )}
               </p>
             </div>
@@ -1051,53 +1050,8 @@ const LineChartCompare = ({
             {/* List tags  */}
             <div>
               <div className="flex justify-between w-full my-8 px-[30px]">
-                <div className="flex items-center gap-2">
-                  <div className="w-[240px]">
-                    <MultiSelectDropdown
-                      options={tagsOptions}
-                      placeholder="集計対象のタグを選択"
-                      className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                      labelOptionClass="break-words w-[190px]"
-                      selectedOptions={selectedTags || []}
-                      onChange={(selected) => {
-                        let updatedTagIds = [];
-                        const currentTagIds = selectedTags || [];
-                        const foundItemIndex = currentTagIds.findIndex(
-                          (tag) => tag.value == selected.value,
-                        );
-                        if (foundItemIndex == -1) {
-                          updatedTagIds = [...currentTagIds, selected];
-                        } else {
-                          updatedTagIds = currentTagIds.filter(
-                            (tag) => tag.value != selected.value,
-                          );
-                        }
-                        setSelectedTags(updatedTagIds);
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <div className="flex gap-2 flex-wrap ">
-                      {selectedTags.map((item) => {
-                        return (
-                          <div
-                            key={item.value}
-                            className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                            <span className=" truncate">{item.label}</span>
-                            <ImageRound
-                              onClick={() => {
-                                removeTag(item);
-                              }}
-                              src={`/icons/close-white.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
+                {/* Filter tag */}
+                <FilterTag />
               </div>
             </div>
             <div className="flex justify-between items-end px-[30px] text-sm font-medium">
@@ -1111,6 +1065,7 @@ const LineChartCompare = ({
                   <Dropdown
                     label="チーム選択"
                     placeholder="-"
+                    disabled={isHasLoading}
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -1149,7 +1104,7 @@ const LineChartCompare = ({
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => handleSelectLarge(data)}
-                    disabled={!selectedOrganization}
+                    disabled={!selectedOrganization || isHasLoading}
                   />
                 </div>
               </div>
@@ -1181,7 +1136,7 @@ const LineChartCompare = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
-                    disabled={!selectedLarge}
+                    disabled={!selectedLarge || isHasLoading}
                   />
                 </div>
               </div>
@@ -1213,7 +1168,7 @@ const LineChartCompare = ({
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
-                    disabled={!selectedMedium}
+                    disabled={!selectedMedium || isHasLoading}
                   />
                 </div>
               </div>

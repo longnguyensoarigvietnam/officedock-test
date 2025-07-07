@@ -11,10 +11,10 @@ import {
 
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { Table, TableBody } from '@components/common/Table';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 
+import { DEFAULT_TIME_TEXT } from '@constants';
 import {
   SortingType,
   StatisticViewLabels,
@@ -41,11 +41,11 @@ import {
   formatDateToYMD,
   sumDurationsChart,
 } from '@utils/date';
+import FilterStatistic from './filter/FilterStatistic';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
-  removeTag: (selected: OptionDropdownType) => void;
   statisticCategoryList: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
@@ -56,12 +56,12 @@ const StackedAreaChart = ({
   statisticCategoryList,
   startDate,
   endDate,
-  removeTag,
   handleSelectOrganization,
   handleSelectLarge,
   handleSelectMedium,
 }: Props) => {
   const {
+    isHasLoading,
     totalDurationLarge,
     totalDurationMedium,
     totalDurationSmall,
@@ -73,10 +73,8 @@ const StackedAreaChart = ({
     selectedMedium,
     selectedOrganization,
     selectedTags,
-    tagsOptions,
     lineChartViewBy,
     selectedSmall,
-    setSelectedTags,
     setLineChartViewBy,
   } = useContext(StatisticStateContext);
 
@@ -185,11 +183,11 @@ const StackedAreaChart = ({
 
     const lastItem = statisticPercentChartList.at(-1);
 
-    if (lastItem && lastItem.endDate !== lastItem.startDate) {
+    if (lastItem) {
       dates.push(lastItem.endDate);
     }
 
-    const uniqueSortedDates = Array.from(new Set(dates)).sort(
+    const uniqueSortedDates = [...dates].sort(
       (a, b) => new Date(a).getTime() - new Date(b).getTime(),
     );
 
@@ -227,12 +225,15 @@ const StackedAreaChart = ({
         }
       }
     }
+    const isAddFirstValue =
+      statisticPercentChartList[0]?.startDate !==
+      statisticPercentChartList[0]?.endDate;
 
     const chartData = Array.from(categoryMap.entries()).map(([name, data]) => {
       const firstValue = data.at(0) ?? 0;
       return {
         name,
-        data: [firstValue, ...data],
+        data: isAddFirstValue ? [firstValue, ...data] : [...data],
       };
     });
     // 3. Collect tableData (duration + percent)
@@ -349,6 +350,7 @@ const StackedAreaChart = ({
           order?.indexOf(String(b.categoryName)),
       );
     }
+
     setDataChart(chartData);
 
     setTableData(finalTableData);
@@ -367,6 +369,8 @@ const StackedAreaChart = ({
     statisticCategoryList,
     selectedMedium,
     selectedSmall,
+    startDate,
+    endDate,
   ]);
 
   const annotations = dataChart.map((s, seriesIndex) => {
@@ -525,10 +529,10 @@ const StackedAreaChart = ({
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
       const rowADuration = convertDurationToTotalMinutes(
-        rowA.categoryDuration || '00:00:00',
+        rowA.categoryDuration || DEFAULT_TIME_TEXT,
       );
       const rowBDuration = convertDurationToTotalMinutes(
-        rowB.categoryDuration || '00:00:00',
+        rowB.categoryDuration || DEFAULT_TIME_TEXT,
       );
 
       return sortingType == SortingType.ASC
@@ -725,60 +729,8 @@ const StackedAreaChart = ({
               期間における割合の推移
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-[240px] flex-shrink-0 relative">
-              <MultiSelectDropdown
-                isShowIconFilter
-                options={tagsOptions}
-                optionClassName="!top-6"
-                labelOptionClass="break-words w-[190px]"
-                placeholder="集計対象のタグを選択"
-                className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
-                selectedOptions={selectedTags || []}
-                onChange={(selected) => {
-                  let updatedTagIds = [];
-                  const currentTagIds = selectedTags || [];
-                  const foundItemIndex = currentTagIds.findIndex(
-                    (tag) => tag.value == selected.value,
-                  );
-                  if (foundItemIndex == -1) {
-                    updatedTagIds = [...currentTagIds, selected];
-                  } else {
-                    updatedTagIds = currentTagIds.filter(
-                      (tag) => tag.value != selected.value,
-                    );
-                  }
-                  setSelectedTags(updatedTagIds);
-                }}
-              />
-              {selectedTags.length === 0 && (
-                <span className="text-xs absolute text-[#77858F] top-[2px] right-[135px]">
-                  タグの絞り込み
-                </span>
-              )}
-            </div>
-            <div className="relative flex-grow right-[224px] top-0">
-              <div className="flex gap-2 w-full flex-shrink-0 flex-wrap ">
-                {selectedTags.map((item) => {
-                  return (
-                    <div
-                      key={item.value}
-                      className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                      <span className=" truncate">{item.label}</span>
-                      <ImageRound
-                        onClick={() => {
-                          removeTag(item);
-                        }}
-                        src={`/icons/close-white.svg`}
-                        name="close"
-                        className="w-fit h-fit cursor-pointer"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+          {/* Filter */}
+          <FilterStatistic />
         </div>
         <ImageRound
           src="/icons/extend-calendar.svg"
@@ -807,6 +759,7 @@ const StackedAreaChart = ({
                   <Dropdown
                     label="チーム選択"
                     placeholder="-"
+                    disabled={isHasLoading}
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -834,7 +787,7 @@ const StackedAreaChart = ({
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => handleSelectLarge(data)}
-                    disabled={!selectedOrganization}
+                    disabled={!selectedOrganization || isHasLoading}
                   />
                 </div>
               </div>
@@ -855,7 +808,7 @@ const StackedAreaChart = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
-                    disabled={!selectedLarge}
+                    disabled={!selectedLarge || isHasLoading}
                   />
                 </div>
               </div>
@@ -952,7 +905,7 @@ const StackedAreaChart = ({
                                 boxShadow: '0px 2px 8px 0px #0000001A',
                               }}
                               className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
-                              <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-center w-full block"> 
+                              <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-center w-full block">
                                 {convertToJapaneseDateRange(
                                   dataDetailDate?.startDate as string,
                                   dataDetailDate?.endDate as string,
@@ -982,7 +935,9 @@ const StackedAreaChart = ({
                                           <div className=" text-black w-[calc(100%_-_60px)] max-w-[calc(100%_-_60px)] line-clamp-3 break-all text-left">
                                             {cate.categoryName}
                                           </div>
-                                          <p className='w-[50px] text-right'>{cate.percent}%</p>
+                                          <p className="w-[50px] text-right">
+                                            {cate.percent}%
+                                          </p>
                                         </div>
                                       </div>
                                     );

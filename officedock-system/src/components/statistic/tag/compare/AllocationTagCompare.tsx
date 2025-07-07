@@ -2,7 +2,6 @@ import React, { memo, useContext, useEffect, useState } from 'react';
 
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 
@@ -20,6 +19,8 @@ import { EventWorkCategory } from '@constants/enums';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 import ProgressBarStatistic from '../ProgressBarStatistic';
+import FilterTag from '../filter/FilterTag';
+import { DEFAULT_TIME_TEXT } from '@constants';
 
 type Props = {
   startDate: Date;
@@ -28,7 +29,6 @@ type Props = {
   statisticTagsCompareList: StatisticsCategories | undefined;
   startDateCompare: Date;
   endDateCompare: Date | null;
-  removeTag: (selected: OptionDropdownType) => void;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -53,7 +53,6 @@ const AllocationTagCompare = memo(
     startDateCompare,
     endDateCompare,
     statisticTagsCompareList,
-    removeTag,
     handleSelectOrganization,
     handleSelectLarge,
     handleSelectMedium,
@@ -102,6 +101,7 @@ const AllocationTagCompare = memo(
     >([]);
 
     const {
+      isHasLoading,
       totalDurationLarge,
       totalDurationMedium,
       totalDurationSmall,
@@ -117,9 +117,7 @@ const AllocationTagCompare = memo(
       selectedLarge,
       selectedMedium,
       selectedOrganization,
-      selectedTags,
       selectedSmall,
-      tagsOptions,
       isLoadingLargeCompare,
       isLoadingMediumCompare,
       isLoadingOrganizationCompare,
@@ -128,7 +126,6 @@ const AllocationTagCompare = memo(
       isLoadingOrganization,
       isLoadingSmall,
       isLoadingSmallCompare,
-      setSelectedTags,
     } = useContext(StatisticTagStateContext);
 
     useEffect(() => {
@@ -255,7 +252,7 @@ const AllocationTagCompare = memo(
           (!organizationId || String(item.organizationId) === organizationId),
       );
 
-      return item?.duration || '00:00:00';
+      return item?.duration || DEFAULT_TIME_TEXT;
     };
 
     const handleClickTooltip = (
@@ -356,53 +353,8 @@ const AllocationTagCompare = memo(
                 {/* List tags  */}
                 <div>
                   <div className="flex justify-between w-full my-8 px-[30px]">
-                    <div className="flex items-center gap-2">
-                      <div className="w-[240px]">
-                        <MultiSelectDropdown
-                          options={tagsOptions}
-                          placeholder="集計対象のタグを選択"
-                          className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                          labelOptionClass="break-words w-[190px]"
-                          selectedOptions={selectedTags || []}
-                          onChange={(selected) => {
-                            let updatedTagIds = [];
-                            const currentTagIds = selectedTags || [];
-                            const foundItemIndex = currentTagIds.findIndex(
-                              (tag) => tag.value == selected.value,
-                            );
-                            if (foundItemIndex == -1) {
-                              updatedTagIds = [...currentTagIds, selected];
-                            } else {
-                              updatedTagIds = currentTagIds.filter(
-                                (tag) => tag.value != selected.value,
-                              );
-                            }
-                            setSelectedTags(updatedTagIds);
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <div className="flex gap-2 flex-wrap ">
-                          {selectedTags.map((item) => {
-                            return (
-                              <div
-                                key={item.value}
-                                className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                                <span className=" truncate">{item.label}</span>
-                                <ImageRound
-                                  onClick={() => {
-                                    removeTag(item);
-                                  }}
-                                  src={`/icons/close-white.svg`}
-                                  name="close"
-                                  className="w-fit h-fit cursor-pointer"
-                                />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
+                    {/* Filter tag */}
+                    <FilterTag />
                   </div>
                 </div>
                 <div className="flex  justify-between px-[30px] text-sm font-medium">
@@ -412,6 +364,7 @@ const AllocationTagCompare = memo(
                       <Dropdown
                         label="チーム選択"
                         placeholder="-"
+                        disabled={isHasLoading}
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -493,7 +446,7 @@ const AllocationTagCompare = memo(
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
                                     {formatTimeToJapanese(
-                                      pair.main?.duration || '00:00:00',
+                                      pair.main?.duration || DEFAULT_TIME_TEXT,
                                     )}
                                   </span>
                                 </div>
@@ -596,7 +549,7 @@ const AllocationTagCompare = memo(
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
-                        disabled={!selectedOrganization}
+                        disabled={!selectedOrganization || isHasLoading}
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">
@@ -671,7 +624,7 @@ const AllocationTagCompare = memo(
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
                                     {formatTimeToJapanese(
-                                      pair.main?.duration || '00:00:00',
+                                      pair.main?.duration || DEFAULT_TIME_TEXT,
                                     )}
                                   </span>
                                 </div>
@@ -766,7 +719,7 @@ const AllocationTagCompare = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedLarge || isHasLoading}
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">
@@ -841,7 +794,7 @@ const AllocationTagCompare = memo(
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
                                     {formatTimeToJapanese(
-                                      pair.main?.duration || '00:00:00',
+                                      pair.main?.duration || DEFAULT_TIME_TEXT,
                                     )}
                                   </span>
                                 </div>
@@ -928,7 +881,7 @@ const AllocationTagCompare = memo(
                         options={smallOptions}
                         selectedOption={selectedSmall || undefined}
                         onChange={(data) => handleSelectSmall(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedMedium || isHasLoading}
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">
@@ -1006,7 +959,7 @@ const AllocationTagCompare = memo(
                                   </span>
                                   <span className="text-sm font-medium truncate max-w-24">
                                     {formatTimeToJapanese(
-                                      pair.main?.duration || '00:00:00',
+                                      pair.main?.duration || DEFAULT_TIME_TEXT,
                                     )}
                                   </span>
                                 </div>
@@ -1020,6 +973,7 @@ const AllocationTagCompare = memo(
                                       false,
                                     );
                                   }}
+                                  isLast
                                   handleClickChart={(
                                     _data: OptionDropdownType,
                                   ) => {}}
@@ -1039,6 +993,7 @@ const AllocationTagCompare = memo(
                                 />
                                 <ProgressBarStatistic
                                   key={index}
+                                  isLast
                                   classProgressClass="h-[20px] rounded-[4px]"
                                   handleClickTooltip={(id: number | null) => {
                                     handleClickTooltip(

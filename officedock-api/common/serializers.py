@@ -40,7 +40,15 @@ class CreationDataOrganizationSerializer(BaseOrganizationSerializer):
 
     class Meta:
         model = Organization
-        fields = ["id", "uuid", "name", "superior", "icon", "icon_color"]
+        fields = [
+            "id",
+            "uuid",
+            "name",
+            "superior",
+            "icon",
+            "icon_color",
+            "type",
+        ]
 
 
 class CreationDataOrganizationWithUserSerializer(
@@ -62,6 +70,7 @@ class CreationDataOrganizationWithUserSerializer(
             "users",
             "icon",
             "icon_color",
+            "type",
         ]
 
 
@@ -84,6 +93,7 @@ class OrganizationWithUserNotHaveSkillMapSerializer(
             "users",
             "icon",
             "icon_color",
+            "type",
         ]
 
     def get_users(self, obj):
@@ -122,6 +132,7 @@ class CreationDataOrganizationWithTagSerializer(
             "tags",
             "icon",
             "icon_color",
+            "type",
         ]
 
 
@@ -219,6 +230,7 @@ class CreationDataOrganizationWithStructCategorySerializer(
             "is_main",
             "statistic_categories",
             "tags",
+            "type",
         ]
 
     def get_statistic_categories(self, obj):
@@ -226,11 +238,7 @@ class CreationDataOrganizationWithStructCategorySerializer(
         Transform statistic category list to serializer data
         """
         statistic_categories = (
-            obj.organizations_statistic_categories.filter(
-                large_statistic_category__isnull=False
-            )
-            .all()
-            .order_by("index")
+            obj.organizations_statistic_categories.all().order_by("index")
         )
         statistic_categories = StatisticCategoryStructionSerializer(
             statistic_categories, many=True

@@ -1,12 +1,6 @@
 'use client';
-import React, { Fragment, useContext, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition,
-} from '@headlessui/react';
 
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
@@ -16,16 +10,17 @@ import PercentageTeamCategory from '@components/statisticTeam/category/Percentag
 import PercentageTeamCategoryCompare from '@components/statisticTeam/category/compare/PercentageCategoryCompare';
 import TaskListTeamStatistic from '@components/statisticTeam/category/TaskList';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
-import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
 import LineChartByTeam from '@components/statisticTeam/category/LineChartByTeam';
 import LineChartByTeamCompare from '@components/statisticTeam/category/compare/LineChartByTeamCompare';
 import AllocationTeamCategoryCompare from '@components/statisticTeam/category/compare/AllocationTeamCategoryCompare';
 import AllocationTeamCategory from '@components/statisticTeam/category/AllocationTeamCategory';
 import StackedAreaTeamChart from '@components/statisticTeam/category/StackedAreaTeamChart';
+import FilterTeamStatistic from '@components/statisticTeam/category/filter/FilterTeamStatistic';
 
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { pageRouters } from '@constants/routers';
-import { ALL_TEAM_STATISTIC, TEAM_CALENDAR_ORGANIZATION } from '@constants';
+import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
+import { OrganizationStatisticType } from '@constants/enums';
 
 import useStatisticCategoriesTeam from '@hooks/useStatisticCategoriesTeam';
 import useStatisticCategoriesTeamCompare from '@hooks/useStatisticCategoriesTeamCompare';
@@ -41,6 +36,7 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 const StatisticTeamBoard = () => {
   const {
+    isHasLoading,
     startDate,
     endDate,
     listMemberTeam,
@@ -54,14 +50,7 @@ const StatisticTeamBoard = () => {
     selectedMedium,
     selectedSmall,
     selectedOrganization,
-    tagsOptions,
     orderingOptions,
-    remainingCountUser,
-    remainingCountTag,
-    firstThreeUser,
-    allLabelUser,
-    allLabelTag,
-    firstThreeTag,
     setOrderingOptions,
     setTotalDurationTask,
     setTotalDurationTaskCompare,
@@ -88,10 +77,8 @@ const StatisticTeamBoard = () => {
     setIsLoadingLargeCompare,
     setIsLoadingMediumCompare,
     setCurrentPage,
-    setAreaTableData,
-    setLineChartTableData,
-    setMergedTableData,
     setIsSkeletonCategoryTeamTask,
+    handleResetTableData,
   } = useContext(StatisticTeamStateContext);
   const {
     organizationTeamList,
@@ -124,7 +111,7 @@ const StatisticTeamBoard = () => {
       smallCategoryId: selectedSmall?.value as number,
       orderingOptions: orderingOptions,
       organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     },
@@ -177,7 +164,7 @@ const StatisticTeamBoard = () => {
               if (itemMap) {
                 setTotalDurationTask(itemMap.duration);
               } else {
-                setTotalDurationTask('00:00:00');
+                setTotalDurationTask(DEFAULT_TIME_TEXT);
               }
             } else {
               setTotalDurationTask(data.smallTotalDuration);
@@ -186,9 +173,9 @@ const StatisticTeamBoard = () => {
             if (
               selectedMedium &&
               selectedMedium.value &&
-              selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+              selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ) {
-              setTotalDurationTask('00:00:00');
+              setTotalDurationTask(DEFAULT_TIME_TEXT);
               return;
             }
             if (selectedSmall && selectedSmall.value) return;
@@ -200,7 +187,7 @@ const StatisticTeamBoard = () => {
           setTotalDurationTask(data.largeTotalDuration);
         }
       } else {
-        setTotalDurationTask('00:00:00');
+        setTotalDurationTask(DEFAULT_TIME_TEXT);
       }
     },
     onError: () => {
@@ -226,7 +213,7 @@ const StatisticTeamBoard = () => {
         isCompare: isCheckCompare,
         orderingOptions: orderingOptions,
         organizationMemberId:
-          selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ? String(selectedOrganizationSideBar?.value || '')
             : undefined,
       },
@@ -254,7 +241,7 @@ const StatisticTeamBoard = () => {
                 if (itemMap) {
                   setTotalDurationTaskCompare(itemMap.duration);
                 } else {
-                  setTotalDurationTaskCompare('00:00:00');
+                  setTotalDurationTaskCompare(DEFAULT_TIME_TEXT);
                 }
               } else {
                 setTotalDurationTaskCompare(data.smallTotalDuration);
@@ -263,9 +250,10 @@ const StatisticTeamBoard = () => {
               if (
                 selectedMedium &&
                 selectedMedium.value &&
-                selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+                selectedOrganization?.type ===
+                  OrganizationStatisticType.CALENDAR
               ) {
-                setTotalDurationTask('00:00:00');
+                setTotalDurationTask(DEFAULT_TIME_TEXT);
                 return;
               }
               if (selectedSmall && selectedSmall.value) return;
@@ -277,7 +265,7 @@ const StatisticTeamBoard = () => {
             setTotalDurationTaskCompare(data.largeTotalDuration);
           }
         } else {
-          setTotalDurationTaskCompare('00:00:00');
+          setTotalDurationTaskCompare(DEFAULT_TIME_TEXT);
         }
       },
       onError: () => {
@@ -340,17 +328,11 @@ const StatisticTeamBoard = () => {
         ...data.organizations.map((org) => ({
           value: org.id || '',
           label: org.name,
+          type: org.type,
         })),
       ]);
     },
   });
-
-  // Reset table data
-  const handleResetTableData = () => {
-    setMergedTableData([]);
-    setAreaTableData([]);
-    setLineChartTableData([]);
-  };
 
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
@@ -386,7 +368,7 @@ const StatisticTeamBoard = () => {
 
       setTagsOptions(optionsTagList);
       if (
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION &&
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR &&
         organizationMember
       ) {
         setListMemberTeam(
@@ -408,7 +390,7 @@ const StatisticTeamBoard = () => {
         });
       } else {
         setListMemberTeam(
-          organization.members.map((member) => ({
+          organization.members?.map((member) => ({
             id: member.id,
             fullName: member.fullName,
             color: member?.avatarColor || '',
@@ -565,49 +547,6 @@ const StatisticTeamBoard = () => {
     setSelectedSmall(data);
   };
 
-  // Remove tags
-  const removeTag = (selected: OptionDropdownType) => {
-    const currentTagIds = orderingOptions?.tag_ids || [];
-    const updatedTagIds = currentTagIds.filter(
-      (tag) => tag.value !== selected.value,
-    );
-    setCurrentPage(1);
-    setIsLoadingLarge(true);
-    setIsLoadingMedium(true);
-    setIsLoadingOrganization(true);
-    handleResetTableData();
-    if (isCheckCompare) {
-      setIsLoadingLargeCompare(true);
-      setIsLoadingMediumCompare(true);
-      setIsLoadingOrganizationCompare(true);
-    }
-    setOrderingOptions((prev) => ({
-      tag_ids: updatedTagIds,
-      user_ids: prev?.user_ids || [],
-    }));
-  };
-  // Remove user
-  const removeUser = (selected: OptionDropdownType) => {
-    const currentUserIds = orderingOptions?.user_ids || [];
-    const updatedUserIds = currentUserIds.filter(
-      (tag) => tag.value !== selected.value,
-    );
-    setCurrentPage(1);
-    setIsLoadingLarge(true);
-    setIsLoadingMedium(true);
-    setIsLoadingOrganization(true);
-    handleResetTableData();
-    if (isCheckCompare) {
-      setIsLoadingLargeCompare(true);
-      setIsLoadingMediumCompare(true);
-      setIsLoadingOrganizationCompare(true);
-    }
-    setOrderingOptions((prev) => ({
-      tag_ids: prev?.tag_ids || [],
-      user_ids: updatedUserIds,
-    }));
-  };
-
   const getParticipantAvatars = (
     participants: {
       id: number;
@@ -683,7 +622,7 @@ const StatisticTeamBoard = () => {
           </div>{' '}
         </div>
         <div className="flex items-center mt-[6px]">
-          {listMemberTeam.length > 0 && getParticipantAvatars(listMemberTeam)}
+          {listMemberTeam?.length > 0 && getParticipantAvatars(listMemberTeam)}
         </div>
       </div>
       <div>
@@ -693,6 +632,7 @@ const StatisticTeamBoard = () => {
               <Dropdown
                 options={listOptionsOrganization}
                 placeholder="-"
+                disabled={isHasLoading}
                 placeholderClass="!text-black text-sm font-normal"
                 className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                 labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -720,7 +660,7 @@ const StatisticTeamBoard = () => {
                 classNameOption="!text-sm"
                 selectedOption={selectedLarge || undefined}
                 onChange={(data) => handleSelectLarge(data)}
-                disabled={!selectedOrganization}
+                disabled={!selectedOrganization || isHasLoading}
               />
             </div>
             <div className="flex items-center  w-fit h-[30px]">
@@ -740,7 +680,7 @@ const StatisticTeamBoard = () => {
                 options={mediumOptions}
                 selectedOption={selectedMedium || undefined}
                 onChange={(data) => handleSelectMedium(data)}
-                disabled={!selectedLarge}
+                disabled={!selectedLarge || isHasLoading}
               />
             </div>
           </div>
@@ -748,119 +688,14 @@ const StatisticTeamBoard = () => {
             <StatisticTeamCalendar />
           </div>
         </div>
-        <div className="flex items-center gap-2 mb-[14px] mt-6">
-          <div className="flex-shrink-0 h-6 relative">
-            {/* Filter option modal */}
-            <Popover className="relative">
-              {() => (
-                <>
-                  <div className="flex items-center gap-2 relative top-[5px]">
-                    <PopoverButton
-                      onClick={() => setIsOpenModalFilter(!isOpenModalFilter)}
-                      className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
-                      <ImageRound
-                        src="/icons/filter.svg"
-                        name="Filter icon"
-                        className="w-[14px] h-[14px] ml-2"
-                      />
-                    </PopoverButton>
-                  </div>
-                  <Transition
-                    as={Fragment}
-                    show={isOpenModalFilter}
-                    enter="transition ease-out duration-200"
-                    enterFrom="opacity-0 translate-y-1"
-                    enterTo="opacity-100 translate-y-0"
-                    leave="transition ease-in duration-150"
-                    leaveFrom="opacity-100 translate-y-0"
-                    leaveTo="opacity-0 translate-y-1">
-                    <PopoverPanel className="absolute left-[30px] top-[-5px] z-[1] w-[400px] transform">
-                      <ActionFilterStatisticTeam
-                        tagsOptions={tagsOptions}
-                        handleClose={() => setIsOpenModalFilter(false)}
-                        listMemberTeam={listMemberTeam}
-                      />
-                    </PopoverPanel>
-                  </Transition>
-                </>
-              )}
-            </Popover>
-          </div>
-          <div className=" flex-grow flex-shrink-0">
-            <div className="flex gap-2 flex-wrap w-[80%] flex-shrink-0 ">
-              <>
-                {firstThreeUser.map((item, index) => {
-                  return (
-                    <div
-                      key={item.value}
-                      className="flex gap-[6px] items-center">
-                      {index === 0 && (
-                        <ImageRound
-                          src={`/icons/user-white.svg`}
-                          name="close"
-                          className="w-fit h-fit cursor-pointer"
-                        />
-                      )}
-                      <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                        <span className="min-w-[32px] max-w-[118px]  truncate">
-                          {item.label}
-                        </span>
-                        <ImageRound
-                          onClick={() => {
-                            removeUser(item);
-                          }}
-                          src={`/icons/close-white.svg`}
-                          name="close"
-                          className="w-fit h-fit cursor-pointer"
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-                {allLabelUser.length > 3 && (
-                  <p className=" h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
-                    +{remainingCountUser}
-                  </p>
-                )}
-              </>
-              <>
-                {firstThreeTag.map((item, index) => {
-                  return (
-                    <div
-                      key={item.value}
-                      className="flex gap-[6px] items-center">
-                      {index === 0 && (
-                        <ImageRound
-                          src={`/icons/tag-white.svg`}
-                          name="close"
-                          className="w-fit h-fit cursor-pointer"
-                        />
-                      )}
-                      <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                        <span className="min-w-[32px] max-w-[118px]  truncate">
-                          {item.label}
-                        </span>
-                        <ImageRound
-                          onClick={() => {
-                            removeTag(item);
-                          }}
-                          src={`/icons/close-white.svg`}
-                          name="close"
-                          className="w-fit h-fit cursor-pointer"
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-                {allLabelTag.length > 3 && (
-                  <p className="pr-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
-                    +{remainingCountTag}
-                  </p>
-                )}
-              </>
-            </div>
-          </div>
-        </div>
+
+        {/* Filter modal */}
+        <FilterTeamStatistic
+          open={isOpenModalFilter}
+          className="mb-[14px] mt-6"
+          classNameData=" w-[80%]"
+          onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
+        />
       </div>
 
       {isCheckCompare ? (
@@ -877,8 +712,6 @@ const StatisticTeamBoard = () => {
             handleSelectOrganizationCustom={handleSelectOrganizationCustom}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
-            removeTag={removeTag}
-            removeUser={removeUser}
             handleSelectSmall={handleSelectSmall}
           />
           {/* Progress bar */}
@@ -889,8 +722,6 @@ const StatisticTeamBoard = () => {
             endDateCompare={endDateCompare}
             statisticTeamCategoryList={statisticCategoryListTeam}
             statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
-            removeTag={removeTag}
-            removeUser={removeUser}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -905,8 +736,6 @@ const StatisticTeamBoard = () => {
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
-            removeTag={removeTag}
-            removeUser={removeUser}
           />
         </>
       ) : (
@@ -920,16 +749,12 @@ const StatisticTeamBoard = () => {
             handleSelectOrganizationCustom={handleSelectOrganizationCustom}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
-            removeTag={removeTag}
-            removeUser={removeUser}
           />
           {/* Progress bar */}
           <AllocationTeamCategory
             startDate={startDate}
             endDate={endDate}
             statisticTeamCategoryList={statisticCategoryListTeam}
-            removeTag={removeTag}
-            removeUser={removeUser}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -942,8 +767,6 @@ const StatisticTeamBoard = () => {
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
-            removeTag={removeTag}
-            removeUser={removeUser}
           />
           <StackedAreaTeamChart
             startDate={startDate}
@@ -952,8 +775,6 @@ const StatisticTeamBoard = () => {
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
-            removeTag={removeTag}
-            removeUser={removeUser}
           />
         </>
       )}
@@ -970,8 +791,6 @@ const StatisticTeamBoard = () => {
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
           handleSelectSmall={handleSelectSmall}
-          removeTag={removeTag}
-          removeUser={removeUser}
           creationDataStatisticData={creationDataStatisticData?.organizations?.find(
             (org) => org.id === selectedOrganization?.value,
           )}

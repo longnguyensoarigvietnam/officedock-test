@@ -4,7 +4,6 @@ import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 import { ProgressDataType, StatisticsCategories } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
@@ -13,16 +12,17 @@ import { formatTimeToJapanese } from '@utils/date';
 import { mapStatisticCategoryInfoToProgressData } from '@utils';
 
 import { EventWorkCategory } from '@constants/enums';
+import { DEFAULT_TIME_TEXT, NO_SETTING } from '@constants';
 
 import { StatisticStateContext } from '@providers/StatisticProvider';
 
 import ProgressBarStatistic from './ProgressBarStatistic';
+import FilterStatistic from './filter/FilterStatistic';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticCategoryList: StatisticsCategories | undefined;
-  removeTag: (selected: OptionDropdownType) => void;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -34,7 +34,6 @@ const AllocationCategory = memo(
     startDate,
     endDate,
     statisticCategoryList,
-    removeTag,
     handleSelectOrganization,
     handleSelectLarge,
     handleSelectMedium,
@@ -59,6 +58,7 @@ const AllocationCategory = memo(
       ProgressDataType[]
     >([]);
     const {
+      isHasLoading,
       totalDurationLarge,
       totalDurationMedium,
       totalDurationSmall,
@@ -71,11 +71,9 @@ const AllocationCategory = memo(
       selectedOrganization,
       selectedTags,
       selectedSmall,
-      tagsOptions,
       isLoadingLarge,
       isLoadingMedium,
       isLoadingOrganization,
-      setSelectedTags,
       setTotalDurationTask,
       setTotalDurationCategory,
     } = useContext(StatisticStateContext);
@@ -123,26 +121,26 @@ const AllocationCategory = memo(
       type: string,
       organizationId?: string,
     ) => {
-      let duration: string = '00:00:00';
+      let duration: string = DEFAULT_TIME_TEXT;
       if (isLoadingLarge || isLoadingMedium || isLoadingOrganization) return;
 
       if (type === EventWorkCategory.ALL) {
         duration =
           statisticCategoryList?.largeCategories.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.LARGE) {
         duration =
           statisticCategoryList?.mediumCategories?.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       if (type === EventWorkCategory.MEDIUM) {
         duration =
           statisticCategoryList?.smallCategories?.find(
             (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          )?.duration || DEFAULT_TIME_TEXT;
       }
       setDetailCategory({
         id: id,
@@ -164,10 +162,10 @@ const AllocationCategory = memo(
         item && handleSelectLarge(item);
 
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectLarge({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -177,10 +175,10 @@ const AllocationCategory = memo(
         );
         item && handleSelectMedium(item);
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectMedium({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -190,10 +188,10 @@ const AllocationCategory = memo(
         );
         item && handleSelectSmall(item);
         setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
         }
       }
@@ -202,10 +200,10 @@ const AllocationCategory = memo(
           (item) => item.value === detailCategory?.id,
         );
         item && handleSelectSmall(item);
-        if (String(detailCategory?.id) == '未設定') {
+        if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
+            label: NO_SETTING,
+            value: NO_SETTING,
           });
           setTotalDurationCategory(detailCategory.totalDuration);
         }
@@ -239,60 +237,8 @@ const AllocationCategory = memo(
                   各カテゴリーの時間配分
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-[240px] flex-shrink-0  relative">
-                  <MultiSelectDropdown
-                    isShowIconFilter
-                    options={tagsOptions}
-                    labelOptionClass="break-all w-[190px]"
-                    optionClassName="!top-6"
-                    placeholder="集計対象のタグを選択"
-                    className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
-                    selectedOptions={selectedTags || []}
-                    onChange={(selected) => {
-                      let updatedTagIds = [];
-                      const currentTagIds = selectedTags || [];
-                      const foundItemIndex = currentTagIds.findIndex(
-                        (tag) => tag.value == selected.value,
-                      );
-                      if (foundItemIndex == -1) {
-                        updatedTagIds = [...currentTagIds, selected];
-                      } else {
-                        updatedTagIds = currentTagIds.filter(
-                          (tag) => tag.value != selected.value,
-                        );
-                      }
-                      setSelectedTags(updatedTagIds);
-                    }}
-                  />
-                  {selectedTags.length === 0 && (
-                    <span className="text-xs absolute text-[#77858F] top-[2px] right-[135px]">
-                      タグの絞り込み
-                    </span>
-                  )}
-                </div>
-                <div className="relative flex-grow right-[224px] top-0">
-                  <div className="flex gap-2 w-full flex-shrink-0 flex-wrap ">
-                    {selectedTags.map((item) => {
-                      return (
-                        <div
-                          key={item.value}
-                          className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                          <span className=" truncate">{item.label}</span>
-                          <ImageRound
-                            onClick={() => {
-                              removeTag(item);
-                            }}
-                            src={`/icons/close-white.svg`}
-                            name="close"
-                            className="w-fit h-fit cursor-pointer"
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+              {/* Filter */}
+              <FilterStatistic />
             </div>
             <ImageRound
               src="/icons/extend-calendar.svg"
@@ -320,6 +266,7 @@ const AllocationCategory = memo(
                       <Dropdown
                         label="チーム選択"
                         placeholder="-"
+                        disabled={isHasLoading}
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -406,7 +353,7 @@ const AllocationCategory = memo(
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
-                        disabled={!selectedOrganization}
+                        disabled={!selectedOrganization || isHasLoading}
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}
@@ -480,7 +427,7 @@ const AllocationCategory = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedLarge || isHasLoading}
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}

@@ -41,7 +41,6 @@ import { TeamDockLineChartTooltip } from '@components/tooltip/TeamDockLineChartT
 import RadioButton from '@components/common/RadioButton';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import CustomStatisticUserCheckbox from '@components/common/Checkbox/CustomStatisticUserCheckbox';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import ActionFilterTeamTagStatistic from '@components/modals/ActionFilterTeamTagStatistic';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
@@ -55,12 +54,15 @@ import {
 } from '@interfaces/statistic';
 import { TooltipDiv } from '@interfaces/tooltip';
 
-import { SortingType, StatisticViewOptions } from '@constants/enums';
+import {
+  OrganizationStatisticType,
+  SortingType,
+  StatisticViewOptions,
+} from '@constants/enums';
 import {
   DEFAULT_TIME_TEXT,
   EVERYONE_OPTION_LABEL,
   STATISTIC_CHART_VIEW_OPTIONS,
-  TEAM_CALENDAR_ORGANIZATION,
 } from '@constants';
 
 import {
@@ -83,6 +85,7 @@ import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations'
 import useDebounceText from '@hooks/useDebounceText';
 import useStatisticTableInTeamTagLineChart from '@hooks/useStatisticTableInTeamTagLineChart';
 import { useGenericDebounce } from '@hooks/useGenericDebounce';
+import FilterTagTeam from './filter/FilterTagTeam';
 
 ChartJS.register(
   CategoryScale,
@@ -98,7 +101,6 @@ ChartJS.register(
 type Props = {
   startDate: Date;
   endDate: Date | null;
-  removeTag: (selected: OptionDropdownType) => void;
   removeUser: (selected: OptionDropdownType) => void;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
@@ -109,7 +111,6 @@ type Props = {
 const LineChartByTeamTags = ({
   startDate,
   endDate,
-  removeTag,
   removeUser,
   handleSelectOrganization,
   handleSelectLarge,
@@ -118,6 +119,7 @@ const LineChartByTeamTags = ({
 }: Props) => {
   // Context
   const {
+    isHasLoading,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -127,28 +129,17 @@ const LineChartByTeamTags = ({
     selectedOrganization,
     selectedSmall,
     selectedTags,
-    tagsOptions,
     listMemberTeam,
     lineChartViewBy,
     remainingCountUser,
     firstThreeUser,
     allLabelUser,
-    isCheckCompare,
     orderingOptions,
     lineChartTableData,
-    setIsLoadingLarge,
-    setIsLoadingMedium,
-    setIsLoadingSmall,
-    setIsLoadingOrganization,
-    setIsLoadingLargeCompare,
-    setIsLoadingMediumCompare,
-    setIsLoadingSmallCompare,
-    setIsLoadingOrganizationCompare,
     setLineChartViewBy,
-    setSelectedTags,
-    setLineChartTableData
+    setLineChartTableData,
   } = useContext(StatisticTeamTagsStateContext);
-  
+
   const { expanded, selectedOrganization: selectedOrganizationSideBar } =
     useContext(GlobalStateContext);
   // Selected members and category
@@ -185,7 +176,7 @@ const LineChartByTeamTags = ({
     selectedOrganization: 0,
     tagIds: [],
     organizationMemberId:
-      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
         ? String(selectedOrganizationSideBar?.value || '')
         : undefined,
   });
@@ -223,7 +214,7 @@ const LineChartByTeamTags = ({
     labels: [],
     datasets: [],
   });
-  const [totalDuration, setTotalDuration] = useState<string>('00:00:00');
+  const [totalDuration, setTotalDuration] = useState<string>(DEFAULT_TIME_TEXT);
 
   // Collapse statuses
   const [tagCollapseStatuses, setTagCollapseStatuses] = useState<
@@ -346,7 +337,9 @@ const LineChartByTeamTags = ({
           ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
           : filter.userIds,
     },
-    condition: [Boolean(lineChartTableData.length > 0 && filter.tagIds?.length > 0)],
+    condition: [
+      Boolean(lineChartTableData.length > 0 && filter.tagIds?.length > 0),
+    ],
   });
 
   // Get table info (statistic team categories)
@@ -365,7 +358,7 @@ const LineChartByTeamTags = ({
             ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
             : debouncedSelectedMembers,
         organizationMemberId:
-          selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+          selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ? String(selectedOrganizationSideBar?.value || '')
             : undefined,
       },
@@ -475,7 +468,7 @@ const LineChartByTeamTags = ({
           ]
         : [],
       organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     };
@@ -488,7 +481,7 @@ const LineChartByTeamTags = ({
     selectedLarge?.value,
     selectedMedium?.value,
     selectedSmall?.value,
-    selectedOrganization?.label,
+    selectedOrganization,
     selectedTag,
     selectedOrganizationSideBar?.value,
   ]);
@@ -903,10 +896,10 @@ const LineChartByTeamTags = ({
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
       const rowADuration = convertDurationToTotalMinutes(
-        rowA.tagDuration || '00:00:00',
+        rowA.tagDuration || DEFAULT_TIME_TEXT,
       );
       const rowBDuration = convertDurationToTotalMinutes(
-        rowB.tagDuration || '00:00:00',
+        rowB.tagDuration || DEFAULT_TIME_TEXT,
       );
 
       return sortingType == SortingType.ASC
@@ -1333,63 +1326,8 @@ const LineChartByTeamTags = ({
             {/* List tags  */}
             <div>
               <div className="flex justify-between w-full mb-[30px] px-[30px]">
-                <div className="flex items-center gap-2">
-                  <div className="w-[240px]">
-                    <MultiSelectDropdown
-                      options={tagsOptions}
-                      placeholder="集計対象のタグを選択"
-                      className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                      labelOptionClass="break-words w-[190px]"
-                      selectedOptions={selectedTags || []}
-                      onChange={(selected) => {
-                        let updatedTagIds = [];
-                        const currentTagIds = selectedTags || [];
-                        const foundItemIndex = currentTagIds.findIndex(
-                          (tag) => tag.value == selected.value,
-                        );
-                        if (foundItemIndex == -1) {
-                          updatedTagIds = [...currentTagIds, selected];
-                        } else {
-                          updatedTagIds = currentTagIds.filter(
-                            (tag) => tag.value != selected.value,
-                          );
-                        }
-                        setIsLoadingLarge(true);
-                        setIsLoadingMedium(true);
-                        setIsLoadingSmall(true);
-                        setIsLoadingOrganization(true);
-                        if (isCheckCompare) {
-                          setIsLoadingLargeCompare(true);
-                          setIsLoadingMediumCompare(true);
-                          setIsLoadingSmallCompare(true);
-                          setIsLoadingOrganizationCompare(true);
-                        }
-                        setSelectedTags(updatedTagIds);
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <div className="flex gap-2 flex-wrap ">
-                      {selectedTags.map((item) => {
-                        return (
-                          <div
-                            key={item.value}
-                            className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                            <span className=" truncate">{item.label}</span>
-                            <ImageRound
-                              onClick={() => {
-                                removeTag(item);
-                              }}
-                              src={`/icons/close-white.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
+                {/* Filter tag */}
+                <FilterTagTeam />
               </div>
             </div>
             <div className="flex justify-between items-end px-[30px] text-sm font-medium">
@@ -1403,6 +1341,7 @@ const LineChartByTeamTags = ({
                   <Dropdown
                     label="チーム選択"
                     placeholder="-"
+                    disabled={isHasLoading}
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -1452,7 +1391,7 @@ const LineChartByTeamTags = ({
                       setSelectedTag(null);
                       handleSelectLarge(data);
                     }}
-                    disabled={!selectedOrganization}
+                    disabled={!selectedOrganization || isHasLoading}
                   />
                 </div>
               </div>
@@ -1488,7 +1427,7 @@ const LineChartByTeamTags = ({
                       setSelectedTag(null);
                       handleSelectMedium(data);
                     }}
-                    disabled={!selectedLarge}
+                    disabled={!selectedLarge || isHasLoading}
                   />
                 </div>
               </div>
@@ -1524,7 +1463,7 @@ const LineChartByTeamTags = ({
                       setSelectedTag(null);
                       handleSelectSmall(data);
                     }}
-                    disabled={!selectedMedium}
+                    disabled={!selectedMedium || isHasLoading}
                   />
                 </div>
               </div>
@@ -1699,7 +1638,8 @@ const LineChartByTeamTags = ({
                 className={`!h-[200px] mt-5 w-full mx-auto`}
               />
             ) : (
-              <Table className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${lineChartTableData.length && 'max-h-[500px] overflow-y-auto'}`}>
+              <Table
+                className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${lineChartTableData.length && 'max-h-[500px] overflow-y-auto'}`}>
                 <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr

@@ -199,6 +199,7 @@ export interface TaskActualType {
   planStartDate: string | null;
   planEndDate?: string | null;
   type?: string;
+  totalDuration?: string;
   categories?: {
     name: string;
     type: string;

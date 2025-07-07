@@ -6,8 +6,6 @@ from rest_framework import viewsets
 from base.apis import BaseAPIViewSet
 from base.filters import FilterByPermission
 from base.permissions import ActionPermission
-from organizations.constants import OrganizationTypes
-from organizations.models import Organization
 
 from roles.constants import Screens
 from .models import Tag
@@ -66,9 +64,7 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 organization, through_defaults={"company": company}
             )
         # Set calendar organization for tag if checked
-        calendar_org, _ = Organization.all_objects.get_or_create(
-            type=OrganizationTypes.CALENDAR.value, company=company
-        )
+        calendar_org = company.get_calendar_organization()
         if calendar_organization_check and calendar_org:
             tag.organizations.add(
                 calendar_org, through_defaults={"company": company}
@@ -86,6 +82,7 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         calendar_organization_check = serializer_data.pop(
             "calendar_organization_check", None
         )
+        company = self.request.user.company
 
         # Update the tag instance
         tag = serializer.save()
@@ -93,16 +90,13 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             tag.organizations.clear()
             for organization in organizations:
                 tag.organizations.add(
-                    organization, through_defaults={"company": tag.company}
+                    organization, through_defaults={"company": company}
                 )
         # Set calendar organization for tag if checked
-        calendar_org, _ = Organization.all_objects.get_or_create(
-            type=OrganizationTypes.CALENDAR.value,
-            company=self.request.user.company,
-        )
+        calendar_org = company.get_calendar_organization()
         if calendar_organization_check and calendar_org:
             tag.organizations.add(
-                calendar_org, through_defaults={"company": tag.company}
+                calendar_org, through_defaults={"company": company}
             )
         elif (
             not calendar_organization_check and tag.get_calendar_organization()

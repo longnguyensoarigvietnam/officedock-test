@@ -2,16 +2,12 @@ import React, { useContext, useEffect, useState } from 'react';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Checkbox from '@components/common/Checkbox';
 import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
 import TableChart from './TableChart';
 
 import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
-import {
-  PAGINATION_PAGE_SIZE_KANBAN,
-  TEAM_CALENDAR_ORGANIZATION,
-} from '@constants';
+import { DEFAULT_TIME_TEXT, PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 
 import {
   CreationStatisticType,
@@ -24,6 +20,8 @@ import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import FilterTagTeam from './filter/FilterTagTeam';
+import { OrganizationStatisticType } from '@constants/enums';
 
 type Props = {
   isCheckCompare: boolean;
@@ -37,7 +35,6 @@ type Props = {
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
-  removeTag: (selected: OptionDropdownType) => void;
 };
 
 const TaskListStatisticTeamTags = ({
@@ -48,13 +45,13 @@ const TaskListStatisticTeamTags = ({
   isCheckCompare,
   creationDataStatisticData,
   statisticTagsListTeam,
-  removeTag,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectSmall,
   handleSelectOrganization,
 }: Props) => {
   const {
+    isHasLoading,
     smallOptions,
     largeOptions,
     mediumOptions,
@@ -72,21 +69,11 @@ const TaskListStatisticTeamTags = ({
     totalDurationSmallCompare,
     totalDurationCategoryCompare,
     selectedTags,
-    tagsOptions,
     listMemberTeam,
     isSkeletonTagTeamTask,
     isSkeletonTagTeamTaskCompare,
-    setSelectedTags,
     currentPage,
     setCurrentPage,
-    setIsLoadingLarge,
-    setIsLoadingMedium,
-    setIsLoadingSmall,
-    setIsLoadingOrganization,
-    setIsLoadingLargeCompare,
-    setIsLoadingMediumCompare,
-    setIsLoadingSmallCompare,
-    setIsLoadingOrganizationCompare,
   } = useContext(StatisticTeamTagsStateContext);
 
   const { selectedOrganization: selectedOrganizationTeamList } =
@@ -123,7 +110,7 @@ const TaskListStatisticTeamTags = ({
       }
       return totalDurationLarge;
     }
-    return '00:00:00';
+    return DEFAULT_TIME_TEXT;
   };
   // Get total compare
   const getTotalDurationCompare = () => {
@@ -139,7 +126,7 @@ const TaskListStatisticTeamTags = ({
       }
       return totalDurationLargeCompare;
     }
-    return '00:00:00';
+    return DEFAULT_TIME_TEXT;
   };
 
   useEffect(() => {
@@ -273,63 +260,8 @@ const TaskListStatisticTeamTags = ({
             {/* List tags  */}
             <div>
               <div className="flex justify-between w-full mb-[30px] px-[30px]">
-                <div className="flex items-center gap-2">
-                  <div className="w-[240px]">
-                    <MultiSelectDropdown
-                      options={tagsOptions}
-                      placeholder="集計対象のタグを選択"
-                      className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                      labelOptionClass="break-words w-[190px]"
-                      selectedOptions={selectedTags || []}
-                      onChange={(selected) => {
-                        let updatedTagIds = [];
-                        const currentTagIds = selectedTags || [];
-                        const foundItemIndex = currentTagIds.findIndex(
-                          (tag) => tag.value == selected.value,
-                        );
-                        if (foundItemIndex == -1) {
-                          updatedTagIds = [...currentTagIds, selected];
-                        } else {
-                          updatedTagIds = currentTagIds.filter(
-                            (tag) => tag.value != selected.value,
-                          );
-                        }
-                        setIsLoadingLarge(true);
-                        setIsLoadingMedium(true);
-                        setIsLoadingSmall(true);
-                        setIsLoadingOrganization(true);
-                        if (isCheckCompare) {
-                          setIsLoadingLargeCompare(true);
-                          setIsLoadingMediumCompare(true);
-                          setIsLoadingSmallCompare(true);
-                          setIsLoadingOrganizationCompare(true);
-                        }
-                        setSelectedTags(updatedTagIds);
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <div className="flex gap-2 flex-wrap">
-                      {selectedTags.map((item) => {
-                        return (
-                          <div
-                            key={item.value}
-                            className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                            <span className=" truncate">{item.label}</span>
-                            <ImageRound
-                              onClick={() => {
-                                removeTag(item);
-                              }}
-                              src={`/icons/close-white.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
+                {/* Filter tag */}
+                <FilterTagTeam />
               </div>
             </div>
             <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">
@@ -371,6 +303,7 @@ const TaskListStatisticTeamTags = ({
                   <Dropdown
                     label="チーム選択"
                     placeholder="-"
+                    disabled={isHasLoading}
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 text-sm !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -409,7 +342,7 @@ const TaskListStatisticTeamTags = ({
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => handleSelectLarge(data)}
-                    disabled={!selectedOrganization}
+                    disabled={!selectedOrganization || isHasLoading}
                   />
                 </div>
               </div>
@@ -441,7 +374,7 @@ const TaskListStatisticTeamTags = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
-                    disabled={!selectedLarge}
+                    disabled={!selectedLarge || isHasLoading}
                   />
                 </div>
               </div>
@@ -476,7 +409,8 @@ const TaskListStatisticTeamTags = ({
                     disabled={
                       !selectedMedium ||
                       selectedOrganization?.value !==
-                        selectedOrganizationTeamList?.value
+                        selectedOrganizationTeamList?.value ||
+                      isHasLoading
                     }
                   />
                 </div>
@@ -547,14 +481,17 @@ const TaskListStatisticTeamTags = ({
                 }
                 totalDuration={
                   isCheckCompare && isShowCompare
-                    ? selectedOrganization?.label ===
-                        TEAM_CALENDAR_ORGANIZATION && selectedMedium?.value
+                    ? selectedOrganization?.type ===
+                        OrganizationStatisticType.CALENDAR &&
+                      selectedMedium?.value
                       ? statisticCategoryListCompare?.totalDuration ||
-                        '00:00:00'
+                        DEFAULT_TIME_TEXT
                       : getTotalDurationCompare()
-                    : selectedOrganization?.label ===
-                          TEAM_CALENDAR_ORGANIZATION && selectedMedium?.value
-                      ? statisticCategoryList?.totalDuration || '00:00:00'
+                    : selectedOrganization?.type ===
+                          OrganizationStatisticType.CALENDAR &&
+                        selectedMedium?.value
+                      ? statisticCategoryList?.totalDuration ||
+                        DEFAULT_TIME_TEXT
                       : getTotalDuration()
                 }
                 selectedMember={selectedMember}

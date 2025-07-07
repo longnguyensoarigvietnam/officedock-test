@@ -13,7 +13,10 @@ import {
   handleSetStartDateAfter,
   handleSetStartDateBefore,
 } from '@utils/date';
-import { getCompareLineChartEnableViews, getLineChartEnableViews } from '@utils';
+import {
+  getCompareLineChartEnableViews,
+  getLineChartEnableViews,
+} from '@utils';
 
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 
@@ -24,6 +27,14 @@ function StatisticTeamCalendar() {
     endDateCompare,
     startDateCompare,
     isCheckCompare,
+    isLoadingLarge,
+    isLoadingLargeCompare,
+    isLoadingMedium,
+    isLoadingMediumCompare,
+    isLoadingOrganization,
+    isLoadingOrganizationCompare,
+    isLoadingSmall,
+    isLoadingSmallCompare,
     setIsCheckCompare,
     setStartDate,
     setEndDate,
@@ -257,6 +268,7 @@ function StatisticTeamCalendar() {
 
   // Save data time
   const handleSaveCalendar = () => {
+    setIsOpenModal(false);
     if (!dataEndDate) {
       setIsErrorData({
         ...isErrorData,
@@ -283,7 +295,7 @@ function StatisticTeamCalendar() {
     setStartDate(dataStartDate);
     setEndDate(dataEndDate);
     setIsCheckCompare(isDataCheckCompare);
-    handleResetTableData()
+    handleResetTableData();
     const enableViews = getLineChartEnableViews(
       dataStartDate,
       dataEndDate as Date,
@@ -324,6 +336,7 @@ function StatisticTeamCalendar() {
 
   // Save data time compare
   const handleSaveCalendarCompare = () => {
+    setIsOpenModal(false);
     if (!dataEndDate) {
       setIsErrorData({
         ...isErrorData,
@@ -371,7 +384,7 @@ function StatisticTeamCalendar() {
     setEndDateCompare(dataEndDateCompare);
     setIsCheckCompare(isDataCheckCompare);
     setIsOpenModal(false);
-    handleResetTableData()
+    handleResetTableData();
 
     const enableViews = getCompareLineChartEnableViews(
       dataStartDate,
@@ -469,6 +482,17 @@ function StatisticTeamCalendar() {
         </div>
         <div
           onClick={() => {
+            if (
+              isLoadingLarge ||
+              isLoadingLargeCompare ||
+              isLoadingMedium ||
+              isLoadingMediumCompare ||
+              isLoadingOrganization ||
+              isLoadingOrganizationCompare ||
+              isLoadingSmall ||
+              isLoadingSmallCompare
+            )
+              return;
             setIsOpenModal(!isOpenModal);
           }}
           className="w-fit h-fit min-h-[34px] flex flex-col gap-[6px]  px-3 py-2 border border-[#77858F] bg-white rounded-md  ">

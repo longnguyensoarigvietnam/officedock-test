@@ -1970,12 +1970,17 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     tasks = tasks.order_by("coalesced_ordering_datetime")
                 for idx, task in enumerate(tasks):
                     task_index = task.task_index.filter(user=user).first()
-                    if task_index.pin_at:
-                        task.task_index.update(
-                            pin_at=timezone.now()
-                            - timedelta(minutes=INITIAL_INDEX_VALUE + idx)
+                    if not task_index:
+                        TaskIndex.update_index_for_user(
+                            user, task, False, INITIAL_INDEX_VALUE - idx
                         )
-                    task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
+                    else:
+                        if task_index.pin_at:
+                            task.task_index.update(
+                                pin_at=timezone.now()
+                                - timedelta(minutes=INITIAL_INDEX_VALUE + idx)
+                            )
+                        task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
 
             task_pin = TaskIndex.objects.filter(
                 task=OuterRef("pk"), user_id=user.id

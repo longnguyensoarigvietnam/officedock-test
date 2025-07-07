@@ -948,9 +948,9 @@ const ChatDetail = ({
                 };
                 const allMessages = [newMessage, ...prev];
 
-                // Remove duplicates by id
+                // Remove duplicates by uuid
                 const uniqueMessages = Array.from(
-                  new Map(allMessages.map((msg) => [msg.id, msg])).values(),
+                  new Map(allMessages.map((msg) => [msg.uuid, msg])).values(),
                 );
 
                 return uniqueMessages;
@@ -2840,8 +2840,11 @@ const ChatDetail = ({
                                   )}
                               </div>
                             </div>
-                            <div className="mt-5">
-                              <EditorContent editor={editor} />
+                            <div className="mt-5 !max-w-full">
+                              <EditorContent
+                                editor={editor}
+                                className="w-full break-all whitespace-pre-wrap"
+                              />
                             </div>
                           </div>
                         ),

@@ -716,10 +716,10 @@ const getEnableViewsByDiffDays = (diffDays: number): StatisticViewOptions[] => {
       return [StatisticViewOptions.WEEK];
     case diffDays <= 120:
       return [StatisticViewOptions.WEEK, StatisticViewOptions.MONTH];
-    case diffDays <= 365:
+    case diffDays <= 366:
       return [StatisticViewOptions.MONTH];
     default:
-      return [];
+      return [StatisticViewOptions.WEEK];
   }
 };
 
@@ -1363,3 +1363,22 @@ export const createLineChartAvatarImage = async (user: {
 
   return await createStyledAvatarWithMargin(avatarUrl, 24, 30);
 };
+// Remove duplicates in search params
+export function deduplicateSearchParams(
+  params: URLSearchParams,
+): URLSearchParams {
+  const seen: Record<string, boolean> = {};
+  const deduped = new URLSearchParams();
+
+  const pairs = params.toString().split('&').reverse(); // Keep last value
+
+  for (const pair of pairs) {
+    const [key, value] = pair.split('=');
+    if (key && !seen[key]) {
+      deduped.set(key, decodeURIComponent(value || ''));
+      seen[key] = true;
+    }
+  }
+
+  return deduped;
+}

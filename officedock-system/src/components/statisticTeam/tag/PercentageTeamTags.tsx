@@ -4,10 +4,10 @@ import PieChart from '@components/common/Chart/PieChartCustom';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 
 import { EventWorkCategory } from '@constants/enums';
+import { DEFAULT_TIME_TEXT } from '@constants';
 
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
@@ -19,7 +19,7 @@ import {
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import FilterTagTeam from './filter/FilterTagTeam';
 
 type Props = {
   startDate: Date;
@@ -29,20 +29,19 @@ type Props = {
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
-  removeTag: (selected: OptionDropdownType) => void;
 };
 
 const PercentageTeamTags = ({
   startDate,
   endDate,
   statisticTagsListTeam,
-  removeTag,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectSmall,
   handleSelectOrganization,
 }: Props) => {
   const {
+    isHasLoading,
     largeOptions,
     mediumOptions,
     smallOptions,
@@ -54,27 +53,12 @@ const PercentageTeamTags = ({
     totalDurationMedium,
     totalDurationSmall,
     totalDurationCategory,
-    tagsOptions,
-    selectedTags,
     selectedSmall,
     isLoadingLarge,
     isLoadingMedium,
     isLoadingOrganization,
     isLoadingSmall,
-    isCheckCompare,
-    setIsLoadingLarge,
-    setIsLoadingMedium,
-    setIsLoadingSmall,
-    setIsLoadingOrganization,
-    setIsLoadingLargeCompare,
-    setIsLoadingMediumCompare,
-    setIsLoadingSmallCompare,
-    setIsLoadingOrganizationCompare,
-    setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
-
-  const { selectedOrganization: selectedOrganizationTeamList } =
-    useContext(GlobalStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
   const [isShowModal, setIsShowModal] = useState(false);
@@ -290,28 +274,28 @@ const PercentageTeamTags = ({
   }, [statisticTagsListTeam]);
 
   const handleClickTooltip = (id: number | null, type: string) => {
-    let duration: string = '00:00:00';
+    let duration: string = DEFAULT_TIME_TEXT;
     if (type === EventWorkCategory.ALL) {
       duration =
         statisticTagsListTeam?.largeCategories.find((item) => item.tagId == id)
-          ?.duration || '00:00:00';
+          ?.duration || DEFAULT_TIME_TEXT;
     }
 
     if (type === EventWorkCategory.LARGE) {
       duration =
         statisticTagsListTeam?.mediumCategories?.find(
           (item) => item.tagId == id,
-        )?.duration || '00:00:00';
+        )?.duration || DEFAULT_TIME_TEXT;
     }
     if (type === EventWorkCategory.MEDIUM) {
       duration =
         statisticTagsListTeam?.smallCategories?.find((item) => item.tagId == id)
-          ?.duration || '00:00:00';
+          ?.duration || DEFAULT_TIME_TEXT;
     }
     if (type === EventWorkCategory.SMALL) {
       duration =
         statisticTagsListTeam?.category?.find((item) => item.tagId == id)
-          ?.duration || '00:00:00';
+          ?.duration || DEFAULT_TIME_TEXT;
     }
     setDetailCategory({
       id: id,
@@ -371,63 +355,8 @@ const PercentageTeamTags = ({
               {/* List tags  */}
               <div>
                 <div className="flex justify-between w-full mb-[30px] px-[30px]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-[240px]">
-                      <MultiSelectDropdown
-                        options={tagsOptions}
-                        placeholder="集計対象のタグを選択"
-                        className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                        labelOptionClass="break-words w-[190px]"
-                        selectedOptions={selectedTags || []}
-                        onChange={(selected) => {
-                          let updatedTagIds = [];
-                          const currentTagIds = selectedTags || [];
-                          const foundItemIndex = currentTagIds.findIndex(
-                            (tag) => tag.value == selected.value,
-                          );
-                          if (foundItemIndex == -1) {
-                            updatedTagIds = [...currentTagIds, selected];
-                          } else {
-                            updatedTagIds = currentTagIds.filter(
-                              (tag) => tag.value != selected.value,
-                            );
-                          }
-                          setIsLoadingLarge(true);
-                          setIsLoadingMedium(true);
-                          setIsLoadingSmall(true);
-                          setIsLoadingOrganization(true);
-                          if (isCheckCompare) {
-                            setIsLoadingLargeCompare(true);
-                            setIsLoadingMediumCompare(true);
-                            setIsLoadingSmallCompare(true);
-                            setIsLoadingOrganizationCompare(true);
-                          }
-                          setSelectedTags(updatedTagIds);
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <div className="flex gap-2 flex-wrap ">
-                        {selectedTags.map((item) => {
-                          return (
-                            <div
-                              key={item.value}
-                              className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                              <span className=" truncate">{item.label}</span>
-                              <ImageRound
-                                onClick={() => {
-                                  removeTag(item);
-                                }}
-                                src={`/icons/close-white.svg`}
-                                name="close"
-                                className="w-fit h-fit cursor-pointer"
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
+                  {/* Filter tag */}
+                  <FilterTagTeam />
                 </div>
               </div>
               <div className="flex justify-between px-[30px] text-sm font-medium">
@@ -437,6 +366,7 @@ const PercentageTeamTags = ({
                     <Dropdown
                       label="チーム選択"
                       placeholder="-"
+                      disabled={isHasLoading}
                       placeholderClass="!text-black text-sm font-normal"
                       className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -496,7 +426,7 @@ const PercentageTeamTags = ({
                       options={largeOptions}
                       selectedOption={selectedLarge || undefined}
                       onChange={(data) => handleSelectLarge(data)}
-                      disabled={!selectedOrganization}
+                      disabled={!selectedOrganization || isHasLoading}
                     />
                     {dataChartMedium.data.length > 0 ? (
                       <p className="text-sm text-black my-[26px]">
@@ -553,7 +483,7 @@ const PercentageTeamTags = ({
                       options={mediumOptions}
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}
-                      disabled={!selectedLarge}
+                      disabled={!selectedLarge || isHasLoading}
                     />
                     {dataChartSmall.data.length > 0 ? (
                       <p className="text-sm text-black my-[26px]">
@@ -609,11 +539,7 @@ const PercentageTeamTags = ({
                       options={smallOptions}
                       selectedOption={selectedSmall || undefined}
                       onChange={(data) => handleSelectSmall(data)}
-                      disabled={
-                        !selectedMedium ||
-                        selectedOrganization?.value !==
-                          selectedOrganizationTeamList?.value
-                      }
+                      disabled={!selectedMedium || isHasLoading}
                     />
                     {dataChartCategory.data.length > 0 ? (
                       <p className="text-sm text-black my-[26px]">

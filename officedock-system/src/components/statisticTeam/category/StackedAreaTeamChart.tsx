@@ -1,11 +1,5 @@
 'use client';
-import React, {
-  Fragment,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import Chart from 'react-apexcharts';
 import Image from 'next/image';
 import {
@@ -14,24 +8,18 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition,
-} from '@headlessui/react';
 
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import { Table, TableBody } from '@components/common/Table';
 import RadioButton from '@components/common/RadioButton';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
-import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
-import { STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
+import { DEFAULT_TIME_TEXT, STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
+import { useGenericDebounce } from '@hooks/useGenericDebounce';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
@@ -50,13 +38,11 @@ import {
 } from '@utils/date';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import { useGenericDebounce } from '@hooks/useGenericDebounce';
+import FilterTeamStatistic from './filter/FilterTeamStatistic';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
-  removeTag: (selected: OptionDropdownType) => void;
-  removeUser: (selected: OptionDropdownType) => void;
   statisticTeamCategoryList: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
@@ -108,8 +94,6 @@ const StackedAreaTeamChart = ({
   statisticTeamCategoryList,
   startDate,
   endDate,
-  removeTag,
-  removeUser,
   handleSelectOrganization,
   handleSelectLarge,
   handleSelectMedium,
@@ -124,17 +108,11 @@ const StackedAreaTeamChart = ({
     selectedMedium,
     selectedOrganization,
     selectedSmall,
-    tagsOptions,
-    firstThreeUser,
-    allLabelUser,
-    remainingCountUser,
-    firstThreeTag,
-    allLabelTag,
-    remainingCountTag,
     listMemberTeam,
     orderingOptions,
     lineChartViewBy,
     areaTableData,
+    isHasLoading,
     setAreaTableData,
     setLineChartViewBy,
   } = useContext(StatisticTeamStateContext);
@@ -619,10 +597,10 @@ const StackedAreaTeamChart = ({
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
       const rowADuration = convertDurationToTotalMinutes(
-        rowA.categoryDuration || '00:00:00',
+        rowA.categoryDuration || DEFAULT_TIME_TEXT,
       );
       const rowBDuration = convertDurationToTotalMinutes(
-        rowB.categoryDuration || '00:00:00',
+        rowB.categoryDuration || DEFAULT_TIME_TEXT,
       );
 
       return sortingType == SortingType.ASC
@@ -990,119 +968,11 @@ const StackedAreaTeamChart = ({
               期間における割合の推移
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex-shrink-0 h-6 relative">
-              {/* Filter option modal */}
-              <Popover className="relative">
-                {() => (
-                  <>
-                    <div className="flex items-center gap-2 relative top-2">
-                      <PopoverButton
-                        onClick={() => setIsOpenModalFilter(!isOpenModalFilter)}
-                        className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
-                        <ImageRound
-                          src="/icons/filter.svg"
-                          name="Filter icon"
-                          className="w-[14px] h-[14px]"
-                        />
-                      </PopoverButton>
-                    </div>
-                    <Transition
-                      as={Fragment}
-                      show={isOpenModalFilter}
-                      enter="transition ease-out duration-200"
-                      enterFrom="opacity-0 translate-y-1"
-                      enterTo="opacity-100 translate-y-0"
-                      leave="transition ease-in duration-150"
-                      leaveFrom="opacity-100 translate-y-0"
-                      leaveTo="opacity-0 translate-y-1">
-                      <PopoverPanel className="absolute left-[30px] top-[-5px] z-[1] w-[400px] transform">
-                        <ActionFilterStatisticTeam
-                          tagsOptions={tagsOptions}
-                          handleClose={() => setIsOpenModalFilter(false)}
-                          listMemberTeam={listMemberTeam}
-                        />
-                      </PopoverPanel>
-                    </Transition>
-                  </>
-                )}
-              </Popover>
-            </div>
-            <div className=" flex-grow flex-shrink-0">
-              <div className="flex gap-2 flex-wrap  flex-shrink-0 ">
-                <>
-                  {firstThreeUser.map((item, index) => {
-                    return (
-                      <div
-                        key={item.value}
-                        className="flex gap-[6px] items-center">
-                        {index === 0 && (
-                          <ImageRound
-                            src={`/icons/user-white.svg`}
-                            name="close"
-                            className="w-fit h-fit cursor-pointer"
-                          />
-                        )}
-                        <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                          <span className="min-w-[32px] max-w-[118px]  truncate">
-                            {item.label}
-                          </span>
-                          <ImageRound
-                            onClick={() => {
-                              removeUser(item);
-                            }}
-                            src={`/icons/close-white.svg`}
-                            name="close"
-                            className="w-fit h-fit cursor-pointer"
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {allLabelUser.length > 3 && (
-                    <p className=" h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
-                      +{remainingCountUser}
-                    </p>
-                  )}
-                </>
-                <>
-                  {firstThreeTag.map((item, index) => {
-                    return (
-                      <div
-                        key={item.value}
-                        className="flex gap-[6px] items-center">
-                        {index === 0 && (
-                          <ImageRound
-                            src={`/icons/tag-white.svg`}
-                            name="close"
-                            className="w-fit h-fit cursor-pointer"
-                          />
-                        )}
-                        <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                          <span className="min-w-[32px] max-w-[118px]  truncate">
-                            {item.label}
-                          </span>
-                          <ImageRound
-                            onClick={() => {
-                              removeTag(item);
-                            }}
-                            src={`/icons/close-white.svg`}
-                            name="close"
-                            className="w-fit h-fit cursor-pointer"
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {allLabelTag.length > 3 && (
-                    <p className="pr-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
-                      +{remainingCountTag}
-                    </p>
-                  )}
-                </>
-              </div>
-            </div>
-          </div>
+          {/* Filter modal */}
+          <FilterTeamStatistic
+            open={isOpenModalFilter}
+            onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
+          />
         </div>
         <ImageRound
           src="/icons/extend-calendar.svg"
@@ -1131,6 +1001,7 @@ const StackedAreaTeamChart = ({
                   <Dropdown
                     label="チーム選択"
                     placeholder="-"
+                    disabled={isHasLoading}
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -1167,7 +1038,7 @@ const StackedAreaTeamChart = ({
                       setAreaTableData([]);
                       handleSelectLarge(data);
                     }}
-                    disabled={!selectedOrganization}
+                    disabled={!selectedOrganization || isHasLoading}
                   />
                 </div>
               </div>
@@ -1191,7 +1062,7 @@ const StackedAreaTeamChart = ({
                       setAreaTableData([]);
                       handleSelectMedium(data);
                     }}
-                    disabled={!selectedLarge}
+                    disabled={!selectedLarge || isHasLoading}
                   />
                 </div>
               </div>
@@ -1264,7 +1135,7 @@ const StackedAreaTeamChart = ({
                         ? sumDurationsChart(
                             dataDetail.map((user) => user.duration),
                           )
-                        : '00:00:00';
+                        : DEFAULT_TIME_TEXT;
 
                       return (
                         <div

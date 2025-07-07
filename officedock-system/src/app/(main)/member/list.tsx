@@ -3,13 +3,13 @@ import React, { useContext, useState } from 'react';
 import Link from 'next/link';
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
+import DetailProfileMemberModal from '@components/modals/DetailProfileMemberModal';
 import GroupMember from './group';
 
 import { pageRouters } from '@constants/routers';
 import useMemberOrganizationList from '@hooks/userMemberOrganizationList';
-import DetailProfileMemberModal from '@components/modals/DetailProfileMemberModal';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import useDebounceText from '@hooks/useDebounceText';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 const ListMember = () => {
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
@@ -27,7 +27,7 @@ const ListMember = () => {
     id: string;
     fullName?: string;
     avatarColor: string;
-    avatarUrl: string
+    avatarUrl: string;
   }>();
   const [organizationId, setOrganizationId] = useState<string>('');
 
@@ -80,12 +80,12 @@ const ListMember = () => {
                   id: string,
                   avatarColor: string,
                   organizationId: string,
-                  avatarUrl: string
+                  avatarUrl: string,
                 ) => {
                   setUserClick({
                     id: id,
                     avatarColor: avatarColor,
-                    avatarUrl: avatarUrl
+                    avatarUrl: avatarUrl,
                   });
                   setIsShowModalDetail(true);
                   setOrganizationId(organizationId);

@@ -15,13 +15,13 @@ import { Table, TableBody } from '@components/common/Table';
 import RadioButton from '@components/common/RadioButton';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
-import { SortingType, StatisticViewOptions } from '@constants/enums';
 import {
-  STATISTIC_CHART_VIEW_OPTIONS,
-  TEAM_CALENDAR_ORGANIZATION,
-} from '@constants';
+  OrganizationStatisticType,
+  SortingType,
+  StatisticViewOptions,
+} from '@constants/enums';
+import { DEFAULT_TIME_TEXT, STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 
 import { OptionDropdownType } from '@interfaces/common';
@@ -42,11 +42,11 @@ import {
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useGenericDebounce } from '@hooks/useGenericDebounce';
+import FilterTagTeam from './filter/FilterTagTeam';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
-  removeTag: (selected: OptionDropdownType) => void;
   statisticTagsListTeam: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
@@ -99,7 +99,6 @@ const StackedAreaTeamTagChart = ({
   statisticTagsListTeam,
   startDate,
   endDate,
-  removeTag,
   handleSelectOrganization,
   handleSelectLarge,
   handleSelectMedium,
@@ -107,6 +106,7 @@ const StackedAreaTeamTagChart = ({
 }: Props) => {
   // Context
   const {
+    isHasLoading,
     totalDurationLarge,
     totalDurationMedium,
     totalDurationSmall,
@@ -119,22 +119,10 @@ const StackedAreaTeamTagChart = ({
     selectedMedium,
     selectedOrganization,
     selectedSmall,
-    selectedTags,
-    tagsOptions,
     listMemberTeam,
     lineChartViewBy,
-    isCheckCompare,
     orderingOptions,
-    setIsLoadingLarge,
-    setIsLoadingMedium,
-    setIsLoadingSmall,
-    setIsLoadingOrganization,
-    setIsLoadingLargeCompare,
-    setIsLoadingMediumCompare,
-    setIsLoadingSmallCompare,
-    setIsLoadingOrganizationCompare,
     setLineChartViewBy,
-    setSelectedTags,
     areaTableData,
     setAreaTableData,
   } = useContext(StatisticTeamTagsStateContext);
@@ -154,7 +142,7 @@ const StackedAreaTeamTagChart = ({
       }
       return totalDurationLarge;
     }
-    return '00:00:00';
+    return DEFAULT_TIME_TEXT;
   };
 
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
@@ -220,7 +208,7 @@ const StackedAreaTeamTagChart = ({
     selectedOrganization: 0,
     tagIds: [],
     organizationMemberId:
-      selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
         ? String(selectedOrganizationSideBar?.value || '')
         : undefined,
   });
@@ -390,7 +378,7 @@ const StackedAreaTeamTagChart = ({
           ]
         : [],
       organizationMemberId:
-        selectedOrganization?.label === TEAM_CALENDAR_ORGANIZATION
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     };
@@ -403,7 +391,7 @@ const StackedAreaTeamTagChart = ({
     selectedSmall?.value,
     selectedMembers,
     selectedTag,
-    selectedOrganization?.label,
+    selectedOrganization,
     selectedOrganizationSideBar?.value,
     selectedOrganizationInTable,
   ]);
@@ -655,10 +643,10 @@ const StackedAreaTeamTagChart = ({
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
       const rowADuration = convertDurationToTotalMinutes(
-        rowA.tagDuration || '00:00:00',
+        rowA.tagDuration || DEFAULT_TIME_TEXT,
       );
       const rowBDuration = convertDurationToTotalMinutes(
-        rowB.tagDuration || '00:00:00',
+        rowB.tagDuration || DEFAULT_TIME_TEXT,
       );
 
       return sortingType == SortingType.ASC
@@ -1017,63 +1005,8 @@ const StackedAreaTeamTagChart = ({
           {/* List tags  */}
           <div>
             <div className="flex justify-between w-full my-8 px-[30px]">
-              <div className="flex items-center gap-2">
-                <div className="w-[240px]">
-                  <MultiSelectDropdown
-                    options={tagsOptions}
-                    placeholder="集計対象のタグを選択"
-                    className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                    labelOptionClass="break-words w-[190px]"
-                    selectedOptions={selectedTags || []}
-                    onChange={(selected) => {
-                      let updatedTagIds = [];
-                      const currentTagIds = selectedTags || [];
-                      const foundItemIndex = currentTagIds.findIndex(
-                        (tag) => tag.value == selected.value,
-                      );
-                      if (foundItemIndex == -1) {
-                        updatedTagIds = [...currentTagIds, selected];
-                      } else {
-                        updatedTagIds = currentTagIds.filter(
-                          (tag) => tag.value != selected.value,
-                        );
-                      }
-                      setIsLoadingLarge(true);
-                      setIsLoadingMedium(true);
-                      setIsLoadingSmall(true);
-                      setIsLoadingOrganization(true);
-                      if (isCheckCompare) {
-                        setIsLoadingLargeCompare(true);
-                        setIsLoadingMediumCompare(true);
-                        setIsLoadingSmallCompare(true);
-                        setIsLoadingOrganizationCompare(true);
-                      }
-                      setSelectedTags(updatedTagIds);
-                    }}
-                  />
-                </div>
-                <div>
-                  <div className="flex gap-2 flex-wrap ">
-                    {selectedTags.map((item) => {
-                      return (
-                        <div
-                          key={item.value}
-                          className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                          <span className=" truncate">{item.label}</span>
-                          <ImageRound
-                            onClick={() => {
-                              removeTag(item);
-                            }}
-                            src={`/icons/close-white.svg`}
-                            name="close"
-                            className="w-fit h-fit cursor-pointer"
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+              {/* Filter tag */}
+              <FilterTagTeam />
             </div>
           </div>
           <div className="flex justify-between items-end px-[30px] text-sm font-medium">
@@ -1087,6 +1020,7 @@ const StackedAreaTeamTagChart = ({
                 <Dropdown
                   label="チーム選択"
                   placeholder="-"
+                  disabled={isHasLoading}
                   placeholderClass="!text-black text-sm font-normal"
                   className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                   labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -1135,7 +1069,7 @@ const StackedAreaTeamTagChart = ({
                     setAreaTableData([]);
                     handleSelectLarge(data);
                   }}
-                  disabled={!selectedOrganization}
+                  disabled={!selectedOrganization || isHasLoading}
                 />
               </div>
             </div>
@@ -1170,7 +1104,7 @@ const StackedAreaTeamTagChart = ({
                     setAreaTableData([]);
                     handleSelectMedium(data);
                   }}
-                  disabled={!selectedLarge}
+                  disabled={!selectedLarge || isHasLoading}
                 />
               </div>
             </div>
@@ -1205,7 +1139,7 @@ const StackedAreaTeamTagChart = ({
                     setAreaTableData([]);
                     handleSelectSmall(data);
                   }}
-                  disabled={!selectedMedium}
+                  disabled={!selectedMedium || isHasLoading}
                 />
               </div>
             </div>
@@ -1277,7 +1211,7 @@ const StackedAreaTeamTagChart = ({
                         ? sumDurationsChart(
                             dataDetail.map((user) => user.duration),
                           )
-                        : '00:00:00';
+                        : DEFAULT_TIME_TEXT;
 
                       return (
                         <div

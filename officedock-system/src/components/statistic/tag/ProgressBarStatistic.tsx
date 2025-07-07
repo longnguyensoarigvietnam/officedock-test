@@ -30,6 +30,7 @@ interface ProgressBarProps {
   startDate?: Date;
   endDate?: Date | null;
   startDateCompare?: Date;
+  isLast?: boolean;
   endDateCompare?: Date | null;
   handleClickTooltip: (
     id: number | null,
@@ -52,6 +53,7 @@ const ProgressBarStatistic = ({
   mergedItems,
   organizationId,
   showInfo = true,
+  isLast,
   startDate,
   endDate,
   startDateCompare,
@@ -92,7 +94,8 @@ const ProgressBarStatistic = ({
                 });
             }}></div>
           {percentage > 0 && (
-            <div className="absolute -top-[25%] left-[40%] w-[250px] rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+            <div
+              className={`absolute -top-[25%] ${isLast ? 'left-[10%]' : 'left-[40%]'}  w-[250px] rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
               {id != -1 ? (
                 <div>
                   {startDate && endDate && (

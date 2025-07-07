@@ -929,14 +929,14 @@ const KanbanBoardTaskTeam = () => {
               name: StatusTask[destStatus as keyof typeof StatusTask],
             },
             repeatType:
-                StatusValueTask[sourceStatus as keyof typeof StatusValueTask] !=
-                  StatusValueTask.MY_ROUTINE &&
-                StatusValueTask[destStatus as keyof typeof StatusValueTask] ==
-                  StatusValueTask.MY_ROUTINE
-                  ? TASK_REPETITIVE_OPTIONS.find(
-                      (option) => option.label == TaskRepetitiveType.ONCE,
-                    )?.value
-                  : movedTask.repeatType,
+              StatusValueTask[sourceStatus as keyof typeof StatusValueTask] !=
+                StatusValueTask.MY_ROUTINE &&
+              StatusValueTask[destStatus as keyof typeof StatusValueTask] ==
+                StatusValueTask.MY_ROUTINE
+                ? TASK_REPETITIVE_OPTIONS.find(
+                    (option) => option.label == TaskRepetitiveType.ONCE,
+                  )?.value
+                : movedTask.repeatType,
           });
         } else {
           const dateAtPrev = aboveItem ? aboveItem.pinAt : null;
@@ -952,14 +952,14 @@ const KanbanBoardTaskTeam = () => {
               name: StatusTask[destStatus as keyof typeof StatusTask],
             },
             repeatType:
-                StatusValueTask[sourceStatus as keyof typeof StatusValueTask] !=
-                  StatusValueTask.MY_ROUTINE &&
-                StatusValueTask[destStatus as keyof typeof StatusValueTask] ==
-                  StatusValueTask.MY_ROUTINE
-                  ? TASK_REPETITIVE_OPTIONS.find(
-                      (option) => option.label == TaskRepetitiveType.ONCE,
-                    )?.value
-                  : movedTask.repeatType,
+              StatusValueTask[sourceStatus as keyof typeof StatusValueTask] !=
+                StatusValueTask.MY_ROUTINE &&
+              StatusValueTask[destStatus as keyof typeof StatusValueTask] ==
+                StatusValueTask.MY_ROUTINE
+                ? TASK_REPETITIVE_OPTIONS.find(
+                    (option) => option.label == TaskRepetitiveType.ONCE,
+                  )?.value
+                : movedTask.repeatType,
           });
         }
       } else {
@@ -1297,7 +1297,6 @@ const KanbanBoardTaskTeam = () => {
     handleCreateTask,
     {
       onSuccess: async ({ data }: { data: Task }) => {
-        // queryClient.refetchQueries(['getDataTaskHeaderList']);
         if (data.peopleInCharge.length > 0) {
           if (actionType && actionType === ActionTask.COPY) {
             copyTaskInKanban({
@@ -2464,6 +2463,7 @@ const KanbanBoardTaskTeam = () => {
               <Checkbox
                 label="他チームを表示"
                 isChecked={isConcurrently}
+                disable={isLoadingDataTask}
                 onChange={(data) => {
                   setIsConcurrently(data);
                 }}

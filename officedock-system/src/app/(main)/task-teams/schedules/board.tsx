@@ -60,7 +60,6 @@ import { TaskContext } from '@providers/TaskProvider';
 
 import {
   adjustEndDate,
-  convertToCurrentTimezone,
   formatHoursAndMinutesForDateTime,
   formatQueryEndDateForCalendar,
   formatQueryStartDateForCalendar,
@@ -253,11 +252,7 @@ const ScheduleTeamBoard = () => {
             return {
               ...item,
               isStart: false,
-              end: new Date(
-                convertToCurrentTimezone(
-                  `${dataActualAddSchedule.planEndDate}`,
-                ),
-              ),
+              end: new Date(`${dataActualAddSchedule.planEndDate}`),
             };
           }
           return item;
@@ -580,13 +575,9 @@ const ScheduleTeamBoard = () => {
                 event.categories.find(
                   (item) => item.type === EventWorkCategory.LARGE,
                 )?.color;
-              const startDateActual = new Date(
-                convertToCurrentTimezone(`${event.startDate}`),
-              );
+              const startDateActual = new Date(`${event.startDate}`);
 
-              const endDateActual = new Date(
-                convertToCurrentTimezone(`${event.endDate}`),
-              );
+              const endDateActual = new Date(`${event.endDate}`);
               const endTimeCustom = event.endDate
                 ? endDateActual
                 : getNext30MinuteSlot(startDateActual);

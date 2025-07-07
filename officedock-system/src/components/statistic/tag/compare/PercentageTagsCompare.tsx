@@ -4,7 +4,6 @@ import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import PercentageBarCompare from '@components/common/ProgressBar/ProgressBarCompare';
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
@@ -12,10 +11,12 @@ import {
   StatisticsCategories,
 } from '@interfaces/statistic';
 
+import { DEFAULT_TIME_TEXT } from '@constants';
 import { EventWorkCategory } from '@constants/enums';
 import { getRandomColor, lightenColor } from '@utils';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
+import FilterTag from '../filter/FilterTag';
 
 type Props = {
   startDate: Date;
@@ -28,7 +29,6 @@ type Props = {
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
-  removeTag: (selected: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
 };
 
@@ -39,13 +39,13 @@ const PercentageTagsCompare = ({
   endDateCompare,
   statisticTagsCompareList,
   statisticTagsList,
-  removeTag,
   handleSelectSmall,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectOrganization,
 }: Props) => {
   const {
+    isHasLoading,
     largeOptions,
     mediumOptions,
     listOptionsOrganization,
@@ -60,8 +60,6 @@ const PercentageTagsCompare = ({
     totalDurationMediumCompare,
     totalDurationSmallCompare,
     totalDurationCategoryCompare,
-    selectedTags,
-    tagsOptions,
     smallOptions,
     selectedSmall,
     isLoadingLarge,
@@ -72,7 +70,6 @@ const PercentageTagsCompare = ({
     isLoadingLargeCompare,
     isLoadingMediumCompare,
     isLoadingSmallCompare,
-    setSelectedTags,
   } = useContext(StatisticTagStateContext);
   const { setIsLoading } = useContext(LoadingContext);
 
@@ -230,7 +227,7 @@ const PercentageTagsCompare = ({
         (!organizationId || String(item.organizationId) === organizationId),
     );
 
-    return item?.duration || '00:00:00';
+    return item?.duration || DEFAULT_TIME_TEXT;
   };
 
   const handleClickTooltip = (
@@ -326,53 +323,8 @@ const PercentageTagsCompare = ({
               {/* List tags  */}
               <div>
                 <div className="flex justify-between w-full my-8 px-[30px]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-[240px]">
-                      <MultiSelectDropdown
-                        options={tagsOptions}
-                        placeholder="集計対象のタグを選択"
-                        className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                        labelOptionClass="break-words w-[190px]"
-                        selectedOptions={selectedTags || []}
-                        onChange={(selected) => {
-                          let updatedTagIds = [];
-                          const currentTagIds = selectedTags || [];
-                          const foundItemIndex = currentTagIds.findIndex(
-                            (tag) => tag.value == selected.value,
-                          );
-                          if (foundItemIndex == -1) {
-                            updatedTagIds = [...currentTagIds, selected];
-                          } else {
-                            updatedTagIds = currentTagIds.filter(
-                              (tag) => tag.value != selected.value,
-                            );
-                          }
-                          setSelectedTags(updatedTagIds);
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <div className="flex gap-2  flex-wrap">
-                        {selectedTags.map((item) => {
-                          return (
-                            <div
-                              key={item.value}
-                              className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                              <span className=" truncate">{item.label}</span>
-                              <ImageRound
-                                onClick={() => {
-                                  removeTag(item);
-                                }}
-                                src={`/icons/close-white.svg`}
-                                name="close"
-                                className="w-fit h-fit cursor-pointer"
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
+                  {/* Filter tag */}
+                  <FilterTag />
                 </div>
               </div>
               <div className="flex gap-[10px] justify-between px-[30px] text-sm font-medium">
@@ -383,6 +335,7 @@ const PercentageTagsCompare = ({
                       <Dropdown
                         label="チーム選択"
                         placeholder="-"
+                        disabled={isHasLoading}
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
@@ -442,7 +395,7 @@ const PercentageTagsCompare = ({
                       options={largeOptions}
                       selectedOption={selectedLarge || undefined}
                       onChange={(data) => handleSelectLarge(data)}
-                      disabled={!selectedOrganization}
+                      disabled={!selectedOrganization || isHasLoading}
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
@@ -492,7 +445,7 @@ const PercentageTagsCompare = ({
                       options={mediumOptions}
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}
-                      disabled={!selectedLarge}
+                      disabled={!selectedLarge || isHasLoading}
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
@@ -542,7 +495,7 @@ const PercentageTagsCompare = ({
                       options={smallOptions}
                       selectedOption={selectedSmall || undefined}
                       onChange={(data) => handleSelectSmall(data)}
-                      disabled={!selectedLarge}
+                      disabled={!selectedMedium || isHasLoading}
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare

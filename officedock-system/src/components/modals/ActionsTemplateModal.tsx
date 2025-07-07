@@ -8,8 +8,6 @@ import {
   useState,
 } from 'react';
 import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
-import { useSessionCache } from '@providers/SessionCacheProvider';
-
 import {
   DragDropContext,
   Draggable,
@@ -23,10 +21,12 @@ import TextareaAutosize from 'react-textarea-autosize';
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
 import Input from '@components/common/Input';
-import TextArea from '@components/common/TextArea';
+import TextAreaLink from '@components/common/TextAreaLink';
 import ImageRound from '@components/common/ImageRound';
 import Drawer from '@components/common/Drawers';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { DEFAULT_VALUE_TODO_LIST } from '@constants/message';
 import { COPY_MESSAGE, NO_OPTION_CATEGORY, UNREGISTERED } from '@constants';
@@ -977,10 +977,12 @@ const ActionsTemplateModal = ({
                   />
                   <p className="text-[#0068B6]">タスクについての詳細</p>
                 </div>
-                <TextArea
+                <TextAreaLink
                   disabled={isCheckActionPermission}
-                  register={Object.assign(register('description'))}
-                  className="resize-none"
+                  initialValue={getValues('description') || ''}
+                  onChange={(data) => {
+                    setValue('description', data);
+                  }}
                 />
               </>
             ) : (

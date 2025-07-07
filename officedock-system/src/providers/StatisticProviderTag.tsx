@@ -12,6 +12,7 @@ import { getAdjustedStartDateDefault } from '@utils/date';
 import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
 
 interface ContextValue {
+  isHasLoading: boolean;
   selectedOrganization: OptionDropdownType | null;
   selectedLarge: OptionDropdownType | null;
   selectedMedium: OptionDropdownType | null;
@@ -90,9 +91,11 @@ interface ContextValue {
 
   currentPage: number;
   setCurrentPage: Dispatch<SetStateAction<number>>;
+  removeTag: (selected: OptionDropdownType) => void;
 }
 
 const defaultValue: ContextValue = {
+  isHasLoading: false,
   smallOptions: [],
   mediumOptions: [],
   largeOptions: [],
@@ -171,6 +174,7 @@ const defaultValue: ContextValue = {
   setLineChartViewBy: () => {},
   currentPage: 1,
   setCurrentPage: () => {},
+  removeTag: () => {},
 };
 
 export const StatisticTagStateContext =
@@ -264,6 +268,25 @@ export const StatisticTagStateProvider = ({
       label: StatisticViewLabels.WEEK,
     });
 
+  // Remove tags
+  const removeTag = (selected: OptionDropdownType) => {
+    const currentTagIds = selectedTags || [];
+    const updatedTagIds = currentTagIds.filter(
+      (tag) => tag.value !== selected.value,
+    );
+    setCurrentPage(1);
+    setSelectedTags(updatedTagIds);
+  };
+  const isHasLoading =
+    isLoadingLarge ||
+    isLoadingMedium ||
+    isLoadingOrganization ||
+    isLoadingSmall ||
+    isLoadingLargeCompare ||
+    isLoadingMediumCompare ||
+    isLoadingOrganizationCompare ||
+    isLoadingSmallCompare;
+
   const contextValue: ContextValue = {
     smallOptions,
     mediumOptions,
@@ -338,6 +361,8 @@ export const StatisticTagStateProvider = ({
     setLineChartViewBy,
     currentPage,
     setCurrentPage,
+    removeTag,
+    isHasLoading,
   };
 
   return (

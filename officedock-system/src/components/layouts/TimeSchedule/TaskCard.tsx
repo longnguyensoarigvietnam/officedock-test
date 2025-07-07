@@ -14,9 +14,9 @@ import { NO_SETTING } from '@constants';
 import { ItemScheduleType, ItemStartType, ViewOptions } from '@constants/enums';
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import { TaskContext } from '@providers/TaskProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import {
   compareWithCurrentDate,
-  convertToCurrentTimezone,
   convertToTimeString,
   getMinuteDifference,
   isMoreThanFifteenMinutes,
@@ -92,6 +92,7 @@ const TaskCard = ({
     setTaskSelected,
     setDataActualAddSchedule,
   } = useContext(TaskContext);
+  const { getDelay, recordHover } = useContext(GlobalStateContext);
 
   const searchParams = useSearchParams();
 
@@ -194,12 +195,8 @@ const TaskCard = ({
       queryClient.refetchQueries(['getDataTaskHeaderList']);
 
       if (data) {
-        const startDateActual = new Date(
-          convertToCurrentTimezone(`${data.planStartDate}`),
-        );
-        const endDateActual = new Date(
-          convertToCurrentTimezone(`${data.planEndDate}`),
-        );
+        const startDateActual = new Date(`${data.planStartDate}`);
+        const endDateActual = new Date(`${data.planEndDate}`);
         setDataActualAddSchedule({
           ...data,
           start: startDateActual,
@@ -313,6 +310,7 @@ const TaskCard = ({
 
   const [isHovering, setIsHovering] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
+  const timeoutId = useRef<NodeJS.Timeout | null>(null);
 
   const handleMouseEnter = (e: any) => {
     setLocal({
@@ -509,18 +507,23 @@ const TaskCard = ({
             onMouseEnter={(e) => {
               if (isShiftPressed) return;
               if (isInteracting) return;
-              handleMouseEnter(e);
-              const fcEvent = containerRef.current?.closest(
-                '.fc-event',
-              ) as HTMLElement;
-              const resizer = fcEvent?.querySelector(
-                '.fc-event-resizer-end',
-              ) as HTMLElement;
-              if (resizer) {
-                resizer.style.setProperty('opacity', '0', 'important');
-              }
+              const delay = getDelay();
+              timeoutId.current = setTimeout(() => {
+                handleMouseEnter(e);
+                const fcEvent = containerRef.current?.closest(
+                  '.fc-event',
+                ) as HTMLElement;
+                const resizer = fcEvent?.querySelector(
+                  '.fc-event-resizer-end',
+                ) as HTMLElement;
+                if (resizer) {
+                  resizer.style.setProperty('opacity', '0', 'important');
+                }
+                recordHover();
+              }, delay);
             }}
             onMouseLeave={() => {
+              if (timeoutId.current) clearTimeout(timeoutId.current);
               handleMouseLeave();
               const fcEvent = containerRef.current?.closest(
                 '.fc-event',

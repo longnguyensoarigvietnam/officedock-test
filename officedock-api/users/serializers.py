@@ -346,6 +346,7 @@ class OrganizationForUserSerializer(OrganizationSerializer):
             "is_main",
             "icon",
             "icon_color",
+            "type",
         ]
 
     def get_is_main(self, obj):

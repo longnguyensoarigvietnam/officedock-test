@@ -8,13 +8,17 @@ import {
 } from 'react';
 
 import { OptionDropdownType } from '@interfaces/common';
-import { CategoryTableRowDetail, MergedTableCategory } from '@interfaces/statistic';
+import {
+  CategoryTableRowDetail,
+  MergedTableCategory,
+} from '@interfaces/statistic';
 
 import { getAdjustedStartDateDefault } from '@utils/date';
 
 import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
 
 interface ContextValue {
+  isHasLoading: boolean;
   selectedOrganization: OptionDropdownType | null;
   selectedLarge: OptionDropdownType | null;
   selectedMedium: OptionDropdownType | null;
@@ -129,11 +133,15 @@ interface ContextValue {
   setAreaTableData: Dispatch<SetStateAction<CategoryTableRowDetail[]>>;
   lineChartTableData: CategoryTableRowDetail[];
   setLineChartTableData: Dispatch<SetStateAction<CategoryTableRowDetail[]>>;
-  mergedTableData: MergedTableCategory[]
-  setMergedTableData: Dispatch<SetStateAction<MergedTableCategory[]>>
+  mergedTableData: MergedTableCategory[];
+  setMergedTableData: Dispatch<SetStateAction<MergedTableCategory[]>>;
+  handleResetTableData: () => void;
+  removeTag: (selected: OptionDropdownType) => void;
+  removeUser: (selected: OptionDropdownType) => void;
 }
 
 const defaultValue: ContextValue = {
+  isHasLoading: false,
   smallOptions: [],
   mediumOptions: [],
   largeOptions: [],
@@ -222,6 +230,9 @@ const defaultValue: ContextValue = {
   setLineChartTableData: () => {},
   mergedTableData: [],
   setMergedTableData: () => {},
+  handleResetTableData: () => {},
+  removeTag: () => {},
+  removeUser: () => {},
 };
 
 export const StatisticTeamStateContext =
@@ -256,9 +267,15 @@ export const StatisticTeamStateProvider = ({
   >([]);
 
   // Table data
-  const [areaTableData, setAreaTableData] = useState<CategoryTableRowDetail[]>([]);
-  const [lineChartTableData, setLineChartTableData] = useState<CategoryTableRowDetail[]>([]);
-  const [mergedTableData, setMergedTableData] = useState<MergedTableCategory[]>([]);
+  const [areaTableData, setAreaTableData] = useState<CategoryTableRowDetail[]>(
+    [],
+  );
+  const [lineChartTableData, setLineChartTableData] = useState<
+    CategoryTableRowDetail[]
+  >([]);
+  const [mergedTableData, setMergedTableData] = useState<MergedTableCategory[]>(
+    [],
+  );
 
   // Select
   const [selectedOrganization, setSelectedOrganization] =
@@ -350,6 +367,64 @@ export const StatisticTeamStateProvider = ({
 
   const remainingCountTag = allLabelTag.length - firstThreeTag.length;
 
+  // Reset table data
+  const handleResetTableData = () => {
+    setMergedTableData([]);
+    setAreaTableData([]);
+    setLineChartTableData([]);
+  };
+
+  // Remove tags
+  const removeTag = (selected: OptionDropdownType) => {
+    const currentTagIds = orderingOptions?.tag_ids || [];
+    const updatedTagIds = currentTagIds.filter(
+      (tag) => tag.value !== selected.value,
+    );
+    setCurrentPage(1);
+    setIsLoadingLarge(true);
+    setIsLoadingMedium(true);
+    setIsLoadingOrganization(true);
+    handleResetTableData();
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingOrganizationCompare(true);
+    }
+    setOrderingOptions((prev) => ({
+      tag_ids: updatedTagIds,
+      user_ids: prev?.user_ids || [],
+    }));
+  };
+  // Remove user
+  const removeUser = (selected: OptionDropdownType) => {
+    const currentUserIds = orderingOptions?.user_ids || [];
+    const updatedUserIds = currentUserIds.filter(
+      (tag) => tag.value !== selected.value,
+    );
+    setCurrentPage(1);
+    setIsLoadingLarge(true);
+    setIsLoadingMedium(true);
+    setIsLoadingOrganization(true);
+    handleResetTableData();
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingOrganizationCompare(true);
+    }
+    setOrderingOptions((prev) => ({
+      tag_ids: prev?.tag_ids || [],
+      user_ids: updatedUserIds,
+    }));
+  };
+
+  const isHasLoading =
+    isLoadingOrganization ||
+    isLoadingLarge ||
+    isLoadingMedium ||
+    isLoadingOrganizationCompare ||
+    isLoadingLargeCompare ||
+    isLoadingMediumCompare;
+
   const contextValue: ContextValue = {
     smallOptions,
     mediumOptions,
@@ -440,7 +515,13 @@ export const StatisticTeamStateProvider = ({
     lineChartTableData,
     setLineChartTableData,
     mergedTableData,
-    setMergedTableData
+    setMergedTableData,
+
+    handleResetTableData,
+    removeTag,
+    removeUser,
+
+    isHasLoading,
   };
 
   return (
