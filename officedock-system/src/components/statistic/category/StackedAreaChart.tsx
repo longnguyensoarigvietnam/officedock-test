@@ -183,11 +183,11 @@ const StackedAreaChart = ({
 
     const lastItem = statisticPercentChartList.at(-1);
 
-    if (lastItem && lastItem.endDate !== lastItem.startDate) {
+    if (lastItem) {
       dates.push(lastItem.endDate);
     }
 
-    const uniqueSortedDates = Array.from(new Set(dates)).sort(
+    const uniqueSortedDates = [...dates].sort(
       (a, b) => new Date(a).getTime() - new Date(b).getTime(),
     );
 
@@ -225,12 +225,15 @@ const StackedAreaChart = ({
         }
       }
     }
+    const isAddFirstValue =
+      statisticPercentChartList[0]?.startDate !==
+      statisticPercentChartList[0]?.endDate;
 
     const chartData = Array.from(categoryMap.entries()).map(([name, data]) => {
       const firstValue = data.at(0) ?? 0;
       return {
         name,
-        data: [firstValue, ...data],
+        data: isAddFirstValue ? [firstValue, ...data] : [...data],
       };
     });
     // 3. Collect tableData (duration + percent)
@@ -347,6 +350,7 @@ const StackedAreaChart = ({
           order?.indexOf(String(b.categoryName)),
       );
     }
+
     setDataChart(chartData);
 
     setTableData(finalTableData);

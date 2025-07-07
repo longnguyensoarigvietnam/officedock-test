@@ -175,7 +175,7 @@ const StackedAreaChart = ({
         lineChartViewBy?.value as StatisticViewOptions,
       );
 
-      const uniqueSortedDates = Array.from(new Set(timeMilestones)).sort(
+      const uniqueSortedDates = [...timeMilestones].sort(
         (pre, next) => new Date(pre).getTime() - new Date(next).getTime(),
       );
 
@@ -251,6 +251,9 @@ const StackedAreaChart = ({
         }
       }
     }
+    const isAddFirstValue =
+      statisticTagPercentChartList[0]?.startDate !==
+      statisticTagPercentChartList[0]?.endDate;
 
     let chartData: { name: string; data: number[] }[] = [];
 
@@ -266,7 +269,9 @@ const StackedAreaChart = ({
         const isEmpty = data.length === 0;
         const validData = isEmpty
           ? Array(transformedDates.length - 1).fill(0)
-          : [data.at(0) ?? 0, ...data];
+          : isAddFirstValue
+            ? [data.at(0) ?? 0, ...data]
+            : [...data];
 
         return {
           name,
