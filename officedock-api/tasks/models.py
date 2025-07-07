@@ -440,6 +440,14 @@ class TaskDuration(BaseModel):
         on_delete=models.CASCADE,
     )
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["started_at", "paused_at"]),
+            models.Index(fields=["task"]),
+            models.Index(fields=["schedule"]),
+            models.Index(fields=["user"]),
+        ]
+
     def save(self, *args, **kwargs):
         """
         Set default company
