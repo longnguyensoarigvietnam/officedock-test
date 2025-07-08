@@ -5,6 +5,7 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
+import { NO_SETTING_CATEGORY } from '@constants';
 import { DataResponseStatisticCreationTeamType } from '@interfaces/statistic';
 
 interface useCreationDataStatisticTeamHooksProps {
@@ -31,7 +32,6 @@ const useCreationDataStatisticTeam = ({
 
   // Handle call API get creation Statistic data
   const getCreationDataStatistic = async () => {
-    if (isTeam && !organization_id) return null;
     const apiUrl = `${apiRouters.STATISTIC_CREATION}?${organization_id ? `organization_id=${organization_id}` : ''}${is_statistic ? `&is_statistic=true` : ''}`;
 
     const { data } =
@@ -50,8 +50,27 @@ const useCreationDataStatisticTeam = ({
       [organization_id, is_statistic, isTeam],
     ],
     queryFn: getCreationDataStatistic,
+    select: (response: DataResponseStatisticCreationTeamType) => {
+      const updatedOrganizations = response.organizations.map((org) => {
+        const updatedCategories = org.statisticCategories.map((category) => ({
+          ...category,
+          LARGE: category.LARGE ?? NO_SETTING_CATEGORY,
+        }));
+
+        return {
+          ...org,
+          statisticCategories: updatedCategories,
+        };
+      });
+
+      return {
+        ...response,
+        organizations: updatedOrganizations,
+      };
+    },
     retry: 0,
-    enabled: !!token && condition?.every(Boolean),
+    enabled:
+      !!token && condition?.every(Boolean) && (!isTeam || !!organization_id),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (response: DataResponseStatisticCreationTeamType) => {

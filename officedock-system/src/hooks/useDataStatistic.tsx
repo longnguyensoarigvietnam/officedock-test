@@ -5,8 +5,12 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import { useQuery } from 'react-query';
 
 import { apiRouters } from '@constants/routers';
+import { NO_SETTING_CATEGORY } from '@constants';
 
-import { dataStatisticResponse } from '@interfaces/statistic';
+import {
+  dataStatisticResponse,
+  OrganizationCategories,
+} from '@interfaces/statistic';
 
 import api from '@base/api';
 
@@ -58,6 +62,23 @@ const useDataStatistic = ({
       [date, userId, organizationId, current_screen],
     ],
     queryFn: getDataStatistic,
+    select: (response) => {
+      const updatedCategories: OrganizationCategories = {};
+
+      for (const orgId in response.organizationCategories) {
+        const originalCategories = response.organizationCategories[orgId];
+        const updated = originalCategories.map((category) => ({
+          ...category,
+          LARGE: category.LARGE ?? NO_SETTING_CATEGORY,
+        }));
+        updatedCategories[orgId] = updated;
+      }
+
+      return {
+        ...response,
+        organizationCategories: updatedCategories,
+      };
+    },
     retry: 0,
     enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,

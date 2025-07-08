@@ -145,7 +145,8 @@ const ScheduleTeamBoard = () => {
     router.push(`?${params.toString()}`);
   };
   useCreationDataStatisticTeam({
-    organization_id: organizationId || '',
+    organization_id:
+      (selectedOrganization?.value as string) || organizationId || '',
     isTeam: true,
     onSuccess: (data) => {
       if (!data) return;
@@ -186,13 +187,15 @@ const ScheduleTeamBoard = () => {
         calendarRef.current?.getApi().refetchEvents();
         if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
           getPlanEventCalendarByTeam({
-            organizationId: String(organizationId),
+            organizationId:
+              (selectedOrganization?.value as string) || String(organizationId),
             startDate: startDateISOString,
             endDate: endDateISOString,
           });
         } else {
           getActualEventCalendarByTeam({
-            organizationId: String(organizationId),
+            organizationId:
+              (selectedOrganization?.value as string) || String(organizationId),
             startDate: startDateISOString,
             endDate: endDateISOString,
           });
@@ -408,13 +411,15 @@ const ScheduleTeamBoard = () => {
       if (isToday(startDate)) {
         if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
           getPlanEventCalendarByTeam({
-            organizationId: String(organizationId),
+            organizationId:
+              (selectedOrganization?.value as string) || String(organizationId),
             startDate: startDateISOString,
             endDate: endDateISOString,
           });
         } else {
           getActualEventCalendarByTeam({
-            organizationId: String(organizationId),
+            organizationId:
+              (selectedOrganization?.value as string) || String(organizationId),
             startDate: startDateISOString,
             endDate: endDateISOString,
           });
@@ -422,14 +427,16 @@ const ScheduleTeamBoard = () => {
       } else if (isBefore(startDate, today)) {
         setOptionShow(ItemScheduleTitleType.ACTUAL);
         getActualEventCalendarByTeam({
-          organizationId: String(organizationId),
+          organizationId:
+            (selectedOrganization?.value as string) || String(organizationId),
           startDate: startDateISOString,
           endDate: endDateISOString,
         });
       } else if (isAfter(startDate, today)) {
         setOptionShow(ItemScheduleTitleType.PLANS);
         getPlanEventCalendarByTeam({
-          organizationId: String(organizationId),
+          organizationId:
+            (selectedOrganization?.value as string) || String(organizationId),
           startDate: startDateISOString,
           endDate: endDateISOString,
         });
@@ -455,13 +462,15 @@ const ScheduleTeamBoard = () => {
       if (isToday(startDate)) {
         if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
           getPlanEventCalendarByTeam({
-            organizationId: String(organizationId),
+            organizationId:
+              (selectedOrganization?.value as string) || String(organizationId),
             startDate: startDateISOString,
             endDate: endDateISOString,
           });
         } else {
           getActualEventCalendarByTeam({
-            organizationId: String(organizationId),
+            organizationId:
+              (selectedOrganization?.value as string) || String(organizationId),
             startDate: startDateISOString,
             endDate: endDateISOString,
           });
@@ -469,14 +478,16 @@ const ScheduleTeamBoard = () => {
       } else if (isBefore(startDate, today)) {
         setOptionShow(ItemScheduleTitleType.ACTUAL);
         getActualEventCalendarByTeam({
-          organizationId: String(organizationId),
+          organizationId:
+            (selectedOrganization?.value as string) || String(organizationId),
           startDate: startDateISOString,
           endDate: endDateISOString,
         });
       } else if (isAfter(startDate, today)) {
         setOptionShow(ItemScheduleTitleType.PLANS);
         getPlanEventCalendarByTeam({
-          organizationId: String(organizationId),
+          organizationId:
+            (selectedOrganization?.value as string) || String(organizationId),
           startDate: startDateISOString,
           endDate: endDateISOString,
         });
@@ -946,7 +957,10 @@ const ScheduleTeamBoard = () => {
                 className={`!text-[#77858F] !bg-transparent !border-[#77858F] !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}
                 onClick={() => {
                   router.push(
-                    `${pageRouters.TASKS_TEAM_MANAGEMENT.href}?organization=${organizationId}&tabId=1`,
+                    `${pageRouters.TASKS_TEAM_MANAGEMENT.href}?organization=${
+                      (selectedOrganization?.value as string) ||
+                      String(organizationId)
+                    }&tabId=1`,
                   );
                 }}>
                 タスク
@@ -1048,7 +1062,9 @@ const ScheduleTeamBoard = () => {
                           calendarRef.current?.getApi().refetchEvents();
 
                           getPlanEventCalendarByTeam({
-                            organizationId: String(organizationId),
+                            organizationId:
+                              (selectedOrganization?.value as string) ||
+                              String(organizationId),
                             startDate: startDateISOString,
                             endDate: endDateISOString,
                           });
@@ -1083,7 +1099,9 @@ const ScheduleTeamBoard = () => {
                           calendarRef.current?.getApi().refetchEvents();
 
                           getActualEventCalendarByTeam({
-                            organizationId: String(organizationId),
+                            organizationId:
+                              (selectedOrganization?.value as string) ||
+                              String(organizationId),
                             startDate: startDateISOString,
                             endDate: endDateISOString,
                           });
