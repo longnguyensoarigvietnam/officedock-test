@@ -111,7 +111,10 @@ const KanbanBoardTaskTeam = () => {
   } = useContext(TaskTeamStateContext);
 
   const { setIsLoading } = useContext(LoadingContext);
-  const { organizationTeamList } = useContext(GlobalStateContext);
+  const {
+    organizationTeamList,
+    selectedOrganization: selectedOrganizationSideBar,
+  } = useContext(GlobalStateContext);
 
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
@@ -200,9 +203,11 @@ const KanbanBoardTaskTeam = () => {
   }, [organizationId]);
 
   // get list data team
-  useTaskBoardTeam({
+  const { refetchTaskBoardListTeam } = useTaskBoardTeam({
     current_screen: 'teamdock',
-    organization_id: organizationId as string,
+    organization_id:
+      (selectedOrganizationSideBar?.value as string) ||
+      (organizationId as string),
     filter: {
       userId: orderingOptions?.user_ids,
       is_cross_team_task: isConcurrently,
@@ -226,9 +231,17 @@ const KanbanBoardTaskTeam = () => {
       }
     },
   });
+  useEffect(() => {
+    if (!isReadyToFetch) {
+      refetchTaskBoardListTeam();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConcurrently, refetchTaskBoardListTeam]);
 
   useTaskNoSettingTeam({
-    organization_id: organizationId as string,
+    organization_id:
+      (selectedOrganizationSideBar?.value as string) ||
+      (organizationId as string),
     filter: {
       userId: orderingOptions?.user_ids,
     },
@@ -2099,7 +2112,10 @@ const KanbanBoardTaskTeam = () => {
     setDataTotalStatus((prevData) => {
       return prevData.map((user) => {
         if (user.id === oldUserId) {
-          if (oldStatusName === taskData.status?.name) {
+          if (
+            oldStatusName === taskData.status?.name &&
+            user.id === `user_${taskData.peopleInCharge[0]?.id}`
+          ) {
             return {
               ...user,
             };

@@ -266,13 +266,17 @@ const NoSettingColumn = ({
                     {provided.placeholder}
                     {/* Loading spinner logic */}
                     <div ref={listTaskRef}>
-                      {isLoadingMore && (
-                        <div className="h-7">
-                          <Spinner
-                            className="!h-fit py-3"
-                            iconClassName="h-6 w-6"
-                          />
-                        </div>
+                      {totalNoSetting?.hasNext ? (
+                        isLoadingMore && (
+                          <div className="h-7">
+                            <Spinner
+                              className="!h-fit py-3"
+                              iconClassName="h-6 w-6"
+                            />
+                          </div>
+                        )
+                      ) : (
+                        <div></div>
                       )}
                     </div>
                   </div>

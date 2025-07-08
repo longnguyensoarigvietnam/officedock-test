@@ -5,6 +5,7 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
+import { NO_SETTING_CATEGORY } from '@constants';
 import { DataResponseStatisticCreationType } from '@interfaces/statistic';
 
 interface useCreationDataStatisticHooksProps {
@@ -54,6 +55,28 @@ const useCreationDataStatistic = ({
       { is_statistic, is_calendar_page, organization_id },
     ],
     queryFn: ({ signal }) => getCreationDataStatistic({ signal }),
+    select: (response: DataResponseStatisticCreationType) => {
+      const updatedOrganizations = response.organizations.map(
+        (organization) => {
+          const updatedCategories = organization.statisticCategories.map(
+            (category) => ({
+              ...category,
+              LARGE: category.LARGE ?? NO_SETTING_CATEGORY,
+            }),
+          );
+
+          return {
+            ...organization,
+            statisticCategories: updatedCategories,
+          };
+        },
+      );
+
+      return {
+        ...response,
+        organizations: updatedOrganizations,
+      };
+    },
     retry: 0,
     enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,

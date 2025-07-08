@@ -280,7 +280,8 @@ const StatisticTeamBoard = () => {
     });
 
   const { creationDataStatisticData } = useCreationDataStatisticTeam({
-    organization_id: organizationId || '',
+    organization_id:
+      (selectedOrganizationSideBar?.value as string) || organizationId || '',
     isTeam: true,
     is_statistic: true,
     onSuccess: (data) => {
@@ -612,7 +613,7 @@ const StatisticTeamBoard = () => {
             <Button
               onClick={() => {
                 router.push(
-                  `${pageRouters.STATISTIC_TEAM_TAG_MANAGEMENT.href}?organization=${organizationId}&tabId=1`,
+                  `${pageRouters.STATISTIC_TEAM_TAG_MANAGEMENT.href}?organization=${(selectedOrganizationSideBar?.value as string) || organizationId}&tabId=1`,
                 );
               }}
               variant={'outline'}
