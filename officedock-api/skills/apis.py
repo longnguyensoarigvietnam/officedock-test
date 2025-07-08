@@ -836,6 +836,7 @@ class SkillViewSet(
                     large_statistic_category=large_category,
                     medium_statistic_category=medium_category,
                     small_statistic_category=small_category,
+                    organization=skill.organization,
                 )
                 if not org_cat.exists():
                     raise ValidationError(

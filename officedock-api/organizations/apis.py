@@ -22,13 +22,13 @@ from common.utils import (
     to_camel_case,
     to_snake_case,
     generate_file_name,
+    transform_statistic_categories_within_none_category,
 )
 from roles.constants import Screens
 from organizations.utils import get_high_level_organizations
 from organizations.constants import OrganizationTypes
 from tasks.models import TaskDuration
 from users.serializers import OrganizationForUserSerializer
-from common.utils import transform_statistic_categories
 from skills.models import StatisticCategory
 from .filters import OrganizationFilter
 from .serializers import (
@@ -429,7 +429,9 @@ class OrganizationByIDViewSet(BaseAPIViewSet):
             categories = OrganizationDetailSerializer(instance).data[
                 "statistic_categories"
             ]
-            return self.response_ok(transform_statistic_categories(categories))
+            return self.response_ok(
+                transform_statistic_categories_within_none_category(categories)
+            )
         elif request.method == "DELETE":
             instance.organizations_statistic_categories.all().delete()
 
