@@ -24,6 +24,7 @@ from common.utils import (
     time_str_to_timedelta,
     transform_statistic_categories,
     split_id_from_string,
+    validate_company_organization,
 )
 from organizations.models import Organization
 from organizations.serializers import OrganizationDetailSerializer
@@ -56,6 +57,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     permission_classes = [ActionPermission]
     filter_backends = [FilterByPermission]
     screen_name = Screens.TEAM_DAILY_REPORT.value
+    throttle_scope = "statistic"
 
     def _separate_duration(self, duration, end_date, user=None):
         """
@@ -111,7 +113,9 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         organization_id = request.query_params.get("organization_id")
         # Find previous and next user in organization by current user
         if organization_id:
-            organization = Organization.objects.get(pk=organization_id)
+            organization = validate_company_organization(
+                user.company, organization_id
+            )
             users = list(organization.users.all().order_by("created_at"))
             # Find the user's position in the list
             try:
@@ -369,6 +373,9 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         """
         user_id = request.query_params.get("user_id", None)
         param_organization_id = request.query_params.get("organization_id")
+        organization = validate_company_organization(
+            request.user.company, param_organization_id
+        )
         date = (
             validate_date_by_regex_and_reformat(
                 request.query_params.get("date", None)
@@ -502,16 +509,10 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             .values_list("is_confirmed", flat=True)
             .first()
         ) or False
-        organization_name = (
-            get_object_or_404(Organization, id=param_organization_id).name
-            if param_organization_id
-            else None
-        )
-
         data["remark"].update(
             {
                 "user": user_serializer,
-                "organization_name": organization_name,
+                "organization_name": organization.name,
                 "is_confirmed": confirm_report,
             }
         )

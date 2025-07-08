@@ -2123,6 +2123,7 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             Task.objects.filter(
                 organization_id=organization_id,
                 people_in_charge__isnull=True,
+                company=user.company,
             )
             .exclude(
                 Q(type=TaskTypes.MY_TEMPLATE.value)
