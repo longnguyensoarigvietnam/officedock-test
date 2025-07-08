@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from django.db.models import Case, When
+from django.db.models import Case, When, IntegerField
 from rest_framework import serializers
 
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
@@ -142,13 +142,15 @@ class SkillSerializer(serializers.ModelSerializer):
         org_cat_ids = obj.organizations_statistic_categories_skills.values_list(
             "organization_statistic_category", flat=True
         )
-        preserved_order = Case(
-            *[When(id=pk, then=pos) for pos, pk in enumerate(org_cat_ids)]
-        )
-
-        categories = OrganizationsStatisticCategories.objects.filter(
-            id__in=org_cat_ids
-        ).order_by(preserved_order)
+        categories = []
+        if org_cat_ids:
+            preserved_order = Case(
+                *[When(id=pk, then=pos) for pos, pk in enumerate(org_cat_ids)],
+                output_field=IntegerField()
+            )
+            categories = OrganizationsStatisticCategories.objects.filter(
+                id__in=org_cat_ids
+            ).order_by(preserved_order)
         transformed_categories = []
         for category in categories:
             transformed_categories.append(
