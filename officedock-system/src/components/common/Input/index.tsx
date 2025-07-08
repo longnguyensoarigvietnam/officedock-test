@@ -62,7 +62,7 @@ const Input = ({
         {isShowClockIcon && (
           <>
             <div
-              className={`w-4 absolute top-1/2 -translate-y-1/2 left-[5px] ${classNameOption} `}>
+              className={`w-4 absolute left-[5px] top-[8px] ${classNameOption} `}>
               <TimeDropdown
                 options={options ? options : []}
                 onChange={onChangeDropdown}

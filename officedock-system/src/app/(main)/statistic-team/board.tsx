@@ -134,10 +134,10 @@ const StatisticTeamBoard = () => {
             ) || creationDataStatisticData?.organizations[0];
 
       if (organization) {
-        const largeCategories = organization.statisticCategories.map(
+        const largeCategories = organization.statisticCategories?.map(
           (stat) => ({
-            value: stat.LARGE.id,
-            label: stat.LARGE.name,
+            value: stat.LARGE?.id,
+            label: stat.LARGE?.name,
           }),
         );
         // If organization is all team then return here
@@ -617,6 +617,7 @@ const StatisticTeamBoard = () => {
                 );
               }}
               variant={'outline'}
+              disabled={isHasLoading}
               className={`!text-[#77858F] !bg-transparent !border-[#77858F] !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
               タグ
             </Button>
@@ -765,6 +766,7 @@ const StatisticTeamBoard = () => {
           <LineChartByTeam
             startDate={startDate}
             endDate={endDate}
+            statisticTeamCategoryList={statisticCategoryListTeam}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}

@@ -1024,7 +1024,7 @@ const CreateActualDurationsForm = () => {
                             );
                           },
                         })}
-                        classNameOption="top-[25px]"
+                        classNameOption="!top-1/2 -translate-y-1/2 mt-[5px]"
                         options={optionTimeInput}
                         onChangeDropdown={(e) => {
                           setValue('startedAtTime', e.label);
@@ -1160,7 +1160,7 @@ const CreateActualDurationsForm = () => {
                             );
                           },
                         })}
-                        classNameOption="top-[25px]"
+                        classNameOption="!top-1/2 -translate-y-1/2 mt-[5px]"
                         options={optionTimeInput}
                         onChangeDropdown={(e) => {
                           setValue('pausedAtTime', e.label);

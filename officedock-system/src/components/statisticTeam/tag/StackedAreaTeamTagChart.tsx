@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import Chart from 'react-apexcharts';
 import Image from 'next/image';
 import {
@@ -41,7 +41,6 @@ import {
 } from '@utils/date';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import { useGenericDebounce } from '@hooks/useGenericDebounce';
 import FilterTagTeam from './filter/FilterTagTeam';
 
 type Props = {
@@ -148,7 +147,6 @@ const StackedAreaTeamTagChart = ({
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
   const [isTableDataRendered, setIsTableDataRendered] =
     useState<boolean>(false);
-  const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
 
   const [isExtendData, setIsExtendData] = useState(true);
 
@@ -185,34 +183,6 @@ const StackedAreaTeamTagChart = ({
     }
   }, [orderingOptions?.user_ids, listMemberTeam]);
 
-  // Filter options
-  const [filter, setFilter] = useState<{
-    fromDate: string;
-    endDate: string;
-    userIds?: string;
-    largeCategoryId?: string | number;
-    mediumCategoryId?: string | number;
-    smallCategoryId?: string | number;
-    statisticBy: string;
-    selectedOrganization: number;
-    tagIds: { label: string; value: number }[];
-    organizationMemberId?: string;
-  }>({
-    fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
-    endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-    userIds: selectedMembers.join(','),
-    largeCategoryId: selectedLarge?.value,
-    mediumCategoryId: selectedMedium?.value,
-    smallCategoryId: selectedSmall?.value,
-    statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: 0,
-    tagIds: [],
-    organizationMemberId:
-      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-        ? String(selectedOrganizationSideBar?.value || '')
-        : undefined,
-  });
-
   // Get initial member options
   useEffect(() => {
     if (orderingOptions?.user_ids && orderingOptions?.user_ids.length > 0) {
@@ -233,27 +203,8 @@ const StackedAreaTeamTagChart = ({
         organizationId: Number(firstTag.organizationId),
       });
       setSelectedOrganizationInTable(Number(firstTag.organizationId));
-      setFilter((prev) => {
-        return {
-          ...prev,
-          tagIds: [
-            {
-              label: String(firstTag.tagName),
-              value: Number(firstTag.tagId),
-            },
-          ],
-          selectedOrganization: Number(firstTag.organizationId),
-        };
-      });
     } else {
       setSelectedTag(null);
-      setFilter((prev) => {
-        return {
-          ...prev,
-          tagIds: [],
-          selectedOrganization: 0,
-        };
-      });
     }
   };
 
@@ -262,12 +213,37 @@ const StackedAreaTeamTagChart = ({
     statisticUserTaskDurationsList,
     isLoadingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
-    filter,
+    filter: {
+      fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
+      endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : selectedMembers?.filter(Boolean).join(','),
+      largeCategoryId: selectedLarge?.value,
+      mediumCategoryId: selectedMedium?.value,
+      smallCategoryId: selectedSmall?.value,
+      statisticBy: `${lineChartViewBy?.value}`,
+      selectedOrganization: selectedOrganizationInTable,
+      tagIds: selectedTag
+        ? [
+            {
+              value: selectedTag?.id,
+              label: selectedTag?.name,
+            },
+          ]
+        : [],
+      organizationMemberId:
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
+    },
     condition: [
       Boolean(
         areaTableData.length > 0 &&
           isTableDataRendered &&
-          filter.tagIds?.length > 0,
+          selectedTag?.id &&
+          selectedOrganizationInTable,
       ),
     ],
   });
@@ -357,58 +333,6 @@ const StackedAreaTeamTagChart = ({
     selectedMedium,
     selectedSmall,
   ]);
-
-  // Handle listen to filter option changes
-  const memoizedFilter = useMemo(() => {
-    return {
-      fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
-      endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-      userIds: selectedMembers?.filter(Boolean).join(',') || '',
-      largeCategoryId: selectedLarge?.value,
-      mediumCategoryId: selectedMedium?.value,
-      smallCategoryId: selectedSmall?.value,
-      statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: selectedOrganizationInTable,
-      tagIds: selectedTag
-        ? [
-            {
-              value: selectedTag?.id,
-              label: selectedTag?.name,
-            },
-          ]
-        : [],
-      organizationMemberId:
-        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-          ? String(selectedOrganizationSideBar?.value || '')
-          : undefined,
-    };
-  }, [
-    startDate,
-    endDate,
-    lineChartViewBy?.value,
-    selectedLarge?.value,
-    selectedMedium?.value,
-    selectedSmall?.value,
-    selectedMembers,
-    selectedTag,
-    selectedOrganization,
-    selectedOrganizationSideBar?.value,
-    selectedOrganizationInTable,
-  ]);
-
-  useEffect(() => {
-    if (isOrganizationChanging && selectedMembers.length > 0) {
-      setIsOrganizationChanging(false); // Done
-    }
-  }, [selectedMembers, isOrganizationChanging]);
-
-  const debouncedFilter = useGenericDebounce(memoizedFilter, 1000);
-
-  useEffect(() => {
-    if (!isOrganizationChanging) {
-      setFilter(debouncedFilter); // Trigger API only when everything is ready
-    }
-  }, [debouncedFilter, isOrganizationChanging]);
 
   useEffect(() => {
     if (
@@ -695,18 +619,6 @@ const StackedAreaTeamTagChart = ({
                   setSelectedOrganizationInTable(
                     info.row.original.organizationId,
                   );
-                  setFilter((prev) => {
-                    return {
-                      ...prev,
-                      tagIds: [
-                        {
-                          label: info.row.original.tagName,
-                          value: info.row.original.tagId,
-                        },
-                      ],
-                      selectedOrganization: info.row.original.organizationId,
-                    };
-                  });
                 }
               }}
             />
@@ -1030,8 +942,8 @@ const StackedAreaTeamTagChart = ({
                   onChange={(data) => {
                     setSelectedMembers([]);
                     setAreaTableData([]);
+                    setSelectedTag(null);
                     setIsTableDataRendered(false);
-                    setIsOrganizationChanging(true);
                     handleSelectOrganization(data);
                   }}
                 />
@@ -1067,6 +979,7 @@ const StackedAreaTeamTagChart = ({
                   selectedOption={selectedLarge || undefined}
                   onChange={(data) => {
                     setAreaTableData([]);
+                    setSelectedTag(null);
                     handleSelectLarge(data);
                   }}
                   disabled={!selectedOrganization || isHasLoading}
@@ -1102,6 +1015,7 @@ const StackedAreaTeamTagChart = ({
                   selectedOption={selectedMedium || undefined}
                   onChange={(data) => {
                     setAreaTableData([]);
+                    setSelectedTag(null);
                     handleSelectMedium(data);
                   }}
                   disabled={!selectedLarge || isHasLoading}
@@ -1137,6 +1051,7 @@ const StackedAreaTeamTagChart = ({
                   selectedOption={selectedSmall || undefined}
                   onChange={(data) => {
                     setAreaTableData([]);
+                    setSelectedTag(null);
                     handleSelectSmall(data);
                   }}
                   disabled={!selectedMedium || isHasLoading}
@@ -1173,6 +1088,8 @@ const StackedAreaTeamTagChart = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
+                    setAreaTableData([]);
+                    setSelectedTag(null);
                     setLineChartViewBy({
                       label: e.label,
                       value: e.value,

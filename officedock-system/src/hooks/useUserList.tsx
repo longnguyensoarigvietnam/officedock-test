@@ -46,7 +46,7 @@ const useUserList = (
 
     // TODO: Confirm with BE about how many and how to use param
     const apiUrl = pagination?.page
-      ? `${apiRouters.USER_LIST}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_SMALL}${ordering ? `&ordering=${ordering}` : ''}${filter?.fullName ? `&full_name=${filter.fullName}` : ''}${filter?.companyName ? `&company_name=${filter.companyName}` : ''}${filter?.organizationId ? `&organization_id=${filter.organizationId}` : ''}${filter?.role ? `&role_id=${filter.role}` : ''}`
+      ? `${apiRouters.USER_LIST}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_SMALL}${ordering ? `&ordering=${ordering}` : ''}${filter?.fullName ? `&full_name=${encodeURIComponent(filter.fullName)}` : ''}${filter?.companyName ? `&company_name=${encodeURIComponent(filter.companyName)}` : ''}${filter?.organizationId ? `&organization_id=${encodeURIComponent(filter.organizationId)}` : ''}${filter?.role ? `&role_id=${encodeURIComponent(filter.role)}` : ''}`
       : `${apiRouters.USER_LIST}`;
 
     const { data } = await api.get<BasePagination<User[]>>(apiUrl);

@@ -101,7 +101,7 @@ const useStatisticUserTaskDurations = ({
     refetch: refetchStatisticUserTaskDurationsList,
     isLoading: isLoadingStatisticUserTaskDurationsList,
   } = useQuery({
-    queryKey: ['getStatisticUserTaskDurations', [filter]],
+    queryKey: ['getStatisticUserTaskDurations', JSON.stringify(filter)],
     queryFn: ({ signal }) => getStatisticUserTaskDurations({ signal }),
     retry: 0,
     enabled: !!token && condition?.every(Boolean),

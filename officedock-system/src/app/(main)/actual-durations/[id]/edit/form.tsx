@@ -1018,7 +1018,7 @@ const EditActualDurationsForm = () => {
                           },
                         })}
                         options={optionTimeInput}
-                        classNameOption="top-[25px]"
+                        classNameOption="!top-1/2 -translate-y-1/2 mt-[5px]"
                         onChangeDropdown={(e) => {
                           setValue('startedAtTime', e.label);
                           handleCalculateActualDuration(
@@ -1153,7 +1153,7 @@ const EditActualDurationsForm = () => {
                             );
                           },
                         })}
-                        classNameOption="top-[25px]"
+                        classNameOption="!top-1/2 -translate-y-1/2 mt-[5px]"
                         options={optionTimeInput}
                         onChangeDropdown={(e) => {
                           setValue('pausedAtTime', e.label);
