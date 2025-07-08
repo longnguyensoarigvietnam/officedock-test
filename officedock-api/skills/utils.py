@@ -104,9 +104,7 @@ def get_next_progression(current_step, current_level, skill=None):
         )
     else:
         if skill:
-            exists_next_skill = Skill.objects.filter(
-                parent__id=skill.id
-            ).first()
+            exists_next_skill = Skill.objects.filter(parent_id=skill.id).first()
             # If not exists next step, replace next step is current step
             if not exists_next_skill:
                 return current_step, current_level

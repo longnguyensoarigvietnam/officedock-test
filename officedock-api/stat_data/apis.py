@@ -57,7 +57,6 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     permission_classes = [ActionPermission]
     filter_backends = [FilterByPermission]
     screen_name = Screens.TEAM_DAILY_REPORT.value
-    throttle_scope = "statistic"
 
     def _separate_duration(self, duration, end_date, user=None):
         """
@@ -426,8 +425,8 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 Q(categories__large_statistic_category__isnull=False)
             ).values(
                 "categories__large_statistic_category__name",
-                "categories__large_statistic_category__id",
-                "organization__id",
+                "categories__large_statistic_category_id",
+                "organization_id",
             )
 
             return with_large.distinct()
@@ -512,7 +511,9 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         data["remark"].update(
             {
                 "user": user_serializer,
-                "organization_name": organization.name,
+                "organization_name": organization.name
+                if organization
+                else None,
                 "is_confirmed": confirm_report,
             }
         )

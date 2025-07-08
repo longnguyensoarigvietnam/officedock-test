@@ -487,7 +487,7 @@ class TaskViewSet(
         ).first()
         task_message = task_room.chat_messages.create(**message)
         chat_room_participant = task_room.chat_rooms_participants.filter(
-            user__id=user.id
+            user_id=user.id
         ).first()
         chat_room_participant.unread_messages = (
             chat_room_participant.unread_messages + 1
@@ -556,7 +556,7 @@ class TaskViewSet(
                 through_defaults={"company": user.company},
             )
             chat_room_participant = chat_room.chat_rooms_participants.filter(
-                user__id=participant.id
+                user_id=participant.id
             ).first()
             socketEventType = WebSocketEventType.CREATE_CHAT_ROOM.value
         else:
@@ -569,7 +569,7 @@ class TaskViewSet(
         chat_room_participant.save()
         # Update unread message of user logged
         user_participant = chat_room.chat_rooms_participants.filter(
-            user__id=user.id
+            user_id=user.id
         ).first()
         user_participant.unread_messages = user_participant.unread_messages + 1
         user_participant.hidden_at = None
@@ -604,7 +604,7 @@ class TaskViewSet(
                 ChatRoomTypes.SKILL.value,
             ]:
                 user_participant = chat_room.chat_rooms_participants.filter(
-                    user__id=user.id
+                    user_id=user.id
                 ).first()
                 user_participant.unread_messages = (
                     user_participant.unread_messages + 1
@@ -1015,7 +1015,7 @@ class TaskViewSet(
         if people_in_charge_ids is not None:
             # Delete index for task if remove user
             TaskIndex.objects.filter(task=task).exclude(
-                user__id__in=[
+                user_id__in=[
                     item["people_in_charge"].id for item in people_in_charge_ids
                 ]
             ).delete()
@@ -1821,7 +1821,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
             # Filter only in organization
             if not is_cross_team_task:
-                queryset = queryset.filter(organization__id=organization_id)
+                queryset = queryset.filter(organization_id=organization_id)
         else:
             task_pin = TaskIndex.objects.filter(
                 task=OuterRef("pk"), user_id=user_id if user_id else user.id
@@ -1829,7 +1829,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
             # Case Mytask: filter only in organization
             if organization_id:
-                queryset = queryset.filter(organization__id=organization_id)
+                queryset = queryset.filter(organization_id=organization_id)
 
         # Filter tasks by the current user if no user_id is provided
         if not user_id:
@@ -1897,18 +1897,12 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         # Handle exclude ids when case add, drag drop item
         if ids := self.request.query_params.get("ids"):
-            exclude_ids = []
-            for id in ids.split(","):
-                try:
-                    exclude_ids.append(int(id))
-                except ValueError:
-                    continue
-            if exclude_ids:
+            if exclude_ids := split_id_from_string(ids):
                 queryset = queryset.exclude(id__in=exclude_ids)
 
         if tag_ids := self.request.query_params.get("tag_ids"):
             if ids := split_id_from_string(tag_ids):
-                queryset = queryset.filter(tags_tasks__tag__id__in=ids)
+                queryset = queryset.filter(tags__id__in=ids)
 
         if category_ids := self.request.query_params.get("category_ids"):
             if ids := split_id_from_string(category_ids):

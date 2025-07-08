@@ -213,7 +213,7 @@ class StatisticViewSet(BaseAPIViewSet):
             )
         )
         if organization_id_param:
-            filters &= Q(organization__id=organization_id_param)
+            filters &= Q(organization_id=organization_id_param)
         tasks, events = get_list_models(durations)
         tasks = (
             tasks.filter(filters)
@@ -1160,8 +1160,8 @@ class StatisticViewSet(BaseAPIViewSet):
                         )
                     # Filter durations for the category by organization id
                     filter_durations = filter_durations.filter(
-                        Q(task__organization__id=organization_id)
-                        | Q(schedule__organization__id=organization_id)
+                        Q(task__organization_id=organization_id)
+                        | Q(schedule__organization_id=organization_id)
                     )
                     duration = get_total_durations(filter_durations)
                     # Calculate the percentage of the total duration

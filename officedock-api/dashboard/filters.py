@@ -54,7 +54,7 @@ class ActualDurationFilter(django_filters.FilterSet):
 
     def get_staff(self, queryset, name, value):
         """Return filter staff of model duration"""
-        return queryset.filter(Q(user__id=value) | Q(user__id=value))
+        return queryset.filter(Q(user_id=value) | Q(user_id=value))
 
     def get_large_category(self, queryset, name, value):
         """Return filter large category of model duration"""
