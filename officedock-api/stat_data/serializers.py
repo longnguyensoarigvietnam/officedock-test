@@ -8,8 +8,8 @@ from calendars.constants import CalendarTypes
 from calendars.models import Schedule
 from common.utils import (
     format_duration,
-    get_common_categories,
     time_str_to_timedelta,
+    get_common_categories_with_none_category,
 )
 from dashboard.serializers import ActualDurationListSerializer
 from tags.serializers import BaseTagSerializer
@@ -97,7 +97,9 @@ class DailyTaskSerializer(TaskCommonSerializer):
         if not obj.categories.exists():
             return []
 
-        return get_common_categories(obj.categories.first(), obj)
+        return get_common_categories_with_none_category(
+            obj.categories.first(), obj
+        )
 
     def get_task_durations(self, obj):
         """
@@ -199,7 +201,9 @@ class DailyEventSerializer(serializers.ModelSerializer):
         if not obj.categories.exists():
             return []
 
-        return get_common_categories(obj.categories.first(), obj)
+        return get_common_categories_with_none_category(
+            obj.categories.first(), obj
+        )
 
     def get_task_durations(self, obj):
         """

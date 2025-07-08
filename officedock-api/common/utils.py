@@ -370,6 +370,88 @@ def transform_statistic_categories(statistic_categories):
     return result
 
 
+def transform_statistic_categories_within_none_category(statistic_categories):
+    """
+    Transform flat list of statistic categories into a nested hierarchy:
+    large → medium → small, with default placeholders for null values.
+    """
+
+    def normalize_category(category):
+        return (
+            category
+            if category
+            else {"id": NONE_CATEGORY, "name": NONE_CATEGORY}
+        )
+
+    large_category_dict = {}
+    result = []
+    large_none_dict = {
+        ScheduleCategoryTypes.LARGE.value: {
+            "id": NONE_CATEGORY,
+            "name": NONE_CATEGORY,
+        },
+        ScheduleCategoryTypes.MEDIUM.value: [],
+    }
+
+    def find_or_create_medium_entry(container, medium_obj):
+        """Helper to find or create medium entry inside a container"""
+        for entry in container:
+            if (
+                entry[ScheduleCategoryTypes.MEDIUM.value]["id"]
+                == medium_obj["id"]
+            ):
+                return entry
+
+        # Not found, create new
+        entry = {
+            ScheduleCategoryTypes.MEDIUM.value: medium_obj,
+            ScheduleCategoryTypes.SMALL.value: [],
+        }
+        container.append(entry)
+        return entry
+
+    for item in statistic_categories:
+        large_obj = normalize_category(item.get("large_statistic_category"))
+        medium_obj = normalize_category(item.get("medium_statistic_category"))
+        small_obj = normalize_category(item.get("small_statistic_category"))
+
+        if large_obj["id"] is not None:
+            large_id = large_obj["id"]
+            if large_id not in large_category_dict:
+                large_obj["color"] = item.get("color")
+                large_category_dict[large_id] = {
+                    ScheduleCategoryTypes.LARGE.value: large_obj,
+                    ScheduleCategoryTypes.MEDIUM.value: [],
+                }
+
+            medium_container = large_category_dict[large_id][
+                ScheduleCategoryTypes.MEDIUM.value
+            ]
+            medium_entry = find_or_create_medium_entry(
+                medium_container, medium_obj
+            )
+
+            if small_obj["id"] is not None:
+                medium_entry[ScheduleCategoryTypes.SMALL.value].append(
+                    small_obj
+                )
+        else:
+            medium_entry = find_or_create_medium_entry(
+                large_none_dict[ScheduleCategoryTypes.MEDIUM.value], medium_obj
+            )
+
+            if small_obj["id"] is not None:
+                medium_entry[ScheduleCategoryTypes.SMALL.value].append(
+                    small_obj
+                )
+
+    result.extend(large_category_dict.values())
+    if large_none_dict[ScheduleCategoryTypes.MEDIUM.value]:
+        result.append(large_none_dict)
+
+    return result
+
+
 def get_common_categories(category, obj=None):
     """Handle transform common category"""
 
@@ -402,6 +484,44 @@ def get_common_categories(category, obj=None):
         }
         for attr, type_value in category_types
         if hasattr(category, attr) and getattr(category, attr) is not None
+    ]
+
+
+def get_common_categories_with_none_category(category, obj=None):
+    """Handle transform common category"""
+
+    if not category:
+        return []
+
+    category_types = [
+        ("large_statistic_category", ScheduleCategoryTypes.LARGE.value),
+        ("medium_statistic_category", ScheduleCategoryTypes.MEDIUM.value),
+        ("small_statistic_category", ScheduleCategoryTypes.SMALL.value),
+    ]
+    color = None
+    if obj:
+        color = (
+            OrganizationsStatisticCategories.objects.filter(
+                organization_id=obj.organization_id,
+                large_statistic_category=category.large_statistic_category,
+            )
+            .values_list("color", flat=True)
+            .first()
+        )
+    return [
+        {
+            "id": getattr(category, attr).id
+            if getattr(category, attr)
+            else NONE_CATEGORY,
+            "name": getattr(category, attr).name
+            if getattr(category, attr)
+            else NONE_CATEGORY,
+            "color": color
+            if type_value == ScheduleCategoryTypes.LARGE.value
+            else None,
+            "type": type_value,
+        }
+        for attr, type_value in category_types
     ]
 
 

@@ -1,9 +1,14 @@
 from datetime import datetime
 
+from django.db.models import Case, When
 from rest_framework import serializers
 
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
-from common.utils import get_common_categories, time_str_to_timedelta
+from common.utils import (
+    get_common_categories,
+    time_str_to_timedelta,
+    get_common_categories_with_none_category,
+)
 from organizations.models import Organization, OrganizationsStatisticCategories
 from organizations.serializers import (
     OrganizationSerializer,
@@ -137,12 +142,18 @@ class SkillSerializer(serializers.ModelSerializer):
         org_cat_ids = obj.organizations_statistic_categories_skills.values_list(
             "organization_statistic_category", flat=True
         )
+        preserved_order = Case(
+            *[When(id=pk, then=pos) for pos, pk in enumerate(org_cat_ids)]
+        )
+
         categories = OrganizationsStatisticCategories.objects.filter(
             id__in=org_cat_ids
-        ).all()
+        ).order_by(preserved_order)
         transformed_categories = []
         for category in categories:
-            transformed_categories.append(get_common_categories(category))
+            transformed_categories.append(
+                get_common_categories_with_none_category(category)
+            )
 
         return transformed_categories
 
