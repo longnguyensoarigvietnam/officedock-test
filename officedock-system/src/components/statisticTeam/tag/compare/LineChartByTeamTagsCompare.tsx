@@ -2,7 +2,6 @@ import React, {
   Fragment,
   useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -89,7 +88,7 @@ import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations'
 import useStatisticUserTaskDurationsCompare from '@hooks/useStatisticUserTaskDurationsCompare';
 import useStatisticTableInTeamTagLineChartCompare from '@hooks/useStatisticTableInTeamTagLineChartCompare';
 import useStatisticTableInTeamTagLineChart from '@hooks/useStatisticTableInTeamTagLineChart';
-import { useGenericDebounce } from '@hooks/useGenericDebounce';
+
 import FilterTagTeam from '../filter/FilterTagTeam';
 
 ChartJS.register(
@@ -114,19 +113,6 @@ type Props = {
   handleSelectMedium: (data: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
 };
-
-interface UserTaskDurationFilter {
-  fromDate: string;
-  endDate: string;
-  userIds?: string;
-  largeCategoryId?: string | number;
-  mediumCategoryId?: string | number;
-  smallCategoryId?: string | number;
-  statisticBy: string;
-  selectedOrganization: number;
-  tagIds: { label: string; value: number }[];
-  organizationMemberId?: string;
-}
 
 const LineChartByTeamTagsCompare = ({
   startDate,
@@ -170,72 +156,9 @@ const LineChartByTeamTagsCompare = ({
     name: string;
     organizationId: number;
   } | null>(null);
-  const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
   const [selectedOrganizationInTable, setSelectedOrganizationInTable] =
     useState<number>(0);
 
-  // Filter options
-  const [filter, setFilter] = useState<UserTaskDurationFilter>({
-    fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
-    endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-    userIds: selectedMembers?.filter(Boolean).join(','),
-    largeCategoryId: selectedLarge?.value,
-    mediumCategoryId: selectedMedium?.value,
-    smallCategoryId: selectedSmall?.value,
-    statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: 0,
-    tagIds: [],
-    organizationMemberId:
-      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-        ? String(selectedOrganizationSideBar?.value || '')
-        : undefined,
-  });
-  // Category filter options
-  const [categoryFilter, setCategoryFilter] = useState({
-    fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
-    endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-    organizationId: '',
-    largeCategoryId: selectedLarge?.value,
-    mediumCategoryId: selectedMedium?.value,
-    smallCategoryId: selectedSmall?.value,
-    selectedTags: [] as OptionDropdownType[],
-    userIds: selectedMembers?.filter(Boolean).join(','),
-    organizationMemberId:
-      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-        ? String(selectedOrganizationSideBar?.value || '')
-        : undefined,
-  });
-  // Compare category filter options
-  const [compareCategoryFilter, setCompareCategoryFilter] = useState({
-    fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
-    endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
-    organizationId: '',
-    largeCategoryId: selectedLarge?.value,
-    mediumCategoryId: selectedMedium?.value,
-    smallCategoryId: selectedSmall?.value,
-    selectedTags: [] as OptionDropdownType[],
-    userIds: selectedMembers?.filter(Boolean).join(','),
-    organizationMemberId:
-      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-        ? String(selectedOrganizationSideBar?.value || '')
-        : undefined,
-  });
-  // Compare filter options
-  const [compareFilter, setCompareFilter] = useState<UserTaskDurationFilter>({
-    fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
-    endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
-    userIds: selectedMembers?.filter(Boolean).join(','),
-    largeCategoryId: selectedLarge?.value,
-    mediumCategoryId: selectedMedium?.value,
-    smallCategoryId: selectedSmall?.value,
-    statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: 0,
-    tagIds: [],
-    organizationMemberId:
-      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-        ? String(selectedOrganizationSideBar?.value || '')
-        : undefined,
-  });
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const [memberOptions, setMemberOptions] = useState<
     {
@@ -378,27 +301,8 @@ const LineChartByTeamTagsCompare = ({
         organizationId: Number(firstTag.organizationId),
       });
       setSelectedOrganizationInTable(Number(firstTag.organizationId));
-      setFilter((prev) => {
-        return {
-          ...prev,
-          tagIds: [
-            {
-              label: String(firstTag.tagName),
-              value: Number(firstTag.tagId),
-            },
-          ],
-          selectedOrganization: Number(firstTag.organizationId),
-        };
-      });
     } else {
       setSelectedTag(null);
-      setFilter((prev) => {
-        return {
-          ...prev,
-          tagIds: [],
-          selectedOrganization: 0,
-        };
-      });
     }
   };
 
@@ -408,18 +312,36 @@ const LineChartByTeamTagsCompare = ({
     isLoadingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
     filter: {
-      ...filter,
-      userIds:
-        orderingOptions?.user_ids?.length == 0
-          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
-          : filter.userIds,
+      fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
+      endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
+      largeCategoryId: selectedLarge?.value,
+      mediumCategoryId: selectedMedium?.value,
+      smallCategoryId: selectedSmall?.value,
+      statisticBy: `${lineChartViewBy?.value}`,
+      selectedOrganization: selectedOrganizationInTable,
+      tagIds: selectedTag
+        ? [
+            {
+              value: selectedTag?.id,
+              label: selectedTag?.name,
+            },
+          ]
+        : [],
       organizationMemberId:
         selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : selectedMembers?.filter(Boolean).join(','),
     },
     condition: [
-      Boolean(mergedTableData.length > 0 && filter.tagIds?.length > 0),
+      Boolean(
+        mergedTableData.length > 0 &&
+          selectedTag?.id &&
+          selectedOrganizationInTable,
+      ),
     ],
   });
 
@@ -429,14 +351,36 @@ const LineChartByTeamTagsCompare = ({
     isLoadingStatisticUserTaskDurationsCompareList,
   } = useStatisticUserTaskDurationsCompare({
     filter: {
-      ...compareFilter,
+      fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
+      endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
+      largeCategoryId: selectedLarge?.value,
+      mediumCategoryId: selectedMedium?.value,
+      smallCategoryId: selectedSmall?.value,
+      statisticBy: `${lineChartViewBy?.value}`,
+      selectedOrganization: selectedOrganizationInTable,
+      tagIds: selectedTag
+        ? [
+            {
+              value: selectedTag?.id,
+              label: selectedTag?.name,
+            },
+          ]
+        : [],
+      organizationMemberId:
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
       userIds:
         orderingOptions?.user_ids?.length == 0
           ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
-          : compareFilter.userIds,
+          : selectedMembers?.filter(Boolean).join(','),
     },
     condition: [
-      Boolean(mergedTableData.length > 0 && compareFilter.tagIds?.length > 0),
+      Boolean(
+        mergedTableData.length > 0 &&
+          selectedTag?.id &&
+          selectedOrganizationInTable,
+      ),
     ],
   });
 
@@ -530,191 +474,25 @@ const LineChartByTeamTagsCompare = ({
     }
   }, [allLabelUser]);
 
-  // Handle listen to filter option changes
-  const memoizedFilter = useMemo(() => {
-    return {
-      fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
-      endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-      userIds: selectedMembers?.filter(Boolean).join(','),
-      largeCategoryId: selectedLarge?.value,
-      mediumCategoryId: selectedMedium?.value,
-      smallCategoryId: selectedSmall?.value,
-      statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: selectedOrganizationInTable,
-      tagIds: selectedTag
-        ? [
-            {
-              value: selectedTag?.id,
-              label: selectedTag?.name,
-            },
-          ]
-        : [],
-      organizationMemberId:
-        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-          ? String(selectedOrganizationSideBar?.value || '')
-          : undefined,
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    startDate,
-    endDate,
-    selectedMembers,
-    lineChartViewBy?.value,
-    selectedOrganizationInTable,
-    selectedLarge?.value,
-    selectedMedium?.value,
-    selectedSmall?.value,
-    lineChartViewBy?.value,
-    selectedOrganization?.value,
-    selectedOrganization?.label,
-    selectedTag,
-    selectedOrganizationSideBar?.value,
-  ]);
-
-  const memoizedCategoryFilter = useMemo(() => {
-    return {
-      fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
-      endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-      userIds:
-        orderingOptions?.user_ids?.length == 0
-          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
-          : selectedMembers?.filter(Boolean).join(','),
-      largeCategoryId: selectedLarge?.value,
-      mediumCategoryId: selectedMedium?.value,
-      smallCategoryId: selectedSmall?.value,
-      organizationId: String(selectedOrganization?.value),
-      selectedTags: selectedTags || [],
-      organizationMemberId:
-        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-          ? String(selectedOrganizationSideBar?.value || '')
-          : undefined,
-    };
-  }, [
-    startDate,
-    endDate,
-    selectedMembers,
-    selectedLarge,
-    selectedMedium,
-    selectedSmall,
-    orderingOptions,
-    selectedTags,
-    selectedOrganization,
-    selectedOrganizationSideBar?.value,
-    listMemberTeam,
-  ]);
-
-  const memoizedCategoryCompareFilter = useMemo(() => {
-    return {
-      fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
-      endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
-      userIds:
-        orderingOptions?.user_ids?.length == 0
-          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
-          : selectedMembers?.filter(Boolean).join(','),
-      largeCategoryId: selectedLarge?.value,
-      mediumCategoryId: selectedMedium?.value,
-      smallCategoryId: selectedSmall?.value,
-      organizationId: String(selectedOrganization?.value),
-      selectedTags: selectedTags || [],
-      organizationMemberId:
-        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-          ? String(selectedOrganizationSideBar?.value || '')
-          : undefined,
-    };
-  }, [
-    startDateCompare,
-    endDateCompare,
-    selectedMembers,
-    selectedLarge,
-    selectedMedium,
-    selectedSmall,
-    orderingOptions,
-    selectedTags,
-    selectedOrganization,
-    selectedOrganizationSideBar?.value,
-    listMemberTeam,
-  ]);
-
-  const memoizedCompareFilter = useMemo(() => {
-    return {
-      fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
-      endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
-      userIds: selectedMembers?.filter(Boolean).join(','),
-      largeCategoryId: selectedLarge?.value,
-      mediumCategoryId: selectedMedium?.value,
-      smallCategoryId: selectedSmall?.value,
-      statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: selectedOrganizationInTable,
-      tagIds: selectedTag
-        ? [
-            {
-              value: selectedTag?.id,
-              label: selectedTag?.name,
-            },
-          ]
-        : [],
-      organizationMemberId:
-        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-          ? String(selectedOrganizationSideBar?.value || '')
-          : undefined,
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    startDateCompare,
-    endDateCompare,
-    selectedMembers,
-    lineChartViewBy?.value,
-    selectedOrganizationInTable,
-    selectedLarge?.value,
-    selectedMedium?.value,
-    selectedSmall?.value,
-    lineChartViewBy?.value,
-    selectedOrganization?.value,
-    selectedOrganization?.label,
-    selectedTag,
-    selectedOrganizationSideBar?.value,
-  ]);
-
-  useEffect(() => {
-    if (isOrganizationChanging && selectedMembers.length > 0) {
-      setIsOrganizationChanging(false); // Done
-    }
-  }, [selectedMembers, isOrganizationChanging]);
-
-  const debouncedFilter = useGenericDebounce(memoizedFilter, 1000);
-  const debouncedCompareFilter = useGenericDebounce(
-    memoizedCompareFilter,
-    1000,
-  );
-  const debouncedCategoryFilter = useGenericDebounce(
-    memoizedCategoryFilter,
-    1000,
-  );
-  const debouncedCategoryCompareFilter = useGenericDebounce(
-    memoizedCategoryCompareFilter,
-    1000,
-  );
-
-  useEffect(() => {
-    if (!isOrganizationChanging) {
-      setFilter(debouncedFilter); // Trigger API only when everything is ready
-      setCompareFilter(debouncedCompareFilter); // Trigger API only when everything is ready
-      setCategoryFilter(debouncedCategoryFilter); // Trigger API only when everything is ready
-      setCompareCategoryFilter(debouncedCategoryCompareFilter); // Trigger API only when everything is ready
-    }
-  }, [
-    debouncedFilter,
-    debouncedCompareFilter,
-    debouncedCategoryFilter,
-    debouncedCategoryCompareFilter,
-    isOrganizationChanging,
-  ]);
-
   // Get table info (statistic team standard categories)
   const { isLoadingStatisticTableInTeamTagLineChart } =
     useStatisticTableInTeamTagLineChart({
       filter: {
-        ...categoryFilter,
+        fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
+        endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
+        userIds:
+          orderingOptions?.user_ids?.length == 0
+            ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+            : selectedMembers?.filter(Boolean).join(','),
+        largeCategoryId: selectedLarge?.value,
+        mediumCategoryId: selectedMedium?.value,
+        smallCategoryId: selectedSmall?.value,
+        organizationId: String(selectedOrganization?.value),
+        selectedTags: selectedTags || [],
+        organizationMemberId:
+          selectedOrganization?.type === OrganizationStatisticType.CALENDAR
+            ? String(selectedOrganizationSideBar?.value || '')
+            : undefined,
       },
       onSuccess: (data) => {
         if (!data) return;
@@ -770,7 +548,23 @@ const LineChartByTeamTagsCompare = ({
   const { isLoadingStatisticTableInTeamTagLineChartCompare } =
     useStatisticTableInTeamTagLineChartCompare({
       filter: {
-        ...compareCategoryFilter,
+        fromDate: startDateCompare
+          ? `${formatDateToYMD(startDateCompare)}`
+          : '',
+        endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
+        userIds:
+          orderingOptions?.user_ids?.length == 0
+            ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+            : selectedMembers?.filter(Boolean).join(','),
+        largeCategoryId: selectedLarge?.value,
+        mediumCategoryId: selectedMedium?.value,
+        smallCategoryId: selectedSmall?.value,
+        organizationId: String(selectedOrganization?.value),
+        selectedTags: selectedTags || [],
+        organizationMemberId:
+          selectedOrganization?.type === OrganizationStatisticType.CALENDAR
+            ? String(selectedOrganizationSideBar?.value || '')
+            : undefined,
       },
       onSuccess: (data) => {
         if (!data) return;
@@ -1412,30 +1206,6 @@ const LineChartByTeamTagsCompare = ({
                   setSelectedOrganizationInTable(
                     info.row.original.organizationId,
                   );
-                  setFilter((prev) => {
-                    return {
-                      ...prev,
-                      tagIds: [
-                        {
-                          label: info.row.original.tagName,
-                          value: info.row.original.tagId,
-                        },
-                      ],
-                      selectedOrganization: info.row.original.organizationId,
-                    };
-                  });
-                  setCompareFilter((prev) => {
-                    return {
-                      ...prev,
-                      tagIds: [
-                        {
-                          label: info.row.original.tagName,
-                          value: info.row.original.tagId,
-                        },
-                      ],
-                      selectedOrganization: info.row.original.organizationId,
-                    };
-                  });
                 }
               }}
             />
@@ -1979,7 +1749,7 @@ const LineChartByTeamTagsCompare = ({
                     onChange={(data) => {
                       setSelectedMembers([]);
                       setMergedTableData([]);
-                      setIsOrganizationChanging(true);
+                      setSelectedTag(null);
                       handleSelectOrganization(data);
                     }}
                   />
@@ -2015,6 +1785,7 @@ const LineChartByTeamTagsCompare = ({
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => {
                       setMergedTableData([]);
+                      setSelectedTag(null);
                       handleSelectLarge(data);
                     }}
                     disabled={!selectedOrganization || isHasLoading}
@@ -2050,6 +1821,7 @@ const LineChartByTeamTagsCompare = ({
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => {
                       setMergedTableData([]);
+                      setSelectedTag(null);
                       handleSelectMedium(data);
                     }}
                     disabled={!selectedLarge || isHasLoading}
@@ -2085,6 +1857,7 @@ const LineChartByTeamTagsCompare = ({
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => {
                       setMergedTableData([]);
+                      setSelectedTag(null);
                       handleSelectSmall(data);
                     }}
                     disabled={!selectedMedium || isHasLoading}
@@ -2156,6 +1929,7 @@ const LineChartByTeamTagsCompare = ({
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
                     setMergedTableData([]);
+                    setSelectedTag(null);
                     setLineChartViewBy({
                       label: e.label,
                       value: e.value,
@@ -2180,9 +1954,16 @@ const LineChartByTeamTagsCompare = ({
                       <CustomStatisticUserCheckbox
                         id={String(member.id)}
                         isChecked={selectedMembers.includes(member.id)}
+                        disable={
+                          isLoadingStatisticTableInTeamTagLineChart ||
+                          isLoadingStatisticTableInTeamTagLineChartCompare ||
+                          isLoadingStatisticUserTaskDurationsList ||
+                          isLoadingStatisticUserTaskDurationsCompareList
+                        }
                         color={member.color}
                         onChange={(state) => {
                           setMergedTableData([]);
+                          setSelectedTag(null);
                           if (state) {
                             setSelectedMembers((prev) => {
                               if (member.id) {

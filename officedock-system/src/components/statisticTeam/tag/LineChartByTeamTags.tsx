@@ -2,7 +2,6 @@ import React, {
   Fragment,
   useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -82,9 +81,8 @@ import {
 } from '@utils';
 
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
-import useDebounceText from '@hooks/useDebounceText';
 import useStatisticTableInTeamTagLineChart from '@hooks/useStatisticTableInTeamTagLineChart';
-import { useGenericDebounce } from '@hooks/useGenericDebounce';
+
 import FilterTagTeam from './filter/FilterTagTeam';
 
 ChartJS.register(
@@ -149,37 +147,9 @@ const LineChartByTeamTags = ({
     name: string;
     organizationId: number;
   } | null>(null);
-  const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
   const [selectedOrganizationInTable, setSelectedOrganizationInTable] =
     useState<number>(0);
 
-  // Filter options
-  const [filter, setFilter] = useState<{
-    fromDate: string;
-    endDate: string;
-    userIds?: string;
-    largeCategoryId?: string | number;
-    mediumCategoryId?: string | number;
-    smallCategoryId?: string | number;
-    statisticBy: string;
-    selectedOrganization: number;
-    tagIds: { label: string; value: number }[];
-    organizationMemberId?: string;
-  }>({
-    fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
-    endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-    userIds: selectedMembers?.filter(Boolean).join(','),
-    largeCategoryId: selectedLarge?.value,
-    mediumCategoryId: selectedMedium?.value,
-    smallCategoryId: selectedSmall?.value,
-    statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: 0,
-    tagIds: [],
-    organizationMemberId:
-      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-        ? String(selectedOrganizationSideBar?.value || '')
-        : undefined,
-  });
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const [memberOptions, setMemberOptions] = useState<
     {
@@ -233,10 +203,6 @@ const LineChartByTeamTags = ({
 
   // Others
   const [isExtendData, setIsExtendData] = useState(true);
-  const debouncedSelectedMembers = useDebounceText(
-    selectedMembers?.filter(Boolean).join(','),
-    1000,
-  );
   const tooltipRef = useRef<HTMLDivElement | null>(null);
 
   const buildTableDetail = (
@@ -301,27 +267,8 @@ const LineChartByTeamTags = ({
         organizationId: Number(firstTag.organizationId),
       });
       setSelectedOrganizationInTable(Number(firstTag.organizationId));
-      setFilter((prev) => {
-        return {
-          ...prev,
-          tagIds: [
-            {
-              label: String(firstTag.tagName),
-              value: Number(firstTag.tagId),
-            },
-          ],
-          selectedOrganization: Number(firstTag.organizationId),
-        };
-      });
     } else {
       setSelectedTag(null);
-      setFilter((prev) => {
-        return {
-          ...prev,
-          tagIds: [],
-          selectedOrganization: 0,
-        };
-      });
     }
   };
 
@@ -331,14 +278,36 @@ const LineChartByTeamTags = ({
     isLoadingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
     filter: {
-      ...filter,
+      fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
+      endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
+      largeCategoryId: selectedLarge?.value,
+      mediumCategoryId: selectedMedium?.value,
+      smallCategoryId: selectedSmall?.value,
+      statisticBy: `${lineChartViewBy?.value}`,
+      selectedOrganization: selectedOrganizationInTable,
+      tagIds: selectedTag
+        ? [
+            {
+              value: selectedTag?.id,
+              label: selectedTag?.name,
+            },
+          ]
+        : [],
+      organizationMemberId:
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
       userIds:
         orderingOptions?.user_ids?.length == 0
           ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
-          : filter.userIds,
+          : selectedMembers?.filter(Boolean).join(','),
     },
     condition: [
-      Boolean(lineChartTableData.length > 0 && filter.tagIds?.length > 0),
+      Boolean(
+        lineChartTableData.length > 0 &&
+          selectedTag?.id &&
+          selectedOrganizationInTable,
+      ),
     ],
   });
 
@@ -356,7 +325,7 @@ const LineChartByTeamTags = ({
         userIds:
           orderingOptions?.user_ids?.length == 0
             ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
-            : debouncedSelectedMembers,
+            : selectedMembers?.filter(Boolean).join(','),
         organizationMemberId:
           selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ? String(selectedOrganizationSideBar?.value || '')
@@ -447,58 +416,6 @@ const LineChartByTeamTags = ({
       setSelectedMembers([]);
     }
   }, [allLabelUser]);
-
-  // Handle listen to filter option changes
-  const memoizedFilter = useMemo(() => {
-    return {
-      fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
-      endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-      userIds: selectedMembers?.filter(Boolean).join(','),
-      largeCategoryId: selectedLarge?.value,
-      mediumCategoryId: selectedMedium?.value,
-      smallCategoryId: selectedSmall?.value,
-      statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: selectedOrganizationInTable,
-      tagIds: selectedTag
-        ? [
-            {
-              value: selectedTag?.id,
-              label: selectedTag?.name,
-            },
-          ]
-        : [],
-      organizationMemberId:
-        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-          ? String(selectedOrganizationSideBar?.value || '')
-          : undefined,
-    };
-  }, [
-    startDate,
-    endDate,
-    selectedMembers,
-    lineChartViewBy?.value,
-    selectedOrganizationInTable,
-    selectedLarge?.value,
-    selectedMedium?.value,
-    selectedSmall?.value,
-    selectedOrganization,
-    selectedTag,
-    selectedOrganizationSideBar?.value,
-  ]);
-
-  useEffect(() => {
-    if (isOrganizationChanging && selectedMembers.length > 0) {
-      setIsOrganizationChanging(false); // Done
-    }
-  }, [selectedMembers, isOrganizationChanging]);
-
-  const debouncedFilter = useGenericDebounce(memoizedFilter, 1000);
-
-  useEffect(() => {
-    if (!isOrganizationChanging) {
-      setFilter(debouncedFilter); // Trigger API only when everything is ready
-    }
-  }, [debouncedFilter, isOrganizationChanging]);
 
   // Hide tooltip when mouse leave over 80px
   useEffect(() => {
@@ -948,18 +865,6 @@ const LineChartByTeamTags = ({
                   setSelectedOrganizationInTable(
                     info.row.original.organizationId,
                   );
-                  setFilter((prev) => {
-                    return {
-                      ...prev,
-                      tagIds: [
-                        {
-                          label: info.row.original.tagName,
-                          value: info.row.original.tagId,
-                        },
-                      ],
-                      selectedOrganization: info.row.original.organizationId,
-                    };
-                  });
                 }
               }}
             />
@@ -1352,7 +1257,6 @@ const LineChartByTeamTags = ({
                       setSelectedMembers([]);
                       setLineChartTableData([]);
                       setSelectedTag(null);
-                      setIsOrganizationChanging(true);
                       handleSelectOrganization(data);
                     }}
                   />
@@ -1499,6 +1403,7 @@ const LineChartByTeamTags = ({
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
                     setLineChartTableData([]);
+                    setSelectedTag(null);
                     setLineChartViewBy({
                       label: e.label,
                       value: e.value,
@@ -1524,8 +1429,13 @@ const LineChartByTeamTags = ({
                         id={String(member.id)}
                         isChecked={selectedMembers.includes(member.id)}
                         color={member.color}
+                        disable={
+                          isLoadingStatisticTableInTeamTagLineChart ||
+                          isLoadingStatisticUserTaskDurationsList
+                        }
                         onChange={(state) => {
                           setLineChartTableData([]);
+                          setSelectedTag(null);
                           if (state) {
                             setSelectedMembers((prev) => {
                               if (member.id) {

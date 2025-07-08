@@ -25,7 +25,7 @@ const ActionFilterTeamTagStatistic = ({
 }: ActionTaskFilterProp) => {
   const boxListRef = useRef<HTMLDivElement | null>(null);
 
-  const { orderingOptions, setOrderingOptions } = useContext(
+  const { orderingOptions, isHasLoading, setOrderingOptions } = useContext(
     StatisticTeamTagsStateContext,
   );
   const [_isOpen, setIsOpen] = useState(false);
@@ -167,7 +167,7 @@ const ActionFilterTeamTagStatistic = ({
           <Button variant="outline" onClick={handleClose} className="h-9">
             キャンセル
           </Button>
-          <Button onClick={handleSearch} className="h-9">
+          <Button onClick={handleSearch} className="h-9" disabled={isHasLoading}>
             絞り込む
           </Button>
         </div>

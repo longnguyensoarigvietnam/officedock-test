@@ -24,10 +24,12 @@ interface FilterProps {
 
 const useStatisticTableInTeamLineChart = ({
   filter,
+  condition,
   onSuccess,
   onError,
 }: {
   filter?: FilterProps;
+  condition?: boolean[];
   onSuccess?: (data: StatisticsCategories) => void;
   onError?: (error: AxiosError) => void;
 }) => {
@@ -87,10 +89,10 @@ const useStatisticTableInTeamLineChart = ({
     isLoading: isLoadingStatisticTableInTeamLineChart,
     isFetched: isFetchedStatisticTableInTeamLineChart,
   } = useQuery({
-    queryKey: ['getStatisticTableInTeamLineChart', [filter]],
+    queryKey: ['getStatisticTableInTeamLineChart', JSON.stringify(filter)],
     queryFn: ({ signal }) => getStatisticTableInTeamLineChart({ signal }),
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (data: StatisticsCategories) => {

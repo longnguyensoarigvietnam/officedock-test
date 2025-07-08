@@ -47,6 +47,7 @@ const StatisticTeamTagBoard = () => {
     selectedTags,
     selectedSmall,
     orderingOptions,
+    isHasLoading,
     setOrderingOptions,
     setTagsOptions,
     setSelectedTags,
@@ -497,6 +498,7 @@ const StatisticTeamTagBoard = () => {
                   `${pageRouters.STATISTIC_TEAM_MANAGEMENT.href}?organization=${(selectedOrganizationSideBar?.value as string) || organizationId}&tabId=1`,
                 );
               }}
+              disabled={isHasLoading}
               className={`!py-0 !px-0 font-bold w-[80px] h-7 
               !rounded-[20px] text-xs !text-[#77858F] !bg-transparent !border-[#77858F]`}>
               カテゴリー
