@@ -33,12 +33,20 @@ def get_signed_url(file, expiration_seconds=None):
     Checks if the default storage is a local file system to generate a signed URL for a given file.
     """
 
-    # Get file in local disk
-    if isinstance(default_storage, FileSystemStorage):
-        return default_storage.url(file.name)
+    if not file:
+        return None
 
-    # Get file in GCS
-    return generate_signed_url(file.name, expiration_seconds)
+    if isinstance(file, str):
+        file_path = file
+    else:
+        file_path = file.name
+
+    # Local
+    if isinstance(default_storage, FileSystemStorage):
+        return default_storage.url(file_path)
+
+    # GCS or others
+    return generate_signed_url(file_path, expiration_seconds)
 
 
 def generate_signed_url(blob_name: str, expiration_seconds=None) -> str:

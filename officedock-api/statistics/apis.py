@@ -20,7 +20,6 @@ from django.utils.translation import trim_whitespace
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
-
 from base.apis import BaseAPIViewSet
 from base.filters import FilterByPermission
 from base.messages import ERROR_MESSAGES
@@ -1439,7 +1438,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
 
         if not tag_ids:
             return self.response_ok(data)
-
         durations = get_list_durations_by_users(
             start_of_day,
             end_of_day,
@@ -1453,9 +1451,9 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             organization_ids_param=organization_id,
             organization_ids=organizations,
         )
+
         if not durations.exists() or tag_list is None:
             return self.response_ok(data)
-
         data["large_total_duration"] = format_duration(total_duration)
         data["large_categories"] = process_tags(
             tag_list,
