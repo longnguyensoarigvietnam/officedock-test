@@ -308,9 +308,9 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 for user in users:
                     total_duration = timedelta()
                     durations = TaskDuration.objects.filter(
-                        Q(
-                            Q(user=user)
-                            & Q(
+                        Q(user=user)
+                        & Q(
+                            Q(
                                 Q(started_at__gte=start_of_day)
                                 & Q(paused_at__lte=end_of_day)
                             )

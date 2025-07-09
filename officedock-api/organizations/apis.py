@@ -629,6 +629,7 @@ class OrganizationByIDViewSet(BaseAPIViewSet):
         detail=True,
         url_path="define-steps",
         serializer_class=StepSerializer,
+        screen_name=Screens.SKILL_MAP.value,
     )
     @transaction.atomic
     def define_steps(self, request, pk=None):
