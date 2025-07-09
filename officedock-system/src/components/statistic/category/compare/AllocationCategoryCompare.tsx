@@ -77,13 +77,11 @@ const AllocationCategoryCompare = memo(
     const [detailCategory, setDetailCategory] = useState<{
       id: number | null;
       type: string;
-      totalDuration: string;
       organizationId?: string;
     } | null>(null);
     const [detailCategoryCompare, setDetailCategoryCompare] = useState<{
       id: number | null;
       type: string;
-      totalDuration: string;
       organizationId?: string;
     } | null>(null);
 
@@ -132,9 +130,6 @@ const AllocationCategoryCompare = memo(
       isLoadingLarge,
       isLoadingMedium,
       isLoadingOrganization,
-      setTotalDurationTask,
-      setTotalDurationCategory,
-      setTotalDurationTaskCompare,
     } = useContext(StatisticStateContext);
 
     useEffect(() => {
@@ -383,7 +378,6 @@ const AllocationCategoryCompare = memo(
       isCompare: boolean,
       organizationId?: string,
     ) => {
-      let duration: string = DEFAULT_TIME_TEXT;
       if (isCompare) {
         if (
           isLoadingLargeCompare ||
@@ -391,29 +385,9 @@ const AllocationCategoryCompare = memo(
           isLoadingOrganizationCompare
         )
           return;
-
-        if (type === EventWorkCategory.ALL) {
-          duration =
-            statisticCategoryCompareList?.largeCategories.find(
-              (item) => item.categoryId == id,
-            )?.duration || DEFAULT_TIME_TEXT;
-        }
-        if (type === EventWorkCategory.LARGE) {
-          duration =
-            statisticCategoryCompareList?.mediumCategories?.find(
-              (item) => item.categoryId == id,
-            )?.duration || DEFAULT_TIME_TEXT;
-        }
-        if (type === EventWorkCategory.MEDIUM) {
-          duration =
-            statisticCategoryCompareList?.smallCategories?.find(
-              (item) => item.categoryId == id,
-            )?.duration || DEFAULT_TIME_TEXT;
-        }
         setDetailCategoryCompare({
           id: id,
           type: type,
-          totalDuration: duration,
           organizationId,
         });
 
@@ -421,28 +395,9 @@ const AllocationCategoryCompare = memo(
       } else {
         if (isLoadingLarge || isLoadingMedium || isLoadingOrganization) return;
 
-        if (type === EventWorkCategory.ALL) {
-          duration =
-            statisticCategoryList?.largeCategories.find(
-              (item) => item.categoryId == id,
-            )?.duration || DEFAULT_TIME_TEXT;
-        }
-        if (type === EventWorkCategory.LARGE) {
-          duration =
-            statisticCategoryList?.mediumCategories?.find(
-              (item) => item.categoryId == id,
-            )?.duration || DEFAULT_TIME_TEXT;
-        }
-        if (type === EventWorkCategory.MEDIUM) {
-          duration =
-            statisticCategoryList?.smallCategories?.find(
-              (item) => item.categoryId == id,
-            )?.duration || DEFAULT_TIME_TEXT;
-        }
         setDetailCategory({
           id: id,
           type: type,
-          totalDuration: duration,
           organizationId,
         });
 
@@ -459,7 +414,6 @@ const AllocationCategoryCompare = memo(
         );
         item && handleSelectLarge(item);
 
-        setTotalDurationTask(detailCategory.totalDuration);
         if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectLarge({
             label: NO_SETTING,
@@ -472,7 +426,6 @@ const AllocationCategoryCompare = memo(
           (item) => item.value === detailCategory?.id,
         );
         item && handleSelectMedium(item);
-        setTotalDurationTask(detailCategory.totalDuration);
         if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectMedium({
             label: NO_SETTING,
@@ -485,7 +438,6 @@ const AllocationCategoryCompare = memo(
           (item) => item.value === detailCategory?.id,
         );
         item && handleSelectSmall(item);
-        setTotalDurationTask(detailCategory.totalDuration);
         if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
             label: NO_SETTING,
@@ -503,7 +455,6 @@ const AllocationCategoryCompare = memo(
             label: NO_SETTING,
             value: NO_SETTING,
           });
-          setTotalDurationCategory(detailCategory.totalDuration);
         }
       }
 
@@ -521,7 +472,6 @@ const AllocationCategoryCompare = memo(
           (item) => item.value === detailCategoryCompare?.id,
         );
         item && handleSelectLarge(item);
-        setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
 
         if (String(detailCategoryCompare?.id) == NO_SETTING) {
           handleSelectLarge({
@@ -535,7 +485,6 @@ const AllocationCategoryCompare = memo(
           (item) => item.value === detailCategoryCompare?.id,
         );
         item && handleSelectMedium(item);
-        setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
 
         if (String(detailCategoryCompare?.id) == NO_SETTING) {
           handleSelectMedium({
@@ -550,7 +499,6 @@ const AllocationCategoryCompare = memo(
           (item) => item.value === detailCategoryCompare?.id,
         );
         item && handleSelectSmall(item);
-        setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
 
         if (String(detailCategoryCompare?.id) == NO_SETTING) {
           handleSelectSmall({
@@ -564,7 +512,6 @@ const AllocationCategoryCompare = memo(
           (item) => item.value === detailCategoryCompare?.id,
         );
         item && handleSelectSmall(item);
-        setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
         if (String(detailCategoryCompare?.id) == NO_SETTING) {
           handleSelectSmall({
             label: NO_SETTING,

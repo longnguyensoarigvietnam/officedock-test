@@ -6,7 +6,6 @@ import PercentageBarCompareTeam from '@components/common/ProgressBar/ProgressBar
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 
 import { EventWorkCategory } from '@constants/enums';
-import { DEFAULT_TIME_TEXT } from '@constants';
 
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
@@ -82,13 +81,11 @@ const PercentageTeamTagsCompare = ({
   const [detailCategory, setDetailCategory] = useState<{
     id: number | null;
     type: string;
-    totalDuration: string;
   } | null>(null);
 
   const [detailCategoryCompare, setDetailCategoryCompare] = useState<{
     id: number | null;
     type: string;
-    totalDuration: string;
   } | null>(null);
 
   // Data value
@@ -266,67 +263,17 @@ const PercentageTeamTagsCompare = ({
     type: string,
     isCompare: boolean,
   ) => {
-    let duration: string = DEFAULT_TIME_TEXT;
     if (isCompare) {
-      if (type === EventWorkCategory.ALL) {
-        duration =
-          statisticTagsListTeamCompare?.largeCategories.find(
-            (item) => item.tagId == id,
-          )?.duration || DEFAULT_TIME_TEXT;
-      }
-      if (type === EventWorkCategory.LARGE) {
-        duration =
-          statisticTagsListTeamCompare?.mediumCategories?.find(
-            (item) => item.tagId == id,
-          )?.duration || DEFAULT_TIME_TEXT;
-      }
-      if (type === EventWorkCategory.MEDIUM) {
-        duration =
-          statisticTagsListTeamCompare?.smallCategories?.find(
-            (item) => item.tagId == id,
-          )?.duration || DEFAULT_TIME_TEXT;
-      }
-      if (type === EventWorkCategory.SMALL) {
-        duration =
-          statisticTagsListTeamCompare?.category?.find(
-            (item) => item.tagId == id,
-          )?.duration || DEFAULT_TIME_TEXT;
-      }
       setDetailCategoryCompare({
         id: id,
         type: type,
-        totalDuration: duration,
       });
 
       setIsShowModalCompare(true);
     } else {
-      if (type === EventWorkCategory.ALL) {
-        duration =
-          statisticTagsListTeam?.largeCategories.find(
-            (item) => item.categoryId == id,
-          )?.duration || DEFAULT_TIME_TEXT;
-      }
-      if (type === EventWorkCategory.LARGE) {
-        duration =
-          statisticTagsListTeam?.mediumCategories?.find(
-            (item) => item.categoryId == id,
-          )?.duration || DEFAULT_TIME_TEXT;
-      }
-      if (type === EventWorkCategory.MEDIUM) {
-        duration =
-          statisticTagsListTeam?.smallCategories?.find(
-            (item) => item.categoryId == id,
-          )?.duration || DEFAULT_TIME_TEXT;
-      }
-      if (type === EventWorkCategory.SMALL) {
-        duration =
-          statisticTagsListTeam?.category?.find((item) => item.categoryId == id)
-            ?.duration || DEFAULT_TIME_TEXT;
-      }
       setDetailCategory({
         id: id,
         type: type,
-        totalDuration: duration,
       });
 
       setIsShowModal(true);

@@ -117,7 +117,6 @@ const AllocationTeamTag = memo(
       id: number | null;
       userId: number;
       type: string;
-      totalDuration: string;
       organizationId?: string;
     } | null>(null);
 
@@ -194,13 +193,11 @@ const AllocationTeamTag = memo(
     const handleClickTooltip = ({
       id,
       userId,
-      duration,
       type,
       organizationId,
     }: {
       id: number;
       userId: number;
-      duration: string;
       type: string;
       organizationId?: string;
     }) => {
@@ -208,7 +205,6 @@ const AllocationTeamTag = memo(
         id: id,
         userId: userId,
         type: type,
-        totalDuration: duration,
         organizationId,
       });
 
@@ -309,18 +305,15 @@ const AllocationTeamTag = memo(
                                 handleClickTooltip={({
                                   userId,
                                   tagId,
-                                  duration,
                                   organizationId,
                                 }: {
                                   userId: number;
                                   tagId: number;
-                                  duration: string;
                                   organizationId?: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: tagId,
                                     userId,
-                                    duration,
                                     type: EventWorkCategory.ALL,
                                     organizationId,
                                   });
@@ -380,16 +373,13 @@ const AllocationTeamTag = memo(
                                 handleClickTooltip={({
                                   userId,
                                   tagId,
-                                  duration,
                                 }: {
                                   userId: number;
                                   tagId: number;
-                                  duration: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: tagId,
                                     userId,
-                                    duration,
                                     type: EventWorkCategory.LARGE,
                                   });
                                 }}
@@ -450,16 +440,13 @@ const AllocationTeamTag = memo(
                                 handleClickTooltip={({
                                   userId,
                                   tagId,
-                                  duration,
                                 }: {
                                   userId: number;
                                   tagId: number;
-                                  duration: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: tagId,
                                     userId,
-                                    duration,
                                     type: EventWorkCategory.MEDIUM,
                                   });
                                 }}
@@ -518,16 +505,13 @@ const AllocationTeamTag = memo(
                                 handleClickTooltip={({
                                   userId,
                                   tagId,
-                                  duration,
                                 }: {
                                   userId: number;
                                   tagId: number;
-                                  duration: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: tagId,
                                     userId,
-                                    duration,
                                     type: EventWorkCategory.SMALL,
                                   });
                                 }}

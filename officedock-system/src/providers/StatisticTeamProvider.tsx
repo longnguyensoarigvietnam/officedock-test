@@ -115,10 +115,6 @@ interface ContextValue {
   setIsLoadingMediumCompare: Dispatch<SetStateAction<boolean>>;
   setIsLoadingOrganizationCompare: Dispatch<SetStateAction<boolean>>;
 
-  totalDurationTask: string;
-  setTotalDurationTask: Dispatch<SetStateAction<string>>;
-  totalDurationTaskCompare: string;
-  setTotalDurationTaskCompare: Dispatch<SetStateAction<string>>;
   currentPage: number;
   setCurrentPage: Dispatch<SetStateAction<number>>;
   // Value data
@@ -217,10 +213,6 @@ const defaultValue: ContextValue = {
   setIsLoadingLargeCompare: () => {},
   setIsLoadingMediumCompare: () => {},
   setIsLoadingOrganizationCompare: () => {},
-  totalDurationTask: '',
-  totalDurationTaskCompare: '',
-  setTotalDurationTask: () => {},
-  setTotalDurationTaskCompare: () => {},
   currentPage: 1,
   setCurrentPage: () => {},
   orderingOptions: null,
@@ -319,10 +311,6 @@ export const StatisticTeamStateProvider = ({
   const [totalDurationCategory, setTotalDurationCategory] =
     useState<string>('');
 
-  // Total duration compare
-  const [totalDurationTask, setTotalDurationTask] = useState<string>('');
-  const [totalDurationTaskCompare, setTotalDurationTaskCompare] =
-    useState<string>('');
   const [totalDurationCategoryCompare, setTotalDurationCategoryCompare] =
     useState<string>('');
   const [totalDurationLargeCompare, setTotalDurationLargeCompare] =
@@ -492,11 +480,6 @@ export const StatisticTeamStateProvider = ({
     setTagsOptions,
     orderingOptions,
     setOrderingOptions,
-
-    totalDurationTask,
-    setTotalDurationTask,
-    totalDurationTaskCompare,
-    setTotalDurationTaskCompare,
 
     isSkeletonCategoryTeamTask,
     setIsSkeletonCategoryTeamTask,

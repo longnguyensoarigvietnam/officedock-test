@@ -41,13 +41,11 @@ interface ProgressBarProps {
   handleClickTooltip: ({
     userId,
     categoryId,
-    duration,
     userDuration,
     organizationId,
   }: {
     userId: number;
     categoryId: number;
-    duration: string;
     userDuration: string;
     organizationId?: string;
   }) => void;
@@ -314,7 +312,6 @@ const ProgressBarTeamStatistic = ({
                           userId: item.user.id,
                           categoryId: id,
                           userDuration: item.duration,
-                          duration: duration,
                           organizationId: organizationId,
                         })
                       }

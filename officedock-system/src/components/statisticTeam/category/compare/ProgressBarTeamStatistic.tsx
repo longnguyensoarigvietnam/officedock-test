@@ -41,7 +41,6 @@ interface ProgressBarProps {
     duration,
     isCompare,
     userDuration,
-    totalTask,
     organizationId,
   }: {
     userId: number;
@@ -49,7 +48,6 @@ interface ProgressBarProps {
     duration: string;
     isCompare?: boolean;
     userDuration: string;
-    totalTask?: string;
     organizationId?: string;
   }) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
@@ -702,7 +700,6 @@ const ProgressBarTeamStatisticCompare = ({
                                 : DEFAULT_TIME_TEXT,
                             isCompare: true,
                             duration: itemCompare?.duration || '',
-                            totalTask: item.duration,
                             organizationId: item.organizationId,
                           })
                         }

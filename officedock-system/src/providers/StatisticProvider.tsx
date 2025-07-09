@@ -68,10 +68,6 @@ interface ContextValue {
   setStartDateCompare: Dispatch<SetStateAction<Date>>;
   setTotalDurationCategory: Dispatch<SetStateAction<string>>;
   setTotalDurationCategoryCompare: Dispatch<SetStateAction<string>>;
-  totalDurationTask: string;
-  setTotalDurationTask: Dispatch<SetStateAction<string>>;
-  totalDurationTaskCompare: string;
-  setTotalDurationTaskCompare: Dispatch<SetStateAction<string>>;
 
   // Loading
   isLoadingLarge: boolean;
@@ -125,8 +121,6 @@ const defaultValue: ContextValue = {
   totalDurationLarge: '',
   totalDurationMedium: '',
   totalDurationSmall: '',
-  totalDurationTask: '',
-  totalDurationTaskCompare: '',
 
   totalDurationLargeCompare: '',
   totalDurationMediumCompare: '',
@@ -137,8 +131,6 @@ const defaultValue: ContextValue = {
   setTotalDurationLarge: () => {},
   setTotalDurationMedium: () => {},
   setTotalDurationSmall: () => {},
-  setTotalDurationTask: () => {},
-  setTotalDurationTaskCompare: () => {},
 
   setTotalDurationLargeCompare: () => {},
   setTotalDurationMediumCompare: () => {},
@@ -230,12 +222,6 @@ export const StatisticStateProvider = ({
   const [selectedSmall, setSelectedSmall] = useState<OptionDropdownType | null>(
     null,
   );
-
-  // Total
-  // Total duration
-  const [totalDurationTask, setTotalDurationTask] = useState<string>('');
-  const [totalDurationTaskCompare, setTotalDurationTaskCompare] =
-    useState<string>('');
 
   const [totalDurationLarge, setTotalDurationLarge] = useState<string>('');
   const [totalDurationMedium, setTotalDurationMedium] = useState<string>('');
@@ -348,10 +334,6 @@ export const StatisticStateProvider = ({
     setTotalDurationSmallCompare,
     setTotalDurationCategory,
     setTotalDurationCategoryCompare,
-    totalDurationTask,
-    setTotalDurationTask,
-    totalDurationTaskCompare,
-    setTotalDurationTaskCompare,
 
     isCheckCompare,
     endDate,
