@@ -287,6 +287,7 @@ const TableChart = ({
   const columns: ColumnDef<ListTaskStatistic>[] = [
     {
       accessorKey: 'name',
+      enableSorting: false,
       header: () => {
         return (
           <p className="text-[#77858F] px-[12px] font-medium text-xs text-left">
@@ -383,6 +384,7 @@ const TableChart = ({
     },
     {
       accessorKey: 'categories',
+      enableSorting: false,
       header: () => {
         return (
           <p className="text-[#77858F] font-medium text-xs text-left">
@@ -478,14 +480,18 @@ const TableChart = ({
                     ? rowData.organizationType !==
                       OrganizationStatisticType.CALENDAR
                       ? listOptionsOrganization.filter(
-                          (org) => org.label !== ALL_TEAM_STATISTIC,
-                        )
-                      : listOptionsOrganization.filter(
                           (org) =>
                             org.label !== ALL_TEAM_STATISTIC &&
-                            org?.type === OrganizationStatisticType.CALENDAR,
+                            org?.type !== OrganizationStatisticType.CALENDAR,
                         )
-                    : listOptionsOrganization
+                      : listOptionsOrganization.filter(
+                          (org) => org.label !== ALL_TEAM_STATISTIC,
+                        )
+                    : listOptionsOrganization.filter(
+                        (org) =>
+                          org.label !== ALL_TEAM_STATISTIC &&
+                          org?.type !== OrganizationStatisticType.CALENDAR,
+                      )
                 }
                 isDisabled={
                   rowData.organizationType ===

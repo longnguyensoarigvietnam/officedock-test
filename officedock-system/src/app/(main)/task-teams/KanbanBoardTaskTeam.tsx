@@ -115,6 +115,8 @@ const KanbanBoardTaskTeam = () => {
     organizationTeamList,
     selectedOrganization: selectedOrganizationSideBar,
   } = useContext(GlobalStateContext);
+  const { taskSelected, statusTaskSelected, taskAddEmpty } =
+    useContext(TaskContext);
 
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
@@ -231,6 +233,7 @@ const KanbanBoardTaskTeam = () => {
       }
     },
   });
+
   useEffect(() => {
     if (!isReadyToFetch) {
       refetchTaskBoardListTeam();
@@ -2259,7 +2262,6 @@ const KanbanBoardTaskTeam = () => {
   const remainingCount = allLabels.length - firstThree.length;
 
   // Handle start and stop task
-  const { taskSelected, statusTaskSelected } = useContext(TaskContext);
 
   const updateTaskIsStart = (taskId: number, isPause: boolean = false) => {
     setListDataKanbanTeam((prevData) =>
@@ -2286,6 +2288,18 @@ const KanbanBoardTaskTeam = () => {
       }
     }
   }, [statusTaskSelected, taskSelected]);
+
+  // Add task empty when start empty task
+  useEffect(() => {
+    if (
+      taskAddEmpty &&
+      taskAddEmpty.organization?.id == selectedOrganizationSideBar?.value &&
+      !isConcurrently
+    ) {
+      addTaskToKanban(taskAddEmpty);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskAddEmpty, selectedOrganizationSideBar, isConcurrently]);
   return (
     <>
       <div

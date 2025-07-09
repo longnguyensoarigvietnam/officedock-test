@@ -229,7 +229,7 @@ const NoSettingColumn = ({
                     paddingTop: `${(columnWidth / 247) * 22}px`,
                     marginRight: `-${(columnWidth / 247) * 16}px`,
                     boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 '#EBF1F7'`,
-                    minHeight: '500px',
+                    minHeight: '700px',
                     maxHeight: '2000px',
                   }}
                   className={`flex-grow overflow-y-auto w-[100%]
@@ -239,7 +239,7 @@ const NoSettingColumn = ({
                       paddingLeft: `${(columnWidth / 247) * 14}px`,
                       paddingRight: `${(columnWidth / 247) * 14}px`,
                       marginRight: `${(columnWidth / 247) * 9}px`,
-                      minHeight: '500px',
+                      minHeight: '700px',
                     }}
                     className={`flex flex-col overflow-x-hidden  h-full pt-[14px] bg-[#DAE2EB] rounded-lg`}>
                     {listTaskNoSetting.map((item, index) => (

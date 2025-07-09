@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import Chart from 'react-apexcharts';
 import Image from 'next/image';
 import {
@@ -862,8 +862,6 @@ const StackedAreaTeamTagChart = ({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
   const getDataByIndex = (index: number) => {
     return statisticUserTaskDurationsList?.map((userData) => {
       const duration = userData.durations[index];
@@ -880,6 +878,26 @@ const StackedAreaTeamTagChart = ({
       };
     });
   };
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [chartHeight, setChartHeight] = useState<number>(0);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (chartRef.current) {
+        const inner = chartRef.current.querySelector(
+          '.apexcharts-inner',
+        ) as HTMLElement;
+        if (inner) {
+          const { height } = inner.getBoundingClientRect();
+          setChartHeight(height);
+        }
+      }
+    }, 100);
+
+    return () => clearTimeout(timeout);
+  }, [dataChart]);
 
   return (
     <div
@@ -1106,7 +1124,7 @@ const StackedAreaTeamTagChart = ({
               className={`!h-[380px] w-full mx-auto`}
             />
           ) : (
-            <div className="relative">
+            <div ref={chartRef} className="relative">
               <Chart
                 options={options as any}
                 series={dataChart}
@@ -1114,6 +1132,9 @@ const StackedAreaTeamTagChart = ({
                 height={380}
               />
               <div
+                style={{
+                  height: dataChart.length > 1 ? chartHeight : chartHeight + 5,
+                }}
                 className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'} pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
                 {!(dataChart.length == 1 && !dataChart[0].name) &&
                   timeRange
