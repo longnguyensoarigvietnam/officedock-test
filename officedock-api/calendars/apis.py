@@ -675,12 +675,10 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
             action = WebSocketEventType.CREATE_CHAT_ROOM.value
             chat_room_participant = chat_room.chat_rooms_participants.filter(
-                user__id=participant.id
+                user=participant
             ).first()
 
-        chat_room_participant.unread_messages = (
-            chat_room_participant.unread_messages + 1
-        )
+        chat_room_participant.unread_messages += 1
         chat_room_participant.save()
 
         message_data = {
@@ -696,9 +694,9 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         message_obj = chat_room.chat_messages.create(**message_data)
         # Update unread message of user logged
         user_participant = chat_room.chat_rooms_participants.filter(
-            user__id=user.id
+            user=user
         ).first()
-        user_participant.unread_messages = user_participant.unread_messages + 1
+        user_participant.unread_messages += 1
         user_participant.hidden_at = None
         user_participant.save()
         # Send WebSocket event for real-time updates

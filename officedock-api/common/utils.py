@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from djangorestframework_camel_case.render import CamelCaseJSONRenderer
 from djangorestframework_camel_case.parser import CamelCaseJSONParser
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, NotFound
 from google.auth.transport.requests import Request
 from google.cloud import storage
 
@@ -781,3 +781,26 @@ def delete_file(file_path: str) -> None:
     """
     if file_path and default_storage.exists(file_path):
         default_storage.delete(file_path)
+
+
+def validate_company_organization(company, org_id):
+    """
+    Validate that the given organization ID belongs to the specified company.
+
+    Args:
+        company: The company instance to check organizations against. Expected to have a related 'organizations' manager.
+        org_id: The ID of the organization to validate.
+
+    Returns:
+        The organization instance if found, otherwise raises NotFound.
+
+    Raises:
+        NotFound: If the organization with the given ID does not belong to the company.
+    """
+    org = None
+    if org_id:
+        org = company.organizations.filter(id=org_id).first()
+        if not org:
+            raise NotFound(ERROR_MESSAGES["organization_not_exists"])
+
+    return org

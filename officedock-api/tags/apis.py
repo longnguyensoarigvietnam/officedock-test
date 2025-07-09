@@ -8,6 +8,7 @@ from base.filters import FilterByPermission
 from base.permissions import ActionPermission
 
 from roles.constants import Screens
+from common.utils import split_id_from_string
 from .models import Tag
 from .serializers import TagSerializer
 from .filters import TagFilter
@@ -116,20 +117,13 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         queryset = self.filter_queryset(self.get_queryset())
 
-        if request.query_params.get("is_hidden") == "true":
+        if request.query_params.get("is_hidden", "").lower() == "true":
             queryset = queryset.filter(is_hidden=True)
         else:
             queryset = queryset.filter(is_hidden=False)
 
-        organization_ids = request.query_params.get("organization_ids")
-        if organization_ids:
-            ids = []
-            for id in organization_ids.split(","):
-                try:
-                    ids.append(int(id))
-                except ValueError:
-                    continue
-            if ids:
+        if organization_ids := request.query_params.get("organization_ids"):
+            if ids := split_id_from_string(organization_ids):
                 queryset = queryset.filter(organizations__id__in=ids)
 
         return self.response_pagination(

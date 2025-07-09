@@ -57,6 +57,7 @@ from .utils import (
     check_task_overtime,
     add_default_entries_to_categories,
     get_organizations_of_user_by_screen_role,
+    validate_company_organization,
 )
 
 
@@ -233,7 +234,9 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         Get creation data for Tag
         """
         user = request.user
+        company = user.company
         organization_id = request.query_params.get("organization_id")
+        validate_company_organization(company, organization_id)
         status = TaskStatus.objects.order_by("created_at").all()
         organizations = Organization.objects.filter(
             Q(users=user) | Q(id=organization_id)
@@ -257,14 +260,13 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 }
             )
         tags = (
-            user.company.tags.filter(
+            company.tags.filter(
                 is_hidden=False,
                 organizations__id__in=[organization_id]
                 if organization_id
                 else organizations,
             )
             .order_by("created_at")
-            .all()
             .distinct()
         )
 
@@ -476,19 +478,21 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         is_statistic = request.query_params.get("is_statistic")
         is_calendar_page = request.query_params.get("is_calendar_page")
         user = request.user
+        company = user.company
         organizations = []
         if not organization_id:
             organizations = user.organizations.all()
-        elif organization := Organization.all_objects.filter(
-            id=organization_id
-        ).first():
+        else:
+            organization = validate_company_organization(
+                company, organization_id
+            )
             organizations = [organization]
         data = {}
-        calendar_org = user.company.get_calendar_organization()
+        calendar_org = company.get_calendar_organization()
 
         def _get_tags_by_organizations(input_organizations):
             return (
-                request.user.company.tags.filter(
+                company.tags.filter(
                     is_hidden=False,
                     organizations__in=input_organizations,
                 )
@@ -570,7 +574,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 ).data
             )
             tags = (
-                user.company.tags.filter(
+                company.tags.filter(
                     is_hidden=False, organizations__in=organizations
                 )
                 .all()
@@ -624,7 +628,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 calendar_org, context={"user": user}
             ).data
             data["locations"] = EventLocationSerializer(
-                user.company.event_locations.all(), many=True
+                company.event_locations.all(), many=True
             ).data
         return self.response_ok(data)
 

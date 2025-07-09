@@ -487,7 +487,7 @@ class BaseOrganizationWithSkillSerializer(BaseOrganizationSerializer):
                     group_data["detail"].append(
                         BaseSkillHierarchySerializer(skill).data
                     )
-                    skill = Skill.objects.filter(parent__id=skill.id).first()
+                    skill = Skill.objects.filter(parent_id=skill.id).first()
                 data.append(group_data)
         return data
 

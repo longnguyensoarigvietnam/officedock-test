@@ -187,14 +187,14 @@ def calculate_progress_skill_map(
     # Get Skill have categories
     org_cat_skills = (
         OrganizationsStatisticCategoriesSkills.objects.filter(
-            organization_statistic_category__id__in=org_categories
+            organization_statistic_category_id__in=org_categories
         )
         .values_list("skill", flat=True)
         .distinct()
     )
     for skill in org_cat_skills:
         skill_map = SkillMap.objects.filter(
-            skill__id=skill,
+            skill_id=skill,
             organization=task.organization,
             staff=user,
             skill_map_skill_levels__is_complete=False,

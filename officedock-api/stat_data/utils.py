@@ -60,20 +60,20 @@ def get_list_durations_by_users(
             return get_duration_of_none_category(durations)
         else:
             filter_tasks &= Q(
-                task__categories__large_statistic_category__id=large_id
+                task__categories__large_statistic_category_id=large_id
             )
             filter_events &= Q(
-                schedule__categories__large_statistic_category__id=large_id
+                schedule__categories__large_statistic_category_id=large_id
             )
     if medium_id:
         if medium_id == NONE_CATEGORY and durations:
             return get_duration_of_none_category(durations, large_id)
         else:
             filter_tasks &= Q(
-                task__categories__medium_statistic_category__id=medium_id
+                task__categories__medium_statistic_category_id=medium_id
             )
             filter_events &= Q(
-                schedule__categories__medium_statistic_category__id=medium_id
+                schedule__categories__medium_statistic_category_id=medium_id
             )
     if small_id:
         if (medium_id == NONE_CATEGORY and durations) or (
@@ -82,10 +82,10 @@ def get_list_durations_by_users(
             return get_duration_of_none_category(durations, large_id, medium_id)
         else:
             filter_tasks &= Q(
-                task__categories__small_statistic_category__id=small_id
+                task__categories__small_statistic_category_id=small_id
             )
             filter_events &= Q(
-                schedule__categories__small_statistic_category__id=small_id
+                schedule__categories__small_statistic_category_id=small_id
             )
     if tags:
         filter_tasks &= Q(task__tags__in=tags)
@@ -385,8 +385,8 @@ def process_categories(
                     organizations=[org_id],
                 )
             else:
-                base_filter = Q(task__organization__id=org_id) | Q(
-                    schedule__organization__id=org_id
+                base_filter = Q(task__organization_id=org_id) | Q(
+                    schedule__organization_id=org_id
                 )
                 null_filter = Q()
 
@@ -743,21 +743,21 @@ def build_category_filters(
 
     # Large Category Filtering
     if large_category_id and large_category_id != NONE_CATEGORY:
-        filters &= Q(categories__large_statistic_category__id=large_category_id)
+        filters &= Q(categories__large_statistic_category_id=large_category_id)
     elif large_category_id == NONE_CATEGORY:
         filters &= Q(categories__large_statistic_category__isnull=True)
 
     # Medium Category Filtering
     if medium_category_id and medium_category_id != NONE_CATEGORY:
         filters &= Q(
-            categories__medium_statistic_category__id=medium_category_id
+            categories__medium_statistic_category_id=medium_category_id
         )
     elif medium_category_id == NONE_CATEGORY:
         filters &= Q(categories__medium_statistic_category__isnull=True)
 
     # Small Category Filtering
     if small_category_id and small_category_id != NONE_CATEGORY:
-        filters &= Q(categories__small_statistic_category__id=small_category_id)
+        filters &= Q(categories__small_statistic_category_id=small_category_id)
     elif small_category_id == NONE_CATEGORY:
         filters &= Q(categories__small_statistic_category__isnull=True)
 

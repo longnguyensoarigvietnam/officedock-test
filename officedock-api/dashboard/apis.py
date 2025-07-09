@@ -457,8 +457,8 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         # Check whether the current task/event has a start time set for now.
         overlapping_qs = TaskDuration.objects.filter(
             Q(
-                task__id=task_id,
-                schedule__id=schedule_id,
+                task_id=task_id,
+                schedule_id=schedule_id,
             )
             & Q(started_at__lt=now(), paused_at__gt=now())
             & Q(user=user)
@@ -628,8 +628,8 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             # Get current task running
             task_running = user.task_durations.filter(
                 started_at__gte=start_of_today,
-                task__id=task_id,
-                schedule__id=schedule_id,
+                task_id=task_id,
+                schedule_id=schedule_id,
             ).last()
         else:
             # Get current task running
@@ -708,7 +708,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             )
 
         if user_id:
-            queryset = queryset.filter(user__id=user_id)
+            queryset = queryset.filter(user_id=user_id)
         else:
             queryset = queryset.none()
 

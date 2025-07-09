@@ -375,7 +375,7 @@ class SkillMapViewSet(
                         group_skill_map.append(
                             SkillReplaceSkilMapSerializer(skill).data
                         )
-                    skill = Skill.objects.filter(parent__id=skill.id).first()
+                    skill = Skill.objects.filter(parent_id=skill.id).first()
                 data_skill_maps.append(group_skill_map)
             data["organizations"].append(
                 {
@@ -423,7 +423,7 @@ class SkillMapViewSet(
                     group_skill.append(
                         SkillReplaceSkilMapSerializer(skill).data
                     )
-                    skill = Skill.objects.filter(parent__id=skill.id).first()
+                    skill = Skill.objects.filter(parent_id=skill.id).first()
                 data_skills.append(group_skill)
             data.append(
                 {
@@ -472,7 +472,7 @@ class SkillMapViewSet(
                     skill, context={"skill_map": skill_map}
                 ).data
             )
-            skill = Skill.objects.filter(parent__id=skill.id).first()
+            skill = Skill.objects.filter(parent_id=skill.id).first()
 
         return self.response_ok(data)
 
@@ -538,10 +538,10 @@ class SkillMapViewSet(
                 Q(permission__name=permission)
                 & Q(selection_result__in=selection_results)
                 & Q(Q(company=skill_map.company) | Q(role__system_role=True))
-            ).values_list("role__id", flat=True)
+            ).values_list("role_id", flat=True)
             users = (
                 User.objects.filter(
-                    user_roles__role__id__in=role_ids, company=skill_map.company
+                    roles__id__in=role_ids, company=skill_map.company
                 )
                 .exclude(id=skill_map.staff.id)
                 .all()
@@ -961,6 +961,6 @@ class SkillViewSet(
         # Handle data from root to last child
         while skill:
             data.append(SkillSerializer(skill).data)
-            skill = Skill.objects.filter(parent__id=skill.id).first()
+            skill = Skill.objects.filter(parent_id=skill.id).first()
 
         return self.response_ok(data)
