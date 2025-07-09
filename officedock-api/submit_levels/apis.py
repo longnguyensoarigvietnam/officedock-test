@@ -240,8 +240,12 @@ class SubmitLevelViewSet(
                 skill=skill_level.skill,
                 measure_time=skill_level.measure_time,
                 measure_count=skill_level.measure_count,
-                look_back_interval=look_back_interval,
-                look_back_type=look_back_type,
+                look_back_interval=look_back_interval
+                if look_back_interval
+                else skill_level.look_back_interval,
+                look_back_type=look_back_type
+                if look_back_type
+                else skill_level.look_back_type,
                 items=items,
             )
         step_after_submit, level_after_submit = get_next_progression(
