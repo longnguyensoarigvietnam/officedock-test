@@ -762,6 +762,7 @@ class TaskViewSet(
         tag_ids = serializer_data.pop("tag_ids", None)
         task_status = serializer_data.get("status", None)
         is_exists_task_schedules = "task_schedules" in serializer_data
+        is_exists_categories = "category_ids" in serializer_data
         task_schedules = serializer_data.pop("task_schedules", None)
         todo_list = serializer_data.pop("todo_list", None)
         categories = serializer_data.pop("category_ids", None)
@@ -1171,13 +1172,17 @@ class TaskViewSet(
             case = CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value
 
         # Create or update categories
-        if categories is not None and not compare_list_categories(
+        if is_exists_categories and not compare_list_categories(
             categories, get_common_categories(task.categories.first())
         ):
             for user in task.people_in_charge.all():
                 # Minus skill map process have old categories of current task
                 calculate_progress_skill_map(
-                    current_task, user, is_minus=True, case=case
+                    current_task,
+                    user,
+                    is_minus=True,
+                    case=case,
+                    organization=current_org,
                 )
 
             # Update new categories

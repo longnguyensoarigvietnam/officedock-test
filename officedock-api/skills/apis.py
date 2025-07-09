@@ -579,86 +579,70 @@ class SkillMapViewSet(
         ]
     )
     @action(
-        methods=["POST"],
-        detail=True,
-        url_path="skill-map-level",
-        serializer_class=UpdateSkillMapSkillLevelSerializer,
-    )
-    def update_skill_map_level(self, request, pk=None):
-        """
-        Handle update skill map skill level
-        """
-        skill_map_level_id = request.query_params.get(
-            "skill_map_level_id", None
-        )
-        skill_map_level = get_object_or_404(
-            SkillMapSkillLevel, id=skill_map_level_id
-        )
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        skill_map_level.popup = serializer.validated_data.get("popup", True)
-        skill_map_level.save()
-
-        return self.response_ok()
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter("skill_map_level_id", type=int, required=True)
-        ]
-    )
-    @action(
-        methods=["DELETE"],
+        methods=["POST", "DELETE"],
         detail=True,
         url_path="skill-map-level",
         serializer_class=UpdateSkillMapSkillLevelSerializer,
     )
     @transaction.atomic()
-    def destroy_skill_map_level(self, request, pk=None):
+    def update_skill_map_level(self, request, pk=None):
         """
-        Handle destroy skill map skill level and rollback old skill level
+        Handle update skill map skill level
         """
-        skill_map = self.get_object()
-        old_skill = skill_map.skill_parent
-        skill_map_level_id = request.query_params.get(
-            "skill_map_level_id", None
-        )
-        skill_map_level = get_object_or_404(
-            SkillMapSkillLevel, id=skill_map_level_id
-        )
-        submit_level = SubmitLevelHistory.objects.filter(
-            skill=skill_map_level.skill,
-            step_after_submit=skill_map.step,
-            level_after_submit=skill_map_level.level,
-            staff=skill_map.staff,
-        ).first()
-        if not submit_level:
+        if request.method == "POST":
+            skill_map_level_id = request.query_params.get(
+                "skill_map_level_id", None
+            )
+            skill_map_level = get_object_or_404(
+                SkillMapSkillLevel, id=skill_map_level_id
+            )
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            skill_map_level.popup = serializer.validated_data.get("popup", True)
+            skill_map_level.save()
+        elif request.method == "DELETE":
+            skill_map = self.get_object()
+            old_skill = skill_map.skill_parent
+            skill_map_level_id = request.query_params.get(
+                "skill_map_level_id", None
+            )
+            skill_map_level = get_object_or_404(
+                SkillMapSkillLevel, id=skill_map_level_id
+            )
             submit_level = SubmitLevelHistory.objects.filter(
-                skill=old_skill,
+                skill=skill_map_level.skill,
                 step_after_submit=skill_map.step,
                 level_after_submit=skill_map_level.level,
                 staff=skill_map.staff,
             ).first()
-        step_before_submit = submit_level.step_before_submit
-        level_before_submit = submit_level.level_before_submit
-        ChatMessage.objects.filter(submit_level=submit_level).delete()
-        submit_level.delete()
-        skill_map_level.delete()
-        last_skill_map = skill_map.skill_map_skill_levels.filter(
-            is_complete=True
-        )
-        if last_skill_map.exists():
-            last_skill_map.update(is_complete=False, popup=False)
-        else:
-            old_skil_map = SkillMap.objects.filter(
-                skill=old_skill,
-                staff=skill_map.staff,
-                step=step_before_submit,
+            if not submit_level:
+                submit_level = SubmitLevelHistory.objects.filter(
+                    skill=old_skill,
+                    step_after_submit=skill_map.step,
+                    level_after_submit=skill_map_level.level,
+                    staff=skill_map.staff,
+                ).first()
+            step_before_submit = submit_level.step_before_submit
+            level_before_submit = submit_level.level_before_submit
+            ChatMessage.objects.filter(submit_level=submit_level).delete()
+            submit_level.delete()
+            skill_map_level.delete()
+            last_skill_map = skill_map.skill_map_skill_levels.filter(
+                is_complete=True
             )
-            old_skil_map.update(is_complete=False)
-            old_skil_map.first().skill_map_skill_levels.filter(
-                is_complete=True, level=level_before_submit
-            ).update(is_complete=False, popup=False)
-            skill_map.delete()
+            if last_skill_map.exists():
+                last_skill_map.update(is_complete=False, popup=False)
+            else:
+                old_skil_map = SkillMap.objects.filter(
+                    skill=old_skill,
+                    staff=skill_map.staff,
+                    step=step_before_submit,
+                )
+                old_skil_map.update(is_complete=False)
+                old_skil_map.first().skill_map_skill_levels.filter(
+                    is_complete=True, level=level_before_submit
+                ).update(is_complete=False, popup=False)
+                skill_map.delete()
 
         return self.response_ok()
 
