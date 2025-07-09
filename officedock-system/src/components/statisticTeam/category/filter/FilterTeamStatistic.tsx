@@ -119,7 +119,7 @@ const FilterTeamStatistic = ({
               );
             })}
             {allLabelUser.length > 3 && (
-              <p className=" h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
+              <p className=" h-6 px-1 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
                 +{remainingCountUser}
               </p>
             )}

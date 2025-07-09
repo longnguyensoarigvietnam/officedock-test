@@ -59,6 +59,7 @@ import {
   MAX_FILE_SIZE,
   MENTION_ALL_MEMBERS,
   NO_OPTION_CATEGORY,
+  NO_SETTING,
   PAGINATION_PAGE_SIZE_HIGHT,
   REACTION_LIST,
 } from '@constants';
@@ -1391,6 +1392,9 @@ const ChatDetail = ({
   const { mutate: editTask } = useMutation('postEditTask', handleEditTask, {
     onSuccess: async () => {
       handleRemoveParam();
+
+      queryClient.refetchQueries(['getDataTaskHeaderList']);
+      queryClient.refetchQueries(['getTaskDurationDetail']);
       queryClient.refetchQueries(['getTaskHeaderStart']);
       queryClient.refetchQueries(['getDataStatistic']);
 
@@ -1454,7 +1458,7 @@ const ChatDetail = ({
     if (data.categories.LARGE?.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.LARGE.value}` == NO_OPTION_CATEGORY
+          `${data.categories.LARGE.value}` == NO_SETTING
             ? null
             : `${data.categories.LARGE.value}`,
         type: EventWorkCategory.LARGE,
@@ -1463,7 +1467,7 @@ const ChatDetail = ({
     if (data.categories.MEDIUM.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.MEDIUM.value}` == NO_OPTION_CATEGORY
+          `${data.categories.MEDIUM.value}` == NO_SETTING
             ? null
             : `${data.categories.MEDIUM.value}`,
         type: EventWorkCategory.MEDIUM,
@@ -1472,7 +1476,7 @@ const ChatDetail = ({
     if (data.categories.SMALL.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.SMALL.value}` == NO_OPTION_CATEGORY
+          `${data.categories.SMALL.value}` == NO_SETTING
             ? null
             : `${data.categories.SMALL.value}`,
         type: EventWorkCategory.SMALL,

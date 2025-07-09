@@ -63,6 +63,7 @@ import {
   DEFAULT_END_TIME,
   DEFAULT_START_TIME,
   NO_OPTION_CATEGORY,
+  NO_SETTING,
 } from '@constants';
 
 import { Task, TaskFormData, TaskRequest } from '@interfaces/task';
@@ -377,6 +378,7 @@ const Header = ({ className }: HeaderProps) => {
   const { mutate: editTask } = useMutation('postEditTask', handleEditTask, {
     onSuccess: async () => {
       handleRemoveParam();
+      queryClient.refetchQueries(['getDataTaskHeaderList']);
       queryClient.refetchQueries(['getTaskHeaderStart']);
       queryClient.refetchQueries(['getDataStatistic']);
       queryClient.refetchQueries(['getTaskDurationDetail']);
@@ -466,7 +468,7 @@ const Header = ({ className }: HeaderProps) => {
     if (data.categories.LARGE?.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.LARGE.value}` == NO_OPTION_CATEGORY
+          `${data.categories.LARGE.value}` == NO_SETTING
             ? null
             : `${data.categories.LARGE.value}`,
         type: EventWorkCategory.LARGE,
@@ -475,7 +477,7 @@ const Header = ({ className }: HeaderProps) => {
     if (data.categories.MEDIUM.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.MEDIUM.value}` == NO_OPTION_CATEGORY
+          `${data.categories.MEDIUM.value}` == NO_SETTING
             ? null
             : `${data.categories.MEDIUM.value}`,
         type: EventWorkCategory.MEDIUM,
@@ -484,7 +486,7 @@ const Header = ({ className }: HeaderProps) => {
     if (data.categories.SMALL.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.SMALL.value}` == NO_OPTION_CATEGORY
+          `${data.categories.SMALL.value}` == NO_SETTING
             ? null
             : `${data.categories.SMALL.value}`,
         type: EventWorkCategory.SMALL,

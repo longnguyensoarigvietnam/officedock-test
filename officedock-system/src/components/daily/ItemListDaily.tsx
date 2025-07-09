@@ -11,6 +11,7 @@ import {
 } from '@interfaces/statistic';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { convertToJapaneseTime } from '@utils/date';
+import { useDebounceCallback } from '@hooks/useDebounceCallback';
 
 type Props = {
   userData: DataUserDetailDailyType;
@@ -38,6 +39,21 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
     (member) => member.id == userData.id,
   );
 
+  const handleSaveData = (e: boolean) => {
+    handleConfirm({
+      id: userData.id,
+      isConfirmed: e,
+      categoryId: organization.id,
+    });
+  };
+
+  const debouncedSaveChecked = useDebounceCallback(handleSaveData, 500);
+
+  const handleChangeCheckBox = (e: boolean) => {
+    setIsConfirm(e);
+    debouncedSaveChecked(e);
+  };
+
   return (
     <div
       key={userData.id}
@@ -54,14 +70,7 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
           )}
           <Checkbox
             isChecked={isConfirm}
-            onChange={(e) => {
-              handleConfirm({
-                id: userData.id,
-                isConfirmed: e,
-                categoryId: organization.id,
-              });
-              setIsConfirm(e);
-            }}
+            onChange={handleChangeCheckBox}
             className="flex justify-center"
             classSize="w-4 h-4"
             boxLabelClass="!m-0"

@@ -24,7 +24,7 @@ const FilterStatistic = ({ className }: Props) => {
   } = useContext(StatisticStateContext);
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <div className="w-[240px]  relative flex-shrink-0">
+      <div className="w-[240px]  relative top-[10px] flex-shrink-0">
         <MultiSelectDropdown
           isShowIconFilter
           options={tagsOptions}
@@ -56,7 +56,7 @@ const FilterStatistic = ({ className }: Props) => {
           </span>
         )}
       </div>
-      <div className="relative right-[224px] flex-grow top-[-8px]">
+      <div className="relative right-[224px] flex-grow top-[3px]">
         <div className="flex gap-2 flex-wrap  w-full flex-shrink-0">
           {selectedTags.map((item) => {
             return (

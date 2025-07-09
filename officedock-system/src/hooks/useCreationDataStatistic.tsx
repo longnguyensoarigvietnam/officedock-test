@@ -56,6 +56,7 @@ const useCreationDataStatistic = ({
     ],
     queryFn: ({ signal }) => getCreationDataStatistic({ signal }),
     select: (response: DataResponseStatisticCreationType) => {
+      if (is_calendar_page) return response;
       const updatedOrganizations = response.organizations.map(
         (organization) => {
           const updatedCategories = organization.statisticCategories.map(
