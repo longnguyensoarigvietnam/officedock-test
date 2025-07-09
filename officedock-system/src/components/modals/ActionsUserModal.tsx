@@ -1,5 +1,12 @@
 'use client';
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import {
@@ -45,10 +52,20 @@ export type ActionsUserModalProps = {
   action?: string | null;
   originalOrganizationOptions: OptionDropdownType[];
   roleUserOptions: OptionDropdownType[];
-  emailErrorMessage: string;
-  usernameErrorMessage: string;
-  passwordErrorMessage: string;
-  setPasswordErrorMessage: Dispatch<SetStateAction<string>>;
+  errorMessages: {
+    email?: string;
+    username?: string;
+    password?: string;
+    fullName?: string;
+  };
+  setErrorMessages: Dispatch<
+    SetStateAction<{
+      email?: string;
+      username?: string;
+      password?: string;
+      fullName?: string;
+    }>
+  >;
   onDelete?: (userToDelete: User) => void;
   onClose: () => void;
   onCreate?: (values: CreateUserFormData, isOptionEmail: boolean) => void;
@@ -61,10 +78,8 @@ const ActionsUserModal = ({
   action = 'CREATE',
   roleUserOptions,
   originalOrganizationOptions,
-  emailErrorMessage,
-  usernameErrorMessage,
-  passwordErrorMessage,
-  setPasswordErrorMessage,
+  errorMessages,
+  setErrorMessages,
   onClose,
   onDelete,
   onCreate,
@@ -384,8 +399,16 @@ const ActionsUserModal = ({
                   placeholder="入力してください"
                   register={register('name', {
                     required: NAME_REQUIRED_MESSAGE,
+                    onChange: () => {
+                      setErrorMessages((prev) => {
+                        return {
+                          ...prev,
+                          fullName: '',
+                        };
+                      });
+                    },
                   })}
-                  className={`h-[42px] !border-[#77858F] rounded-md !w-[426px] ${!errors?.name ? '!border-[#77858F]' : '!border-error'}`}
+                  className={`h-[42px] !border-[#77858F] rounded-md !w-[426px] ${errors?.name?.message || errorMessages?.fullName ? '!border-error' : '!border-[#77858F]'}`}
                 />
               </div>
               <div className="flex gap-2 items-center">
@@ -403,6 +426,12 @@ const ActionsUserModal = ({
                 </Button>
               </div>
             </div>
+            {errorMessages?.fullName && (
+              <ErrorMessage
+                error={errorMessages.fullName}
+                className="mt-[5px] mb-[5px] text-xs"
+              />
+            )}
 
             {/* Options */}
             <div className="flex gap-5 mt-[38px]">
@@ -464,11 +493,21 @@ const ActionsUserModal = ({
                       disabled={action == ActionsEvent.EDIT}
                       register={register('username', {
                         required: ID_REQUIRED_MESSAGE,
+                        onChange: () => {
+                          setErrorMessages((prev) => {
+                            return {
+                              ...prev,
+                              username: '',
+                            };
+                          });
+                        },
                       })}
-                      className={`h-[34px] !border-[#77858F] !w-full text-sm rounded-md !py-0 ${!errors?.username ? '!border-[#77858F]' : '!border-error'}`}
+                      className={`h-[34px] !border-[#77858F] !w-full text-sm rounded-md !py-0 ${errors?.username?.message || errorMessages.username ? '!border-error' : '!border-[#77858F]'}`}
                     />
                     <ErrorMessage
-                      error={errors?.username?.message || usernameErrorMessage}
+                      error={
+                        errors?.username?.message || errorMessages.username
+                      }
                       className="mt-[5px] mb-[5px] text-xs"
                     />
                   </div>
@@ -486,12 +525,22 @@ const ActionsUserModal = ({
                       name="email"
                       required
                       placeholder="入力してください"
-                      register={register('email', emailRules(true))}
+                      register={register('email', {
+                        ...emailRules(true),
+                        onChange: () => {
+                          setErrorMessages((prev) => {
+                            return {
+                              ...prev,
+                              email: '',
+                            };
+                          });
+                        },
+                      })}
                       disabled={action == ActionsEvent.EDIT}
-                      className={`h-[34px] !border-[#77858F] !w-full rounded-md !text-sm !py-0 ${!errors?.email ? '!border-[#77858F]' : '!border-error'}`}
+                      className={`h-[34px] !border-[#77858F] !w-full rounded-md !text-sm !py-0 ${errors?.email?.message || errorMessages?.email ? '!border-error' : '!border-[#77858F]'}`}
                     />
                     <ErrorMessage
-                      error={errors?.email?.message || emailErrorMessage}
+                      error={errors?.email?.message || errorMessages?.email}
                       className="mt-[5px] mb-[5px] text-xs"
                     />
                   </div>
@@ -509,10 +558,12 @@ const ActionsUserModal = ({
                     <Input
                       required
                       placeholder="入力してください"
-                      register={register(
-                        'twoFactorAuthEmailRequired',
-                        emailRules(true),
-                      )}
+                      register={register('twoFactorAuthEmailRequired', {
+                        ...emailRules(true),
+                        onChange: () => {
+                          clearErrors('twoFactorAuthEmailRequired');
+                        },
+                      })}
                       className={`h-[34px] !border-[#77858F] rounded-md !text-sm !py-0 ${!errors?.twoFactorAuthEmailRequired ? '!border-[#77858F]' : '!border-error'}`}
                     />
                     <ErrorMessage
@@ -532,10 +583,12 @@ const ActionsUserModal = ({
                     <Input
                       required={false}
                       placeholder="入力してください"
-                      register={register(
-                        'twoFactorAuthEmail',
-                        emailRules(false),
-                      )}
+                      register={register('twoFactorAuthEmail', {
+                        ...emailRules(false),
+                        onChange: () => {
+                          clearErrors('twoFactorAuthEmail');
+                        },
+                      })}
                       className={`h-[34px] !border-[#77858F] rounded-md !text-sm !py-0 ${!errors?.twoFactorAuthEmail ? '!border-[#77858F]' : '!border-error'}`}
                     />
                   </div>
@@ -554,13 +607,18 @@ const ActionsUserModal = ({
                         register={register('password', {
                           ...passwordRegisterRules(false),
                           onChange: () => {
-                            setPasswordErrorMessage('');
+                            setErrorMessages((prev) => {
+                              return {
+                                ...prev,
+                                password: '',
+                              };
+                            });
                           },
                         })}
-                        className={`h-[34px] w-full leading-[34px] !text-sm ${!passwordErrorMessage ? '!border-[#77858F]' : '!border-error'} rounded-md px-2 custom-password-mask`}
+                        className={`h-[34px] w-full leading-[34px] !text-sm ${!errorMessages?.password ? '!border-[#77858F]' : '!border-error'} rounded-md px-2 custom-password-mask`}
                       />
                       <ErrorMessage
-                        error={passwordErrorMessage}
+                        error={errorMessages.password}
                         className="mt-[5px] mb-[5px] text-xs"
                       />
                     </div>

@@ -195,8 +195,15 @@ const Header = ({ className }: HeaderProps) => {
   const [openRewardModal, setOpenRewardModal] = useState(false);
   const [dataRewardSkill, setDataRewardSkill] =
     useState<WebSocketMessageData>();
-  const [editPasswordErrorMessage, setEditPasswordErrorMessage] =
-    useState<string>('');
+
+  // Error messages
+  const [editProfileErrorMessages, setEditProfileErrorMessages] = useState<{
+    password?: string;
+    fullName?: string;
+  }>({
+    password: '',
+    fullName: '',
+  });
 
   const { showToast } = useToast();
   const { authenticatedUser } = useAuthenticatedUser({});
@@ -875,7 +882,10 @@ const Header = ({ className }: HeaderProps) => {
     if (data.password) formData.append('password', data.password);
     if (data.avatar) formData.append('avatar', data.avatar);
     formData.append('profile.fullName', data.profile.fullName);
-    return await api.patch(apiRouters.USER_DETAIL(String(data.id)), formData);
+    return await api.patch(
+      `${apiRouters.USER_DETAIL(String(data.id))}?current_screen=my_profile`,
+      formData,
+    );
   };
 
   const { mutate: editProfile } = useMutation(
@@ -896,16 +906,22 @@ const Header = ({ className }: HeaderProps) => {
           queryClient.invalidateQueries({
             queryKey: ['getCreationDataStatistic'],
           }),
+          queryClient.invalidateQueries({
+            queryKey: ['getCreationDataStatisticTeam'],
+          }),
           queryClient.invalidateQueries({ queryKey: ['getTaskTeamList'] }),
         ]);
-        setEditPasswordErrorMessage('');
+        setEditProfileErrorMessages({
+          fullName: '',
+          password: '',
+        });
       },
       onError: (error: AxiosError<any>) => {
-        const errorDetail = error.response?.data;
-
-        const passwordError = errorDetail?.password?.[0];
-        if (passwordError) {
-          setEditPasswordErrorMessage(passwordError);
+        if (Object.keys(error.response?.data || {}).length) {
+          setEditProfileErrorMessages({
+            fullName: error.response?.data?.profile?.fullName?.[0] || '',
+            password: error.response?.data?.password?.[0] || '',
+          });
         } else {
           showErrorToast(error, ERROR_UPDATE_MESSAGE);
         }
@@ -1120,12 +1136,15 @@ const Header = ({ className }: HeaderProps) => {
           open={openEditProfileModal}
           onClose={() => {
             setOpenEditProfileModal(false);
-            setEditPasswordErrorMessage('');
+            setEditProfileErrorMessages({
+              fullName: '',
+              password: '',
+            });
           }}
           onEdit={handleConfirmEditProfile}
           setOpenErrorUploadFileModal={setOpenErrorUploadFileModal}
-          setEditPasswordErrorMessage={setEditPasswordErrorMessage}
-          editPasswordErrorMessage={editPasswordErrorMessage}
+          setEditProfileErrorMessages={setEditProfileErrorMessages}
+          editProfileErrorMessages={editProfileErrorMessages}
           authenticatedUser={authenticatedUser}
         />
       )}

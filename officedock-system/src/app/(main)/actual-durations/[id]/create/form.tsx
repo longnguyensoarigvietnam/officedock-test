@@ -76,7 +76,7 @@ const CreateActualDurationsForm = () => {
     searchParams.get('type') !== EventCalendarType.TASK
       ? Number(params.id)
       : undefined;
-      
+
   // Toast
   const { showToast } = useToast();
 
@@ -836,29 +836,32 @@ const CreateActualDurationsForm = () => {
               />
 
               {/* Category small */}
-              <Controller
-                control={control}
-                name={'smallCategory'}
-                render={({ field: { value, onChange } }) => (
-                  <Dropdown
-                    className="!h-[46px] !py-1 text-sm"
-                    classNameTextData="!text-sm"
-                    classNameOption="!text-sm"
-                    classNameError="!text-sm"
-                    selectedOption={
-                      dataOptionsCategorySmall?.find(
-                        (element) =>
-                          element.value == (value as OptionDropdownType)?.value,
-                      ) as OptionDropdownType | undefined
-                    }
-                    options={dataOptionsCategorySmall}
-                    placeholder="小カテゴリ"
-                    onChange={(e) => {
-                      onChange(e);
-                    }}
-                  />
-                )}
-              />
+              {searchParams.get('type') == EventCalendarType.TASK && (
+                <Controller
+                  control={control}
+                  name={'smallCategory'}
+                  render={({ field: { value, onChange } }) => (
+                    <Dropdown
+                      className="!h-[46px] !py-1 text-sm"
+                      classNameTextData="!text-sm"
+                      classNameOption="!text-sm"
+                      classNameError="!text-sm"
+                      selectedOption={
+                        dataOptionsCategorySmall?.find(
+                          (element) =>
+                            element.value ==
+                            (value as OptionDropdownType)?.value,
+                        ) as OptionDropdownType | undefined
+                      }
+                      options={dataOptionsCategorySmall}
+                      placeholder="小カテゴリ"
+                      onChange={(e) => {
+                        onChange(e);
+                      }}
+                    />
+                  )}
+                />
+              )}
             </div>
           </div>
           <div className="grid gap-3 w-1/2">
