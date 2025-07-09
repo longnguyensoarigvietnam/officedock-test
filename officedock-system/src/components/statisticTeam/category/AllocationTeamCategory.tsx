@@ -143,6 +143,7 @@ const AllocationTeamCategory = memo(
       ProgressDataType[]
     >([]);
     const {
+      isDisableCalendar,
       isHasLoading,
       orderingOptions,
       totalDurationLarge,
@@ -535,7 +536,9 @@ const AllocationTeamCategory = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge || isHasLoading}
+                        disabled={
+                          !selectedLarge || isHasLoading || isDisableCalendar
+                        }
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}

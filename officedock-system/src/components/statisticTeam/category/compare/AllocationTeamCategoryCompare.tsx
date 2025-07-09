@@ -257,6 +257,7 @@ const AllocationTeamCategoryCompare = memo(
       ProgressDataCompareItem[]
     >([]);
     const {
+      isDisableCalendar,
       isHasLoading,
       orderingOptions,
       totalDurationLarge,
@@ -787,7 +788,9 @@ const AllocationTeamCategoryCompare = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge || isHasLoading}
+                        disabled={
+                          !selectedLarge || isHasLoading || isDisableCalendar
+                        }
                       />
 
                       {isLoadingMedium || isLoadingMediumCompare ? (

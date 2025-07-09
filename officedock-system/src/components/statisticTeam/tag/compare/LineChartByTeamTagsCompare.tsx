@@ -127,6 +127,7 @@ const LineChartByTeamTagsCompare = ({
 }: Props) => {
   // Context
   const {
+    isDisableCalendar,
     isHasLoading,
     listOptionsOrganization,
     largeOptions,
@@ -1824,7 +1825,9 @@ const LineChartByTeamTagsCompare = ({
                       setSelectedTag(null);
                       handleSelectMedium(data);
                     }}
-                    disabled={!selectedLarge || isHasLoading}
+                    disabled={
+                      !selectedLarge || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>
@@ -1860,7 +1863,9 @@ const LineChartByTeamTagsCompare = ({
                       setSelectedTag(null);
                       handleSelectSmall(data);
                     }}
-                    disabled={!selectedMedium || isHasLoading}
+                    disabled={
+                      !selectedMedium || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>

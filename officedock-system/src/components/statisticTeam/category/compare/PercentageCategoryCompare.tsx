@@ -44,6 +44,7 @@ const PercentageTeamCategoryCompare = ({
   handleSelectOrganizationCustom,
 }: Props) => {
   const {
+    isDisableCalendar,
     largeOptions,
     mediumOptions,
     listOptionsOrganization,
@@ -401,7 +402,9 @@ const PercentageTeamCategoryCompare = ({
                       options={mediumOptions}
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}
-                      disabled={!selectedLarge || isHasLoading}
+                      disabled={
+                        !selectedLarge || isHasLoading || isDisableCalendar
+                      }
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam

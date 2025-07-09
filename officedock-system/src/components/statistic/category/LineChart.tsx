@@ -81,6 +81,7 @@ const LineChart = ({
   handleSelectMedium,
 }: Props) => {
   const {
+    isDisableCalendar,
     isHasLoading,
     totalDurationLarge,
     totalDurationMedium,
@@ -790,7 +791,9 @@ const LineChart = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
-                    disabled={!selectedLarge || isHasLoading}
+                    disabled={
+                      !selectedLarge || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>

@@ -118,6 +118,7 @@ const LineChartCompare = ({
   handleSelectSmall,
 }: Props) => {
   const {
+    isDisableCalendar,
     isHasLoading,
     listOptionsOrganization,
     largeOptions,
@@ -1136,7 +1137,9 @@ const LineChartCompare = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
-                    disabled={!selectedLarge || isHasLoading}
+                    disabled={
+                      !selectedLarge || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>
@@ -1168,7 +1171,9 @@ const LineChartCompare = ({
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
-                    disabled={!selectedMedium || isHasLoading}
+                    disabled={
+                      !selectedMedium || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>

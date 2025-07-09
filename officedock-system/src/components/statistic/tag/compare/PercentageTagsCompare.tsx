@@ -45,6 +45,7 @@ const PercentageTagsCompare = ({
   handleSelectOrganization,
 }: Props) => {
   const {
+    isDisableCalendar,
     isHasLoading,
     largeOptions,
     mediumOptions,
@@ -445,7 +446,9 @@ const PercentageTagsCompare = ({
                       options={mediumOptions}
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}
-                      disabled={!selectedLarge || isHasLoading}
+                      disabled={
+                        !selectedLarge || isHasLoading || isDisableCalendar
+                      }
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
@@ -495,7 +498,9 @@ const PercentageTagsCompare = ({
                       options={smallOptions}
                       selectedOption={selectedSmall || undefined}
                       onChange={(data) => handleSelectSmall(data)}
-                      disabled={!selectedMedium || isHasLoading}
+                      disabled={
+                        !selectedMedium || isHasLoading || isDisableCalendar
+                      }
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare

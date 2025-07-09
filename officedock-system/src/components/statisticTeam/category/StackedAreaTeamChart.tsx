@@ -107,6 +107,7 @@ const StackedAreaTeamChart = ({
 }: Props) => {
   // Context
   const {
+    isDisableCalendar,
     totalDurationTask,
     listOptionsOrganization,
     largeOptions,
@@ -954,7 +955,9 @@ const StackedAreaTeamChart = ({
                       setSelectedCategory(null);
                       handleSelectMedium(data);
                     }}
-                    disabled={!selectedLarge || isHasLoading}
+                    disabled={
+                      !selectedLarge || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>

@@ -24,6 +24,7 @@ import { pageRouters } from '@constants/routers';
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
+import { OrganizationStatisticType } from '@constants/enums';
 
 const StatisticTagBoard = () => {
   const {
@@ -64,6 +65,7 @@ const StatisticTagBoard = () => {
     setIsLoadingMediumCompare,
     setIsLoadingSmallCompare,
     setCurrentPage,
+    setDataMediumCalendar,
   } = useContext(StatisticTagStateContext);
   const [isMyTask, setIsMyTask] = useState(true);
   const router = useRouter();
@@ -169,6 +171,9 @@ const StatisticTagBoard = () => {
       }
     }
     setCurrentPage(1);
+    if (data.type === OrganizationStatisticType.CALENDAR) {
+      setDataMediumCalendar(undefined);
+    }
 
     setSelectedOrganization(data);
     setSelectedLarge(null);
@@ -206,6 +211,9 @@ const StatisticTagBoard = () => {
   };
   // Handle Choose LARGE
   const handleSelectLarge = (data: OptionDropdownType) => {
+    if (selectedOrganization?.type === OrganizationStatisticType.CALENDAR) {
+      setDataMediumCalendar(undefined);
+    }
     if (data.value !== selectedLarge?.value) {
       setIsLoadingLarge(true);
       if (isCheckCompare) {
@@ -239,12 +247,17 @@ const StatisticTagBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
+    if (selectedOrganization?.type === OrganizationStatisticType.CALENDAR) {
+      setDataMediumCalendar(data);
+      return;
+    }
     if (data.value !== selectedMedium?.value) {
       setIsLoadingMedium(true);
       if (isCheckCompare) {
         setIsLoadingMediumCompare(true);
       }
     }
+
     setSelectedMedium(data);
     setSelectedSmall(null);
 
@@ -272,6 +285,9 @@ const StatisticTagBoard = () => {
   };
   // Handle choose small
   const handleSelectSmall = (data: OptionDropdownType) => {
+    if (selectedOrganization?.type === OrganizationStatisticType.CALENDAR) {
+      return;
+    }
     if (data.value !== selectedSmall?.value) {
       setIsLoadingSmall(true);
       if (isCheckCompare) {

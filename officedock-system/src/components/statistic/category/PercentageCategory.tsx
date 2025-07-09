@@ -41,6 +41,7 @@ const PercentageCategory = ({
   handleSelectOrganizationCustom,
 }: Props) => {
   const {
+    isDisableCalendar,
     isHasLoading,
     largeOptions,
     mediumOptions,
@@ -568,7 +569,9 @@ const PercentageCategory = ({
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge || isHasLoading}
+                        disabled={
+                          !selectedLarge || isHasLoading || isDisableCalendar
+                        }
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}

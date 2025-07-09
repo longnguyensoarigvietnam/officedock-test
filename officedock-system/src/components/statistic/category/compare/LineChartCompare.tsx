@@ -123,6 +123,7 @@ const LineChartCompare = ({
   handleSelectMedium,
 }: Props) => {
   const {
+    isDisableCalendar,
     isHasLoading,
     listOptionsOrganization,
     largeOptions,
@@ -1079,7 +1080,9 @@ const LineChartCompare = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
-                    disabled={!selectedLarge || isHasLoading}
+                    disabled={
+                      !selectedLarge || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>

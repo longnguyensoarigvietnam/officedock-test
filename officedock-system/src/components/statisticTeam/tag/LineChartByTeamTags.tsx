@@ -117,6 +117,7 @@ const LineChartByTeamTags = ({
 }: Props) => {
   // Context
   const {
+    isDisableCalendar,
     isHasLoading,
     listOptionsOrganization,
     largeOptions,
@@ -1331,7 +1332,9 @@ const LineChartByTeamTags = ({
                       setSelectedTag(null);
                       handleSelectMedium(data);
                     }}
-                    disabled={!selectedLarge || isHasLoading}
+                    disabled={
+                      !selectedLarge || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>
@@ -1367,7 +1370,9 @@ const LineChartByTeamTags = ({
                       setSelectedTag(null);
                       handleSelectSmall(data);
                     }}
-                    disabled={!selectedMedium || isHasLoading}
+                    disabled={
+                      !selectedMedium || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>

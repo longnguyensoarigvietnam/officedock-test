@@ -30,6 +30,7 @@ import { StatisticStateContext } from '@providers/StatisticProvider';
 
 const StatisticBoard = () => {
   const {
+    isDisableCalendar,
     startDate,
     endDate,
     isCheckCompare,
@@ -69,6 +70,7 @@ const StatisticBoard = () => {
     setIsLoadingMediumCompare,
     setTagsOptions,
     setCurrentPage,
+    setDataMediumCalendar,
   } = useContext(StatisticStateContext);
 
   const [isMyTask, setIsMyTask] = useState(true);
@@ -257,6 +259,9 @@ const StatisticBoard = () => {
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === data.value,
     );
+    if (data.type === OrganizationStatisticType.CALENDAR) {
+      setDataMediumCalendar(undefined);
+    }
 
     if (organization) {
       const largeCategories = organization.statisticCategories.map((stat) => ({
@@ -288,6 +293,9 @@ const StatisticBoard = () => {
     setSelectedLarge(null);
     setSelectedMedium(null);
     setSelectedSmall(null);
+    if (data.type === OrganizationStatisticType.CALENDAR) {
+      setDataMediumCalendar(undefined);
+    }
 
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === data.value,
@@ -334,6 +342,9 @@ const StatisticBoard = () => {
 
     setSelectedMedium(null);
     setSelectedSmall(null);
+    if (selectedOrganization?.type === OrganizationStatisticType.CALENDAR) {
+      setDataMediumCalendar(undefined);
+    }
 
     const organization = creationDataStatisticData?.organizations.find(
       (org) => org.id === selectedOrganization?.value,
@@ -356,6 +367,10 @@ const StatisticBoard = () => {
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
     if (selectedOrganization?.label === ALL_TEAM_STATISTIC) return;
+    if (selectedOrganization?.type === OrganizationStatisticType.CALENDAR) {
+      setDataMediumCalendar(data);
+      return;
+    }
 
     if (data.value !== selectedMedium?.value) {
       setIsLoadingMedium(true);
@@ -482,7 +497,7 @@ const StatisticBoard = () => {
                 options={mediumOptions}
                 selectedOption={selectedMedium || undefined}
                 onChange={(data) => handleSelectMedium(data)}
-                disabled={!selectedLarge || isHasLoading}
+                disabled={!selectedLarge || isHasLoading || isDisableCalendar}
               />
             </div>
           </div>

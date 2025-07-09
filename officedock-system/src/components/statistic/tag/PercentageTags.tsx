@@ -40,6 +40,7 @@ const PercentageTags = ({
   handleSelectOrganization,
 }: Props) => {
   const {
+    isDisableCalendar,
     isHasLoading,
     largeOptions,
     mediumOptions,
@@ -497,7 +498,9 @@ const PercentageTags = ({
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge || isHasLoading}
+                        disabled={
+                          !selectedLarge || isHasLoading || isDisableCalendar
+                        }
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}
@@ -550,7 +553,9 @@ const PercentageTags = ({
                         options={smallOptions}
                         selectedOption={selectedSmall || undefined}
                         onChange={(data) => handleSelectSmall(data)}
-                        disabled={!selectedMedium || isHasLoading}
+                        disabled={
+                          !selectedMedium || isHasLoading || isDisableCalendar
+                        }
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}

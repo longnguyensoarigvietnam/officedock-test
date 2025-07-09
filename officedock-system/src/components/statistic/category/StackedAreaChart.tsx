@@ -61,6 +61,7 @@ const StackedAreaChart = ({
   handleSelectMedium,
 }: Props) => {
   const {
+    isDisableCalendar,
     isHasLoading,
     totalDurationLarge,
     totalDurationMedium,
@@ -828,7 +829,9 @@ const StackedAreaChart = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
-                    disabled={!selectedLarge || isHasLoading}
+                    disabled={
+                      !selectedLarge || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>

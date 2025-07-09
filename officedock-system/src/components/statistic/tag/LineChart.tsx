@@ -80,6 +80,7 @@ const LineChart = ({
   handleSelectSmall,
 }: Props) => {
   const {
+    isDisableCalendar,
     isHasLoading,
     totalDurationLarge,
     totalDurationMedium,
@@ -835,7 +836,9 @@ const LineChart = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
-                    disabled={!selectedLarge || isHasLoading}
+                    disabled={
+                      !selectedLarge || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>
@@ -867,7 +870,9 @@ const LineChart = ({
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
-                    disabled={!selectedMedium || isHasLoading}
+                    disabled={
+                      !selectedMedium || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>

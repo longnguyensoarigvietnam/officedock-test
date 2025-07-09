@@ -105,6 +105,7 @@ const StackedAreaTeamTagChart = ({
 }: Props) => {
   // Context
   const {
+    isDisableCalendar,
     isHasLoading,
     totalDurationLarge,
     totalDurationMedium,
@@ -1036,7 +1037,7 @@ const StackedAreaTeamTagChart = ({
                     setSelectedTag(null);
                     handleSelectMedium(data);
                   }}
-                  disabled={!selectedLarge || isHasLoading}
+                  disabled={!selectedLarge || isHasLoading || isDisableCalendar}
                 />
               </div>
             </div>
@@ -1072,7 +1073,9 @@ const StackedAreaTeamTagChart = ({
                     setSelectedTag(null);
                     handleSelectSmall(data);
                   }}
-                  disabled={!selectedMedium || isHasLoading}
+                  disabled={
+                    !selectedMedium || isHasLoading || isDisableCalendar
+                  }
                 />
               </div>
             </div>

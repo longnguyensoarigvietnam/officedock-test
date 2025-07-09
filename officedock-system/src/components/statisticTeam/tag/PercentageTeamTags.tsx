@@ -41,6 +41,7 @@ const PercentageTeamTags = ({
   handleSelectOrganization,
 }: Props) => {
   const {
+    isDisableCalendar,
     isHasLoading,
     largeOptions,
     mediumOptions,
@@ -483,7 +484,9 @@ const PercentageTeamTags = ({
                       options={mediumOptions}
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}
-                      disabled={!selectedLarge || isHasLoading}
+                      disabled={
+                        !selectedLarge || isHasLoading || isDisableCalendar
+                      }
                     />
                     {dataChartSmall.data.length > 0 ? (
                       <p className="text-sm text-black my-[26px]">
@@ -539,7 +542,9 @@ const PercentageTeamTags = ({
                       options={smallOptions}
                       selectedOption={selectedSmall || undefined}
                       onChange={(data) => handleSelectSmall(data)}
-                      disabled={!selectedMedium || isHasLoading}
+                      disabled={
+                        !selectedMedium || isHasLoading || isDisableCalendar
+                      }
                     />
                     {dataChartCategory.data.length > 0 ? (
                       <p className="text-sm text-black my-[26px]">

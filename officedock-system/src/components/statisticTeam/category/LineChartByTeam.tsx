@@ -117,6 +117,7 @@ const LineChartByTeam = ({
 }: Props) => {
   // Context
   const {
+    isDisableCalendar,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -1262,7 +1263,9 @@ const LineChartByTeam = ({
                       );
                       handleSelectMedium(data);
                     }}
-                    disabled={!selectedLarge || isHasLoading}
+                    disabled={
+                      !selectedLarge || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>

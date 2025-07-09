@@ -45,6 +45,7 @@ const PercentageTeamTagsCompare = ({
   handleSelectOrganization,
 }: Props) => {
   const {
+    isDisableCalendar,
     isHasLoading,
     largeOptions,
     mediumOptions,
@@ -518,7 +519,9 @@ const PercentageTeamTagsCompare = ({
                       options={mediumOptions}
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}
-                      disabled={!selectedLarge || isHasLoading}
+                      disabled={
+                        !selectedLarge || isHasLoading || isDisableCalendar
+                      }
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
@@ -568,7 +571,9 @@ const PercentageTeamTagsCompare = ({
                       options={smallOptions}
                       selectedOption={selectedSmall || undefined}
                       onChange={(data) => handleSelectSmall(data)}
-                      disabled={!selectedMedium || isHasLoading}
+                      disabled={
+                        !selectedMedium || isHasLoading || isDisableCalendar
+                      }
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
