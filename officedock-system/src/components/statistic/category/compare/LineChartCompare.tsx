@@ -132,8 +132,6 @@ const LineChartCompare = ({
     selectedMedium,
     selectedOrganization,
     selectedTags,
-    totalDurationTaskCompare,
-    totalDurationTask,
     lineChartViewBy,
     setLineChartViewBy,
   } = useContext(StatisticStateContext);
@@ -1108,8 +1106,8 @@ const LineChartCompare = ({
                       </p>
                     </div>
                     <p className="font-medium text-[16px]">
-                      合計 {totalDurationTask?.split(':')[0] || '00'}時間
-                      {totalDurationTask?.split(':')[1] || '00'}分
+                      {/* 合計 Total duration task 時間 */}
+                      {/* Total duration task 分 */}
                     </p>
                   </div>
                 )}
@@ -1132,8 +1130,8 @@ const LineChartCompare = ({
                       </p>
                     </div>
                     <p className="font-medium text-[16px]">
-                      合計 {totalDurationTaskCompare?.split(':')[0] || '00'}時間
-                      {totalDurationTaskCompare?.split(':')[1] || '00'}分
+                      {/* 合計 TOTAL DURATION TASK 時間 */}
+                      {/* TOTAL DURATION TASK 分 */}
                     </p>
                   </div>
                 )}

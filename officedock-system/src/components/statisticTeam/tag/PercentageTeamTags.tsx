@@ -7,7 +7,6 @@ import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailSt
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 
 import { EventWorkCategory } from '@constants/enums';
-import { DEFAULT_TIME_TEXT } from '@constants';
 
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
@@ -66,7 +65,6 @@ const PercentageTeamTags = ({
   const [detailCategory, setDetailCategory] = useState<{
     id: number | null;
     type: string;
-    totalDuration: string;
   } | null>(null);
 
   const [dataChartLarge, setDataChartLarge] = useState<DataChartType>({
@@ -275,33 +273,9 @@ const PercentageTeamTags = ({
   }, [statisticTagsListTeam]);
 
   const handleClickTooltip = (id: number | null, type: string) => {
-    let duration: string = DEFAULT_TIME_TEXT;
-    if (type === EventWorkCategory.ALL) {
-      duration =
-        statisticTagsListTeam?.largeCategories.find((item) => item.tagId == id)
-          ?.duration || DEFAULT_TIME_TEXT;
-    }
-
-    if (type === EventWorkCategory.LARGE) {
-      duration =
-        statisticTagsListTeam?.mediumCategories?.find(
-          (item) => item.tagId == id,
-        )?.duration || DEFAULT_TIME_TEXT;
-    }
-    if (type === EventWorkCategory.MEDIUM) {
-      duration =
-        statisticTagsListTeam?.smallCategories?.find((item) => item.tagId == id)
-          ?.duration || DEFAULT_TIME_TEXT;
-    }
-    if (type === EventWorkCategory.SMALL) {
-      duration =
-        statisticTagsListTeam?.category?.find((item) => item.tagId == id)
-          ?.duration || DEFAULT_TIME_TEXT;
-    }
     setDetailCategory({
       id: id,
       type: type,
-      totalDuration: duration,
     });
 
     setIsShowModal(true);

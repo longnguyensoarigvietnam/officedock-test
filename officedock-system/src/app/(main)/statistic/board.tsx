@@ -17,7 +17,7 @@ import LineChartCompare from '@components/statistic/category/compare/LineChartCo
 import FilterStatistic from '@components/statistic/category/filter/FilterStatistic';
 
 import { OrganizationStatisticType } from '@constants/enums';
-import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
+import { ALL_TEAM_STATISTIC } from '@constants';
 import { pageRouters } from '@constants/routers';
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 import useStatisticCategoriesCompare from '@hooks/useStatisticCategoriesCompare';
@@ -60,8 +60,6 @@ const StatisticBoard = () => {
     setTotalDurationLargeCompare,
     setTotalDurationMediumCompare,
     setTotalDurationSmallCompare,
-    setTotalDurationTask,
-    setTotalDurationTaskCompare,
     setIsLoadingOrganization,
     setIsLoadingLarge,
     setIsLoadingMedium,
@@ -109,42 +107,6 @@ const StatisticBoard = () => {
       setTotalDurationLarge(sumDurations(data.largeCategories ?? []));
       setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmall(sumDurations(data.smallCategories ?? []));
-      if (data.largeTotalDuration) {
-        if (data.mediumTotalDuration) {
-          if (data.smallTotalDuration) {
-            if (selectedSmall && selectedSmall.value && data.smallCategories) {
-              const itemMap = data.smallCategories.find(
-                (item) =>
-                  String(item.categoryId) === String(selectedSmall.value),
-              );
-              if (itemMap) {
-                setTotalDurationTask(itemMap.duration);
-              } else {
-                setTotalDurationTask(DEFAULT_TIME_TEXT);
-              }
-            } else {
-              setTotalDurationTask(data.smallTotalDuration);
-            }
-          } else {
-            if (
-              selectedMedium &&
-              selectedMedium.value &&
-              selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-            ) {
-              setTotalDurationTask(DEFAULT_TIME_TEXT);
-              return;
-            }
-            if (selectedSmall && selectedSmall.value) return;
-
-            setTotalDurationTask(data.mediumTotalDuration);
-          }
-        } else {
-          if (selectedLarge && selectedLarge.value) return;
-          setTotalDurationTask(data.largeTotalDuration);
-        }
-      } else {
-        setTotalDurationTask(DEFAULT_TIME_TEXT);
-      }
     },
   });
 
@@ -163,43 +125,6 @@ const StatisticBoard = () => {
       setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
       setTotalDurationMediumCompare(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmallCompare(sumDurations(data.smallCategories ?? []));
-      if (data.largeTotalDuration) {
-        if (data.mediumTotalDuration) {
-          if (data.smallTotalDuration) {
-            if (selectedSmall && selectedSmall.value && data.smallCategories) {
-              const itemMap = data.smallCategories.find(
-                (item) =>
-                  String(item.categoryId) === String(selectedSmall.value),
-              );
-              if (itemMap) {
-                setTotalDurationTaskCompare(itemMap.duration);
-              } else {
-                setTotalDurationTaskCompare(DEFAULT_TIME_TEXT);
-              }
-            } else {
-              setTotalDurationTaskCompare(data.smallTotalDuration);
-            }
-          } else {
-            if (
-              selectedMedium &&
-              selectedMedium.value &&
-              selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-            ) {
-              setTotalDurationTask(DEFAULT_TIME_TEXT);
-              return;
-            }
-
-            if (selectedSmall && selectedSmall.value) return;
-
-            setTotalDurationTaskCompare(data.mediumTotalDuration);
-          }
-        } else {
-          if (selectedLarge && selectedLarge.value) return;
-          setTotalDurationTaskCompare(data.largeTotalDuration);
-        }
-      } else {
-        setTotalDurationTaskCompare(DEFAULT_TIME_TEXT);
-      }
     },
   });
 
@@ -249,7 +174,6 @@ const StatisticBoard = () => {
         setIsLoadingOrganizationCompare(true);
       }
     }
-    setTotalDurationTask('');
     setCurrentPage(1);
     setSelectedOrganization(data);
     setSelectedLarge(null);

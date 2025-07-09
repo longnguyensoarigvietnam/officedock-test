@@ -127,7 +127,6 @@ const AllocationTeamCategory = memo(
       id: number | null;
       userId: number;
       type: string;
-      totalDuration: string;
       userDuration: string;
       organizationId?: string;
     } | null>(null);
@@ -160,7 +159,6 @@ const AllocationTeamCategory = memo(
       isLoadingLarge,
       isLoadingMedium,
       isLoadingOrganization,
-      setTotalDurationTask,
     } = useContext(StatisticTeamStateContext);
 
     useEffect(() => {
@@ -205,14 +203,12 @@ const AllocationTeamCategory = memo(
     const handleClickTooltip = ({
       id,
       userId,
-      duration,
       userDuration,
       type,
       organizationId,
     }: {
       id: number;
       userId: number;
-      duration: string;
       userDuration: string;
       type: string;
       organizationId?: string;
@@ -221,7 +217,6 @@ const AllocationTeamCategory = memo(
         id: id,
         userId: userId,
         type: type,
-        totalDuration: duration,
         userDuration,
         organizationId,
       });
@@ -238,7 +233,6 @@ const AllocationTeamCategory = memo(
         );
         item && handleSelectLarge(item);
 
-        setTotalDurationTask(detailCategory.totalDuration);
         if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectLarge({
             label: NO_SETTING,
@@ -251,7 +245,6 @@ const AllocationTeamCategory = memo(
           (item) => item.value === detailCategory?.id,
         );
         item && handleSelectMedium(item);
-        setTotalDurationTask(detailCategory.totalDuration);
         if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectMedium({
             label: NO_SETTING,
@@ -264,7 +257,6 @@ const AllocationTeamCategory = memo(
           (item) => item.value === detailCategory?.id,
         );
         item && handleSelectSmall(item);
-        setTotalDurationTask(detailCategory.totalDuration);
         if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
             label: NO_SETTING,
@@ -393,20 +385,17 @@ const AllocationTeamCategory = memo(
                                 handleClickTooltip={({
                                   userId,
                                   categoryId,
-                                  duration,
                                   userDuration,
                                   organizationId,
                                 }: {
                                   userId: number;
                                   categoryId: number;
-                                  duration: string;
                                   userDuration: string;
                                   organizationId?: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: categoryId,
                                     userId,
-                                    duration,
                                     type: EventWorkCategory.ALL,
                                     userDuration,
                                     organizationId,
@@ -470,18 +459,15 @@ const AllocationTeamCategory = memo(
                                 handleClickTooltip={({
                                   userId,
                                   categoryId,
-                                  duration,
                                   userDuration,
                                 }: {
                                   userId: number;
                                   categoryId: number;
-                                  duration: string;
                                   userDuration: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: categoryId,
                                     userId,
-                                    duration,
                                     type: EventWorkCategory.LARGE,
                                     userDuration,
                                   });
@@ -563,18 +549,15 @@ const AllocationTeamCategory = memo(
                                 handleClickTooltip={({
                                   userId,
                                   categoryId,
-                                  duration,
                                   userDuration,
                                 }: {
                                   userId: number;
                                   categoryId: number;
-                                  duration: string;
                                   userDuration: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: categoryId,
                                     userId,
-                                    duration,
                                     type: EventWorkCategory.MEDIUM,
                                     userDuration,
                                   });

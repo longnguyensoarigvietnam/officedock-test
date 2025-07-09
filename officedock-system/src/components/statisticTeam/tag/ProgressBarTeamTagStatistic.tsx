@@ -40,12 +40,10 @@ interface ProgressBarProps {
   handleClickTooltip: ({
     userId,
     tagId,
-    duration,
     organizationId,
   }: {
     userId: number;
     tagId: number;
-    duration: string;
     organizationId?: string;
   }) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
@@ -393,7 +391,6 @@ const ProgressBarTeamTagStatistic = ({
                         handleClickTooltip({
                           userId: item.user.id,
                           tagId: id,
-                          duration: item.duration,
                           organizationId: organizationId,
                         })
                       }

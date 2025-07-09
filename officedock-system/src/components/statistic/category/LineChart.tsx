@@ -86,7 +86,6 @@ const LineChart = ({
     totalDurationLarge,
     totalDurationMedium,
     totalDurationSmall,
-    totalDurationTask,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -805,13 +804,13 @@ const LineChart = ({
                 <p>合計時間</p>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-[34px] leading-none">
-                    {totalDurationTask?.split(':')[0]}
+                    {/* TOTAL DURATION TASK */}
                   </p>
                   <p className="text-[25px] leading-none">時間</p>
                 </div>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-[34px] leading-none">
-                    {totalDurationTask?.split(':')[1]}
+                    {/* TOTAL DURATION TASK */}
                   </p>
                   <p className="text-[25px] leading-none">分</p>
                 </div>

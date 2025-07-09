@@ -13,7 +13,7 @@ import {
 } from '@interfaces/statistic';
 import { getRandomColor, lightenColor } from '@utils';
 import { StatisticStateContext } from '@providers/StatisticProvider';
-import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT, NO_SETTING } from '@constants';
+import { ALL_TEAM_STATISTIC, NO_SETTING } from '@constants';
 import FilterStatistic from '../filter/FilterStatistic';
 
 type Props = {
@@ -67,8 +67,6 @@ const PercentageCategoryCompare = ({
     isLoadingLargeCompare,
     isLoadingMediumCompare,
     isLoadingOrganizationCompare,
-    setTotalDurationTask,
-    setTotalDurationTaskCompare,
   } = useContext(StatisticStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
@@ -78,14 +76,12 @@ const PercentageCategoryCompare = ({
   const [detailCategory, setDetailCategory] = useState<{
     id: number | null;
     type: string;
-    totalDuration: string;
     organizationId?: string;
   } | null>(null);
 
   const [detailCategoryCompare, setDetailCategoryCompare] = useState<{
     id: number | null;
     type: string;
-    totalDuration: string;
     organizationId?: string;
   } | null>(null);
 
@@ -222,7 +218,6 @@ const PercentageCategoryCompare = ({
     isCompare: boolean,
     organizationId?: string,
   ) => {
-    let duration: string = DEFAULT_TIME_TEXT;
     if (isCompare) {
       if (
         isLoadingLargeCompare ||
@@ -231,28 +226,9 @@ const PercentageCategoryCompare = ({
       )
         return;
 
-      if (type === EventWorkCategory.ALL) {
-        duration =
-          statisticCategoryCompareList?.largeCategories.find(
-            (item) => item.categoryId == id,
-          )?.duration || DEFAULT_TIME_TEXT;
-      }
-      if (type === EventWorkCategory.LARGE) {
-        duration =
-          statisticCategoryCompareList?.mediumCategories?.find(
-            (item) => item.categoryId == id,
-          )?.duration || DEFAULT_TIME_TEXT;
-      }
-      if (type === EventWorkCategory.MEDIUM) {
-        duration =
-          statisticCategoryCompareList?.smallCategories?.find(
-            (item) => item.categoryId == id,
-          )?.duration || DEFAULT_TIME_TEXT;
-      }
       setDetailCategoryCompare({
         id: id,
         type: type,
-        totalDuration: duration,
         organizationId,
       });
 
@@ -260,28 +236,9 @@ const PercentageCategoryCompare = ({
     } else {
       if (isLoadingLarge || isLoadingMedium || isLoadingOrganization) return;
 
-      if (type === EventWorkCategory.ALL) {
-        duration =
-          statisticCategoryList?.largeCategories.find(
-            (item) => item.categoryId == id,
-          )?.duration || DEFAULT_TIME_TEXT;
-      }
-      if (type === EventWorkCategory.LARGE) {
-        duration =
-          statisticCategoryList?.mediumCategories?.find(
-            (item) => item.categoryId == id,
-          )?.duration || DEFAULT_TIME_TEXT;
-      }
-      if (type === EventWorkCategory.MEDIUM) {
-        duration =
-          statisticCategoryList?.smallCategories?.find(
-            (item) => item.categoryId == id,
-          )?.duration || DEFAULT_TIME_TEXT;
-      }
       setDetailCategory({
         id: id,
         type: type,
-        totalDuration: duration,
         organizationId,
       });
 
@@ -297,7 +254,6 @@ const PercentageCategoryCompare = ({
         (item) => item.value === detailCategory?.id,
       );
       item && handleSelectLarge(item);
-      setTotalDurationTask(detailCategory.totalDuration);
       if (String(detailCategory?.id) == NO_SETTING) {
         handleSelectLarge({
           label: NO_SETTING,
@@ -310,7 +266,6 @@ const PercentageCategoryCompare = ({
         (item) => item.value === detailCategory?.id,
       );
       item && handleSelectMedium(item);
-      setTotalDurationTask(detailCategory.totalDuration);
 
       if (String(detailCategory?.id) == NO_SETTING) {
         handleSelectMedium({
@@ -324,7 +279,6 @@ const PercentageCategoryCompare = ({
         (item) => item.value === detailCategory?.id,
       );
       item && handleSelectSmall(item);
-      setTotalDurationTask(detailCategory.totalDuration);
 
       if (String(detailCategory?.id) == NO_SETTING) {
         handleSelectSmall({
@@ -338,7 +292,6 @@ const PercentageCategoryCompare = ({
         (item) => item.value === detailCategory?.id,
       );
       item && handleSelectSmall(item);
-      setTotalDurationTask(detailCategory.totalDuration);
 
       if (String(detailCategory?.id) == NO_SETTING) {
         handleSelectSmall({
@@ -361,7 +314,6 @@ const PercentageCategoryCompare = ({
         (item) => item.value === detailCategoryCompare?.id,
       );
       item && handleSelectLarge(item);
-      setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
 
       if (String(detailCategoryCompare?.id) == NO_SETTING) {
         handleSelectLarge({
@@ -375,7 +327,6 @@ const PercentageCategoryCompare = ({
         (item) => item.value === detailCategoryCompare?.id,
       );
       item && handleSelectMedium(item);
-      setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
 
       if (String(detailCategoryCompare?.id) == NO_SETTING) {
         handleSelectMedium({
@@ -390,7 +341,6 @@ const PercentageCategoryCompare = ({
         (item) => item.value === detailCategoryCompare?.id,
       );
       item && handleSelectSmall(item);
-      setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
 
       if (String(detailCategoryCompare?.id) == NO_SETTING) {
         handleSelectSmall({
@@ -404,7 +354,6 @@ const PercentageCategoryCompare = ({
         (item) => item.value === detailCategoryCompare?.id,
       );
       item && handleSelectSmall(item);
-      setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
       if (String(detailCategoryCompare?.id) == NO_SETTING) {
         handleSelectSmall({
           label: NO_SETTING,

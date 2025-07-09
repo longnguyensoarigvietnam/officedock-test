@@ -61,8 +61,6 @@ const TaskListTeamStatistic = ({
     selectedMedium,
     selectedOrganization,
     selectedSmall,
-    totalDurationTask,
-    totalDurationTaskCompare,
     isSkeletonCategoryTeamTask,
     isSkeletonCategoryTeamTaskCompare,
     currentPage,
@@ -91,21 +89,12 @@ const TaskListTeamStatistic = ({
   const [isShowCompare, setIsShowCompare] = useState(false);
   const [selectedMember, setSelectedMember] = useState<number | null>(null);
 
-  const getTotalDuration = () => {
-    if (totalDurationTask) {
-      return totalDurationTask;
-    }
-    return '';
-  };
-  // Get total compare
-  const getTotalDurationCompare = () => {
-    if (totalDurationTaskCompare) {
-      return totalDurationTaskCompare;
-    }
-    return '';
-  };
+  // Total
+  const [totalDuration, setTotalDuration] = useState<string>(DEFAULT_TIME_TEXT);
+  const [totalDurationCompare, setTotalDurationCompare] =
+    useState<string>(DEFAULT_TIME_TEXT);
 
-  const { statisticCategoryList } = useStatisticTask({
+  useStatisticTask({
     isTeam: true,
     parentData: statisticCategoryListTeam,
     filter: {
@@ -121,11 +110,6 @@ const TaskListTeamStatistic = ({
       smallCategoryId: selectedSmall?.value as number,
 
       page: currentPage,
-      totalDuration:
-        selectedOrganization?.label == OrganizationStatisticType.CALENDAR &&
-        dataMediumCalendar
-          ? DEFAULT_TIME_TEXT
-          : getTotalDuration(),
       ordering: ordering,
       pageSize: pageSize,
       user_id: selectedMember as number,
@@ -135,6 +119,7 @@ const TaskListTeamStatistic = ({
     conditions: [listMemberTeam.length !== 0],
     onSuccess: (data) => {
       if (data) {
+        setTotalDuration(data.totalDuration || DEFAULT_TIME_TEXT);
         setTotalPages(data.numPages);
         if (data.results) {
           setTaskList(data.results);
@@ -142,44 +127,39 @@ const TaskListTeamStatistic = ({
       }
     },
   });
-  const { statisticCategoryList: statisticCategoryListCompare } =
-    useStatisticTaskCompare({
-      isTeam: true,
-      filter: {
-        fromDate: formatDateToYMD(startDateCompare) || '',
-        endDate: formatDateToYMD(`${endDateCompare}`) || '',
-        organizationIds: String(selectedOrganization?.value || ''),
-        largeCategoryId: selectedLarge?.value as number,
-        mediumCategoryId:
-          selectedOrganization?.label == OrganizationStatisticType.CALENDAR &&
-          dataMediumCalendar
-            ? (dataMediumCalendar?.value as number)
-            : (selectedMedium?.value as number),
-        smallCategoryId: selectedSmall?.value as number,
+  useStatisticTaskCompare({
+    isTeam: true,
+    filter: {
+      fromDate: formatDateToYMD(startDateCompare) || '',
+      endDate: formatDateToYMD(`${endDateCompare}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: selectedLarge?.value as number,
+      mediumCategoryId:
+        selectedOrganization?.label == OrganizationStatisticType.CALENDAR &&
+        dataMediumCalendar
+          ? (dataMediumCalendar?.value as number)
+          : (selectedMedium?.value as number),
+      smallCategoryId: selectedSmall?.value as number,
 
-        page: currentPage,
-        totalDuration:
-          selectedOrganization?.label == OrganizationStatisticType.CALENDAR &&
-          dataMediumCalendar
-            ? DEFAULT_TIME_TEXT
-            : getTotalDurationCompare(),
-        ordering: ordering,
-        pageSize: pageSize,
-        tagIds: orderingOptions?.tag_ids,
-        isCompare: isCheckCompare && isShowCompare,
-        user_id: selectedMember as number,
-      },
-      conditions: [listMemberTeam.length !== 0],
+      page: currentPage,
+      ordering: ordering,
+      pageSize: pageSize,
+      tagIds: orderingOptions?.tag_ids,
+      isCompare: isCheckCompare && isShowCompare,
+      user_id: selectedMember as number,
+    },
+    conditions: [listMemberTeam.length !== 0],
 
-      onSuccess: (data) => {
-        if (data) {
-          setTotalPagesCompare(data.numPages);
-          if (data.results) {
-            setTaskListCompare(data.results);
-          }
+    onSuccess: (data) => {
+      if (data) {
+        setTotalDurationCompare(data.totalDuration || DEFAULT_TIME_TEXT);
+        setTotalPagesCompare(data.numPages);
+        if (data.results) {
+          setTaskListCompare(data.results);
         }
-      },
-    });
+      }
+    },
+  });
 
   useEffect(() => {
     if (orderingOptions?.user_ids && orderingOptions.user_ids.length > 0) {
@@ -503,28 +483,8 @@ const TaskListTeamStatistic = ({
                 }
                 totalDuration={
                   isCheckCompare && isShowCompare
-                    ? selectedOrganization?.type ===
-                        OrganizationStatisticType.CALENDAR &&
-                      selectedMedium?.value
-                      ? statisticCategoryListCompare?.totalDuration ||
-                        DEFAULT_TIME_TEXT
-                      : selectedOrganization?.type ===
-                            OrganizationStatisticType.CALENDAR &&
-                          dataMediumCalendar
-                        ? statisticCategoryListCompare?.totalDuration ||
-                          DEFAULT_TIME_TEXT
-                        : getTotalDurationCompare()
-                    : selectedOrganization?.type ===
-                          OrganizationStatisticType.CALENDAR &&
-                        selectedMedium?.value
-                      ? statisticCategoryList?.totalDuration ||
-                        DEFAULT_TIME_TEXT
-                      : selectedOrganization?.type ===
-                            OrganizationStatisticType.CALENDAR &&
-                          dataMediumCalendar
-                        ? statisticCategoryList?.totalDuration ||
-                          DEFAULT_TIME_TEXT
-                        : getTotalDuration()
+                    ? totalDurationCompare
+                    : totalDuration
                 }
                 selectedMember={selectedMember}
                 listOptionsOrganization={listOptionsOrganization}
