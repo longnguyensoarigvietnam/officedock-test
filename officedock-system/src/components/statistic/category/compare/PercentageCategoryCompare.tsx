@@ -44,6 +44,7 @@ const PercentageCategoryCompare = ({
   handleSelectOrganizationCustom,
 }: Props) => {
   const {
+    isDisableCalendar,
     isHasLoading,
     largeOptions,
     mediumOptions,
@@ -621,7 +622,9 @@ const PercentageCategoryCompare = ({
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge || isHasLoading}
+                        disabled={
+                          !selectedLarge || isHasLoading || isDisableCalendar
+                        }
                       />
                     </div>
                     <div className="min-h-[280px] mt-[10px] flex justify-center">

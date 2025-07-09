@@ -79,6 +79,7 @@ const StatisticTeamTagBoard = () => {
     setCurrentPage,
     setIsSkeletonTagTeamTask,
     handleResetTableData,
+    setDataMediumCalendar,
   } = useContext(StatisticTeamTagsStateContext);
   const {
     organizationTeamList,
@@ -262,7 +263,9 @@ const StatisticTeamTagBoard = () => {
       }
     }
     setCurrentPage(1);
-
+    if (data?.type === OrganizationStatisticType.CALENDAR) {
+      setDataMediumCalendar(undefined);
+    }
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
@@ -347,7 +350,9 @@ const StatisticTeamTagBoard = () => {
     }
     handleResetTableData();
     setCurrentPage(1);
-
+    if (selectedOrganization?.type === OrganizationStatisticType.CALENDAR) {
+      setDataMediumCalendar(undefined);
+    }
     setSelectedLarge(data);
     setSelectedMedium(null);
     setSelectedSmall(null);
@@ -372,6 +377,10 @@ const StatisticTeamTagBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
+    if (selectedOrganization?.type === OrganizationStatisticType.CALENDAR) {
+      setDataMediumCalendar(data);
+      return;
+    }
     if (data.value !== selectedMedium?.value) {
       setIsLoadingMedium(true);
       if (isCheckCompare) {

@@ -9,7 +9,11 @@ import {
 
 import { OptionDropdownType } from '@interfaces/common';
 import { getAdjustedStartDateDefault } from '@utils/date';
-import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
+import {
+  OrganizationStatisticType,
+  StatisticViewLabels,
+  StatisticViewOptions,
+} from '@constants/enums';
 
 interface ContextValue {
   isHasLoading: boolean;
@@ -96,10 +100,12 @@ interface ContextValue {
   setDataMediumCalendar: Dispatch<
     SetStateAction<OptionDropdownType | undefined>
   >;
+  isDisableCalendar: boolean;
 }
 
 const defaultValue: ContextValue = {
   isHasLoading: false,
+  isDisableCalendar: false,
   smallOptions: [],
   mediumOptions: [],
   largeOptions: [],
@@ -283,6 +289,17 @@ export const StatisticTagStateProvider = ({
       (tag) => tag.value !== selected.value,
     );
     setCurrentPage(1);
+    setIsLoadingLarge(true);
+    setIsLoadingMedium(true);
+    setIsLoadingOrganization(true);
+    setIsLoadingSmall(true);
+
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingOrganizationCompare(true);
+      setIsLoadingSmallCompare(true);
+    }
     setSelectedTags(updatedTagIds);
   };
   const isHasLoading =
@@ -294,6 +311,9 @@ export const StatisticTagStateProvider = ({
     isLoadingMediumCompare ||
     isLoadingOrganizationCompare ||
     isLoadingSmallCompare;
+
+  const isDisableCalendar =
+    selectedOrganization?.type === OrganizationStatisticType.CALENDAR;
 
   const contextValue: ContextValue = {
     smallOptions,
@@ -373,6 +393,7 @@ export const StatisticTagStateProvider = ({
     isHasLoading,
     dataMediumCalendar,
     setDataMediumCalendar,
+    isDisableCalendar,
   };
 
   return (

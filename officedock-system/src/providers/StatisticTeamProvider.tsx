@@ -15,9 +15,14 @@ import {
 
 import { getAdjustedStartDateDefault } from '@utils/date';
 
-import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
+import {
+  OrganizationStatisticType,
+  StatisticViewLabels,
+  StatisticViewOptions,
+} from '@constants/enums';
 
 interface ContextValue {
+  isDisableCalendar: boolean;
   isHasLoading: boolean;
   selectedOrganization: OptionDropdownType | null;
   selectedLarge: OptionDropdownType | null;
@@ -147,6 +152,7 @@ interface ContextValue {
 
 const defaultValue: ContextValue = {
   isHasLoading: false,
+  isDisableCalendar: false,
   smallOptions: [],
   mediumOptions: [],
   largeOptions: [],
@@ -434,6 +440,8 @@ export const StatisticTeamStateProvider = ({
     isLoadingOrganizationCompare ||
     isLoadingLargeCompare ||
     isLoadingMediumCompare;
+  const isDisableCalendar =
+    selectedOrganization?.type === OrganizationStatisticType.CALENDAR;
 
   const contextValue: ContextValue = {
     smallOptions,
@@ -534,6 +542,7 @@ export const StatisticTeamStateProvider = ({
     isHasLoading,
     dataMediumCalendar,
     setDataMediumCalendar,
+    isDisableCalendar,
   };
 
   return (

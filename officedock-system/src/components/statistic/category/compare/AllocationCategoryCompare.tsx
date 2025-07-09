@@ -109,6 +109,7 @@ const AllocationCategoryCompare = memo(
     >([]);
 
     const {
+      isDisableCalendar,
       isHasLoading,
       totalDurationLarge,
       totalDurationMedium,
@@ -1056,7 +1057,9 @@ const AllocationCategoryCompare = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge || isHasLoading}
+                        disabled={
+                          !selectedLarge || isHasLoading || isDisableCalendar
+                        }
                       />
                       <div className={`mt-[14px] flex justify-between`}>
                         <div className="flex items-center">

@@ -30,6 +30,7 @@ import { StatisticStateContext } from '@providers/StatisticProvider';
 
 const StatisticBoard = () => {
   const {
+    isDisableCalendar,
     startDate,
     endDate,
     isCheckCompare,
@@ -258,7 +259,7 @@ const StatisticBoard = () => {
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === data.value,
     );
-    if (data.value === 292) {
+    if (data.type === OrganizationStatisticType.CALENDAR) {
       setDataMediumCalendar(undefined);
     }
 
@@ -292,7 +293,7 @@ const StatisticBoard = () => {
     setSelectedLarge(null);
     setSelectedMedium(null);
     setSelectedSmall(null);
-    if (data.value === 292) {
+    if (data.type === OrganizationStatisticType.CALENDAR) {
       setDataMediumCalendar(undefined);
     }
 
@@ -341,7 +342,7 @@ const StatisticBoard = () => {
 
     setSelectedMedium(null);
     setSelectedSmall(null);
-    if (data.value === 292) {
+    if (selectedOrganization?.type === OrganizationStatisticType.CALENDAR) {
       setDataMediumCalendar(undefined);
     }
 
@@ -366,6 +367,10 @@ const StatisticBoard = () => {
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
     if (selectedOrganization?.label === ALL_TEAM_STATISTIC) return;
+    if (selectedOrganization?.type === OrganizationStatisticType.CALENDAR) {
+      setDataMediumCalendar(data);
+      return;
+    }
 
     if (data.value !== selectedMedium?.value) {
       setIsLoadingMedium(true);
@@ -492,7 +497,7 @@ const StatisticBoard = () => {
                 options={mediumOptions}
                 selectedOption={selectedMedium || undefined}
                 onChange={(data) => handleSelectMedium(data)}
-                disabled={!selectedLarge || isHasLoading}
+                disabled={!selectedLarge || isHasLoading || isDisableCalendar}
               />
             </div>
           </div>

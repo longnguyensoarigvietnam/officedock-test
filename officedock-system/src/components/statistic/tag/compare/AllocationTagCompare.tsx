@@ -101,6 +101,7 @@ const AllocationTagCompare = memo(
     >([]);
 
     const {
+      isDisableCalendar,
       isHasLoading,
       totalDurationLarge,
       totalDurationMedium,
@@ -719,7 +720,9 @@ const AllocationTagCompare = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge || isHasLoading}
+                        disabled={
+                          !selectedLarge || isHasLoading || isDisableCalendar
+                        }
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">
@@ -881,7 +884,9 @@ const AllocationTagCompare = memo(
                         options={smallOptions}
                         selectedOption={selectedSmall || undefined}
                         onChange={(data) => handleSelectSmall(data)}
-                        disabled={!selectedMedium || isHasLoading}
+                        disabled={
+                          !selectedMedium || isHasLoading || isDisableCalendar
+                        }
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">

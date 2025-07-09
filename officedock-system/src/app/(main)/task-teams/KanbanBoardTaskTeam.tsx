@@ -2420,11 +2420,13 @@ const KanbanBoardTaskTeam = () => {
                             <span className="w-[71px] truncate">
                               {item.label}
                             </span>
-                            <ImageRound
-                              src={`/icons/close.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
+                            {!isLoadingDataTask && (
+                              <ImageRound
+                                src={`/icons/close.svg`}
+                                name="close"
+                                className="w-fit h-fit cursor-pointer"
+                              />
+                            )}
                           </div>
                         ))}
                         <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
@@ -2450,11 +2452,13 @@ const KanbanBoardTaskTeam = () => {
                             <span className="w-[71px] truncate">
                               {item.label}
                             </span>
-                            <ImageRound
-                              src={`/icons/close.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
+                            {!isLoadingDataTask && (
+                              <ImageRound
+                                src={`/icons/close.svg`}
+                                name="close"
+                                className="w-fit h-fit cursor-pointer"
+                              />
+                            )}
                           </div>
                         ))}
                       </>

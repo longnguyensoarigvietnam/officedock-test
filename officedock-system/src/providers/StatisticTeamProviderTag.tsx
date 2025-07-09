@@ -11,9 +11,14 @@ import { OptionDropdownType } from '@interfaces/common';
 import { MergedTableTag, TagTableRowDetail } from '@interfaces/statistic';
 
 import { getAdjustedStartDateDefault } from '@utils/date';
-import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
+import {
+  OrganizationStatisticType,
+  StatisticViewLabels,
+  StatisticViewOptions,
+} from '@constants/enums';
 
 interface ContextValue {
+  isDisableCalendar: boolean;
   isHasLoading: boolean;
   selectedOrganization: OptionDropdownType | null;
   selectedLarge: OptionDropdownType | null;
@@ -144,6 +149,7 @@ interface ContextValue {
 }
 
 const defaultValue: ContextValue = {
+  isDisableCalendar: false,
   isHasLoading: false,
   smallOptions: [],
   mediumOptions: [],
@@ -401,6 +407,9 @@ export const StatisticTeamTagsStateProvider = ({
     isLoadingSmall ||
     isLoadingSmallCompare;
 
+  const isDisableCalendar =
+    selectedOrganization?.type === OrganizationStatisticType.CALENDAR;
+
   const contextValue: ContextValue = {
     smallOptions,
     mediumOptions,
@@ -503,6 +512,7 @@ export const StatisticTeamTagsStateProvider = ({
     isHasLoading,
     dataMediumCalendar,
     setDataMediumCalendar,
+    isDisableCalendar,
   };
 
   return (
