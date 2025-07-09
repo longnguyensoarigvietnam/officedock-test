@@ -37,7 +37,6 @@ from common.utils import (
 )
 from organizations.constants import OrganizationTypes
 from organizations.models import Organization
-from skills.constants import DEFAULT_TIME
 from stat_data.constants import ALL_TEAM, FilterTime
 from stat_data.serializers import (
     StatisticTaskSerializer,
@@ -92,7 +91,6 @@ class StatisticViewSet(BaseAPIViewSet):
             OpenApiParameter(name="medium_category_id", type=str),
             OpenApiParameter(name="small_category_id", type=str),
             OpenApiParameter(name="user_id", type=int),
-            OpenApiParameter(name="user_ids", type=str),
             OpenApiParameter(name="tag_ids", type=str),
             OpenApiParameter(name="total_duration", type=str),
             OpenApiParameter(name="ordering", type=str),
@@ -119,10 +117,8 @@ class StatisticViewSet(BaseAPIViewSet):
         medium_category_id = request.query_params.get("medium_category_id")
         small_category_id = request.query_params.get("small_category_id")
         user_id = request.query_params.get("user_id")
-        user_ids_param = request.query_params.get("user_ids")
         tag_ids_param = request.query_params.get("tag_ids")
         tag_ids = []
-        total_duration = request.query_params.get("total_duration")
         ordering = request.query_params.get("ordering")
         cursor = request.query_params.get("cursor")
         cursor_id = request.query_params.get("cursor_id")
@@ -166,38 +162,8 @@ class StatisticViewSet(BaseAPIViewSet):
             medium_id=medium_category_id,
             small_id=small_category_id,
         )
-        # TODO: Remove if implement wish 40
-        if total_duration == DEFAULT_TIME:
-            durations_for_get_total_duration = durations
-            if user_ids_param:
-                users = User.objects.filter(
-                    id__in=split_id_from_string(user_ids_param)
-                )
-                durations_for_get_total_duration = get_list_durations_by_users(
-                    start_of_day,
-                    end_of_day,
-                    users,
-                    organization_ids,
-                    tags=tag_ids,
-                )
-                durations_for_get_total_duration = get_list_durations_by_users(
-                    durations=durations_for_get_total_duration,
-                    large_id=large_category_id,
-                    medium_id=medium_category_id,
-                    small_id=small_category_id,
-                )
-            if is_tag_page:
-                total_duration, tag_list = process_merge_card_per_tag(
-                    tag_ids,
-                    durations=durations_for_get_total_duration,
-                    organization_ids_param=organization_ids_param,
-                    organization_ids=organization_ids,
-                )
-            else:
-                total_duration = get_total_durations(
-                    durations_for_get_total_duration
-                )
-            total_duration = format_duration(total_duration)
+        total_duration = get_total_durations(durations)
+        total_duration = format_duration(total_duration)
         filters = Q(
             Q(task_durations__user=user)
             & Q(
