@@ -46,7 +46,7 @@ const useCreationDataStatisticTeam = ({
     isFetched: isFetchedCreationDataStatistic,
   } = useQuery({
     queryKey: [
-      'getCreationDataStatistic',
+      'getCreationDataStatisticTeam',
       [organization_id, is_statistic, isTeam],
     ],
     queryFn: getCreationDataStatistic,

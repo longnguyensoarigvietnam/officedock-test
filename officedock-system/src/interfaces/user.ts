@@ -152,6 +152,7 @@ export interface UserProfileFormData {
   email: string;
   password: string | null;
   fullName: string;
+  username: string;
   avatarUrl?: string
 }
 export interface UserProfileFormRequest {

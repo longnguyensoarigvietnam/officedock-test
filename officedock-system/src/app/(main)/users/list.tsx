@@ -27,8 +27,6 @@ import {
   ERROR_COMMON_MESSAGE,
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
-  ERROR_EMAIL_AVAILABLE_MESSAGE,
-  ERROR_ID_AVAILABLE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
@@ -86,9 +84,17 @@ const ListUsers = () => {
   const [userEditDetail, setUserEditDetail] = useState<User | null>(null);
 
   // Error messages
-  const [emailErrorMessage, setEmailErrorMessage] = useState<string>('');
-  const [usernameErrorMessage, setUsernameErrorMessage] = useState<string>('');
-  const [passwordErrorMessage, setPasswordErrorMessage] = useState<string>('');
+  const [errorMessages, setErrorMessages] = useState<{
+    email?: string;
+    username?: string;
+    password?: string;
+    fullName?: string;
+  }>({
+    email: '',
+    username: '',
+    password: '',
+    fullName: '',
+  });
 
   // Set ID user for delete
   const [selectedUserToDelete, setSelectedUserToDelete] = useState<User | null>(
@@ -312,25 +318,29 @@ const ListUsers = () => {
         setOpenActionsUserModal(false);
         setUserEditId(null);
         handleRemoveParam();
-        setUsernameErrorMessage('');
-        setEmailErrorMessage('');
-        setPasswordErrorMessage('');
+        setErrorMessages({
+          email: '',
+          username: '',
+          password: '',
+          fullName: '',
+        });
       }
     },
     onError: ({
       response,
     }: ResponseError<{
-      username: string[];
-      email: string[];
-      password: string[];
+      username?: string[];
+      email?: string[];
+      profile?: { fullName?: string[] };
+      password?: string[];
     }>) => {
-      const { username, email, password } = response?.data || {};
-      if (username) {
-        setUsernameErrorMessage(ERROR_ID_AVAILABLE_MESSAGE);
-      } else if (email) {
-        setEmailErrorMessage(ERROR_EMAIL_AVAILABLE_MESSAGE);
-      } else if (password?.[0]) {
-        setPasswordErrorMessage(password?.[0]);
+      if (Object.keys(response?.data || {}).length) {
+        setErrorMessages({
+          username: response?.data?.username?.[0] || '',
+          email: response?.data?.email?.[0] || '',
+          fullName: response?.data?.profile?.fullName?.[0] || '',
+          password: response?.data?.password?.[0] || '',
+        });
       } else {
         showToast({
           variant: 'error',
@@ -412,17 +422,26 @@ const ListUsers = () => {
         setOpenActionsUserModal(false);
         setUserEditId(null);
         handleRemoveParam();
-        setUsernameErrorMessage('');
-        setEmailErrorMessage('');
+        setErrorMessages({
+          email: '',
+          username: '',
+          password: '',
+          fullName: '',
+        });
       },
       onError: ({
         response,
-      }: ResponseError<{ username: string; email: string }>) => {
-        const { username, email } = response?.data || {};
-        if (username) {
-          setUsernameErrorMessage(ERROR_ID_AVAILABLE_MESSAGE);
-        } else if (email) {
-          setEmailErrorMessage(ERROR_EMAIL_AVAILABLE_MESSAGE);
+      }: ResponseError<{
+        username?: string[];
+        email?: string[];
+        profile?: { fullName?: string[] };
+      }>) => {
+        if (Object.keys(response?.data || {}).length) {
+          setErrorMessages({
+            username: response?.data?.username?.[0] || '',
+            email: response?.data?.email?.[0] || '',
+            fullName: response?.data?.profile?.fullName?.[0] || '',
+          });
         } else {
           showToast({
             variant: 'error',
@@ -435,7 +454,6 @@ const ListUsers = () => {
       },
     },
   );
-
   const handleConfirmCreateUser = (
     data: CreateUserFormData,
     isOptionEmail: boolean,
@@ -776,18 +794,19 @@ const ListUsers = () => {
               (role) => role.value,
             )}
             roleUserOptions={roleUserOptions.filter((role) => role.value)}
-            emailErrorMessage={emailErrorMessage}
-            usernameErrorMessage={usernameErrorMessage}
-            passwordErrorMessage={passwordErrorMessage}
-            setPasswordErrorMessage={setPasswordErrorMessage}
+            errorMessages={errorMessages}
+            setErrorMessages={setErrorMessages}
             onClose={() => {
               handleRemoveParam();
               setOpenActionsUserModal(false);
               setUserEditId(null);
               setUserEditDetail(null);
-              setUsernameErrorMessage('');
-              setEmailErrorMessage('');
-              setPasswordErrorMessage('');
+              setErrorMessages({
+                email: '',
+                username: '',
+                password: '',
+                fullName: '',
+              });
             }}
             onDelete={(userToDelete: User) => {
               handleOpenDeleteUserModal(userToDelete);

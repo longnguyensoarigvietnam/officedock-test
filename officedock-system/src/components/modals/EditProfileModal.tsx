@@ -24,10 +24,18 @@ import { ALLOWED_IMAGE_TYPES, MAX_AVATAR_IMAGE_FILE_SIZE } from '@constants';
 
 export type EditProfileModalProps = {
   open: boolean;
-  editPasswordErrorMessage: string;
+  editProfileErrorMessages: {
+    password?: string;
+    fullName?: string;
+  };
   authenticatedUser: User | undefined;
   onClose: () => void;
-  setEditPasswordErrorMessage: Dispatch<SetStateAction<string>>;
+  setEditProfileErrorMessages: Dispatch<
+    SetStateAction<{
+      password?: string;
+      fullName?: string;
+    }>
+  >;
   onEdit: (data: UserProfileFormData) => void;
   setOpenErrorUploadFileModal: Dispatch<SetStateAction<boolean>>;
 };
@@ -35,15 +43,16 @@ export type EditProfileModalProps = {
 const EditProfileModal = memo(
   ({
     open,
-    editPasswordErrorMessage,
+    editProfileErrorMessages,
     authenticatedUser,
     onClose,
-    setEditPasswordErrorMessage,
+    setEditProfileErrorMessages,
     onEdit,
     setOpenErrorUploadFileModal,
   }: EditProfileModalProps) => {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const { reset, handleSubmit, register } = useForm<UserProfileFormData>();
+    const { reset, handleSubmit, register, getValues } =
+      useForm<UserProfileFormData>();
     const [previewAvatarUrl, setPreviewAvatarUrl] = useState<string | null>(
       null,
     );
@@ -57,6 +66,7 @@ const EditProfileModal = memo(
           password: '',
           id: authenticatedUser.id,
           avatarUrl: authenticatedUser.avatar,
+          username: authenticatedUser.username || '',
         });
         setPreviewAvatarUrl(authenticatedUser?.avatar || '');
       }
@@ -111,7 +121,7 @@ const EditProfileModal = memo(
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mx-8 mb-5">
             <div className="flex items-center mb-5">
-              <div className="w-[150px]">
+              <div className="w-[170px]">
                 <input
                   type="file"
                   accept={ALLOWED_IMAGE_TYPES.join(',')}
@@ -139,43 +149,60 @@ const EditProfileModal = memo(
               <div className="!w-full">
                 <p className="text-sm font-medium mb-2">名前</p>
                 <Input
-                  className="shadow-none text-[22px] leading-[56px] font-medium !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
+                  className={`shadow-none text-[22px] leading-[56px] font-medium !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md ${editProfileErrorMessages.fullName && '!border-error'}`}
                   register={register('fullName', {
                     required: true,
+                    onChange: () => {
+                      setEditProfileErrorMessages((prev) => {
+                        return {
+                          ...prev,
+                          fullName: '',
+                        };
+                      });
+                    },
                   })}
                 />
+                {editProfileErrorMessages.fullName && (
+                  <ErrorMessage
+                    error={editProfileErrorMessages.fullName}
+                    className="mt-[5px] mb-[5px] text-xs"
+                  />
+                )}
               </div>
             </div>
 
             <div className="flex items-center pb-3 mb-3">
-              <p className="text-sm font-medium w-[150px] text-left whitespace-nowrap">
-                メールアドレス
+              <p className="text-sm font-medium w-[170px] text-left whitespace-nowrap">
+                ID｜メールアドレス
               </p>
               <Input
                 className="shadow-none text-sm leading-[56px] font-normal !pl-3 flex items-center !py-0 h-[34px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md !opacity-100 hover:cursor-not-allowed"
-                register={register('email', {
-                  required: true,
-                })}
+                value={getValues('username') || getValues('email')}
                 disabled={true}
               />
             </div>
             <div className="flex items-center pb-3 mb-3">
-              <p className="text-sm font-medium w-[150px] text-left">
+              <p className="text-sm font-medium w-[170px] text-left">
                 パスワード
               </p>
               <div className="flex flex-col !w-full">
                 <Input
-                  className={`shadow-none text-sm leading-[56px] font-normal !pl-3 flex items-center !py-0 h-[34px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md ${editPasswordErrorMessage && '!border-error'}`}
+                  className={`shadow-none text-sm leading-[56px] font-normal !pl-3 flex items-center !py-0 h-[34px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md ${editProfileErrorMessages.password && '!border-error'}`}
                   register={register('password', {
                     ...passwordRegisterRules(false),
                     onChange: () => {
-                      setEditPasswordErrorMessage('');
+                      setEditProfileErrorMessages((prev) => {
+                        return {
+                          ...prev,
+                          password: '',
+                        };
+                      });
                     },
                   })}
                 />
-                {editPasswordErrorMessage && (
+                {editProfileErrorMessages.password && (
                   <ErrorMessage
-                    error={editPasswordErrorMessage}
+                    error={editProfileErrorMessages.password}
                     className="mt-[5px] mb-[5px] text-xs"
                   />
                 )}

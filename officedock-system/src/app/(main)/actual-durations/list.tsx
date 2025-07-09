@@ -622,10 +622,12 @@ const ListActualDurations = () => {
                           (category) =>
                             category.type == EventWorkCategory.MEDIUM,
                         ),
-                        element?.categories.find(
-                          (category) =>
-                            category.type == EventWorkCategory.SMALL,
-                        ),
+                        element.type == ItemStartType.TASK
+                          ? element?.categories.find(
+                              (category) =>
+                                category.type == EventWorkCategory.SMALL,
+                            )
+                          : '',
                       ].some(Boolean)
                         ? [
                             element?.categories.find(
@@ -636,10 +638,12 @@ const ListActualDurations = () => {
                               (category) =>
                                 category.type == EventWorkCategory.MEDIUM,
                             )?.name || NO_OPTION_CATEGORY,
-                            element?.categories.find(
-                              (category) =>
-                                category.type == EventWorkCategory.SMALL,
-                            )?.name || NO_OPTION_CATEGORY,
+                            element.type == ItemStartType.TASK
+                              ? element?.categories.find(
+                                  (category) =>
+                                    category.type == EventWorkCategory.SMALL,
+                                )?.name || NO_OPTION_CATEGORY
+                              : '',
                           ]
                             .filter(Boolean)
                             .join('＞')
@@ -676,7 +680,7 @@ const ListActualDurations = () => {
                     </p>
                   </div>
                   <div className="text-left w-[400px] border-b-[1px]">
-                    <p className="w-[400px] break-words px-5 py-3">
+                    <p className="w-[400px] break-all px-5 py-3">
                       {element.staffs?.map((staff, index) => {
                         return (
                           <span key={index}>
