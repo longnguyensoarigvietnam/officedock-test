@@ -22,7 +22,7 @@ from common.utils import (
     to_camel_case,
     to_snake_case,
     generate_file_name,
-    transform_statistic_categories_within_none_category,
+    transform_statistic_categories,
 )
 from roles.constants import Screens
 from organizations.utils import get_high_level_organizations
@@ -429,9 +429,7 @@ class OrganizationByIDViewSet(BaseAPIViewSet):
             categories = OrganizationDetailSerializer(instance).data[
                 "statistic_categories"
             ]
-            return self.response_ok(
-                transform_statistic_categories_within_none_category(categories)
-            )
+            return self.response_ok(transform_statistic_categories(categories))
         elif request.method == "DELETE":
             instance.organizations_statistic_categories.all().delete()
 
