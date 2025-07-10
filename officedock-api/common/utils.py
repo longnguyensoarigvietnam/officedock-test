@@ -783,13 +783,14 @@ def delete_file(file_path: str) -> None:
         default_storage.delete(file_path)
 
 
-def validate_company_organization(company, org_id):
+def validate_company_organization(company, org_id, required_field=False):
     """
     Validate that the given organization ID belongs to the specified company.
 
     Args:
         company: The company instance to check organizations against. Expected to have a related 'organizations' manager.
         org_id: The ID of the organization to validate.
+        required_field: Check field input is required
 
     Returns:
         The organization instance if found, otherwise raises NotFound.
@@ -797,6 +798,11 @@ def validate_company_organization(company, org_id):
     Raises:
         NotFound: If the organization with the given ID does not belong to the company.
     """
+    if required_field and not org_id:
+        raise ValidationError(
+            {"organization_id": ERROR_MESSAGES["field_required"]}
+        )
+
     org = None
     if org_id:
         org = company.organizations.filter(id=org_id).first()
@@ -804,3 +810,27 @@ def validate_company_organization(company, org_id):
             raise NotFound(ERROR_MESSAGES["organization_not_exists"])
 
     return org
+
+
+def parse_search_date(search):
+    """
+    Try to parse the search term into a valid date format and return the datetime object if successful, else None.
+
+    Args:
+        search (str): The input string to be parsed as a date. Accepts formats like 'YYYY/MM/DD' or 'YYYY-MM-DD'.
+
+    Returns:
+        datetime or None: The parsed datetime object if the input matches a supported format, otherwise None.
+    """
+    if not search:
+        return None
+
+    # List of supported date formats
+    date_formats = ["%Y/%m/%d", "%Y-%m-%d"]
+    for date_format in date_formats:
+        try:
+            return datetime.strptime(search, date_format)
+        except ValueError:
+            continue
+
+    return None
