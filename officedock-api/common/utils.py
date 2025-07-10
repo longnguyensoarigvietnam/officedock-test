@@ -20,7 +20,6 @@ from base.messages import ERROR_MESSAGES
 from calendars.constants import ScheduleCategoryTypes
 from chat.constants import USER_ACTION_GROUP, WebSocketEventType
 from common.constants import STRIP_TAGS
-from organizations.constants import CategoryColors
 from organizations.models import OrganizationsStatisticCategories, Organization
 from roles.constants import SelectionResultOptions, Screens
 from skills.constants import DEFAULT_TIME
@@ -246,216 +245,82 @@ def check_permission_exists(request, permission_name):
 
 
 def transform_statistic_categories(statistic_categories):
-    """Handle change statistic categories to hierarchy categories"""
-    large_category_dict = {}
-    result = []
-    large_none_dict = {
-        ScheduleCategoryTypes.LARGE.value: None,
-        ScheduleCategoryTypes.MEDIUM.value: [],
-    }
-    for item in statistic_categories:
-        large_obj = item.get("large_statistic_category")
-        medium_obj = item.get("medium_statistic_category")
-        small_obj = item.get("small_statistic_category")
-
-        if large_obj:
-            large_id = large_obj["id"]
-            # Initialize large category entry if not present
-            if large_id not in large_category_dict:
-                large_obj["color"] = item.get("color")
-                large_category_dict[large_id] = {
-                    ScheduleCategoryTypes.LARGE.value: large_obj,
-                    ScheduleCategoryTypes.MEDIUM.value: [],
-                }
-
-            # Handle medium category
-            if medium_obj:
-                medium_id = medium_obj["id"]
-                medium_entry = next(
-                    (
-                        entry
-                        for entry in large_category_dict[large_id][
-                            ScheduleCategoryTypes.MEDIUM.value
-                        ]
-                        if entry[ScheduleCategoryTypes.MEDIUM.value]
-                        and entry[ScheduleCategoryTypes.MEDIUM.value]["id"]
-                        == medium_id
-                    ),
-                    None,
-                )
-                if not medium_entry:
-                    medium_entry = {
-                        ScheduleCategoryTypes.MEDIUM.value: medium_obj,
-                        ScheduleCategoryTypes.SMALL.value: None,
-                    }
-                    large_category_dict[large_id][
-                        ScheduleCategoryTypes.MEDIUM.value
-                    ].append(medium_entry)
-
-                # Add small category if it exists
-                if small_obj:
-                    if medium_entry[ScheduleCategoryTypes.SMALL.value] is None:
-                        medium_entry[ScheduleCategoryTypes.SMALL.value] = []
-
-                    medium_entry[ScheduleCategoryTypes.SMALL.value].append(
-                        small_obj
-                    )
-            elif small_obj:
-                small_entry = next(
-                    (
-                        entry
-                        for entry in large_category_dict[large_id][
-                            ScheduleCategoryTypes.MEDIUM.value
-                        ]
-                        if entry[ScheduleCategoryTypes.MEDIUM.value] is None
-                    ),
-                    None,
-                )
-                if not small_entry:
-                    small_entry = {
-                        ScheduleCategoryTypes.MEDIUM.value: None,
-                        ScheduleCategoryTypes.SMALL.value: [],
-                    }
-                    large_category_dict[large_id][
-                        ScheduleCategoryTypes.MEDIUM.value
-                    ].append(small_entry)
-
-                small_entry[ScheduleCategoryTypes.SMALL.value].append(small_obj)
-        else:  # Merge all entries with large_statistic_category: None
-            if medium_obj:
-                medium_entry = next(
-                    (
-                        entry
-                        for entry in large_none_dict[
-                            ScheduleCategoryTypes.MEDIUM.value
-                        ]
-                        if entry[ScheduleCategoryTypes.MEDIUM.value]
-                        and entry[ScheduleCategoryTypes.MEDIUM.value]["id"]
-                        == medium_obj["id"]
-                    ),
-                    None,
-                )
-                if not medium_entry:
-                    medium_entry = {
-                        ScheduleCategoryTypes.MEDIUM.value: medium_obj,
-                        ScheduleCategoryTypes.SMALL.value: [],
-                    }
-                    large_none_dict[ScheduleCategoryTypes.MEDIUM.value].append(
-                        medium_entry
-                    )
-
-                # Add small category if it exists
-                if small_obj:
-                    medium_entry[ScheduleCategoryTypes.SMALL.value].append(
-                        small_obj
-                    )
-            elif small_obj:
-                small_entry = next(
-                    (
-                        entry
-                        for entry in large_none_dict[
-                            ScheduleCategoryTypes.MEDIUM.value
-                        ]
-                        if entry[ScheduleCategoryTypes.MEDIUM.value] is None
-                    ),
-                    None,
-                )
-                if not small_entry:
-                    small_entry = {
-                        ScheduleCategoryTypes.MEDIUM.value: None,
-                        ScheduleCategoryTypes.SMALL.value: [],
-                    }
-                    large_none_dict[ScheduleCategoryTypes.MEDIUM.value].append(
-                        small_entry
-                    )
-
-                small_entry[ScheduleCategoryTypes.SMALL.value].append(small_obj)
-
-    # Combine the grouped large categories with standalone entries
-    result.extend(large_category_dict.values())
-    if large_none_dict[ScheduleCategoryTypes.MEDIUM.value]:
-        result.append(large_none_dict)
-    return result
-
-
-def transform_statistic_categories_within_none_category(statistic_categories):
     """
     Transform flat list of statistic categories into a nested hierarchy:
     large → medium → small, with default placeholders for null values.
+    Handles duplicates by ID properly and ensures '未設定' categories are shown first.
     """
+    LARGE = ScheduleCategoryTypes.LARGE.value
+    MEDIUM = ScheduleCategoryTypes.MEDIUM.value
+    SMALL = ScheduleCategoryTypes.SMALL.value
 
     def normalize_category(category):
         return (
-            category
+            dict(category)
             if category
             else {"id": NONE_CATEGORY, "name": NONE_CATEGORY}
         )
 
-    large_category_dict = {}
-    result = []
-    large_none_dict = {
-        ScheduleCategoryTypes.LARGE.value: {
-            "id": NONE_CATEGORY,
-            "name": NONE_CATEGORY,
-        },
-        ScheduleCategoryTypes.MEDIUM.value: [],
-    }
+    def get_color(category, default_color="#D7576A"):
+        return "#83919E" if category["id"] == NONE_CATEGORY else default_color
 
-    def find_or_create_medium_entry(container, medium_obj):
-        """Helper to find or create medium entry inside a container"""
-        for entry in container:
-            if (
-                entry[ScheduleCategoryTypes.MEDIUM.value]["id"]
-                == medium_obj["id"]
-            ):
-                return entry
-
-        # Not found, create new
-        entry = {
-            ScheduleCategoryTypes.MEDIUM.value: medium_obj,
-            ScheduleCategoryTypes.SMALL.value: [],
-        }
-        container.append(entry)
-        return entry
+    large_dict = {}
 
     for item in statistic_categories:
-        large_obj = normalize_category(item.get("large_statistic_category"))
-        medium_obj = normalize_category(item.get("medium_statistic_category"))
-        small_obj = normalize_category(item.get("small_statistic_category"))
+        large = normalize_category(item.get("large_statistic_category"))
+        medium = normalize_category(item.get("medium_statistic_category"))
+        small = normalize_category(item.get("small_statistic_category"))
 
-        if large_obj["id"] is not None:
-            large_id = large_obj["id"]
-            if large_id not in large_category_dict:
-                large_obj["color"] = item.get("color")
-                large_category_dict[large_id] = {
-                    ScheduleCategoryTypes.LARGE.value: large_obj,
-                    ScheduleCategoryTypes.MEDIUM.value: [],
-                }
+        large_id = str(large["id"])
+        medium_id = str(medium["id"])
+        small_id = str(small["id"])
 
-            medium_container = large_category_dict[large_id][
-                ScheduleCategoryTypes.MEDIUM.value
-            ]
-            medium_entry = find_or_create_medium_entry(
-                medium_container, medium_obj
+        large_color = get_color(large, item.get("color", "#D7576A"))
+        large_key = large_id
+
+        # Add large when haven't
+        if large_key not in large_dict:
+            large_dict[large_key] = {
+                LARGE: {**large, "color": large_color},
+                MEDIUM: {},
+            }
+
+        # Add medium when haven't
+        medium_dict = large_dict[large_key][MEDIUM]
+        if medium_id not in medium_dict:
+            medium_dict[medium_id] = {MEDIUM: medium, SMALL: []}
+
+        # Add small when haven't
+        small_list = medium_dict[medium_id][SMALL]
+        if all(str(s.get("id")) != small_id for s in small_list):
+            small_entry = {**small}
+            if small_entry["id"] == NONE_CATEGORY:
+                small_entry["uuid"] = NONE_CATEGORY
+                small_entry["color"] = "#83919E"
+            small_list.append(small_entry)
+
+    # Change dict to list and push None category to first
+    def sort_by_none_first(items_dict):
+        return [
+            v
+            for k, v in sorted(
+                items_dict.items(),
+                key=lambda x: 0 if x[0] == NONE_CATEGORY else 1,
             )
+        ]
 
-            if small_obj["id"] is not None:
-                medium_entry[ScheduleCategoryTypes.SMALL.value].append(
-                    small_obj
-                )
-        else:
-            medium_entry = find_or_create_medium_entry(
-                large_none_dict[ScheduleCategoryTypes.MEDIUM.value], medium_obj
+    result = []
+    for large_id, large_data in sorted(
+        large_dict.items(), key=lambda x: 0 if x[0] == NONE_CATEGORY else 1
+    ):
+        medium_list = []
+        for medium_data in sort_by_none_first(large_data[MEDIUM]):
+            # sort small inside medium
+            medium_data[SMALL].sort(
+                key=lambda s: 0 if str(s["id"]) == NONE_CATEGORY else 1
             )
-
-            if small_obj["id"] is not None:
-                medium_entry[ScheduleCategoryTypes.SMALL.value].append(
-                    small_obj
-                )
-
-    result.extend(large_category_dict.values())
-    if large_none_dict[ScheduleCategoryTypes.MEDIUM.value]:
-        result.append(large_none_dict)
+            medium_list.append(medium_data)
+        result.append({LARGE: large_data[LARGE], MEDIUM: medium_list})
 
     return result
 
@@ -561,47 +426,6 @@ def create_categories_by_model(model, categories):
 def generate_random_color():
     """Generate a random hex color code."""
     return "#{:06x}".format(random.randint(0, 0xFFFFFF))
-
-
-def add_default_entries_to_categories(data):
-    """
-    Handle add default entries to categories
-    """
-    # Add default to Large
-    default = {
-        "id": NONE_CATEGORY,
-        "name": NONE_CATEGORY,
-        "uuid": NONE_CATEGORY,
-        "color": CategoryColors.GRAY.value,
-    }
-    for item in data:
-        # Handle Medium
-        new_medium_list = []
-        for medium_entry in item["MEDIUM"]:
-            # Add default in to Small
-            smalls = (
-                medium_entry.get("SMALL") if medium_entry.get("SMALL") else []
-            )
-            smalls.insert(0, default)
-
-            # Add default to Medium
-            medium_with_default = {
-                "MEDIUM": medium_entry["MEDIUM"],
-                "SMALL": smalls,
-            }
-            new_medium_list.insert(0, medium_with_default)
-
-        default_medium = {"MEDIUM": default, "SMALL": [default]}
-        new_medium_list.insert(0, default_medium)
-
-        item["MEDIUM"] = new_medium_list
-    default_entry = {
-        "LARGE": default,
-        "MEDIUM": [{"MEDIUM": default, "SMALL": [default]}],
-    }
-
-    data.insert(0, default_entry)
-    return data
 
 
 class StripTags(Func):

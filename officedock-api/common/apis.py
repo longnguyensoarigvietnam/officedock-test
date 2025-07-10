@@ -55,7 +55,6 @@ from .utils import (
     send_web_socket_event,
     transform_statistic_categories,
     check_task_overtime,
-    add_default_entries_to_categories,
     get_organizations_of_user_by_screen_role,
     validate_company_organization,
 )
@@ -532,9 +531,6 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             }
 
             for org in data["organizations"]:
-                org["statistic_categories"] = add_default_entries_to_categories(
-                    org["statistic_categories"]
-                )
                 org["members"] = members[org["id"]]
             organizations_by_role = get_organizations_of_user_by_screen_role(
                 user, Screens.TEAMDOCK.value, Actions.VIEW.value
@@ -542,7 +538,6 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             users = User.objects.filter(
                 organizations__in=organizations_by_role
             ).distinct()
-
             # Insert option all team to pulldown choose organization for statistic to start of a list
             tags = _get_tags_by_organizations(organizations_by_role)
             data["organizations"].insert(
@@ -592,10 +587,6 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     ).data,
                 },
             )
-            for org in data["organizations"]:
-                org["statistic_categories"] = add_default_entries_to_categories(
-                    org["statistic_categories"]
-                )
 
             return data
 
