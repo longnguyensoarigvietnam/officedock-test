@@ -50,7 +50,7 @@ from chat.apis import ChatFileViewSet, ChatMessageViewSet, ChatRoomViewSet
 from roles.apis import RoleViewSet
 
 # Routers provide an easy way of automatically determining the URL conf.
-api_router = routers.DefaultRouter()
+api_router = routers.SimpleRouter()
 
 # Register router view set
 api_router.register("auth", SystemAuthViewSet, basename="system_auth")

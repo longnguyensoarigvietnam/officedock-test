@@ -971,7 +971,9 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
             company=company,
         )
         task_schedules = TaskSchedule.objects.select_related("task").filter(
-            task__organization_id__in=org_ids, company=company
+            task__organization_id__in=org_ids,
+            company=company,
+            task__deleted_at__isnull=True,
         )
 
         # Handle filter search
@@ -1156,7 +1158,10 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
         durations = TaskDuration.objects.select_related(
             "task", "schedule"
         ).filter(
-            Q(task__organization_id__in=org_ids)
+            Q(
+                task__organization_id__in=org_ids,
+                task__deleted_at__isnull=True,
+            )
             | Q(
                 schedule__organization_id=calendar_org.id
                 if calendar_org
