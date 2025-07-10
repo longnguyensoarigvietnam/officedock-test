@@ -2505,7 +2505,11 @@ const ChatDetail = ({
                                   src="/icons/setting-chat.svg"
                                   border="full"
                                   name="Setting icon"
-                                  onClick={() => setOpenSettingBox(true)}
+                                  onClick={() => {
+                                    setOpenSettingBox(true);
+                                    // Refetch to get the latest room name
+                                    refetchChatRoomDetail()
+                                  }}
                                 />
                               </div>
                             </DynamicTooltip>
@@ -3028,7 +3032,7 @@ const ChatDetail = ({
           onClose={() => setOpenSettingBox(false)}
           chatRoomDetail={chatRoomDetail}
           code={`${chatRoomCode}`}
-          dashboardMembers={dashboardMembers}
+          dashboardMemberList={dashboardMemberList}
           openAddMemberModal={() => {
             setOpenSettingBox(false);
             setOpenAddMembersBox(true);

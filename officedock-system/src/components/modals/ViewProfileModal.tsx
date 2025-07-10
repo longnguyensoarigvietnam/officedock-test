@@ -78,15 +78,15 @@ const ViewProfileModal = memo(
           </div>
 
           <div className="flex gap-3 items-center pb-3 mb-3 border-b-[1px] border-b-[#D2DBE1]">
-            <p className="text-[#77858F] text-sm font-medium w-[100px] text-left">
-              メールアドレス
+            <p className="text-[#77858F] text-sm font-medium w-[130px] text-left">
+              ID｜メールアドレス
             </p>
-            <p className="text-black text-[16px] text-justify font-medium break-all max-w-[calc(100%_-_112px)]">
-              {authenticatedUser?.email || ''}
+            <p className="text-black text-[16px] text-justify font-medium break-all max-w-[calc(100%_-_142px)]">
+              {authenticatedUser?.email || authenticatedUser?.username || ''}
             </p>
           </div>
           <div className="flex gap-3 items-center pb-3 mb-3 border-b-[1px] border-b-[#D2DBE1]">
-            <p className="text-[#77858F] text-sm font-medium w-[100px] text-left">
+            <p className="text-[#77858F] text-sm font-medium w-[130px] text-left">
               パスワード
             </p>
             <p className="text-black text-[16px] text-left font-medium">
@@ -94,19 +94,19 @@ const ViewProfileModal = memo(
             </p>
           </div>
           <div className="flex gap-3 items-center pb-3 mb-3 border-b-[1px] border-b-[#D2DBE1]">
-            <p className="text-[#77858F] text-sm font-medium w-[100px] text-left">
+            <p className="text-[#77858F] text-sm font-medium w-[130px] text-left">
               メインチーム
             </p>
-            <p className="text-black text-[16px] text-justify font-medium break-all max-w-[calc(100%_-_112px)]">
+            <p className="text-black text-[16px] text-justify font-medium break-all max-w-[calc(100%_-_142px)]">
               {authenticatedUser?.organizations?.find((org) => org.isMain)
                 ?.name || ''}
             </p>
           </div>
           <div className="flex gap-3 items-center pb-3 mb-3 border-b-[1px] border-b-[#D2DBE1]">
-            <p className="text-[#77858F] text-sm font-medium w-[100px] text-left">
+            <p className="text-[#77858F] text-sm font-medium w-[130px] text-left">
               サブチーム
             </p>
-            <p className="text-black text-[16px] font-medium break-all max-w-[calc(100%_-_112px)] text-justify">
+            <p className="text-black text-[16px] font-medium break-all max-w-[calc(100%_-_142px)] text-justify">
               {authenticatedUser?.organizations
                 ?.filter((org) => !org.isMain)
                 ?.map((org) => org.name)
@@ -114,10 +114,10 @@ const ViewProfileModal = memo(
             </p>
           </div>
           <div className="flex gap-3 items-center">
-            <p className="text-[#77858F] text-sm font-medium w-[100px] text-left">
+            <p className="text-[#77858F] text-sm font-medium w-[130px] text-left">
               権限
             </p>
-            <p className="text-black text-[16px] text-justify font-medium break-all max-w-[calc(100%_-_112px)]">
+            <p className="text-black text-[16px] text-justify font-medium break-all max-w-[calc(100%_-_142px)]">
               {authenticatedUser?.roles?.map((role) => role.name)?.join('/ ') ||
                 ''}
             </p>

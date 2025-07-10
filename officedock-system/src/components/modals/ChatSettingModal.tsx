@@ -2,8 +2,6 @@
 import { memo, useContext, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useMutation } from 'react-query';
-import { useSessionCache } from '@providers/SessionCacheProvider';
-
 import { AxiosError } from 'axios';
 
 import Modal from '../common/Modal';
@@ -16,17 +14,6 @@ import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Input from '@components/common/Input';
 
 import { apiRouters } from '@constants/routers';
-
-import {
-  ChatDashboardMember,
-  ChatParticipant,
-  ChatRoomDetail,
-} from '@interfaces/chat';
-import { OptionDropdownType } from '@interfaces/common';
-
-import useDashboardMemberList from '@hooks/useDashBoardMemberList';
-import { useErrorToast } from '@hooks/useErrorToast';
-
 import { NO_OPTIONS } from '@constants';
 import { ChatRoomType, PermissionsSystem } from '@constants/enums';
 import {
@@ -34,33 +21,44 @@ import {
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 
+import {
+  ChatParticipant,
+  ChatRoomDetail,
+} from '@interfaces/chat';
+import { Profile } from '@interfaces/user';
+import { OptionDropdownType } from '@interfaces/common';
+
+import { useErrorToast } from '@hooks/useErrorToast';
+
+import { useSessionCache } from '@providers/SessionCacheProvider';
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
+
 import { hasPermissionInArray } from '@utils';
+
 import api from '@base/api';
 
 export type ChatSettingModalProps = {
   open: boolean;
+  chatRoomDetail: ChatRoomDetail | undefined;
+  code: string;
+  dashboardMemberList: Omit<Profile, "birthday" | "gender">[]
   onClose: () => void;
   openAddMemberModal: () => void;
   openConfirmRemoveModal: (id: number) => void;
-  chatRoomDetail: ChatRoomDetail | undefined;
-  code: string;
-  dashboardMembers: ChatDashboardMember[];
 };
 
 const ChatSettingModal = memo(
   ({
     open,
-    onClose,
     chatRoomDetail,
     code,
+    dashboardMemberList,
+    onClose,
     openAddMemberModal,
     openConfirmRemoveModal,
-    dashboardMembers,
   }: ChatSettingModalProps) => {
     const { data: session } = useSessionCache();
-    const { dashboardMemberList } = useDashboardMemberList();
 
     const [searchName, setSearchName] = useState<string>('');
     const { showToast } = useToast();
@@ -128,14 +126,14 @@ const ChatSettingModal = memo(
     }, [chatRoomDetail, setValue]);
 
     const renderAvatar = (memberId: number) => {
-      const memberInfo = dashboardMembers.find((member) => {
+      const memberInfo = dashboardMemberList.find((member) => {
         return member.id == memberId;
       });
 
       return (
         <div>
           <CustomUserAvatar
-            avatarUrl={memberInfo?.avatarUrl || ''}
+            avatarUrl={memberInfo?.avatar || ''}
             avatarColor={memberInfo?.avatarColor || ''}
             size={33}
           />
