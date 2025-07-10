@@ -25,8 +25,10 @@ import Dropdown from '@components/common/Dropdown';
 import { Table, TableBody } from '@components/common/Table';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import { MyDockLineChartTooltip } from '@components/tooltip/MyDockLineChartTooltip';
+import StatisticLineChartTableSkeleton from '@components/common/SkeletonLoading/StatisticLineChartTableSkeleton';
 
 import { OptionDropdownType } from '@interfaces/common';
+import { TooltipDiv } from '@interfaces/tooltip';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
 import { DEFAULT_TIME_TEXT, STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
@@ -48,7 +50,7 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 import useStatisticTagTaskDurations from '@hooks/useStatisticTagTaskDurations';
-import { TooltipDiv } from '@interfaces/tooltip';
+
 import FilterTag from './filter/FilterTag';
 
 ChartJS.register(
@@ -965,10 +967,7 @@ const LineChart = ({
             )}
 
             {!isFetchedStatisticTagTaskDurationsList ? (
-              <RowSkeleton
-                numberOfRows={1}
-                className={`!h-[200px] mt-5 w-full mx-auto`}
-              />
+              <StatisticLineChartTableSkeleton />
             ) : (
               <Table
                 className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>

@@ -24,6 +24,8 @@ import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
 import { Table, TableBody } from '@components/common/Table';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
+import StatisticLineChartTableSkeleton from '@components/common/SkeletonLoading/StatisticLineChartTableSkeleton';
+import { MyDockCompareLineChartTooltip } from '@components/tooltip/MyDockCompareLineChartTooltip';
 
 import { StatisticStateContext } from '@providers/StatisticProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
@@ -33,6 +35,7 @@ import {
   StatisticsTaskDuration,
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
+import { TooltipDiv } from '@interfaces/tooltip';
 
 import {
   SortingType,
@@ -61,8 +64,7 @@ import {
   getStatisticMilestones,
   lightenColor,
 } from '@utils';
-import { TooltipDiv } from '@interfaces/tooltip';
-import { MyDockCompareLineChartTooltip } from '@components/tooltip/MyDockCompareLineChartTooltip';
+
 import FilterStatistic from '../filter/FilterStatistic';
 
 ChartJS.register(
@@ -1281,10 +1283,7 @@ const LineChartCompare = ({
                 </TableBody>
               </Table>
             ) : (
-              <RowSkeleton
-                numberOfRows={1}
-                className={`!h-[200px] mt-5 w-full mx-auto`}
-              />
+              <StatisticLineChartTableSkeleton />
             )}
           </div>
         </>

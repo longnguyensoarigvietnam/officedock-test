@@ -28,6 +28,7 @@ import RadioButton from '@components/common/RadioButton';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import CustomStatisticUserCheckbox from '@components/common/Checkbox/CustomStatisticUserCheckbox';
 import { TeamDockCompareLineChartTooltip } from '@components/tooltip/TeamDockCompareLineChartTooltip';
+import StatisticLineChartTableSkeleton from '@components/common/SkeletonLoading/StatisticLineChartTableSkeleton';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
@@ -75,6 +76,7 @@ import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations'
 import useStatisticUserTaskDurationsCompare from '@hooks/useStatisticUserTaskDurationsCompare';
 import useStatisticTableInTeamLineChart from '@hooks/useStatisticTableInTeamLineChart';
 import useStatisticTableInTeamLineChartCompare from '@hooks/useStatisticTableInTeamLineChartCompare';
+
 import FilterTeamStatistic from '../filter/FilterTeamStatistic';
 
 ChartJS.register(
@@ -1941,10 +1943,7 @@ const LineChartByTeamCompare = ({
                 </TableBody>
               </Table>
             ) : (
-              <RowSkeleton
-                numberOfRows={1}
-                className={`!h-[200px] mt-5 w-full mx-auto`}
-              />
+              <StatisticLineChartTableSkeleton />
             )}
           </div>
         </div>

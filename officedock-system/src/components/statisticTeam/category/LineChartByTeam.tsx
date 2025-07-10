@@ -28,6 +28,7 @@ import { TeamDockLineChartTooltip } from '@components/tooltip/TeamDockLineChartT
 import RadioButton from '@components/common/RadioButton';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import CustomStatisticUserCheckbox from '@components/common/Checkbox/CustomStatisticUserCheckbox';
+import StatisticLineChartTableSkeleton from '@components/common/SkeletonLoading/StatisticLineChartTableSkeleton';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
@@ -1449,10 +1450,7 @@ const LineChartByTeam = ({
               )}
 
             {isLoadingStatisticTableInTeamLineChart ? (
-              <RowSkeleton
-                numberOfRows={1}
-                className={`!h-[200px] mt-5 w-full mx-auto`}
-              />
+              <StatisticLineChartTableSkeleton />
             ) : (
               <Table
                 className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${lineChartTableData.length && 'max-h-[500px] overflow-y-auto'}`}>
