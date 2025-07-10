@@ -582,6 +582,9 @@ class TaskBoardSerializer(TaskCommonSerializer):
         """
         Return index of task
         """
+        if hasattr(instance, "index"):
+            return instance.index
+
         last_task = get_task_index(
             instance,
             self.context.get("request"),
@@ -896,46 +899,67 @@ class TaskTeamdockSerializer(BaseUserSerializer):
         )
         page_size = int(params.get("page_size", 5))
         ordering = params.get("ordering", None)
-        statuses = TaskStatus.objects.order_by("id")
-
-        user_org_ids = (
+        statuses = list(TaskStatus.objects.order_by("id"))
+        user_org_ids = list(
             obj.organizations.all().values_list("id", flat=True)
-            if is_cross_team_task
-            else [organization_id]
         )
 
-        results = []
+        def _apply_filters(tasks):
+            # Filter by tag, category, organization, search
+            if tag_ids := params.get("tag_ids"):
+                if ids := split_id_from_string(tag_ids):
+                    tasks = tasks.filter(tags__id__in=ids)
+            if category_ids := params.get("category_ids"):
+                if ids := split_id_from_string(category_ids):
+                    tasks = tasks.filter(
+                        categories__large_statistic_category__in=ids
+                    )
+            if organization_ids := params.get("organization_ids"):
+                if ids := split_id_from_string(organization_ids):
+                    tasks = tasks.filter(organization_id__in=ids)
+            if search := params.get("search"):
+                tasks = tasks.filter(title__icontains=search)
+            return tasks
 
+        def _apply_ordering(tasks, ordering):
+            # Ordering by deadline, important
+            tasks = tasks.annotate(
+                coalesced_deadline=Coalesce(
+                    "deadline",
+                    Value(
+                        REPLACE_NULL_DATE_WITH_FUTURE,
+                        output_field=DateTimeField(),
+                    ),
+                )
+            )
+
+            if "deadline" in ordering:
+                tasks = tasks.order_by(
+                    "coalesced_deadline", "-is_important", "-updated_at"
+                )
+
+            if "is_important" in ordering:
+                tasks = tasks.order_by(
+                    "-is_important", "coalesced_deadline", "-updated_at"
+                )
+            return tasks
+
+        results = []
+        all_tasks = obj.in_charge_tasks.filter(
+            organization_id__in=user_org_ids,
+            deleted_at__isnull=True,
+        ).exclude(type=TaskTypes.MY_TEMPLATE.value)
         for status in statuses:
-            tasks = obj.in_charge_tasks.filter(
-                status=status,
-                organization_id__in=user_org_ids,
-                deleted_at__isnull=True,
-            ).exclude(type=TaskTypes.MY_TEMPLATE.value)
-            tasks_total = tasks.count()
+            tasks = all_tasks.filter(status=status)
+
+            # Filter data
+            tasks = _apply_filters(tasks)
 
             # Validate ordering before applying it
             if ordering:
                 if ordering in ordering_fields:
-                    tasks = tasks.annotate(
-                        coalesced_deadline=Coalesce(
-                            "deadline",
-                            Value(
-                                REPLACE_NULL_DATE_WITH_FUTURE,
-                                output_field=DateTimeField(),
-                            ),
-                        )
-                    )
-
-                    if "deadline" in ordering:
-                        tasks = tasks.order_by(
-                            "coalesced_deadline", "-is_important", "-updated_at"
-                        )
-
-                    if "is_important" in ordering:
-                        tasks = tasks.order_by(
-                            "-is_important", "coalesced_deadline", "-updated_at"
-                        )
+                    # Ordering data
+                    tasks = _apply_ordering(tasks, ordering)
 
                     # Update team task index only if sorting by deadline or importance
                     for idx, task in enumerate(tasks):
@@ -960,33 +984,15 @@ class TaskTeamdockSerializer(BaseUserSerializer):
                             ].format(field_name=ordering)
                         }
                     )
-            # Handle filter data
-            if tag_ids := request.query_params.get("tag_ids"):
-                if ids := split_id_from_string(tag_ids):
-                    tasks = tasks.filter(tags__id__in=ids)
-
-            if category_ids := request.query_params.get("category_ids"):
-                if ids := split_id_from_string(category_ids):
-                    tasks = tasks.filter(
-                        categories__large_statistic_category__in=ids
-                    )
-
-            if organization_ids := request.query_params.get("organization_ids"):
-                if ids := split_id_from_string(organization_ids):
-                    tasks = tasks.filter(organization_id__in=ids)
-
-            if search := request.query_params.get("search"):
-                tasks = tasks.filter(title__icontains=search)
-
             # If the current user has no team task index, reindex tasks
             if (
-                not TeamTaskIndex.objects.filter(
+                not ordering
+                and not TeamTaskIndex.objects.filter(
                     team_id=organization_id,
                     user=user,
                     task__status=status,
                     task__people_in_charge=obj,
                 ).exists()
-                and not ordering
             ):
                 tasks = tasks.annotate(
                     coalesced_deadline=Coalesce(
@@ -1072,7 +1078,11 @@ class TaskTeamdockSerializer(BaseUserSerializer):
                         ),
                     ).order_by("-coalesced_pin_at", "-index", "-created_at")
 
+            if not is_cross_team_task:
+                tasks = tasks.filter(organization_id=organization_id)
+
             # Append formatted status data
+            tasks_total = tasks.count()
             results.append(
                 {
                     "id": status.id,
