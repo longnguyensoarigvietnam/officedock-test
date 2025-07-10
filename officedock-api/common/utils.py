@@ -629,7 +629,9 @@ def validate_company_organization(company, org_id, required_field=False):
 
     org = None
     if org_id:
-        org = company.organizations.filter(id=org_id).first()
+        org = Organization.all_objects.filter(
+            company=company, id=org_id
+        ).first()
         if not org:
             raise NotFound(ERROR_MESSAGES["organization_not_exists"])
 

@@ -1257,6 +1257,7 @@ class TaskViewSet(
         Get the top tasks with the highest counts for the logged-in user.
         """
         # Get page_size from query params
+        user = request.user
         page_size = request.query_params.get("page_size", DEFAULT_PAGE_SIZE)
 
         try:
@@ -1269,14 +1270,14 @@ class TaskViewSet(
 
         frequent_tasks = (
             TaskFrequent.objects.filter(
-                user=request.user,
-                company=request.user.company,
-                task__people_in_charge__id=request.user.id,
+                user=user,
+                company=user.company,
+                task__people_in_charge__id=user.id,
             )
             .order_by("-count")
-            .prefetch_related("task", "task__status")[:page_size]
+            .prefetch_related("task")[:page_size]
         )
-        tasks = [task.task for task in frequent_tasks]
+        tasks = [item.task for item in frequent_tasks]
 
         return self.response_ok(
             TaskBoardSerializer(
@@ -1300,7 +1301,7 @@ class TaskViewSet(
                 task__type=TaskTypes.MY_TEMPLATE.value
             )
             .all()
-            .order_by("task__id")
+            .order_by("task_id")
         )
         data = []
         for people_in_charge_task in people_in_charge_tasks:
