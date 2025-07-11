@@ -39,6 +39,7 @@ import {
   EventWorkCategory,
   FilterTypeKanban,
   ItemStartType,
+  ServerStatusCode,
   StatusTask,
   StatusValueTask,
   TaskRepetitiveType,
@@ -94,6 +95,7 @@ import api from '@base/api';
 const KanbanBoardTaskTeam = () => {
   // Context
   const {
+    oldUserAction,
     isLoadingDataTask,
     selectedOptionZoom,
     setSelectedOptionZoom,
@@ -1524,13 +1526,21 @@ const KanbanBoardTaskTeam = () => {
       if (data.peopleInCharge.length > 0) {
         editTaskInKanban({
           taskData: data,
-          oldIdStatus: parseInt(`${variant.oldIdStatus}`),
-          oldUserId: `user_${variant.oldIdPeople}`,
+          oldIdStatus: oldUserAction
+            ? oldUserAction.statusId
+            : parseInt(`${variant.oldIdStatus}`),
+          oldUserId: oldUserAction
+            ? oldUserAction.id
+            : `user_${variant.oldIdPeople}`,
         });
         updateTaskStatusTotal({
           taskData: data,
-          oldUserId: `user_${variant.oldIdPeople}`,
-          oldStatusName: variant.oldNameStatus || '',
+          oldUserId: oldUserAction
+            ? oldUserAction.id
+            : `user_${variant.oldIdPeople}`,
+          oldStatusName: oldUserAction
+            ? oldUserAction.statusName
+            : variant.oldNameStatus || '',
         });
         const itemChange = listTaskNoSetting.find(
           (item) => item.id === data.id,
@@ -1546,20 +1556,26 @@ const KanbanBoardTaskTeam = () => {
         }
       } else {
         updateTotalStatusSubtract({
-          userId:
-            dataTaskEdit?.peopleInCharge &&
-            dataTaskEdit.peopleInCharge.length > 0
-              ? `user_${dataTaskEdit.peopleInCharge[0].id}`
+          userId: oldUserAction
+            ? oldUserAction.id
+            : dataTaskEdit?.peopleInCharge &&
+                dataTaskEdit.peopleInCharge.length > 0
+              ? `user_${dataTaskEdit?.peopleInCharge[0].id}`
               : '',
-          statusName: dataTaskEdit?.status?.name || '',
+          statusName: oldUserAction
+            ? oldUserAction.statusName
+            : dataTaskEdit?.status?.name || '',
         });
         removeTaskById({
-          statusId: dataTaskEdit?.status?.id as number,
+          statusId: oldUserAction
+            ? oldUserAction.statusId
+            : (dataTaskEdit?.status?.id as number),
           taskId: dataTaskEdit?.id as number,
-          userId:
-            dataTaskEdit?.peopleInCharge &&
-            dataTaskEdit.peopleInCharge.length > 0
-              ? `user_${dataTaskEdit.peopleInCharge[0].id}`
+          userId: oldUserAction
+            ? oldUserAction.id
+            : dataTaskEdit?.peopleInCharge &&
+                dataTaskEdit.peopleInCharge.length > 0
+              ? `user_${dataTaskEdit?.peopleInCharge[0].id}`
               : '',
         });
         if (dataTaskEdit?.peopleInCharge.length !== 0) {
@@ -1657,18 +1673,25 @@ const KanbanBoardTaskTeam = () => {
       detail: TaskErrorPerson;
       taskSchedules: TaskErrorPerson;
     }>) => {
-      if (response?.data.detail) {
-        setDataErrorTask(response?.data.detail);
-      } else if (response?.data.taskSchedules) {
-        showToast({
-          variant: 'error',
-          description: ERROR_MESSAGE_OVERLAP_TASK,
-        });
-      } else {
+      if (response?.status === ServerStatusCode.NOT_FOUND) {
         showToast({
           variant: 'error',
           description: ERROR_UPDATE_MESSAGE,
         });
+      } else {
+        if (response?.data.detail) {
+          setDataErrorTask(response?.data.detail);
+        } else if (response?.data.taskSchedules) {
+          showToast({
+            variant: 'error',
+            description: ERROR_MESSAGE_OVERLAP_TASK,
+          });
+        } else {
+          showToast({
+            variant: 'error',
+            description: ERROR_UPDATE_MESSAGE,
+          });
+        }
       }
     },
     onSettled: () => {
@@ -2227,7 +2250,6 @@ const KanbanBoardTaskTeam = () => {
           (key) =>
             StatusValueTask[key as keyof typeof StatusValueTask] === statusId,
         ) as keyof TransformedStatuses;
-
         if (!statusKey) return user;
         return {
           ...user,

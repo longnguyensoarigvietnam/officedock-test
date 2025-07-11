@@ -3082,7 +3082,6 @@ const KanbanBoardTask = () => {
     const handleSocketMessage = (data: WebSocketMessageSortKanban) => {
       switch (data.action) {
         case SocketActions.RESET_STATUS_SORT_TASK:
-          if (orderingRequest === '') return;
           setIsReadyToFetch(false);
           setOrderingRequest('');
           setDataOrderRing('');

@@ -4138,6 +4138,32 @@ const TimeSchedule = memo(
                       info.el.classList.remove('resizable-disabled');
                     });
                   }}
+                  eventClassNames={(arg) => {
+                    const event = arg.event;
+                    const allEvents =
+                      calendarRef.current?.getApi()?.getEvents() ?? [];
+
+                    const isOverlappedFromAbove = allEvents.some((other) => {
+                      if (event.id === other.id) return false;
+
+                      const aStart = event.start?.getTime() ?? 0;
+                      const aEnd = event.end?.getTime() ?? 0;
+                      const bStart = other.start?.getTime() ?? 0;
+                      const bEnd = other.end?.getTime() ?? 0;
+
+                      const isOverlapping = aStart < bEnd && aEnd > bStart;
+                      const isAboveInTime = aStart < bStart;
+
+                      const isPartiallyOverlapped =
+                        aStart < bStart && aEnd > bStart && aEnd < bEnd;
+
+                      return (
+                        isOverlapping && isAboveInTime && isPartiallyOverlapped
+                      );
+                    });
+
+                    return isOverlappedFromAbove ? ['overlap-event'] : [];
+                  }}
                   eventDragStop={handleEventDragStop}
                   // TODO: Update hover event
                   eventClick={handleEventClick}
