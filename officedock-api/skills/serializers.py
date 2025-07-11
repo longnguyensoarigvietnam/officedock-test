@@ -5,7 +5,6 @@ from rest_framework import serializers
 
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
 from common.utils import (
-    get_common_categories,
     time_str_to_timedelta,
     get_common_categories_with_none_category,
 )
@@ -645,7 +644,9 @@ class GroupStepSkillMapSerializer(SkillSerializer):
         ).all()
         transformed_categories = []
         for category in categories:
-            transformed_categories.append(get_common_categories(category))
+            transformed_categories.append(
+                get_common_categories_with_none_category(category)
+            )
 
         return transformed_categories
 
