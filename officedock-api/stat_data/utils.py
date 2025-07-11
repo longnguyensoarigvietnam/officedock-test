@@ -295,7 +295,7 @@ def aggregate_durations(
 
         category_name = category.name if category else NONE_CATEGORY
         category_id = category.id if category else NONE_CATEGORY
-        category_color = CategoryColors.GRAY.value
+        category_color = None
         index = 0
 
         org_cat_key = (
@@ -309,6 +309,8 @@ def aggregate_durations(
         ):
             category_color = org_cat_map[org_cat_key]["color"]
             index = org_cat_map[org_cat_key]["id"]
+        if category_id == NONE_CATEGORY:
+            category_color = CategoryColors.GRAY.value
 
         if organization_ids_param == ALL_TEAM and not is_daily_report:
             category_name = f"{organization.name} {category_name}"
