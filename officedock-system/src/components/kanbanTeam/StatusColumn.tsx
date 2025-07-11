@@ -312,6 +312,7 @@ const StatusColumn = ({
                             id={String(task.id)}
                             index={index}
                             content={task}
+                            userColumn={user.id}
                             handleActionEditTask={handleSetParamEditTask}
                             handleConfirmCopyTask={handleSetParamCopyTask}
                             handleUpdateItemInline={() => {}}
