@@ -59,12 +59,7 @@ import {
   SUCCESS_UPDATE_MESSAGE,
   UPLOAD_AVATAR_FILE_MAXIMUM_SIZE,
 } from '@constants/message';
-import {
-  DEFAULT_END_TIME,
-  DEFAULT_START_TIME,
-  NO_OPTION_CATEGORY,
-  NO_SETTING,
-} from '@constants';
+import { DEFAULT_END_TIME, DEFAULT_START_TIME, NO_SETTING } from '@constants';
 
 import { Task, TaskFormData, TaskRequest } from '@interfaces/task';
 import { EventEditFormData, EventRequest } from '@interfaces/calendar';
@@ -678,7 +673,7 @@ const Header = ({ className }: HeaderProps) => {
     if (data.largeCategory && data.largeCategory?.value !== 'undefined') {
       newWorkCategories.push({
         categoryId:
-          `${data.largeCategory.value}` == NO_OPTION_CATEGORY
+          `${data.largeCategory.value}` == NO_SETTING
             ? null
             : `${data.largeCategory.value}`,
         type: EventWorkCategory.LARGE,
@@ -687,7 +682,7 @@ const Header = ({ className }: HeaderProps) => {
     if (data.mediumCategory && data.mediumCategory?.value !== 'undefined') {
       newWorkCategories.push({
         categoryId:
-          `${data.mediumCategory.value}` == NO_OPTION_CATEGORY
+          `${data.mediumCategory.value}` == NO_SETTING
             ? null
             : `${data.mediumCategory.value}`,
         type: EventWorkCategory.MEDIUM,

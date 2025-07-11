@@ -78,7 +78,6 @@ const StatisticTeamBoard = () => {
     setIsLoadingLargeCompare,
     setIsLoadingMediumCompare,
     setCurrentPage,
-    setIsSkeletonCategoryTeamTask,
     handleResetTableData,
     setDataMediumCalendar,
   } = useContext(StatisticTeamStateContext);
@@ -118,10 +117,6 @@ const StatisticTeamBoard = () => {
           : undefined,
     },
     onSuccess: (data) => {
-      if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
-        setIsSkeletonCategoryTeamTask(false);
-      }
-
       if (creationDataStatisticData?.organizations.length === 0) {
         return;
       }
@@ -220,9 +215,6 @@ const StatisticTeamBoard = () => {
             : undefined,
       },
       onSuccess: (data) => {
-        if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
-          setIsSkeletonCategoryTeamTask(false);
-        }
         setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
         setTotalDurationMediumCompare(
           sumDurations(data.mediumCategories ?? []),
@@ -282,8 +274,9 @@ const StatisticTeamBoard = () => {
     });
 
   const { creationDataStatisticData } = useCreationDataStatisticTeam({
-    organization_id:
-      (selectedOrganizationSideBar?.value as string) || organizationId || '',
+    organization_id: selectedOrganizationSideBar
+      ? (selectedOrganizationSideBar?.value as string)
+      : organizationId || '',
     isTeam: true,
     is_statistic: true,
     onSuccess: (data) => {

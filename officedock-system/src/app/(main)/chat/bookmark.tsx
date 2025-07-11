@@ -29,7 +29,7 @@ import {
 import {
   DEFAULT_END_TIME,
   DEFAULT_START_TIME,
-  NO_OPTION_CATEGORY,
+  NO_SETTING,
   PAGINATION_PAGE_SIZE_MEDIUM,
 } from '@constants';
 import {
@@ -335,7 +335,7 @@ const BookmarkList = ({
     if (data.largeCategory && data.largeCategory?.value !== 'undefined') {
       newWorkCategories.push({
         categoryId:
-          `${data.largeCategory.value}` == NO_OPTION_CATEGORY
+          `${data.largeCategory.value}` == NO_SETTING
             ? null
             : `${data.largeCategory.value}`,
         type: EventWorkCategory.LARGE,
@@ -344,7 +344,7 @@ const BookmarkList = ({
     if (data.mediumCategory && data.mediumCategory?.value !== 'undefined') {
       newWorkCategories.push({
         categoryId:
-          `${data.mediumCategory.value}` == NO_OPTION_CATEGORY
+          `${data.mediumCategory.value}` == NO_SETTING
             ? null
             : `${data.mediumCategory.value}`,
         type: EventWorkCategory.MEDIUM,
@@ -632,7 +632,7 @@ const BookmarkList = ({
     if (data.categories.LARGE?.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.LARGE.value}` == NO_OPTION_CATEGORY
+          `${data.categories.LARGE.value}` == NO_SETTING
             ? null
             : `${data.categories.LARGE.value}`,
         type: EventWorkCategory.LARGE,
@@ -641,7 +641,7 @@ const BookmarkList = ({
     if (data.categories.MEDIUM.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.MEDIUM.value}` == NO_OPTION_CATEGORY
+          `${data.categories.MEDIUM.value}` == NO_SETTING
             ? null
             : `${data.categories.MEDIUM.value}`,
         type: EventWorkCategory.MEDIUM,
@@ -650,7 +650,7 @@ const BookmarkList = ({
     if (data.categories.SMALL.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.SMALL.value}` == NO_OPTION_CATEGORY
+          `${data.categories.SMALL.value}` == NO_SETTING
             ? null
             : `${data.categories.SMALL.value}`,
         type: EventWorkCategory.SMALL,

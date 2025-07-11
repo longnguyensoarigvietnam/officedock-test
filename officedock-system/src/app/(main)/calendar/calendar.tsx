@@ -104,11 +104,7 @@ import {
   ServerStatusCode,
   ViewOptions,
 } from '@constants/enums';
-import {
-  DEFAULT_END_TIME,
-  DEFAULT_START_TIME,
-  NO_OPTION_CATEGORY,
-} from '@constants';
+import { DEFAULT_END_TIME, DEFAULT_START_TIME, NO_SETTING } from '@constants';
 
 import api from '@base/api';
 
@@ -1746,7 +1742,7 @@ const EventCalendar = () => {
     if (data.largeCategory?.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.largeCategory.value}` == NO_OPTION_CATEGORY
+          `${data.largeCategory.value}` == NO_SETTING
             ? null
             : `${data.largeCategory.value}`,
         type: EventWorkCategory.LARGE,
@@ -1755,7 +1751,7 @@ const EventCalendar = () => {
     if (data.mediumCategory?.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.mediumCategory.value}` == NO_OPTION_CATEGORY
+          `${data.mediumCategory.value}` == NO_SETTING
             ? null
             : `${data.mediumCategory.value}`,
         type: EventWorkCategory.MEDIUM,
@@ -1941,7 +1937,7 @@ const EventCalendar = () => {
     if (data.largeCategory && data.largeCategory?.value !== 'undefined') {
       newWorkCategories.push({
         categoryId:
-          `${data.largeCategory.value}` == NO_OPTION_CATEGORY
+          `${data.largeCategory.value}` == NO_SETTING
             ? null
             : `${data.largeCategory.value}`,
         type: EventWorkCategory.LARGE,
@@ -1950,7 +1946,7 @@ const EventCalendar = () => {
     if (data.mediumCategory && data.mediumCategory?.value !== 'undefined') {
       newWorkCategories.push({
         categoryId:
-          `${data.mediumCategory.value}` == NO_OPTION_CATEGORY
+          `${data.mediumCategory.value}` == NO_SETTING
             ? null
             : `${data.mediumCategory.value}`,
         type: EventWorkCategory.MEDIUM,

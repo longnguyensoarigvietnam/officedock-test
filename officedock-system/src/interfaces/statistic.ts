@@ -30,14 +30,14 @@ export interface UserListStatisticType {
 }
 
 export interface SmallCategory {
-  id: number;
+  id: number | string;
   name: string;
   uuid: string;
 }
 
 export interface MediumCategory {
   MEDIUM: {
-    id: number;
+    id: number | string;
     name: string;
     uuid: string;
   } | null;
@@ -45,7 +45,7 @@ export interface MediumCategory {
 }
 export interface LargeCategory {
   LARGE: {
-    id: number;
+    id: number | string;
     name: string;
     uuid: string;
   };

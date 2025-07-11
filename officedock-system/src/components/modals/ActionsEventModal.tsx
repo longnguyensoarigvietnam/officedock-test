@@ -48,8 +48,8 @@ import {
   DEFAULT_END_TIME,
   DEFAULT_START_TIME,
   MONTH_OPTIONS,
-  NO_OPTION_CATEGORY,
   NO_OPTIONS,
+  NO_SETTING,
   REPEAT_INTERVAL_OPTIONS,
   TASK_REPETITIVE_OPTIONS,
   UNREGISTERED,
@@ -171,9 +171,9 @@ const ActionsEventModal = ({
   // Get creation data for organizations, tags, locations, categories
   const { isFetchedCreationDataStatistic } = useCreationDataStatistic({
     is_calendar_page: true,
-
     onSuccess: (data) => {
       if (!data) return;
+
       setDataOptionsOrganizations([
         ...data.organizations.map((org) => ({
           value: org.id || '',
@@ -200,20 +200,20 @@ const ActionsEventModal = ({
       const organizationCategories =
         data.calendarOrganization?.statisticCategories.map((category) => {
           const largeCategory = category.LARGE || {
-            id: NO_OPTION_CATEGORY,
-            name: NO_OPTION_CATEGORY,
+            id: NO_SETTING,
+            name: NO_SETTING,
             uuid: '',
           };
 
           const mediumCategories = (category.MEDIUM || []).map(
             (mediumCategory) => {
               const mediumCategoryField = mediumCategory.MEDIUM || {
-                id: NO_OPTION_CATEGORY,
-                name: NO_OPTION_CATEGORY,
+                id: NO_SETTING,
+                name: NO_SETTING,
                 uuid: '',
               };
               const smallCategories = mediumCategory.SMALL || [
-                { id: NO_OPTION_CATEGORY, name: NO_OPTION_CATEGORY, uuid: '' },
+                { id: NO_SETTING, name: NO_SETTING, uuid: '' },
               ];
 
               return {
@@ -231,12 +231,7 @@ const ActionsEventModal = ({
 
       setDataOrganizationCategories(organizationCategories);
       setDataOptionsCategoryLarge(() => {
-        const largeCategories: OptionDropdownType[] = [
-          {
-            label: NO_OPTION_CATEGORY,
-            value: NO_OPTION_CATEGORY,
-          },
-        ];
+        const largeCategories: OptionDropdownType[] = [];
         data.calendarOrganization.statisticCategories.map((category) => {
           if (category.LARGE) {
             largeCategories.push({
@@ -322,15 +317,15 @@ const ActionsEventModal = ({
           (category) => category.type === EventWorkCategory.LARGE,
         );
         newLargeCategory = {
-          value: largeCat ? `${largeCat?.id}` : NO_OPTION_CATEGORY,
-          label: largeCat ? `${largeCat?.name}` : NO_OPTION_CATEGORY,
+          value: largeCat ? `${largeCat?.id}` : NO_SETTING,
+          label: largeCat ? `${largeCat?.name}` : NO_SETTING,
         };
         const mediumCat = dataEvent.categories.find(
           (category) => category.type === EventWorkCategory.MEDIUM,
         );
         newMediumCategory = {
-          value: mediumCat ? `${mediumCat?.id}` : NO_OPTION_CATEGORY,
-          label: mediumCat ? `${mediumCat?.name}` : NO_OPTION_CATEGORY,
+          value: mediumCat ? `${mediumCat?.id}` : NO_SETTING,
+          label: mediumCat ? `${mediumCat?.name}` : NO_SETTING,
         };
       }
 
@@ -1647,24 +1642,8 @@ const ActionsEventModal = ({
                       className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
                       classNameTextData="!text-xs"
                       classNameOption="!text-xs"
-                      options={[
-                        {
-                          label: NO_OPTION_CATEGORY,
-                          value: NO_OPTION_CATEGORY,
-                        },
-                        ...dataOptionsCategoryLarge.filter(
-                          (category) => category.label !== NO_OPTION_CATEGORY,
-                        ),
-                      ]}
-                      selectedOption={[
-                        {
-                          label: NO_OPTION_CATEGORY,
-                          value: NO_OPTION_CATEGORY,
-                        },
-                        ...dataOptionsCategoryLarge.filter(
-                          (category) => category.label !== NO_OPTION_CATEGORY,
-                        ),
-                      ].find(
+                      options={[...dataOptionsCategoryLarge]}
+                      selectedOption={[...dataOptionsCategoryLarge].find(
                         (element) =>
                           element.value == (value as OptionDropdownType)?.value,
                       )}
@@ -1691,26 +1670,8 @@ const ActionsEventModal = ({
                           className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
                           classNameTextData="!text-xs"
                           classNameOption="!text-xs"
-                          options={[
-                            {
-                              label: NO_OPTION_CATEGORY,
-                              value: NO_OPTION_CATEGORY,
-                            },
-                            ...dataOptionsCategoryMedium.filter(
-                              (category) =>
-                                category.label !== NO_OPTION_CATEGORY,
-                            ),
-                          ]}
-                          selectedOption={[
-                            {
-                              label: NO_OPTION_CATEGORY,
-                              value: NO_OPTION_CATEGORY,
-                            },
-                            ...dataOptionsCategoryMedium.filter(
-                              (category) =>
-                                category.label !== NO_OPTION_CATEGORY,
-                            ),
-                          ].find(
+                          options={[...dataOptionsCategoryMedium]}
+                          selectedOption={[...dataOptionsCategoryMedium].find(
                             (element) =>
                               element.value ==
                               (value as OptionDropdownType)?.value,

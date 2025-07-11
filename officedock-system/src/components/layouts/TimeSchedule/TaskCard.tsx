@@ -584,7 +584,9 @@ const TaskCard = ({
                   )}
                 </p>
                 {!resourcePlan && !isCalculation && (
-                  <p>{getMinuteDifference(event.timeText)}分</p>
+                  <p className="break-all">
+                    {getMinuteDifference(event.timeText)}分
+                  </p>
                 )}
               </div>
             </div>

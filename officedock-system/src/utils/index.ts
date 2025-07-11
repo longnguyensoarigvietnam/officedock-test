@@ -1382,3 +1382,13 @@ export function deduplicateSearchParams(
 
   return deduped;
 }
+export function removeDuplicateOptions(
+  options: OptionDropdownType[],
+): OptionDropdownType[] {
+  const seen = new Set<string | number>();
+  return options.filter((item) => {
+    if (seen.has(item.value)) return false;
+    seen.add(item.value);
+    return true;
+  });
+}

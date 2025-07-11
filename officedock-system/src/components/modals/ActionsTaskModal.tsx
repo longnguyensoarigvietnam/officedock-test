@@ -252,27 +252,12 @@ const ActionsTaskModal = ({
     isTeam: true,
     onSuccess: (data) => {
       if (!data) return;
-      const NO_SETTING_CATEGORY = {
-        id: NO_SETTING,
-        name: NO_SETTING,
-        uuid: NO_SETTING,
-      };
-
       const mainItem =
         data.organizations.find(
           (item) => String(item.id) === String(organizationValue),
         ) || data.organizations[0];
 
-      const updatedStatisticCategories = mainItem.statisticCategories.map(
-        (category) => {
-          return {
-            ...category,
-            LARGE: category.LARGE ?? NO_SETTING_CATEGORY,
-          };
-        },
-      );
-
-      const organizationCategories = updatedStatisticCategories.map(
+      const organizationCategories = mainItem.statisticCategories.map(
         (category) => {
           const largeCategory = category.LARGE || {
             id: NO_SETTING,
@@ -307,12 +292,7 @@ const ActionsTaskModal = ({
 
       setDataOrganizationCategories(organizationCategories);
       setDataOptionsCategoryLarge(() => {
-        const largeCategories: OptionDropdownType[] = [
-          {
-            label: NO_SETTING,
-            value: NO_SETTING,
-          },
-        ];
+        const largeCategories: OptionDropdownType[] = [];
         mainItem.statisticCategories.map((category) => {
           if (category.LARGE) {
             largeCategories.push({
@@ -636,12 +616,7 @@ const ActionsTaskModal = ({
       (category) => category.LARGE.id == watch('categories.LARGE.value'),
     );
 
-    const initialMediumCategory: OptionDropdownType[] = [
-      {
-        label: NO_SETTING,
-        value: NO_SETTING,
-      },
-    ];
+    const initialMediumCategory: OptionDropdownType[] = [];
 
     if (selectedLargeCategory) {
       selectedLargeCategory.MEDIUM.map((mediumCategory) => {
@@ -681,12 +656,7 @@ const ActionsTaskModal = ({
         (category) => category.MEDIUM.id == watch('categories.MEDIUM.value'),
       );
 
-    const initialSmallCategory: OptionDropdownType[] = [
-      {
-        label: NO_SETTING,
-        value: NO_SETTING,
-      },
-    ];
+    const initialSmallCategory: OptionDropdownType[] = [];
     if (selectedMediumCategoryOption) {
       selectedMediumCategoryOption.SMALL &&
         selectedMediumCategoryOption.SMALL.map((smallCategory) => {
@@ -1122,6 +1092,7 @@ const ActionsTaskModal = ({
     ]);
   };
   const isRoutineTaskModal = type == ItemStartType.FIXED_TASK;
+
   return (
     <Drawer
       open={open}
