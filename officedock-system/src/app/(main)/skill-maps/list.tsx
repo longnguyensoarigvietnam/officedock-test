@@ -207,13 +207,17 @@ const ListSkillsMap = () => {
           : [],
       categoryIds: step.rawCategories.map((cate) => ({
         largeStatisticCategoryId:
-          cate.LARGE.value !== NO_SETTING ? (cate.LARGE.value as number) : null,
+          cate.LARGE.value !== NO_SETTING && cate.LARGE.value !== ''
+            ? (cate.LARGE.value as number)
+            : null,
         mediumStatisticCategoryId:
-          cate.MEDIUM.value !== NO_SETTING
+          cate.MEDIUM.value !== NO_SETTING && cate.MEDIUM.value !== ''
             ? (cate.MEDIUM.value as number)
             : null,
         smallStatisticCategoryId:
-          cate.SMALL.value !== NO_SETTING ? (cate.SMALL.value as number) : null,
+          cate.SMALL.value !== NO_SETTING && cate.SMALL.value !== ''
+            ? (cate.SMALL.value as number)
+            : null,
       })),
     });
 
@@ -274,13 +278,17 @@ const ListSkillsMap = () => {
           : [],
       categoryIds: step.rawCategories.map((cate) => ({
         largeStatisticCategoryId:
-          cate.LARGE.value !== NO_SETTING ? (cate.LARGE.value as number) : null,
+          cate.LARGE.value !== NO_SETTING && cate.LARGE.value !== ''
+            ? (cate.LARGE.value as number)
+            : null,
         mediumStatisticCategoryId:
-          cate.MEDIUM.value !== NO_SETTING
+          cate.MEDIUM.value !== NO_SETTING && cate.MEDIUM.value !== ''
             ? (cate.MEDIUM.value as number)
             : null,
         smallStatisticCategoryId:
-          cate.SMALL.value !== NO_SETTING ? (cate.SMALL.value as number) : null,
+          cate.SMALL.value !== NO_SETTING && cate.SMALL.value !== ''
+            ? (cate.SMALL.value as number)
+            : null,
       })),
     });
 

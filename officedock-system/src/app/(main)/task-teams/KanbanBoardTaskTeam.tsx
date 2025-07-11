@@ -48,7 +48,7 @@ import {
   COLUMN_ID_TASK,
   INITIAL_INDEX_VALUE,
   INITIAL_INDEX_VALUE_STEP,
-  NO_OPTION_CATEGORY,
+  NO_SETTING,
   TASK_REPETITIVE_OPTIONS,
 } from '@constants';
 import {
@@ -1195,7 +1195,7 @@ const KanbanBoardTaskTeam = () => {
     if (data.categories.LARGE?.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.LARGE.value}` == NO_OPTION_CATEGORY
+          `${data.categories.LARGE.value}` == NO_SETTING
             ? null
             : `${data.categories.LARGE.value}`,
         type: EventWorkCategory.LARGE,
@@ -1204,7 +1204,7 @@ const KanbanBoardTaskTeam = () => {
     if (data.categories.MEDIUM.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.MEDIUM.value}` == NO_OPTION_CATEGORY
+          `${data.categories.MEDIUM.value}` == NO_SETTING
             ? null
             : `${data.categories.MEDIUM.value}`,
         type: EventWorkCategory.MEDIUM,
@@ -1213,7 +1213,7 @@ const KanbanBoardTaskTeam = () => {
     if (data.categories.SMALL.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.SMALL.value}` == NO_OPTION_CATEGORY
+          `${data.categories.SMALL.value}` == NO_SETTING
             ? null
             : `${data.categories.SMALL.value}`,
         type: EventWorkCategory.SMALL,
@@ -1407,7 +1407,7 @@ const KanbanBoardTaskTeam = () => {
     if (data.categories.LARGE?.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.LARGE.value}` == NO_OPTION_CATEGORY
+          `${data.categories.LARGE.value}` == NO_SETTING
             ? null
             : `${data.categories.LARGE.value}`,
         type: EventWorkCategory.LARGE,
@@ -1416,7 +1416,7 @@ const KanbanBoardTaskTeam = () => {
     if (data.categories.MEDIUM.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.MEDIUM.value}` == NO_OPTION_CATEGORY
+          `${data.categories.MEDIUM.value}` == NO_SETTING
             ? null
             : `${data.categories.MEDIUM.value}`,
         type: EventWorkCategory.MEDIUM,
@@ -1425,7 +1425,7 @@ const KanbanBoardTaskTeam = () => {
     if (data.categories.SMALL.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.SMALL.value}` == NO_OPTION_CATEGORY
+          `${data.categories.SMALL.value}` == NO_SETTING
             ? null
             : `${data.categories.SMALL.value}`,
         type: EventWorkCategory.SMALL,

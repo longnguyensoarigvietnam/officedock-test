@@ -207,6 +207,9 @@ const TableChart = ({
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
+        queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
+        });
 
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
@@ -223,6 +226,10 @@ const TableChart = ({
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingOrganizationCompare(true);
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTaskListCompare',
+          });
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTagsListCompare',

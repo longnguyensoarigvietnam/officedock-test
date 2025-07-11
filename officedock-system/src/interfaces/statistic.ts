@@ -340,7 +340,7 @@ export interface DataTaskListStatisticListType {
   categories?: {
     name: string;
     type: string;
-    id: number;
+    id: string | number;
     color: string;
   }[];
   taskDurations: {

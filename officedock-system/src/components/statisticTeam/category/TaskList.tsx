@@ -23,6 +23,7 @@ import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import FilterTeamStatistic from './filter/FilterTeamStatistic';
+import { removeDuplicateOptions } from '@utils';
 
 type Props = {
   isCheckCompare: boolean;
@@ -364,7 +365,7 @@ const TaskListTeamStatistic = ({
                     className="!h-[34px] !py-0 !rounded-md text-sm !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
                     classNameOption="!text-sm"
-                    options={mediumOptions}
+                    options={removeDuplicateOptions(mediumOptions)}
                     selectedOption={
                       selectedOrganization?.type ===
                       OrganizationStatisticType.CALENDAR
