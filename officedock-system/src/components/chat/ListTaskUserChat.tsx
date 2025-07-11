@@ -193,6 +193,7 @@ const ListTaskUserChat = ({
       }
     });
   };
+
   return (
     <div className="relative z-20">
       <DynamicTooltip content={'タスクを引用'} placement="top">
@@ -322,6 +323,10 @@ const ListTaskUserChat = ({
           <Button
             onClick={() => {
               handleQuoteTaskUser(quoteTaskList);
+              setQuoteTaskList([]);
+              setDataTaskSearch([]);
+              setIsShowList(false);
+              setSearchTask('');
             }}
             className="!py-0 !px-0 h-[38px] w-[150px] flex items-center justify-center">
             タスクを引用する

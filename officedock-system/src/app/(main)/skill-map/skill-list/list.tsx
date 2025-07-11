@@ -162,6 +162,7 @@ const SkillList = () => {
             (element) => element.value == selectedOrganizationOption.value,
           )}
           onChange={(e) => {
+            setSkillMapByOrganizations([]);
             setSelectedOrganizationOption({
               label: e.label,
               value: e.value,
