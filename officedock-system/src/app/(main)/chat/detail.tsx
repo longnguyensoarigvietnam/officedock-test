@@ -1089,14 +1089,12 @@ const ChatDetail = ({
     mentionIds,
     files,
     fileUuids,
-    taskIds,
   }: {
     data: string;
     uuid: string;
     mentionIds: number[];
     files: File[];
     fileUuids: string[];
-    taskIds: number[];
   }) => {
     const totalChunks = files.reduce((acc, file) => {
       const chunkSize = getChunkSize(file.size);
@@ -1128,7 +1126,6 @@ const ChatDetail = ({
     formData.append('uuid', uuid);
     formData.append('clientId', clientId);
     mentionIds.forEach((id) => formData.append('mentionIds', id.toString()));
-    taskIds.forEach((id) => formData.append('taskIds', id.toString()));
     fileUuids.forEach((id) => formData.append('fileUuids', id.toString()));
     try {
       const { data: response } = await api.post(
@@ -1194,7 +1191,6 @@ const ChatDetail = ({
         uuid: file.uuid,
       };
     });
-    const taskIds = quoteTaskList.map((task) => task.id);
     setDataMessageDetail([
       {
         uuid: uuidMsg,
@@ -1244,7 +1240,6 @@ const ChatDetail = ({
       mentionIds,
       files: uploadFiles.map((file) => file.file),
       fileUuids: uploadFiles.map((file) => file.uuid),
-      taskIds: taskIds,
     });
   };
 
