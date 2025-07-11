@@ -875,6 +875,13 @@ class SkillViewSet(
         if categories:
             for category in categories:
                 # Validate data category
+                if (
+                    category["large_statistic_category"]
+                    == category["medium_statistic_category"]
+                    == category["small_statistic_category"]
+                    is None
+                ):
+                    continue
                 large_category = category.get("large_statistic_category")
                 medium_category = category.get("medium_statistic_category")
                 small_category = category.get("small_statistic_category")
