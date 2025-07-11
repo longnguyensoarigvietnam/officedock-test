@@ -286,12 +286,7 @@ const ActionsTaskModalTeam = ({
 
         setDataOrganizationCategories(organizationCategories);
         setDataOptionsCategoryLarge(() => {
-          const largeCategories: OptionDropdownType[] = [
-            {
-              label: NO_OPTION_CATEGORY,
-              value: NO_OPTION_CATEGORY,
-            },
-          ];
+          const largeCategories: OptionDropdownType[] = [];
           data.map((category) => {
             if (category.LARGE) {
               largeCategories.push({
@@ -579,12 +574,7 @@ const ActionsTaskModalTeam = ({
       (category) => category.LARGE.id == watch('categories.LARGE.value'),
     );
 
-    const initialMediumCategory: OptionDropdownType[] = [
-      {
-        label: NO_OPTION_CATEGORY,
-        value: NO_OPTION_CATEGORY,
-      },
-    ];
+    const initialMediumCategory: OptionDropdownType[] = [];
 
     if (selectedLargeCategory) {
       selectedLargeCategory.MEDIUM.map((mediumCategory) => {
@@ -624,12 +614,7 @@ const ActionsTaskModalTeam = ({
         (category) => category.MEDIUM.id == watch('categories.MEDIUM.value'),
       );
 
-    const initialSmallCategory: OptionDropdownType[] = [
-      {
-        label: NO_OPTION_CATEGORY,
-        value: NO_OPTION_CATEGORY,
-      },
-    ];
+    const initialSmallCategory: OptionDropdownType[] = [];
     if (selectedMediumCategoryOption) {
       selectedMediumCategoryOption.SMALL &&
         selectedMediumCategoryOption.SMALL.map((smallCategory) => {
@@ -1293,7 +1278,12 @@ const ActionsTaskModalTeam = ({
                     classNameTextData="!text-xs"
                     classNameOption="!text-xs"
                     classNameError="!text-xs"
-                    disabled={dataTask?.isStart}
+                    disabled={
+                      dataTask?.isStart ||
+                      (dataTask
+                        ? dataTask.status?.id === StatusValueTask.COMPLETED
+                        : false)
+                    }
                     options={dataOptionsPeopleInCharge}
                     selectedOption={dataOptionsPeopleInCharge.find(
                       (element) => element.value === value?.value,

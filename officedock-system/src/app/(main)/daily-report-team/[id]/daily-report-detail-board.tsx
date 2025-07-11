@@ -57,7 +57,7 @@ import {
   SocketActions,
   StatusValueTask,
 } from '@constants/enums';
-import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY, NO_SETTING } from '@constants';
+import { DATE_TEXT_FORMAT, NO_SETTING } from '@constants';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
@@ -106,6 +106,7 @@ import {
   adjustPositionForViewportSchedule,
   calculateTotalMinutes,
   hasPermissionInArray,
+  removeDuplicateOptions,
   secondsToTimeString,
   timeStringToSeconds,
   transformDataTaskDailyToTable,
@@ -117,6 +118,7 @@ import { TeamDailyStateContext } from '@providers/TeamDailyReportProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { TaskContext } from '@providers/TaskProvider';
 import api from '@base/api';
+import { useDebounceCallback } from '@hooks/useDebounceCallback';
 
 const DailyReportDetailBoard = () => {
   const { statusTaskSelected, setStatusTaskSelected } = useContext(TaskContext);
@@ -886,8 +888,8 @@ const DailyReportDetailBoard = () => {
             : undefined;
         const optionData = [
           {
-            label: NO_OPTION_CATEGORY,
-            value: NO_OPTION_CATEGORY,
+            label: NO_SETTING,
+            value: NO_SETTING,
           },
           ...getLargeCategories(organizationCategory ?? []),
         ];
@@ -908,7 +910,7 @@ const DailyReportDetailBoard = () => {
                     element.value ===
                     (info.row.original.LARGE.id
                       ? info.row.original.LARGE.id
-                      : NO_OPTION_CATEGORY),
+                      : NO_SETTING),
                 )}
                 isDisabled={!isPermissionAction}
                 placeholder=""
@@ -922,7 +924,7 @@ const DailyReportDetailBoard = () => {
                       categoryIds: [
                         {
                           categoryId:
-                            e?.value == NO_OPTION_CATEGORY
+                            e?.value == NO_SETTING
                               ? null
                               : (e?.value as number),
                           type: EventWorkCategory.LARGE,
@@ -943,7 +945,7 @@ const DailyReportDetailBoard = () => {
                       categoryIds: [
                         {
                           categoryId:
-                            e?.value == NO_OPTION_CATEGORY
+                            e?.value == NO_SETTING
                               ? null
                               : (e?.value as number),
                           type: EventWorkCategory.LARGE,
@@ -1006,16 +1008,16 @@ const DailyReportDetailBoard = () => {
           info.row.original.LARGE.id !== ''
             ? [
                 {
-                  label: NO_OPTION_CATEGORY,
-                  value: NO_OPTION_CATEGORY,
+                  label: NO_SETTING,
+                  value: NO_SETTING,
                 },
                 ...getMediumCategories(result),
               ]
             : info.row.original.MEDIUM.id !== ''
               ? [
                   {
-                    label: NO_OPTION_CATEGORY,
-                    value: NO_OPTION_CATEGORY,
+                    label: NO_SETTING,
+                    value: NO_SETTING,
                   },
                   {
                     value: info.row.original.MEDIUM.id,
@@ -1024,8 +1026,8 @@ const DailyReportDetailBoard = () => {
                 ]
               : [
                   {
-                    label: NO_OPTION_CATEGORY,
-                    value: NO_OPTION_CATEGORY,
+                    label: NO_SETTING,
+                    value: NO_SETTING,
                   },
                 ];
         const isParent = info.row.depth === 0;
@@ -1045,13 +1047,13 @@ const DailyReportDetailBoard = () => {
                       element.value ===
                       (info.row.original.MEDIUM.id
                         ? info.row.original.MEDIUM.id
-                        : NO_OPTION_CATEGORY),
+                        : NO_SETTING),
                   )}
                   showArrow
                   forceMenuPlacementBottom
                   isDisabled={!isPermissionAction}
                   placeholder=""
-                  options={optionMedium}
+                  options={removeDuplicateOptions(optionMedium)}
                   onChange={(e) => {
                     if (info.row.original.type === EventCalendarType.TASK) {
                       editCategoryInline({
@@ -1059,14 +1061,14 @@ const DailyReportDetailBoard = () => {
                         categoryIds: [
                           {
                             categoryId:
-                              e?.value == NO_OPTION_CATEGORY
+                              e?.value == NO_SETTING
                                 ? null
                                 : (e?.value as number),
                             type: EventWorkCategory.MEDIUM,
                           },
                           {
                             categoryId:
-                              info.row.original.LARGE.id == NO_OPTION_CATEGORY
+                              info.row.original.LARGE.id == NO_SETTING
                                 ? null
                                 : (info.row.original.LARGE.id as number),
                             type: EventWorkCategory.LARGE,
@@ -1083,14 +1085,14 @@ const DailyReportDetailBoard = () => {
                         categoryIds: [
                           {
                             categoryId:
-                              e?.value == NO_OPTION_CATEGORY
+                              e?.value == NO_SETTING
                                 ? null
                                 : (e?.value as number),
                             type: EventWorkCategory.MEDIUM,
                           },
                           {
                             categoryId:
-                              info.row.original.LARGE.id == NO_OPTION_CATEGORY
+                              info.row.original.LARGE.id == NO_SETTING
                                 ? null
                                 : (info.row.original.LARGE.id as number),
                             type: EventWorkCategory.LARGE,
@@ -1169,23 +1171,23 @@ const DailyReportDetailBoard = () => {
           info.row.original.MEDIUM.id !== ''
             ? [
                 {
-                  label: NO_OPTION_CATEGORY,
-                  value: NO_OPTION_CATEGORY,
+                  label: NO_SETTING,
+                  value: NO_SETTING,
                 },
                 ...getSmallCategories(smallResult),
               ]
             : info.row.original.SMALL.id !== ''
               ? [
                   {
-                    label: NO_OPTION_CATEGORY,
-                    value: NO_OPTION_CATEGORY,
+                    label: NO_SETTING,
+                    value: NO_SETTING,
                   },
                   ...getSmallCategories(smallResult),
                 ]
               : [
                   {
-                    label: NO_OPTION_CATEGORY,
-                    value: NO_OPTION_CATEGORY,
+                    label: NO_SETTING,
+                    value: NO_SETTING,
                   },
                   ...getSmallCategories(smallResult),
                 ];
@@ -1204,13 +1206,13 @@ const DailyReportDetailBoard = () => {
                   element.value ===
                   (info.row.original.SMALL.id
                     ? info.row.original.SMALL.id
-                    : NO_OPTION_CATEGORY),
+                    : NO_SETTING),
               )}
               isDisabled={!isPermissionAction}
               placeholder=""
               showArrow
               forceMenuPlacementBottom
-              options={optionSmall}
+              options={removeDuplicateOptions(optionSmall)}
               onChange={(e) => {
                 if (info.row.original.type === EventCalendarType.TASK) {
                   editCategoryInline({
@@ -1218,21 +1220,19 @@ const DailyReportDetailBoard = () => {
                     categoryIds: [
                       {
                         categoryId:
-                          e?.value == NO_OPTION_CATEGORY
-                            ? null
-                            : (e?.value as number),
+                          e?.value == NO_SETTING ? null : (e?.value as number),
                         type: EventWorkCategory.SMALL,
                       },
                       {
                         categoryId:
-                          info.row.original.LARGE.id == NO_OPTION_CATEGORY
+                          info.row.original.LARGE.id == NO_SETTING
                             ? null
                             : (info.row.original.LARGE.id as number),
                         type: EventWorkCategory.LARGE,
                       },
                       {
                         categoryId:
-                          info.row.original.MEDIUM.id == NO_OPTION_CATEGORY
+                          info.row.original.MEDIUM.id == NO_SETTING
                             ? null
                             : (info.row.original.MEDIUM.id as number),
                         type: EventWorkCategory.MEDIUM,
@@ -1245,21 +1245,19 @@ const DailyReportDetailBoard = () => {
                     categoryIds: [
                       {
                         categoryId:
-                          e?.value == NO_OPTION_CATEGORY
-                            ? null
-                            : (e?.value as number),
+                          e?.value == NO_SETTING ? null : (e?.value as number),
                         type: EventWorkCategory.SMALL,
                       },
                       {
                         categoryId:
-                          info.row.original.LARGE.id == NO_OPTION_CATEGORY
+                          info.row.original.LARGE.id == NO_SETTING
                             ? null
                             : (info.row.original.LARGE.id as number),
                         type: EventWorkCategory.LARGE,
                       },
                       {
                         categoryId:
-                          info.row.original.MEDIUM.id == NO_OPTION_CATEGORY
+                          info.row.original.MEDIUM.id == NO_SETTING
                             ? null
                             : (info.row.original.MEDIUM.id as number),
                         type: EventWorkCategory.MEDIUM,
@@ -1853,6 +1851,22 @@ const DailyReportDetailBoard = () => {
 
   const detailDateInfo = getDateInfoFull(dataDatePicker);
 
+  const handleSaveData = (e: boolean) => {
+    if (dataDetailUser?.id) {
+      confirmUserDaily({
+        id: dataDetailUser?.id,
+        isConfirmed: e,
+        categoryId: parseInt(`${organization}`),
+      });
+    }
+  };
+
+  const debouncedSaveChecked = useDebounceCallback(handleSaveData, 500);
+
+  const handleChangeCheckBox = (e: boolean) => {
+    debouncedSaveChecked(e);
+  };
+
   return (
     <div className="flex  flex-col ">
       <div className="h-[calc(100vh_-_83px)] overflow-y-auto ">
@@ -1931,15 +1945,7 @@ const DailyReportDetailBoard = () => {
                 )}
                 <Checkbox
                   isChecked={dataDetailUser?.isConfirmed}
-                  onChange={(e) => {
-                    if (dataDetailUser?.id) {
-                      confirmUserDaily({
-                        id: dataDetailUser?.id,
-                        isConfirmed: e,
-                        categoryId: parseInt(`${organization}`),
-                      });
-                    }
-                  }}
+                  onChange={handleChangeCheckBox}
                   className="flex justify-center"
                   classSize="w-4 h-4"
                   boxLabelClass="!m-0"

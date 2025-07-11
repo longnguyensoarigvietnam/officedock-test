@@ -408,6 +408,8 @@ const TaskListStatistic = ({
                 setOrdering={(ord: string) => {
                   setOrdering(ord);
                 }}
+                setTaskList={setTaskList}
+                setTaskListCompare={setTaskListCompare}
               />
             )}
           </div>

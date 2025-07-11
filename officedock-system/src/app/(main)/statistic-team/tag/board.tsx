@@ -99,8 +99,10 @@ const StatisticTeamTagBoard = () => {
 
   const organizationId = searchParams.get('organization');
   const { creationDataStatisticData } = useCreationDataStatisticTeam({
-    organization_id:
-      (selectedOrganizationSideBar?.value as string) || organizationId || '',
+    organization_id: selectedOrganizationSideBar
+      ? (selectedOrganizationSideBar?.value as string)
+      : organizationId || '',
+
     isTeam: true,
     is_statistic: true,
     onSuccess: (data) => {

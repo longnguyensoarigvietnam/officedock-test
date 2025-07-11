@@ -121,7 +121,7 @@ const useStatisticTaskCompare = ({
   // Handle API get statistic category list
   const {
     data: statisticCategoryList,
-    refetch: refetchStatisticCategoryList,
+    refetch: refetchStatisticCategoryListCompare,
     isFetched: isFetchedStatisticCategoryList,
   } = useQuery({
     queryKey: ['getStatisticTaskListCompare', [filter]],
@@ -147,7 +147,7 @@ const useStatisticTaskCompare = ({
 
   return {
     statisticCategoryList,
-    refetchStatisticCategoryList,
+    refetchStatisticCategoryListCompare,
     isFetchedStatisticCategoryList,
   };
 };

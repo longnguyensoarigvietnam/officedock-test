@@ -5,7 +5,13 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
-import { CategoryStructure } from '@interfaces/skills';
+import {
+  CategoryStructure,
+  ChildCategory,
+  NestedCategory,
+} from '@interfaces/skills';
+import { NO_SETTING_CATEGORY } from '@constants';
+import { ScreenName } from '@constants/enums';
 
 interface useCreationDataTaskHooksProps {
   organizationId?: number;
@@ -49,6 +55,54 @@ const useOrganizationStatisticCategories = ({
     enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
+    select: (response: CategoryStructure[]): CategoryStructure[] => {
+      if (currentScreen === ScreenName.SKILL_MAP) return response;
+      return response.map((category): CategoryStructure => {
+        const isLargeValid = category.LARGE && category.LARGE.id != null;
+
+        const updatedLarge = isLargeValid
+          ? category.LARGE
+          : NO_SETTING_CATEGORY;
+
+        const updatedMedium: NestedCategory[] = isLargeValid
+          ? [
+              ...(category.MEDIUM || []).map((nested): NestedCategory => {
+                const updatedMedium =
+                  nested.MEDIUM && nested.MEDIUM.id != null
+                    ? nested.MEDIUM
+                    : NO_SETTING_CATEGORY;
+
+                const updatedSmall: ChildCategory[] = [
+                  ...(nested.SMALL || []).map(
+                    (small): ChildCategory =>
+                      small && small.id != null ? small : NO_SETTING_CATEGORY,
+                  ),
+                  NO_SETTING_CATEGORY,
+                ];
+
+                return {
+                  MEDIUM: updatedMedium,
+                  SMALL: updatedSmall,
+                };
+              }),
+              {
+                MEDIUM: NO_SETTING_CATEGORY,
+                SMALL: [NO_SETTING_CATEGORY],
+              },
+            ]
+          : [
+              {
+                MEDIUM: NO_SETTING_CATEGORY,
+                SMALL: [NO_SETTING_CATEGORY],
+              },
+            ];
+
+        return {
+          LARGE: updatedLarge,
+          MEDIUM: updatedMedium,
+        };
+      });
+    },
     onSuccess: (response: CategoryStructure[]) => {
       onSuccess && onSuccess(response);
     },

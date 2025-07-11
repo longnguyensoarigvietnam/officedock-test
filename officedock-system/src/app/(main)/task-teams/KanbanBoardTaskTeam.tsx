@@ -207,9 +207,10 @@ const KanbanBoardTaskTeam = () => {
   // get list data team
   const { refetchTaskBoardListTeam } = useTaskBoardTeam({
     current_screen: 'teamdock',
-    organization_id:
-      (selectedOrganizationSideBar?.value as string) ||
-      (organizationId as string),
+    organization_id: selectedOrganizationSideBar
+      ? (selectedOrganizationSideBar?.value as string)
+      : organizationId || '',
+
     filter: {
       userId: orderingOptions?.user_ids,
       is_cross_team_task: isConcurrently,
@@ -1635,6 +1636,13 @@ const KanbanBoardTaskTeam = () => {
       }
 
       handleRemoveParam();
+      if (
+        data.peopleInCharge &&
+        data.peopleInCharge.length &&
+        session?.user.id === data.peopleInCharge?.[0]?.id
+      ) {
+        queryClient.refetchQueries(['getDataTaskHeaderList']);
+      }
       queryClient.refetchQueries(['getTaskDurationDetail']);
       setPendingTaskData(null);
       setCloseAction(null);

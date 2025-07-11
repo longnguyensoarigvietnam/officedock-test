@@ -6,7 +6,11 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
 import { NO_SETTING_CATEGORY } from '@constants';
-import { DataResponseStatisticCreationTeamType } from '@interfaces/statistic';
+import {
+  DataResponseStatisticCreationTeamType,
+  MediumCategory,
+  SmallCategory,
+} from '@interfaces/statistic';
 
 interface useCreationDataStatisticTeamHooksProps {
   condition?: boolean[];
@@ -52,10 +56,46 @@ const useCreationDataStatisticTeam = ({
     queryFn: getCreationDataStatistic,
     select: (response: DataResponseStatisticCreationTeamType) => {
       const updatedOrganizations = response.organizations.map((org) => {
-        const updatedCategories = org.statisticCategories.map((category) => ({
-          ...category,
-          LARGE: category.LARGE ?? NO_SETTING_CATEGORY,
-        }));
+        const updatedCategories = org.statisticCategories.map((category) => {
+          const updatedLarge =
+            category.LARGE && category.LARGE.id != null
+              ? category.LARGE
+              : NO_SETTING_CATEGORY;
+
+          const updatedMedium: MediumCategory[] = [
+            ...(category.MEDIUM || []).map((mediumItem): MediumCategory => {
+              const updatedMediumValue =
+                mediumItem.MEDIUM && mediumItem.MEDIUM.id != null
+                  ? mediumItem.MEDIUM
+                  : NO_SETTING_CATEGORY;
+
+              const updatedSmall: SmallCategory[] = [
+                ...(mediumItem.SMALL || []).map(
+                  (smallItem): SmallCategory =>
+                    smallItem && smallItem.id != null
+                      ? smallItem
+                      : NO_SETTING_CATEGORY,
+                ),
+                NO_SETTING_CATEGORY,
+              ];
+
+              return {
+                MEDIUM: updatedMediumValue,
+                SMALL: updatedSmall,
+              };
+            }),
+            {
+              MEDIUM: NO_SETTING_CATEGORY,
+              SMALL: [NO_SETTING_CATEGORY],
+            },
+          ];
+
+          return {
+            ...category,
+            LARGE: updatedLarge,
+            MEDIUM: updatedMedium,
+          };
+        });
 
         return {
           ...org,
@@ -68,6 +108,7 @@ const useCreationDataStatisticTeam = ({
         organizations: updatedOrganizations,
       };
     },
+
     retry: 0,
     enabled:
       !!token && condition?.every(Boolean) && (!isTeam || !!organization_id),

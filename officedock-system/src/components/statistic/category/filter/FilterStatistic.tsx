@@ -19,8 +19,15 @@ const FilterStatistic = ({ className }: Props) => {
     isLoadingLargeCompare,
     isLoadingMediumCompare,
     isLoadingOrganizationCompare,
+    isCheckCompare,
     setSelectedTags,
     removeTag,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganization,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganizationCompare,
   } = useContext(StatisticStateContext);
   return (
     <div className={`flex items-center gap-2 ${className}`}>
@@ -46,6 +53,14 @@ const FilterStatistic = ({ className }: Props) => {
               updatedTagIds = currentTagIds.filter(
                 (tag) => tag.value != selected.value,
               );
+            }
+            setIsLoadingLarge(true);
+            setIsLoadingMedium(true);
+            setIsLoadingOrganization(true);
+            if (isCheckCompare) {
+              setIsLoadingLargeCompare(true);
+              setIsLoadingMediumCompare(true);
+              setIsLoadingOrganizationCompare(true);
             }
             setSelectedTags(updatedTagIds);
           }}

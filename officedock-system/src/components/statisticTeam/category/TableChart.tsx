@@ -48,6 +48,8 @@ import api from '@base/api';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import useCreationDataStatisticAllTeam from '@hooks/useCreationDataStatisticAllTeam';
+import { Task } from '@interfaces/task';
+import { EventCalendarProps } from '@interfaces/calendar';
 
 interface TableChartProps {
   ordering: string;
@@ -57,6 +59,12 @@ interface TableChartProps {
   listOptionsOrganization: OptionDropdownType[];
   creationDataStatisticData: CreationStatisticType | undefined;
   setOrdering: (ord: string) => void;
+  setTaskList: React.Dispatch<
+    React.SetStateAction<DataTaskListStatisticListType[]>
+  >;
+  setTaskListCompare: React.Dispatch<
+    React.SetStateAction<DataTaskListStatisticListType[]>
+  >;
 }
 
 const TagListInfo = ({ tagList }: { tagList: OptionDropdownType[] }) => {
@@ -140,6 +148,8 @@ const TableChart = ({
   creationDataStatisticData,
   listOptionsOrganization,
   setOrdering,
+  setTaskList,
+  setTaskListCompare,
 }: TableChartProps) => {
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();
@@ -147,7 +157,6 @@ const TableChart = ({
   const {
     isCheckCompare,
     selectedOrganization,
-    setIsSkeletonCategoryTeamTask,
     setIsLoadingLarge,
     setIsLoadingLargeCompare,
     setIsLoadingMedium,
@@ -176,7 +185,7 @@ const TableChart = ({
     }[];
     organizationId?: number | null;
   }) => {
-    const { data } = await api.patch(
+    const { data } = await api.patch<Task>(
       `${apiRouters.TASK_DETAIL(`${dataTask.id}`)}?current_screen=${ScreenName.STATISTIC}`,
       dataTask,
     );
@@ -186,21 +195,36 @@ const TableChart = ({
     'postEditCategoryTaskInline',
     handleEditCategoryInline,
     {
-      onSuccess: async () => {
+      onSuccess: async (data) => {
+        setTaskList((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
+        setTaskListCompare((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
-        setIsSkeletonCategoryTeamTask(true);
 
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryListTeam',
         });
-        if (selectedOrganization?.label === ALL_TEAM_STATISTIC) {
-          queryClient.invalidateQueries({
-            predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
-          });
-        }
+
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTableInTeamLineChart',
@@ -210,12 +234,7 @@ const TableChart = ({
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingOrganizationCompare(true);
-          if (selectedOrganization?.label === ALL_TEAM_STATISTIC) {
-            queryClient.invalidateQueries({
-              predicate: (query) =>
-                query.queryKey[0] === 'getStatisticTaskListCompare',
-            });
-          }
+
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
@@ -242,7 +261,7 @@ const TableChart = ({
     }[];
     organizationId?: number | null;
   }) => {
-    const { data } = await api.patch(
+    const { data } = await api.patch<EventCalendarProps>(
       `${apiRouters.SCHEDULE_DETAIL(`${dataTask.id}`)}?current_screen=${ScreenName.STATISTIC}`,
       dataTask,
     );
@@ -252,11 +271,30 @@ const TableChart = ({
     'postEditCategoryEventInline',
     handleEditEventCategoryInline,
     {
-      onSuccess: async () => {
+      onSuccess: async (data) => {
+        setTaskList((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
+        setTaskListCompare((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
-        setIsSkeletonCategoryTeamTask(true);
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryListTeam',
@@ -265,11 +303,7 @@ const TableChart = ({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTableInTeamLineChart',
         });
-        if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
-          queryClient.invalidateQueries({
-            predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
-          });
-        }
+
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
         });
@@ -281,12 +315,6 @@ const TableChart = ({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
           });
-          if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
-            queryClient.invalidateQueries({
-              predicate: (query) =>
-                query.queryKey[0] === 'getStatisticTaskListCompare',
-            });
-          }
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTableInTeamLineChartCompare',
@@ -400,6 +428,7 @@ const TableChart = ({
     {
       accessorKey: 'categories',
       enableSorting: false,
+
       header: () => {
         return (
           <p className="text-[#77858F] font-medium text-xs text-left">

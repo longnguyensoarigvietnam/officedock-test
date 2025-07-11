@@ -19,7 +19,7 @@ import FilterTeamStatistic from '@components/statisticTeam/category/filter/Filte
 
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { pageRouters } from '@constants/routers';
-import { ALL_TEAM_STATISTIC } from '@constants';
+import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
 import { OrganizationStatisticType } from '@constants/enums';
 
 import useStatisticCategoriesTeam from '@hooks/useStatisticCategoriesTeam';
@@ -53,6 +53,8 @@ const StatisticTeamBoard = () => {
     selectedOrganization,
     orderingOptions,
     setOrderingOptions,
+    setTotalDurationTask,
+    setTotalDurationTaskCompare,
     setTagsOptions,
     setSelectedLarge,
     setSelectedMedium,
@@ -76,7 +78,6 @@ const StatisticTeamBoard = () => {
     setIsLoadingLargeCompare,
     setIsLoadingMediumCompare,
     setCurrentPage,
-    setIsSkeletonCategoryTeamTask,
     handleResetTableData,
     setDataMediumCalendar,
   } = useContext(StatisticTeamStateContext);
@@ -116,10 +117,6 @@ const StatisticTeamBoard = () => {
           : undefined,
     },
     onSuccess: (data) => {
-      if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
-        setIsSkeletonCategoryTeamTask(false);
-      }
-
       if (creationDataStatisticData?.organizations.length === 0) {
         return;
       }
@@ -153,6 +150,42 @@ const StatisticTeamBoard = () => {
       setTotalDurationLarge(sumDurations(data.largeCategories ?? []));
       setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmall(sumDurations(data.smallCategories ?? []));
+      if (data.largeTotalDuration) {
+        if (data.mediumTotalDuration) {
+          if (data.smallTotalDuration) {
+            if (selectedSmall && selectedSmall.value && data.smallCategories) {
+              const itemMap = data.smallCategories.find(
+                (item) =>
+                  String(item.categoryId) === String(selectedSmall.value),
+              );
+              if (itemMap) {
+                setTotalDurationTask(itemMap.duration);
+              } else {
+                setTotalDurationTask(DEFAULT_TIME_TEXT);
+              }
+            } else {
+              setTotalDurationTask(data.smallTotalDuration);
+            }
+          } else {
+            if (
+              selectedMedium &&
+              selectedMedium.value &&
+              selectedOrganization?.type === OrganizationStatisticType.CALENDAR
+            ) {
+              setTotalDurationTask(DEFAULT_TIME_TEXT);
+              return;
+            }
+            if (selectedSmall && selectedSmall.value) return;
+
+            setTotalDurationTask(data.mediumTotalDuration);
+          }
+        } else {
+          if (selectedLarge && selectedLarge.value) return;
+          setTotalDurationTask(data.largeTotalDuration);
+        }
+      } else {
+        setTotalDurationTask(DEFAULT_TIME_TEXT);
+      }
     },
     onError: () => {
       showToast({
@@ -182,14 +215,52 @@ const StatisticTeamBoard = () => {
             : undefined,
       },
       onSuccess: (data) => {
-        if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
-          setIsSkeletonCategoryTeamTask(false);
-        }
         setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
         setTotalDurationMediumCompare(
           sumDurations(data.mediumCategories ?? []),
         );
         setTotalDurationSmallCompare(sumDurations(data.smallCategories ?? []));
+        if (data.largeTotalDuration) {
+          if (data.mediumTotalDuration) {
+            if (data.smallTotalDuration) {
+              if (
+                selectedSmall &&
+                selectedSmall.value &&
+                data.smallCategories
+              ) {
+                const itemMap = data.smallCategories.find(
+                  (item) =>
+                    String(item.categoryId) === String(selectedSmall.value),
+                );
+                if (itemMap) {
+                  setTotalDurationTaskCompare(itemMap.duration);
+                } else {
+                  setTotalDurationTaskCompare(DEFAULT_TIME_TEXT);
+                }
+              } else {
+                setTotalDurationTaskCompare(data.smallTotalDuration);
+              }
+            } else {
+              if (
+                selectedMedium &&
+                selectedMedium.value &&
+                selectedOrganization?.type ===
+                  OrganizationStatisticType.CALENDAR
+              ) {
+                setTotalDurationTask(DEFAULT_TIME_TEXT);
+                return;
+              }
+              if (selectedSmall && selectedSmall.value) return;
+
+              setTotalDurationTaskCompare(data.mediumTotalDuration);
+            }
+          } else {
+            if (selectedLarge && selectedLarge.value) return;
+            setTotalDurationTaskCompare(data.largeTotalDuration);
+          }
+        } else {
+          setTotalDurationTaskCompare(DEFAULT_TIME_TEXT);
+        }
       },
       onError: () => {
         showToast({
@@ -203,8 +274,9 @@ const StatisticTeamBoard = () => {
     });
 
   const { creationDataStatisticData } = useCreationDataStatisticTeam({
-    organization_id:
-      (selectedOrganizationSideBar?.value as string) || organizationId || '',
+    organization_id: selectedOrganizationSideBar
+      ? (selectedOrganizationSideBar?.value as string)
+      : organizationId || '',
     isTeam: true,
     is_statistic: true,
     onSuccess: (data) => {

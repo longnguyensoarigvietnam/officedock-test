@@ -55,6 +55,12 @@ interface TableChartProps {
   listOptionsOrganization: OptionDropdownType[];
   creationDataStatisticData: CreationStatisticType[];
   setOrdering: (ord: string) => void;
+  setTaskList: React.Dispatch<
+    React.SetStateAction<DataTaskListStatisticListType[]>
+  >;
+  setTaskListCompare: React.Dispatch<
+    React.SetStateAction<DataTaskListStatisticListType[]>
+  >;
 }
 
 const TagListInfo = ({ tagList }: { tagList: OptionDropdownType[] }) => {
@@ -137,6 +143,8 @@ const TableChart = ({
   creationDataStatisticData,
   listOptionsOrganization,
   setOrdering,
+  setTaskList,
+  setTaskListCompare,
 }: TableChartProps) => {
   const {
     isCheckCompare,
@@ -175,13 +183,31 @@ const TableChart = ({
     'postEditCategoryTaskInline',
     handleEditCategoryInline,
     {
-      onSuccess: async () => {
+      onSuccess: async (data) => {
+        setTaskList((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
+        setTaskListCompare((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
-        queryClient.invalidateQueries({
-          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
-        });
+
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryList',
@@ -199,10 +225,7 @@ const TableChart = ({
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingOrganizationCompare(true);
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              query.queryKey[0] === 'getStatisticTaskListCompare',
-          });
+
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticCategoryCompareList',
@@ -239,13 +262,31 @@ const TableChart = ({
     'postEditCategoryEventInline',
     handleEditEventCategoryInline,
     {
-      onSuccess: async () => {
+      onSuccess: async (data) => {
+        setTaskList((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
+        setTaskListCompare((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
-        queryClient.invalidateQueries({
-          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
-        });
+
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryList',
@@ -262,10 +303,6 @@ const TableChart = ({
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingOrganizationCompare(true);
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              query.queryKey[0] === 'getStatisticTaskListCompare',
-          });
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticCategoryCompareList',

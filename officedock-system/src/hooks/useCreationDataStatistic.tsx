@@ -6,7 +6,12 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
 import { NO_SETTING_CATEGORY } from '@constants';
-import { DataResponseStatisticCreationType } from '@interfaces/statistic';
+import {
+  DataResponseStatisticCreationType,
+  LargeCategory,
+  MediumCategory,
+  SmallCategory,
+} from '@interfaces/statistic';
 
 interface useCreationDataStatisticHooksProps {
   condition?: boolean[];
@@ -56,21 +61,95 @@ const useCreationDataStatistic = ({
     ],
     queryFn: ({ signal }) => getCreationDataStatistic({ signal }),
     select: (response: DataResponseStatisticCreationType) => {
-      if (is_calendar_page) return response;
-      const updatedOrganizations = response.organizations.map(
-        (organization) => {
-          const updatedCategories = organization.statisticCategories.map(
-            (category) => ({
-              ...category,
-              LARGE: category.LARGE ?? NO_SETTING_CATEGORY,
-            }),
-          );
+      const normalizeCategories = (
+        categories: LargeCategory[],
+      ): LargeCategory[] => {
+        return categories.map((category) => {
+          const isLargeValid = category.LARGE && category.LARGE.id != null;
+          const updatedLarge = isLargeValid
+            ? category.LARGE
+            : NO_SETTING_CATEGORY;
+
+          let updatedMedium: MediumCategory[] = [];
+
+          if (Array.isArray(category.MEDIUM) && category.MEDIUM.length > 0) {
+            updatedMedium = category.MEDIUM.map(
+              (mediumItem): MediumCategory => {
+                const isMediumValid =
+                  mediumItem.MEDIUM && mediumItem.MEDIUM.id != null;
+                const updatedMediumValue = isMediumValid
+                  ? mediumItem.MEDIUM
+                  : NO_SETTING_CATEGORY;
+
+                const updatedSmall: SmallCategory[] = Array.isArray(
+                  mediumItem.SMALL,
+                )
+                  ? mediumItem.SMALL.map((smallItem) =>
+                      smallItem && smallItem.id != null
+                        ? smallItem
+                        : NO_SETTING_CATEGORY,
+                    )
+                  : [];
+
+                const hasNoSettingSmall = updatedSmall.some(
+                  (s) => String(s.id) === String(NO_SETTING_CATEGORY.id),
+                );
+                if (!hasNoSettingSmall) {
+                  updatedSmall.push(NO_SETTING_CATEGORY);
+                }
+
+                return {
+                  MEDIUM: updatedMediumValue,
+                  SMALL: updatedSmall,
+                };
+              },
+            );
+
+            const hasNoSettingMedium = updatedMedium.some(
+              (m) => String(m.MEDIUM?.id) === String(NO_SETTING_CATEGORY.id),
+            );
+            if (!hasNoSettingMedium) {
+              updatedMedium.push({
+                MEDIUM: NO_SETTING_CATEGORY,
+                SMALL: [NO_SETTING_CATEGORY],
+              });
+            }
+          } else {
+            updatedMedium = [
+              {
+                MEDIUM: NO_SETTING_CATEGORY,
+                SMALL: [NO_SETTING_CATEGORY],
+              },
+            ];
+          }
 
           return {
-            ...organization,
-            statisticCategories: updatedCategories,
+            ...category,
+            LARGE: updatedLarge,
+            MEDIUM: updatedMedium,
           };
-        },
+        });
+      };
+
+      if (is_calendar_page) {
+        return {
+          ...response,
+          calendarOrganization: {
+            ...response.calendarOrganization,
+            statisticCategories: normalizeCategories(
+              response.calendarOrganization.statisticCategories,
+            ),
+          },
+        };
+      }
+
+      const updatedOrganizations = response.organizations.map(
+        (organization) => ({
+          ...organization,
+          statisticCategories: normalizeCategories(
+            organization.statisticCategories,
+          ),
+        }),
       );
 
       return {
@@ -78,6 +157,7 @@ const useCreationDataStatistic = ({
         organizations: updatedOrganizations,
       };
     },
+
     retry: 0,
     enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,

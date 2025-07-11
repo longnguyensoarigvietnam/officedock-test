@@ -58,7 +58,6 @@ import {
   DEFAULT_START_TIME,
   MAX_FILE_SIZE,
   MENTION_ALL_MEMBERS,
-  NO_OPTION_CATEGORY,
   NO_SETTING,
   PAGINATION_PAGE_SIZE_HIGHT,
   REACTION_LIST,
@@ -1532,7 +1531,7 @@ const ChatDetail = ({
     if (data.largeCategory && data.largeCategory?.value !== 'undefined') {
       newWorkCategories.push({
         categoryId:
-          `${data.largeCategory.value}` == NO_OPTION_CATEGORY
+          `${data.largeCategory.value}` == NO_SETTING
             ? null
             : `${data.largeCategory.value}`,
         type: EventWorkCategory.LARGE,
@@ -1541,7 +1540,7 @@ const ChatDetail = ({
     if (data.mediumCategory && data.mediumCategory?.value !== 'undefined') {
       newWorkCategories.push({
         categoryId:
-          `${data.mediumCategory.value}` == NO_OPTION_CATEGORY
+          `${data.mediumCategory.value}` == NO_SETTING
             ? null
             : `${data.mediumCategory.value}`,
         type: EventWorkCategory.MEDIUM,

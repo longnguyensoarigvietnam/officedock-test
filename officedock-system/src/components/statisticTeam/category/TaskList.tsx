@@ -103,7 +103,7 @@ const TaskListTeamStatistic = ({
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: selectedLarge?.value as number,
       mediumCategoryId:
-        selectedOrganization?.label == OrganizationStatisticType.CALENDAR &&
+        selectedOrganization?.type == OrganizationStatisticType.CALENDAR &&
         dataMediumCalendar
           ? (dataMediumCalendar?.value as number)
           : (selectedMedium?.value as number),
@@ -135,7 +135,7 @@ const TaskListTeamStatistic = ({
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: selectedLarge?.value as number,
       mediumCategoryId:
-        selectedOrganization?.label == OrganizationStatisticType.CALENDAR &&
+        selectedOrganization?.type == OrganizationStatisticType.CALENDAR &&
         dataMediumCalendar
           ? (dataMediumCalendar?.value as number)
           : (selectedMedium?.value as number),
@@ -492,6 +492,8 @@ const TaskListTeamStatistic = ({
                 setOrdering={(ord: string) => {
                   setOrdering(ord);
                 }}
+                setTaskList={setTaskList}
+                setTaskListCompare={setTaskListCompare}
               />
             )}
           </div>
