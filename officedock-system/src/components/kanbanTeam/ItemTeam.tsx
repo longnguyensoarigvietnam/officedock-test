@@ -28,6 +28,7 @@ interface ItemProps {
   id: string;
   index: number;
   content: Task;
+  userColumn: string;
   handleActionEditTask: (id: number) => void;
   handleConfirmCopyTask: (id: number) => void;
   handleUpdateItemInline: (data: Task) => void;
@@ -44,13 +45,18 @@ interface ItemProps {
 }
 const ItemTeam = ({
   content,
+  userColumn,
   editTask,
   handlePinItem,
   handleUnPinItem,
   handleActionEditTask,
 }: ItemProps) => {
-  const { creationDataTaskData, columnWidth, selectedOptionZoom } =
-    useContext(TaskTeamStateContext);
+  const {
+    creationDataTaskData,
+    columnWidth,
+    selectedOptionZoom,
+    setOldUserAction,
+  } = useContext(TaskTeamStateContext);
 
   const [dataOptionsStatus, setDataOptionsStatus] = useState<
     OptionDropdownType[]
@@ -164,6 +170,12 @@ const ItemTeam = ({
   const handleClick = () => {
     if (isClicked) return;
     if (content.isCrossTeamTask) return;
+
+    setOldUserAction({
+      id: String(userColumn),
+      statusId: content.status?.id as number,
+      statusName: content.status?.name as string,
+    });
 
     setIsClicked(true);
     handleActionEditTask(parseInt(`${content.id}`));

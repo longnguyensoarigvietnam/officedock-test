@@ -31,7 +31,11 @@ import {
   OrganizationStatisticType,
   ScreenName,
 } from '@constants/enums';
-import { ALL_TEAM_STATISTIC, NO_SETTING } from '@constants';
+import {
+  ALL_TEAM_STATISTIC,
+  DEFAULT_EMPTY_CATEGORY,
+  NO_SETTING,
+} from '@constants';
 import { ERROR_UPDATE_MESSAGE } from '@constants/message';
 import { apiRouters } from '@constants/routers';
 
@@ -200,7 +204,10 @@ const TableChart = ({
             task.id === data.id
               ? {
                   ...task,
-                  categories: data.categories,
+                  categories:
+                    data.categories && data.categories.length > 0
+                      ? data.categories
+                      : DEFAULT_EMPTY_CATEGORY,
                 }
               : task,
           ),
@@ -210,7 +217,10 @@ const TableChart = ({
             task.id === data.id
               ? {
                   ...task,
-                  categories: data.categories,
+                  categories:
+                    data.categories && data.categories.length > 0
+                      ? data.categories
+                      : DEFAULT_EMPTY_CATEGORY,
                 }
               : task,
           ),
@@ -220,6 +230,9 @@ const TableChart = ({
         setIsLoadingSmall(true);
         setIsLoadingOrganization(true);
         queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
+        });
+        queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTagsListTeam',
         });
@@ -228,6 +241,10 @@ const TableChart = ({
           setIsLoadingMediumCompare(true);
           setIsLoadingSmallCompare(true);
           setIsLoadingOrganizationCompare(true);
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTaskListCompare',
+          });
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTagsListTeamCompare',
@@ -285,6 +302,9 @@ const TableChart = ({
         setIsLoadingMedium(true);
         setIsLoadingSmall(true);
         setIsLoadingOrganization(true);
+        queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
+        });
 
         queryClient.invalidateQueries({
           predicate: (query) =>
@@ -295,6 +315,10 @@ const TableChart = ({
           setIsLoadingMediumCompare(true);
           setIsLoadingSmallCompare(true);
           setIsLoadingOrganizationCompare(true);
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTaskListCompare',
+          });
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTagsListTeamCompare',

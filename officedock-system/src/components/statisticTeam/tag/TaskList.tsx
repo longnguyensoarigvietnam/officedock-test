@@ -22,6 +22,7 @@ import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import FilterTagTeam from './filter/FilterTagTeam';
+import { removeDuplicateOptions } from '@utils';
 
 type Props = {
   isCheckCompare: boolean;
@@ -346,7 +347,7 @@ const TaskListStatisticTeamTags = ({
                     className="!h-[34px] !py-0 text-sm !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
                     classNameOption="!text-sm"
-                    options={mediumOptions}
+                    options={removeDuplicateOptions(mediumOptions)}
                     selectedOption={
                       selectedOrganization?.type ===
                       OrganizationStatisticType.CALENDAR

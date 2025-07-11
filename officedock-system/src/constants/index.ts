@@ -460,3 +460,10 @@ export const NO_SETTING_CATEGORY = {
   name: NO_SETTING,
   uuid: NO_SETTING,
 };
+export const DEFAULT_EMPTY_CATEGORY = [
+  {
+    ...NO_SETTING_CATEGORY,
+    type: 'LARGE',
+    color: '',
+  },
+];

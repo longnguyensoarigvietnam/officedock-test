@@ -66,7 +66,6 @@ import {
 import {
   INITIAL_INDEX_VALUE,
   MY_TEMPLATE,
-  NO_OPTION_CATEGORY,
   NO_SETTING,
   TASK_REPETITIVE_OPTIONS,
 } from '@constants';
@@ -2413,7 +2412,7 @@ const KanbanBoardTask = () => {
     if (data.categories.LARGE?.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.LARGE.value}` == NO_OPTION_CATEGORY
+          `${data.categories.LARGE.value}` == NO_SETTING
             ? null
             : `${data.categories.LARGE.value}`,
         type: EventWorkCategory.LARGE,
@@ -2422,7 +2421,7 @@ const KanbanBoardTask = () => {
     if (data.categories.MEDIUM.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.MEDIUM.value}` == NO_OPTION_CATEGORY
+          `${data.categories.MEDIUM.value}` == NO_SETTING
             ? null
             : `${data.categories.MEDIUM.value}`,
         type: EventWorkCategory.MEDIUM,
@@ -2431,7 +2430,7 @@ const KanbanBoardTask = () => {
     if (data.categories.SMALL.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.SMALL.value}` == NO_OPTION_CATEGORY
+          `${data.categories.SMALL.value}` == NO_SETTING
             ? null
             : `${data.categories.SMALL.value}`,
         type: EventWorkCategory.SMALL,
@@ -2512,7 +2511,7 @@ const KanbanBoardTask = () => {
     if (data.categories.LARGE?.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.LARGE.value}` == NO_OPTION_CATEGORY
+          `${data.categories.LARGE.value}` == NO_SETTING
             ? null
             : `${data.categories.LARGE.value}`,
         type: EventWorkCategory.LARGE,
@@ -2521,7 +2520,7 @@ const KanbanBoardTask = () => {
     if (data.categories.MEDIUM.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.MEDIUM.value}` == NO_OPTION_CATEGORY
+          `${data.categories.MEDIUM.value}` == NO_SETTING
             ? null
             : `${data.categories.MEDIUM.value}`,
         type: EventWorkCategory.MEDIUM,
@@ -2530,7 +2529,7 @@ const KanbanBoardTask = () => {
     if (data.categories.SMALL.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.SMALL.value}` == NO_OPTION_CATEGORY
+          `${data.categories.SMALL.value}` == NO_SETTING
             ? null
             : `${data.categories.SMALL.value}`,
         type: EventWorkCategory.SMALL,
@@ -2632,7 +2631,7 @@ const KanbanBoardTask = () => {
     if (data.categories.LARGE?.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.LARGE.value}` == NO_OPTION_CATEGORY
+          `${data.categories.LARGE.value}` == NO_SETTING
             ? null
             : `${data.categories.LARGE.value}`,
         type: EventWorkCategory.LARGE,
@@ -2641,7 +2640,7 @@ const KanbanBoardTask = () => {
     if (data.categories.MEDIUM.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.MEDIUM.value}` == NO_OPTION_CATEGORY
+          `${data.categories.MEDIUM.value}` == NO_SETTING
             ? null
             : `${data.categories.MEDIUM.value}`,
         type: EventWorkCategory.MEDIUM,
@@ -2650,7 +2649,7 @@ const KanbanBoardTask = () => {
     if (data.categories.SMALL.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.SMALL.value}` == NO_OPTION_CATEGORY
+          `${data.categories.SMALL.value}` == NO_SETTING
             ? null
             : `${data.categories.SMALL.value}`,
         type: EventWorkCategory.SMALL,
@@ -3082,7 +3081,6 @@ const KanbanBoardTask = () => {
     const handleSocketMessage = (data: WebSocketMessageSortKanban) => {
       switch (data.action) {
         case SocketActions.RESET_STATUS_SORT_TASK:
-          if (orderingRequest === '') return;
           setIsReadyToFetch(false);
           setOrderingRequest('');
           setDataOrderRing('');

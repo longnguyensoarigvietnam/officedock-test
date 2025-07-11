@@ -219,6 +219,9 @@ const TableChart = ({
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
+        queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
+        });
 
         queryClient.invalidateQueries({
           predicate: (query) =>
@@ -234,7 +237,10 @@ const TableChart = ({
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingOrganizationCompare(true);
-
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTaskListCompare',
+          });
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
@@ -296,6 +302,9 @@ const TableChart = ({
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
         queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
+        });
+        queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryListTeam',
         });
@@ -311,6 +320,10 @@ const TableChart = ({
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingOrganizationCompare(true);
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTaskListCompare',
+          });
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
@@ -614,10 +627,13 @@ const TableChart = ({
                 showArrow
                 className="border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
-                  largeCategories &&
-                  largeCategories.find(
-                    (element) => element.value === largeItem?.value,
-                  )
+                  (largeCategories &&
+                    largeCategories.find(
+                      (element) => element.value === largeItem?.value,
+                    )) || {
+                    value: NO_SETTING,
+                    label: NO_SETTING,
+                  }
                 }
                 placeholder=""
                 options={largeCategories}
@@ -680,10 +696,13 @@ const TableChart = ({
               <SingleSelect
                 className="border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
-                  mediumCategories &&
-                  mediumCategories.find(
-                    (element) => element.value === mediumItem?.value,
-                  )
+                  (mediumCategories &&
+                    mediumCategories.find(
+                      (element) => element.value === mediumItem?.value,
+                    )) || {
+                    value: NO_SETTING,
+                    label: NO_SETTING,
+                  }
                 }
                 placeholder=""
                 showArrow
@@ -753,14 +772,24 @@ const TableChart = ({
               <SingleSelect
                 className="border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
-                  smallCategories &&
-                  smallCategories.find(
-                    (element) => element.value === smallItem?.value,
-                  )
+                  (smallCategories &&
+                    smallCategories.find(
+                      (element) => element.value === smallItem?.value,
+                    )) || {
+                    value: NO_SETTING,
+                    label: NO_SETTING,
+                  }
                 }
                 placeholder=""
                 showArrow={info.row.original.type === EventCalendarType.TASK}
-                options={smallCategories}
+                options={
+                  smallCategories || [
+                    {
+                      value: NO_SETTING,
+                      label: NO_SETTING,
+                    },
+                  ]
+                }
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({

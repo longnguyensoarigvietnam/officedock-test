@@ -54,6 +54,23 @@ interface ContextValue {
   setListTaskNoSetting: Dispatch<SetStateAction<Task[]>>;
   isConcurrently: boolean;
   setIsConcurrently: Dispatch<SetStateAction<boolean>>;
+  oldUserAction:
+    | {
+        id: string;
+        statusId: number;
+        statusName: string;
+      }
+    | undefined;
+  setOldUserAction: Dispatch<
+    SetStateAction<
+      | {
+          id: string;
+          statusId: number;
+          statusName: string;
+        }
+      | undefined
+    >
+  >;
 }
 
 const defaultValue: ContextValue = {
@@ -84,6 +101,8 @@ const defaultValue: ContextValue = {
   setListTaskNoSetting: () => {},
   isConcurrently: false,
   setIsConcurrently: () => {},
+  oldUserAction: undefined,
+  setOldUserAction: () => {},
 };
 
 export const TaskTeamStateContext = createContext<ContextValue>(defaultValue);
@@ -139,6 +158,12 @@ export const TaskTeamStateProvider = ({
   const [showWarningStartTaskModalTeam, setShowWarningStartTaskModalTeam] =
     useState(false);
 
+  const [oldUserAction, setOldUserAction] = useState<{
+    id: string;
+    statusId: number;
+    statusName: string;
+  }>();
+
   const contextValue: ContextValue = {
     orderingOptions,
     creationDataTaskData,
@@ -164,6 +189,8 @@ export const TaskTeamStateProvider = ({
     setListTaskNoSetting,
     isConcurrently,
     setIsConcurrently,
+    oldUserAction,
+    setOldUserAction,
   };
 
   return (

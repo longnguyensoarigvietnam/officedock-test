@@ -869,7 +869,7 @@ const ScheduleTeamBoard = () => {
   };
 
   useEffect(() => {
-    if (orderingOptions) {
+    if (orderingOptions && listMemberTeam) {
       const newListMemberData =
         orderingOptions?.user_ids?.length > 0
           ? listMemberTeam.filter((member) =>
@@ -878,7 +878,6 @@ const ScheduleTeamBoard = () => {
               ),
             )
           : listMemberTeam;
-
       setCurrentResources(
         newListMemberData.map((member) => ({
           id: String(member.id),
@@ -886,7 +885,7 @@ const ScheduleTeamBoard = () => {
         })),
       );
     }
-  }, [orderingOptions && orderingOptions?.user_ids]);
+  }, [orderingOptions && orderingOptions?.user_ids, listMemberTeam]);
 
   // ZOOM IN / ZOOM OUT SCHEDULE
   useEffect(() => {
