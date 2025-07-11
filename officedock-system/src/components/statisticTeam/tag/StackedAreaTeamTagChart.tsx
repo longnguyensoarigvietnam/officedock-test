@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import Chart from 'react-apexcharts';
 import Image from 'next/image';
 import {
@@ -15,6 +15,7 @@ import { Table, TableBody } from '@components/common/Table';
 import RadioButton from '@components/common/RadioButton';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
+import StatisticLineChartTableSkeleton from '@components/common/SkeletonLoading/StatisticLineChartTableSkeleton';
 
 import {
   OrganizationStatisticType,
@@ -30,6 +31,7 @@ import {
   StatisticsCategories,
   TagTableRowDetail,
 } from '@interfaces/statistic';
+
 import { getLineChartEnableViews, getStatisticMilestones } from '@utils';
 import {
   convertDurationToTotalMinutes,
@@ -41,7 +43,7 @@ import {
 } from '@utils/date';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import { useGenericDebounce } from '@hooks/useGenericDebounce';
+
 import FilterTagTeam from './filter/FilterTagTeam';
 
 type Props = {
@@ -106,6 +108,7 @@ const StackedAreaTeamTagChart = ({
 }: Props) => {
   // Context
   const {
+    isDisableCalendar,
     isHasLoading,
     totalDurationLarge,
     totalDurationMedium,
@@ -148,7 +151,6 @@ const StackedAreaTeamTagChart = ({
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
   const [isTableDataRendered, setIsTableDataRendered] =
     useState<boolean>(false);
-  const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
 
   const [isExtendData, setIsExtendData] = useState(true);
 
@@ -185,34 +187,6 @@ const StackedAreaTeamTagChart = ({
     }
   }, [orderingOptions?.user_ids, listMemberTeam]);
 
-  // Filter options
-  const [filter, setFilter] = useState<{
-    fromDate: string;
-    endDate: string;
-    userIds?: string;
-    largeCategoryId?: string | number;
-    mediumCategoryId?: string | number;
-    smallCategoryId?: string | number;
-    statisticBy: string;
-    selectedOrganization: number;
-    tagIds: { label: string; value: number }[];
-    organizationMemberId?: string;
-  }>({
-    fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
-    endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-    userIds: selectedMembers.join(','),
-    largeCategoryId: selectedLarge?.value,
-    mediumCategoryId: selectedMedium?.value,
-    smallCategoryId: selectedSmall?.value,
-    statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: 0,
-    tagIds: [],
-    organizationMemberId:
-      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-        ? String(selectedOrganizationSideBar?.value || '')
-        : undefined,
-  });
-
   // Get initial member options
   useEffect(() => {
     if (orderingOptions?.user_ids && orderingOptions?.user_ids.length > 0) {
@@ -233,27 +207,8 @@ const StackedAreaTeamTagChart = ({
         organizationId: Number(firstTag.organizationId),
       });
       setSelectedOrganizationInTable(Number(firstTag.organizationId));
-      setFilter((prev) => {
-        return {
-          ...prev,
-          tagIds: [
-            {
-              label: String(firstTag.tagName),
-              value: Number(firstTag.tagId),
-            },
-          ],
-          selectedOrganization: Number(firstTag.organizationId),
-        };
-      });
     } else {
       setSelectedTag(null);
-      setFilter((prev) => {
-        return {
-          ...prev,
-          tagIds: [],
-          selectedOrganization: 0,
-        };
-      });
     }
   };
 
@@ -262,12 +217,37 @@ const StackedAreaTeamTagChart = ({
     statisticUserTaskDurationsList,
     isLoadingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
-    filter,
+    filter: {
+      fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
+      endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : selectedMembers?.filter(Boolean).join(','),
+      largeCategoryId: selectedLarge?.value,
+      mediumCategoryId: selectedMedium?.value,
+      smallCategoryId: selectedSmall?.value,
+      statisticBy: `${lineChartViewBy?.value}`,
+      selectedOrganization: selectedOrganizationInTable,
+      tagIds: selectedTag
+        ? [
+            {
+              value: selectedTag?.id,
+              label: selectedTag?.name,
+            },
+          ]
+        : [],
+      organizationMemberId:
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
+    },
     condition: [
       Boolean(
         areaTableData.length > 0 &&
           isTableDataRendered &&
-          filter.tagIds?.length > 0,
+          selectedTag?.id &&
+          selectedOrganizationInTable,
       ),
     ],
   });
@@ -357,58 +337,6 @@ const StackedAreaTeamTagChart = ({
     selectedMedium,
     selectedSmall,
   ]);
-
-  // Handle listen to filter option changes
-  const memoizedFilter = useMemo(() => {
-    return {
-      fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
-      endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-      userIds: selectedMembers?.filter(Boolean).join(',') || '',
-      largeCategoryId: selectedLarge?.value,
-      mediumCategoryId: selectedMedium?.value,
-      smallCategoryId: selectedSmall?.value,
-      statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: selectedOrganizationInTable,
-      tagIds: selectedTag
-        ? [
-            {
-              value: selectedTag?.id,
-              label: selectedTag?.name,
-            },
-          ]
-        : [],
-      organizationMemberId:
-        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-          ? String(selectedOrganizationSideBar?.value || '')
-          : undefined,
-    };
-  }, [
-    startDate,
-    endDate,
-    lineChartViewBy?.value,
-    selectedLarge?.value,
-    selectedMedium?.value,
-    selectedSmall?.value,
-    selectedMembers,
-    selectedTag,
-    selectedOrganization,
-    selectedOrganizationSideBar?.value,
-    selectedOrganizationInTable,
-  ]);
-
-  useEffect(() => {
-    if (isOrganizationChanging && selectedMembers.length > 0) {
-      setIsOrganizationChanging(false); // Done
-    }
-  }, [selectedMembers, isOrganizationChanging]);
-
-  const debouncedFilter = useGenericDebounce(memoizedFilter, 1000);
-
-  useEffect(() => {
-    if (!isOrganizationChanging) {
-      setFilter(debouncedFilter); // Trigger API only when everything is ready
-    }
-  }, [debouncedFilter, isOrganizationChanging]);
 
   useEffect(() => {
     if (
@@ -695,18 +623,6 @@ const StackedAreaTeamTagChart = ({
                   setSelectedOrganizationInTable(
                     info.row.original.organizationId,
                   );
-                  setFilter((prev) => {
-                    return {
-                      ...prev,
-                      tagIds: [
-                        {
-                          label: info.row.original.tagName,
-                          value: info.row.original.tagId,
-                        },
-                      ],
-                      selectedOrganization: info.row.original.organizationId,
-                    };
-                  });
                 }
               }}
             />
@@ -950,8 +866,6 @@ const StackedAreaTeamTagChart = ({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
   const getDataByIndex = (index: number) => {
     return statisticUserTaskDurationsList?.map((userData) => {
       const duration = userData.durations[index];
@@ -968,6 +882,26 @@ const StackedAreaTeamTagChart = ({
       };
     });
   };
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [chartHeight, setChartHeight] = useState<number>(0);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (chartRef.current) {
+        const inner = chartRef.current.querySelector(
+          '.apexcharts-inner',
+        ) as HTMLElement;
+        if (inner) {
+          const { height } = inner.getBoundingClientRect();
+          setChartHeight(height);
+        }
+      }
+    }, 100);
+
+    return () => clearTimeout(timeout);
+  }, [dataChart]);
 
   return (
     <div
@@ -1030,8 +964,8 @@ const StackedAreaTeamTagChart = ({
                   onChange={(data) => {
                     setSelectedMembers([]);
                     setAreaTableData([]);
+                    setSelectedTag(null);
                     setIsTableDataRendered(false);
-                    setIsOrganizationChanging(true);
                     handleSelectOrganization(data);
                   }}
                 />
@@ -1067,6 +1001,7 @@ const StackedAreaTeamTagChart = ({
                   selectedOption={selectedLarge || undefined}
                   onChange={(data) => {
                     setAreaTableData([]);
+                    setSelectedTag(null);
                     handleSelectLarge(data);
                   }}
                   disabled={!selectedOrganization || isHasLoading}
@@ -1102,9 +1037,10 @@ const StackedAreaTeamTagChart = ({
                   selectedOption={selectedMedium || undefined}
                   onChange={(data) => {
                     setAreaTableData([]);
+                    setSelectedTag(null);
                     handleSelectMedium(data);
                   }}
-                  disabled={!selectedLarge || isHasLoading}
+                  disabled={!selectedLarge || isHasLoading || isDisableCalendar}
                 />
               </div>
             </div>
@@ -1137,9 +1073,12 @@ const StackedAreaTeamTagChart = ({
                   selectedOption={selectedSmall || undefined}
                   onChange={(data) => {
                     setAreaTableData([]);
+                    setSelectedTag(null);
                     handleSelectSmall(data);
                   }}
-                  disabled={!selectedMedium || isHasLoading}
+                  disabled={
+                    !selectedMedium || isHasLoading || isDisableCalendar
+                  }
                 />
               </div>
             </div>
@@ -1173,6 +1112,8 @@ const StackedAreaTeamTagChart = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
+                    setAreaTableData([]);
+                    setSelectedTag(null);
                     setLineChartViewBy({
                       label: e.label,
                       value: e.value,
@@ -1186,10 +1127,10 @@ const StackedAreaTeamTagChart = ({
           {isLoadingStatisticUserTaskDurationsList ? (
             <RowSkeleton
               numberOfRows={1}
-              className={`!h-[380px] w-full mx-auto`}
+              className={`!h-[380px] w-[calc(100%_-_60px)] mx-auto`}
             />
           ) : (
-            <div className="relative">
+            <div ref={chartRef} className="relative">
               <Chart
                 options={options as any}
                 series={dataChart}
@@ -1197,6 +1138,9 @@ const StackedAreaTeamTagChart = ({
                 height={380}
               />
               <div
+                style={{
+                  height: dataChart.length > 1 ? chartHeight : chartHeight + 5,
+                }}
                 className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'} pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
                 {!(dataChart.length == 1 && !dataChart[0].name) &&
                   timeRange
@@ -1287,54 +1231,58 @@ const StackedAreaTeamTagChart = ({
             </div>
           )}
           <div className="px-[30px]">
-            <Table
-              className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${areaTableData.length && 'max-h-[500px] overflow-y-auto'}`}>
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className="sticky top-0 z-10 text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                    {headerGroup.headers.map((header, index) => (
-                      <th
-                        key={header.id}
-                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
-                        style={{
-                          width: header.getSize(),
-                          minWidth: header.getSize(),
-                          maxWidth: header.getSize(),
-                        }}
-                        onClick={header.column.getToggleSortingHandler()}>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    {row.getVisibleCells().map((cell, index) => (
-                      <td
-                        key={cell.id}
-                        style={{
-                          width: cell.column.getSize(),
-                          minWidth: cell.column.getSize(),
-                          maxWidth: cell.column.getSize(),
-                        }}
-                        className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </TableBody>
-            </Table>
+            {isLoadingStatisticUserTaskDurationsList ? (
+              <StatisticLineChartTableSkeleton />
+            ) : (
+             <Table
+                className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${areaTableData.length && 'max-h-[500px] overflow-y-auto'}`}>
+                <thead>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr
+                      key={headerGroup.id}
+                      className="sticky top-0 z-10 text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                      {headerGroup.headers.map((header, index) => (
+                        <th
+                          key={header.id}
+                          className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                          style={{
+                            width: header.getSize(),
+                            minWidth: header.getSize(),
+                            maxWidth: header.getSize(),
+                          }}
+                          onClick={header.column.getToggleSortingHandler()}>
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <TableBody>
+                  {table.getRowModel().rows.map((row) => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+                      {row.getVisibleCells().map((cell, index) => (
+                        <td
+                          key={cell.id}
+                          style={{
+                            width: cell.column.getSize(),
+                            minWidth: cell.column.getSize(),
+                            maxWidth: cell.column.getSize(),
+                          }}
+                          className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </div>
       )}

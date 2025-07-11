@@ -77,7 +77,7 @@ class TaskBoardFilter(django_filters.FilterSet):
         field_name="people_in_charge__id", lookup_expr="exact"
     )
     status_id = django_filters.NumberFilter(
-        field_name="status__id", lookup_expr="exact"
+        field_name="status_id", lookup_expr="exact"
     )
 
     class Meta:

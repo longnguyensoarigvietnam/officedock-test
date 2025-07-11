@@ -327,6 +327,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                         current_instance.paused_at - current_instance.started_at
                     ),
                     case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
+                    duration_created_at=instance.created_at,
                 )
         if started_at.date() != paused_at.date():
             # Call separate_duration to handle multi-day durations
@@ -348,6 +349,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                         user,
                         duration_time=total_duration,
                         case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
+                        duration_created_at=instance.created_at,
                     )
             return DurationSerializer(
                 new_durations, many=True, context={"request": request}
@@ -366,6 +368,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                         user,
                         duration_time=total_duration,
                         case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
+                        duration_created_at=instance.created_at,
                     )
             # Return serialized single instance
             return [
@@ -390,6 +393,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                     user,
                     duration_time=-total_duration,
                     case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
+                    duration_created_at=instance.created_at,
                 )
 
         instance.delete()
@@ -457,8 +461,8 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         # Check whether the current task/event has a start time set for now.
         overlapping_qs = TaskDuration.objects.filter(
             Q(
-                task__id=task_id,
-                schedule__id=schedule_id,
+                task_id=task_id,
+                schedule_id=schedule_id,
             )
             & Q(started_at__lt=now(), paused_at__gt=now())
             & Q(user=user)
@@ -566,6 +570,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                         user,
                         duration_time=total_duration,
                         case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
+                        duration_created_at=duration.created_at,
                     )
 
     def _startDuration(self, user, task=None, schedule=None):
@@ -628,8 +633,8 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             # Get current task running
             task_running = user.task_durations.filter(
                 started_at__gte=start_of_today,
-                task__id=task_id,
-                schedule__id=schedule_id,
+                task_id=task_id,
+                schedule_id=schedule_id,
             ).last()
         else:
             # Get current task running
@@ -708,7 +713,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             )
 
         if user_id:
-            queryset = queryset.filter(user__id=user_id)
+            queryset = queryset.filter(user_id=user_id)
         else:
             queryset = queryset.none()
 
@@ -910,6 +915,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     user,
                     duration_time=-total_duration,
                     case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
+                    duration_created_at=instance.created_at,
                 )
 
         # Update actual duration
@@ -928,6 +934,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     user,
                     duration_time=total_duration,
                     case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
+                    duration_created_at=instance.created_at,
                 )
         paused_at = paused_at or instance.paused_at or now()
         started_at = started_at or instance.started_at
@@ -952,6 +959,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     user,
                     duration_time=-total_duration,
                     case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
+                    duration_created_at=instance.created_at,
                 )
 
         instance.delete()

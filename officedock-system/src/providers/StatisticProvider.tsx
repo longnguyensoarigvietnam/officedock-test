@@ -9,7 +9,11 @@ import {
 
 import { OptionDropdownType } from '@interfaces/common';
 import { getAdjustedStartDateDefault } from '@utils/date';
-import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
+import {
+  OrganizationStatisticType,
+  StatisticViewLabels,
+  StatisticViewOptions,
+} from '@constants/enums';
 
 interface ContextValue {
   selectedOrganization: OptionDropdownType | null;
@@ -91,10 +95,17 @@ interface ContextValue {
   setCurrentPage: Dispatch<SetStateAction<number>>;
   removeTag: (selected: OptionDropdownType) => void;
   isHasLoading: boolean;
+
+  dataMediumCalendar: OptionDropdownType | undefined;
+  setDataMediumCalendar: Dispatch<
+    SetStateAction<OptionDropdownType | undefined>
+  >;
+  isDisableCalendar: boolean;
 }
 
 const defaultValue: ContextValue = {
   isHasLoading: false,
+  isDisableCalendar: false,
   smallOptions: [],
   mediumOptions: [],
   largeOptions: [],
@@ -174,6 +185,8 @@ const defaultValue: ContextValue = {
   currentPage: 1,
   setCurrentPage: () => {},
   removeTag: () => {},
+  dataMediumCalendar: undefined,
+  setDataMediumCalendar: () => {},
 };
 
 export const StatisticStateContext = createContext<ContextValue>(defaultValue);
@@ -255,6 +268,8 @@ export const StatisticStateProvider = ({
   // Page task list
 
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [dataMediumCalendar, setDataMediumCalendar] =
+    useState<OptionDropdownType>();
 
   // Data Date calendar compare
   const [endDateCompare, setEndDateCompare] = useState<Date | null>(new Date());
@@ -275,6 +290,14 @@ export const StatisticStateProvider = ({
     const updatedTagIds = currentTagIds.filter(
       (tag) => tag.value !== selected.value,
     );
+    setIsLoadingLarge(true);
+    setIsLoadingMedium(true);
+    setIsLoadingOrganization(true);
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingOrganizationCompare(true);
+    }
     setCurrentPage(1);
 
     setSelectedTags(updatedTagIds);
@@ -286,6 +309,8 @@ export const StatisticStateProvider = ({
     isLoadingLargeCompare ||
     isLoadingMediumCompare ||
     isLoadingOrganizationCompare;
+  const isDisableCalendar =
+    selectedOrganization?.type === OrganizationStatisticType.CALENDAR;
 
   const contextValue: ContextValue = {
     smallOptions,
@@ -367,6 +392,9 @@ export const StatisticStateProvider = ({
     setCurrentPage,
     removeTag,
     isHasLoading,
+    dataMediumCalendar,
+    setDataMediumCalendar,
+    isDisableCalendar,
   };
 
   return (

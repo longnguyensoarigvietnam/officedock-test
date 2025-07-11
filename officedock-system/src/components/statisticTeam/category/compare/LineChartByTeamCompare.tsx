@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import Image from 'next/image';
 import { Line } from 'react-chartjs-2';
@@ -28,6 +28,7 @@ import RadioButton from '@components/common/RadioButton';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import CustomStatisticUserCheckbox from '@components/common/Checkbox/CustomStatisticUserCheckbox';
 import { TeamDockCompareLineChartTooltip } from '@components/tooltip/TeamDockCompareLineChartTooltip';
+import StatisticLineChartTableSkeleton from '@components/common/SkeletonLoading/StatisticLineChartTableSkeleton';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
@@ -75,7 +76,7 @@ import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations'
 import useStatisticUserTaskDurationsCompare from '@hooks/useStatisticUserTaskDurationsCompare';
 import useStatisticTableInTeamLineChart from '@hooks/useStatisticTableInTeamLineChart';
 import useStatisticTableInTeamLineChartCompare from '@hooks/useStatisticTableInTeamLineChartCompare';
-import { useGenericDebounce } from '@hooks/useGenericDebounce';
+
 import FilterTeamStatistic from '../filter/FilterTeamStatistic';
 
 ChartJS.register(
@@ -135,70 +136,9 @@ const LineChartByTeamCompare = ({
     id: number;
     name: string;
   } | null>(null);
-  const [isOrganizationChanging, setIsOrganizationChanging] = useState(false);
   const [selectedOrganizationInTable, setSelectedOrganizationInTable] =
     useState<number>(0);
 
-  // Filter options
-  const [filter, setFilter] = useState({
-    fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
-    endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-    userIds: selectedMembers?.filter(Boolean).join(','),
-    largeCategoryId: selectedLarge?.value,
-    mediumCategoryId: selectedMedium?.value,
-    smallCategoryId: selectedSmall?.value,
-    statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: 0,
-    tagIds: orderingOptions?.tag_ids || [],
-    organizationMemberId:
-      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-        ? String(selectedOrganizationSideBar?.value || '')
-        : undefined,
-  });
-  // Category filter options
-  const [categoryFilter, setCategoryFilter] = useState({
-    fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
-    endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-    userIds: selectedMembers?.filter(Boolean).join(','),
-    largeCategoryId: selectedLarge?.value,
-    mediumCategoryId: selectedMedium?.value,
-    organizationId: '',
-    tagIds: orderingOptions?.tag_ids || [],
-    organizationMemberId:
-      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-        ? String(selectedOrganizationSideBar?.value || '')
-        : undefined,
-  });
-  // Compare category filter options
-  const [compareCategoryFilter, setCompareCategoryFilter] = useState({
-    fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
-    endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
-    userIds: selectedMembers?.filter(Boolean).join(','),
-    largeCategoryId: selectedLarge?.value,
-    mediumCategoryId: selectedMedium?.value,
-    organizationId: '',
-    tagIds: orderingOptions?.tag_ids || [],
-    organizationMemberId:
-      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-        ? String(selectedOrganizationSideBar?.value || '')
-        : undefined,
-  });
-  // Compare filter options
-  const [compareFilter, setCompareFilter] = useState({
-    fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
-    endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
-    userIds: selectedMembers?.filter(Boolean).join(','),
-    largeCategoryId: selectedLarge?.value,
-    mediumCategoryId: selectedMedium?.value,
-    smallCategoryId: selectedSmall?.value,
-    statisticBy: `${lineChartViewBy?.value}`,
-    selectedOrganization: 0,
-    tagIds: orderingOptions?.tag_ids || [],
-    organizationMemberId:
-      selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-        ? String(selectedOrganizationSideBar?.value || '')
-        : undefined,
-  });
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const [memberOptions, setMemberOptions] = useState<
     {
@@ -341,296 +281,30 @@ const LineChartByTeamCompare = ({
         name: firstCategory.categoryName,
       });
       setSelectedOrganizationInTable(Number(firstCategory.organizationId));
-      if (selectedOrganization && !selectedLarge && !selectedMedium) {
-        setFilter((prev) => {
-          return {
-            ...prev,
-            largeCategoryId: firstCategory.categoryId,
-            selectedOrganization: Number(firstCategory.organizationId),
-          };
-        });
-        setCompareFilter((prev) => {
-          return {
-            ...prev,
-            largeCategoryId: firstCategory.categoryId,
-          };
-        });
-      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
-        setFilter((prev) => {
-          return {
-            ...prev,
-            mediumCategoryId: firstCategory.categoryId,
-            selectedOrganization: Number(firstCategory.organizationId),
-          };
-        });
-        setCompareFilter((prev) => {
-          return {
-            ...prev,
-            mediumCategoryId: firstCategory.categoryId,
-            selectedOrganization: Number(firstCategory.organizationId),
-          };
-        });
-      } else if (selectedOrganization && selectedLarge && selectedMedium) {
-        setFilter((prev) => {
-          return {
-            ...prev,
-            smallCategoryId: firstCategory.categoryId,
-            selectedOrganization: Number(firstCategory.organizationId),
-          };
-        });
-        setCompareFilter((prev) => {
-          return {
-            ...prev,
-            smallCategoryId: firstCategory.categoryId,
-            selectedOrganization: Number(firstCategory.organizationId),
-          };
-        });
-      }
     } else {
       setSelectedCategory(null);
       setSelectedOrganizationInTable(0);
-      if (selectedOrganization && !selectedLarge && !selectedMedium) {
-        setFilter((prev) => {
-          return {
-            ...prev,
-            largeCategoryId: undefined,
-            selectedOrganization: 0,
-          };
-        });
-        setCompareFilter((prev) => {
-          return {
-            ...prev,
-            largeCategoryId: undefined,
-            selectedOrganization: 0,
-          };
-        });
-      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
-        setFilter((prev) => {
-          return {
-            ...prev,
-            mediumCategoryId: undefined,
-            selectedOrganization: 0,
-          };
-        });
-        setCompareFilter((prev) => {
-          return {
-            ...prev,
-            mediumCategoryId: undefined,
-            selectedOrganization: 0,
-          };
-        });
-      } else if (selectedOrganization && selectedLarge && selectedMedium) {
-        setFilter((prev) => {
-          return {
-            ...prev,
-            smallCategoryId: undefined,
-            selectedOrganization: 0,
-          };
-        });
-        setCompareFilter((prev) => {
-          return {
-            ...prev,
-            smallCategoryId: undefined,
-            selectedOrganization: 0,
-          };
-        });
-      }
     }
   };
-
-  // Handle listen to filter option changes
-  const memoizedFilter = useMemo(() => {
-    return {
-      fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
-      endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-      userIds:
-        orderingOptions?.user_ids?.length == 0
-          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
-          : selectedMembers?.filter(Boolean).join(','),
-      largeCategoryId:
-        selectedOrganizationInTable && !selectedLarge && !selectedMedium
-          ? selectedCategory?.id
-          : selectedLarge?.value,
-      mediumCategoryId:
-        selectedOrganizationInTable && selectedLarge && !selectedMedium
-          ? selectedCategory?.id
-          : selectedMedium?.value,
-      smallCategoryId:
-        selectedOrganizationInTable && selectedLarge && selectedMedium
-          ? selectedCategory?.id
-          : selectedSmall?.value,
-      statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: selectedOrganizationInTable,
-      tagIds: orderingOptions?.tag_ids || [],
-      organizationMemberId:
-        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-          ? String(selectedOrganizationSideBar?.value || '')
-          : undefined,
-    };
-  }, [
-    startDate,
-    endDate,
-    orderingOptions?.user_ids?.length,
-    orderingOptions?.tag_ids,
-    listMemberTeam,
-    selectedMembers,
-    selectedOrganizationInTable,
-    selectedLarge,
-    selectedMedium,
-    selectedCategory?.id,
-    selectedSmall?.value,
-    lineChartViewBy?.value,
-    selectedOrganization?.type,
-    selectedOrganizationSideBar?.value,
-  ]);
-
-  const memoizedCategoryFilter = useMemo(() => {
-    return {
-      fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
-      endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-      userIds:
-        orderingOptions?.user_ids?.length == 0
-          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
-          : selectedMembers?.filter(Boolean).join(','),
-      largeCategoryId: selectedLarge?.value,
-      mediumCategoryId: selectedMedium?.value,
-      organizationId: String(selectedOrganization?.value),
-      tagIds: orderingOptions?.tag_ids || [],
-      organizationMemberId:
-        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-          ? String(selectedOrganizationSideBar?.value || '')
-          : undefined,
-    };
-  }, [
-    startDate,
-    endDate,
-    orderingOptions?.user_ids?.length,
-    orderingOptions?.tag_ids,
-    listMemberTeam,
-    selectedMembers,
-    selectedLarge?.value,
-    selectedMedium?.value,
-    selectedOrganization?.value,
-    selectedOrganization?.type,
-    selectedOrganizationSideBar?.value,
-  ]);
-
-  const memoizedCategoryCompareFilter = useMemo(() => {
-    return {
-      fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
-      endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
-      userIds:
-        orderingOptions?.user_ids?.length == 0
-          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
-          : selectedMembers?.filter(Boolean).join(','),
-      largeCategoryId: selectedLarge?.value,
-      mediumCategoryId: selectedMedium?.value,
-      organizationId: String(selectedOrganization?.value),
-      tagIds: orderingOptions?.tag_ids || [],
-      organizationMemberId:
-        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-          ? String(selectedOrganizationSideBar?.value || '')
-          : undefined,
-    };
-  }, [
-    startDateCompare,
-    endDateCompare,
-    orderingOptions?.user_ids?.length,
-    orderingOptions?.tag_ids,
-    listMemberTeam,
-    selectedMembers,
-    selectedLarge?.value,
-    selectedMedium?.value,
-    selectedOrganization?.value,
-    selectedOrganization?.type,
-    selectedOrganizationSideBar?.value,
-  ]);
-
-  const memoizedCompareFilter = useMemo(() => {
-    return {
-      fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
-      endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
-      userIds:
-        orderingOptions?.user_ids?.length == 0
-          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
-          : selectedMembers?.filter(Boolean).join(','),
-      largeCategoryId:
-        selectedOrganizationInTable && !selectedLarge && !selectedMedium
-          ? selectedCategory?.id
-          : selectedLarge?.value,
-      mediumCategoryId:
-        selectedOrganizationInTable && selectedLarge && !selectedMedium
-          ? selectedCategory?.id
-          : selectedMedium?.value,
-      smallCategoryId:
-        selectedOrganizationInTable && selectedLarge && selectedMedium
-          ? selectedCategory?.id
-          : selectedSmall?.value,
-      statisticBy: `${lineChartViewBy?.value}`,
-      selectedOrganization: selectedOrganizationInTable,
-      tagIds: orderingOptions?.tag_ids || [],
-      organizationMemberId:
-        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
-          ? String(selectedOrganizationSideBar?.value || '')
-          : undefined,
-    };
-  }, [
-    startDateCompare,
-    endDateCompare,
-    orderingOptions?.user_ids?.length,
-    orderingOptions?.tag_ids,
-    listMemberTeam,
-    selectedMembers,
-    selectedOrganizationInTable,
-    selectedLarge,
-    selectedMedium,
-    selectedCategory?.id,
-    selectedSmall?.value,
-    lineChartViewBy?.value,
-    selectedOrganization?.type,
-    selectedOrganizationSideBar?.value,
-  ]);
-
-  useEffect(() => {
-    if (isOrganizationChanging && selectedMembers.length > 0) {
-      setIsOrganizationChanging(false); // Done
-    }
-  }, [selectedMembers, isOrganizationChanging]);
-
-  const debouncedFilter = useGenericDebounce(memoizedFilter, 1000);
-  const debouncedCompareFilter = useGenericDebounce(
-    memoizedCompareFilter,
-    1000,
-  );
-  const debouncedCategoryFilter = useGenericDebounce(
-    memoizedCategoryFilter,
-    1000,
-  );
-  const debouncedCategoryCompareFilter = useGenericDebounce(
-    memoizedCategoryCompareFilter,
-    1000,
-  );
-
-  useEffect(() => {
-    if (!isOrganizationChanging) {
-      setFilter(debouncedFilter); // Trigger API only when everything is ready
-      setCompareFilter(debouncedCompareFilter); // Trigger API only when everything is ready
-      setCategoryFilter(debouncedCategoryFilter); // Trigger API only when everything is ready
-      setCompareCategoryFilter(debouncedCategoryCompareFilter); // Trigger API only when everything is ready
-    }
-  }, [
-    debouncedFilter,
-    debouncedCompareFilter,
-    debouncedCategoryFilter,
-    debouncedCategoryCompareFilter,
-    isOrganizationChanging,
-  ]);
 
   // Get table info (statistic team standard categories)
   const { isLoadingStatisticTableInTeamLineChart } =
     useStatisticTableInTeamLineChart({
       filter: {
-        ...categoryFilter,
+        fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
+        endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
+        userIds:
+          orderingOptions?.user_ids?.length == 0
+            ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+            : selectedMembers?.filter(Boolean).join(','),
+        largeCategoryId: selectedLarge?.value,
+        mediumCategoryId: selectedMedium?.value,
+        organizationId: String(selectedOrganization?.value),
+        tagIds: orderingOptions?.tag_ids || [],
+        organizationMemberId:
+          selectedOrganization?.type === OrganizationStatisticType.CALENDAR
+            ? String(selectedOrganizationSideBar?.value || '')
+            : undefined,
       },
       onSuccess: (data) => {
         if (!data) return;
@@ -662,7 +336,22 @@ const LineChartByTeamCompare = ({
   const { isLoadingStatisticTableInTeamLineChartCompare } =
     useStatisticTableInTeamLineChartCompare({
       filter: {
-        ...compareCategoryFilter,
+        fromDate: startDateCompare
+          ? `${formatDateToYMD(startDateCompare)}`
+          : '',
+        endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
+        userIds:
+          orderingOptions?.user_ids?.length == 0
+            ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+            : selectedMembers?.filter(Boolean).join(','),
+        largeCategoryId: selectedLarge?.value,
+        mediumCategoryId: selectedMedium?.value,
+        organizationId: String(selectedOrganization?.value),
+        tagIds: orderingOptions?.tag_ids || [],
+        organizationMemberId:
+          selectedOrganization?.type === OrganizationStatisticType.CALENDAR
+            ? String(selectedOrganizationSideBar?.value || '')
+            : undefined,
       },
       onSuccess: (data) => {
         if (!data) return;
@@ -738,9 +427,39 @@ const LineChartByTeamCompare = ({
     isLoadingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
     filter: {
-      ...filter,
+      fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
+      endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : selectedMembers?.filter(Boolean).join(','),
+      largeCategoryId:
+        selectedOrganizationInTable && !selectedLarge && !selectedMedium
+          ? selectedCategory?.id
+          : selectedLarge?.value,
+      mediumCategoryId:
+        selectedOrganizationInTable && selectedLarge && !selectedMedium
+          ? selectedCategory?.id
+          : selectedMedium?.value,
+      smallCategoryId:
+        selectedOrganizationInTable && selectedLarge && selectedMedium
+          ? selectedCategory?.id
+          : selectedSmall?.value,
+      statisticBy: `${lineChartViewBy?.value}`,
+      selectedOrganization: selectedOrganizationInTable,
+      tagIds: orderingOptions?.tag_ids || [],
+      organizationMemberId:
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
     },
-    condition: [Boolean(mergedTableData.length > 0)],
+    condition: [
+      Boolean(
+        mergedTableData.length > 0 &&
+          selectedCategory?.id &&
+          selectedOrganizationInTable,
+      ),
+    ],
   });
 
   // Get user task durations (compared)
@@ -749,9 +468,39 @@ const LineChartByTeamCompare = ({
     isLoadingStatisticUserTaskDurationsCompareList,
   } = useStatisticUserTaskDurationsCompare({
     filter: {
-      ...compareFilter,
+      fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
+      endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : selectedMembers?.filter(Boolean).join(','),
+      largeCategoryId:
+        selectedOrganizationInTable && !selectedLarge && !selectedMedium
+          ? selectedCategory?.id
+          : selectedLarge?.value,
+      mediumCategoryId:
+        selectedOrganizationInTable && selectedLarge && !selectedMedium
+          ? selectedCategory?.id
+          : selectedMedium?.value,
+      smallCategoryId:
+        selectedOrganizationInTable && selectedLarge && selectedMedium
+          ? selectedCategory?.id
+          : selectedSmall?.value,
+      statisticBy: `${lineChartViewBy?.value}`,
+      selectedOrganization: selectedOrganizationInTable,
+      tagIds: orderingOptions?.tag_ids || [],
+      organizationMemberId:
+        selectedOrganization?.type === OrganizationStatisticType.CALENDAR
+          ? String(selectedOrganizationSideBar?.value || '')
+          : undefined,
     },
-    condition: [Boolean(mergedTableData.length > 0)],
+    condition: [
+      Boolean(
+        mergedTableData.length > 0 &&
+          selectedCategory?.id &&
+          selectedOrganizationInTable,
+      ),
+    ],
   });
 
   const mergeCategories = (
@@ -1389,64 +1138,6 @@ const LineChartByTeamCompare = ({
                   setSelectedOrganizationInTable(
                     info.row.original.organizationId,
                   );
-                  if (
-                    selectedOrganization &&
-                    !selectedLarge &&
-                    !selectedMedium
-                  ) {
-                    setFilter((prev) => {
-                      return {
-                        ...prev,
-                        largeCategoryId: info.row.original.categoryId,
-                        selectedOrganization: info.row.original.organizationId,
-                      };
-                    });
-                    setCompareFilter((prev) => {
-                      return {
-                        ...prev,
-                        largeCategoryId: info.row.original.categoryId,
-                        selectedOrganization: info.row.original.organizationId,
-                      };
-                    });
-                  } else if (
-                    selectedOrganization &&
-                    selectedLarge &&
-                    !selectedMedium
-                  ) {
-                    setFilter((prev) => {
-                      return {
-                        ...prev,
-                        mediumCategoryId: info.row.original.categoryId,
-                        selectedOrganization: info.row.original.organizationId,
-                      };
-                    });
-                    setCompareFilter((prev) => {
-                      return {
-                        ...prev,
-                        mediumCategoryId: info.row.original.categoryId,
-                        selectedOrganization: info.row.original.organizationId,
-                      };
-                    });
-                  } else if (
-                    selectedOrganization &&
-                    selectedLarge &&
-                    selectedMedium
-                  ) {
-                    setFilter((prev) => {
-                      return {
-                        ...prev,
-                        smallCategoryId: info.row.original.categoryId,
-                        selectedOrganization: info.row.original.organizationId,
-                      };
-                    });
-                    setCompareFilter((prev) => {
-                      return {
-                        ...prev,
-                        smallCategoryId: info.row.original.categoryId,
-                        selectedOrganization: info.row.original.organizationId,
-                      };
-                    });
-                  }
                 }
               }}
             />
@@ -1911,7 +1602,7 @@ const LineChartByTeamCompare = ({
                     onChange={(data) => {
                       setSelectedMembers([]);
                       setMergedTableData([]);
-                      setIsOrganizationChanging(true);
+                      setSelectedCategory(null);
                       handleSelectOrganization(data);
                     }}
                   />
@@ -1936,6 +1627,7 @@ const LineChartByTeamCompare = ({
                     onChange={(data) => {
                       setMergedTableData([]);
                       handleSelectLarge(data);
+                      setSelectedCategory(null);
                     }}
                     disabled={!selectedOrganization || isHasLoading}
                   />
@@ -1960,6 +1652,7 @@ const LineChartByTeamCompare = ({
                     onChange={(data) => {
                       setMergedTableData([]);
                       handleSelectMedium(data);
+                      setSelectedCategory(null);
                     }}
                     disabled={!selectedLarge || isHasLoading}
                   />
@@ -2029,6 +1722,7 @@ const LineChartByTeamCompare = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
+                    setMergedTableData([]);
                     setLineChartViewBy({
                       label: e.label,
                       value: e.value,
@@ -2054,7 +1748,15 @@ const LineChartByTeamCompare = ({
                         id={String(member.id)}
                         isChecked={selectedMembers.includes(member.id)}
                         color={member.color}
+                        disable={
+                          isLoadingStatisticTableInTeamLineChart ||
+                          isLoadingStatisticTableInTeamLineChartCompare ||
+                          isLoadingStatisticUserTaskDurationsList ||
+                          isLoadingStatisticUserTaskDurationsCompareList
+                        }
                         onChange={(state) => {
+                          setMergedTableData([]);
+                          setSelectedCategory(null);
                           if (state) {
                             setSelectedMembers((prev) => {
                               if (member.id) {
@@ -2241,10 +1943,7 @@ const LineChartByTeamCompare = ({
                 </TableBody>
               </Table>
             ) : (
-              <RowSkeleton
-                numberOfRows={1}
-                className={`!h-[200px] mt-5 w-full mx-auto`}
-              />
+              <StatisticLineChartTableSkeleton />
             )}
           </div>
         </div>

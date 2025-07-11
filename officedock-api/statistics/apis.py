@@ -20,7 +20,6 @@ from django.utils.translation import trim_whitespace
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
-
 from base.apis import BaseAPIViewSet
 from base.filters import FilterByPermission
 from base.messages import ERROR_MESSAGES
@@ -34,11 +33,11 @@ from common.utils import (
     time_str_to_timedelta,
     split_id_from_string,
     get_organizations_of_user_by_screen_role,
+    validate_company_organization,
 )
 from organizations.constants import OrganizationTypes
 from organizations.models import Organization
-from skills.constants import DEFAULT_TIME
-from stat_data.constants import ALL_TEAM, FilterTime
+from stat_data.constants import ALL_TEAM, FilterTime, NONE_CATEGORY
 from stat_data.serializers import (
     StatisticTaskSerializer,
     StatisticEventSerializer,
@@ -92,7 +91,6 @@ class StatisticViewSet(BaseAPIViewSet):
             OpenApiParameter(name="medium_category_id", type=str),
             OpenApiParameter(name="small_category_id", type=str),
             OpenApiParameter(name="user_id", type=int),
-            OpenApiParameter(name="user_ids", type=str),
             OpenApiParameter(name="tag_ids", type=str),
             OpenApiParameter(name="total_duration", type=str),
             OpenApiParameter(name="ordering", type=str),
@@ -114,14 +112,13 @@ class StatisticViewSet(BaseAPIViewSet):
         user = request.user
         organization_ids_param = request.query_params.get("organization_ids")
         organization_id_param = request.query_params.get("organization_id")
+        validate_company_organization(user.company, organization_id_param)
         large_category_id = request.query_params.get("large_category_id")
         medium_category_id = request.query_params.get("medium_category_id")
         small_category_id = request.query_params.get("small_category_id")
         user_id = request.query_params.get("user_id")
-        user_ids_param = request.query_params.get("user_ids")
         tag_ids_param = request.query_params.get("tag_ids")
         tag_ids = []
-        total_duration = request.query_params.get("total_duration")
         ordering = request.query_params.get("ordering")
         cursor = request.query_params.get("cursor")
         cursor_id = request.query_params.get("cursor_id")
@@ -165,38 +162,8 @@ class StatisticViewSet(BaseAPIViewSet):
             medium_id=medium_category_id,
             small_id=small_category_id,
         )
-        # TODO: Remove if implement wish 40
-        if total_duration == DEFAULT_TIME:
-            durations_for_get_total_duration = durations
-            if user_ids_param:
-                users = User.objects.filter(
-                    id__in=split_id_from_string(user_ids_param)
-                )
-                durations_for_get_total_duration = get_list_durations_by_users(
-                    start_of_day,
-                    end_of_day,
-                    users,
-                    organization_ids,
-                    tags=tag_ids,
-                )
-                durations_for_get_total_duration = get_list_durations_by_users(
-                    durations=durations_for_get_total_duration,
-                    large_id=large_category_id,
-                    medium_id=medium_category_id,
-                    small_id=small_category_id,
-                )
-            if is_tag_page:
-                total_duration, tag_list = process_merge_card_per_tag(
-                    tag_ids,
-                    durations=durations_for_get_total_duration,
-                    organization_ids_param=organization_ids_param,
-                    organization_ids=organization_ids,
-                )
-            else:
-                total_duration = get_total_durations(
-                    durations_for_get_total_duration
-                )
-            total_duration = format_duration(total_duration)
+        total_duration = get_total_durations(durations, is_tag_page, tag_ids)
+        total_duration = format_duration(total_duration)
         filters = Q(
             Q(task_durations__user=user)
             & Q(
@@ -212,7 +179,7 @@ class StatisticViewSet(BaseAPIViewSet):
             )
         )
         if organization_id_param:
-            filters &= Q(organization__id=organization_id_param)
+            filters &= Q(organization_id=organization_id_param)
         tasks, events = get_list_models(durations)
         tasks = (
             tasks.filter(filters)
@@ -568,7 +535,7 @@ class StatisticViewSet(BaseAPIViewSet):
                             medium_id=medium_category_id,
                             small_id=category_id,
                         )
-            if category_id is None:
+            if category_id == NONE_CATEGORY:
                 filter_durations = get_duration_of_none_category(
                     filter_durations if filter_durations else durations,
                     large_category_id,
@@ -1149,7 +1116,7 @@ class StatisticViewSet(BaseAPIViewSet):
                     filter_durations = _handle_get_filter_durations(
                         id, filter_duration_by_range
                     )
-                    if id is None:
+                    if id == NONE_CATEGORY:
                         filter_durations = get_duration_of_none_category(
                             filter_durations
                             if filter_durations
@@ -1159,8 +1126,8 @@ class StatisticViewSet(BaseAPIViewSet):
                         )
                     # Filter durations for the category by organization id
                     filter_durations = filter_durations.filter(
-                        Q(task__organization__id=organization_id)
-                        | Q(schedule__organization__id=organization_id)
+                        Q(task__organization_id=organization_id)
+                        | Q(schedule__organization_id=organization_id)
                     )
                     duration = get_total_durations(filter_durations)
                     # Calculate the percentage of the total duration
@@ -1391,6 +1358,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         Returns a list of statistic by tags.
         """
         user = request.user
+        company = user.company
         large_category_id = request.query_params.get("large_category_id")
         medium_category_id = request.query_params.get("medium_category_id")
         small_category_id = request.query_params.get("small_category_id")
@@ -1406,34 +1374,34 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         organization_get_members_id = request.query_params.get(
             "organization_get_members_id"
         )
-        calendar_org = user.company.get_calendar_organization()
+        calendar_org = company.get_calendar_organization()
+
         if organization_id == ALL_TEAM:
             organizations = get_organizations_of_user_by_screen_role(
                 user, Screens.TEAMDOCK.value, Actions.VIEW.value
             )
         else:
-            organization = Organization.all_objects.filter(id=organization_id)
-            if not organization.exists():
-                raise NotFound(ERROR_MESSAGES["organization_not_exists"])
-            organizations = [organization.first().id]
+            organization = validate_company_organization(
+                company, organization_id
+            )
+            organizations = [organization.id]
+
         if user_ids_param:
             users = User.objects.filter(
                 id__in=split_id_from_string(user_ids_param)
             )
         else:
-            org = (
-                organizations
-                if not organization_get_members_id
-                else [
-                    get_object_or_404(
-                        Organization, id=organization_get_members_id
+            orgs = organizations
+            if organization_get_members_id:
+                orgs = [
+                    validate_company_organization(
+                        company, organization_get_members_id
                     )
                 ]
-            )
-            users = User.objects.filter(organizations__in=org).distinct()
+            users = User.objects.filter(organizations__in=orgs).distinct()
+
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
-
         tag_ids = split_id_from_string(tag_ids_param)
         data = {}
 
@@ -1453,6 +1421,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             organization_ids_param=organization_id,
             organization_ids=organizations,
         )
+
         if not durations.exists() or tag_list is None:
             return self.response_ok(data)
 
@@ -1475,6 +1444,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 type_total_duration="medium_total_duration",
                 type_category="medium_categories",
                 organization_id=organization_id,
+                organizations=organizations,
             )
 
             if medium_category_id and calendar_org.id not in organizations:
@@ -1488,6 +1458,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                     type_total_duration="small_total_duration",
                     type_category="small_categories",
                     organization_id=organization_id,
+                    organizations=organizations,
                 )
 
                 if small_category_id:
@@ -1501,6 +1472,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                         type_total_duration="category_total_duration",
                         type_category="category",
                         organization_id=organization_id,
+                        organizations=organizations,
                     )
 
         return self.response_ok(data)
@@ -1516,6 +1488,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         type_total_duration=None,
         type_category=None,
         organization_id=None,
+        organizations=None,
     ):
         """
         Return data of statistic tag by category
@@ -1530,7 +1503,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             tag_ids,
             durations=durations,
             organization_ids_param=organization_id,
-            organization_ids=[organization_id],
+            organization_ids=organizations,
         )
         data[type_total_duration] = format_duration(total_duration)
         data[type_category] = process_tags(

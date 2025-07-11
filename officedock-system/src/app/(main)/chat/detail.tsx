@@ -58,7 +58,7 @@ import {
   DEFAULT_START_TIME,
   MAX_FILE_SIZE,
   MENTION_ALL_MEMBERS,
-  NO_OPTION_CATEGORY,
+  NO_SETTING,
   PAGINATION_PAGE_SIZE_HIGHT,
   REACTION_LIST,
 } from '@constants';
@@ -1089,14 +1089,12 @@ const ChatDetail = ({
     mentionIds,
     files,
     fileUuids,
-    taskIds,
   }: {
     data: string;
     uuid: string;
     mentionIds: number[];
     files: File[];
     fileUuids: string[];
-    taskIds: number[];
   }) => {
     const totalChunks = files.reduce((acc, file) => {
       const chunkSize = getChunkSize(file.size);
@@ -1128,7 +1126,6 @@ const ChatDetail = ({
     formData.append('uuid', uuid);
     formData.append('clientId', clientId);
     mentionIds.forEach((id) => formData.append('mentionIds', id.toString()));
-    taskIds.forEach((id) => formData.append('taskIds', id.toString()));
     fileUuids.forEach((id) => formData.append('fileUuids', id.toString()));
     try {
       const { data: response } = await api.post(
@@ -1194,7 +1191,6 @@ const ChatDetail = ({
         uuid: file.uuid,
       };
     });
-    const taskIds = quoteTaskList.map((task) => task.id);
     setDataMessageDetail([
       {
         uuid: uuidMsg,
@@ -1244,7 +1240,6 @@ const ChatDetail = ({
       mentionIds,
       files: uploadFiles.map((file) => file.file),
       fileUuids: uploadFiles.map((file) => file.uuid),
-      taskIds: taskIds,
     });
   };
 
@@ -1391,6 +1386,9 @@ const ChatDetail = ({
   const { mutate: editTask } = useMutation('postEditTask', handleEditTask, {
     onSuccess: async () => {
       handleRemoveParam();
+
+      queryClient.refetchQueries(['getDataTaskHeaderList']);
+      queryClient.refetchQueries(['getTaskDurationDetail']);
       queryClient.refetchQueries(['getTaskHeaderStart']);
       queryClient.refetchQueries(['getDataStatistic']);
 
@@ -1454,7 +1452,7 @@ const ChatDetail = ({
     if (data.categories.LARGE?.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.LARGE.value}` == NO_OPTION_CATEGORY
+          `${data.categories.LARGE.value}` == NO_SETTING
             ? null
             : `${data.categories.LARGE.value}`,
         type: EventWorkCategory.LARGE,
@@ -1463,7 +1461,7 @@ const ChatDetail = ({
     if (data.categories.MEDIUM.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.MEDIUM.value}` == NO_OPTION_CATEGORY
+          `${data.categories.MEDIUM.value}` == NO_SETTING
             ? null
             : `${data.categories.MEDIUM.value}`,
         type: EventWorkCategory.MEDIUM,
@@ -1472,7 +1470,7 @@ const ChatDetail = ({
     if (data.categories.SMALL.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.SMALL.value}` == NO_OPTION_CATEGORY
+          `${data.categories.SMALL.value}` == NO_SETTING
             ? null
             : `${data.categories.SMALL.value}`,
         type: EventWorkCategory.SMALL,
@@ -1528,7 +1526,7 @@ const ChatDetail = ({
     if (data.largeCategory && data.largeCategory?.value !== 'undefined') {
       newWorkCategories.push({
         categoryId:
-          `${data.largeCategory.value}` == NO_OPTION_CATEGORY
+          `${data.largeCategory.value}` == NO_SETTING
             ? null
             : `${data.largeCategory.value}`,
         type: EventWorkCategory.LARGE,
@@ -1537,7 +1535,7 @@ const ChatDetail = ({
     if (data.mediumCategory && data.mediumCategory?.value !== 'undefined') {
       newWorkCategories.push({
         categoryId:
-          `${data.mediumCategory.value}` == NO_OPTION_CATEGORY
+          `${data.mediumCategory.value}` == NO_SETTING
             ? null
             : `${data.mediumCategory.value}`,
         type: EventWorkCategory.MEDIUM,
@@ -2501,7 +2499,11 @@ const ChatDetail = ({
                                   src="/icons/setting-chat.svg"
                                   border="full"
                                   name="Setting icon"
-                                  onClick={() => setOpenSettingBox(true)}
+                                  onClick={() => {
+                                    setOpenSettingBox(true);
+                                    // Refetch to get the latest room name
+                                    refetchChatRoomDetail()
+                                  }}
                                 />
                               </div>
                             </DynamicTooltip>
@@ -3024,7 +3026,7 @@ const ChatDetail = ({
           onClose={() => setOpenSettingBox(false)}
           chatRoomDetail={chatRoomDetail}
           code={`${chatRoomCode}`}
-          dashboardMembers={dashboardMembers}
+          dashboardMemberList={dashboardMemberList}
           openAddMemberModal={() => {
             setOpenSettingBox(false);
             setOpenAddMembersBox(true);

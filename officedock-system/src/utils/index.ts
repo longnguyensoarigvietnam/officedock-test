@@ -43,6 +43,7 @@ import {
   getJapaneseWeekDay,
   sumDurationsChart,
 } from './date';
+import { EventApi } from '@fullcalendar/core';
 
 export function hasPermissionInArray(
   requiredPermissions: PermissionsSystem[],
@@ -1382,3 +1383,26 @@ export function deduplicateSearchParams(
 
   return deduped;
 }
+export function removeDuplicateOptions(
+  options: OptionDropdownType[],
+): OptionDropdownType[] {
+  const seen = new Set<string | number>();
+  return options.filter((item) => {
+    if (seen.has(item.value)) return false;
+    seen.add(item.value);
+    return true;
+  });
+}
+export const isOverlappedAndBelow = (a: EventApi, b: EventApi) => {
+  if (a.id === b.id) return false;
+
+  const aStart = a.start?.getTime() ?? 0;
+  const aEnd = a.end?.getTime() ?? 0;
+  const bStart = b.start?.getTime() ?? 0;
+  const bEnd = b.end?.getTime() ?? 0;
+
+  const isOverlapping = aStart < bEnd && aEnd > bStart;
+  const isBelow = aStart > bStart;
+
+  return isOverlapping && isBelow;
+};

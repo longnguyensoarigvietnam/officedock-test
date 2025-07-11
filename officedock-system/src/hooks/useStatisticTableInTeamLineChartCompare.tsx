@@ -89,7 +89,7 @@ const useStatisticTableInTeamLineChartCompare = ({
     isLoading: isLoadingStatisticTableInTeamLineChartCompare,
     isFetched: isFetchedStatisticTableInTeamLineChartCompare,
   } = useQuery({
-    queryKey: ['getStatisticTableInTeamLineChartCompare', [filter]],
+    queryKey: ['getStatisticTableInTeamLineChartCompare', JSON.stringify(filter)],
     queryFn: ({ signal }) =>
       getStatisticTableInTeamLineChartCompare({ signal }),
 

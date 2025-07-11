@@ -331,7 +331,7 @@ const ActionsSkillMapModal = ({
   useOrganizationStatisticCategories({
     organizationId: Number(organizationId),
     condition: [Boolean(organizationId)],
-    currentScreen: ScreenName.MY_TASK,
+    currentScreen: ScreenName.SKILL_MAP,
     onSuccess: (data) => {
       const organizationCategories = data.map((category) => {
         const largeCategory = category.LARGE || {

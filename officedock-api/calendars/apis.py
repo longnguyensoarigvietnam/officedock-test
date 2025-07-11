@@ -525,12 +525,12 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     )
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        user = self.request.user
+        user = request.user
         company = user.company
-        send_to_chat = self.request.query_params.get("send_to_chat", None)
-        schedule_message = self.request.query_params.get("message", None)
+        send_to_chat = request.query_params.get("send_to_chat", None)
+        schedule_message = request.query_params.get("message", None)
         participants = instance.participants.all()
-        client_id = self.request.data.pop("client_id", None)
+        client_id = request.data.pop("client_id", None)
 
         if send_to_chat:
             data = self._generate_chat_data(
@@ -603,16 +603,18 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         Send a chat message to participants regarding the schedule change.
         """
-        calendar_room_participant = user.chat_rooms_participants.filter(
-            chat_room__type=ChatRoomTypes.CALENDAR.value
-        ).first()
+        calendar_room_participant = (
+            user.chat_rooms_participants.filter(
+                chat_room__type=ChatRoomTypes.CALENDAR.value
+            )
+            .select_related("chat_room")
+            .first()
+        )
         if not calendar_room_participant:
             return
         chat_room = calendar_room_participant.chat_room
-        calendar_room_participant.unread_messages = (
-            calendar_room_participant.unread_messages + 1
-        )
-        calendar_room_participant.save()
+        calendar_room_participant.unread_messages += 1
+        calendar_room_participant.save(update_fields=["unread_messages"])
 
         action = WebSocketEventType.MESSAGE.value
 
@@ -654,17 +656,20 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         Send a chat message to participants regarding the schedule change.
         """
-        chat_room_participant = participant.chat_rooms_participants.filter(
-            chat_room__type=ChatRoomTypes.PRIVATE.value,
-            chat_room__participants=user,
-        ).first()
+        chat_room_participant = (
+            participant.chat_rooms_participants.filter(
+                chat_room__type=ChatRoomTypes.PRIVATE.value,
+                chat_room__participants=user,
+            )
+            .select_related("chat_room")
+            .first()
+        )
 
         action = WebSocketEventType.MESSAGE.value
         if chat_room_participant:
             chat_room = chat_room_participant.chat_room
             if chat_room_participant.hidden_at is not None:
                 chat_room_participant.hidden_at = None
-                chat_room_participant.save()
         else:
             chat_room = ChatRoom.objects.create(
                 company=company, type=ChatRoomTypes.PRIVATE.value
@@ -675,13 +680,13 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
             action = WebSocketEventType.CREATE_CHAT_ROOM.value
             chat_room_participant = chat_room.chat_rooms_participants.filter(
-                user__id=participant.id
+                user=participant
             ).first()
 
-        chat_room_participant.unread_messages = (
-            chat_room_participant.unread_messages + 1
+        chat_room_participant.unread_messages += 1
+        chat_room_participant.save(
+            update_fields=["unread_messages", "hidden_at"]
         )
-        chat_room_participant.save()
 
         message_data = {
             "sender": user,
@@ -696,20 +701,27 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         message_obj = chat_room.chat_messages.create(**message_data)
         # Update unread message of user logged
         user_participant = chat_room.chat_rooms_participants.filter(
-            user__id=user.id
+            user=user
         ).first()
-        user_participant.unread_messages = user_participant.unread_messages + 1
-        user_participant.hidden_at = None
-        user_participant.save()
+        user_participant.unread_messages += 1
+        user_participant.save(update_fields=["unread_messages"])
+
+        # Serializer data
+        chat_room_participant_serializer_data = (
+            ChatRoomsParticipantsWebSocketSerializer(chat_room_participant).data
+        )
+        chat_room_user_serializer_data = (
+            ChatRoomsParticipantsWebSocketSerializer(user_participant).data
+        )
+        chat_message_serializer_data = ChatMessageSerializer(message_obj).data
+
         # Send WebSocket event for real-time updates
         send_web_socket_event(
             {
                 "client_id": client_id,
                 "action": action,
-                "chat_room": ChatRoomsParticipantsWebSocketSerializer(
-                    chat_room_participant
-                ).data,
-                "chat_message": ChatMessageSerializer(message_obj).data,
+                "chat_room": chat_room_participant_serializer_data,
+                "chat_message": chat_message_serializer_data,
             },
             participant,
         )
@@ -719,30 +731,23 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 {
                     "client_id": None,
                     "action": action,
-                    "chat_room": ChatRoomsParticipantsWebSocketSerializer(
-                        user_participant
-                    ).data,
-                    "chat_message": ChatMessageSerializer(message_obj).data,
+                    "chat_room": chat_room_user_serializer_data,
+                    "chat_message": chat_message_serializer_data,
                 },
                 user,
             )
-        # Check if user logged hide chat room, send websocket show it
-        chat_room_participant_of_user = (
-            chat_room.chat_rooms_participants.filter(user=user).first()
-        )
-        if chat_room_participant_of_user.hidden_at is not None:
-            chat_room_participant_of_user.hidden_at = None
-            chat_room_participant_of_user.save()
-            send_web_socket_event(
-                {
-                    "action": WebSocketEventType.SHOW_ROOM.value,
-                    "chat_room": ChatRoomsParticipantsWebSocketSerializer(
-                        chat_room_participant_of_user
-                    ).data,
-                    "chat_message": ChatMessageSerializer(message_obj).data,
-                },
-                user,
-            )
+            # Check if user logged hide chat room, send websocket show it
+            if user_participant.hidden_at is not None:
+                user_participant.hidden_at = None
+                user_participant.save(update_fields=["hidden_at"])
+                send_web_socket_event(
+                    {
+                        "action": WebSocketEventType.SHOW_ROOM.value,
+                        "chat_room": chat_room_user_serializer_data,
+                        "chat_message": chat_message_serializer_data,
+                    },
+                    user,
+                )
 
     @extend_schema(
         parameters=[
@@ -973,7 +978,9 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
             company=company,
         )
         task_schedules = TaskSchedule.objects.select_related("task").filter(
-            task__organization_id__in=org_ids, company=company
+            task__organization_id__in=org_ids,
+            company=company,
+            task__deleted_at__isnull=True,
         )
 
         # Handle filter search
@@ -1158,7 +1165,10 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
         durations = TaskDuration.objects.select_related(
             "task", "schedule"
         ).filter(
-            Q(task__organization_id__in=org_ids)
+            Q(
+                task__organization_id__in=org_ids,
+                task__deleted_at__isnull=True,
+            )
             | Q(
                 schedule__organization_id=calendar_org.id
                 if calendar_org

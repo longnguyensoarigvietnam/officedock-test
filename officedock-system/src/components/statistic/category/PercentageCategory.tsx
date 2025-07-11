@@ -6,7 +6,7 @@ import ImageRound from '@components/common/ImageRound';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 
-import { DEFAULT_TIME_TEXT, NO_SETTING } from '@constants';
+import { NO_SETTING } from '@constants';
 import { EventWorkCategory } from '@constants/enums';
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
@@ -41,6 +41,7 @@ const PercentageCategory = ({
   handleSelectOrganizationCustom,
 }: Props) => {
   const {
+    isDisableCalendar,
     isHasLoading,
     largeOptions,
     mediumOptions,
@@ -57,8 +58,6 @@ const PercentageCategory = ({
     isLoadingLarge,
     isLoadingMedium,
     isLoadingOrganization,
-    setTotalDurationTask,
-    setTotalDurationCategory,
   } = useContext(StatisticStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
@@ -66,7 +65,6 @@ const PercentageCategory = ({
   const [detailCategory, setDetailCategory] = useState<{
     id: number | null;
     type: string;
-    totalDuration: string;
     organizationId?: string;
   } | null>(null);
 
@@ -266,30 +264,10 @@ const PercentageCategory = ({
     organizationId?: string;
   }) => {
     if (isLoadingLarge || isLoadingMedium || isLoadingOrganization) return;
-    let duration: string = DEFAULT_TIME_TEXT;
 
-    if (type === EventWorkCategory.ALL) {
-      duration =
-        statisticCategoryList?.largeCategories.find(
-          (item) => item.categoryId == id,
-        )?.duration || DEFAULT_TIME_TEXT;
-    }
-    if (type === EventWorkCategory.LARGE) {
-      duration =
-        statisticCategoryList?.mediumCategories?.find(
-          (item) => item.categoryId == id,
-        )?.duration || DEFAULT_TIME_TEXT;
-    }
-    if (type === EventWorkCategory.MEDIUM) {
-      duration =
-        statisticCategoryList?.smallCategories?.find(
-          (item) => item.categoryId == id,
-        )?.duration || DEFAULT_TIME_TEXT;
-    }
     setDetailCategory({
       id: id,
       type: type,
-      totalDuration: duration,
       organizationId: organizationId,
     });
 
@@ -304,8 +282,6 @@ const PercentageCategory = ({
         (item) => item.value === detailCategory?.id,
       );
       item && handleSelectLarge(item);
-
-      setTotalDurationTask(detailCategory.totalDuration);
       if (String(detailCategory?.id) == NO_SETTING) {
         handleSelectLarge({
           label: NO_SETTING,
@@ -318,7 +294,6 @@ const PercentageCategory = ({
         (item) => item.value === detailCategory?.id,
       );
       item && handleSelectMedium(item);
-      setTotalDurationTask(detailCategory.totalDuration);
       if (String(detailCategory?.id) == NO_SETTING) {
         handleSelectMedium({
           label: NO_SETTING,
@@ -331,7 +306,6 @@ const PercentageCategory = ({
         (item) => item.value === detailCategory?.id,
       );
       item && handleSelectSmall(item);
-      setTotalDurationTask(detailCategory.totalDuration);
       if (String(detailCategory?.id) == NO_SETTING) {
         handleSelectSmall({
           label: NO_SETTING,
@@ -349,7 +323,6 @@ const PercentageCategory = ({
           label: NO_SETTING,
           value: NO_SETTING,
         });
-        setTotalDurationCategory(detailCategory.totalDuration);
       }
     }
 
@@ -568,7 +541,9 @@ const PercentageCategory = ({
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge || isHasLoading}
+                        disabled={
+                          !selectedLarge || isHasLoading || isDisableCalendar
+                        }
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}

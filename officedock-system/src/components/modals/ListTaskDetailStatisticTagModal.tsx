@@ -25,7 +25,6 @@ import Spinner from '@components/common/Spinner';
 type Props = {
   detailCategory: {
     id: number | null;
-    totalDuration: string;
     type: string;
     userId?: number;
     organizationId?: string;
@@ -100,7 +99,6 @@ const ListTaskDetailStatisticTagModal = ({
             ? (selectedSmall?.value as number)
             : null,
       page: 1,
-      totalDuration: detailCategory?.totalDuration,
       ordering: ordering,
       pageSize: PAGINATION_PAGE_SIZE_SMALL,
       tagIds: [

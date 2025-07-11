@@ -107,7 +107,7 @@ const ActionFilterTaskTeam = ({
           label: String(org.fullName),
           value: String(org.id),
           imgUrl: org.avatarUrl,
-          iconColor: org.color
+          iconColor: org.color,
         })),
       );
     }

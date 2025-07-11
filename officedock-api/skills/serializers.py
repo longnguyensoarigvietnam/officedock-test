@@ -1,9 +1,13 @@
 from datetime import datetime
 
+from django.db.models import Case, When, IntegerField
 from rest_framework import serializers
 
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
-from common.utils import get_common_categories, time_str_to_timedelta
+from common.utils import (
+    time_str_to_timedelta,
+    get_common_categories_with_none_category,
+)
 from organizations.models import Organization, OrganizationsStatisticCategories
 from organizations.serializers import (
     OrganizationSerializer,
@@ -137,12 +141,20 @@ class SkillSerializer(serializers.ModelSerializer):
         org_cat_ids = obj.organizations_statistic_categories_skills.values_list(
             "organization_statistic_category", flat=True
         )
-        categories = OrganizationsStatisticCategories.objects.filter(
-            id__in=org_cat_ids
-        ).all()
+        categories = []
+        if org_cat_ids:
+            preserved_order = Case(
+                *[When(id=pk, then=pos) for pos, pk in enumerate(org_cat_ids)],
+                output_field=IntegerField()
+            )
+            categories = OrganizationsStatisticCategories.objects.filter(
+                id__in=org_cat_ids
+            ).order_by(preserved_order)
         transformed_categories = []
         for category in categories:
-            transformed_categories.append(get_common_categories(category))
+            transformed_categories.append(
+                get_common_categories_with_none_category(category)
+            )
 
         return transformed_categories
 
@@ -474,7 +486,7 @@ class BaseOrganizationWithSkillSerializer(BaseOrganizationSerializer):
                     group_data["detail"].append(
                         BaseSkillHierarchySerializer(skill).data
                     )
-                    skill = Skill.objects.filter(parent__id=skill.id).first()
+                    skill = Skill.objects.filter(parent_id=skill.id).first()
                 data.append(group_data)
         return data
 
@@ -632,7 +644,9 @@ class GroupStepSkillMapSerializer(SkillSerializer):
         ).all()
         transformed_categories = []
         for category in categories:
-            transformed_categories.append(get_common_categories(category))
+            transformed_categories.append(
+                get_common_categories_with_none_category(category)
+            )
 
         return transformed_categories
 

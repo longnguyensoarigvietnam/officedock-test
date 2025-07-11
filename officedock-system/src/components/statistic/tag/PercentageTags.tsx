@@ -18,7 +18,6 @@ import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 import FilterTag from './filter/FilterTag';
-import { DEFAULT_TIME_TEXT } from '@constants';
 
 type Props = {
   startDate: Date;
@@ -40,6 +39,7 @@ const PercentageTags = ({
   handleSelectOrganization,
 }: Props) => {
   const {
+    isDisableCalendar,
     isHasLoading,
     largeOptions,
     mediumOptions,
@@ -64,7 +64,6 @@ const PercentageTags = ({
   const [detailCategory, setDetailCategory] = useState<{
     id: number | null;
     type: string;
-    totalDuration: string;
     organizationId?: string;
   } | null>(null);
 
@@ -264,45 +263,14 @@ const PercentageTags = ({
       }
     }
   }, [statisticTagsList]);
-  const getDuration = (
-    dataSource: any,
-    type: EventWorkCategory,
-    tagId: number,
-    organizationId?: string,
-  ): string => {
-    const categoryMap = {
-      [EventWorkCategory.ALL]: dataSource?.largeCategories,
-      [EventWorkCategory.LARGE]: dataSource?.mediumCategories,
-      [EventWorkCategory.MEDIUM]: dataSource?.smallCategories,
-      [EventWorkCategory.SMALL]: dataSource?.category,
-    };
-
-    const categoryList = categoryMap[type] || [];
-
-    const item = categoryList?.find(
-      (item: any) =>
-        item.tagId === tagId &&
-        (!organizationId || String(item.organizationId) === organizationId),
-    );
-
-    return item?.duration || DEFAULT_TIME_TEXT;
-  };
-
   const handleClickTooltip = (
     id: number | null,
     type: EventWorkCategory,
     organizationId?: string,
   ) => {
-    const duration = getDuration(
-      statisticTagsList,
-      type,
-      id as number,
-      organizationId,
-    );
     setDetailCategory({
       id: id,
       type: type,
-      totalDuration: duration,
       organizationId,
     });
 
@@ -497,7 +465,9 @@ const PercentageTags = ({
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge || isHasLoading}
+                        disabled={
+                          !selectedLarge || isHasLoading || isDisableCalendar
+                        }
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}
@@ -550,7 +520,9 @@ const PercentageTags = ({
                         options={smallOptions}
                         selectedOption={selectedSmall || undefined}
                         onChange={(data) => handleSelectSmall(data)}
-                        disabled={!selectedMedium || isHasLoading}
+                        disabled={
+                          !selectedMedium || isHasLoading || isDisableCalendar
+                        }
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}

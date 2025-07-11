@@ -52,7 +52,6 @@ const AllocationTag = memo(
     const [detailCategory, setDetailCategory] = useState<{
       id: number | null;
       type: string;
-      totalDuration: string;
       organizationId?: string;
     } | null>(null);
 
@@ -69,6 +68,7 @@ const AllocationTag = memo(
       ProgressDataType[]
     >([]);
     const {
+      isDisableCalendar,
       isHasLoading,
       totalDurationLarge,
       totalDurationMedium,
@@ -166,17 +166,14 @@ const AllocationTag = memo(
       id,
       type,
       organizationId,
-      duration,
     }: {
       id: number | null;
       type: EventWorkCategory;
       organizationId?: string;
-      duration: string;
     }) => {
       setDetailCategory({
         id: id,
         type: type,
-        totalDuration: duration,
         organizationId,
       });
 
@@ -274,13 +271,11 @@ const AllocationTag = memo(
                                 handleClickTooltip={(
                                   id: number | null,
                                   organizationId?: string,
-                                  duration?: string,
                                 ) => {
                                   handleClickTooltip({
                                     id,
                                     type: EventWorkCategory.ALL,
                                     organizationId,
-                                    duration: duration || item.duration,
                                   });
                                 }}
                                 handleClickChart={(
@@ -333,15 +328,10 @@ const AllocationTag = memo(
                               <ProgressBarStatistic
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={(
-                                  id: number | null,
-                                  _organizationId?: string,
-                                  duration?: string,
-                                ) => {
+                                handleClickTooltip={(id: number | null) => {
                                   handleClickTooltip({
                                     id,
                                     type: EventWorkCategory.LARGE,
-                                    duration: duration || item.duration,
                                   });
                                 }}
                                 handleClickChart={(
@@ -374,7 +364,9 @@ const AllocationTag = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge || isHasLoading}
+                        disabled={
+                          !selectedLarge || isHasLoading || isDisableCalendar
+                        }
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}
@@ -394,15 +386,10 @@ const AllocationTag = memo(
                               <ProgressBarStatistic
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={(
-                                  id: number | null,
-                                  _organizationId?: string,
-                                  duration?: string,
-                                ) => {
+                                handleClickTooltip={(id: number | null) => {
                                   handleClickTooltip({
                                     id,
                                     type: EventWorkCategory.MEDIUM,
-                                    duration: duration || item.duration,
                                   });
                                 }}
                                 {...item}
@@ -432,7 +419,9 @@ const AllocationTag = memo(
                         options={smallOptions}
                         selectedOption={selectedSmall || undefined}
                         onChange={(data) => handleSelectSmall(data)}
-                        disabled={!selectedMedium || isHasLoading}
+                        disabled={
+                          !selectedMedium || isHasLoading || isDisableCalendar
+                        }
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}
@@ -453,15 +442,10 @@ const AllocationTag = memo(
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
                                 isLast
-                                handleClickTooltip={(
-                                  id: number | null,
-                                  _organizationId?: string,
-                                  duration?: string,
-                                ) => {
+                                handleClickTooltip={(id: number | null) => {
                                   handleClickTooltip({
                                     id,
                                     type: EventWorkCategory.SMALL,
-                                    duration: duration || item.duration,
                                   });
                                 }}
                                 {...item}

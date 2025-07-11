@@ -240,9 +240,6 @@ const AllocationTeamCategoryCompare = memo(
       id: number | null;
       userId: number;
       type: string;
-      totalDuration: string;
-      userDuration: string;
-      totalTask?: string;
       organizationId?: string;
     } | null>(null);
 
@@ -257,6 +254,7 @@ const AllocationTeamCategoryCompare = memo(
       ProgressDataCompareItem[]
     >([]);
     const {
+      isDisableCalendar,
       isHasLoading,
       orderingOptions,
       totalDurationLarge,
@@ -279,7 +277,6 @@ const AllocationTeamCategoryCompare = memo(
       isLoadingLargeCompare,
       isLoadingMediumCompare,
       isLoadingOrganizationCompare,
-      setTotalDurationTask,
     } = useContext(StatisticTeamStateContext);
 
     useEffect(() => {
@@ -322,20 +319,15 @@ const AllocationTeamCategoryCompare = memo(
     const handleClickTooltip = ({
       id,
       userId,
-      duration,
       type,
       isCompare,
-      userDuration,
-      totalTask,
       organizationId,
     }: {
       id: number;
       userId: number;
-      duration: string;
       type: string;
       isCompare?: boolean;
       userDuration: string;
-      totalTask?: string;
       organizationId?: string;
     }) => {
       if (isCompare) {
@@ -347,9 +339,6 @@ const AllocationTeamCategoryCompare = memo(
         id: id,
         userId: userId,
         type: type,
-        totalDuration: duration,
-        userDuration,
-        totalTask,
         organizationId,
       });
 
@@ -365,11 +354,6 @@ const AllocationTeamCategoryCompare = memo(
         );
         item && handleSelectLarge(item);
 
-        setTotalDurationTask(
-          detailCategory.totalTask
-            ? detailCategory.totalTask
-            : detailCategory.totalDuration,
-        );
         if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectLarge({
             label: NO_SETTING,
@@ -382,7 +366,6 @@ const AllocationTeamCategoryCompare = memo(
           (item) => item.value === detailCategory?.id,
         );
         item && handleSelectMedium(item);
-        setTotalDurationTask(detailCategory.totalDuration);
         if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectMedium({
             label: NO_SETTING,
@@ -395,7 +378,6 @@ const AllocationTeamCategoryCompare = memo(
           (item) => item.value === detailCategory?.id,
         );
         item && handleSelectSmall(item);
-        setTotalDurationTask(detailCategory.totalDuration);
         if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
             label: NO_SETTING,
@@ -560,28 +542,22 @@ const AllocationTeamCategoryCompare = memo(
                                 handleClickTooltip={({
                                   userId,
                                   categoryId,
-                                  duration,
                                   isCompare,
                                   userDuration,
-                                  totalTask,
                                   organizationId,
                                 }: {
                                   userId: number;
                                   categoryId: number;
-                                  duration: string;
                                   isCompare?: boolean;
                                   userDuration: string;
-                                  totalTask?: string;
                                   organizationId?: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: categoryId,
                                     userId,
-                                    duration,
                                     type: EventWorkCategory.ALL,
                                     isCompare,
                                     userDuration,
-                                    totalTask,
                                     organizationId,
                                   });
                                 }}
@@ -716,26 +692,20 @@ const AllocationTeamCategoryCompare = memo(
                                   handleClickTooltip={({
                                     userId,
                                     categoryId,
-                                    duration,
                                     isCompare,
                                     userDuration,
-                                    totalTask,
                                   }: {
                                     userId: number;
                                     categoryId: number;
-                                    duration: string;
                                     isCompare?: boolean;
                                     userDuration: string;
-                                    totalTask?: string;
                                   }) => {
                                     handleClickTooltip({
                                       id: categoryId,
                                       userId,
-                                      duration,
                                       type: EventWorkCategory.LARGE,
                                       isCompare,
                                       userDuration,
-                                      totalTask,
                                     });
                                   }}
                                   handleClickChart={(
@@ -787,7 +757,9 @@ const AllocationTeamCategoryCompare = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge || isHasLoading}
+                        disabled={
+                          !selectedLarge || isHasLoading || isDisableCalendar
+                        }
                       />
 
                       {isLoadingMedium || isLoadingMediumCompare ? (
@@ -869,26 +841,20 @@ const AllocationTeamCategoryCompare = memo(
                                 handleClickTooltip={({
                                   userId,
                                   categoryId,
-                                  duration,
                                   isCompare,
                                   userDuration,
-                                  totalTask,
                                 }: {
                                   userId: number;
                                   categoryId: number;
-                                  duration: string;
                                   isCompare?: boolean;
                                   userDuration: string;
-                                  totalTask?: string;
                                 }) => {
                                   handleClickTooltip({
                                     id: categoryId,
                                     userId,
-                                    duration,
                                     type: EventWorkCategory.MEDIUM,
                                     isCompare,
                                     userDuration,
-                                    totalTask,
                                   });
                                 }}
                                 {...item}

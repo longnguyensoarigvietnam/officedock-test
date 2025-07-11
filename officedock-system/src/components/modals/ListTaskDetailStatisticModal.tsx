@@ -26,8 +26,6 @@ type Props = {
   isDisable?: boolean;
   detailCategory: {
     id: number | null;
-    totalDuration: string;
-    userDuration?: string;
     type: string;
     userId?: number;
     organizationId?: string;
@@ -103,11 +101,6 @@ const ListTaskDetailStatisticModal = ({
             ? (selectedSmall?.value as number)
             : null,
       page: 1,
-      totalDuration: detailCategory?.userDuration
-        ? detailCategory?.userDuration
-        : detailCategory?.totalDuration
-          ? detailCategory?.totalDuration
-          : '',
       ordering: ordering,
       pageSize: PAGINATION_PAGE_SIZE_SMALL,
       tagIds: selectedTags,

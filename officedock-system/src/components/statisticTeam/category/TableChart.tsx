@@ -48,6 +48,8 @@ import api from '@base/api';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import useCreationDataStatisticAllTeam from '@hooks/useCreationDataStatisticAllTeam';
+import { Task } from '@interfaces/task';
+import { EventCalendarProps } from '@interfaces/calendar';
 
 interface TableChartProps {
   ordering: string;
@@ -57,6 +59,12 @@ interface TableChartProps {
   listOptionsOrganization: OptionDropdownType[];
   creationDataStatisticData: CreationStatisticType | undefined;
   setOrdering: (ord: string) => void;
+  setTaskList: React.Dispatch<
+    React.SetStateAction<DataTaskListStatisticListType[]>
+  >;
+  setTaskListCompare: React.Dispatch<
+    React.SetStateAction<DataTaskListStatisticListType[]>
+  >;
 }
 
 const TagListInfo = ({ tagList }: { tagList: OptionDropdownType[] }) => {
@@ -140,6 +148,8 @@ const TableChart = ({
   creationDataStatisticData,
   listOptionsOrganization,
   setOrdering,
+  setTaskList,
+  setTaskListCompare,
 }: TableChartProps) => {
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();
@@ -147,7 +157,6 @@ const TableChart = ({
   const {
     isCheckCompare,
     selectedOrganization,
-    setIsSkeletonCategoryTeamTask,
     setIsLoadingLarge,
     setIsLoadingLargeCompare,
     setIsLoadingMedium,
@@ -176,7 +185,7 @@ const TableChart = ({
     }[];
     organizationId?: number | null;
   }) => {
-    const { data } = await api.patch(
+    const { data } = await api.patch<Task>(
       `${apiRouters.TASK_DETAIL(`${dataTask.id}`)}?current_screen=${ScreenName.STATISTIC}`,
       dataTask,
     );
@@ -186,21 +195,39 @@ const TableChart = ({
     'postEditCategoryTaskInline',
     handleEditCategoryInline,
     {
-      onSuccess: async () => {
+      onSuccess: async (data) => {
+        setTaskList((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
+        setTaskListCompare((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
-        setIsSkeletonCategoryTeamTask(true);
+        queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
+        });
 
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryListTeam',
         });
-        if (selectedOrganization?.label === ALL_TEAM_STATISTIC) {
-          queryClient.invalidateQueries({
-            predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
-          });
-        }
+
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTableInTeamLineChart',
@@ -210,12 +237,10 @@ const TableChart = ({
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingOrganizationCompare(true);
-          if (selectedOrganization?.label === ALL_TEAM_STATISTIC) {
-            queryClient.invalidateQueries({
-              predicate: (query) =>
-                query.queryKey[0] === 'getStatisticTaskListCompare',
-            });
-          }
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTaskListCompare',
+          });
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
@@ -242,7 +267,7 @@ const TableChart = ({
     }[];
     organizationId?: number | null;
   }) => {
-    const { data } = await api.patch(
+    const { data } = await api.patch<EventCalendarProps>(
       `${apiRouters.SCHEDULE_DETAIL(`${dataTask.id}`)}?current_screen=${ScreenName.STATISTIC}`,
       dataTask,
     );
@@ -252,11 +277,33 @@ const TableChart = ({
     'postEditCategoryEventInline',
     handleEditEventCategoryInline,
     {
-      onSuccess: async () => {
+      onSuccess: async (data) => {
+        setTaskList((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
+        setTaskListCompare((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
-        setIsSkeletonCategoryTeamTask(true);
+        queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
+        });
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryListTeam',
@@ -265,11 +312,7 @@ const TableChart = ({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTableInTeamLineChart',
         });
-        if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
-          queryClient.invalidateQueries({
-            predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
-          });
-        }
+
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
         });
@@ -279,14 +322,12 @@ const TableChart = ({
           setIsLoadingOrganizationCompare(true);
           queryClient.invalidateQueries({
             predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTaskListCompare',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
               query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
           });
-          if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
-            queryClient.invalidateQueries({
-              predicate: (query) =>
-                query.queryKey[0] === 'getStatisticTaskListCompare',
-            });
-          }
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTableInTeamLineChartCompare',
@@ -308,6 +349,7 @@ const TableChart = ({
   const columns: ColumnDef<ListTaskStatistic>[] = [
     {
       accessorKey: 'name',
+      enableSorting: false,
       header: 'タスク名',
       size: 70,
       cell: (info) => {
@@ -398,6 +440,8 @@ const TableChart = ({
     },
     {
       accessorKey: 'categories',
+      enableSorting: false,
+
       header: () => {
         return (
           <p className="text-[#77858F] font-medium text-xs text-left">
@@ -503,16 +547,22 @@ const TableChart = ({
                   OrganizationStatisticType.CALENDAR
                 }
                 options={
-                  selectedOrganization?.value === ALL_TEAM_STATISTIC
-                    ? listOptionAllTeamOrg?.filter(
-                        (item) =>
-                          item.type !== OrganizationStatisticType.CALENDAR,
-                      )
-                    : selectedOrganization
-                      ? listOptionsOrganization.filter(
-                          (item) => item.value === selectedOrganization.value,
+                  selectedOrganization?.label === ALL_TEAM_STATISTIC
+                    ? rowData.organizationType !==
+                      OrganizationStatisticType.CALENDAR
+                      ? listOptionAllTeamOrg?.filter(
+                          (org) =>
+                            org.label !== ALL_TEAM_STATISTIC &&
+                            org?.type !== OrganizationStatisticType.CALENDAR,
                         )
-                      : []
+                      : listOptionAllTeamOrg?.filter(
+                          (org) => org.label !== ALL_TEAM_STATISTIC,
+                        )
+                    : listOptionsOrganization.filter(
+                        (org) =>
+                          org.label !== ALL_TEAM_STATISTIC &&
+                          org?.type !== OrganizationStatisticType.CALENDAR,
+                      )
                 }
                 isDisabled={
                   rowData.organizationType ===
@@ -577,10 +627,13 @@ const TableChart = ({
                 showArrow
                 className="border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
-                  largeCategories &&
-                  largeCategories.find(
-                    (element) => element.value === largeItem?.value,
-                  )
+                  (largeCategories &&
+                    largeCategories.find(
+                      (element) => element.value === largeItem?.value,
+                    )) || {
+                    value: NO_SETTING,
+                    label: NO_SETTING,
+                  }
                 }
                 placeholder=""
                 options={largeCategories}
@@ -643,10 +696,13 @@ const TableChart = ({
               <SingleSelect
                 className="border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
-                  mediumCategories &&
-                  mediumCategories.find(
-                    (element) => element.value === mediumItem?.value,
-                  )
+                  (mediumCategories &&
+                    mediumCategories.find(
+                      (element) => element.value === mediumItem?.value,
+                    )) || {
+                    value: NO_SETTING,
+                    label: NO_SETTING,
+                  }
                 }
                 placeholder=""
                 showArrow
@@ -716,14 +772,24 @@ const TableChart = ({
               <SingleSelect
                 className="border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
-                  smallCategories &&
-                  smallCategories.find(
-                    (element) => element.value === smallItem?.value,
-                  )
+                  (smallCategories &&
+                    smallCategories.find(
+                      (element) => element.value === smallItem?.value,
+                    )) || {
+                    value: NO_SETTING,
+                    label: NO_SETTING,
+                  }
                 }
                 placeholder=""
                 showArrow={info.row.original.type === EventCalendarType.TASK}
-                options={smallCategories}
+                options={
+                  smallCategories || [
+                    {
+                      value: NO_SETTING,
+                      label: NO_SETTING,
+                    },
+                  ]
+                }
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({

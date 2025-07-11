@@ -78,7 +78,7 @@ import {
   DATE_SCHEDULE_FORMAT,
   DEFAULT_END_TIME,
   DEFAULT_START_TIME,
-  NO_OPTION_CATEGORY,
+  NO_SETTING,
 } from '@constants';
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
@@ -3090,7 +3090,7 @@ const TimeSchedule = memo(
       if (data.largeCategory && data.largeCategory?.value !== 'undefined') {
         newWorkCategories.push({
           categoryId:
-            `${data.largeCategory.value}` == NO_OPTION_CATEGORY
+            `${data.largeCategory.value}` == NO_SETTING
               ? null
               : `${data.largeCategory.value}`,
           type: EventWorkCategory.LARGE,
@@ -3099,7 +3099,7 @@ const TimeSchedule = memo(
       if (data.mediumCategory && data.mediumCategory?.value !== 'undefined') {
         newWorkCategories.push({
           categoryId:
-            `${data.mediumCategory.value}` == NO_OPTION_CATEGORY
+            `${data.mediumCategory.value}` == NO_SETTING
               ? null
               : `${data.mediumCategory.value}`,
           type: EventWorkCategory.MEDIUM,
@@ -4137,6 +4137,32 @@ const TimeSchedule = memo(
                     info.el.addEventListener('mouseleave', () => {
                       info.el.classList.remove('resizable-disabled');
                     });
+                  }}
+                  eventClassNames={(arg) => {
+                    const event = arg.event;
+                    const allEvents =
+                      calendarRef.current?.getApi()?.getEvents() ?? [];
+
+                    const isOverlappedFromAbove = allEvents.some((other) => {
+                      if (event.id === other.id) return false;
+
+                      const aStart = event.start?.getTime() ?? 0;
+                      const aEnd = event.end?.getTime() ?? 0;
+                      const bStart = other.start?.getTime() ?? 0;
+                      const bEnd = other.end?.getTime() ?? 0;
+
+                      const isOverlapping = aStart < bEnd && aEnd > bStart;
+                      const isAboveInTime = aStart < bStart;
+
+                      const isPartiallyOverlapped =
+                        aStart < bStart && aEnd > bStart && aEnd < bEnd;
+
+                      return (
+                        isOverlapping && isAboveInTime && isPartiallyOverlapped
+                      );
+                    });
+
+                    return isOverlappedFromAbove ? ['overlap-event'] : [];
                   }}
                   eventDragStop={handleEventDragStop}
                   // TODO: Update hover event

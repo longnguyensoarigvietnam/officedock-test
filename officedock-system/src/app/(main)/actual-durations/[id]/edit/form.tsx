@@ -829,29 +829,32 @@ const EditActualDurationsForm = () => {
               />
 
               {/* Category small */}
-              <Controller
-                control={control}
-                name={'smallCategory'}
-                render={({ field: { value, onChange } }) => (
-                  <Dropdown
-                    className="!h-[46px] !py-1 text-sm"
-                    classNameTextData="!text-sm"
-                    classNameOption="!text-sm"
-                    classNameError="!text-sm"
-                    selectedOption={
-                      (dataOptionsCategorySmall?.find(
-                        (element) =>
-                          element.value == (value as OptionDropdownType)?.value,
-                      ) as OptionDropdownType | undefined) || value
-                    }
-                    options={dataOptionsCategorySmall}
-                    placeholder="小カテゴリ"
-                    onChange={(e) => {
-                      onChange(e);
-                    }}
-                  />
-                )}
-              />
+              {searchParams.get('type') == EventCalendarType.TASK && (
+                <Controller
+                  control={control}
+                  name={'smallCategory'}
+                  render={({ field: { value, onChange } }) => (
+                    <Dropdown
+                      className="!h-[46px] !py-1 text-sm"
+                      classNameTextData="!text-sm"
+                      classNameOption="!text-sm"
+                      classNameError="!text-sm"
+                      selectedOption={
+                        (dataOptionsCategorySmall?.find(
+                          (element) =>
+                            element.value ==
+                            (value as OptionDropdownType)?.value,
+                        ) as OptionDropdownType | undefined) || value
+                      }
+                      options={dataOptionsCategorySmall}
+                      placeholder="小カテゴリ"
+                      onChange={(e) => {
+                        onChange(e);
+                      }}
+                    />
+                  )}
+                />
+              )}
             </div>
           </div>
           <div className="grid gap-3 w-1/2">
@@ -1018,7 +1021,7 @@ const EditActualDurationsForm = () => {
                           },
                         })}
                         options={optionTimeInput}
-                        classNameOption="top-[25px]"
+                        classNameOption="!top-1/2 -translate-y-1/2 mt-[5px]"
                         onChangeDropdown={(e) => {
                           setValue('startedAtTime', e.label);
                           handleCalculateActualDuration(
@@ -1153,7 +1156,7 @@ const EditActualDurationsForm = () => {
                             );
                           },
                         })}
-                        classNameOption="top-[25px]"
+                        classNameOption="!top-1/2 -translate-y-1/2 mt-[5px]"
                         options={optionTimeInput}
                         onChangeDropdown={(e) => {
                           setValue('pausedAtTime', e.label);

@@ -575,44 +575,48 @@ const ListActualDurations = () => {
       <div className="w-full">
         <div
           className={`max-h-[calc(100vh_-_290px)] ${expanded ? 'max-w-[calc(100vw_-_250px)]' : 'max-w-[calc(100vw_-_120px)]'} overflow-x-auto ring-1 ring-gray-200 rounded-tl-lg rounded-tr-lg bg-white`}>
-          <div className="sticky top-0 z-10 grid grid-cols-[100px_150px_250px_400px_400px_120px_150px_400px_150px] [&>div]:bg-[#F3F4F6] text-[#374151]">
-            <div className="px-5 py-3 w-[100px] font-medium flex items-center justify-center">
+          <div className="sticky top-0 z-10 grid grid-cols-[10%_15%_20%_25%_25%_10%_15%_25%_15%] min-w-[1200px] [&>div]:bg-[#F3F4F6] text-[#374151]">
+            <div className="px-5 py-3 min-w-[100px] font-medium flex items-center justify-center">
               ID
             </div>
-            <div className="px-5 py-3 w-[150px] font-medium">タスク/予定</div>
-            <div className="px-5 py-3 w-[250px] font-medium">タイトル</div>
-            <div className="px-5 py-3 w-[400px] font-medium">カテゴリ</div>
-            <div className="px-5 py-3 w-[400px] font-medium">集計タグ</div>
-            <div className="px-5 py-3 w-[120px] font-medium">作成日時</div>
-            <div className="px-5 py-3 w-[150px] font-medium">計測時間</div>
-            <div className="px-5 py-3 w-[400px] font-medium">従業員</div>
-            <div className="px-5 py-3 w-[150px] font-medium flex items-center justify-center">
+            <div className="px-5 py-3 min-w-[150px] font-medium">
+              タスク/予定
+            </div>
+            <div className="px-5 py-3 min-w-[250px] font-medium">タイトル</div>
+            <div className="px-5 py-3 min-w-[360px] font-medium">カテゴリ</div>
+            <div className="px-5 py-3 min-w-[360px] font-medium">集計タグ</div>
+            <div className="px-5 py-3 min-w-[120px] font-medium">作成日時</div>
+            <div className="px-5 py-3 min-w-[150px] font-medium">計測時間</div>
+            <div className="px-5 py-3 min-w-[360px] font-medium">従業員</div>
+            <div className="px-5 py-3 min-w-[150px] font-medium flex items-center justify-center">
               操作
             </div>
           </div>
           <div className="!bg-white relative">
             {dataActualDurations && dataActualDurations.length ? (
               dataActualDurations.map((element, index) => (
-                <div className="flex relative text-[#4B5563]" key={index}>
-                  <div className="w-[100px] border-b-[1px]">
-                    <p className="w-[100px] py-3 flex justify-center items-center">
+                <div
+                  className="grid grid-cols-[10%_15%_20%_25%_25%_10%_15%_25%_15%] min-w-[1200px] text-[#4B5563]"
+                  key={index}>
+                  <div className="min-w-[100px] border-b-[1px]">
+                    <p className="min-w-[100px] py-3 flex justify-center items-center">
                       {element.id}
                     </p>
                   </div>
-                  <div className="text-left w-[150px] border-b-[1px]">
-                    <p className=" w-[150px] px-5 py-3 flex justify-start items-center">
+                  <div className="text-left min-w-[150px] border-b-[1px]">
+                    <p className=" min-w-[150px] px-5 py-3 flex justify-start items-center">
                       {element.type == ItemStartType.TASK
                         ? WorkItemType.Task
                         : WorkItemType.Event}
                     </p>
                   </div>
-                  <div className="text-left w-[250px] border-b-[1px]">
-                    <p className="w-[250px] px-5 py-3 truncate">
+                  <div className="text-left min-w-[250px] border-b-[1px]">
+                    <p className="min-w-[250px] px-5 py-3 break-all">
                       {element.title}
                     </p>
                   </div>
-                  <div className="text-left w-[400px] border-b-[1px]">
-                    <p className="w-[400px] px-5 py-3 break-words">
+                  <div className="text-left min-w-[360px] border-b-[1px]">
+                    <p className="min-w-[360px] px-5 py-3 break-all">
                       {[
                         element?.categories.find(
                           (category) =>
@@ -622,10 +626,12 @@ const ListActualDurations = () => {
                           (category) =>
                             category.type == EventWorkCategory.MEDIUM,
                         ),
-                        element?.categories.find(
-                          (category) =>
-                            category.type == EventWorkCategory.SMALL,
-                        ),
+                        element.type == ItemStartType.TASK
+                          ? element?.categories.find(
+                              (category) =>
+                                category.type == EventWorkCategory.SMALL,
+                            )
+                          : '',
                       ].some(Boolean)
                         ? [
                             element?.categories.find(
@@ -636,18 +642,20 @@ const ListActualDurations = () => {
                               (category) =>
                                 category.type == EventWorkCategory.MEDIUM,
                             )?.name || NO_OPTION_CATEGORY,
-                            element?.categories.find(
-                              (category) =>
-                                category.type == EventWorkCategory.SMALL,
-                            )?.name || NO_OPTION_CATEGORY,
+                            element.type == ItemStartType.TASK
+                              ? element?.categories.find(
+                                  (category) =>
+                                    category.type == EventWorkCategory.SMALL,
+                                )?.name || NO_OPTION_CATEGORY
+                              : '',
                           ]
                             .filter(Boolean)
                             .join('＞')
                         : NO_SETTING}
                     </p>
                   </div>
-                  <div className="text-left w-[400px] border-b-[1px]">
-                    <p className="w-[400px] px-5 py-3 break-words">
+                  <div className="text-left min-w-[360px] border-b-[1px]">
+                    <p className="min-w-[360px] px-5 py-3 break-all">
                       {element.tags.map((tag, index) => {
                         return (
                           <span key={index}>
@@ -658,15 +666,15 @@ const ListActualDurations = () => {
                       })}
                     </p>
                   </div>
-                  <div className="text-left w-[120px] border-b-[1px]">
-                    <p className="w-[120px] px-5 py-3 flex justify-start items-center">
+                  <div className="text-left min-w-[120px] border-b-[1px]">
+                    <p className="min-w-[120px] px-5 py-3 flex justify-start items-center">
                       {getSubmitLevelFormattedDate(
                         new Date(element.createdAt as Date),
                       )}
                     </p>
                   </div>
-                  <div className="text-left w-[150px] border-b-[1px]">
-                    <p className="w-[150px] px-5 py-3 flex justify-start items-center">
+                  <div className="text-left min-w-[150px] border-b-[1px]">
+                    <p className="min-w-[150px] px-5 py-3 flex justify-start items-center">
                       {element.pausedAt
                         ? calculateActualDuration(
                             String(element.startedAt),
@@ -675,8 +683,8 @@ const ListActualDurations = () => {
                         : '計測中'}
                     </p>
                   </div>
-                  <div className="text-left w-[400px] border-b-[1px]">
-                    <p className="w-[400px] break-words px-5 py-3">
+                  <div className="text-left min-w-[360px] border-b-[1px]">
+                    <p className="min-w-[360px] break-all px-5 py-3">
                       {element.staffs?.map((staff, index) => {
                         return (
                           <span key={index}>
@@ -687,8 +695,8 @@ const ListActualDurations = () => {
                       })}
                     </p>
                   </div>
-                  <div className="w-[150px] border-b-[1px]">
-                    <div className="flex w-[150px] px-5 py-3 gap-2 justify-center items-center">
+                  <div className="min-w-[150px] border-b-[1px]">
+                    <div className="flex min-w-[150px] px-5 py-3 gap-2 justify-center items-center">
                       <Link
                         href={pageRouters.DETAIL_ACTUAL_DURATIONS.href(
                           `${element.id}`,
@@ -712,12 +720,12 @@ const ListActualDurations = () => {
                           )}>
                           <ImageRound
                             name="Edit"
-                            src={'/icons/edit.svg'}
-                            className={`w-3.5 h-3.5 hover:cursor-pointer`}
+                            src={'/icons/edit-task.svg'}
+                            className={`w-[15px] h-[15px] hover:cursor-pointer opacity-65`}
                           />
                         </Link>
                       ) : (
-                        <div className="w-3.5 h-3.5"></div>
+                        <div className="w-[15px] h-[15px]"></div>
                       )}
                       {session?.user.permissions &&
                       hasPermissionInArray(
@@ -727,14 +735,14 @@ const ListActualDurations = () => {
                       element.pausedAt ? (
                         <ImageRound
                           name="Delete"
-                          src={'/icons/delete.svg'}
-                          className={`w-[13px] h-[15px] hover:cursor-pointer`}
+                          src={'/icons/delete-task.svg'}
+                          className={`w-[13px] h-[16px] hover:cursor-pointer opacity-85`}
                           onClick={() =>
                             handleOpenDeleteActualDurationModal(element)
                           }
                         />
                       ) : (
-                        <div className="w-[13px] h-[13px]"></div>
+                        <div className="w-[13px] h-[16px]"></div>
                       )}
                     </div>
                   </div>

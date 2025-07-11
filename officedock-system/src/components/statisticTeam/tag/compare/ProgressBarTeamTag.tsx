@@ -38,13 +38,11 @@ interface ProgressBarProps {
   handleClickTooltip: ({
     userId,
     categoryId,
-    duration,
     isCompare,
     organizationId,
   }: {
     userId: number;
     categoryId: number;
-    duration: string;
     isCompare?: boolean;
     organizationId?: string;
   }) => void;
@@ -592,7 +590,6 @@ const ProgressBarTeamTagCompare = ({
                           handleClickTooltip({
                             userId: itemUser.user.user.id,
                             categoryId: item.id as number,
-                            duration: itemUser.user.duration,
                             organizationId: organizationId,
                           })
                         }
@@ -682,7 +679,6 @@ const ProgressBarTeamTagCompare = ({
                           handleClickTooltip({
                             userId: itemUser.userCompare.user.id,
                             categoryId: item.id as number,
-                            duration: itemUser.userCompare.duration,
                             isCompare: true,
                             organizationId: organizationId,
                           })

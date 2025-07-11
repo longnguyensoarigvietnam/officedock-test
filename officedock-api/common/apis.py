@@ -55,8 +55,8 @@ from .utils import (
     send_web_socket_event,
     transform_statistic_categories,
     check_task_overtime,
-    add_default_entries_to_categories,
     get_organizations_of_user_by_screen_role,
+    validate_company_organization,
 )
 
 
@@ -233,7 +233,9 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         Get creation data for Tag
         """
         user = request.user
+        company = user.company
         organization_id = request.query_params.get("organization_id")
+        validate_company_organization(company, organization_id)
         status = TaskStatus.objects.order_by("created_at").all()
         organizations = Organization.objects.filter(
             Q(users=user) | Q(id=organization_id)
@@ -257,14 +259,13 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 }
             )
         tags = (
-            user.company.tags.filter(
+            company.tags.filter(
                 is_hidden=False,
                 organizations__id__in=[organization_id]
                 if organization_id
                 else organizations,
             )
             .order_by("created_at")
-            .all()
             .distinct()
         )
 
@@ -476,19 +477,21 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         is_statistic = request.query_params.get("is_statistic")
         is_calendar_page = request.query_params.get("is_calendar_page")
         user = request.user
+        company = user.company
         organizations = []
         if not organization_id:
             organizations = user.organizations.all()
-        elif organization := Organization.all_objects.filter(
-            id=organization_id
-        ).first():
+        else:
+            organization = validate_company_organization(
+                company, organization_id
+            )
             organizations = [organization]
         data = {}
-        calendar_org = user.company.get_calendar_organization()
+        calendar_org = company.get_calendar_organization()
 
         def _get_tags_by_organizations(input_organizations):
             return (
-                request.user.company.tags.filter(
+                company.tags.filter(
                     is_hidden=False,
                     organizations__in=input_organizations,
                 )
@@ -528,9 +531,6 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             }
 
             for org in data["organizations"]:
-                org["statistic_categories"] = add_default_entries_to_categories(
-                    org["statistic_categories"]
-                )
                 org["members"] = members[org["id"]]
             organizations_by_role = get_organizations_of_user_by_screen_role(
                 user, Screens.TEAMDOCK.value, Actions.VIEW.value
@@ -538,7 +538,6 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             users = User.objects.filter(
                 organizations__in=organizations_by_role
             ).distinct()
-
             # Insert option all team to pulldown choose organization for statistic to start of a list
             tags = _get_tags_by_organizations(organizations_by_role)
             data["organizations"].insert(
@@ -570,7 +569,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 ).data
             )
             tags = (
-                user.company.tags.filter(
+                company.tags.filter(
                     is_hidden=False, organizations__in=organizations
                 )
                 .all()
@@ -588,10 +587,6 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     ).data,
                 },
             )
-            for org in data["organizations"]:
-                org["statistic_categories"] = add_default_entries_to_categories(
-                    org["statistic_categories"]
-                )
 
             return data
 
@@ -624,7 +619,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 calendar_org, context={"user": user}
             ).data
             data["locations"] = EventLocationSerializer(
-                user.company.event_locations.all(), many=True
+                company.event_locations.all(), many=True
             ).data
         return self.response_ok(data)
 

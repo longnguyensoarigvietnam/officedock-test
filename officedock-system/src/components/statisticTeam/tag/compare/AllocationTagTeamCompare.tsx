@@ -231,7 +231,6 @@ const AllocationTagTeamCompare = memo(
       id: number | null;
       userId: number;
       type: string;
-      totalDuration: string;
       organizationId?: string;
     } | null>(null);
 
@@ -253,6 +252,7 @@ const AllocationTagTeamCompare = memo(
     >([]);
 
     const {
+      isDisableCalendar,
       isHasLoading,
       totalDurationLarge,
       totalDurationMedium,
@@ -315,14 +315,12 @@ const AllocationTagTeamCompare = memo(
     const handleClickTooltip = ({
       id,
       userId,
-      duration,
       type,
       isCompare,
       organizationId,
     }: {
       id: number;
       userId: number;
-      duration: string;
       type: string;
       isCompare?: boolean;
       organizationId?: string;
@@ -336,7 +334,6 @@ const AllocationTagTeamCompare = memo(
         id: id,
         userId: userId,
         type: type,
-        totalDuration: duration,
         organizationId,
       });
 
@@ -495,20 +492,17 @@ const AllocationTagTeamCompare = memo(
                                   handleClickTooltip={({
                                     userId,
                                     categoryId,
-                                    duration,
                                     isCompare,
                                     organizationId,
                                   }: {
                                     userId: number;
                                     categoryId: number;
-                                    duration: string;
                                     isCompare?: boolean;
                                     organizationId?: string;
                                   }) => {
                                     handleClickTooltip({
                                       id: categoryId,
                                       userId,
-                                      duration,
                                       type: EventWorkCategory.ALL,
                                       isCompare,
                                       organizationId,
@@ -640,18 +634,15 @@ const AllocationTagTeamCompare = memo(
                                   handleClickTooltip={({
                                     userId,
                                     categoryId,
-                                    duration,
                                     isCompare,
                                   }: {
                                     userId: number;
                                     categoryId: number;
-                                    duration: string;
                                     isCompare?: boolean;
                                   }) => {
                                     handleClickTooltip({
                                       id: categoryId,
                                       userId,
-                                      duration,
                                       type: EventWorkCategory.LARGE,
                                       isCompare,
                                     });
@@ -685,7 +676,9 @@ const AllocationTagTeamCompare = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge || isHasLoading}
+                        disabled={
+                          !selectedLarge || isHasLoading || isDisableCalendar
+                        }
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">
@@ -764,18 +757,15 @@ const AllocationTagTeamCompare = memo(
                                   handleClickTooltip={({
                                     userId,
                                     categoryId,
-                                    duration,
                                     isCompare,
                                   }: {
                                     userId: number;
                                     categoryId: number;
-                                    duration: string;
                                     isCompare?: boolean;
                                   }) => {
                                     handleClickTooltip({
                                       id: categoryId,
                                       userId,
-                                      duration,
                                       type: EventWorkCategory.MEDIUM,
                                       isCompare,
                                     });
@@ -825,7 +815,9 @@ const AllocationTagTeamCompare = memo(
                         options={smallOptions}
                         selectedOption={selectedSmall || undefined}
                         onChange={(data) => handleSelectSmall(data)}
-                        disabled={!selectedMedium || isHasLoading}
+                        disabled={
+                          !selectedMedium || isHasLoading || isDisableCalendar
+                        }
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">
@@ -906,18 +898,15 @@ const AllocationTagTeamCompare = memo(
                                   handleClickTooltip={({
                                     userId,
                                     categoryId,
-                                    duration,
                                     isCompare,
                                   }: {
                                     userId: number;
                                     categoryId: number;
-                                    duration: string;
                                     isCompare?: boolean;
                                   }) => {
                                     handleClickTooltip({
                                       id: categoryId,
                                       userId,
-                                      duration,
                                       type: EventWorkCategory.SMALL,
                                       isCompare,
                                     });

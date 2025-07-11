@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Chart from 'react-apexcharts';
 import {
@@ -23,6 +23,7 @@ import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
 import { Table, TableBody } from '@components/common/Table';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
+import StatisticLineChartTableSkeleton from '@components/common/SkeletonLoading/StatisticLineChartTableSkeleton';
 
 import { DEFAULT_TIME_TEXT } from '@constants';
 import {
@@ -53,6 +54,7 @@ import {
 } from '@utils';
 
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
+
 import FilterTag from './filter/FilterTag';
 
 ChartJS.register(
@@ -86,6 +88,7 @@ const StackedAreaChart = ({
   handleSelectSmall,
 }: Props) => {
   const {
+    isDisableCalendar,
     isHasLoading,
     totalDurationLarge,
     totalDurationMedium,
@@ -117,7 +120,6 @@ const StackedAreaChart = ({
   const [totalDuration, setTotalDuration] = useState<string>(DEFAULT_TIME_TEXT);
 
   const [timeRange, setTimeRange] = useState<string[]>([]);
-  const [timeRangeLabel, setTimeRangeLabel] = useState<string[]>([]);
 
   const [colorList, setColorList] = useState<string[]>([]);
   const [dataChart, setDataChart] = useState<
@@ -195,7 +197,6 @@ const StackedAreaChart = ({
           data: Array(timeMilestones.length).fill(0),
         },
       ]);
-      setTimeRangeLabel([]);
       setTableData([]);
       return;
     }
@@ -221,7 +222,6 @@ const StackedAreaChart = ({
         isEdge,
       );
     });
-    setTimeRangeLabel(uniqueSortedDates);
     setTimeRange(transformedDates);
 
     // 2. Collect chart data percentage
@@ -622,55 +622,10 @@ const StackedAreaChart = ({
       enabled: true,
       intersect: false,
       shared: true,
-      custom: function ({
-        series,
-        dataPointIndex,
-        w,
-      }: {
-        series: any;
-        dataPointIndex: any;
-        w: any;
-      }) {
-        const productNames = dataChart.map((name) => name.name);
-        const hoverDate = timeRangeLabel[dataPointIndex + 1];
-        const hoverStartDate = timeRangeLabel[dataPointIndex];
+      custom: function () {
         return `
-            <div style="background: white; padding: 8px; border-radius: 6px;width: 250px">
-              <span style="font-size : 14px ; color : #77858F;font-weight :400 ; margin-bottom : 4px ;text-align: center;width : 100%;  display: block;
-   "> ${convertToStatisticJapaneseLabels(
-     hoverStartDate,
-     lineChartViewBy?.value as string,
-     true,
-   )} ~ ${convertToStatisticJapaneseLabels(
-     hoverDate,
-     lineChartViewBy?.value as string,
-     true,
-   )}</span>
-              ${series
-                .map((value: any, index: any) => {
-                  const color = w.globals.colors[index];
-                  return `<div style="display: flex; align-items: center; gap: 5px;">
-                          <div style="width: 12px; height: 12px; background: ${color};"></div>
-              <span style="
-                        display: -webkit-box;
-                       -webkit-line-clamp: 3;
-                        -webkit-box-orient: vertical;
-                       overflow: hidden;
-                       text-overflow: ellipsis;
-                       max-width: 180px;
-                       word-break: break-word;
-                        white-space: normal;
-                        line-height: 1.2em;
-                      max-height: 3.6em; /* 3 lines * 1.2 line-height */
-  ">
-    ${productNames[index]}:
-  </span>
-                          <span>${value[dataPointIndex]}%</span>
-                        </div>`;
-                })
-                .join('')}
-            </div>
-          `;
+         
+        `;
       },
     },
   };
@@ -885,6 +840,24 @@ const StackedAreaChart = ({
   };
 
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [chartHeight, setChartHeight] = useState<number>(0);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (chartRef.current) {
+        const inner = chartRef.current.querySelector(
+          '.apexcharts-inner',
+        ) as HTMLElement;
+        if (inner) {
+          const { height } = inner.getBoundingClientRect();
+          setChartHeight(height);
+        }
+      }
+    }, 100);
+
+    return () => clearTimeout(timeout);
+  }, [dataChart]);
 
   return (
     <div
@@ -1012,7 +985,9 @@ const StackedAreaChart = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
-                    disabled={!selectedLarge || isHasLoading}
+                    disabled={
+                      !selectedLarge || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>
@@ -1044,7 +1019,9 @@ const StackedAreaChart = ({
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
-                    disabled={!selectedMedium || isHasLoading}
+                    disabled={
+                      !selectedMedium || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>
@@ -1092,10 +1069,10 @@ const StackedAreaChart = ({
           {isLoadingStatisticTagPercentChartList ? (
             <RowSkeleton
               numberOfRows={1}
-              className={`!h-[380px] w-full mx-auto`}
+              className={`!h-[380px] w-[calc(100%_-_60px)] mx-auto`}
             />
           ) : (
-            <div className="relative">
+            <div ref={chartRef} className="relative">
               <Chart
                 options={options as any}
                 series={dataChart}
@@ -1103,6 +1080,9 @@ const StackedAreaChart = ({
                 height={380}
               />
               <div
+                style={{
+                  height: dataChart.length > 1 ? chartHeight : chartHeight + 5,
+                }}
                 className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'} pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
                 {!(dataChart.length == 1 && !dataChart[0].name) &&
                   timeRange
@@ -1187,54 +1167,58 @@ const StackedAreaChart = ({
           )}
 
           <div className="px-[30px]">
-            <Table
-              className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className="sticky top-0 z-10 text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                    {headerGroup.headers.map((header, index) => (
-                      <th
-                        key={header.id}
-                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
-                        style={{
-                          width: header.getSize(),
-                          minWidth: header.getSize(),
-                          maxWidth: header.getSize(),
-                        }}
-                        onClick={header.column.getToggleSortingHandler()}>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    {row.getVisibleCells().map((cell, index) => (
-                      <td
-                        key={cell.id}
-                        style={{
-                          width: cell.column.getSize(),
-                          minWidth: cell.column.getSize(),
-                          maxWidth: cell.column.getSize(),
-                        }}
-                        className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </TableBody>
-            </Table>
+            {isLoadingStatisticTagPercentChartList ? (
+              <StatisticLineChartTableSkeleton />
+            ) : (
+              <Table
+                className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>
+                <thead>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr
+                      key={headerGroup.id}
+                      className="sticky top-0 z-10 text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
+                      {headerGroup.headers.map((header, index) => (
+                        <th
+                          key={header.id}
+                          className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                          style={{
+                            width: header.getSize(),
+                            minWidth: header.getSize(),
+                            maxWidth: header.getSize(),
+                          }}
+                          onClick={header.column.getToggleSortingHandler()}>
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <TableBody>
+                  {table.getRowModel().rows.map((row) => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+                      {row.getVisibleCells().map((cell, index) => (
+                        <td
+                          key={cell.id}
+                          style={{
+                            width: cell.column.getSize(),
+                            minWidth: cell.column.getSize(),
+                            maxWidth: cell.column.getSize(),
+                          }}
+                          className={`py-3 !px-0 ${index !== 0 ? 'border-l' : ''}`}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </>
       )}

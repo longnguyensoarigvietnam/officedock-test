@@ -34,7 +34,7 @@ const useTaskUserChat = ({
 
   // Handle call API get task user chat
   const getTaskUserChat = async () => {
-    const apiUrl = `${apiRouters.TASK_LIST_CHAT}?page_size=${PAGINATION_PAGE_SIZE_MEDIUM}&page=${page}${search && `&search=${search}`}${roomCode ? `&chat_room_code=${roomCode}` : ''}`;
+    const apiUrl = `${apiRouters.TASK_LIST_CHAT}?page_size=${PAGINATION_PAGE_SIZE_MEDIUM}&page=${page}${search && `&search=${encodeURIComponent(search)}`}${roomCode ? `&chat_room_code=${roomCode}` : ''}`;
 
     const { data } = await api.get<BasePagination<TaskUserListChat[]>>(apiUrl);
     return data;

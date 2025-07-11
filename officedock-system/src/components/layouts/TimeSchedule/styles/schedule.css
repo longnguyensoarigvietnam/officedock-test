@@ -666,6 +666,9 @@
   cursor: pointer !important;
   opacity: 1;
 }
+.schedule-custom .fc-event.overlap-event .fc-event-resizer-end {
+  left: 42% !important;
+}
 .schedule-custom .fc-scroller-harness .fc-scroller-harness-liquid {
   margin-left: -5px;
 }

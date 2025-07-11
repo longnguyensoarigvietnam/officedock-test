@@ -167,7 +167,13 @@ def calculate_new_time(start_time, delta_value, delta_unit):
 
 @transaction.atomic()
 def calculate_progress_skill_map(
-    task, user, duration_time: timedelta = None, is_minus=False, case=None
+    task,
+    user,
+    duration_time: timedelta = None,
+    is_minus=False,
+    case=None,
+    duration_created_at=None,
+    organization=None,
 ):
     """
     Handle calculate progress skill map by task
@@ -177,39 +183,50 @@ def calculate_progress_skill_map(
     task_categories = task.categories.first()
     if not task_categories:
         return
+    organization = organization if organization else task.organization
     # Get Organization categories
     org_categories = OrganizationsStatisticCategories.objects.filter(
         large_statistic_category=task_categories.large_statistic_category,
         medium_statistic_category=task_categories.medium_statistic_category,
         small_statistic_category=task_categories.small_statistic_category,
-        organization=task.organization,
+        organization=organization,
     ).values_list("id", flat=True)
     # Get Skill have categories
     org_cat_skills = (
         OrganizationsStatisticCategoriesSkills.objects.filter(
-            organization_statistic_category__id__in=org_categories
+            organization_statistic_category_id__in=org_categories
         )
         .values_list("skill", flat=True)
         .distinct()
     )
     for skill in org_cat_skills:
         skill_map = SkillMap.objects.filter(
-            skill__id=skill,
-            organization=task.organization,
+            skill_id=skill,
+            organization=organization,
             staff=user,
             skill_map_skill_levels__is_complete=False,
             is_complete=False,
             is_valid=True,
         ).first()
         if skill_map:
+            if (
+                duration_created_at
+                and duration_created_at < skill_map.created_at
+            ):
+                continue
             current_skill_level = skill_map.skill_map_skill_levels.filter(
                 is_complete=False
             ).first()
             actual_measure_count = current_skill_level.actual_measure_count
             actual_measure_time = current_skill_level.actual_measure_time
-            if is_minus and task.id not in current_skill_level.measure_task_ids:
+            if is_minus and (
+                current_skill_level.measure_task_ids is None
+                or task.id not in current_skill_level.measure_task_ids
+            ):
                 continue
-            duration = duration_time or get_total_hours_of_task(task)
+            duration = duration_time or get_total_hours_of_task(
+                task, skill_map_created_at=skill_map.created_at
+            )
             total_duration_of_task = -duration if is_minus else duration
             if case in {
                 CalculateSkillMapProcessCases.NOT_CHANGE_COMPLETED_STATUS.value,
@@ -349,13 +366,15 @@ def _send_socket_show_popup_complete(
     )
 
 
-def get_total_hours_of_task(task):
+def get_total_hours_of_task(task, skill_map_created_at=None):
     """
     Return total hours of task
     """
     durations = TaskDuration.objects.filter(task=task).all()
     total_duration = timedelta()
     for duration in durations:
+        if skill_map_created_at and skill_map_created_at > duration.created_at:
+            continue
         if duration.paused_at:
             total_duration += duration.paused_at - duration.started_at
 

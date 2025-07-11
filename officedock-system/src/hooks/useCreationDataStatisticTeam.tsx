@@ -5,7 +5,12 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
-import { DataResponseStatisticCreationTeamType } from '@interfaces/statistic';
+import { NO_SETTING_CATEGORY } from '@constants';
+import {
+  DataResponseStatisticCreationTeamType,
+  MediumCategory,
+  SmallCategory,
+} from '@interfaces/statistic';
 
 interface useCreationDataStatisticTeamHooksProps {
   condition?: boolean[];
@@ -31,7 +36,6 @@ const useCreationDataStatisticTeam = ({
 
   // Handle call API get creation Statistic data
   const getCreationDataStatistic = async () => {
-    if (isTeam && !organization_id) return null;
     const apiUrl = `${apiRouters.STATISTIC_CREATION}?${organization_id ? `organization_id=${organization_id}` : ''}${is_statistic ? `&is_statistic=true` : ''}`;
 
     const { data } =
@@ -46,12 +50,68 @@ const useCreationDataStatisticTeam = ({
     isFetched: isFetchedCreationDataStatistic,
   } = useQuery({
     queryKey: [
-      'getCreationDataStatistic',
+      'getCreationDataStatisticTeam',
       [organization_id, is_statistic, isTeam],
     ],
     queryFn: getCreationDataStatistic,
+    select: (response: DataResponseStatisticCreationTeamType) => {
+      const updatedOrganizations = response.organizations.map((org) => {
+        const updatedCategories = org.statisticCategories.map((category) => {
+          const updatedLarge =
+            category.LARGE && category.LARGE.id != null
+              ? category.LARGE
+              : NO_SETTING_CATEGORY;
+
+          const updatedMedium: MediumCategory[] = [
+            ...(category.MEDIUM || []).map((mediumItem): MediumCategory => {
+              const updatedMediumValue =
+                mediumItem.MEDIUM && mediumItem.MEDIUM.id != null
+                  ? mediumItem.MEDIUM
+                  : NO_SETTING_CATEGORY;
+
+              const updatedSmall: SmallCategory[] = [
+                ...(mediumItem.SMALL || []).map(
+                  (smallItem): SmallCategory =>
+                    smallItem && smallItem.id != null
+                      ? smallItem
+                      : NO_SETTING_CATEGORY,
+                ),
+                NO_SETTING_CATEGORY,
+              ];
+
+              return {
+                MEDIUM: updatedMediumValue,
+                SMALL: updatedSmall,
+              };
+            }),
+            {
+              MEDIUM: NO_SETTING_CATEGORY,
+              SMALL: [NO_SETTING_CATEGORY],
+            },
+          ];
+
+          return {
+            ...category,
+            LARGE: updatedLarge,
+            MEDIUM: updatedMedium,
+          };
+        });
+
+        return {
+          ...org,
+          statisticCategories: updatedCategories,
+        };
+      });
+
+      return {
+        ...response,
+        organizations: updatedOrganizations,
+      };
+    },
+
     retry: 0,
-    enabled: !!token && condition?.every(Boolean),
+    enabled:
+      !!token && condition?.every(Boolean) && (!isTeam || !!organization_id),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (response: DataResponseStatisticCreationTeamType) => {

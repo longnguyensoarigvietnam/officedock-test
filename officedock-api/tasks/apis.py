@@ -46,12 +46,14 @@ from common.constants import BASE_DATETIME_FORMAT
 from common.filters import CustomOrderFilter
 from common.utils import (
     filter_task_index_team,
+    parse_search_date,
     send_web_socket_event,
     create_categories_by_model,
     check_task_overtime,
     split_id_from_string,
     get_common_categories,
     compare_list_categories,
+    validate_company_organization,
 )
 from stat_data.utils import validate_date_by_regex_and_reformat
 from tasks.constants import (
@@ -487,7 +489,7 @@ class TaskViewSet(
         ).first()
         task_message = task_room.chat_messages.create(**message)
         chat_room_participant = task_room.chat_rooms_participants.filter(
-            user__id=user.id
+            user_id=user.id
         ).first()
         chat_room_participant.unread_messages = (
             chat_room_participant.unread_messages + 1
@@ -556,7 +558,7 @@ class TaskViewSet(
                 through_defaults={"company": user.company},
             )
             chat_room_participant = chat_room.chat_rooms_participants.filter(
-                user__id=participant.id
+                user_id=participant.id
             ).first()
             socketEventType = WebSocketEventType.CREATE_CHAT_ROOM.value
         else:
@@ -569,7 +571,7 @@ class TaskViewSet(
         chat_room_participant.save()
         # Update unread message of user logged
         user_participant = chat_room.chat_rooms_participants.filter(
-            user__id=user.id
+            user_id=user.id
         ).first()
         user_participant.unread_messages = user_participant.unread_messages + 1
         user_participant.hidden_at = None
@@ -604,7 +606,7 @@ class TaskViewSet(
                 ChatRoomTypes.SKILL.value,
             ]:
                 user_participant = chat_room.chat_rooms_participants.filter(
-                    user__id=user.id
+                    user_id=user.id
                 ).first()
                 user_participant.unread_messages = (
                     user_participant.unread_messages + 1
@@ -762,6 +764,7 @@ class TaskViewSet(
         tag_ids = serializer_data.pop("tag_ids", None)
         task_status = serializer_data.get("status", None)
         is_exists_task_schedules = "task_schedules" in serializer_data
+        is_exists_categories = "category_ids" in serializer_data
         task_schedules = serializer_data.pop("task_schedules", None)
         todo_list = serializer_data.pop("todo_list", None)
         categories = serializer_data.pop("category_ids", None)
@@ -1015,7 +1018,7 @@ class TaskViewSet(
         if people_in_charge_ids is not None:
             # Delete index for task if remove user
             TaskIndex.objects.filter(task=task).exclude(
-                user__id__in=[
+                user_id__in=[
                     item["people_in_charge"].id for item in people_in_charge_ids
                 ]
             ).delete()
@@ -1171,13 +1174,17 @@ class TaskViewSet(
             case = CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value
 
         # Create or update categories
-        if categories is not None and not compare_list_categories(
+        if is_exists_categories and not compare_list_categories(
             categories, get_common_categories(task.categories.first())
         ):
             for user in task.people_in_charge.all():
                 # Minus skill map process have old categories of current task
                 calculate_progress_skill_map(
-                    current_task, user, is_minus=True, case=case
+                    current_task,
+                    user,
+                    is_minus=True,
+                    case=case,
+                    organization=current_org,
                 )
 
             # Update new categories
@@ -1250,6 +1257,7 @@ class TaskViewSet(
         Get the top tasks with the highest counts for the logged-in user.
         """
         # Get page_size from query params
+        user = request.user
         page_size = request.query_params.get("page_size", DEFAULT_PAGE_SIZE)
 
         try:
@@ -1262,14 +1270,14 @@ class TaskViewSet(
 
         frequent_tasks = (
             TaskFrequent.objects.filter(
-                user=request.user,
-                company=request.user.company,
-                task__people_in_charge__id=request.user.id,
+                user=user,
+                company=user.company,
+                task__people_in_charge__id=user.id,
             )
             .order_by("-count")
-            .prefetch_related("task", "task__status")[:page_size]
+            .prefetch_related("task")[:page_size]
         )
-        tasks = [task.task for task in frequent_tasks]
+        tasks = [item.task for item in frequent_tasks]
 
         return self.response_ok(
             TaskBoardSerializer(
@@ -1293,7 +1301,7 @@ class TaskViewSet(
                 task__type=TaskTypes.MY_TEMPLATE.value
             )
             .all()
-            .order_by("task__id")
+            .order_by("task_id")
         )
         data = []
         for people_in_charge_task in people_in_charge_tasks:
@@ -1763,73 +1771,46 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             "tags__name",
             "people_in_charge__profile__full_name",
         ]
+        query_params = self.request.query_params.copy()
+        search = query_params.get("search")
+        ordering = query_params.get("ordering")
 
-        if search := self.request.query_params.get("search"):
-            # List of date formats to attempt parsing
-            date_formats = ["%Y/%m/%d", "%Y-%m-%d"]
-
-            # Try to parse the search term into a valid date format
-            parsed_date = None
-            for date_format in date_formats:
-                try:
-                    parsed_date = datetime.strptime(search, date_format)
-                    break
-                except ValueError:
-                    continue
-
-            if parsed_date:
-                # Append date fields to search_fields dynamically
-                self.search_fields += self.date_search_fields
-
-                # Format search date if any
-                query_params = self.request.query_params.copy()
-                query_params["search"] = parsed_date.strftime("%Y-%m-%d")
-                self.request._request.GET = query_params
+        if parsed_date := parse_search_date(search):
+            # Append date fields to search_fields dynamically
+            self.search_fields += self.date_search_fields
+            # Format search date if any
+            query_params["search"] = parsed_date.strftime("%Y-%m-%d")
 
         # Make sure to sort by ID DESC
-        if ordering := self.request.query_params.get("ordering"):
-            if "id" not in ordering:
-                query_params = self.request.query_params.copy()
-                query_params["ordering"] = f"{ordering},-id"
-                self.request._request.GET = query_params
+        if ordering and "id" not in ordering:
+            query_params["ordering"] = f"{ordering},-id"
 
+        self.request._request.GET = query_params
         return super().filter_queryset(queryset)
 
     def get_queryset(self):
         user = self.request.user
         queryset = super().get_queryset().filter(company=user.company)
-        user_id = self.request.query_params.get("user_id")
-        ordering = self.request.query_params.get("ordering")
-        is_team_task = (
-            self.request.query_params.get("is_team_task", "").lower() == "true"
-        )
-        organization_id = self.request.query_params.get("organization_id")
+        query_params = self.request.query_params
+        user_id = query_params.get("user_id")
+        ordering = query_params.get("ordering")
+        is_team_task = query_params.get("is_team_task", "").lower() == "true"
+        organization_id = query_params.get("organization_id")
         is_cross_team_task = (
-            self.request.query_params.get("is_cross_team_task", "").lower()
-            == "true"
+            query_params.get("is_cross_team_task", "").lower() == "true"
         )
 
         if is_team_task:
-            if not organization_id:
-                raise ValidationError(
-                    {"organization_id": ERROR_MESSAGES["field_required"]}
-                )
-
-            task_pin = TeamTaskIndex.objects.filter(
-                task=OuterRef("pk"), team_id=organization_id, user_id=user.id
-            ).values("pin_at")[:1]
-
+            validate_company_organization(
+                user.company, organization_id, required_field=True
+            )
             # Filter only in organization
             if not is_cross_team_task:
-                queryset = queryset.filter(organization__id=organization_id)
+                queryset = queryset.filter(organization_id=organization_id)
         else:
-            task_pin = TaskIndex.objects.filter(
-                task=OuterRef("pk"), user_id=user_id if user_id else user.id
-            ).values("pin_at")[:1]
-
             # Case Mytask: filter only in organization
             if organization_id:
-                queryset = queryset.filter(organization__id=organization_id)
+                queryset = queryset.filter(organization_id=organization_id)
 
         # Filter tasks by the current user if no user_id is provided
         if not user_id:
@@ -1839,86 +1820,71 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         if not ordering:
             if is_team_task:
                 # Handle load more for team tasks
+                task_pin = TeamTaskIndex.objects.filter(
+                    task=OuterRef("pk"),
+                    team_id=organization_id,
+                    user_id=user.id,
+                ).values("pin_at")[:1]
                 task_index = TeamTaskIndex.objects.filter(
                     task=OuterRef("pk"),
                     team_id=organization_id,
                     user_id=user.id,
                 ).values("index")[:1]
-                # Annotate the queryset with the index from TaskIndex
-                queryset = queryset.annotate(
-                    index=Subquery(task_index),
-                    coalesced_pin_at=Coalesce(
-                        Subquery(task_pin),
-                        Value(REPLACE_NULL_DATE),
-                        output_field=DateTimeField(),
-                    ),
-                    task_index_pin_at=Subquery(task_pin),
-                ).order_by("-coalesced_pin_at", "-index")
-                if pin_at := self.request.query_params.get("pin_at"):
-                    queryset = queryset.filter(Q(coalesced_pin_at__lt=pin_at))
-                elif index := self.request.query_params.get("index"):
-                    queryset = queryset.filter(
-                        index__lt=index, task_index_pin_at__isnull=True
-                    )
             else:
                 # Handle load more for my tasks
+                task_pin = TaskIndex.objects.filter(
+                    task=OuterRef("pk"), user_id=user_id if user_id else user.id
+                ).values("pin_at")[:1]
                 task_index = TaskIndex.objects.filter(
                     task=OuterRef("pk"), user_id=user_id if user_id else user.id
                 ).values("index")[:1]
-                # Annotate the queryset with the index from TaskIndex
-                queryset = queryset.annotate(
-                    index=Subquery(task_index),
-                    coalesced_pin_at=Coalesce(
-                        Subquery(task_pin),
-                        Value(REPLACE_NULL_DATE),
-                        output_field=DateTimeField(),
-                    ),
-                    task_index_pin_at=Subquery(task_pin),
-                ).order_by("-coalesced_pin_at", "-index")
-                if pin_at := self.request.query_params.get("pin_at"):
-                    queryset = queryset.filter(Q(coalesced_pin_at__lt=pin_at))
-                elif index := self.request.query_params.get("index"):
-                    queryset = queryset.filter(
-                        index__lt=index, task_index_pin_at__isnull=True
-                    )
+
+            # Annotate the queryset with the index from TaskIndex and TeamTaskIndex
+            queryset = queryset.annotate(
+                index=Subquery(task_index),
+                coalesced_pin_at=Coalesce(
+                    Subquery(task_pin),
+                    Value(REPLACE_NULL_DATE),
+                    output_field=DateTimeField(),
+                ),
+                task_index_pin_at=Subquery(task_pin),
+            ).order_by("-coalesced_pin_at", "-index")
+
+            if pin_at := query_params.get("pin_at"):
+                queryset = queryset.filter(coalesced_pin_at__lt=pin_at)
+            elif index := query_params.get("index"):
+                queryset = queryset.filter(
+                    index__lt=index, task_index_pin_at__isnull=True
+                )
         else:
             # Handle filter when pagination
-            if id := self.request.query_params.get("task_id"):
-                if "deadline" in ordering:
-                    if deadline := self.request.query_params.get("deadline"):
-                        queryset = queryset.filter(
-                            Q(deadline__gt=deadline) | Q(deadline__isnull=True)
-                        )
-                    else:
-                        queryset = queryset.filter(
-                            deadline__isnull=True,
-                            id__lt=id,
-                        )
+            if id := query_params.get("task_id") and "deadline" in ordering:
+                if deadline := query_params.get("deadline"):
+                    queryset = queryset.filter(
+                        Q(deadline__gt=deadline) | Q(deadline__isnull=True)
+                    )
+                else:
+                    queryset = queryset.filter(
+                        deadline__isnull=True,
+                        id__lt=id,
+                    )
 
         # Handle exclude ids when case add, drag drop item
-        if ids := self.request.query_params.get("ids"):
-            exclude_ids = []
-            for id in ids.split(","):
-                try:
-                    exclude_ids.append(int(id))
-                except ValueError:
-                    continue
-            if exclude_ids:
+        if ids := query_params.get("ids"):
+            if exclude_ids := split_id_from_string(ids):
                 queryset = queryset.exclude(id__in=exclude_ids)
 
-        if tag_ids := self.request.query_params.get("tag_ids"):
+        if tag_ids := query_params.get("tag_ids"):
             if ids := split_id_from_string(tag_ids):
-                queryset = queryset.filter(tags_tasks__tag__id__in=ids)
+                queryset = queryset.filter(tags__id__in=ids)
 
-        if category_ids := self.request.query_params.get("category_ids"):
+        if category_ids := query_params.get("category_ids"):
             if ids := split_id_from_string(category_ids):
                 queryset = queryset.filter(
                     Q(categories__large_statistic_category__in=ids)
                 )
 
-        if organization_ids := self.request.query_params.get(
-            "organization_ids"
-        ):
+        if organization_ids := query_params.get("organization_ids"):
             if ids := split_id_from_string(organization_ids):
                 queryset = queryset.filter(Q(organization__in=ids))
 
@@ -1954,8 +1920,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 "deadline" in ordering
                 and int(status_id) == task_routine_status.id
             ):
-                tasks = queryset.all()
-                tasks = tasks.annotate(
+                queryset = queryset.annotate(
                     coalesced_ordering_datetime=Coalesce(
                         "deadline",
                         Value(REPLACE_NULL_DATE_WITH_FUTURE),
@@ -1963,12 +1928,19 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     )
                 )
                 if "is_important" in ordering:
-                    tasks = tasks.order_by(
-                        "-is_important", "coalesced_ordering_datetime"
+                    queryset = queryset.order_by(
+                        "-is_important",
+                        "coalesced_ordering_datetime",
+                        "-updated_at",
                     )
                 if "deadline" in ordering:
-                    tasks = tasks.order_by("coalesced_ordering_datetime")
-                for idx, task in enumerate(tasks):
+                    queryset = queryset.order_by(
+                        "coalesced_ordering_datetime",
+                        "-is_important",
+                        "-updated_at",
+                    )
+
+                for idx, task in enumerate(queryset):
                     task_index = task.task_index.filter(user=user).first()
                     if not task_index:
                         TaskIndex.update_index_for_user(
@@ -1976,11 +1948,11 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                         )
                     else:
                         if task_index.pin_at:
-                            task.task_index.update(
-                                pin_at=timezone.now()
-                                - timedelta(minutes=INITIAL_INDEX_VALUE + idx)
+                            task_index.pin_at = timezone.now() - timedelta(
+                                minutes=INITIAL_INDEX_VALUE + idx
                             )
-                        task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
+                        task_index.index = INITIAL_INDEX_VALUE - idx
+                        task_index.save()
 
             task_pin = TaskIndex.objects.filter(
                 task=OuterRef("pk"), user_id=user.id
@@ -2019,8 +1991,8 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         # Fill context to serializer
         context = {}
-        if self.request.query_params.get("is_team_task"):
-            context["organization_id"] = self.request.query_params.get(
+        if request.query_params.get("is_team_task"):
+            context["organization_id"] = request.query_params.get(
                 "organization_id"
             )
             context["user_id"] = user.id
@@ -2123,6 +2095,7 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             Task.objects.filter(
                 organization_id=organization_id,
                 people_in_charge__isnull=True,
+                company=user.company,
             )
             .exclude(
                 Q(type=TaskTypes.MY_TEMPLATE.value)
@@ -2195,12 +2168,12 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         # If the current user has no team task index, reindex tasks
         if (
-            not TeamTaskIndex.objects.filter(
+            not ordering
+            and not TeamTaskIndex.objects.filter(
                 team_id=organization_id,
                 user=user,
                 task__people_in_charge__isnull=True,
             ).exists()
-            and not ordering
         ):
             tasks = tasks.annotate(
                 coalesced_deadline=Coalesce(

@@ -92,7 +92,7 @@ const useStatisticTableInTeamTagLineChart = ({
     refetch: refetchStatisticTableInTeamTagLineChart,
     isLoading: isLoadingStatisticTableInTeamTagLineChart,
   } = useQuery({
-    queryKey: ['getStatisticTableInTeamTagLineChart', [filter]],
+    queryKey: ['getStatisticTableInTeamTagLineChart', JSON.stringify(filter)],
     queryFn: ({ signal }) => getStatisticTableInTeamTagLineChart({ signal }),
     retry: 0,
     enabled: !!token,

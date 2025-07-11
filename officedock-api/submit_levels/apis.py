@@ -194,7 +194,7 @@ class SubmitLevelViewSet(
         if step_after_submit != instance.step_before_submit:
             # Update current skill map
             SkillMap.objects.filter(id=skill_map.id).update(is_complete=True)
-            skill = Skill.objects.filter(parent__id=instance.skill.id).first()
+            skill = Skill.objects.filter(parent_id=instance.skill.id).first()
             if skill:
                 # Get next skill map
                 skill_map = SkillMap.objects.create(
@@ -211,7 +211,7 @@ class SubmitLevelViewSet(
                 is_not_max_level = False
         elif (
             instance.level_before_submit == SkillLevelEnum.LEVEL_3.value
-            and not Skill.objects.filter(parent__id=instance.skill.id).exists()
+            and not Skill.objects.filter(parent_id=instance.skill.id).exists()
         ):
             # Update last skill map
             SkillMap.objects.filter(id=skill_map.id).update(is_complete=True)
@@ -240,8 +240,12 @@ class SubmitLevelViewSet(
                 skill=skill_level.skill,
                 measure_time=skill_level.measure_time,
                 measure_count=skill_level.measure_count,
-                look_back_interval=look_back_interval,
-                look_back_type=look_back_type,
+                look_back_interval=look_back_interval
+                if look_back_interval
+                else skill_level.look_back_interval,
+                look_back_type=look_back_type
+                if look_back_type
+                else skill_level.look_back_type,
                 items=items,
             )
         step_after_submit, level_after_submit = get_next_progression(

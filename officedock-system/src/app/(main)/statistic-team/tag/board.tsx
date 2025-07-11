@@ -47,6 +47,7 @@ const StatisticTeamTagBoard = () => {
     selectedTags,
     selectedSmall,
     orderingOptions,
+    isHasLoading,
     setOrderingOptions,
     setTagsOptions,
     setSelectedTags,
@@ -78,6 +79,7 @@ const StatisticTeamTagBoard = () => {
     setCurrentPage,
     setIsSkeletonTagTeamTask,
     handleResetTableData,
+    setDataMediumCalendar,
   } = useContext(StatisticTeamTagsStateContext);
   const {
     organizationTeamList,
@@ -97,10 +99,12 @@ const StatisticTeamTagBoard = () => {
 
   const organizationId = searchParams.get('organization');
   const { creationDataStatisticData } = useCreationDataStatisticTeam({
-    organization_id: organizationId || '',
+    organization_id: selectedOrganizationSideBar
+      ? (selectedOrganizationSideBar?.value as string)
+      : organizationId || '',
+
     isTeam: true,
     is_statistic: true,
-
     onSuccess: (data) => {
       if (!data) return;
 
@@ -261,7 +265,9 @@ const StatisticTeamTagBoard = () => {
       }
     }
     setCurrentPage(1);
-
+    if (data?.type === OrganizationStatisticType.CALENDAR) {
+      setDataMediumCalendar(undefined);
+    }
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
@@ -346,7 +352,9 @@ const StatisticTeamTagBoard = () => {
     }
     handleResetTableData();
     setCurrentPage(1);
-
+    if (selectedOrganization?.type === OrganizationStatisticType.CALENDAR) {
+      setDataMediumCalendar(undefined);
+    }
     setSelectedLarge(data);
     setSelectedMedium(null);
     setSelectedSmall(null);
@@ -371,6 +379,10 @@ const StatisticTeamTagBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
+    if (selectedOrganization?.type === OrganizationStatisticType.CALENDAR) {
+      setDataMediumCalendar(data);
+      return;
+    }
     if (data.value !== selectedMedium?.value) {
       setIsLoadingMedium(true);
       if (isCheckCompare) {
@@ -494,9 +506,10 @@ const StatisticTeamTagBoard = () => {
               variant={'outline'}
               onClick={() => {
                 router.push(
-                  `${pageRouters.STATISTIC_TEAM_MANAGEMENT.href}?organization=${organizationId}&tabId=1`,
+                  `${pageRouters.STATISTIC_TEAM_MANAGEMENT.href}?organization=${(selectedOrganizationSideBar?.value as string) || organizationId}&tabId=1`,
                 );
               }}
+              disabled={isHasLoading}
               className={`!py-0 !px-0 font-bold w-[80px] h-7 
               !rounded-[20px] text-xs !text-[#77858F] !bg-transparent !border-[#77858F]`}>
               カテゴリー

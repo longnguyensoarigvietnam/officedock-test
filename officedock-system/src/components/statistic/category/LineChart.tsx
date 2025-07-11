@@ -25,6 +25,7 @@ import Dropdown from '@components/common/Dropdown';
 import { Table, TableBody } from '@components/common/Table';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import { MyDockLineChartTooltip } from '@components/tooltip/MyDockLineChartTooltip';
+import StatisticLineChartTableSkeleton from '@components/common/SkeletonLoading/StatisticLineChartTableSkeleton';
 
 import { StatisticStateContext } from '@providers/StatisticProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
@@ -50,6 +51,7 @@ import {
   getStatisticMilestones,
   lightenColor,
 } from '@utils';
+
 import FilterStatistic from './filter/FilterStatistic';
 
 ChartJS.register(
@@ -81,6 +83,7 @@ const LineChart = ({
   handleSelectMedium,
 }: Props) => {
   const {
+    isDisableCalendar,
     isHasLoading,
     totalDurationLarge,
     totalDurationMedium,
@@ -790,7 +793,9 @@ const LineChart = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
-                    disabled={!selectedLarge || isHasLoading}
+                    disabled={
+                      !selectedLarge || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>
@@ -883,10 +888,7 @@ const LineChart = ({
             )}
 
             {!isFetchedStatisticTaskDurationsList ? (
-              <RowSkeleton
-                numberOfRows={1}
-                className={`!h-[200px] mt-5 w-full mx-auto`}
-              />
+              <StatisticLineChartTableSkeleton />
             ) : (
               <Table
                 className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>

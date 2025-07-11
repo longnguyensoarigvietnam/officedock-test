@@ -4,10 +4,13 @@ import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
 import Checkbox from '@components/common/Checkbox';
 import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import TableChart from './TableChart';
 
 import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
 import { DEFAULT_TIME_TEXT, PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
+import useStatisticTask from '@hooks/useStatisticTask';
+import { OrganizationStatisticType } from '@constants/enums';
 
 import {
   CreationStatisticType,
@@ -15,13 +18,11 @@ import {
   StatisticsCategories,
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
-import useStatisticTask from '@hooks/useStatisticTask';
 import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
-import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import FilterTagTeam from './filter/FilterTagTeam';
-import { OrganizationStatisticType } from '@constants/enums';
+import { removeDuplicateOptions } from '@utils';
 
 type Props = {
   isCheckCompare: boolean;
@@ -60,19 +61,13 @@ const TaskListStatisticTeamTags = ({
     selectedMedium,
     selectedOrganization,
     selectedSmall,
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
-    totalDurationCategory,
-    totalDurationLargeCompare,
-    totalDurationMediumCompare,
-    totalDurationSmallCompare,
-    totalDurationCategoryCompare,
     selectedTags,
     listMemberTeam,
     isSkeletonTagTeamTask,
     isSkeletonTagTeamTaskCompare,
     currentPage,
+    dataMediumCalendar,
+    setDataMediumCalendar,
     setCurrentPage,
   } = useContext(StatisticTeamTagsStateContext);
 
@@ -97,37 +92,10 @@ const TaskListStatisticTeamTags = ({
   const [pageSize, setPageSize] = useState<number>(PAGINATION_PAGE_SIZE_KANBAN);
   const [isShowCompare, setIsShowCompare] = useState(false);
 
-  const getTotalDuration = () => {
-    if (selectedOrganization?.value) {
-      if (selectedLarge?.value) {
-        if (selectedMedium?.value) {
-          if (selectedSmall?.value) {
-            return totalDurationCategory;
-          }
-          return totalDurationSmall;
-        }
-        return totalDurationMedium;
-      }
-      return totalDurationLarge;
-    }
-    return DEFAULT_TIME_TEXT;
-  };
-  // Get total compare
-  const getTotalDurationCompare = () => {
-    if (selectedOrganization?.value) {
-      if (selectedLarge?.value) {
-        if (selectedMedium?.value) {
-          if (selectedSmall?.value) {
-            return totalDurationCategoryCompare;
-          }
-          return totalDurationSmallCompare;
-        }
-        return totalDurationMediumCompare;
-      }
-      return totalDurationLargeCompare;
-    }
-    return DEFAULT_TIME_TEXT;
-  };
+  // Total
+  const [totalDuration, setTotalDuration] = useState<string>(DEFAULT_TIME_TEXT);
+  const [totalDurationCompare, setTotalDurationCompare] =
+    useState<string>(DEFAULT_TIME_TEXT);
 
   useEffect(() => {
     if (listMemberTeam && listMemberTeam.length > 0) {
@@ -135,7 +103,7 @@ const TaskListStatisticTeamTags = ({
     }
   }, [listMemberTeam]);
 
-  const { statisticCategoryList } = useStatisticTask({
+  useStatisticTask({
     isTeam: true,
     is_tag_page: true,
     parentData: statisticTagsListTeam,
@@ -144,11 +112,14 @@ const TaskListStatisticTeamTags = ({
       endDate: formatDateToYMD(`${endDate}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: selectedLarge?.value as number,
-      mediumCategoryId: selectedMedium?.value as number,
+      mediumCategoryId:
+        selectedOrganization?.type == OrganizationStatisticType.CALENDAR &&
+        dataMediumCalendar
+          ? (dataMediumCalendar?.value as number)
+          : (selectedMedium?.value as number),
       smallCategoryId: selectedSmall?.value as number,
 
       page: currentPage,
-      totalDuration: getTotalDuration(),
       ordering: ordering,
       pageSize: pageSize,
       tagIds: selectedTags,
@@ -161,6 +132,7 @@ const TaskListStatisticTeamTags = ({
     conditions: [listMemberTeam.length !== 0],
     onSuccess: (data) => {
       if (data) {
+        setTotalDuration(data.totalDuration || DEFAULT_TIME_TEXT);
         setTotalPages(data.numPages);
         if (data.results) {
           setTaskList(data.results);
@@ -168,42 +140,46 @@ const TaskListStatisticTeamTags = ({
       }
     },
   });
-  const { statisticCategoryList: statisticCategoryListCompare } =
-    useStatisticTaskCompare({
-      isTeam: true,
-      is_tag_page: true,
 
-      filter: {
-        fromDate: formatDateToYMD(startDateCompare) || '',
-        endDate: formatDateToYMD(`${endDateCompare}`) || '',
-        organizationIds: String(selectedOrganization?.value || ''),
-        largeCategoryId: selectedLarge?.value as number,
-        mediumCategoryId: selectedMedium?.value as number,
-        smallCategoryId: selectedSmall?.value as number,
+  useStatisticTaskCompare({
+    isTeam: true,
+    is_tag_page: true,
 
-        page: currentPage,
-        totalDuration: getTotalDurationCompare(),
-        ordering: ordering,
-        pageSize: pageSize,
-        tagIds: selectedTags,
-        isCompare: isCheckCompare && isShowCompare,
-        user_id: selectedMember as number,
-        user_ids: listMemberTeam.map((item) => ({
-          label: item.fullName,
-          value: item.id,
-        })),
-      },
-      conditions: [listMemberTeam.length !== 0],
+    filter: {
+      fromDate: formatDateToYMD(startDateCompare) || '',
+      endDate: formatDateToYMD(`${endDateCompare}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: selectedLarge?.value as number,
+      mediumCategoryId:
+        selectedOrganization?.type == OrganizationStatisticType.CALENDAR &&
+        dataMediumCalendar
+          ? (dataMediumCalendar?.value as number)
+          : (selectedMedium?.value as number),
+      smallCategoryId: selectedSmall?.value as number,
 
-      onSuccess: (data) => {
-        if (data) {
-          setTotalPagesCompare(data.numPages);
-          if (data.results) {
-            setTaskListCompare(data.results);
-          }
+      page: currentPage,
+      ordering: ordering,
+      pageSize: pageSize,
+      tagIds: selectedTags,
+      isCompare: isCheckCompare && isShowCompare,
+      user_id: selectedMember as number,
+      user_ids: listMemberTeam.map((item) => ({
+        label: item.fullName,
+        value: item.id,
+      })),
+    },
+    conditions: [listMemberTeam.length !== 0],
+
+    onSuccess: (data) => {
+      if (data) {
+        setTotalDurationCompare(data.totalDuration || DEFAULT_TIME_TEXT);
+        setTotalPagesCompare(data.numPages);
+        if (data.results) {
+          setTaskListCompare(data.results);
         }
-      },
-    });
+      }
+    },
+  });
 
   const optionList = [
     {
@@ -371,9 +347,23 @@ const TaskListStatisticTeamTags = ({
                     className="!h-[34px] !py-0 text-sm !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
                     classNameOption="!text-sm"
-                    options={mediumOptions}
-                    selectedOption={selectedMedium || undefined}
-                    onChange={(data) => handleSelectMedium(data)}
+                    options={removeDuplicateOptions(mediumOptions)}
+                    selectedOption={
+                      selectedOrganization?.type ===
+                      OrganizationStatisticType.CALENDAR
+                        ? dataMediumCalendar
+                        : selectedMedium || undefined
+                    }
+                    onChange={(data) => {
+                      if (
+                        selectedOrganization?.type ===
+                        OrganizationStatisticType.CALENDAR
+                      ) {
+                        setDataMediumCalendar(data);
+                      } else {
+                        handleSelectMedium(data);
+                      }
+                    }}
                     disabled={!selectedLarge || isHasLoading}
                   />
                 </div>
@@ -481,18 +471,8 @@ const TaskListStatisticTeamTags = ({
                 }
                 totalDuration={
                   isCheckCompare && isShowCompare
-                    ? selectedOrganization?.type ===
-                        OrganizationStatisticType.CALENDAR &&
-                      selectedMedium?.value
-                      ? statisticCategoryListCompare?.totalDuration ||
-                        DEFAULT_TIME_TEXT
-                      : getTotalDurationCompare()
-                    : selectedOrganization?.type ===
-                          OrganizationStatisticType.CALENDAR &&
-                        selectedMedium?.value
-                      ? statisticCategoryList?.totalDuration ||
-                        DEFAULT_TIME_TEXT
-                      : getTotalDuration()
+                    ? totalDurationCompare
+                    : totalDuration
                 }
                 selectedMember={selectedMember}
                 listOptionsOrganization={listOptionsOrganization}
@@ -500,6 +480,8 @@ const TaskListStatisticTeamTags = ({
                 setOrdering={(ord: string) => {
                   setOrdering(ord);
                 }}
+                setTaskList={setTaskList}
+                setTaskListCompare={setTaskListCompare}
               />
             )}
           </div>

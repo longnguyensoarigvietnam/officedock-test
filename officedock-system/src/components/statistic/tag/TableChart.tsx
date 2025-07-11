@@ -54,6 +54,12 @@ interface TableChartProps {
   listOptionsOrganization: OptionDropdownType[];
   creationDataStatisticData: CreationStatisticType[];
   setOrdering: (ord: string) => void;
+  setTaskList: React.Dispatch<
+    React.SetStateAction<DataTaskListStatisticListType[]>
+  >;
+  setTaskListCompare: React.Dispatch<
+    React.SetStateAction<DataTaskListStatisticListType[]>
+  >;
 }
 
 const TagListInfo = ({ tagList }: { tagList: OptionDropdownType[] }) => {
@@ -136,6 +142,8 @@ const TableChart = ({
   creationDataStatisticData,
   listOptionsOrganization,
   setOrdering,
+  setTaskList,
+  setTaskListCompare,
 }: TableChartProps) => {
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();
@@ -143,6 +151,7 @@ const TableChart = ({
   const {
     isCheckCompare,
     selectedOrganization,
+
     setIsLoadingLarge,
     setIsLoadingLargeCompare,
     setIsLoadingMedium,
@@ -174,13 +183,34 @@ const TableChart = ({
     'postEditCategoryTaskInline',
     handleEditCategoryInline,
     {
-      onSuccess: async () => {
+      onSuccess: async (data) => {
+        setTaskList((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
+        setTaskListCompare((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
         });
+
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
         });
@@ -236,13 +266,35 @@ const TableChart = ({
     'postEditCategoryEventInline',
     handleEditEventCategoryInline,
     {
-      onSuccess: async () => {
+      onSuccess: async (data) => {
+        setTaskList((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
+        setTaskListCompare((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
-        queryClient.invalidateQueries({
-          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
-        });
+        if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
+          queryClient.invalidateQueries({
+            predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
+          });
+        }
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
         });
@@ -258,10 +310,12 @@ const TableChart = ({
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingOrganizationCompare(true);
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              query.queryKey[0] === 'getStatisticTaskListCompare',
-          });
+          if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticTaskListCompare',
+            });
+          }
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTagsListCompare',
@@ -283,6 +337,7 @@ const TableChart = ({
   const columns: ColumnDef<ListTaskStatistic>[] = [
     {
       accessorKey: 'name',
+      enableSorting: false,
       header: () => {
         return (
           <p className="text-[#77858F] px-[12px] font-medium text-xs text-left">
@@ -379,6 +434,7 @@ const TableChart = ({
     },
     {
       accessorKey: 'categories',
+      enableSorting: false,
       header: () => {
         return (
           <p className="text-[#77858F] font-medium text-xs text-left">
@@ -474,14 +530,18 @@ const TableChart = ({
                     ? rowData.organizationType !==
                       OrganizationStatisticType.CALENDAR
                       ? listOptionsOrganization.filter(
-                          (org) => org.label !== ALL_TEAM_STATISTIC,
-                        )
-                      : listOptionsOrganization.filter(
                           (org) =>
                             org.label !== ALL_TEAM_STATISTIC &&
-                            org?.type === OrganizationStatisticType.CALENDAR,
+                            org?.type !== OrganizationStatisticType.CALENDAR,
                         )
-                    : listOptionsOrganization
+                      : listOptionsOrganization.filter(
+                          (org) => org.label !== ALL_TEAM_STATISTIC,
+                        )
+                    : listOptionsOrganization.filter(
+                        (org) =>
+                          org.label !== ALL_TEAM_STATISTIC &&
+                          org?.type !== OrganizationStatisticType.CALENDAR,
+                      )
                 }
                 isDisabled={
                   rowData.organizationType ===

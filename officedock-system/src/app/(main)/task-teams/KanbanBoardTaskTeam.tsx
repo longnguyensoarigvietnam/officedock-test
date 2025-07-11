@@ -39,6 +39,7 @@ import {
   EventWorkCategory,
   FilterTypeKanban,
   ItemStartType,
+  ServerStatusCode,
   StatusTask,
   StatusValueTask,
   TaskRepetitiveType,
@@ -47,7 +48,7 @@ import {
   COLUMN_ID_TASK,
   INITIAL_INDEX_VALUE,
   INITIAL_INDEX_VALUE_STEP,
-  NO_OPTION_CATEGORY,
+  NO_SETTING,
   TASK_REPETITIVE_OPTIONS,
 } from '@constants';
 import {
@@ -94,6 +95,7 @@ import api from '@base/api';
 const KanbanBoardTaskTeam = () => {
   // Context
   const {
+    oldUserAction,
     isLoadingDataTask,
     selectedOptionZoom,
     setSelectedOptionZoom,
@@ -111,7 +113,12 @@ const KanbanBoardTaskTeam = () => {
   } = useContext(TaskTeamStateContext);
 
   const { setIsLoading } = useContext(LoadingContext);
-  const { organizationTeamList } = useContext(GlobalStateContext);
+  const {
+    organizationTeamList,
+    selectedOrganization: selectedOrganizationSideBar,
+  } = useContext(GlobalStateContext);
+  const { taskSelected, statusTaskSelected, taskAddEmpty } =
+    useContext(TaskContext);
 
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
@@ -200,9 +207,12 @@ const KanbanBoardTaskTeam = () => {
   }, [organizationId]);
 
   // get list data team
-  useTaskBoardTeam({
+  const { refetchTaskBoardListTeam } = useTaskBoardTeam({
     current_screen: 'teamdock',
-    organization_id: organizationId as string,
+    organization_id: selectedOrganizationSideBar
+      ? (selectedOrganizationSideBar?.value as string)
+      : organizationId || '',
+
     filter: {
       userId: orderingOptions?.user_ids,
       is_cross_team_task: isConcurrently,
@@ -227,8 +237,17 @@ const KanbanBoardTaskTeam = () => {
     },
   });
 
+  useEffect(() => {
+    if (!isReadyToFetch) {
+      refetchTaskBoardListTeam();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConcurrently, refetchTaskBoardListTeam]);
+
   useTaskNoSettingTeam({
-    organization_id: organizationId as string,
+    organization_id:
+      (selectedOrganizationSideBar?.value as string) ||
+      (organizationId as string),
     filter: {
       userId: orderingOptions?.user_ids,
     },
@@ -1176,7 +1195,7 @@ const KanbanBoardTaskTeam = () => {
     if (data.categories.LARGE?.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.LARGE.value}` == NO_OPTION_CATEGORY
+          `${data.categories.LARGE.value}` == NO_SETTING
             ? null
             : `${data.categories.LARGE.value}`,
         type: EventWorkCategory.LARGE,
@@ -1185,7 +1204,7 @@ const KanbanBoardTaskTeam = () => {
     if (data.categories.MEDIUM.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.MEDIUM.value}` == NO_OPTION_CATEGORY
+          `${data.categories.MEDIUM.value}` == NO_SETTING
             ? null
             : `${data.categories.MEDIUM.value}`,
         type: EventWorkCategory.MEDIUM,
@@ -1194,7 +1213,7 @@ const KanbanBoardTaskTeam = () => {
     if (data.categories.SMALL.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.SMALL.value}` == NO_OPTION_CATEGORY
+          `${data.categories.SMALL.value}` == NO_SETTING
             ? null
             : `${data.categories.SMALL.value}`,
         type: EventWorkCategory.SMALL,
@@ -1388,7 +1407,7 @@ const KanbanBoardTaskTeam = () => {
     if (data.categories.LARGE?.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.LARGE.value}` == NO_OPTION_CATEGORY
+          `${data.categories.LARGE.value}` == NO_SETTING
             ? null
             : `${data.categories.LARGE.value}`,
         type: EventWorkCategory.LARGE,
@@ -1397,7 +1416,7 @@ const KanbanBoardTaskTeam = () => {
     if (data.categories.MEDIUM.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.MEDIUM.value}` == NO_OPTION_CATEGORY
+          `${data.categories.MEDIUM.value}` == NO_SETTING
             ? null
             : `${data.categories.MEDIUM.value}`,
         type: EventWorkCategory.MEDIUM,
@@ -1406,7 +1425,7 @@ const KanbanBoardTaskTeam = () => {
     if (data.categories.SMALL.value) {
       newWorkCategories.push({
         categoryId:
-          `${data.categories.SMALL.value}` == NO_OPTION_CATEGORY
+          `${data.categories.SMALL.value}` == NO_SETTING
             ? null
             : `${data.categories.SMALL.value}`,
         type: EventWorkCategory.SMALL,
@@ -1507,13 +1526,21 @@ const KanbanBoardTaskTeam = () => {
       if (data.peopleInCharge.length > 0) {
         editTaskInKanban({
           taskData: data,
-          oldIdStatus: parseInt(`${variant.oldIdStatus}`),
-          oldUserId: `user_${variant.oldIdPeople}`,
+          oldIdStatus: oldUserAction
+            ? oldUserAction.statusId
+            : parseInt(`${variant.oldIdStatus}`),
+          oldUserId: oldUserAction
+            ? oldUserAction.id
+            : `user_${variant.oldIdPeople}`,
         });
         updateTaskStatusTotal({
           taskData: data,
-          oldUserId: `user_${variant.oldIdPeople}`,
-          oldStatusName: variant.oldNameStatus || '',
+          oldUserId: oldUserAction
+            ? oldUserAction.id
+            : `user_${variant.oldIdPeople}`,
+          oldStatusName: oldUserAction
+            ? oldUserAction.statusName
+            : variant.oldNameStatus || '',
         });
         const itemChange = listTaskNoSetting.find(
           (item) => item.id === data.id,
@@ -1529,20 +1556,26 @@ const KanbanBoardTaskTeam = () => {
         }
       } else {
         updateTotalStatusSubtract({
-          userId:
-            dataTaskEdit?.peopleInCharge &&
-            dataTaskEdit.peopleInCharge.length > 0
-              ? `user_${dataTaskEdit.peopleInCharge[0].id}`
+          userId: oldUserAction
+            ? oldUserAction.id
+            : dataTaskEdit?.peopleInCharge &&
+                dataTaskEdit.peopleInCharge.length > 0
+              ? `user_${dataTaskEdit?.peopleInCharge[0].id}`
               : '',
-          statusName: dataTaskEdit?.status?.name || '',
+          statusName: oldUserAction
+            ? oldUserAction.statusName
+            : dataTaskEdit?.status?.name || '',
         });
         removeTaskById({
-          statusId: dataTaskEdit?.status?.id as number,
+          statusId: oldUserAction
+            ? oldUserAction.statusId
+            : (dataTaskEdit?.status?.id as number),
           taskId: dataTaskEdit?.id as number,
-          userId:
-            dataTaskEdit?.peopleInCharge &&
-            dataTaskEdit.peopleInCharge.length > 0
-              ? `user_${dataTaskEdit.peopleInCharge[0].id}`
+          userId: oldUserAction
+            ? oldUserAction.id
+            : dataTaskEdit?.peopleInCharge &&
+                dataTaskEdit.peopleInCharge.length > 0
+              ? `user_${dataTaskEdit?.peopleInCharge[0].id}`
               : '',
         });
         if (dataTaskEdit?.peopleInCharge.length !== 0) {
@@ -1619,6 +1652,13 @@ const KanbanBoardTaskTeam = () => {
       }
 
       handleRemoveParam();
+      if (
+        data.peopleInCharge &&
+        data.peopleInCharge.length &&
+        session?.user.id === data.peopleInCharge?.[0]?.id
+      ) {
+        queryClient.refetchQueries(['getDataTaskHeaderList']);
+      }
       queryClient.refetchQueries(['getTaskDurationDetail']);
       setPendingTaskData(null);
       setCloseAction(null);
@@ -1633,18 +1673,25 @@ const KanbanBoardTaskTeam = () => {
       detail: TaskErrorPerson;
       taskSchedules: TaskErrorPerson;
     }>) => {
-      if (response?.data.detail) {
-        setDataErrorTask(response?.data.detail);
-      } else if (response?.data.taskSchedules) {
-        showToast({
-          variant: 'error',
-          description: ERROR_MESSAGE_OVERLAP_TASK,
-        });
-      } else {
+      if (response?.status === ServerStatusCode.NOT_FOUND) {
         showToast({
           variant: 'error',
           description: ERROR_UPDATE_MESSAGE,
         });
+      } else {
+        if (response?.data.detail) {
+          setDataErrorTask(response?.data.detail);
+        } else if (response?.data.taskSchedules) {
+          showToast({
+            variant: 'error',
+            description: ERROR_MESSAGE_OVERLAP_TASK,
+          });
+        } else {
+          showToast({
+            variant: 'error',
+            description: ERROR_UPDATE_MESSAGE,
+          });
+        }
       }
     },
     onSettled: () => {
@@ -2099,7 +2146,10 @@ const KanbanBoardTaskTeam = () => {
     setDataTotalStatus((prevData) => {
       return prevData.map((user) => {
         if (user.id === oldUserId) {
-          if (oldStatusName === taskData.status?.name) {
+          if (
+            oldStatusName === taskData.status?.name &&
+            user.id === `user_${taskData.peopleInCharge[0]?.id}`
+          ) {
             return {
               ...user,
             };
@@ -2200,7 +2250,6 @@ const KanbanBoardTaskTeam = () => {
           (key) =>
             StatusValueTask[key as keyof typeof StatusValueTask] === statusId,
         ) as keyof TransformedStatuses;
-
         if (!statusKey) return user;
         return {
           ...user,
@@ -2243,7 +2292,6 @@ const KanbanBoardTaskTeam = () => {
   const remainingCount = allLabels.length - firstThree.length;
 
   // Handle start and stop task
-  const { taskSelected, statusTaskSelected } = useContext(TaskContext);
 
   const updateTaskIsStart = (taskId: number, isPause: boolean = false) => {
     setListDataKanbanTeam((prevData) =>
@@ -2270,6 +2318,18 @@ const KanbanBoardTaskTeam = () => {
       }
     }
   }, [statusTaskSelected, taskSelected]);
+
+  // Add task empty when start empty task
+  useEffect(() => {
+    if (
+      taskAddEmpty &&
+      taskAddEmpty.organization?.id == selectedOrganizationSideBar?.value &&
+      !isConcurrently
+    ) {
+      addTaskToKanban(taskAddEmpty);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskAddEmpty, selectedOrganizationSideBar, isConcurrently]);
   return (
     <>
       <div
@@ -2390,11 +2450,13 @@ const KanbanBoardTaskTeam = () => {
                             <span className="w-[71px] truncate">
                               {item.label}
                             </span>
-                            <ImageRound
-                              src={`/icons/close.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
+                            {!isLoadingDataTask && (
+                              <ImageRound
+                                src={`/icons/close.svg`}
+                                name="close"
+                                className="w-fit h-fit cursor-pointer"
+                              />
+                            )}
                           </div>
                         ))}
                         <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
@@ -2420,11 +2482,13 @@ const KanbanBoardTaskTeam = () => {
                             <span className="w-[71px] truncate">
                               {item.label}
                             </span>
-                            <ImageRound
-                              src={`/icons/close.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
+                            {!isLoadingDataTask && (
+                              <ImageRound
+                                src={`/icons/close.svg`}
+                                name="close"
+                                className="w-fit h-fit cursor-pointer"
+                              />
+                            )}
                           </div>
                         ))}
                       </>

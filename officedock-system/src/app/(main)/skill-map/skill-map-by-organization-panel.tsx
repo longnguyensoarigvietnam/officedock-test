@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useMutation } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { AxiosError } from 'axios';
 
 import ImageRound from '@components/common/ImageRound';
@@ -44,6 +44,8 @@ export const SkillMapByOrganizationPanel = ({
   const showErrorToast = useErrorToast();
   const { showToast } = useToast();
 
+  const queryClient = useQueryClient();
+
   // View comment
   const [openSkillMapCommentModal, setOpenSkillMapCommentModal] =
     useState<boolean>(false);
@@ -71,7 +73,9 @@ export const SkillMapByOrganizationPanel = ({
   useSkillMapComment({
     skillMapId: Number(selectedSkillMapToViewComment),
     onSuccess: (data: SkillMapComment[]) => {
-      setSkillMapCommentList(data.sort((preComment, nextComment) => preComment.id - nextComment.id));
+      setSkillMapCommentList(
+        data.sort((preComment, nextComment) => preComment.id - nextComment.id),
+      );
       setOpenSkillMapCommentModal(true);
     },
   });
@@ -79,13 +83,20 @@ export const SkillMapByOrganizationPanel = ({
   useSkillMapLevelUp({
     skillMapId: Number(selectedSkillMapToSubmitLevelUp),
     onSuccess: (data) => {
-      setSubmitLevelUpDetail({
-        ...data,
-        staffId: userId,
-      });
-      setOpenSubmitLevelUpModal(true);
-      if (data.isApplying) {
-        setIsSuccessSubmitLevelUp(true);
+      if (Object.keys(data).length) {
+        setSubmitLevelUpDetail({
+          ...data,
+          staffId: userId,
+        });
+        setOpenSubmitLevelUpModal(true);
+        if (data.isApplying) {
+          setIsSuccessSubmitLevelUp(true);
+        }
+      } else {
+        setSelectedSkillMapToSubmitLevelUp(null);
+        queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] === 'getSkillMapInfo',
+        });
       }
     },
   });
@@ -338,7 +349,6 @@ export const SkillMapByOrganizationPanel = ({
       </p>
 
       <div>
-
         {/* Steps bar */}
         <div className="flex w-full font-medium text-white text-[16px] mb-5 h-[32px]">
           <StepInfoTooltip

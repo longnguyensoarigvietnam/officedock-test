@@ -10,6 +10,7 @@ from rest_framework.exceptions import ValidationError, NotFound
 from base.apis import BaseAPIViewSet
 from base.messages import ERROR_MESSAGES, KEYWORDS
 from base.permissions import ActionPermission
+from chat.models import ChatMessage
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
 from common.utils import split_id_from_string
 from organizations.models import (
@@ -375,7 +376,7 @@ class SkillMapViewSet(
                         group_skill_map.append(
                             SkillReplaceSkilMapSerializer(skill).data
                         )
-                    skill = Skill.objects.filter(parent__id=skill.id).first()
+                    skill = Skill.objects.filter(parent_id=skill.id).first()
                 data_skill_maps.append(group_skill_map)
             data["organizations"].append(
                 {
@@ -423,7 +424,7 @@ class SkillMapViewSet(
                     group_skill.append(
                         SkillReplaceSkilMapSerializer(skill).data
                     )
-                    skill = Skill.objects.filter(parent__id=skill.id).first()
+                    skill = Skill.objects.filter(parent_id=skill.id).first()
                 data_skills.append(group_skill)
             data.append(
                 {
@@ -472,7 +473,7 @@ class SkillMapViewSet(
                     skill, context={"skill_map": skill_map}
                 ).data
             )
-            skill = Skill.objects.filter(parent__id=skill.id).first()
+            skill = Skill.objects.filter(parent_id=skill.id).first()
 
         return self.response_ok(data)
 
@@ -538,10 +539,10 @@ class SkillMapViewSet(
                 Q(permission__name=permission)
                 & Q(selection_result__in=selection_results)
                 & Q(Q(company=skill_map.company) | Q(role__system_role=True))
-            ).values_list("role__id", flat=True)
+            ).values_list("role_id", flat=True)
             users = (
                 User.objects.filter(
-                    user_roles__role__id__in=role_ids, company=skill_map.company
+                    roles__id__in=role_ids, company=skill_map.company
                 )
                 .exclude(id=skill_map.staff.id)
                 .all()
@@ -578,25 +579,70 @@ class SkillMapViewSet(
         ]
     )
     @action(
-        methods=["POST"],
+        methods=["POST", "DELETE"],
         detail=True,
         url_path="skill-map-level",
         serializer_class=UpdateSkillMapSkillLevelSerializer,
     )
+    @transaction.atomic()
     def update_skill_map_level(self, request, pk=None):
         """
         Handle update skill map skill level
         """
-        skill_map_level_id = request.query_params.get(
-            "skill_map_level_id", None
-        )
-        skill_map_level = get_object_or_404(
-            SkillMapSkillLevel, id=skill_map_level_id
-        )
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        skill_map_level.popup = serializer.validated_data.get("popup", True)
-        skill_map_level.save()
+        if request.method == "POST":
+            skill_map_level_id = request.query_params.get(
+                "skill_map_level_id", None
+            )
+            skill_map_level = get_object_or_404(
+                SkillMapSkillLevel, id=skill_map_level_id
+            )
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            skill_map_level.popup = serializer.validated_data.get("popup", True)
+            skill_map_level.save()
+        elif request.method == "DELETE":
+            skill_map = self.get_object()
+            old_skill = skill_map.skill_parent
+            skill_map_level_id = request.query_params.get(
+                "skill_map_level_id", None
+            )
+            skill_map_level = get_object_or_404(
+                SkillMapSkillLevel, id=skill_map_level_id
+            )
+            submit_level = SubmitLevelHistory.objects.filter(
+                skill=skill_map_level.skill,
+                step_after_submit=skill_map.step,
+                level_after_submit=skill_map_level.level,
+                staff=skill_map.staff,
+            ).first()
+            if not submit_level:
+                submit_level = SubmitLevelHistory.objects.filter(
+                    skill=old_skill,
+                    step_after_submit=skill_map.step,
+                    level_after_submit=skill_map_level.level,
+                    staff=skill_map.staff,
+                ).first()
+            step_before_submit = submit_level.step_before_submit
+            level_before_submit = submit_level.level_before_submit
+            ChatMessage.objects.filter(submit_level=submit_level).delete()
+            submit_level.delete()
+            skill_map_level.delete()
+            last_skill_map = skill_map.skill_map_skill_levels.filter(
+                is_complete=True
+            )
+            if last_skill_map.exists():
+                last_skill_map.update(is_complete=False, popup=False)
+            else:
+                old_skil_map = SkillMap.objects.filter(
+                    skill=old_skill,
+                    staff=skill_map.staff,
+                    step=step_before_submit,
+                )
+                old_skil_map.update(is_complete=False)
+                old_skil_map.first().skill_map_skill_levels.filter(
+                    is_complete=True, level=level_before_submit
+                ).update(is_complete=False, popup=False)
+                skill_map.delete()
 
         return self.response_ok()
 
@@ -829,6 +875,13 @@ class SkillViewSet(
         if categories:
             for category in categories:
                 # Validate data category
+                if (
+                    category["large_statistic_category"]
+                    == category["medium_statistic_category"]
+                    == category["small_statistic_category"]
+                    is None
+                ):
+                    continue
                 large_category = category.get("large_statistic_category")
                 medium_category = category.get("medium_statistic_category")
                 small_category = category.get("small_statistic_category")
@@ -836,6 +889,7 @@ class SkillViewSet(
                     large_statistic_category=large_category,
                     medium_statistic_category=medium_category,
                     small_statistic_category=small_category,
+                    organization=skill.organization,
                 )
                 if not org_cat.exists():
                     raise ValidationError(
@@ -960,6 +1014,6 @@ class SkillViewSet(
         # Handle data from root to last child
         while skill:
             data.append(SkillSerializer(skill).data)
-            skill = Skill.objects.filter(parent__id=skill.id).first()
+            skill = Skill.objects.filter(parent_id=skill.id).first()
 
         return self.response_ok(data)

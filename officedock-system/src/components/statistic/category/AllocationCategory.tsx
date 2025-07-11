@@ -12,7 +12,7 @@ import { formatTimeToJapanese } from '@utils/date';
 import { mapStatisticCategoryInfoToProgressData } from '@utils';
 
 import { EventWorkCategory } from '@constants/enums';
-import { DEFAULT_TIME_TEXT, NO_SETTING } from '@constants';
+import { NO_SETTING } from '@constants';
 
 import { StatisticStateContext } from '@providers/StatisticProvider';
 
@@ -44,7 +44,6 @@ const AllocationCategory = memo(
     const [detailCategory, setDetailCategory] = useState<{
       id: number | null;
       type: string;
-      totalDuration: string;
       organizationId?: string;
     } | null>(null);
 
@@ -58,6 +57,7 @@ const AllocationCategory = memo(
       ProgressDataType[]
     >([]);
     const {
+      isDisableCalendar,
       isHasLoading,
       totalDurationLarge,
       totalDurationMedium,
@@ -74,8 +74,6 @@ const AllocationCategory = memo(
       isLoadingLarge,
       isLoadingMedium,
       isLoadingOrganization,
-      setTotalDurationTask,
-      setTotalDurationCategory,
     } = useContext(StatisticStateContext);
 
     useEffect(() => {
@@ -121,31 +119,10 @@ const AllocationCategory = memo(
       type: string,
       organizationId?: string,
     ) => {
-      let duration: string = DEFAULT_TIME_TEXT;
       if (isLoadingLarge || isLoadingMedium || isLoadingOrganization) return;
-
-      if (type === EventWorkCategory.ALL) {
-        duration =
-          statisticCategoryList?.largeCategories.find(
-            (item) => item.categoryId == id,
-          )?.duration || DEFAULT_TIME_TEXT;
-      }
-      if (type === EventWorkCategory.LARGE) {
-        duration =
-          statisticCategoryList?.mediumCategories?.find(
-            (item) => item.categoryId == id,
-          )?.duration || DEFAULT_TIME_TEXT;
-      }
-      if (type === EventWorkCategory.MEDIUM) {
-        duration =
-          statisticCategoryList?.smallCategories?.find(
-            (item) => item.categoryId == id,
-          )?.duration || DEFAULT_TIME_TEXT;
-      }
       setDetailCategory({
         id: id,
         type: type,
-        totalDuration: duration,
         organizationId,
       });
 
@@ -161,7 +138,6 @@ const AllocationCategory = memo(
         );
         item && handleSelectLarge(item);
 
-        setTotalDurationTask(detailCategory.totalDuration);
         if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectLarge({
             label: NO_SETTING,
@@ -174,7 +150,6 @@ const AllocationCategory = memo(
           (item) => item.value === detailCategory?.id,
         );
         item && handleSelectMedium(item);
-        setTotalDurationTask(detailCategory.totalDuration);
         if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectMedium({
             label: NO_SETTING,
@@ -187,7 +162,6 @@ const AllocationCategory = memo(
           (item) => item.value === detailCategory?.id,
         );
         item && handleSelectSmall(item);
-        setTotalDurationTask(detailCategory.totalDuration);
         if (String(detailCategory?.id) == NO_SETTING) {
           handleSelectSmall({
             label: NO_SETTING,
@@ -205,7 +179,6 @@ const AllocationCategory = memo(
             label: NO_SETTING,
             value: NO_SETTING,
           });
-          setTotalDurationCategory(detailCategory.totalDuration);
         }
       }
 
@@ -427,7 +400,9 @@ const AllocationCategory = memo(
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
-                        disabled={!selectedLarge || isHasLoading}
+                        disabled={
+                          !selectedLarge || isHasLoading || isDisableCalendar
+                        }
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}

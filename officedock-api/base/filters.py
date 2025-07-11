@@ -44,16 +44,17 @@ class FilterByPermission(DjangoFilterBackend):
         permission_name = f"{screen_name}_{action}"
 
         # Retrieve the role permission
+        user_logged = request.user
         role_permissions = RoleDetail.objects.filter(
-            role__users=request.user, permission__name=permission_name
+            role__users=user_logged, permission__name=permission_name
         ).all()
 
         if not role_permissions:
             return queryset.none()
 
-        org_ids = list(request.user.organizations.values_list("id", flat=True))
+        org_ids = list(user_logged.organizations.values_list("id", flat=True))
 
-        if calendar_org := request.user.company.get_calendar_organization():
+        if calendar_org := user_logged.company.get_calendar_organization():
             org_ids.append(calendar_org.id)
 
         if screen_name != Screens.ORGANIZATION_HIERARCHY.value:
@@ -64,7 +65,7 @@ class FilterByPermission(DjangoFilterBackend):
                     org_ids.append(child.id)
                     _get_children(child)
 
-            _get_children(request.user)
+            _get_children(user_logged)
             org_ids = set(org_ids)
 
         selection_results = [item.selection_result for item in role_permissions]
@@ -92,16 +93,16 @@ class FilterByPermission(DjangoFilterBackend):
         elif SelectionResultOptions.ONLY_DATA_OWN.value in selection_results:
             # Filter queryset by own data
             if queryset.model is User:
-                return queryset.filter(id=request.user.id)
+                return queryset.filter(id=user_logged.id)
             elif queryset.model in [SkillMap, SubmitLevelHistory]:
-                return queryset.filter(staff=request.user.id)
+                return queryset.filter(staff=user_logged.id)
         elif (
             SelectionResultOptions.ALLOWED_WITHOUT_OWN_DATA.value
             in selection_results
         ):
             # Filter queryset by exclude own data
             if queryset.model is SubmitLevelHistory:
-                return queryset.exclude(staff__id=request.user.id)
+                return queryset.exclude(staff=user_logged.id)
         elif (
             SelectionResultOptions.ONLY_DATA_ORGANIZATION_WITHOUT_OWN_DATA.value
             in selection_results
@@ -109,7 +110,7 @@ class FilterByPermission(DjangoFilterBackend):
             # Filter queryset by exclude own data
             if queryset.model is SubmitLevelHistory:
                 return queryset.filter(organization__in=org_ids).exclude(
-                    staff__id=request.user.id
+                    staff=user_logged.id
                 )
         else:
             return queryset if current_screen else queryset.none()

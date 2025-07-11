@@ -11,9 +11,14 @@ import { OptionDropdownType } from '@interfaces/common';
 import { MergedTableTag, TagTableRowDetail } from '@interfaces/statistic';
 
 import { getAdjustedStartDateDefault } from '@utils/date';
-import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
+import {
+  OrganizationStatisticType,
+  StatisticViewLabels,
+  StatisticViewOptions,
+} from '@constants/enums';
 
 interface ContextValue {
+  isDisableCalendar: boolean;
   isHasLoading: boolean;
   selectedOrganization: OptionDropdownType | null;
   selectedLarge: OptionDropdownType | null;
@@ -137,9 +142,14 @@ interface ContextValue {
   handleResetTableData: () => void;
 
   removeTag: (selected: OptionDropdownType) => void;
+  dataMediumCalendar: OptionDropdownType | undefined;
+  setDataMediumCalendar: Dispatch<
+    SetStateAction<OptionDropdownType | undefined>
+  >;
 }
 
 const defaultValue: ContextValue = {
+  isDisableCalendar: false,
   isHasLoading: false,
   smallOptions: [],
   mediumOptions: [],
@@ -233,6 +243,8 @@ const defaultValue: ContextValue = {
   setMergedTableData: () => {},
   handleResetTableData: () => {},
   removeTag: () => {},
+  dataMediumCalendar: undefined,
+  setDataMediumCalendar: () => {},
 };
 
 export const StatisticTeamTagsStateContext =
@@ -291,6 +303,8 @@ export const StatisticTeamTagsStateProvider = ({
   // Page task list
 
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [dataMediumCalendar, setDataMediumCalendar] =
+    useState<OptionDropdownType>();
 
   // Total
   // Total duration
@@ -393,6 +407,9 @@ export const StatisticTeamTagsStateProvider = ({
     isLoadingSmall ||
     isLoadingSmallCompare;
 
+  const isDisableCalendar =
+    selectedOrganization?.type === OrganizationStatisticType.CALENDAR;
+
   const contextValue: ContextValue = {
     smallOptions,
     mediumOptions,
@@ -493,6 +510,9 @@ export const StatisticTeamTagsStateProvider = ({
     handleResetTableData,
 
     isHasLoading,
+    dataMediumCalendar,
+    setDataMediumCalendar,
+    isDisableCalendar,
   };
 
   return (

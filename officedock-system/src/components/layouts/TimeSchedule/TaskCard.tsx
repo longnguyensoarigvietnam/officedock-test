@@ -313,9 +313,13 @@ const TaskCard = ({
   const timeoutId = useRef<NodeJS.Timeout | null>(null);
 
   const handleMouseEnter = (e: any) => {
+    const viewportHeight = window.innerHeight;
+    const cursorY = e.clientY;
+
+    const isNearBottom = viewportHeight - cursorY < 150;
     setLocal({
       clientX: e.clientX,
-      clientY: e.clientY,
+      clientY: isNearBottom ? e.clientY - 150 : e.clientY,
     });
     setIsHovering(true);
   };
@@ -584,7 +588,9 @@ const TaskCard = ({
                   )}
                 </p>
                 {!resourcePlan && !isCalculation && (
-                  <p>{getMinuteDifference(event.timeText)}分</p>
+                  <p className="break-all">
+                    {getMinuteDifference(event.timeText)}分
+                  </p>
                 )}
               </div>
             </div>

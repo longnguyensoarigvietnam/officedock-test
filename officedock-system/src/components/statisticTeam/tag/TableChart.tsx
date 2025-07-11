@@ -31,7 +31,11 @@ import {
   OrganizationStatisticType,
   ScreenName,
 } from '@constants/enums';
-import { ALL_TEAM_STATISTIC, NO_SETTING } from '@constants';
+import {
+  ALL_TEAM_STATISTIC,
+  DEFAULT_EMPTY_CATEGORY,
+  NO_SETTING,
+} from '@constants';
 import { ERROR_UPDATE_MESSAGE } from '@constants/message';
 import { apiRouters } from '@constants/routers';
 
@@ -46,6 +50,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useErrorToast } from '@hooks/useErrorToast';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import useCreationDataStatisticAllTeam from '@hooks/useCreationDataStatisticAllTeam';
+import { Task } from '@interfaces/task';
 
 interface TableChartProps {
   ordering: string;
@@ -55,6 +60,12 @@ interface TableChartProps {
   listOptionsOrganization: OptionDropdownType[];
   creationDataStatisticData: CreationStatisticType | undefined;
   setOrdering: (ord: string) => void;
+  setTaskList: React.Dispatch<
+    React.SetStateAction<DataTaskListStatisticListType[]>
+  >;
+  setTaskListCompare: React.Dispatch<
+    React.SetStateAction<DataTaskListStatisticListType[]>
+  >;
 }
 
 const TagListInfo = ({ tagList }: { tagList: OptionDropdownType[] }) => {
@@ -138,6 +149,8 @@ const TableChart = ({
   creationDataStatisticData,
   listOptionsOrganization,
   setOrdering,
+  setTaskList,
+  setTaskListCompare,
 }: TableChartProps) => {
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();
@@ -145,7 +158,6 @@ const TableChart = ({
   const {
     isCheckCompare,
     selectedOrganization,
-    setIsSkeletonTagTeamTask,
     setIsLoadingLarge,
     setIsLoadingLargeCompare,
     setIsLoadingMedium,
@@ -176,7 +188,7 @@ const TableChart = ({
     }[];
     organizationId?: number | null;
   }) => {
-    const { data } = await api.patch(
+    const { data } = await api.patch<Task>(
       `${apiRouters.TASK_DETAIL(`${dataTask.id}`)}?current_screen=${ScreenName.STATISTIC}`,
       dataTask,
     );
@@ -186,17 +198,40 @@ const TableChart = ({
     'postEditCategoryTaskInline',
     handleEditCategoryInline,
     {
-      onSuccess: async () => {
+      onSuccess: async (data) => {
+        setTaskList((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories:
+                    data.categories && data.categories.length > 0
+                      ? data.categories
+                      : DEFAULT_EMPTY_CATEGORY,
+                }
+              : task,
+          ),
+        );
+        setTaskListCompare((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories:
+                    data.categories && data.categories.length > 0
+                      ? data.categories
+                      : DEFAULT_EMPTY_CATEGORY,
+                }
+              : task,
+          ),
+        );
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingSmall(true);
         setIsLoadingOrganization(true);
-        setIsSkeletonTagTeamTask(true);
-        if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
-          queryClient.invalidateQueries({
-            predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
-          });
-        }
+        queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
+        });
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTagsListTeam',
@@ -206,12 +241,10 @@ const TableChart = ({
           setIsLoadingMediumCompare(true);
           setIsLoadingSmallCompare(true);
           setIsLoadingOrganizationCompare(true);
-          if (selectedOrganization?.label !== ALL_TEAM_STATISTIC) {
-            queryClient.invalidateQueries({
-              predicate: (query) =>
-                query.queryKey[0] === 'getStatisticTaskListCompare',
-            });
-          }
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTaskListCompare',
+          });
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTagsListTeamCompare',
@@ -244,18 +277,35 @@ const TableChart = ({
     'postEditCategoryEventInline',
     handleEditEventCategoryInline,
     {
-      onSuccess: async () => {
+      onSuccess: async (data) => {
+        setTaskList((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
+        setTaskListCompare((prev) =>
+          prev.map((task) =>
+            task.id === data.id
+              ? {
+                  ...task,
+                  categories: data.categories,
+                }
+              : task,
+          ),
+        );
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingSmall(true);
         setIsLoadingOrganization(true);
-        setIsSkeletonTagTeamTask(true);
+        queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
+        });
 
-        if (selectedOrganization?.label === ALL_TEAM_STATISTIC) {
-          queryClient.invalidateQueries({
-            predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
-          });
-        }
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTagsListTeam',
@@ -265,12 +315,10 @@ const TableChart = ({
           setIsLoadingMediumCompare(true);
           setIsLoadingSmallCompare(true);
           setIsLoadingOrganizationCompare(true);
-          if (selectedOrganization?.label === ALL_TEAM_STATISTIC) {
-            queryClient.invalidateQueries({
-              predicate: (query) =>
-                query.queryKey[0] === 'getStatisticTaskListCompare',
-            });
-          }
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTaskListCompare',
+          });
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTagsListTeamCompare',
@@ -288,6 +336,8 @@ const TableChart = ({
   const columns: ColumnDef<ListTaskStatistic>[] = [
     {
       accessorKey: 'name',
+      enableSorting: false,
+
       header: 'タスク名',
       size: 70,
       cell: (info) => {
@@ -378,6 +428,8 @@ const TableChart = ({
     },
     {
       accessorKey: 'categories',
+      enableSorting: false,
+
       header: () => {
         return (
           <p className="text-[#77858F] font-medium text-xs text-left">
@@ -483,16 +535,22 @@ const TableChart = ({
                   OrganizationStatisticType.CALENDAR
                 }
                 options={
-                  selectedOrganization?.value === ALL_TEAM_STATISTIC
-                    ? listOptionAllTeamOrg?.filter(
-                        (item) =>
-                          item?.type !== OrganizationStatisticType.CALENDAR,
-                      )
-                    : selectedOrganization
-                      ? listOptionsOrganization.filter(
-                          (item) => item.value === selectedOrganization.value,
+                  selectedOrganization?.label === ALL_TEAM_STATISTIC
+                    ? rowData.organizationType !==
+                      OrganizationStatisticType.CALENDAR
+                      ? listOptionAllTeamOrg?.filter(
+                          (org) =>
+                            org.label !== ALL_TEAM_STATISTIC &&
+                            org?.type !== OrganizationStatisticType.CALENDAR,
                         )
-                      : []
+                      : listOptionAllTeamOrg?.filter(
+                          (org) => org.label !== ALL_TEAM_STATISTIC,
+                        )
+                    : listOptionsOrganization.filter(
+                        (org) =>
+                          org.label !== ALL_TEAM_STATISTIC &&
+                          org?.type !== OrganizationStatisticType.CALENDAR,
+                      )
                 }
                 isDisabled={
                   rowData.organizationType ===

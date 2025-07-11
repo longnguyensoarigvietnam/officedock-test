@@ -11,7 +11,6 @@ import {
   StatisticsCategories,
 } from '@interfaces/statistic';
 
-import { DEFAULT_TIME_TEXT } from '@constants';
 import { EventWorkCategory } from '@constants/enums';
 import { getRandomColor, lightenColor } from '@utils';
 import { LoadingContext } from '@providers/LoadingProvider';
@@ -45,6 +44,7 @@ const PercentageTagsCompare = ({
   handleSelectOrganization,
 }: Props) => {
   const {
+    isDisableCalendar,
     isHasLoading,
     largeOptions,
     mediumOptions,
@@ -80,14 +80,12 @@ const PercentageTagsCompare = ({
   const [detailCategory, setDetailCategory] = useState<{
     id: number | null;
     type: string;
-    totalDuration: string;
     organizationId?: string;
   } | null>(null);
 
   const [detailCategoryCompare, setDetailCategoryCompare] = useState<{
     id: number | null;
     type: string;
-    totalDuration: string;
     organizationId?: string;
   } | null>(null);
 
@@ -206,48 +204,15 @@ const PercentageTagsCompare = ({
     }
   }, [statisticTagsCompareList]);
 
-  const getDuration = (
-    dataSource: StatisticsCategories,
-    type: EventWorkCategory,
-    tagId: number,
-    organizationId?: string,
-  ): string => {
-    const categoryMap = {
-      [EventWorkCategory.ALL]: dataSource?.largeCategories,
-      [EventWorkCategory.LARGE]: dataSource?.mediumCategories,
-      [EventWorkCategory.MEDIUM]: dataSource?.smallCategories,
-      [EventWorkCategory.SMALL]: dataSource?.category,
-    };
-
-    const categoryList = categoryMap[type] || [];
-
-    const item = categoryList?.find(
-      (item: any) =>
-        item.tagId === tagId &&
-        (!organizationId || String(item.organizationId) === organizationId),
-    );
-
-    return item?.duration || DEFAULT_TIME_TEXT;
-  };
-
   const handleClickTooltip = (
     id: number | null,
     type: EventWorkCategory,
     isCompare: boolean,
     organizationId?: string,
   ) => {
-    const dataSource = isCompare ? statisticTagsCompareList : statisticTagsList;
-    const duration = getDuration(
-      dataSource as StatisticsCategories,
-      type,
-      id as number,
-      organizationId,
-    );
-
     const detailData = {
       id,
       type,
-      totalDuration: duration,
       organizationId,
     };
 
@@ -445,7 +410,9 @@ const PercentageTagsCompare = ({
                       options={mediumOptions}
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}
-                      disabled={!selectedLarge || isHasLoading}
+                      disabled={
+                        !selectedLarge || isHasLoading || isDisableCalendar
+                      }
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
@@ -495,7 +462,9 @@ const PercentageTagsCompare = ({
                       options={smallOptions}
                       selectedOption={selectedSmall || undefined}
                       onChange={(data) => handleSelectSmall(data)}
-                      disabled={!selectedMedium || isHasLoading}
+                      disabled={
+                        !selectedMedium || isHasLoading || isDisableCalendar
+                      }
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare

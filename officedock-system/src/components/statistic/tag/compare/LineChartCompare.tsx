@@ -24,6 +24,7 @@ import ImageRound from '@components/common/ImageRound';
 import { Table, TableBody } from '@components/common/Table';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import Dropdown from '@components/common/Dropdown';
+import StatisticLineChartTableSkeleton from '@components/common/SkeletonLoading/StatisticLineChartTableSkeleton';
 import { MyDockCompareLineChartTooltip } from '@components/tooltip/MyDockCompareLineChartTooltip';
 
 import { StatisticsTagTaskDuration } from '@interfaces/statistic';
@@ -60,6 +61,7 @@ import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 import useStatisticTagTaskDurations from '@hooks/useStatisticTagTaskDurations';
 import useStatisticTagTaskDurationsCompare from '@hooks/useStatisticTagTaskDurationsCompare';
+
 import FilterTag from '../filter/FilterTag';
 
 ChartJS.register(
@@ -118,6 +120,7 @@ const LineChartCompare = ({
   handleSelectSmall,
 }: Props) => {
   const {
+    isDisableCalendar,
     isHasLoading,
     listOptionsOrganization,
     largeOptions,
@@ -1136,7 +1139,9 @@ const LineChartCompare = ({
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
-                    disabled={!selectedLarge || isHasLoading}
+                    disabled={
+                      !selectedLarge || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>
@@ -1168,7 +1173,9 @@ const LineChartCompare = ({
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
-                    disabled={!selectedMedium || isHasLoading}
+                    disabled={
+                      !selectedMedium || isHasLoading || isDisableCalendar
+                    }
                   />
                 </div>
               </div>
@@ -1369,10 +1376,7 @@ const LineChartCompare = ({
                 </TableBody>
               </Table>
             ) : (
-              <RowSkeleton
-                numberOfRows={1}
-                className={`!h-[200px] mt-5 w-full mx-auto`}
-              />
+              <StatisticLineChartTableSkeleton />
             )}
           </div>
         </>

@@ -454,3 +454,16 @@ export const OPTION_DEFAULT_TASK = {
   type: 'TASK',
   totalData: DEFAULT_TIME_TEXT,
 };
+
+export const NO_SETTING_CATEGORY = {
+  id: NO_SETTING,
+  name: NO_SETTING,
+  uuid: NO_SETTING,
+};
+export const DEFAULT_EMPTY_CATEGORY = [
+  {
+    ...NO_SETTING_CATEGORY,
+    type: 'LARGE',
+    color: '',
+  },
+];

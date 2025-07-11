@@ -19,6 +19,7 @@ import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import { ActualDurationDefaultData } from '@interfaces/durations';
+
 import { calculateActualDuration, convertToTimeString } from '@utils/date';
 
 const ActualDurationsDetail = () => {
@@ -26,6 +27,7 @@ const ActualDurationsDetail = () => {
   const { showToast } = useToast();
   const { expanded } = useContext(GlobalStateContext);
   const router = useRouter();
+
   const [taskScheduleDetail, setTaskScheduleDetail] =
     useState<ActualDurationDefaultData>();
 
@@ -99,12 +101,17 @@ const ActualDurationsDetail = () => {
           {[
             taskScheduleDetail?.largeCategory?.label,
             taskScheduleDetail?.mediumCategory?.label,
-            taskScheduleDetail?.smallCategory?.label,
+            taskScheduleDetail?.taskId
+              ? taskScheduleDetail?.smallCategory?.label
+              : '',
           ].some(Boolean)
             ? [
                 taskScheduleDetail?.largeCategory?.label || NO_OPTION_CATEGORY,
                 taskScheduleDetail?.mediumCategory?.label || NO_OPTION_CATEGORY,
-                taskScheduleDetail?.smallCategory?.label || NO_OPTION_CATEGORY,
+                taskScheduleDetail?.taskId
+                  ? taskScheduleDetail?.smallCategory?.label ||
+                    NO_OPTION_CATEGORY
+                  : '',
               ]
                 .filter(Boolean)
                 .join('＞')
