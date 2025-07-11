@@ -37,7 +37,7 @@ from common.utils import (
 )
 from organizations.constants import OrganizationTypes
 from organizations.models import Organization
-from stat_data.constants import ALL_TEAM, FilterTime
+from stat_data.constants import ALL_TEAM, FilterTime, NONE_CATEGORY
 from stat_data.serializers import (
     StatisticTaskSerializer,
     StatisticEventSerializer,
@@ -162,7 +162,7 @@ class StatisticViewSet(BaseAPIViewSet):
             medium_id=medium_category_id,
             small_id=small_category_id,
         )
-        total_duration = get_total_durations(durations)
+        total_duration = get_total_durations(durations, is_tag_page, tag_ids)
         total_duration = format_duration(total_duration)
         filters = Q(
             Q(task_durations__user=user)
@@ -535,7 +535,7 @@ class StatisticViewSet(BaseAPIViewSet):
                             medium_id=medium_category_id,
                             small_id=category_id,
                         )
-            if category_id is None:
+            if category_id == NONE_CATEGORY:
                 filter_durations = get_duration_of_none_category(
                     filter_durations if filter_durations else durations,
                     large_category_id,
@@ -1116,7 +1116,7 @@ class StatisticViewSet(BaseAPIViewSet):
                     filter_durations = _handle_get_filter_durations(
                         id, filter_duration_by_range
                     )
-                    if id is None:
+                    if id == NONE_CATEGORY:
                         filter_durations = get_duration_of_none_category(
                             filter_durations
                             if filter_durations
@@ -1444,6 +1444,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 type_total_duration="medium_total_duration",
                 type_category="medium_categories",
                 organization_id=organization_id,
+                organizations=organizations,
             )
 
             if medium_category_id and calendar_org.id not in organizations:
@@ -1457,6 +1458,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                     type_total_duration="small_total_duration",
                     type_category="small_categories",
                     organization_id=organization_id,
+                    organizations=organizations,
                 )
 
                 if small_category_id:
@@ -1470,6 +1472,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                         type_total_duration="category_total_duration",
                         type_category="category",
                         organization_id=organization_id,
+                        organizations=organizations,
                     )
 
         return self.response_ok(data)
@@ -1485,6 +1488,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         type_total_duration=None,
         type_category=None,
         organization_id=None,
+        organizations=None,
     ):
         """
         Return data of statistic tag by category
@@ -1499,7 +1503,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             tag_ids,
             durations=durations,
             organization_ids_param=organization_id,
-            organization_ids=[organization_id],
+            organization_ids=organizations,
         )
         data[type_total_duration] = format_duration(total_duration)
         data[type_category] = process_tags(

@@ -622,7 +622,6 @@ def process_merge_card_per_tag(
     organizations = Organization.all_objects.filter(
         id__in=organization_ids
     ).only("id", "name")
-
     grouped_data = defaultdict(list)
     total_duration = timedelta(0)
 
@@ -653,7 +652,6 @@ def process_merge_card_per_tag(
             if d.schedule_id
             else None
         )
-
         if org_id is None or org_id not in organization_ids:
             continue
 
@@ -672,7 +670,6 @@ def process_merge_card_per_tag(
             if organization_ids_param == ALL_TEAM
             else tag_map[tag_id]
         )
-
         tag_totals[key] = {
             "organization_id": org_id,
             "tag_id": tag_id,
@@ -766,14 +763,22 @@ def build_category_filters(
     return filters
 
 
-def get_total_durations(durations):
+def get_total_durations(durations, is_tag_page=False, tag_ids=[]):
     """
     Handle get total durations
     """
     total_duration = timedelta()
     for duration in durations:
         paused_at = duration.paused_at if duration.paused_at else timezone.now()
-        total_duration += paused_at - duration.started_at
+        if is_tag_page:
+            obj = duration.task or duration.schedule
+            related_tag_count = obj.tags.filter(id__in=tag_ids).count()
+            total_duration += (
+                paused_at - duration.started_at
+            ) * related_tag_count
+        else:
+            total_duration += paused_at - duration.started_at
+
     return time_str_to_timedelta(format_duration(total_duration))
 
 
