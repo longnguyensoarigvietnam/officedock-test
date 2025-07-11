@@ -20,6 +20,7 @@ from base.messages import ERROR_MESSAGES
 from calendars.constants import ScheduleCategoryTypes
 from chat.constants import USER_ACTION_GROUP, WebSocketEventType
 from common.constants import STRIP_TAGS
+from organizations.constants import CategoryColors, OrganizationTypes
 from organizations.models import OrganizationsStatisticCategories, Organization
 from roles.constants import SelectionResultOptions, Screens
 from skills.constants import DEFAULT_TIME
@@ -244,7 +245,7 @@ def check_permission_exists(request, permission_name):
     )
 
 
-def transform_statistic_categories(statistic_categories):
+def transform_statistic_categories_for_skill_map(statistic_categories):
     """
     Transform flat list of statistic categories into a nested hierarchy:
     large → medium → small, with default placeholders for null values.
@@ -325,6 +326,111 @@ def transform_statistic_categories(statistic_categories):
     return result
 
 
+def transform_statistic_categories(statistic_categories):
+    """
+    Transform flat list of statistic categories into a nested hierarchy:
+    large → medium → small, with default placeholders for null values.
+    Handles duplicates by ID properly and ensures '未設定' categories are shown first.
+    """
+    LARGE = ScheduleCategoryTypes.LARGE.value
+    MEDIUM = ScheduleCategoryTypes.MEDIUM.value
+    SMALL = ScheduleCategoryTypes.SMALL.value
+    DEFAULT_CATEGORY = {
+        "id": None,
+        "name": NONE_CATEGORY,
+        "uuid": NONE_CATEGORY,
+        "color": CategoryColors.GRAY.value,
+    }
+
+    def normalize_category(category):
+        return dict(category) if category else None
+
+    def get_color(category, default_color=CategoryColors.GRAY.value):
+        return (
+            CategoryColors.GRAY.value
+            if category.get("id") in [None, NONE_CATEGORY]
+            else default_color
+        )
+
+    large_dict = {}
+
+    for item in statistic_categories:
+        large = normalize_category(item.get("large_statistic_category"))
+        medium = normalize_category(item.get("medium_statistic_category"))
+        small = normalize_category(item.get("small_statistic_category"))
+
+        large_key = str(large.get("id")) if large else "None"
+        large_data = large if large else DEFAULT_CATEGORY
+
+        large_color = get_color(
+            large_data, item.get("color", CategoryColors.GRAY.value)
+        )
+
+        if large_key not in large_dict:
+            large_dict[large_key] = {
+                LARGE: {**large_data, "color": large_color},
+                MEDIUM: {},
+            }
+
+        medium_dict = large_dict[large_key][MEDIUM]
+
+        medium_key = str(medium.get("id")) if medium else "None"
+        if medium_key not in medium_dict:
+            medium_data = medium if medium else None
+            medium_dict[medium_key] = {
+                MEDIUM: medium_data,
+                SMALL: [],
+            }
+
+        small_list = medium_dict[medium_key][SMALL]
+        if small and all(
+            str(s.get("id")) != str(small.get("id")) for s in small_list
+        ):
+            small_entry = {**small}
+            if small_entry.get("id") in [None, NONE_CATEGORY]:
+                small_entry["uuid"] = NONE_CATEGORY
+                small_entry["color"] = CategoryColors.GRAY.value
+            small_list.append(small_entry)
+
+    # Ensure '未設定' large/medium/small exists
+    none_large_key = "None"
+    if none_large_key not in large_dict:
+        large_dict[none_large_key] = {
+            LARGE: DEFAULT_CATEGORY,
+            MEDIUM: {
+                "None": {
+                    MEDIUM: None,
+                    SMALL: [],
+                }
+            },
+        }
+
+    # Sort helper
+    def sort_key(item):
+        if item is None:
+            return 0, ""
+        name = str(item.get("name") or "")
+        return 0 if name == NONE_CATEGORY else 1, name
+
+    result = []
+    for large_id, large_data in sorted(
+        large_dict.items(),
+        key=lambda x: (0 if x[0] == "None" else 1, sort_key(x[1][LARGE])),
+    ):
+        medium_list = []
+        medium_items = list(large_data[MEDIUM].values())
+
+        for medium_data in sorted(
+            medium_items, key=lambda m: sort_key(m[MEDIUM])
+        ):
+            medium_data[SMALL].sort(key=sort_key)
+            medium_list.append(medium_data)
+
+        result.append({LARGE: large_data[LARGE], MEDIUM: medium_list})
+
+    return result
+
+
 def get_common_categories(category, obj=None):
     """Handle transform common category"""
 
@@ -381,21 +487,29 @@ def get_common_categories_with_none_category(category, obj=None):
             .values_list("color", flat=True)
             .first()
         )
-    return [
-        {
-            "id": getattr(category, attr).id
-            if getattr(category, attr)
-            else NONE_CATEGORY,
-            "name": getattr(category, attr).name
-            if getattr(category, attr)
-            else NONE_CATEGORY,
-            "color": color
-            if type_value == ScheduleCategoryTypes.LARGE.value
-            else None,
-            "type": type_value,
-        }
-        for attr, type_value in category_types
-    ]
+    formatted = []
+    for attr, type_value in category_types:
+        if (
+            obj
+            and obj.organization.type == OrganizationTypes.CALENDAR.value
+            and type_value == ScheduleCategoryTypes.SMALL.value
+        ):
+            continue
+        formatted.append(
+            {
+                "id": getattr(category, attr).id
+                if getattr(category, attr)
+                else NONE_CATEGORY,
+                "name": getattr(category, attr).name
+                if getattr(category, attr)
+                else NONE_CATEGORY,
+                "color": color
+                if type_value == ScheduleCategoryTypes.LARGE.value
+                else None,
+                "type": type_value,
+            }
+        )
+    return formatted
 
 
 def create_categories_by_model(model, categories):

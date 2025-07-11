@@ -219,7 +219,10 @@ def calculate_progress_skill_map(
             ).first()
             actual_measure_count = current_skill_level.actual_measure_count
             actual_measure_time = current_skill_level.actual_measure_time
-            if is_minus and task.id not in current_skill_level.measure_task_ids:
+            if is_minus and (
+                current_skill_level.measure_task_ids is None
+                or task.id not in current_skill_level.measure_task_ids
+            ):
                 continue
             duration = duration_time or get_total_hours_of_task(
                 task, skill_map_created_at=skill_map.created_at
