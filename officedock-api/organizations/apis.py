@@ -23,6 +23,7 @@ from common.utils import (
     to_snake_case,
     generate_file_name,
     transform_statistic_categories,
+    transform_statistic_categories_for_skill_map,
 )
 from roles.constants import Screens
 from organizations.utils import get_high_level_organizations
@@ -426,9 +427,14 @@ class OrganizationByIDViewSet(BaseAPIViewSet):
         calendar_org = company.get_calendar_organization()
         instance = self.get_object()
         if request.method == "GET":
+            current_screen = request.query_params.get("current_screen")
             categories = OrganizationDetailSerializer(instance).data[
                 "statistic_categories"
             ]
+            if current_screen == to_camel_case(Screens.SKILL_MAP.value):
+                return self.response_ok(
+                    transform_statistic_categories_for_skill_map(categories)
+                )
             return self.response_ok(transform_statistic_categories(categories))
         elif request.method == "DELETE":
             instance.organizations_statistic_categories.all().delete()
