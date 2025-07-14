@@ -1315,7 +1315,11 @@ export const totalDurationsForStatistic = (durations: string[]) => {
 // Convert time to decimal
 export function convertTimeToDecimal(timeString: string) {
   const [hours, minutes, seconds] = timeString.split(':').map(Number);
-  return hours + minutes / 60 + seconds / 3600;
+
+  // If seconds >= 30, round minutes up
+  const roundedMinutes = seconds >= 30 ? minutes + 1 : minutes;
+
+  return hours + roundedMinutes / 60;
 }
 
 // Convert from number to Japanese time

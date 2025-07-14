@@ -33,7 +33,8 @@ interface PieChartProps {
     avatarColor?: string;
     mergedItems?: StatisticCategoryInfo[];
   }[][];
-  listIdData?: number[];
+  isAllTeamOption?: boolean
+  listIdData?: (string | number)[];
   mergedItems: StatisticCategoryInfo[];
   dataOrganization?: string[];
 
@@ -60,6 +61,7 @@ const PieChartCustom = ({
   optionsData,
   listIdData,
   dataOrganization,
+  isAllTeamOption = false,
   handleClickChart,
   handleClickTooltip,
 }: PieChartProps) => {
@@ -229,6 +231,7 @@ const PieChartCustom = ({
             data={data}
             mergedItems={mergedItems}
             listIdData={listIdData || []}
+            isAllTeamOption={isAllTeamOption}
             dataOrganization={dataOrganization}
             handleClickTooltip={handleClickTooltip}
           />

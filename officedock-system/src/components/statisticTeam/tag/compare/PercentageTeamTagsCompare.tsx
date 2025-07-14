@@ -381,7 +381,7 @@ const PercentageTeamTagsCompare = ({
                         startDateCompare={startDateCompare}
                         endDateCompare={endDateCompare}
                         dataCompare={dataChartLargeCompare}
-                        handleClickChart={(_data: number) => {}}
+                        handleClickChart={(_data: string) => {}}
                         handleClickTooltip={(
                           id: number | null,
                           isCompare: boolean,
@@ -431,7 +431,7 @@ const PercentageTeamTagsCompare = ({
                         dataCompare={dataChartMediumCompare}
                         totalDuration={totalDurationMedium}
                         totalDurationCompare={totalDurationMediumCompare}
-                        handleClickChart={(_data: number) => {}}
+                        handleClickChart={(_data: string) => {}}
                         handleClickTooltip={(
                           id: number | null,
                           isCompare: boolean,
@@ -483,7 +483,7 @@ const PercentageTeamTagsCompare = ({
                         dataCompare={dataChartSmallCompare}
                         totalDuration={totalDurationSmall}
                         totalDurationCompare={totalDurationSmallCompare}
-                        handleClickChart={(_data: number) => {}}
+                        handleClickChart={(_data: string) => {}}
                         handleClickTooltip={(
                           id: number | null,
                           isCompare: boolean,
@@ -536,7 +536,7 @@ const PercentageTeamTagsCompare = ({
                         dataCompare={dataChartCategoryCompare}
                         totalDuration={totalDurationCategory}
                         totalDurationCompare={totalDurationCategoryCompare}
-                        handleClickChart={(_data: number) => {}}
+                        handleClickChart={(_data: string) => {}}
                         handleClickTooltip={(
                           id: number | null,
                           isCompare: boolean,

@@ -255,6 +255,10 @@ export interface StatisticsCategories {
   smallCategories?: StatisticCategoryInfo[];
   category?: StatisticCategoryInfo[];
 }
+export interface StatisticsAllTeams {
+  largeTotalDuration: string;
+  largeCategories: StatisticAllTeamInfo[];
+}
 export interface StatisticsTagsType {
   totalDuration: string;
   largeCategories: StatisticCategoryInfo[];
@@ -263,6 +267,24 @@ export interface StatisticsTagsType {
   category?: StatisticCategoryInfo[];
 }
 
+export interface StatisticAllTeamInfo {
+  organizationId: string;
+  organizationName?: string;
+  percent: number;
+  duration: string;
+  color: string;
+  subTeams?: {
+    organizationId: number;
+    organizationName?: string;
+    duration: string;
+  }[];
+  data?: {
+    categoryId: number;
+    categoryName?: string;
+    categoryColor?: string;
+    duration: string;
+  }[];
+}
 export interface StatisticCategoryInfo {
   categoryId: number;
   tagId?: number;
@@ -359,17 +381,57 @@ export interface DataTaskListStatisticListType {
 }
 
 export interface StatisticsTaskDuration {
-  categoryId: number;
-  categoryName: string;
-  categoryColor: string;
-  duration: string;
+  data: {
+    organizationId: number | string;
+    categoryId: number | string;
+    categoryName: string;
+    categoryColor: string;
+    duration: string;
+    percent: number;
+    tasks: {
+      id: number;
+      title: string;
+      type: string;
+    }[];
+  }[];
   durations: {
     startDate: string;
     endDate: string;
+    data: {
+      organizationId: number | string;
+      categoryId: number | string;
+      categoryName: string;
+      categoryColor: string;
+      duration: string;
+      percent: number;
+      tasks: {
+        id: number;
+        title: string;
+        type: string;
+      }[];
+    }[];
+  }[];
+}
+
+export interface StatisticsAllTeamTaskDuration {
+  data: {
+    color: string;
     duration: string;
+    organizationId: string | number;
+    organizationName: string;
     percent: number;
   }[];
-  percent?: number;
+  durations: {
+    startDate: string;
+    endDate: string;
+    data: {
+      organizationId: string | number;
+      organizationName: string;
+      duration: string;
+      percent: number;
+      color: string;
+    }[];
+  }[];
 }
 
 export interface StatisticsTagTaskDuration {
@@ -425,7 +487,7 @@ export interface StatisticsUserTaskDuration {
 }
 
 export type ProgressDataType = {
-  id: number;
+  id: number | string;
   label: string;
   value: number;
   color: string;
@@ -541,4 +603,19 @@ export interface ListTaskStatistic {
   organizationName: string;
   organizationType?: string;
   type: string;
+}
+
+export interface CategoryLineChartDatasetInfo {
+  label: string;
+  data: { x: any; y: number; endDate: any; color: any; label: any }[];
+  borderColor: string;
+  backgroundColor: string;
+  fill: boolean;
+  tension: number;
+  pointRadius: number;
+  pointBorderColor: string;
+  pointHoverRadius: number;
+  pointHoverBackgroundColor: string;
+  pointHoverBorderColor: string;
+  pointHoverBorderWidth: number;
 }

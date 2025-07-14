@@ -33,6 +33,7 @@ import { formatDateToYMD, sumDurations } from '@utils/date';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import useStatisticAllTeamCategories from '@hooks/useStatisticAllTeamCategories';
 
 const StatisticTeamBoard = () => {
   const {
@@ -116,6 +117,7 @@ const StatisticTeamBoard = () => {
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     },
+    condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
     onSuccess: (data) => {
       if (creationDataStatisticData?.organizations.length === 0) {
         return;
@@ -137,12 +139,7 @@ const StatisticTeamBoard = () => {
             label: stat.LARGE?.name,
           }),
         );
-        // If organization is all team then return here
-        if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
-          setLargeOptions([]);
-        } else {
-          setLargeOptions(largeCategories);
-        }
+        setLargeOptions(largeCategories);
       } else {
         setLargeOptions([]);
       }
@@ -195,6 +192,19 @@ const StatisticTeamBoard = () => {
       if (organizationTeamList.length > 0) {
         handleSetParam(String(organizationTeamList[0].value));
       }
+    },
+  });
+
+  useStatisticAllTeamCategories({
+    filter: {
+      fromDate: formatDateToYMD(startDate) || '',
+      endDate: formatDateToYMD(`${endDate}`) || '',
+      tagIds: orderingOptions?.tag_ids,
+    },
+    condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
+    onSuccess: (data) => {
+      setLargeOptions([]);
+      setTotalDurationLarge(data.largeTotalDuration);
     },
   });
 

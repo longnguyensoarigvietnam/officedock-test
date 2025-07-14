@@ -1,22 +1,24 @@
 import ImageRound from '@components/common/ImageRound';
+import { ALL_TEAM_STATISTIC } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
+import { StatisticStateContext } from '@providers/StatisticProvider';
 import {
   formatShowStatisticTask,
   formatTimeToJapanese,
   getJapaneseDayName,
 } from '@utils/date';
-import React from 'react';
+import React, { useContext } from 'react';
 
 interface ProgressBarProps {
   label: string;
   value: number;
-  id: number;
+  id: string | number;
   duration: string;
   maxValue?: number;
   optionData: string[];
   mergedItems?: {
     color: string;
-    id: number;
+    id: string | number;
     label: string;
     value: number;
     duration: string;
@@ -56,6 +58,8 @@ const ProgressBarStatistic = ({
   handleClickTooltip,
   handleClickChart,
 }: ProgressBarProps) => {
+  const { selectedOrganization } = useContext(StatisticStateContext);
+
   const percentage = Math.round(Math.min((value / maxValue) * 100, 100));
   return (
     <>
@@ -153,22 +157,24 @@ const ProgressBarStatistic = ({
                       </li>
                     ))}
                   </ul>
-                  <div className="flex w-full justify-end mt-3">
-                    <div
-                      onClick={() => {
-                        handleClickTooltip(id, organizationId);
-                      }}
-                      className="bg-white flex items-center  justify-center gap-2 text-[12px] text-[#77858F] h-[34px] rounded-md">
-                      <span>タスクを見る</span>
-                      <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
-                        <ImageRound
-                          className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
-                          src="/icons/right-statistic.svg"
-                          name="right"
-                        />
+                  {selectedOrganization?.value != ALL_TEAM_STATISTIC && (
+                    <div className="flex w-full justify-end mt-3">
+                      <div
+                        onClick={() => {
+                          handleClickTooltip(id as number, organizationId);
+                        }}
+                        className="bg-white flex items-center  justify-center gap-2 text-[12px] text-[#77858F] h-[34px] rounded-md">
+                        <span>タスクを見る</span>
+                        <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
+                          <ImageRound
+                            className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
+                            src="/icons/right-statistic.svg"
+                            name="right"
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ) : (
                 <div>
@@ -236,25 +242,29 @@ const ProgressBarStatistic = ({
                                   formatTimeToJapanese(item.duration)}
                               </span>
                             </div>
-                            <div className="flex w-full justify-end mt-3">
-                              <div
-                                onClick={() => {
-                                  handleClickTooltip(
-                                    item.id,
-                                    item.organizationId,
-                                  );
-                                }}
-                                className="bg-white flex items-center  justify-center gap-2 text-[12px] text-[#77858F] h-[34px] rounded-md">
-                                <span>タスクを見る</span>
-                                <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
-                                  <ImageRound
-                                    className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
-                                    src="/icons/right-statistic.svg"
-                                    name="right"
-                                  />
+                            {selectedOrganization?.value !=
+                              ALL_TEAM_STATISTIC && (
+                              <div className="flex w-full justify-end mt-3">
+                                <div
+                                  onClick={() => {
+                                    handleClickTooltip(
+                                      item.id as number,
+                                      item.organizationId,
+                                    );
+                                  }}
+                                  className="bg-white flex items-center  justify-center gap-2 text-[12px] text-[#77858F] h-[34px] rounded-md">
+                                  <span>タスクを見る</span>
+                                  <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
+                                    <ImageRound
+                                      className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
+                                      src="/icons/right-statistic.svg"
+                                      name="right"
+                                    />
+                                  </div>
                                 </div>
                               </div>
-                            </div>
+                            )}
+
                             <div className=" w-full mb-5  border-b border-[#D2DBE1]"></div>
                           </div>
                         );

@@ -467,3 +467,5 @@ export const DEFAULT_EMPTY_CATEGORY = [
     color: '',
   },
 ];
+
+export const SUB_TEAMS = 'サブチーム'
