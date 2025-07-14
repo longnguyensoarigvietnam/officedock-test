@@ -2,13 +2,15 @@
 
 import { useQuery } from 'react-query';
 import { AxiosError } from 'axios';
+
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 
-import api from '@base/api';
 import { StatisticsTaskDuration } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
+
+import api from '@base/api';
 
 interface FilterProps {
   endDate: string | Date;
@@ -20,27 +22,32 @@ interface FilterProps {
   tagIds?: OptionDropdownType[];
   statisticBy?: string;
   isTagPage?: boolean;
+  isCompare: boolean;
 }
 
 const useStatisticTaskDurationsCompare = ({
   filter,
+  condition,
   onSuccess,
   onError,
 }: {
   filter?: FilterProps;
-  onSuccess?: (data: StatisticsTaskDuration[]) => void;
+  condition?: boolean[];
+  onSuccess?: (data: StatisticsTaskDuration) => void;
   onError?: (error: AxiosError) => void;
 }) => {
   const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   // Handle call API get statistic task duration list
-  const getStatisticTaskDurations = async ({
+  const getStatisticTaskDurationsCompareList = async ({
     signal,
   }: {
     signal?: AbortSignal;
   }) => {
     if (!filter?.organizationIds) return [];
+    if (!filter?.isCompare) return [];
+    
     const apiUrl = `${apiRouters.STATISTICS_TASK_DURATIONS}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
     }${filter?.endDate ? `&end_date=${filter.endDate}` : ''}${
@@ -65,7 +72,7 @@ const useStatisticTaskDurationsCompare = ({
         : ''
     }${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
-    const { data } = await api.get<StatisticsTaskDuration[]>(apiUrl, {
+    const { data } = await api.get<StatisticsTaskDuration>(apiUrl, {
       signal,
     });
     return data;
@@ -78,12 +85,12 @@ const useStatisticTaskDurationsCompare = ({
     isFetched: isFetchedStatisticTaskDurationsCompareList,
   } = useQuery({
     queryKey: ['getStatisticTaskDurationsCompareList', [filter]],
-    queryFn: ({ signal }) => getStatisticTaskDurations({ signal }),
+    queryFn: ({ signal }) => getStatisticTaskDurationsCompareList({ signal }),
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onSuccess: (data: StatisticsTaskDuration[]) => {
+    onSuccess: (data: StatisticsTaskDuration) => {
       onSuccess && onSuccess(data);
     },
     onError: (error: AxiosError) => {

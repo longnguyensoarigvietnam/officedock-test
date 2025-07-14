@@ -363,7 +363,7 @@ const PercentageTags = ({
                       ) : dataChartLarge.data.length > 0 ? (
                         <PieChartCustom
                           isClickTooltip
-                          mergedItems={dataChartLarge.mergedItems}
+                          mergedItems={dataChartLarge.mergedItems || []}
                           colors={dataChartLarge.colors}
                           data={dataChartLarge?.data}
                           labels={dataChartLarge?.labels}
@@ -425,7 +425,7 @@ const PercentageTags = ({
                       ) : dataChartMedium.data.length > 0 ? (
                         <PieChartCustom
                           isClickTooltip
-                          mergedItems={dataChartMedium.mergedItems}
+                          mergedItems={dataChartMedium.mergedItems || []}
                           colors={dataChartMedium.colors}
                           data={dataChartMedium?.data}
                           labels={dataChartMedium?.labels}
@@ -480,7 +480,7 @@ const PercentageTags = ({
                         <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
                       ) : dataChartSmall.data.length > 0 ? (
                         <PieChartCustom
-                          mergedItems={dataChartSmall.mergedItems}
+                          mergedItems={dataChartSmall.mergedItems || []}
                           colors={dataChartSmall.colors}
                           data={dataChartSmall?.data}
                           labels={dataChartSmall?.labels}
@@ -535,7 +535,7 @@ const PercentageTags = ({
                         <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
                       ) : dataChartCategory.data.length > 0 ? (
                         <PieChartCustom
-                          mergedItems={dataChartCategory.mergedItems}
+                          mergedItems={dataChartCategory.mergedItems || []}
                           colors={dataChartCategory.colors}
                           data={dataChartCategory?.data}
                           labels={dataChartCategory?.labels}

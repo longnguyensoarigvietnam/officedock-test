@@ -12,16 +12,25 @@ import {
   StatusTask,
   TaskRepetitiveValue,
 } from '@constants/enums';
-import { DATE_FORMAT, MAX_HEX_COLOR_VALUE, SKILL_MAP_STEPS } from '@constants';
+import {
+  DATE_FORMAT,
+  MAX_HEX_COLOR_VALUE,
+  SKILL_MAP_STEPS,
+  SUB_TEAMS,
+} from '@constants';
 import { PASSWORD_REGEX, URL_REGEX } from '@constants/regex';
 
 import { JwtDecode } from '@interfaces/auth';
 import { Organizations } from '@interfaces/organization';
 import {
+  CategoryLineChartDatasetInfo,
   dataTaskDaily,
   dataTaskDailyTable,
   ProgressDataType,
+  StatisticAllTeamInfo,
   StatisticCategoryInfo,
+  StatisticsAllTeamTaskDuration,
+  StatisticsTaskDuration,
 } from '@interfaces/statistic';
 import {
   ResultTeam,
@@ -35,6 +44,7 @@ import { UserRoleType } from '@interfaces/user';
 import { ChatMessageResponse } from '@interfaces/chat';
 
 import {
+  convertTimeToDecimal,
   convertToTimeString,
   formatHoursAndMinutesForDateTime,
   formatShowDeadline,
@@ -1228,7 +1238,7 @@ export const getSafeTooltipLeft = ({
 
   return left;
 };
-
+// Map statistic category info to progress data
 export const mapStatisticCategoryInfoToProgressData = ({
   data,
   mergeLabel = 'その他',
@@ -1286,6 +1296,34 @@ export const mapStatisticCategoryInfoToProgressData = ({
 
   return {
     finalData: [...mainItems, mergedItem],
+  };
+};
+// Map statistic all team categories info to progress data
+export const mapStatisticAllTeamCategoryInfoToProgressData = ({
+  data,
+}: {
+  data: StatisticAllTeamInfo[];
+}): {
+  finalData: ProgressDataType[];
+} => {
+  const progressData: ProgressDataType[] = data.map((item) => ({
+    id: item.organizationId,
+    label: item?.organizationName || '',
+    value: item.percent,
+    color: item.color || getRandomColor(),
+    duration: item.duration,
+    optionData:
+      item.organizationId == SUB_TEAMS
+        ? item?.subTeams
+            ?.slice(0, 3)
+            .map((team) => team?.organizationName || '') || []
+        : item?.data
+            ?.slice(0, 3)
+            .map((category) => category?.categoryName || '') || [],
+  }));
+
+  return {
+    finalData: progressData,
   };
 };
 // Parse to ISO Date locally
@@ -1405,4 +1443,263 @@ export const isOverlappedAndBelow = (a: EventApi, b: EventApi) => {
   const isBelow = aStart > bStart;
 
   return isOverlapping && isBelow;
+}
+export const getLineChartDataFromStatisticTaskDurations = ({
+  normalizeDataObject,
+  color,
+}: {
+  normalizeDataObject: StatisticsTaskDuration;
+  color: string;
+}) => {
+  const labelList: string[] = [];
+  // Map: organizationId -> dataset info
+  const datasetMap = new Map<string | number, CategoryLineChartDatasetInfo>();
+  normalizeDataObject.durations.forEach((durationDetail, index) => {
+    labelList.push(durationDetail.startDate);
+    if (
+      index === normalizeDataObject.durations.length - 1 &&
+      String(normalizeDataObject.durations.at(-1)?.endDate) !=
+        String(normalizeDataObject.durations.at(-1)?.startDate)
+    ) {
+      const endDate = normalizeDataObject.durations.at(-1)?.endDate;
+      if (endDate) {
+        labelList.push(endDate);
+      }
+    }
+
+    durationDetail.data.forEach((category) => {
+      const existing = datasetMap.get(category.categoryId);
+
+      if (existing) {
+        existing.data[index] = {
+          x: durationDetail.startDate,
+          y: category.duration ? convertTimeToDecimal(category.duration) : 0,
+          endDate: durationDetail.endDate,
+          color:
+            category.categoryColor ||
+            (color && lightenColor(color, category?.percent || 0)) ||
+            getRandomColor(),
+          label: category.categoryName,
+        };
+        if (
+          index === normalizeDataObject.durations.length - 1 &&
+          String(normalizeDataObject.durations.at(-1)?.endDate) !=
+            String(normalizeDataObject.durations.at(-1)?.startDate)
+        ) {
+          existing.data[index + 1] = {
+            x: durationDetail.endDate,
+            y: category.duration ? convertTimeToDecimal(category.duration) : 0,
+            endDate: durationDetail.endDate,
+            color:
+              category.categoryColor ||
+              (color && lightenColor(color, category?.percent || 0)) ||
+              getRandomColor(),
+            label: category.categoryName,
+          };
+        }
+      } else {
+        // Initialize new dataset with placeholders
+        const dataArray = Array(normalizeDataObject.durations.length).fill(0);
+        dataArray[index] = {
+          x: durationDetail.startDate,
+          y: category.duration ? convertTimeToDecimal(category.duration) : 0,
+          endDate: durationDetail.endDate,
+          color:
+            category.categoryColor ||
+            (color && lightenColor(color, category?.percent || 0)) ||
+            getRandomColor(),
+          label: category.categoryName,
+        };
+
+        datasetMap.set(category.categoryId, {
+          label: category.categoryName,
+          data: dataArray,
+          borderColor: category.categoryColor || getRandomColor(),
+          backgroundColor: 'rgba(217, 83, 79, 0.04)',
+          fill: true,
+          tension: 0,
+          pointRadius: 4,
+          pointBorderColor: 'transparent',
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor:
+            category.categoryColor ||
+            (color && lightenColor(color, 50)) ||
+            getRandomColor(),
+          pointHoverBorderColor: 'transparent',
+          pointHoverBorderWidth: 2,
+        });
+      }
+    });
+  });
+
+  return {
+    labelList,
+    datasetMap,
+  };
+};
+
+export const getLineChartDataFromStatisticAllTeamTaskDurations = ({
+  normalizeDataObject,
+  color,
+}: {
+  normalizeDataObject: StatisticsAllTeamTaskDuration;
+  color: string;
+}) => {
+  const labelList: string[] = [];
+  // Map: organizationId -> dataset info
+  const datasetMap = new Map<string | number, CategoryLineChartDatasetInfo>();
+  normalizeDataObject.durations.forEach((categoryDetail, index) => {
+    categoryDetail.data.forEach((team) => {
+      const existing = datasetMap.get(team.organizationId);
+
+      if (existing) {
+        existing.data[index] = {
+          x: categoryDetail.startDate,
+          y: team.duration ? convertTimeToDecimal(team.duration) : 0,
+          endDate: categoryDetail.endDate,
+          color:
+            team.color ||
+            (color && lightenColor(color, team?.percent || 0)) ||
+            getRandomColor(),
+          label: team.organizationName,
+        };
+        if (
+          index === normalizeDataObject.durations.length - 1 &&
+          String(normalizeDataObject.durations.at(-1)?.endDate) !=
+            String(normalizeDataObject.durations.at(-1)?.startDate)
+        ) {
+          existing.data[index + 1] = {
+            x: categoryDetail.endDate,
+            y: team.duration ? convertTimeToDecimal(team.duration) : 0,
+            endDate: categoryDetail.endDate,
+            color:
+              team.color ||
+              (color && lightenColor(color, team?.percent || 0)) ||
+              getRandomColor(),
+            label: team.organizationName,
+          };
+        }
+      } else {
+        // Initialize new dataset with placeholders
+        const dataArray = Array(normalizeDataObject.durations.length).fill(0);
+        dataArray[index] = {
+          x: categoryDetail.startDate,
+          y: team.duration ? convertTimeToDecimal(team.duration) : 0,
+          endDate: categoryDetail.endDate,
+          color:
+            team.color ||
+            (color && lightenColor(color, team?.percent || 0)) ||
+            getRandomColor(),
+          label: team.organizationName,
+        };
+
+        datasetMap.set(team.organizationId, {
+          label: team.organizationName,
+          data: dataArray,
+          borderColor: team.color || getRandomColor(),
+          backgroundColor: 'rgba(217, 83, 79, 0.04)',
+          fill: true,
+          tension: 0,
+          pointRadius: 4,
+          pointBorderColor: 'transparent',
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor:
+            team.color ||
+            (color && lightenColor(color, 50)) ||
+            getRandomColor(),
+          pointHoverBorderColor: 'transparent',
+          pointHoverBorderWidth: 2,
+        });
+      }
+    });
+  });
+
+  return {
+    labelList,
+    datasetMap,
+  };
+};
+
+export const normalizeDurationsWithStatisticCategoryTaskDurations = (
+  taskDurationObject: StatisticsTaskDuration,
+): {
+  startDate: string;
+  endDate: string;
+  data: {
+    organizationId: number | string;
+    categoryId: number | string;
+    categoryName: string;
+    categoryColor: string;
+    duration: string;
+    percent: number;
+    tasks: {
+      id: number;
+      title: string;
+      type: string;
+    }[];
+  }[];
+}[] => {
+  return taskDurationObject.durations.map((duration) => {
+    const filledCategories = taskDurationObject.data.map((templateCategory) => {
+      const match = duration.data.find(
+        (cat) =>
+          cat.organizationId == templateCategory.organizationId &&
+          cat.categoryId == templateCategory.categoryId,
+      );
+
+      return (
+        match || {
+          organizationId: templateCategory.organizationId,
+          categoryId: templateCategory.categoryId,
+          categoryName: templateCategory.categoryName,
+          categoryColor: templateCategory.categoryColor,
+          duration: '00:00:00',
+          percent: 0,
+          tasks: [],
+        }
+      );
+    });
+
+    return {
+      ...duration,
+      data: filledCategories,
+    };
+  });
+};
+
+export const normalizeDurationsWithStatisticAllTeamCategoryTaskDurations = (
+  taskDurationObject: StatisticsAllTeamTaskDuration,
+): {
+  startDate: string;
+  endDate: string;
+  data: {
+    organizationId: string | number;
+    organizationName: string;
+    duration: string;
+    percent: number;
+    color: string;
+  }[];
+}[] => {
+  return taskDurationObject.durations.map((duration) => {
+    const filledCategories = taskDurationObject.data.map((templateCategory) => {
+      const match = duration.data.find(
+        (cat) => cat.organizationId == templateCategory.organizationId,
+      );
+
+      return (
+        match || {
+          organizationId: templateCategory.organizationId,
+          organizationName: templateCategory.organizationName,
+          color: templateCategory.color,
+          duration: '00:00:00',
+          percent: 0,
+        }
+      );
+    });
+
+    return {
+      ...duration,
+      data: filledCategories,
+    };
+  });
 };

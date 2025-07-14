@@ -548,6 +548,10 @@ export const apiRouters = {
   STATISTICS_TASK_DURATIONS: '/statistics/task-durations/',
   STATISTICS_PERCENT_CHART: '/statistics/percent-change/',
 
+  STATISTICS_ALL_TEAMS_TASK_DURATIONS: '/all-team-statistics/task-durations/',
+  STATISTICS_ALL_TEAMS_CATEGORIES: '/all-team-statistics/categories/',
+  STATISTICS_ALL_TEAMS_TAG: '/all-team-statistics/tags/',
+
   // STATISTICS TEAM
   STATISTICS_CATEGORIES_TEAM: `/organization-statistics/categories/`,
   STATISTICS_TAGS_TEAM: `/organization-statistics/tags/`,

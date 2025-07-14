@@ -23,7 +23,7 @@ interface Props {
   isLoading: boolean;
   isLoadingCompare: boolean;
   handleClickTooltip: (id: number | null, isCompare: boolean) => void;
-  handleClickChart: (data: number) => void;
+  handleClickChart: (data: string) => void;
 }
 
 const PercentageBarCompareTeam = ({
@@ -75,7 +75,7 @@ const PercentageBarCompareTeam = ({
                   key={index}
                   onClick={() => {
                     if (item.id !== -1) {
-                      handleClickChart(item.id);
+                      handleClickChart(item.id as string);
                     }
                   }}
                   className="flex group border-l border-white relative flex-col justify-center items-center text-white text-center py-2"
@@ -252,7 +252,7 @@ const PercentageBarCompareTeam = ({
                   key={index}
                   onClick={() => {
                     if (item.id !== -1) {
-                      handleClickChart(item.id);
+                      handleClickChart(item.id as string);
                     }
                   }}
                   className="flex relative border-l border-white group flex-col justify-center items-center text-white text-center py-2"

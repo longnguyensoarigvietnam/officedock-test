@@ -38,14 +38,14 @@ export interface DataChartType {
     avatarColor?: string;
     percent?: number;
   }[][];
-  listId: number[];
-  listDuration: string[][];
-  mergedItems: StatisticCategoryInfo[];
+  listId: (number | string)[];
+  listDuration?: string[][];
+  mergedItems?: StatisticCategoryInfo[];
   dataOrganization?: string[];
 }
 
 export interface DataPercentCompareType {
-  id: number;
+  id: string | number;
   label: string;
   percentage: number;
   color: string;

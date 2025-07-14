@@ -311,9 +311,9 @@ const PercentageTeamCategoryCompare = ({
                         endDateCompare={endDateCompare}
                         dataCompare={dataChartLargeCompare}
                         handleClickTooltip={() => {}}
-                        handleClickChart={(data: number) => {
+                        handleClickChart={(data: string) => {
                           const select = largeOptions.find(
-                            (item) => item.value === data,
+                            (item) => item.value == data,
                           );
 
                           selectedOrganization &&
@@ -366,7 +366,7 @@ const PercentageTeamCategoryCompare = ({
                         totalDuration={totalDurationMedium}
                         totalDurationCompare={totalDurationMediumCompare}
                         handleClickTooltip={() => {}}
-                        handleClickChart={(data: number) => {
+                        handleClickChart={(data: string) => {
                           const select = mediumOptions.find(
                             (item) => item.value === data,
                           );
@@ -420,7 +420,7 @@ const PercentageTeamCategoryCompare = ({
                         totalDuration={totalDurationSmall}
                         totalDurationCompare={totalDurationSmallCompare}
                         handleClickTooltip={() => {}}
-                        handleClickChart={(data: number) => {
+                        handleClickChart={(data: string) => {
                           const select = smallOptions.find(
                             (item) => item.value === data,
                           );

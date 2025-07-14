@@ -8,12 +8,14 @@ import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStati
 import { EventWorkCategory } from '@constants/enums';
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
+  StatisticAllTeamInfo,
   StatisticCategoryInfo,
+  StatisticsAllTeams,
   StatisticsCategories,
 } from '@interfaces/statistic';
 import { getRandomColor, lightenColor } from '@utils';
 import { StatisticStateContext } from '@providers/StatisticProvider';
-import { ALL_TEAM_STATISTIC, NO_SETTING } from '@constants';
+import { ALL_TEAM_STATISTIC, NO_SETTING, SUB_TEAMS } from '@constants';
 import FilterStatistic from '../filter/FilterStatistic';
 
 type Props = {
@@ -21,6 +23,8 @@ type Props = {
   endDate: Date | null;
   statisticCategoryList: StatisticsCategories | undefined;
   statisticCategoryCompareList: StatisticsCategories | undefined;
+  statisticAllTeamCategoryList: StatisticsAllTeams | undefined;
+  statisticAllTeamCategoryCompareList: StatisticsAllTeams | undefined;
   startDateCompare: Date;
   endDateCompare: Date | null;
   handleSelectOrganization: (data: OptionDropdownType) => void;
@@ -37,6 +41,8 @@ const PercentageCategoryCompare = ({
   endDateCompare,
   statisticCategoryCompareList,
   statisticCategoryList,
+  statisticAllTeamCategoryList,
+  statisticAllTeamCategoryCompareList,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectSmall,
@@ -158,9 +164,39 @@ const PercentageCategoryCompare = ({
     ];
   };
 
+  const mapCategoryDataWithAllTeamOption = (
+    dataCategories: StatisticAllTeamInfo[],
+  ) => {
+    if (!dataCategories) return [];
+    const categories = dataCategories.filter((item) => item.percent >= 0);
+
+    const mappedMainItems = categories.map((item) => ({
+      id: item.organizationId,
+      label: item?.organizationName || '',
+      percentage: item.percent,
+      organizationId: item.organizationId,
+      color: item.color || getRandomColor(),
+      totalDuration: item.duration,
+      optionData:
+        item.organizationId == SUB_TEAMS
+          ? item?.subTeams?.slice(0, 3).map((team) => {
+              return { label: team?.organizationName || '' };
+            }) || []
+          : item?.data?.slice(0, 3).map((category) => {
+              return { label: category?.categoryName || '' };
+            }) || [],
+      mergedItems: [],
+    }));
+
+    return [...mappedMainItems];
+  };
+
   // Set data from category list
   useEffect(() => {
-    if (statisticCategoryList) {
+    if (
+      statisticCategoryList &&
+      selectedOrganization?.value != ALL_TEAM_STATISTIC
+    ) {
       const color =
         statisticCategoryList.largeCategories &&
         statisticCategoryList.largeCategories.find(
@@ -183,11 +219,27 @@ const PercentageCategoryCompare = ({
         ),
       );
     }
-  }, [statisticCategoryList]);
+  }, [statisticCategoryList, selectedOrganization?.value]);
+
+  useEffect(() => {
+    if (
+      statisticAllTeamCategoryList &&
+      selectedOrganization?.value == ALL_TEAM_STATISTIC
+    ) {
+      setDataChartLarge(
+        mapCategoryDataWithAllTeamOption(
+          statisticAllTeamCategoryList.largeCategories || [],
+        ),
+      );
+    }
+  }, [statisticAllTeamCategoryList, selectedOrganization?.value]);
 
   // Set data from category compare list
   useEffect(() => {
-    if (statisticCategoryCompareList) {
+    if (
+      statisticCategoryCompareList &&
+      selectedOrganization?.value != ALL_TEAM_STATISTIC
+    ) {
       const color =
         statisticCategoryCompareList.largeCategories &&
         statisticCategoryCompareList.largeCategories.find(
@@ -210,7 +262,20 @@ const PercentageCategoryCompare = ({
         ),
       );
     }
-  }, [statisticCategoryCompareList]);
+  }, [statisticCategoryCompareList, selectedOrganization?.value]);
+
+  useEffect(() => {
+    if (
+      statisticAllTeamCategoryCompareList &&
+      selectedOrganization?.value == ALL_TEAM_STATISTIC
+    ) {
+      setDataChartLargeCompare(
+        mapCategoryDataWithAllTeamOption(
+          statisticAllTeamCategoryCompareList.largeCategories || [],
+        ),
+      );
+    }
+  }, [statisticAllTeamCategoryCompareList, selectedOrganization?.value]);
 
   const handleClickTooltip = (
     id: number | null,
@@ -447,6 +512,9 @@ const PercentageCategoryCompare = ({
                         startDateCompare={startDateCompare}
                         endDateCompare={endDateCompare}
                         dataCompare={dataChartLargeCompare}
+                        isAllTeamOption={
+                          selectedOrganization?.value == ALL_TEAM_STATISTIC
+                        }
                         handleClickChart={(data: number) => {
                           if (
                             selectedOrganization?.value === ALL_TEAM_STATISTIC
@@ -522,6 +590,9 @@ const PercentageCategoryCompare = ({
                         dataCompare={dataChartMediumCompare}
                         totalDuration={totalDurationMedium}
                         totalDurationCompare={totalDurationMediumCompare}
+                        isAllTeamOption={
+                          selectedOrganization?.value == ALL_TEAM_STATISTIC
+                        }
                         handleClickChart={(data: number) => {
                           const select = mediumOptions.find(
                             (item) => item.value === data,
@@ -589,6 +660,9 @@ const PercentageCategoryCompare = ({
                         dataCompare={dataChartSmallCompare}
                         totalDuration={totalDurationSmall}
                         totalDurationCompare={totalDurationSmallCompare}
+                        isAllTeamOption={
+                          selectedOrganization?.value == ALL_TEAM_STATISTIC
+                        }
                         handleClickChart={(data: number) => {
                           const select = smallOptions.find(
                             (item) => item.value === data,
