@@ -1436,7 +1436,7 @@ class TaskViewSet(
                         minus = True
                     for user in task.people_in_charge.all():
                         calculate_progress_skill_map(
-                            task, user, is_minus=minus, case=case
+                            task, user, is_minus=minus, case=case, is_plus=False
                         )
                 for user in task.people_in_charge.all():
                     send_web_socket_event(
