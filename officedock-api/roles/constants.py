@@ -27,6 +27,12 @@ class Screens(EnumChoices):
     TEAMDOCK = "teamdock"
     TEAM_DAILY_REPORT = "team_daily_report"
 
+    # Define screens for role skill-map
+    MY_TASK_SKILL_MAP = "my_task_skill_map"
+    TEAM_DOCK_SKILL_MAP = "team_dock_skill_map"
+    SKILL_MAP_MANAGEMENT = "skill_map_management"
+    SKILL_MAP_OTHER = "skill_map_other"
+
 
 class Actions(EnumChoices):
     """Enum for defining available actions."""
@@ -105,7 +111,6 @@ ONLY_DATA_ORGANIZATION_ACTIONS = {
 }
 
 # Define permissions for role SYSTEM ADMIN and MANAGER
-
 SYSTEM_ADMIN_AND_MANAGER_PERMISSIONS = {
     Screens.MY_TASK.value: ALLOWED_FULL_ACTIONS,
     Screens.CALENDAR.value: ALLOWED_FULL_ACTIONS,
@@ -128,9 +133,14 @@ SYSTEM_ADMIN_AND_MANAGER_PERMISSIONS = {
     Screens.TEAMDOCK.value: ALLOWED_FULL_ACTIONS,
     Screens.ACTUAL_DURATION.value: ALLOWED_FULL_ACTIONS,
     Screens.LIST_MEMBER.value: ALLOWED_FULL_ACTIONS,
+    # Define permission skill-map
+    Screens.MY_TASK_SKILL_MAP.value: ALLOWED_FULL_ACTIONS,
+    Screens.TEAM_DOCK_SKILL_MAP.value: ALLOWED_FULL_ACTIONS,
+    Screens.SKILL_MAP_MANAGEMENT.value: ALLOWED_FULL_ACTIONS,
+    Screens.SKILL_MAP_OTHER.value: ALLOWED_FULL_ACTIONS,
 }
-# Define permissions for role DEPARTMENT MANAGER
 
+# Define permissions for role DEPARTMENT MANAGER
 DEPARTMENT_MANAGER_PERMISSIONS = {
     Screens.MY_TASK.value: ALLOWED_FULL_ACTIONS,
     Screens.CALENDAR.value: ALLOWED_FULL_ACTIONS,
@@ -153,7 +163,13 @@ DEPARTMENT_MANAGER_PERMISSIONS = {
     Screens.TEAMDOCK.value: ONLY_DATA_ORGANIZATION_ACTIONS,
     Screens.ACTUAL_DURATION.value: ONLY_DATA_ORGANIZATION_ACTIONS,
     Screens.LIST_MEMBER.value: ONLY_DATA_ORGANIZATION_ACTIONS,
+    # Define permission skill-map
+    Screens.MY_TASK_SKILL_MAP.value: ALLOWED_FULL_ACTIONS,
+    Screens.TEAM_DOCK_SKILL_MAP.value: ONLY_DATA_ORGANIZATION_ACTIONS,
+    Screens.SKILL_MAP_MANAGEMENT.value: ONLY_DATA_ORGANIZATION_ACTIONS,
+    Screens.SKILL_MAP_OTHER.value: ONLY_DATA_ORGANIZATION_ACTIONS,
 }
+
 # Define permissions for role GENERAL
 GENERAL_PERMISSIONS = {
     Screens.MY_TASK.value: ALLOWED_FULL_ACTIONS,
@@ -177,6 +193,11 @@ GENERAL_PERMISSIONS = {
     Screens.TEAMDOCK.value: ONLY_DATA_ORGANIZATION_ACTIONS,
     Screens.ACTUAL_DURATION.value: NOT_ALLOWED_ACTIONS,
     Screens.LIST_MEMBER.value: NOT_ALLOWED_ACTIONS,
+    # Define permission skill-map
+    Screens.MY_TASK_SKILL_MAP.value: ALLOWED_FULL_ACTIONS,
+    Screens.TEAM_DOCK_SKILL_MAP.value: NOT_ALLOWED_ACTIONS,
+    Screens.SKILL_MAP_MANAGEMENT.value: NOT_ALLOWED_ACTIONS,
+    Screens.SKILL_MAP_OTHER.value: NOT_ALLOWED_ACTIONS,
 }
 
 # Define base role permissions
@@ -202,4 +223,33 @@ ROLE_PERMISSION_BY_OPTIONS = {
 TEAMDOCK_ROLE_PERMISSION_BY_OPTIONS = {
     PermissionOptions.LOGGED_ORGANIZATION.value: ONLY_DATA_ORGANIZATION_ACTIONS,
     PermissionOptions.ALL_ORGANIZATION.value: ALLOWED_FULL_ACTIONS,
+}
+
+# Define skill-map action permission by options (used to return matching option to FE)
+SKILL_MAP_ACTION_PERMISSION_BY_OPTIONS = {
+    PermissionOptions.ALLOW_EDIT.value: ALLOWED_FULL_ACTIONS,
+    PermissionOptions.ONLY_EDIT_ORGANIZATION.value: ONLY_DATA_ORGANIZATION_ACTIONS,
+    PermissionOptions.NOT_ALLOWED.value: NOT_ALLOWED_ACTIONS,
+}
+
+# Define options by skill map role permission
+SKILL_MAP_ROLE_PERMISSION_BY_OPTIONS = {
+    PermissionOptions.ALLOW_EDIT.value: {
+        Screens.MY_TASK_SKILL_MAP.value: ALLOWED_FULL_ACTIONS,
+        Screens.TEAM_DOCK_SKILL_MAP.value: ALLOWED_FULL_ACTIONS,
+        Screens.SKILL_MAP_MANAGEMENT.value: ALLOWED_FULL_ACTIONS,
+        Screens.SKILL_MAP_OTHER.value: ALLOWED_FULL_ACTIONS,
+    },
+    PermissionOptions.ONLY_EDIT_ORGANIZATION.value: {
+        Screens.MY_TASK_SKILL_MAP.value: ALLOWED_FULL_ACTIONS,
+        Screens.TEAM_DOCK_SKILL_MAP.value: ONLY_DATA_ORGANIZATION_ACTIONS,
+        Screens.SKILL_MAP_MANAGEMENT.value: ONLY_DATA_ORGANIZATION_ACTIONS,
+        Screens.SKILL_MAP_OTHER.value: ONLY_DATA_ORGANIZATION_ACTIONS,
+    },
+    PermissionOptions.NOT_ALLOWED.value: {
+        Screens.MY_TASK_SKILL_MAP.value: ALLOWED_FULL_ACTIONS,
+        Screens.TEAM_DOCK_SKILL_MAP.value: NOT_ALLOWED_ACTIONS,
+        Screens.SKILL_MAP_MANAGEMENT.value: NOT_ALLOWED_ACTIONS,
+        Screens.SKILL_MAP_OTHER.value: NOT_ALLOWED_ACTIONS,
+    },
 }
