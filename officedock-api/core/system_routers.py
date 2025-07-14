@@ -17,6 +17,7 @@ from skills.apis import (
 from statistics.apis import (
     StatisticViewSet,
     OrganizationStatisticViewSet,
+    AllTeamStatisticViewSet,
 )
 from submit_levels.apis import SubmitLevelViewSet
 from tasks.apis import (
@@ -120,6 +121,11 @@ api_router.register("roles", RoleViewSet, basename="roles")
 api_router.register("cron-jobs", CronJobViewSet, basename="cron_jobs")
 api_router.register("chat-files", ChatFileViewSet, basename="chat_files")
 api_router.register("statistics", StatisticViewSet, basename="statistics")
+api_router.register(
+    "all-team-statistics",
+    AllTeamStatisticViewSet,
+    basename="all_team_statistics",
+)
 api_router.register(
     "organization-statistics",
     OrganizationStatisticViewSet,
