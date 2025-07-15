@@ -2097,10 +2097,7 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 people_in_charge__isnull=True,
                 company=user.company,
             )
-            .exclude(
-                Q(type=TaskTypes.MY_TEMPLATE.value)
-                | Q(status__name=TaskStatus.MY_ROUTINE.value)
-            )
+            .exclude(type=TaskTypes.MY_TEMPLATE.value)
             .all()
         )
 
