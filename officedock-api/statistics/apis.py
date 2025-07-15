@@ -57,6 +57,7 @@ from stat_data.utils import (
     percentage_calculation_of_duration,
     process_team_categories,
     process_team_tags,
+    build_category_filters,
 )
 from tasks.constants import TaskCategoryTypes
 from tasks.models import Task
@@ -231,6 +232,13 @@ class StatisticViewSet(BaseAPIViewSet):
             )
             .distinct()
         )
+        filters = build_category_filters(
+            large_category_id=large_category_id,
+            medium_category_id=medium_category_id,
+            small_category_id=small_category_id,
+        )
+        tasks = tasks.filter(filters)
+        events = events.filter(filters)
         merged_qs = sorted(
             chain(tasks, events),
             key=lambda x: (x.total_duration or timedelta(0), x.id),
@@ -1456,62 +1464,89 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         ranges = split_ranges(
             from_date, end_date, trim_whitespace(statistic_by)
         )
-        if not is_tag_page:
-            for index, (start, end) in enumerate(ranges):
-                start_date_min = datetime.combine(start, time.min)
-                end_date_max = datetime.combine(end, time.max)
-                filter_duration_by_range = durations.filter(
+        for index, (start, end) in enumerate(ranges):
+            start_date_min = datetime.combine(start, time.min)
+            end_date_max = datetime.combine(end, time.max)
+            filter_duration_by_range = durations.filter(
+                Q(
                     Q(
-                        Q(
-                            Q(started_at__gte=start_date_min)
-                            & Q(paused_at__lte=end_date_max)
-                        )
-                        | Q(
-                            Q(started_at__lte=end_date_max)
-                            & Q(started_at__gte=start_date_min)
-                            & Q(paused_at__isnull=True)
-                        )
+                        Q(started_at__gte=start_date_min)
+                        & Q(paused_at__lte=end_date_max)
+                    )
+                    | Q(
+                        Q(started_at__lte=end_date_max)
+                        & Q(started_at__gte=start_date_min)
+                        & Q(paused_at__isnull=True)
                     )
                 )
-                total_duration = get_total_durations(filter_duration_by_range)
-                category_list = aggregate_durations(
+            )
+            if is_tag_page:
+                total_duration, data_list = process_merge_card_per_tag(
+                    tag_ids,
                     durations=filter_duration_by_range,
+                    organization_ids=organization_ids,
                 )
-                teams = process_team_categories(
-                    category_list,
+                teams = process_team_tags(
+                    data_list,
                     total_duration,
                     durations=filter_duration_by_range,
                     main_organization=main_organization,
                     calendar_organization=calendar_org,
                 )
-                for team in teams:
-                    if team.get("sub_teams"):
-                        team.pop("sub_teams")
-                    if team.get("categories"):
-                        team.pop("categories")
-                data["durations"].append(
-                    {
-                        "start_date": start_date_min.strftime(BASE_DATE_FORMAT),
-                        "end_date": end_date_max.strftime(BASE_DATE_FORMAT),
-                        "data": teams,
-                    }
+            else:
+                total_duration = get_total_durations(filter_duration_by_range)
+                data_list = aggregate_durations(
+                    durations=filter_duration_by_range,
                 )
-        total_duration = get_total_durations(durations)
-        category_list = aggregate_durations(
-            durations=durations,
-        )
-        teams = process_team_categories(
-            category_list,
-            total_duration,
-            durations=durations,
-            main_organization=main_organization,
-            calendar_organization=calendar_org,
-        )
+                teams = process_team_categories(
+                    data_list,
+                    total_duration,
+                    durations=filter_duration_by_range,
+                    main_organization=main_organization,
+                    calendar_organization=calendar_org,
+                )
+            for team in teams:
+                if team.get("sub_teams"):
+                    team.pop("sub_teams")
+                if team.get("data"):
+                    team.pop("data")
+            data["durations"].append(
+                {
+                    "start_date": start_date_min.strftime(BASE_DATE_FORMAT),
+                    "end_date": end_date_max.strftime(BASE_DATE_FORMAT),
+                    "data": teams,
+                }
+            )
+        if is_tag_page:
+            total_duration, data_list = process_merge_card_per_tag(
+                tag_ids,
+                durations=durations,
+                organization_ids=organization_ids,
+            )
+            teams = process_team_tags(
+                data_list,
+                total_duration,
+                durations=durations,
+                main_organization=main_organization,
+                calendar_organization=calendar_org,
+            )
+        else:
+            total_duration = get_total_durations(durations)
+            data_list = aggregate_durations(
+                durations=durations,
+            )
+            teams = process_team_categories(
+                data_list,
+                total_duration,
+                durations=durations,
+                main_organization=main_organization,
+                calendar_organization=calendar_org,
+            )
         # TODO: Refactor later
         for team in teams:
             if team.get("sub_teams"):
                 team.pop("sub_teams")
-            if team.get("categories"):
-                team.pop("categories")
+            if team.get("data"):
+                team.pop("data")
         data["data"] = teams
         return self.response_ok(data)
