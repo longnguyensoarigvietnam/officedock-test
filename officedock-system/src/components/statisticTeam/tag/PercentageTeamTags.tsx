@@ -573,7 +573,6 @@ const PercentageTeamTags = ({
           selectedSmall={selectedSmall}
           selectedMedium={selectedMedium}
           detailCategory={detailCategory}
-          statisticTagsListTeam={statisticTagsListTeam}
           handleScroll={handleScroll}
         />
       )}

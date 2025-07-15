@@ -25,6 +25,9 @@ import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 import { OrganizationStatisticType } from '@constants/enums';
+import useStatisticAllTeamCategories from '@hooks/useStatisticAllTeamCategories';
+import { removeDuplicateOptions } from '@utils';
+import useStatisticAllTeamCategoriesCompare from '@hooks/useStatisticAllTeamCategoriesCompare';
 
 const StatisticTagBoard = () => {
   const {
@@ -107,6 +110,21 @@ const StatisticTagBoard = () => {
       setTotalDurationCategory(sumDurations(data.category ?? []));
     },
   });
+  // Get statistic categories for ALL TEAM option
+  const { statisticAllTeamCategoryList } = useStatisticAllTeamCategories({
+    filter: {
+      fromDate: formatDateToYMD(startDate) || '',
+      endDate: formatDateToYMD(`${endDate}`) || '',
+      tagIds: selectedTags,
+      isTagPage: true,
+    },
+    condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
+    onSuccess: (data) => {
+      setLargeOptions([]);
+      setTotalDurationLarge(data.largeTotalDuration);
+    },
+  });
+
   const { statisticTagsListCompare } = useStatisticTagsCompare({
     filter: {
       fromDate: formatDateToYMD(startDateCompare) || '',
@@ -127,6 +145,23 @@ const StatisticTagBoard = () => {
       setTotalDurationCategoryCompare(sumDurations(data.category ?? []));
     },
   });
+  // Get statistic compared categories for ALL TEAM option
+  useStatisticAllTeamCategoriesCompare({
+    filter: {
+      fromDate: formatDateToYMD(startDateCompare) || '',
+      endDate: formatDateToYMD(`${endDateCompare}`) || '',
+      tagIds: selectedTags,
+      isCompare: isCheckCompare,
+      isTagPage: true,
+    },
+    condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
+    onSuccess: (data) => {
+      setLargeOptions([]);
+      setTotalDurationLargeCompare(data.largeTotalDuration);
+    },
+  });
+  // Get data creation
+
   const { creationDataStatisticData } = useCreationDataStatistic({
     is_statistic: true,
 
@@ -202,7 +237,7 @@ const StatisticTagBoard = () => {
       if (data?.value === ALL_TEAM_STATISTIC) {
         setLargeOptions([]);
       } else {
-        setLargeOptions(largeCategories);
+        setLargeOptions(removeDuplicateOptions(largeCategories));
       }
     } else {
       setLargeOptions([]);
@@ -239,7 +274,7 @@ const StatisticTagBoard = () => {
         label: medium.MEDIUM?.name || '',
       }));
 
-      setMediumOptions(mediumCategories);
+      setMediumOptions(removeDuplicateOptions(mediumCategories));
     } else {
       setMediumOptions([]);
     }
@@ -278,7 +313,7 @@ const StatisticTagBoard = () => {
           value: small.id,
           label: small.name,
         }));
-      setSmallOptions(smallCategories);
+      setSmallOptions(removeDuplicateOptions(smallCategories));
     } else {
       setSmallOptions([]);
     }
@@ -384,6 +419,7 @@ const StatisticTagBoard = () => {
             startDate={startDate}
             endDate={endDate}
             statisticTagsList={statisticTagsList}
+            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectSmall={handleSelectSmall}
@@ -394,6 +430,7 @@ const StatisticTagBoard = () => {
             startDate={startDate}
             endDate={endDate}
             statisticTagsList={statisticTagsList}
+            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -427,7 +464,6 @@ const StatisticTagBoard = () => {
         startDateCompare={startDateCompare}
         endDateCompare={endDateCompare}
         isCheckCompare={isCheckCompare}
-        statisticTagsList={statisticTagsList}
         handleSelectOrganization={handleSelectOrganization}
         handleSelectLarge={handleSelectLarge}
         handleSelectMedium={handleSelectMedium}

@@ -45,7 +45,6 @@ const TaskListTeamStatistic = ({
   startDateCompare,
   endDateCompare,
   isCheckCompare,
-  statisticCategoryListTeam,
   creationDataStatisticData,
   handleSelectLarge,
   handleSelectMedium,
@@ -97,7 +96,6 @@ const TaskListTeamStatistic = ({
 
   useStatisticTask({
     isTeam: true,
-    parentData: statisticCategoryListTeam,
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',

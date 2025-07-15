@@ -53,7 +53,6 @@ import {
   getJapaneseWeekDay,
   sumDurationsChart,
 } from './date';
-import { EventApi } from '@fullcalendar/core';
 
 export function hasPermissionInArray(
   requiredPermissions: PermissionsSystem[],
@@ -1319,7 +1318,9 @@ export const mapStatisticAllTeamCategoryInfoToProgressData = ({
             .map((team) => team?.organizationName || '') || []
         : item?.data
             ?.slice(0, 3)
-            .map((category) => category?.categoryName || '') || [],
+            .map(
+              (category) => category?.categoryName || category?.tagName || '',
+            ) || [],
   }));
 
   return {
@@ -1431,19 +1432,7 @@ export function removeDuplicateOptions(
     return true;
   });
 }
-export const isOverlappedAndBelow = (a: EventApi, b: EventApi) => {
-  if (a.id === b.id) return false;
 
-  const aStart = a.start?.getTime() ?? 0;
-  const aEnd = a.end?.getTime() ?? 0;
-  const bStart = b.start?.getTime() ?? 0;
-  const bEnd = b.end?.getTime() ?? 0;
-
-  const isOverlapping = aStart < bEnd && aEnd > bStart;
-  const isBelow = aStart > bStart;
-
-  return isOverlapping && isBelow;
-}
 export const getLineChartDataFromStatisticTaskDurations = ({
   normalizeDataObject,
   color,

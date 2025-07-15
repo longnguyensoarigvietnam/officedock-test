@@ -951,9 +951,6 @@ const AllocationTagTeamCompare = memo(
             startDate={isModalCompare ? startDateCompare : startDate}
             endDate={isModalCompare ? endDateCompare : endDate}
             selectedOrganization={selectedOrganization}
-            statisticTagsListTeam={
-              isModalCompare ? statisticTagsCompareList : statisticTagsList
-            }
             onClose={() => {
               setIsShowModal(false);
             }}

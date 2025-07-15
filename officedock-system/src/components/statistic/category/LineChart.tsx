@@ -78,10 +78,10 @@ type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticCategoryList: StatisticsCategories | undefined;
-  statisticTaskDurationsList: StatisticsTaskDuration | undefined
-  statisticAllTeamTaskDurationsList: StatisticsAllTeamTaskDuration | undefined
-  isFetchedStatisticTaskDurationsList: boolean
-  isFetchedStatisticAllTeamTaskDurationsList: boolean
+  statisticTaskDurationsList: StatisticsTaskDuration | undefined;
+  statisticAllTeamTaskDurationsList: StatisticsAllTeamTaskDuration | undefined;
+  isFetchedStatisticTaskDurationsList: boolean;
+  isFetchedStatisticAllTeamTaskDurationsList: boolean;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -417,7 +417,10 @@ const LineChart = ({
         setStandardLabelsInfo([]);
       }
 
-      if (normalizeDataObject.durations && normalizeDataObject.durations?.length > 0) {
+      if (
+        normalizeDataObject.durations &&
+        normalizeDataObject.durations?.length > 0
+      ) {
         const { labelList, datasetMap } =
           getLineChartDataFromStatisticTaskDurations({
             normalizeDataObject,
@@ -498,7 +501,10 @@ const LineChart = ({
         setStandardLabelsInfo([]);
       }
 
-      if (normalizeDataObject.durations && normalizeDataObject.durations?.length > 0) {
+      if (
+        normalizeDataObject.durations &&
+        normalizeDataObject.durations?.length > 0
+      ) {
         const { labelList, datasetMap } =
           getLineChartDataFromStatisticAllTeamTaskDurations({
             normalizeDataObject,

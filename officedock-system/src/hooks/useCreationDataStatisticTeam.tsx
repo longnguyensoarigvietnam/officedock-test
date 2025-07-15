@@ -63,6 +63,10 @@ const useCreationDataStatisticTeam = ({
               : NO_SETTING_CATEGORY;
 
           const updatedMedium: MediumCategory[] = [
+            {
+              MEDIUM: NO_SETTING_CATEGORY,
+              SMALL: [NO_SETTING_CATEGORY],
+            },
             ...(category.MEDIUM || []).map((mediumItem): MediumCategory => {
               const updatedMediumValue =
                 mediumItem.MEDIUM && mediumItem.MEDIUM.id != null
@@ -70,13 +74,13 @@ const useCreationDataStatisticTeam = ({
                   : NO_SETTING_CATEGORY;
 
               const updatedSmall: SmallCategory[] = [
+                NO_SETTING_CATEGORY,
                 ...(mediumItem.SMALL || []).map(
                   (smallItem): SmallCategory =>
                     smallItem && smallItem.id != null
                       ? smallItem
                       : NO_SETTING_CATEGORY,
                 ),
-                NO_SETTING_CATEGORY,
               ];
 
               return {
@@ -84,10 +88,6 @@ const useCreationDataStatisticTeam = ({
                 SMALL: updatedSmall,
               };
             }),
-            {
-              MEDIUM: NO_SETTING_CATEGORY,
-              SMALL: [NO_SETTING_CATEGORY],
-            },
           ];
 
           return {

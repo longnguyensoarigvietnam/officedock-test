@@ -5,11 +5,18 @@ import ImageRound from '@components/common/ImageRound';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 
-import { ProgressDataType, StatisticsAllTeams, StatisticsCategories } from '@interfaces/statistic';
+import {
+  ProgressDataType,
+  StatisticsAllTeams,
+  StatisticsCategories,
+} from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
 import { formatTimeToJapanese } from '@utils/date';
-import { mapStatisticAllTeamCategoryInfoToProgressData, mapStatisticCategoryInfoToProgressData } from '@utils';
+import {
+  mapStatisticAllTeamCategoryInfoToProgressData,
+  mapStatisticCategoryInfoToProgressData,
+} from '@utils';
 
 import { EventWorkCategory } from '@constants/enums';
 import { ALL_TEAM_STATISTIC, NO_SETTING } from '@constants';
@@ -23,7 +30,7 @@ type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticCategoryList: StatisticsCategories | undefined;
-  statisticAllTeamCategoryList: StatisticsAllTeams | undefined
+  statisticAllTeamCategoryList: StatisticsAllTeams | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -79,7 +86,10 @@ const AllocationCategory = memo(
     } = useContext(StatisticStateContext);
 
     useEffect(() => {
-      if (statisticCategoryList && selectedOrganization?.value != ALL_TEAM_STATISTIC) {
+      if (
+        statisticCategoryList &&
+        selectedOrganization?.value != ALL_TEAM_STATISTIC
+      ) {
         if (statisticCategoryList.largeCategories) {
           const { finalData } = mapStatisticCategoryInfoToProgressData({
             data: statisticCategoryList.largeCategories,
@@ -117,7 +127,10 @@ const AllocationCategory = memo(
     }, [statisticCategoryList, selectedOrganization?.value]);
 
     useEffect(() => {
-      if (statisticAllTeamCategoryList && selectedOrganization?.value == ALL_TEAM_STATISTIC) {
+      if (
+        statisticAllTeamCategoryList &&
+        selectedOrganization?.value == ALL_TEAM_STATISTIC
+      ) {
         if (statisticAllTeamCategoryList.largeCategories) {
           const { finalData } = mapStatisticAllTeamCategoryInfoToProgressData({
             data: statisticAllTeamCategoryList.largeCategories,
@@ -462,7 +475,6 @@ const AllocationCategory = memo(
             selectedLarge={selectedLarge}
             selectedMedium={selectedMedium}
             selectedSmall={selectedSmall}
-            statisticCategoryList={statisticCategoryList}
             startDate={startDate}
             endDate={endDate}
             detailCategory={detailCategory}

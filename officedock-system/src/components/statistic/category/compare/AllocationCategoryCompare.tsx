@@ -387,7 +387,7 @@ const AllocationCategoryCompare = memo(
         setProgressDataPairsMedium(mediumPairs);
         setProgressDataPairsSmall(smallPairs);
       }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
       statisticCategoryList,
       statisticCategoryCompareList,
@@ -1271,7 +1271,6 @@ const AllocationCategoryCompare = memo(
             open={isShowModal}
             startDate={startDate}
             endDate={endDate}
-            statisticCategoryList={statisticCategoryList}
             selectedLarge={selectedLarge}
             selectedMedium={selectedMedium}
             selectedSmall={selectedSmall}
@@ -1289,7 +1288,6 @@ const AllocationCategoryCompare = memo(
             open={isShowModalCompare}
             selectedTags={selectedTags}
             startDate={startDateCompare}
-            statisticCategoryList={statisticCategoryList}
             endDate={endDateCompare}
             selectedLarge={selectedLarge}
             selectedMedium={selectedMedium}

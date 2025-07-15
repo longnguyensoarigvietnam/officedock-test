@@ -48,7 +48,7 @@ import {
   EventWorkCategory,
   ServerStatusCode,
 } from '@constants/enums';
-import { DEFAULT_TASK_SCHEDULE_DURATION, NO_OPTION_CATEGORY } from '@constants';
+import { DEFAULT_TASK_SCHEDULE_DURATION, NO_SETTING } from '@constants';
 
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
@@ -63,6 +63,7 @@ import {
 } from '@utils/date';
 
 import api from '@base/api';
+import { removeDuplicateOptions } from '@utils';
 
 const CreateActualDurationsForm = () => {
   // Params
@@ -88,24 +89,24 @@ const CreateActualDurationsForm = () => {
     OptionDropdownType[]
   >([
     {
-      label: NO_OPTION_CATEGORY,
-      value: NO_OPTION_CATEGORY,
+      label: NO_SETTING,
+      value: NO_SETTING,
     },
   ]);
   const [dataOptionsCategoryMedium, setDataOptionsCategoryMedium] = useState<
     OptionDropdownType[]
   >([
     {
-      label: NO_OPTION_CATEGORY,
-      value: NO_OPTION_CATEGORY,
+      label: NO_SETTING,
+      value: NO_SETTING,
     },
   ]);
   const [dataOptionsCategoryLarge, setDataOptionsCategoryLarge] = useState<
     OptionDropdownType[]
   >([
     {
-      label: NO_OPTION_CATEGORY,
-      value: NO_OPTION_CATEGORY,
+      label: NO_SETTING,
+      value: NO_SETTING,
     },
   ]);
   const [dataOptionsTagIds, setDataOptionsTagIds] = useState<
@@ -189,37 +190,37 @@ const CreateActualDurationsForm = () => {
           label: data.categories
             ? data.categories.find(
                 (category) => category.type === EventWorkCategory.LARGE,
-              )?.name ?? NO_OPTION_CATEGORY
-            : NO_OPTION_CATEGORY,
+              )?.name ?? NO_SETTING
+            : NO_SETTING,
           value: data.categories
             ? data.categories.find(
                 (category) => category.type === EventWorkCategory.LARGE,
-              )?.id ?? NO_OPTION_CATEGORY
-            : NO_OPTION_CATEGORY,
+              )?.id ?? NO_SETTING
+            : NO_SETTING,
         },
         mediumCategory: {
           label: data.categories
             ? data.categories.find(
                 (category) => category.type === EventWorkCategory.MEDIUM,
-              )?.name ?? NO_OPTION_CATEGORY
-            : NO_OPTION_CATEGORY,
+              )?.name ?? NO_SETTING
+            : NO_SETTING,
           value: data.categories
             ? data.categories.find(
                 (category) => category.type === EventWorkCategory.MEDIUM,
-              )?.id ?? NO_OPTION_CATEGORY
-            : NO_OPTION_CATEGORY,
+              )?.id ?? NO_SETTING
+            : NO_SETTING,
         },
         smallCategory: {
           label: data.categories
             ? data.categories.find(
                 (category) => category.type === EventWorkCategory.SMALL,
-              )?.name ?? NO_OPTION_CATEGORY
-            : NO_OPTION_CATEGORY,
+              )?.name ?? NO_SETTING
+            : NO_SETTING,
           value: data.categories
             ? data.categories.find(
                 (category) => category.type === EventWorkCategory.SMALL,
-              )?.id ?? NO_OPTION_CATEGORY
-            : NO_OPTION_CATEGORY,
+              )?.id ?? NO_SETTING
+            : NO_SETTING,
         },
         tagIds: data.tags as { id: number; name: string }[],
       });
@@ -247,15 +248,15 @@ const CreateActualDurationsForm = () => {
               ? data.categories.find(
                   (category: { id: number; type: string; name: string }) =>
                     category.type == EventWorkCategory.LARGE,
-                )?.name ?? NO_OPTION_CATEGORY
-              : NO_OPTION_CATEGORY,
+                )?.name ?? NO_SETTING
+              : NO_SETTING,
           value:
             data.categories.length > 0
               ? data.categories.find(
                   (category: { id: number; type: string; name: string }) =>
                     category.type == EventWorkCategory.LARGE,
-                )?.id ?? NO_OPTION_CATEGORY
-              : NO_OPTION_CATEGORY,
+                )?.id ?? NO_SETTING
+              : NO_SETTING,
         },
         mediumCategory: {
           label:
@@ -263,15 +264,15 @@ const CreateActualDurationsForm = () => {
               ? data.categories.find(
                   (category: { id: number; type: string; name: string }) =>
                     category.type == EventWorkCategory.MEDIUM,
-                )?.name ?? NO_OPTION_CATEGORY
-              : NO_OPTION_CATEGORY,
+                )?.name ?? NO_SETTING
+              : NO_SETTING,
           value:
             data.categories.length > 0
               ? data.categories.find(
                   (category: { id: number; type: string; name: string }) =>
                     category.type == EventWorkCategory.MEDIUM,
-                )?.id ?? NO_OPTION_CATEGORY
-              : NO_OPTION_CATEGORY,
+                )?.id ?? NO_SETTING
+              : NO_SETTING,
         },
         smallCategory: {
           label:
@@ -279,15 +280,15 @@ const CreateActualDurationsForm = () => {
               ? data.categories.find(
                   (category: { id: number; type: string; name: string }) =>
                     category.type == EventWorkCategory.SMALL,
-                )?.name ?? NO_OPTION_CATEGORY
-              : NO_OPTION_CATEGORY,
+                )?.name ?? NO_SETTING
+              : NO_SETTING,
           value:
             data.categories.length > 0
               ? data.categories.find(
                   (category: { id: number; type: string; name: string }) =>
                     category.type == EventWorkCategory.SMALL,
-                )?.id ?? NO_OPTION_CATEGORY
-              : NO_OPTION_CATEGORY,
+                )?.id ?? NO_SETTING
+              : NO_SETTING,
         },
         tagIds: data.tags,
         scheduleType: {
@@ -356,20 +357,20 @@ const CreateActualDurationsForm = () => {
       onSuccess: (data) => {
         const organizationCategories = data.map((category) => {
           const largeCategory = category.LARGE || {
-            id: NO_OPTION_CATEGORY,
-            name: NO_OPTION_CATEGORY,
+            id: NO_SETTING,
+            name: NO_SETTING,
             uuid: '',
           };
 
           const mediumCategories = (category.MEDIUM || []).map(
             (mediumCategory) => {
               const mediumCategoryField = mediumCategory.MEDIUM || {
-                id: NO_OPTION_CATEGORY,
-                name: NO_OPTION_CATEGORY,
+                id: NO_SETTING,
+                name: NO_SETTING,
                 uuid: '',
               };
               const smallCategories = mediumCategory.SMALL || [
-                { id: NO_OPTION_CATEGORY, name: NO_OPTION_CATEGORY, uuid: '' },
+                { id: NO_SETTING, name: NO_SETTING, uuid: '' },
               ];
 
               return {
@@ -389,8 +390,8 @@ const CreateActualDurationsForm = () => {
         setDataOptionsCategoryLarge(() => {
           const largeCategories: OptionDropdownType[] = [
             {
-              label: NO_OPTION_CATEGORY,
-              value: NO_OPTION_CATEGORY,
+              label: NO_SETTING,
+              value: NO_SETTING,
             },
           ];
           data.map((category) => {
@@ -428,26 +429,26 @@ const CreateActualDurationsForm = () => {
       value.largeCategory = {
         value: defaultTaskScheduleData.largeCategory
           ? String(defaultTaskScheduleData.largeCategory?.value)
-          : NO_OPTION_CATEGORY,
+          : NO_SETTING,
         label: defaultTaskScheduleData.largeCategory
           ? String(defaultTaskScheduleData.largeCategory?.label)
-          : NO_OPTION_CATEGORY,
+          : NO_SETTING,
       };
       value.mediumCategory = {
         value: defaultTaskScheduleData.mediumCategory
           ? String(defaultTaskScheduleData.mediumCategory?.value)
-          : NO_OPTION_CATEGORY,
+          : NO_SETTING,
         label: defaultTaskScheduleData.mediumCategory
           ? String(defaultTaskScheduleData.mediumCategory?.label)
-          : NO_OPTION_CATEGORY,
+          : NO_SETTING,
       };
       value.smallCategory = {
         value: defaultTaskScheduleData.smallCategory
           ? String(defaultTaskScheduleData.smallCategory?.value)
-          : NO_OPTION_CATEGORY,
+          : NO_SETTING,
         label: defaultTaskScheduleData.smallCategory
           ? String(defaultTaskScheduleData.smallCategory?.label)
-          : NO_OPTION_CATEGORY,
+          : NO_SETTING,
       };
       value.scheduleType = {
         value: defaultTaskScheduleData.scheduleType
@@ -481,8 +482,8 @@ const CreateActualDurationsForm = () => {
     if (!dataOrganizationCategories || !watch('largeCategory.value')) {
       setDataOptionsCategoryMedium([
         {
-          label: NO_OPTION_CATEGORY,
-          value: NO_OPTION_CATEGORY,
+          label: NO_SETTING,
+          value: NO_SETTING,
         },
       ]);
       return;
@@ -494,8 +495,8 @@ const CreateActualDurationsForm = () => {
 
     const initialMediumCategory: OptionDropdownType[] = [
       {
-        label: NO_OPTION_CATEGORY,
-        value: NO_OPTION_CATEGORY,
+        label: NO_SETTING,
+        value: NO_SETTING,
       },
     ];
 
@@ -521,8 +522,8 @@ const CreateActualDurationsForm = () => {
     if (!dataOrganizationCategories || !watch('mediumCategory.value')) {
       setDataOptionsCategorySmall([
         {
-          label: NO_OPTION_CATEGORY,
-          value: NO_OPTION_CATEGORY,
+          label: NO_SETTING,
+          value: NO_SETTING,
         },
       ]);
       return;
@@ -539,8 +540,8 @@ const CreateActualDurationsForm = () => {
 
     const initialSmallCategory: OptionDropdownType[] = [
       {
-        label: NO_OPTION_CATEGORY,
-        value: NO_OPTION_CATEGORY,
+        label: NO_SETTING,
+        value: NO_SETTING,
       },
     ];
     if (selectedMediumCategoryOption) {
@@ -785,7 +786,7 @@ const CreateActualDurationsForm = () => {
                       classNameTextData="!text-sm"
                       classNameOption="!text-sm"
                       classNameError="!text-sm"
-                      options={dataOptionsCategoryLarge}
+                      options={removeDuplicateOptions(dataOptionsCategoryLarge)}
                       selectedOption={
                         dataOptionsCategoryLarge?.find(
                           (element) =>
@@ -823,7 +824,9 @@ const CreateActualDurationsForm = () => {
                             (value as OptionDropdownType)?.value,
                         ) as OptionDropdownType | undefined
                       }
-                      options={dataOptionsCategoryMedium}
+                      options={removeDuplicateOptions(
+                        dataOptionsCategoryMedium,
+                      )}
                       onChange={(e) => {
                         if (e.value != watch('mediumCategory.value')) {
                           setValue('smallCategory', { label: '', value: '' });
@@ -853,7 +856,7 @@ const CreateActualDurationsForm = () => {
                             (value as OptionDropdownType)?.value,
                         ) as OptionDropdownType | undefined
                       }
-                      options={dataOptionsCategorySmall}
+                      options={removeDuplicateOptions(dataOptionsCategorySmall)}
                       placeholder="小カテゴリ"
                       onChange={(e) => {
                         onChange(e);

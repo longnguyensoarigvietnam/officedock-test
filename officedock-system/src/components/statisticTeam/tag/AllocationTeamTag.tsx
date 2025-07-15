@@ -537,7 +537,6 @@ const AllocationTeamTag = memo(
             selectedSmall={selectedSmall}
             detailCategory={detailCategory}
             selectedOrganization={selectedOrganization}
-            statisticTagsListTeam={statisticTagsList}
             onClose={() => {
               setIsShowModal(false);
             }}

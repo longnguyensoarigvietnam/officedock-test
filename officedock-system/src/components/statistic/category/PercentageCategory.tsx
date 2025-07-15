@@ -82,6 +82,7 @@ const PercentageCategory = ({
     listDuration: [],
     mergedItems: [],
   });
+
   const [dataChartMedium, setDataChartMedium] = useState<DataChartType>({
     actualValue: [],
     colors: [],
@@ -312,7 +313,11 @@ const PercentageCategory = ({
         });
       }
     }
-  }, [statisticCategoryList, selectedOrganization?.value]);
+  }, [
+    statisticCategoryList,
+    selectedOrganization?.value,
+    selectedLarge?.value,
+  ]);
 
   useEffect(() => {
     if (
@@ -696,7 +701,6 @@ const PercentageCategory = ({
           selectedSmall={selectedSmall}
           startDate={startDate}
           endDate={endDate}
-          statisticCategoryList={statisticCategoryList}
           detailCategory={detailCategory}
           selectedOrganization={selectedOrganization}
           onClose={() => {

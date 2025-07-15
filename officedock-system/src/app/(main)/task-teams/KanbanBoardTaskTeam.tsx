@@ -2327,6 +2327,13 @@ const KanbanBoardTaskTeam = () => {
       !isConcurrently
     ) {
       addTaskToKanban(taskAddEmpty);
+      updateTotalStatusAdd({
+        userId:
+          taskAddEmpty.peopleInCharge && taskAddEmpty.peopleInCharge.length > 0
+            ? `user_${taskAddEmpty.peopleInCharge[0].id}`
+            : '',
+        statusName: taskAddEmpty.status?.name || '',
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskAddEmpty, selectedOrganizationSideBar, isConcurrently]);

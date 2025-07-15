@@ -10,10 +10,7 @@ import { apiRouters } from '@constants/routers';
 
 import api from '@base/api';
 import { BasePagination, OptionDropdownType } from '@interfaces/common';
-import {
-  DataTaskListStatisticListType,
-  StatisticsCategories,
-} from '@interfaces/statistic';
+import { DataTaskListStatisticListType } from '@interfaces/statistic';
 import { StatisticStateContext } from '@providers/StatisticProvider';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
@@ -42,13 +39,11 @@ const useStatisticTask = ({
   filter,
   isTeam = false,
   is_tag_page = false,
-  parentData,
   conditions,
   onSuccess,
   onError,
 }: {
   is_tag_page?: boolean;
-  parentData?: StatisticsCategories;
   isScroll?: boolean;
   cursor_id?: string;
   cursor?: string;
@@ -137,7 +132,7 @@ const useStatisticTask = ({
     queryFn: ({ signal }) => getStatisticCategoryList({ signal }),
 
     retry: 0,
-    enabled: !!parentData && !!token && conditions?.every(Boolean),
+    enabled: !!token && conditions?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (data: BasePagination<DataTaskListStatisticListType[]>) => {

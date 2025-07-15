@@ -14,7 +14,6 @@ import { OrganizationStatisticType } from '@constants/enums';
 import {
   CreationStatisticType,
   DataTaskListStatisticListType,
-  StatisticsCategories,
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
@@ -29,7 +28,6 @@ type Props = {
   endDate: Date | null;
   startDateCompare: Date;
   endDateCompare: Date | null;
-  statisticTagsList: StatisticsCategories | undefined;
   creationDataStatisticData: CreationStatisticType[];
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
@@ -44,7 +42,6 @@ const TaskListStatisticTags = ({
   endDateCompare,
   isCheckCompare,
   creationDataStatisticData,
-  statisticTagsList,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectSmall,
@@ -92,8 +89,6 @@ const TaskListStatisticTags = ({
 
   useStatisticTask({
     is_tag_page: true,
-    parentData: statisticTagsList,
-
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
