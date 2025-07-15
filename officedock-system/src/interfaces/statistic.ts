@@ -283,6 +283,8 @@ export interface StatisticAllTeamInfo {
     categoryName?: string;
     categoryColor?: string;
     duration: string;
+    tagId?: number;
+    tagName?: string;
   }[];
 }
 export interface StatisticCategoryInfo {

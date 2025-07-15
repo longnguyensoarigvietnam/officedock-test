@@ -18,6 +18,7 @@ interface FilterProps {
   endDate: string | Date;
   fromDate: string | Date;
   tagIds?: OptionDropdownType[];
+  isTagPage?: boolean;
 }
 
 const useStatisticAllTeamCategories = ({
@@ -50,6 +51,9 @@ const useStatisticAllTeamCategories = ({
     if (filter?.tagIds) {
       const tagValues = filter.tagIds.map((item) => item.value).join(',');
       params.append('tag_ids', tagValues);
+    }
+    if (filter?.isTagPage) {
+      params.append('is_tag_page', String(true));
     }
 
     const apiUrl = `${apiRouters.STATISTICS_ALL_TEAMS_CATEGORIES}?${params.toString()}`;

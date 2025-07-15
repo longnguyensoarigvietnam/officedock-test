@@ -11,10 +11,10 @@ import TaskListStatistic from '@components/statistic/category/TaskList';
 import AllocationCategory from '@components/statistic/category/AllocationCategory';
 import PercentageCategoryCompare from '@components/statistic/category/compare/PercentageCategoryCompare';
 import AllocationCategoryCompare from '@components/statistic/category/compare/AllocationCategoryCompare';
-import LineChart from '@components/statistic/category/LineChart';
 import StackedAreaChart from '@components/statistic/category/StackedAreaChart';
 import LineChartCompare from '@components/statistic/category/compare/LineChartCompare';
 import FilterStatistic from '@components/statistic/category/filter/FilterStatistic';
+import LineChart from '@components/statistic/category/LineChart';
 
 import { OrganizationStatisticType } from '@constants/enums';
 import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
@@ -25,13 +25,14 @@ import useStatisticCategoriesCompare from '@hooks/useStatisticCategoriesCompare'
 import useStatisticCategories from '@hooks/useStatisticCategories';
 import useStatisticAllTeamCategories from '@hooks/useStatisticAllTeamCategories';
 import useStatisticAllTeamCategoriesCompare from '@hooks/useStatisticAllTeamCategoriesCompare';
+import useStatisticTaskDurations from '@hooks/useStatisticTaskDurations';
+import useStatisticAllTeamTaskDurations from '@hooks/useStatisticAllTeamTaskDurations';
+import useStatisticTaskDurationsCompare from '@hooks/useStatisticTaskDurationsCompare';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
 import { StatisticStateContext } from '@providers/StatisticProvider';
-import useStatisticTaskDurations from '@hooks/useStatisticTaskDurations';
-import useStatisticAllTeamTaskDurations from '@hooks/useStatisticAllTeamTaskDurations';
-import useStatisticTaskDurationsCompare from '@hooks/useStatisticTaskDurationsCompare';
+import { removeDuplicateOptions } from '@utils';
 
 const StatisticBoard = () => {
   const {
@@ -397,7 +398,7 @@ const StatisticBoard = () => {
       if (data?.value === ALL_TEAM_STATISTIC) {
         setLargeOptions([]);
       } else {
-        setLargeOptions(largeCategories);
+        setLargeOptions(removeDuplicateOptions(largeCategories));
       }
     } else {
       setLargeOptions([]);
@@ -437,7 +438,7 @@ const StatisticBoard = () => {
         value: medium.MEDIUM?.id || '',
         label: medium.MEDIUM?.name || '',
       }));
-      setMediumOptions(mediumCategories);
+      setMediumOptions(removeDuplicateOptions(mediumCategories));
     } else {
       setMediumOptions([]);
     }
@@ -480,7 +481,7 @@ const StatisticBoard = () => {
           value: small.id,
           label: small.name,
         }));
-      setSmallOptions(smallCategories);
+      setSmallOptions(removeDuplicateOptions(smallCategories));
     } else {
       setSmallOptions([]);
     }
@@ -635,10 +636,16 @@ const StatisticBoard = () => {
             endDateCompare={endDateCompare}
             statisticCategoryList={statisticCategoryList}
             statisticCategoryCompareList={statisticCategoryCompareList}
-            statisticTaskDurationsCompareList={statisticTaskDurationsCompareList}
+            statisticTaskDurationsCompareList={
+              statisticTaskDurationsCompareList
+            }
             statisticTaskDurationsList={statisticTaskDurationsList}
-            isFetchedStatisticTaskDurationsCompareList={isFetchedStatisticTaskDurationsCompareList}
-            isFetchedStatisticTaskDurationsList={isFetchedStatisticTaskDurationsList}
+            isFetchedStatisticTaskDurationsCompareList={
+              isFetchedStatisticTaskDurationsCompareList
+            }
+            isFetchedStatisticTaskDurationsList={
+              isFetchedStatisticTaskDurationsList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -675,9 +682,15 @@ const StatisticBoard = () => {
             endDate={endDate}
             statisticCategoryList={statisticCategoryList}
             statisticTaskDurationsList={statisticTaskDurationsList}
-            statisticAllTeamTaskDurationsList={statisticAllTeamTaskDurationsList}
-            isFetchedStatisticTaskDurationsList={isFetchedStatisticTaskDurationsList}
-            isFetchedStatisticAllTeamTaskDurationsList={isFetchedStatisticAllTeamTaskDurationsList}
+            statisticAllTeamTaskDurationsList={
+              statisticAllTeamTaskDurationsList
+            }
+            isFetchedStatisticTaskDurationsList={
+              isFetchedStatisticTaskDurationsList
+            }
+            isFetchedStatisticAllTeamTaskDurationsList={
+              isFetchedStatisticAllTeamTaskDurationsList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -687,6 +700,16 @@ const StatisticBoard = () => {
             startDate={startDate}
             endDate={endDate}
             statisticCategoryList={statisticCategoryList}
+            statisticTaskDurationsList={statisticTaskDurationsList}
+            statisticAllTeamTaskDurationsList={
+              statisticAllTeamTaskDurationsList
+            }
+            isFetchedStatisticTaskDurationsList={
+              isFetchedStatisticTaskDurationsList
+            }
+            isFetchedStatisticAllTeamTaskDurationsList={
+              isFetchedStatisticAllTeamTaskDurationsList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -701,7 +724,6 @@ const StatisticBoard = () => {
         startDateCompare={startDateCompare}
         endDateCompare={endDateCompare}
         isCheckCompare={isCheckCompare}
-        statisticCategoryList={statisticCategoryList}
         handleSelectOrganization={handleSelectOrganization}
         handleSelectLarge={handleSelectLarge}
         handleSelectMedium={handleSelectMedium}

@@ -882,11 +882,6 @@ const AllocationTeamCategoryCompare = memo(
             selectedSmall={selectedSmall}
             startDate={isModalCompare ? startDateCompare : startDate}
             endDate={isModalCompare ? endDateCompare : endDate}
-            statisticCategoryList={
-              isModalCompare
-                ? statisticCategoryListTeamCompare
-                : statisticTeamCategoryList
-            }
             detailCategory={detailCategory}
             selectedOrganization={selectedOrganization}
             onClose={() => {

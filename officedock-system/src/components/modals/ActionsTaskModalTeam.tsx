@@ -53,7 +53,7 @@ import {
   COPY_MESSAGE,
   DAY_OPTIONS,
   MONTH_OPTIONS,
-  NO_OPTION_CATEGORY,
+  NO_SETTING,
   REPEAT_INTERVAL_OPTIONS,
   TASK_REPETITIVE_OPTIONS,
   UNREGISTERED,
@@ -160,24 +160,24 @@ const ActionsTaskModalTeam = ({
     OptionDropdownType[]
   >([
     {
-      label: NO_OPTION_CATEGORY,
-      value: NO_OPTION_CATEGORY,
+      label: NO_SETTING,
+      value: NO_SETTING,
     },
   ]);
   const [dataOptionsCategoryMedium, setDataOptionsCategoryMedium] = useState<
     OptionDropdownType[]
   >([
     {
-      label: NO_OPTION_CATEGORY,
-      value: NO_OPTION_CATEGORY,
+      label: NO_SETTING,
+      value: NO_SETTING,
     },
   ]);
   const [dataOptionsCategoryLarge, setDataOptionsCategoryLarge] = useState<
     OptionDropdownType[]
   >([
     {
-      label: NO_OPTION_CATEGORY,
-      value: NO_OPTION_CATEGORY,
+      label: NO_SETTING,
+      value: NO_SETTING,
     },
   ]);
 
@@ -255,20 +255,20 @@ const ActionsTaskModalTeam = ({
       onSuccess: (data) => {
         const organizationCategories = data.map((category) => {
           const largeCategory = category.LARGE || {
-            id: NO_OPTION_CATEGORY,
-            name: NO_OPTION_CATEGORY,
+            id: NO_SETTING,
+            name: NO_SETTING,
             uuid: '',
           };
 
           const mediumCategories = (category.MEDIUM || []).map(
             (mediumCategory) => {
               const mediumCategoryField = mediumCategory.MEDIUM || {
-                id: NO_OPTION_CATEGORY,
-                name: NO_OPTION_CATEGORY,
+                id: NO_SETTING,
+                name: NO_SETTING,
                 uuid: '',
               };
               const smallCategories = mediumCategory.SMALL || [
-                { id: NO_OPTION_CATEGORY, name: NO_OPTION_CATEGORY, uuid: '' },
+                { id: NO_SETTING, name: NO_SETTING, uuid: '' },
               ];
 
               return {
@@ -504,26 +504,26 @@ const ActionsTaskModalTeam = ({
         (value.categories.LARGE = {
           label: firstLargeCategory
             ? (firstLargeCategory?.name as string)
-            : NO_OPTION_CATEGORY,
+            : NO_SETTING,
           value: firstLargeCategory
             ? (firstLargeCategory?.id as number)
-            : NO_OPTION_CATEGORY,
+            : NO_SETTING,
         }),
           (value.categories.MEDIUM = {
             label: firstMediumCategory
               ? (firstMediumCategory?.name as string)
-              : NO_OPTION_CATEGORY,
+              : NO_SETTING,
             value: firstMediumCategory
               ? (firstMediumCategory?.id as number)
-              : NO_OPTION_CATEGORY,
+              : NO_SETTING,
           }),
           (value.categories.SMALL = {
             label: firstSmallCategory
               ? (firstSmallCategory?.name as string)
-              : NO_OPTION_CATEGORY,
+              : NO_SETTING,
             value: firstSmallCategory
               ? (firstSmallCategory?.id as number)
-              : NO_OPTION_CATEGORY,
+              : NO_SETTING,
           });
       }
     }
@@ -563,8 +563,8 @@ const ActionsTaskModalTeam = ({
     if (!dataOrganizationCategories || !watch('categories.LARGE.value')) {
       setDataOptionsCategoryMedium([
         {
-          label: NO_OPTION_CATEGORY,
-          value: NO_OPTION_CATEGORY,
+          label: NO_SETTING,
+          value: NO_SETTING,
         },
       ]);
       return;
@@ -598,8 +598,8 @@ const ActionsTaskModalTeam = ({
     if (!dataOrganizationCategories || !watch('categories.MEDIUM.value')) {
       setDataOptionsCategorySmall([
         {
-          label: NO_OPTION_CATEGORY,
-          value: NO_OPTION_CATEGORY,
+          label: NO_SETTING,
+          value: NO_SETTING,
         },
       ]);
       return;
@@ -1048,20 +1048,20 @@ const ActionsTaskModalTeam = ({
   const resetDataCategoryOptions = () => {
     setDataOptionsCategoryLarge([
       {
-        label: NO_OPTION_CATEGORY,
-        value: NO_OPTION_CATEGORY,
+        label: NO_SETTING,
+        value: NO_SETTING,
       },
     ]);
     setDataOptionsCategoryMedium([
       {
-        label: NO_OPTION_CATEGORY,
-        value: NO_OPTION_CATEGORY,
+        label: NO_SETTING,
+        value: NO_SETTING,
       },
     ]);
     setDataOptionsCategorySmall([
       {
-        label: NO_OPTION_CATEGORY,
-        value: NO_OPTION_CATEGORY,
+        label: NO_SETTING,
+        value: NO_SETTING,
       },
     ]);
   };

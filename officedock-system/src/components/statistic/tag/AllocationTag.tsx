@@ -5,7 +5,10 @@ import ImageRound from '@components/common/ImageRound';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 
-import { StatisticsCategories } from '@interfaces/statistic';
+import {
+  StatisticsAllTeams,
+  StatisticsCategories,
+} from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
 import { formatTimeToJapanese } from '@utils/date';
@@ -17,11 +20,13 @@ import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 import ProgressBarStatistic from './ProgressBarStatistic';
 import FilterTag from './filter/FilterTag';
+import { ALL_TEAM_STATISTIC } from '@constants';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticTagsList: StatisticsCategories | undefined;
+  statisticAllTeamCategoryList: StatisticsAllTeams | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -89,7 +94,10 @@ const AllocationTag = memo(
     } = useContext(StatisticTagStateContext);
 
     useEffect(() => {
-      if (statisticTagsList) {
+      if (
+        statisticTagsList &&
+        selectedOrganization?.value !== ALL_TEAM_STATISTIC
+      ) {
         if (statisticTagsList.largeCategories) {
           const listDataLarge = statisticTagsList.largeCategories.map(
             (item) => ({
@@ -470,7 +478,6 @@ const AllocationTag = memo(
             selectedSmall={selectedSmall}
             detailCategory={detailCategory}
             selectedOrganization={selectedOrganization}
-            statisticTagsListTeam={statisticTagsList}
             onClose={() => {
               setIsShowModal(false);
             }}

@@ -587,7 +587,6 @@ const AllocationTeamCategory = memo(
             selectedSmall={selectedSmall}
             startDate={startDate}
             endDate={endDate}
-            statisticCategoryList={statisticTeamCategoryList}
             detailCategory={detailCategory}
             selectedOrganization={selectedOrganization}
             onClose={() => {

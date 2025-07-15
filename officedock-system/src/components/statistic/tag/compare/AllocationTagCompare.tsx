@@ -1010,7 +1010,6 @@ const AllocationTagCompare = memo(
             startDate={startDate}
             endDate={endDate}
             selectedOrganization={selectedOrganization}
-            statisticTagsListTeam={statisticTagsList}
             onClose={() => {
               setIsShowModal(false);
             }}
@@ -1027,7 +1026,6 @@ const AllocationTagCompare = memo(
             endDate={endDateCompare}
             detailCategory={detailCategoryCompare}
             selectedOrganization={selectedOrganization}
-            statisticTagsListTeam={statisticTagsList}
             onClose={() => {
               setIsShowModalCompare(false);
             }}

@@ -29,6 +29,7 @@ import { CreateUserFormData, User } from '@interfaces/user';
 
 import {
   ActionsEvent,
+  ActionTask,
   CreateUserType,
   OrganizationType,
   PermissionsSystem,
@@ -75,7 +76,7 @@ export type ActionsUserModalProps = {
 const ActionsUserModal = ({
   open,
   dataUserDetail,
-  action = 'CREATE',
+  action = ActionTask.CREATE,
   roleUserOptions,
   originalOrganizationOptions,
   errorMessages,

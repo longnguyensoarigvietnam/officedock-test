@@ -15,34 +15,36 @@ import { Table, TableBody } from '@components/common/Table';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import StatisticLineChartTableSkeleton from '@components/common/SkeletonLoading/StatisticLineChartTableSkeleton';
 
-import { DEFAULT_TIME_TEXT } from '@constants';
+import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
 import {
   SortingType,
   StatisticViewLabels,
   StatisticViewOptions,
 } from '@constants/enums';
 
-import useStatisticPercentChart from '@hooks/useStatisticPercentChart';
-
 import { OptionDropdownType } from '@interfaces/common';
 import {
   StatisticCategoryInfo,
+  StatisticsAllTeamTaskDuration,
   StatisticsCategories,
+  StatisticsTaskDuration,
 } from '@interfaces/statistic';
 
 import { StatisticStateContext } from '@providers/StatisticProvider';
 
 import {
   getLineChartEnableViews,
+  getRandomColor,
   getStatisticMilestones,
   lightenColor,
+  normalizeDurationsWithStatisticAllTeamCategoryTaskDurations,
+  normalizeDurationsWithStatisticCategoryTaskDurations,
 } from '@utils';
 import {
   convertDurationToTotalMinutes,
   convertToJapaneseDateRange,
   convertToStatisticJapaneseLabels,
   formatDateToYMD,
-  sumDurationsChart,
 } from '@utils/date';
 
 import FilterStatistic from './filter/FilterStatistic';
@@ -51,6 +53,11 @@ type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticCategoryList: StatisticsCategories | undefined;
+  statisticTaskDurationsList: StatisticsTaskDuration | undefined;
+  statisticAllTeamTaskDurationsList: StatisticsAllTeamTaskDuration | undefined;
+  isFetchedStatisticTaskDurationsList: boolean;
+  isFetchedStatisticAllTeamTaskDurationsList: boolean;
+
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -58,8 +65,12 @@ type Props = {
 
 const StackedAreaChart = ({
   statisticCategoryList,
+  statisticTaskDurationsList,
+  statisticAllTeamTaskDurationsList,
   startDate,
   endDate,
+  isFetchedStatisticTaskDurationsList,
+  isFetchedStatisticAllTeamTaskDurationsList,
   handleSelectOrganization,
   handleSelectLarge,
   handleSelectMedium,
@@ -67,9 +78,6 @@ const StackedAreaChart = ({
   const {
     isDisableCalendar,
     isHasLoading,
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
     totalDurationTask,
     listOptionsOrganization,
     largeOptions,
@@ -77,9 +85,9 @@ const StackedAreaChart = ({
     selectedLarge,
     selectedMedium,
     selectedOrganization,
-    selectedTags,
     lineChartViewBy,
     selectedSmall,
+
     setLineChartViewBy,
   } = useContext(StatisticStateContext);
 
@@ -93,25 +101,13 @@ const StackedAreaChart = ({
 
   const [tableData, setTableData] = useState<
     {
-      categoryId: number;
+      categoryId: number | string;
       categoryName: string;
       categoryDuration: string;
       categoryPercent: string;
       categoryColor: string;
     }[]
   >([]);
-  const { statisticPercentChartList, isLoadingStatisticPercentChartList } =
-    useStatisticPercentChart({
-      filter: {
-        fromDate: formatDateToYMD(startDate) || '',
-        endDate: formatDateToYMD(`${endDate}`) || '',
-        organizationIds: String(selectedOrganization?.value || ''),
-        largeCategoryId: selectedLarge?.value || '',
-        mediumCategoryId: selectedMedium?.value || '',
-        tagIds: selectedTags,
-        statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
-      },
-    });
 
   const [dataChart, setDataChart] = useState<
     {
@@ -151,232 +147,318 @@ const StackedAreaChart = ({
   const [colorList, setColorList] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!statisticPercentChartList || statisticPercentChartList.length === 0) {
-      const timeMilestones = getStatisticMilestones(
-        `${formatDateToYMD(startDate)}`,
-        `${formatDateToYMD(endDate || '')}`,
-        lineChartViewBy?.value as StatisticViewOptions,
-      );
-
-      const uniqueSortedDates = Array.from(new Set(timeMilestones)).sort(
-        (pre, next) => new Date(pre).getTime() - new Date(next).getTime(),
-      );
-
-      const transformedDates = uniqueSortedDates.map((date, index, arr) => {
-        const isEdge = index === 0 || index === arr.length - 1;
-        return convertToStatisticJapaneseLabels(
-          date,
-          lineChartViewBy?.value as string,
-          isEdge,
-        );
-      });
-
-      setTimeRange(transformedDates);
-      setDataChart([
-        {
-          name: '',
-          data: Array(timeMilestones.length).fill(0),
-        },
-      ]);
-      setTableData([]);
-      return;
-    }
-
-    // 1. Create timeRange
-    const dates: string[] = statisticPercentChartList.map(
-      (item) => item.startDate,
-    );
-
-    const lastItem = statisticPercentChartList.at(-1);
-
-    if (lastItem) {
-      dates.push(lastItem.endDate);
-    }
-
-    const uniqueSortedDates = [...dates].sort(
-      (a, b) => new Date(a).getTime() - new Date(b).getTime(),
-    );
-
-    const transformedDates = uniqueSortedDates.map((date, index, arr) => {
-      const isEdge = index === 0 || index === arr.length - 1;
-      return convertToStatisticJapaneseLabels(
-        date,
-        lineChartViewBy?.value as string,
-        isEdge,
-      );
-    });
-
-    setTimeRange(transformedDates);
-
-    // 2. Collect chart data percentage
-    const categoryMap = new Map<string, number[]>();
-
-    for (let i = 0; i <= uniqueSortedDates.length - 1; i++) {
-      const date = uniqueSortedDates[i];
-      const weekItem = statisticPercentChartList.find(
-        (item) => item.startDate === date,
-      );
-
-      if (weekItem) {
-        for (const cat of weekItem.categories) {
-          if (!categoryMap.has(cat.categoryName)) {
-            categoryMap.set(
-              cat.categoryName,
-              Array(uniqueSortedDates.length - 1).fill(0),
-            );
-          }
-
-          const dataArray = categoryMap.get(cat.categoryName)!;
-          dataArray[i] = cat.percent;
-        }
-      }
-    }
-    const isAddFirstValue =
-      statisticPercentChartList[0]?.startDate !==
-      statisticPercentChartList[0]?.endDate;
-
-    const chartData = Array.from(categoryMap.entries()).map(([name, data]) => {
-      const firstValue = data.at(0) ?? 0;
-      return {
-        name,
-        data: isAddFirstValue ? [firstValue, ...data] : [...data],
-      };
-    });
-    // 3. Collect tableData (duration + percent)
-    const categoryTableMap = new Map<
-      string, // use key `${id}_${name}` to distinguish
-      {
-        categoryId: number;
-        categoryName: string;
-        categoryColor: string;
-        durations: string[];
-        percents: number[];
-      }
-    >();
-
-    let colorChild = '';
-
-    // Iterate through each item
-    for (const item of statisticPercentChartList) {
-      for (const cat of item.categories) {
-        const mapKey = `${cat.categoryId}_${cat.categoryName}`; // distinguish by ID + name
-
-        if (!categoryTableMap.has(mapKey)) {
-          categoryTableMap.set(mapKey, {
-            categoryId: cat.categoryId,
-            categoryName: cat.categoryName,
-            categoryColor: cat.categoryColor,
-            durations: [],
-            percents: [],
-          });
-        }
-
-        const existing = categoryTableMap.get(mapKey)!;
-        existing.durations.push(cat.duration);
-        existing.percents.push(cat.percent);
-      }
-    }
-
-    if (statisticCategoryList?.mediumCategories) {
-      colorChild =
-        statisticCategoryList?.largeCategories.find(
+    if (
+      statisticTaskDurationsList &&
+      selectedOrganization?.value != ALL_TEAM_STATISTIC
+    ) {
+      const color =
+        statisticCategoryList?.largeCategories?.find(
           (item) => item.categoryId === selectedLarge?.value,
         )?.categoryColor || '';
-    }
 
-    const finalTableData = Array.from(categoryTableMap.values()).map((cat) => {
-      const totalDuration = sumDurationsChart(cat.durations);
+      const colorListData: string[] = [];
+      const tableDetail: {
+        categoryId: number;
+        categoryName: string;
+        categoryDuration: string;
+        categoryPercent: string;
+        categoryColor: string;
+      }[] = [];
 
-      let percent = 0;
+      const normalizeDataObject = {
+        data: statisticTaskDurationsList?.data || [],
+        durations: normalizeDurationsWithStatisticCategoryTaskDurations({
+          durations: statisticTaskDurationsList?.durations || [],
+          data: statisticTaskDurationsList?.data || [],
+        }),
+      };
+
+      if (normalizeDataObject?.data && normalizeDataObject?.data?.length > 0) {
+        normalizeDataObject.data.forEach((data) => {
+          tableDetail.push({
+            categoryId: data.categoryId as number,
+            categoryName: data.categoryName,
+            categoryDuration: data.duration,
+            categoryPercent: String(data?.percent || 0),
+            categoryColor:
+              data.categoryColor ||
+              (color && lightenColor(color, data?.percent || 0)) ||
+              getRandomColor(),
+          });
+          const colorAdd =
+            data.categoryColor ||
+            (color && lightenColor(color, data?.percent || 0)) ||
+            getRandomColor();
+
+          colorListData.push(colorAdd);
+        });
+
+        setTableData(tableDetail);
+        setColorList(colorListData);
+      } else {
+        setTableData([]);
+      }
 
       if (
-        !selectedLarge?.value &&
-        statisticCategoryList?.largeCategories &&
-        statisticCategoryList?.largeCategories?.length > 0
+        normalizeDataObject.durations &&
+        normalizeDataObject.durations?.length > 0
       ) {
-        percent =
-          statisticCategoryList.largeCategories.find(
-            (category) => category.categoryName === cat.categoryName,
-          )?.percent || 0;
-      } else if (
-        !selectedMedium?.value &&
-        statisticCategoryList?.mediumCategories &&
-        statisticCategoryList?.mediumCategories?.length > 0
-      ) {
-        percent =
-          statisticCategoryList.mediumCategories.find(
-            (category) => category.categoryName === cat.categoryName,
-          )?.percent || 0;
-      } else if (
-        statisticCategoryList?.smallCategories &&
-        statisticCategoryList?.smallCategories?.length > 0
-      ) {
-        percent =
-          statisticCategoryList.smallCategories.find(
-            (category) => category.categoryName === cat.categoryName,
-          )?.percent || 0;
-      }
+        const dates: string[] = normalizeDataObject.durations.map(
+          (item) => item.startDate,
+        );
+        const lastItem = normalizeDataObject.durations.at(-1);
+        if (lastItem) dates.push(lastItem.endDate);
 
-      return {
-        categoryId: cat.categoryId,
-        categoryName: cat.categoryName,
-        categoryColor:
-          cat.categoryColor !== null
-            ? cat.categoryColor
-            : colorChild !== ''
-              ? lightenColor(colorChild, percent)
-              : '',
-        categoryDuration: totalDuration,
-        categoryPercent: `${percent}`,
-      };
-    });
-    let sortSource: StatisticCategoryInfo[] | undefined =
-      statisticCategoryList?.largeCategories;
+        const uniqueSortedDates = [...dates].sort(
+          (a, b) => new Date(a).getTime() - new Date(b).getTime(),
+        );
 
-    if (selectedLarge && statisticCategoryList?.mediumCategories?.length) {
-      sortSource = statisticCategoryList.mediumCategories;
+        const transformedDates = uniqueSortedDates.map((date, index, arr) => {
+          const isEdge = index === 0 || index === arr.length - 1;
+          return convertToStatisticJapaneseLabels(
+            date,
+            lineChartViewBy?.value as string,
+            isEdge,
+          );
+        });
 
-      if (selectedMedium && statisticCategoryList?.smallCategories?.length) {
-        sortSource = statisticCategoryList.smallCategories;
+        setTimeRange(transformedDates);
 
-        if (selectedSmall && statisticCategoryList?.category?.length) {
-          sortSource = statisticCategoryList.category;
+        const categoryMap = new Map<string, number[]>();
+
+        for (let i = 0; i <= uniqueSortedDates.length - 1; i++) {
+          const date = uniqueSortedDates[i];
+          const weekItem = normalizeDataObject.durations.find(
+            (item) => item.startDate === date,
+          );
+
+          if (weekItem) {
+            for (const cat of weekItem.data) {
+              if (!categoryMap.has(cat.categoryName)) {
+                categoryMap.set(
+                  cat.categoryName,
+                  Array(uniqueSortedDates.length - 1).fill(0),
+                );
+              }
+
+              const dataArray = categoryMap.get(cat.categoryName)!;
+              dataArray[i] = cat.percent;
+            }
+          }
         }
+
+        const isAddFirstValue =
+          normalizeDataObject.durations[0]?.startDate !==
+          normalizeDataObject.durations[0]?.endDate;
+
+        const chartData = Array.from(categoryMap.entries()).map(
+          ([name, data]) => {
+            const firstValue = data.at(0) ?? 0;
+            return {
+              name,
+              data: isAddFirstValue ? [firstValue, ...data] : [...data],
+            };
+          },
+        );
+
+        // Sắp xếp theo danh sách đã chọn nếu có
+        let sortSource: StatisticCategoryInfo[] | undefined =
+          statisticCategoryList?.largeCategories;
+
+        if (selectedLarge && statisticCategoryList?.mediumCategories?.length) {
+          sortSource = statisticCategoryList.mediumCategories;
+
+          if (
+            selectedMedium &&
+            statisticCategoryList?.smallCategories?.length
+          ) {
+            sortSource = statisticCategoryList.smallCategories;
+
+            if (selectedSmall && statisticCategoryList?.category?.length) {
+              sortSource = statisticCategoryList.category;
+            }
+          }
+        }
+
+        if (sortSource?.length) {
+          const order = sortSource.map((cat) => cat.categoryName);
+          chartData.sort(
+            (a, b) =>
+              order.indexOf(String(a.name)) - order.indexOf(String(b.name)),
+          );
+        }
+
+        setDataChart(chartData);
+      } else {
+        const timeMilestones = getStatisticMilestones(
+          `${formatDateToYMD(startDate)}`,
+          `${formatDateToYMD(endDate || '')}`,
+          lineChartViewBy?.value as StatisticViewOptions,
+        );
+
+        const uniqueSortedDates = Array.from(new Set(timeMilestones)).sort(
+          (pre, next) => new Date(pre).getTime() - new Date(next).getTime(),
+        );
+
+        const transformedDates = uniqueSortedDates.map((date, index, arr) => {
+          const isEdge = index === 0 || index === arr.length - 1;
+          return convertToStatisticJapaneseLabels(
+            date,
+            lineChartViewBy?.value as string,
+            isEdge,
+          );
+        });
+
+        setTimeRange(transformedDates);
+        setDataChart([
+          {
+            name: '',
+            data: Array(timeMilestones.length).fill(0),
+          },
+        ]);
+        setTableData([]);
+        return;
       }
     }
-
-    if (sortSource?.length) {
-      const order = sortSource.map((cat) => cat.categoryName);
-      chartData.sort(
-        (a, b) => order.indexOf(String(a.name)) - order.indexOf(String(b.name)),
-      );
-      finalTableData.sort(
-        (a, b) =>
-          order?.indexOf(String(a.categoryName)) -
-          order?.indexOf(String(b.categoryName)),
-      );
-    }
-
-    setDataChart(chartData);
-
-    setTableData(finalTableData);
-    setColorList(
-      finalTableData.map((color) => {
-        return color.categoryColor;
-      }),
-    );
   }, [
-    statisticPercentChartList,
-    lineChartViewBy,
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
-    selectedLarge,
+    statisticTaskDurationsList,
     statisticCategoryList,
+    selectedOrganization,
+    selectedLarge,
+    lineChartViewBy,
     selectedMedium,
     selectedSmall,
     startDate,
     endDate,
+  ]);
+
+  useEffect(() => {
+    if (
+      statisticAllTeamTaskDurationsList &&
+      selectedOrganization?.value === ALL_TEAM_STATISTIC
+    ) {
+      const baseColor =
+        statisticCategoryList?.largeCategories?.find(
+          (item) => item.categoryId === selectedLarge?.value,
+        )?.categoryColor || '';
+
+      const colorListData: string[] = [];
+      const tableDetail: {
+        categoryId: number | string;
+        categoryName: string;
+        categoryDuration: string;
+        categoryPercent: string;
+        categoryColor: string;
+      }[] = [];
+
+      const normalizeDataObject: StatisticsAllTeamTaskDuration = {
+        data: statisticAllTeamTaskDurationsList?.data || [],
+        durations: normalizeDurationsWithStatisticAllTeamCategoryTaskDurations({
+          durations: statisticAllTeamTaskDurationsList?.durations || [],
+          data: statisticAllTeamTaskDurationsList?.data || [],
+        }),
+      };
+
+      // ===== TABLE DATA =====
+      if (normalizeDataObject?.data?.length > 0) {
+        normalizeDataObject.data.forEach((data) => {
+          const finalColor =
+            data.color ||
+            (baseColor && lightenColor(baseColor, data?.percent || 0)) ||
+            getRandomColor();
+
+          tableDetail.push({
+            categoryId: data.organizationId,
+            categoryName: data.organizationName,
+            categoryDuration: data.duration,
+            categoryPercent: String(data?.percent || 0),
+            categoryColor: finalColor,
+          });
+
+          colorListData.push(finalColor);
+        });
+
+        setTableData(tableDetail);
+        setColorList(colorListData);
+      } else {
+        setTableData([]);
+        setColorList([]);
+      }
+
+      // ===== CHART DATA =====
+      if (normalizeDataObject?.durations?.length > 0) {
+        const dates: string[] = normalizeDataObject.durations.map(
+          (item) => item.startDate,
+        );
+        const lastItem = normalizeDataObject.durations.at(-1);
+        if (lastItem) dates.push(lastItem.endDate);
+
+        const uniqueSortedDates = [...dates].sort(
+          (a, b) => new Date(a).getTime() - new Date(b).getTime(),
+        );
+
+        const transformedDates = uniqueSortedDates.map((date, index, arr) => {
+          const isEdge = index === 0 || index === arr.length - 1;
+          return convertToStatisticJapaneseLabels(
+            date,
+            lineChartViewBy?.value as string,
+            isEdge,
+          );
+        });
+
+        setTimeRange(transformedDates);
+
+        const categoryMap = new Map<string, number[]>();
+
+        for (let i = 0; i <= uniqueSortedDates.length - 1; i++) {
+          const date = uniqueSortedDates[i];
+          const weekItem = normalizeDataObject.durations.find(
+            (item) => item.startDate === date,
+          );
+
+          if (weekItem) {
+            for (const org of weekItem.data) {
+              if (!categoryMap.has(org.organizationName)) {
+                categoryMap.set(
+                  org.organizationName,
+                  Array(uniqueSortedDates.length - 1).fill(0),
+                );
+              }
+
+              const dataArray = categoryMap.get(org.organizationName)!;
+              dataArray[i] = org.percent;
+            }
+          }
+        }
+
+        const isAddFirstValue =
+          normalizeDataObject.durations[0]?.startDate !==
+          normalizeDataObject.durations[0]?.endDate;
+
+        const chartData = Array.from(categoryMap.entries()).map(
+          ([name, data]) => {
+            const firstValue = data.at(0) ?? 0;
+            return {
+              name,
+              data: isAddFirstValue ? [firstValue, ...data] : [...data],
+            };
+          },
+        );
+
+        chartData.sort((a, b) => a.name.localeCompare(b.name));
+
+        setDataChart(chartData);
+      } else {
+        setTimeRange([]);
+        setDataChart([]);
+      }
+    }
+  }, [
+    statisticAllTeamTaskDurationsList,
+    statisticCategoryList,
+    selectedOrganization,
+    selectedLarge,
+    lineChartViewBy?.value,
   ]);
 
   const annotations = dataChart.map((s, seriesIndex) => {
@@ -436,6 +518,13 @@ const StackedAreaChart = ({
       },
       labels: {
         colors: '#77858F',
+      },
+      formatter: function (seriesName: string) {
+        return `
+          <div style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            ${seriesName}
+          </div>
+        `;
       },
     },
     dataLabels: {
@@ -525,7 +614,7 @@ const StackedAreaChart = ({
   // sort
   const sortByDurationDifference = (
     data: {
-      categoryId: number;
+      categoryId: number | string;
       categoryName: string;
       categoryDuration: string;
       categoryPercent: string;
@@ -549,7 +638,7 @@ const StackedAreaChart = ({
   };
   const sortByPercentDifference = (
     data: {
-      categoryId: number;
+      categoryId: number | string;
       categoryName: string;
       categoryDuration: string;
       categoryPercent: string;
@@ -570,7 +659,7 @@ const StackedAreaChart = ({
 
   // Data
   const columns: ColumnDef<{
-    categoryId: number;
+    categoryId: number | string;
     categoryName: string;
     categoryDuration: string;
     categoryPercent: string;
@@ -880,7 +969,10 @@ const StackedAreaChart = ({
               </div>
             </div>
           </div>
-          {isLoadingStatisticPercentChartList ? (
+          {(!isFetchedStatisticTaskDurationsList &&
+            selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
+          (!isFetchedStatisticAllTeamTaskDurationsList &&
+            selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
             <RowSkeleton
               numberOfRows={1}
               className={`!h-[380px] w-[calc(100%_-_60px)] mx-auto`}
@@ -895,7 +987,8 @@ const StackedAreaChart = ({
               />
               <div
                 style={{
-                  height: dataChart.length > 1 ? chartHeight : chartHeight + 5,
+                  height:
+                    dataChart.length > 1 ? chartHeight + 5 : chartHeight + 5,
                 }}
                 className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'}  pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
                 {!(dataChart.length == 1 && !dataChart[0].name) &&
@@ -906,12 +999,11 @@ const StackedAreaChart = ({
                       const isHovered = hoveredIndex === actualIndex;
 
                       const dataDetail =
-                        statisticPercentChartList &&
-                        statisticPercentChartList[idx];
-                      const dataDetailDate =
-                        statisticPercentChartList &&
-                        statisticPercentChartList[idx];
-
+                        statisticTaskDurationsList &&
+                        statisticTaskDurationsList.durations[idx];
+                      const dataDetailAllTeam =
+                        statisticAllTeamTaskDurationsList &&
+                        statisticAllTeamTaskDurationsList.durations[idx];
                       return (
                         <div
                           key={actualIndex}
@@ -929,24 +1021,27 @@ const StackedAreaChart = ({
                             transition: 'background-color 0.2s',
                           }}
                           className="group relative">
-                          {statisticPercentChartList && (
-                            <div
-                              style={{
-                                boxShadow: '0px 2px 8px 0px #0000001A',
-                              }}
-                              className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
-                              <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-center w-full block">
-                                {convertToJapaneseDateRange(
-                                  dataDetailDate?.startDate as string,
-                                  dataDetailDate?.endDate as string,
-                                )}
-                              </p>
-                              <div className="max-h-[250px] overflow-y-auto px-5">
-                                {dataDetail?.categories.map(
-                                  (cate, cateIndex) => {
+                          {/* Detail with no all team */}
+                          {statisticTaskDurationsList &&
+                            selectedOrganization?.value !==
+                              ALL_TEAM_STATISTIC && (
+                              <div
+                                style={{
+                                  boxShadow: '0px 2px 8px 0px #0000001A',
+                                }}
+                                className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                                <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-center w-full block">
+                                  {convertToJapaneseDateRange(
+                                    dataDetail?.startDate as string,
+                                    dataDetail?.endDate as string,
+                                  )}
+                                </p>
+                                <div className="max-h-[250px] overflow-y-auto px-5">
+                                  {/* Detail with no all team */}
+                                  {dataDetail?.data.map((cate, cateIndex) => {
                                     const colorDefault = tableData.find(
                                       (itemFind) =>
-                                        itemFind.categoryId === cate.categoryId,
+                                        itemFind.categoryId == cate.categoryId,
                                     );
                                     return (
                                       <div
@@ -971,11 +1066,53 @@ const StackedAreaChart = ({
                                         </div>
                                       </div>
                                     );
-                                  },
-                                )}
+                                  })}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
+                          {/* Detail with  all team */}
+                          {statisticAllTeamTaskDurationsList &&
+                            selectedOrganization?.value ===
+                              ALL_TEAM_STATISTIC && (
+                              <div
+                                style={{
+                                  boxShadow: '0px 2px 8px 0px #0000001A',
+                                }}
+                                className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                                <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-center w-full block">
+                                  {convertToJapaneseDateRange(
+                                    dataDetailAllTeam?.startDate as string,
+                                    dataDetailAllTeam?.endDate as string,
+                                  )}
+                                </p>
+                                <div className="max-h-[250px] overflow-y-auto px-5">
+                                  {dataDetailAllTeam?.data.map(
+                                    (org, orgIndex) => {
+                                      return (
+                                        <div
+                                          key={orgIndex}
+                                          className="flex items-baseline gap-1.5">
+                                          <div
+                                            className="w-3 h-3 rounded-sm"
+                                            style={{
+                                              backgroundColor: org.color,
+                                            }}
+                                          />
+                                          <div className="flex flex-grow items-baseline justify-between text-base font-medium w-full">
+                                            <div className=" text-black w-[calc(100%_-_60px)] max-w-[calc(100%_-_60px)] line-clamp-3 break-all text-left">
+                                              {org.organizationName}
+                                            </div>
+                                            <p className="w-[50px] text-right">
+                                              {org.percent}%
+                                            </p>
+                                          </div>
+                                        </div>
+                                      );
+                                    },
+                                  )}
+                                </div>
+                              </div>
+                            )}
                         </div>
                       );
                     })}
@@ -983,7 +1120,10 @@ const StackedAreaChart = ({
             </div>
           )}
           <div className="px-[30px]">
-            {isLoadingStatisticPercentChartList ? (
+            {(!isFetchedStatisticTaskDurationsList &&
+              selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
+            (!isFetchedStatisticAllTeamTaskDurationsList &&
+              selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <StatisticLineChartTableSkeleton />
             ) : (
               <Table

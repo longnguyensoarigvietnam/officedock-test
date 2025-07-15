@@ -10,7 +10,9 @@ import { EventWorkCategory } from '@constants/enums';
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
   DataTaskModalStatisticType,
+  StatisticAllTeamInfo,
   StatisticCategoryInfo,
+  StatisticsAllTeams,
   StatisticsCategories,
 } from '@interfaces/statistic';
 
@@ -18,11 +20,13 @@ import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 import FilterTag from './filter/FilterTag';
+import { ALL_TEAM_STATISTIC, SUB_TEAMS } from '@constants';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticTagsList: StatisticsCategories | undefined;
+  statisticAllTeamCategoryList: StatisticsAllTeams | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -33,6 +37,7 @@ const PercentageTags = ({
   startDate,
   endDate,
   statisticTagsList,
+  statisticAllTeamCategoryList,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectSmall,
@@ -77,6 +82,7 @@ const PercentageTags = ({
     listDuration: [],
     mergedItems: [],
   });
+
   const [dataChartMedium, setDataChartMedium] = useState<DataChartType>({
     actualValue: [],
     colors: [],
@@ -187,9 +193,63 @@ const PercentageTags = ({
       mergedItems: mergedItems,
     };
   };
+  const processChartDataWithAllTeamOption = (
+    dataCategories: StatisticAllTeamInfo[],
+    colorData?: string,
+  ) => {
+    const categories = dataCategories.filter((item) => item.percent >= 0);
+
+    // Get list percent
+    const listPercent = categories.map((percent) => percent.percent);
+
+    // Get list color
+    const listColor = categories.map((color, index) =>
+      color.color !== null
+        ? color.color
+        : lightenColor(colorData as string, listPercent[index]) ||
+          getRandomColor(),
+    );
+    // Get list label
+    const listLabel = categories.map((label) => label?.organizationName || '');
+    // Get list value
+    const listValueActualChart = categories.map((item) =>
+      convertToJapaneseTime(item.duration),
+    );
+    // Get list options
+    const listDataOptions = categories.map((item) =>
+      item.organizationId == SUB_TEAMS
+        ? item?.subTeams?.slice(0, 3).map((team) => {
+            return { label: team?.organizationName || '' };
+          }) || []
+        : item?.data?.slice(0, 3).map((tag) => {
+            return { label: tag?.tagName || '' };
+          }) || [],
+    );
+
+    // Get list Organization for all team
+    const listDataOrganizations = categories.map((org) =>
+      String(org.organizationId),
+    );
+
+    // Get list id
+    const listDataIds = categories.map((item) => item.organizationId);
+
+    return {
+      colors: listColor,
+      labels: listLabel,
+      data: listPercent,
+      actualValue: listValueActualChart,
+      optionData: listDataOptions,
+      listId: listDataIds,
+      dataOrganization: listDataOrganizations,
+    };
+  };
 
   useEffect(() => {
-    if (statisticTagsList) {
+    if (
+      statisticTagsList &&
+      selectedOrganization?.value != ALL_TEAM_STATISTIC
+    ) {
       if (statisticTagsList.largeCategories) {
         const largeChartData = processChartData(
           statisticTagsList.largeCategories,
@@ -262,7 +322,32 @@ const PercentageTags = ({
         });
       }
     }
-  }, [statisticTagsList]);
+  }, [selectedOrganization?.value, statisticTagsList]);
+  useEffect(() => {
+    if (
+      statisticAllTeamCategoryList &&
+      selectedOrganization?.value == ALL_TEAM_STATISTIC
+    ) {
+      if (statisticAllTeamCategoryList.largeCategories) {
+        const largeChartData = processChartDataWithAllTeamOption(
+          statisticAllTeamCategoryList.largeCategories,
+        );
+        setDataChartLarge(largeChartData);
+      } else {
+        setDataChartLarge({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+          listDuration: [],
+          mergedItems: [],
+        });
+      }
+    }
+  }, [selectedOrganization?.value, statisticAllTeamCategoryList]);
+
   const handleClickTooltip = (
     id: number | null,
     type: EventWorkCategory,
@@ -383,6 +468,9 @@ const PercentageTags = ({
                             );
                           }}
                           handleClickChart={(_data: OptionDropdownType) => {}}
+                          isAllTeamOption={
+                            selectedOrganization?.value == ALL_TEAM_STATISTIC
+                          }
                         />
                       ) : (
                         <div className="w-[220px] h-[220px]  rounded-full bg-[#EBF1F7]"></div>
@@ -570,7 +658,6 @@ const PercentageTags = ({
           selectedSmall={selectedSmall}
           detailCategory={detailCategory}
           selectedOrganization={selectedOrganization}
-          statisticTagsListTeam={statisticTagsList}
           onClose={() => {
             setIsShowModal(false);
           }}

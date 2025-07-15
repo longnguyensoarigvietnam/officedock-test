@@ -50,6 +50,7 @@ import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import useCreationDataStatisticAllTeam from '@hooks/useCreationDataStatisticAllTeam';
 import { Task } from '@interfaces/task';
 import { EventCalendarProps } from '@interfaces/calendar';
+import { removeDuplicateOptions } from '@utils';
 
 interface TableChartProps {
   ordering: string;
@@ -706,7 +707,7 @@ const TableChart = ({
                 }
                 placeholder=""
                 showArrow
-                options={mediumCategories}
+                options={removeDuplicateOptions(mediumCategories)}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({

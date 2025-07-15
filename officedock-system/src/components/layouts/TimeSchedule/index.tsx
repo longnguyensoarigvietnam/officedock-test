@@ -4142,9 +4142,18 @@ const TimeSchedule = memo(
                     const event = arg.event;
                     const allEvents =
                       calendarRef.current?.getApi()?.getEvents() ?? [];
+                    const eventResourceId = event.getResources()?.[0]?.id;
 
                     const isOverlappedFromAbove = allEvents.some((other) => {
                       if (event.id === other.id) return false;
+                      const otherResourceId = other.getResources()?.[0]?.id;
+
+                      if (
+                        eventResourceId &&
+                        eventResourceId === otherResourceId &&
+                        searchParams.get('view') === ViewOptions.DAY
+                      )
+                        return false;
 
                       const aStart = event.start?.getTime() ?? 0;
                       const aEnd = event.end?.getTime() ?? 0;
@@ -4155,7 +4164,7 @@ const TimeSchedule = memo(
                       const isAboveInTime = aStart < bStart;
 
                       const isPartiallyOverlapped =
-                        aStart < bStart && aEnd > bStart && aEnd < bEnd;
+                        aStart < bStart && aEnd > bStart && aEnd <= bEnd;
 
                       return (
                         isOverlapping && isAboveInTime && isPartiallyOverlapped
