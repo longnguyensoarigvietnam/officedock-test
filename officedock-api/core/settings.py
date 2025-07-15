@@ -203,16 +203,21 @@ WSGI_APPLICATION = "core.wsgi.application"
 # SMTP
 # https://docs.djangoproject.com/en/5.0/topics/email/
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_HOST = os.getenv("EMAIL_HOST", None)
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "") != "false"
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", None)
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", None)
 EMAIL_SENDER = os.getenv("EMAIL_SENDER", EMAIL_HOST_USER)
 NAME_SENDER = os.getenv("NAME_SENDER", "OfficeDock")
-SECRET_KEY_FOR_CRONJOB = os.getenv("SECRET_KEY_FOR_CRONJOB", None)
 
+if not EMAIL_HOST:
+    # Only use in local environment if EMAIL_HOST is not set
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+SECRET_KEY_FOR_CRONJOB = os.getenv("SECRET_KEY_FOR_CRONJOB", None)
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
