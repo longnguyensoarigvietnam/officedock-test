@@ -675,6 +675,7 @@ def process_merge_card_per_tag(
         )
         tag_totals[key] = {
             "organization_id": org_id,
+            "organization_name": org_map[org_id],
             "tag_id": tag_id,
             "tag_name": name,
             "duration": total,
