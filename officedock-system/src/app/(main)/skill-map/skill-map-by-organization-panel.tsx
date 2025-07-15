@@ -417,7 +417,7 @@ export const SkillMapByOrganizationPanel = ({
 
                   return (
                     <div
-                      key={skill.id}
+                      key={skill.id ?? `${index}-${idx}`}
                       className={`relative hover:cursor-pointer flex items-center ${isLast ? 'w-[calc(33.33333%_-_30px)]' : 'w-[calc(33.33333%_+_15px)]'}`}
                       onClick={() => {
                         if (!stepCompleted && !isLocked) {

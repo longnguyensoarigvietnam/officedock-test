@@ -13,6 +13,7 @@ import { StatisticsAllTeams } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
 import api from '@base/api';
+import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 interface FilterProps {
   endDate: string | Date;
@@ -38,6 +39,13 @@ const useStatisticAllTeamCategories = ({
   const { setIsLoadingLarge, setIsLoadingMedium, setIsLoadingOrganization } =
     useContext(StatisticStateContext);
 
+  const {
+    setIsLoadingLarge: setIsLoadingLargeTag,
+    setIsLoadingMedium: setIsLoadingMediumTag,
+    setIsLoadingSmall: setIsLoadingSmallTag,
+    setIsLoadingOrganization: setIsLoadingOrganizationTag,
+  } = useContext(StatisticTagStateContext);
+
   // Handle call API get statistic category list
   const getStatisticAllTeamCategoryList = async ({
     signal,
@@ -45,7 +53,6 @@ const useStatisticAllTeamCategories = ({
     signal?: AbortSignal;
   }) => {
     const params = new URLSearchParams();
-
     if (filter?.fromDate) params.append('from_date', String(filter.fromDate));
     if (filter?.endDate) params.append('end_date', String(filter.endDate));
     if (filter?.tagIds) {
@@ -84,6 +91,10 @@ const useStatisticAllTeamCategories = ({
       setIsLoadingLarge(false);
       setIsLoadingMedium(false);
       setIsLoadingOrganization(false);
+      setIsLoadingLargeTag(false)
+      setIsLoadingMediumTag(false)
+      setIsLoadingSmallTag(false)
+      setIsLoadingOrganizationTag(false)
     },
   });
 

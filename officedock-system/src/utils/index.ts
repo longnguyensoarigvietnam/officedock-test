@@ -8,6 +8,7 @@ import {
   PermissionsSystem,
   PermissionType,
   ScreenName,
+  StatisticChartType,
   StatisticViewOptions,
   StatusTask,
   TaskRepetitiveValue,
@@ -26,6 +27,8 @@ import {
   CategoryLineChartDatasetInfo,
   dataTaskDaily,
   dataTaskDailyTable,
+  MergedMyDockLineChartTable,
+  MyDockLineChartTableItem,
   ProgressDataType,
   StatisticAllTeamInfo,
   StatisticCategoryInfo,
@@ -1729,4 +1732,36 @@ export const normalizeDurationsWithStatisticAllTeamCategoryTaskDurations = (
       data: filledCategories,
     };
   });
+};
+
+export const mergeMyDockLineChartTableItems = (
+  data: MyDockLineChartTableItem[],
+): MergedMyDockLineChartTable[] => {
+  const grouped: Record<string, MergedMyDockLineChartTable> = {};
+
+  data.forEach((item) => {
+    const key = item.id ?? 'null'; // Ensure `null` is treated as a string key
+
+    if (!grouped[key]) {
+      grouped[key] = {
+        id: item.id,
+        name: item.name,
+        color: item.color,
+      };
+    }
+
+    if (item.type === StatisticChartType.STANDARD) {
+      grouped[key].standardInfo = {
+        duration: item.duration,
+        percent: item.percent,
+      };
+    } else if (item.type === StatisticChartType.COMPARE) {
+      grouped[key].compareInfo = {
+        duration: item.duration,
+        percent: item.percent,
+      };
+    }
+  });
+
+  return Object.values(grouped);
 };

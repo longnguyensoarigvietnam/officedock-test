@@ -107,7 +107,6 @@ const StatisticBoard = () => {
             label: stat.LARGE.name,
           }),
         );
-        // If organization is all team then return here
         setLargeOptions(largeCategories);
       } else {
         setLargeOptions([]);

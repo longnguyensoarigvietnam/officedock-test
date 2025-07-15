@@ -20,7 +20,7 @@ import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 import ProgressBarStatistic from './ProgressBarStatistic';
 import FilterTag from './filter/FilterTag';
-import { ALL_TEAM_STATISTIC } from '@constants';
+import { ALL_TEAM_STATISTIC, SUB_TEAMS } from '@constants';
 
 type Props = {
   startDate: Date;
@@ -34,7 +34,7 @@ type Props = {
 };
 
 type ProgressDataType = {
-  id: number;
+  id: number | string;
   label: string;
   value: number;
   color: string;
@@ -47,6 +47,7 @@ const AllocationTag = memo(
     startDate,
     endDate,
     statisticTagsList,
+    statisticAllTeamCategoryList,
     handleSelectOrganization,
     handleSelectLarge,
     handleSelectMedium,
@@ -168,7 +169,42 @@ const AllocationTag = memo(
           setProgressDataCategory([]);
         }
       }
-    }, [statisticTagsList]);
+    }, [statisticTagsList, selectedOrganization?.value]);
+
+    useEffect(() => {
+      if (
+        statisticAllTeamCategoryList &&
+        selectedOrganization?.value == ALL_TEAM_STATISTIC
+      ) {
+        if (statisticAllTeamCategoryList.largeCategories) {
+          const listDataLarge =
+            statisticAllTeamCategoryList.largeCategories.map((item) => ({
+              id: item.organizationId,
+              label: item.organizationName as string,
+              value: item.percent,
+              color:
+                lightenColor('#2E9267' as string, item.percent) ||
+                getRandomColor(),
+              duration: item.duration,
+              optionData:
+                item.organizationId == SUB_TEAMS
+                  ? item?.subTeams
+                      ?.slice(0, 3)
+                      .map((team) => team?.organizationName || '') || []
+                  : item?.data
+                      ?.slice(0, 3)
+                      .map(
+                        (category) =>
+                          category?.categoryName || category?.tagName || '',
+                      ) || [],
+              organizationId: item.organizationId,
+            }));
+          setProgressDataLarge(listDataLarge);
+        } else {
+          setProgressDataLarge([]);
+        }
+      }
+    }, [statisticAllTeamCategoryList, selectedOrganization?.value]);
 
     const handleClickTooltip = ({
       id,
