@@ -637,7 +637,7 @@ const TableChart = ({
                   }
                 }
                 placeholder=""
-                options={largeCategories}
+                options={removeDuplicateOptions(largeCategories)}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
@@ -783,14 +783,14 @@ const TableChart = ({
                 }
                 placeholder=""
                 showArrow={info.row.original.type === EventCalendarType.TASK}
-                options={
+                options={removeDuplicateOptions(
                   smallCategories || [
                     {
                       value: NO_SETTING,
                       label: NO_SETTING,
                     },
-                  ]
-                }
+                  ],
+                )}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({

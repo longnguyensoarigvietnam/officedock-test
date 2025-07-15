@@ -7,7 +7,9 @@ import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailSt
 
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
+  StatisticAllTeamInfo,
   StatisticCategoryInfo,
+  StatisticsAllTeams,
   StatisticsCategories,
 } from '@interfaces/statistic';
 
@@ -16,13 +18,15 @@ import { getRandomColor, lightenColor } from '@utils';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 import FilterTag from '../filter/FilterTag';
+import { ALL_TEAM_STATISTIC, SUB_TEAMS } from '@constants';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticTagsList: StatisticsCategories | undefined;
   statisticTagsCompareList: StatisticsCategories | undefined;
-
+  statisticAllTeamCategoryList: StatisticsAllTeams | undefined;
+  statisticAllTeamCategoryCompareList: StatisticsAllTeams | undefined;
   startDateCompare: Date;
   endDateCompare: Date | null;
   handleSelectOrganization: (data: OptionDropdownType) => void;
@@ -38,6 +42,8 @@ const PercentageTagsCompare = ({
   endDateCompare,
   statisticTagsCompareList,
   statisticTagsList,
+  statisticAllTeamCategoryList,
+  statisticAllTeamCategoryCompareList,
   handleSelectSmall,
   handleSelectLarge,
   handleSelectMedium,
@@ -159,10 +165,40 @@ const PercentageTagsCompare = ({
       ...(otherItem.percentage > 0 ? [otherItem] : []),
     ];
   };
+  const mapCategoryDataWithAllTeamOption = (
+    dataCategories: StatisticAllTeamInfo[],
+  ) => {
+    if (!dataCategories) return [];
+    const colorTag = '#2E9267';
+    const categories = dataCategories.filter((item) => item.percent >= 0);
+
+    const mappedMainItems = categories.map((item) => ({
+      id: item.organizationId,
+      label: item?.organizationName || '',
+      percentage: item.percent,
+      organizationId: item.organizationId,
+      color: lightenColor(colorTag as string, item.percent) || getRandomColor(),
+      totalDuration: item.duration,
+      optionData:
+        item.organizationId == SUB_TEAMS
+          ? item?.subTeams?.slice(0, 3).map((team) => {
+              return { label: team?.organizationName || '' };
+            }) || []
+          : item?.data?.slice(0, 3).map((category) => {
+              return { label: category?.tagName || '' };
+            }) || [],
+      mergedItems: [],
+    }));
+
+    return [...mappedMainItems];
+  };
 
   // Set data from category list
   useEffect(() => {
-    if (statisticTagsList) {
+    if (
+      statisticTagsList &&
+      selectedOrganization?.value != ALL_TEAM_STATISTIC
+    ) {
       setDataChartLarge(
         mapCategoryData(statisticTagsList.largeCategories || []),
       );
@@ -177,11 +213,27 @@ const PercentageTagsCompare = ({
       );
       setIsLoading(false);
     }
-  }, [statisticTagsList]);
+  }, [selectedOrganization?.value, statisticTagsList]);
+
+  useEffect(() => {
+    if (
+      statisticAllTeamCategoryList &&
+      selectedOrganization?.value == ALL_TEAM_STATISTIC
+    ) {
+      setDataChartLarge(
+        mapCategoryDataWithAllTeamOption(
+          statisticAllTeamCategoryList.largeCategories || [],
+        ),
+      );
+    }
+  }, [statisticAllTeamCategoryList, selectedOrganization?.value]);
 
   // Set data from category compare list
   useEffect(() => {
-    if (statisticTagsCompareList) {
+    if (
+      statisticTagsCompareList &&
+      selectedOrganization?.value != ALL_TEAM_STATISTIC
+    ) {
       setDataChartLargeCompare(
         mapCategoryData(statisticTagsCompareList.largeCategories || []),
       );
@@ -202,7 +254,20 @@ const PercentageTagsCompare = ({
       );
       setIsLoading(false);
     }
-  }, [statisticTagsCompareList]);
+  }, [selectedOrganization?.value, statisticTagsCompareList]);
+
+  useEffect(() => {
+    if (
+      statisticAllTeamCategoryCompareList &&
+      selectedOrganization?.value == ALL_TEAM_STATISTIC
+    ) {
+      setDataChartLargeCompare(
+        mapCategoryDataWithAllTeamOption(
+          statisticAllTeamCategoryCompareList.largeCategories || [],
+        ),
+      );
+    }
+  }, [statisticAllTeamCategoryCompareList, selectedOrganization?.value]);
 
   const handleClickTooltip = (
     id: number | null,

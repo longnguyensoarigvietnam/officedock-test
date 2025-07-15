@@ -51,6 +51,7 @@ import { useErrorToast } from '@hooks/useErrorToast';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import useCreationDataStatisticAllTeam from '@hooks/useCreationDataStatisticAllTeam';
 import { Task } from '@interfaces/task';
+import { removeDuplicateOptions } from '@utils';
 
 interface TableChartProps {
   ordering: string;
@@ -622,7 +623,7 @@ const TableChart = ({
                   )
                 }
                 placeholder=""
-                options={largeCategories}
+                options={removeDuplicateOptions(largeCategories)}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
@@ -689,7 +690,7 @@ const TableChart = ({
                 }
                 placeholder=""
                 showArrow
-                options={mediumCategories}
+                options={removeDuplicateOptions(mediumCategories)}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
@@ -761,6 +762,7 @@ const TableChart = ({
                   )
                 }
                 placeholder=""
+                options={removeDuplicateOptions(smallCategories)}
                 showArrow={info.row.original.type === EventCalendarType.TASK}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {

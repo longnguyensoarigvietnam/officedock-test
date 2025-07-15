@@ -250,6 +250,7 @@ export interface StatisticsCategories {
   largeTotalDuration: string;
   mediumTotalDuration?: string;
   smallTotalDuration?: string;
+  categoryTotalDuration?: string;
   largeCategories: StatisticCategoryInfo[];
   mediumCategories?: StatisticCategoryInfo[];
   smallCategories?: StatisticCategoryInfo[];
@@ -411,6 +412,26 @@ export interface StatisticsTaskDuration {
         title: string;
         type: string;
       }[];
+    }[];
+  }[];
+}
+export interface StatisticsTaskDurationTag {
+  data: {
+    duration: string;
+    organizationId: number;
+    percent: number;
+    tagId: number;
+    tagName: string;
+  }[];
+  durations: {
+    startDate: string;
+    endDate: string;
+    data: {
+      duration: string;
+      organizationId: number;
+      percent: number;
+      tagId: number;
+      tagName: string;
     }[];
   }[];
 }

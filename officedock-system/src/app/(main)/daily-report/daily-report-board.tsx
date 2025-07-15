@@ -844,7 +844,7 @@ const DailyReportBoard = () => {
                 isDisabled={!isPermissionAction}
                 placeholder=""
                 showArrow
-                options={optionData}
+                options={removeDuplicateOptions(optionData)}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
