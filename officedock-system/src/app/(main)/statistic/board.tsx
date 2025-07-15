@@ -28,6 +28,7 @@ import useStatisticAllTeamCategoriesCompare from '@hooks/useStatisticAllTeamCate
 import useStatisticTaskDurations from '@hooks/useStatisticTaskDurations';
 import useStatisticAllTeamTaskDurations from '@hooks/useStatisticAllTeamTaskDurations';
 import useStatisticTaskDurationsCompare from '@hooks/useStatisticTaskDurationsCompare';
+import useStatisticAllTeamTaskDurationsCompare from '@hooks/useStatisticAllTeamTaskDurationsCompare';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
@@ -285,6 +286,20 @@ const StatisticBoard = () => {
       isCompare: isCheckCompare,
     },
     condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
+  });
+
+  // Get compared task durations for ALL TEAM option
+  const {
+    statisticAllTeamTaskDurationsCompareList,
+    isFetchedStatisticAllTeamTaskDurationsCompareList
+  } = useStatisticAllTeamTaskDurationsCompare({
+    filter: {
+      fromDate: formatDateToYMD(startDateCompare) || '',
+      endDate: formatDateToYMD(`${endDateCompare}`) || '',
+      tagIds: selectedTags,
+      statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
+    },
+    condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
   });
 
   const { creationDataStatisticData } = useCreationDataStatistic({
@@ -635,17 +650,14 @@ const StatisticBoard = () => {
             startDateCompare={startDateCompare}
             endDateCompare={endDateCompare}
             statisticCategoryList={statisticCategoryList}
-            statisticCategoryCompareList={statisticCategoryCompareList}
-            statisticTaskDurationsCompareList={
-              statisticTaskDurationsCompareList
-            }
+            statisticTaskDurationsCompareList={statisticTaskDurationsCompareList}
             statisticTaskDurationsList={statisticTaskDurationsList}
-            isFetchedStatisticTaskDurationsCompareList={
-              isFetchedStatisticTaskDurationsCompareList
-            }
-            isFetchedStatisticTaskDurationsList={
-              isFetchedStatisticTaskDurationsList
-            }
+            statisticAllTeamTaskDurationsList={statisticAllTeamTaskDurationsList}
+            statisticAllTeamTaskDurationsCompareList={statisticAllTeamTaskDurationsCompareList}
+            isFetchedStatisticAllTeamTaskDurationsList={isFetchedStatisticAllTeamTaskDurationsList}
+            isFetchedStatisticAllTeamTaskDurationsCompareList={isFetchedStatisticAllTeamTaskDurationsCompareList}
+            isFetchedStatisticTaskDurationsCompareList={isFetchedStatisticTaskDurationsCompareList}
+            isFetchedStatisticTaskDurationsList={isFetchedStatisticTaskDurationsList}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}

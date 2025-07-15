@@ -31,6 +31,10 @@ import { StatisticStateContext } from '@providers/StatisticProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import {
+  CategoryLineChartDatasetInfo,
+  MergedMyDockLineChartTable,
+  MyDockLineChartTableItem,
+  StatisticsAllTeamTaskDuration,
   StatisticsCategories,
   StatisticsTaskDuration,
 } from '@interfaces/statistic';
@@ -42,21 +46,33 @@ import {
   StatisticChartType,
   StatisticViewOptions,
 } from '@constants/enums';
-import { DEFAULT_TIME_TEXT, STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
+import {
+  ALL_TEAM_STATISTIC,
+  DEFAULT_TIME_TEXT,
+  STATISTIC_CHART_VIEW_OPTIONS,
+} from '@constants';
 
 import {
   convertDurationToTotalMinutes,
+  convertTimeToDecimal,
   convertToStatisticJapaneseLabels,
+  extractDateLabelsListFromTaskDuration,
   formatDateToYMD,
   formatShowStatisticTask,
+  generateShownLineChartDateLabels,
   getCategoryFormattedDate,
   getJapaneseDayName,
   subtractDurations,
+  totalDurationsForStatistic,
 } from '@utils/date';
 import {
   getCompareLineChartEnableViews,
+  getRandomColor,
   getSafeTooltipLeft,
   getStatisticMilestones,
+  lightenColor,
+  normalizeDurationsWithStatisticAllTeamCategoryTaskDurations,
+  normalizeDurationsWithStatisticCategoryTaskDurations,
 } from '@utils';
 
 import FilterStatistic from '../filter/FilterStatistic';
@@ -78,9 +94,14 @@ type Props = {
   startDateCompare: Date;
   endDateCompare: Date | null;
   statisticCategoryList: StatisticsCategories | undefined;
-  statisticCategoryCompareList: StatisticsCategories | undefined;
   statisticTaskDurationsCompareList: StatisticsTaskDuration | undefined;
   statisticTaskDurationsList: StatisticsTaskDuration | undefined;
+  statisticAllTeamTaskDurationsList: StatisticsAllTeamTaskDuration | undefined;
+  statisticAllTeamTaskDurationsCompareList:
+    | StatisticsAllTeamTaskDuration
+    | undefined;
+  isFetchedStatisticAllTeamTaskDurationsList: boolean;
+  isFetchedStatisticAllTeamTaskDurationsCompareList: boolean;
   isFetchedStatisticTaskDurationsCompareList: boolean;
   isFetchedStatisticTaskDurationsList: boolean;
   handleSelectOrganization: (data: OptionDropdownType) => void;
@@ -88,21 +109,14 @@ type Props = {
   handleSelectMedium: (data: OptionDropdownType) => void;
 };
 
-type MergedTableCategory = {
-  categoryId: number | null;
-  categoryName: string;
-  categoryColor: string;
-  standardInfo?: {
-    categoryDuration: string;
-    categoryPercent: string;
-  };
-  compareInfo?: {
-    categoryDuration: string;
-    categoryPercent: string;
-  };
-};
-
 const LineChartCompare = ({
+  statisticCategoryList,
+  statisticTaskDurationsList,
+  statisticTaskDurationsCompareList,
+  statisticAllTeamTaskDurationsList,
+  statisticAllTeamTaskDurationsCompareList,
+  isFetchedStatisticAllTeamTaskDurationsList,
+  isFetchedStatisticAllTeamTaskDurationsCompareList,
   isFetchedStatisticTaskDurationsCompareList,
   isFetchedStatisticTaskDurationsList,
   startDate,
@@ -122,44 +136,38 @@ const LineChartCompare = ({
     selectedLarge,
     selectedMedium,
     selectedOrganization,
-    totalDurationTaskCompare,
-    totalDurationTask,
     lineChartViewBy,
     setLineChartViewBy,
   } = useContext(StatisticStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
-  const [lineChartData, _setLineChartData] = useState<{
+  const [lineChartData, setLineChartData] = useState<{
     labels: string[];
-    datasets: {
-      label: string;
-      data: number[];
-      borderColor: string;
-      backgroundColor: string;
-      fill: boolean;
-      tension: number;
-      borderDash: any;
-    }[];
+    datasets: CategoryLineChartDatasetInfo[];
   }>({
     labels: [],
     datasets: [],
   });
-  const [tableData, setTableData] = useState<MergedTableCategory[]>([]);
-  const [standardLabelsInfo, _setStandardLabelsInfo] = useState<
+  const [tableData, setTableData] = useState<MergedMyDockLineChartTable[]>([]);
+  const [standardLabelsInfo, setStandardLabelsInfo] = useState<
     {
       color: string;
       name: string;
     }[]
   >([]);
-  const [comparedLabelsInfo, _setComparedLabelsInfo] = useState<
+  const [comparedLabelsInfo, setComparedLabelsInfo] = useState<
     {
       color: string;
       name: string;
     }[]
   >([]);
-  const [standardDateLabels, _setStandardDateLabels] = useState<string[]>([]);
-  const [compareDateLabels, _setCompareDateLabels] = useState<string[]>([]);
+  const [standardDateLabels, setStandardDateLabels] = useState<string[]>([]);
+  const [compareDateLabels, setCompareDateLabels] = useState<string[]>([]);
   const { expanded } = useContext(GlobalStateContext);
+  const [standardTotalDuration, setStandardTotalDuration] =
+    useState<string>(DEFAULT_TIME_TEXT);
+  const [compareTotalDuration, setCompareTotalDuration] =
+    useState<string>(DEFAULT_TIME_TEXT);
 
   // Sorting
   const [percentageSortingStatus, setPercentageSortingStatus] =
@@ -363,14 +371,14 @@ const LineChartCompare = ({
   };
 
   const sortByPercentDifference = (
-    data: MergedTableCategory[],
+    data: MergedMyDockLineChartTable[],
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
-      const rowAStandard = Number(rowA.standardInfo?.categoryPercent || 0);
-      const rowACompare = Number(rowA.compareInfo?.categoryPercent || 0);
-      const rowBStandard = Number(rowB.standardInfo?.categoryPercent || 0);
-      const rowBCompare = Number(rowB.compareInfo?.categoryPercent || 0);
+      const rowAStandard = Number(rowA.standardInfo?.percent || 0);
+      const rowACompare = Number(rowA.compareInfo?.percent || 0);
+      const rowBStandard = Number(rowB.standardInfo?.percent || 0);
+      const rowBCompare = Number(rowB.compareInfo?.percent || 0);
 
       const rowADiff = rowAStandard - rowACompare;
       const rowBDiff = rowBStandard - rowBCompare;
@@ -383,23 +391,23 @@ const LineChartCompare = ({
   };
 
   const sortByDurationDifference = (
-    data: MergedTableCategory[],
+    data: MergedMyDockLineChartTable[],
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
       const rowAStandard = convertDurationToTotalMinutes(
-        rowA.standardInfo?.categoryDuration || DEFAULT_TIME_TEXT,
+        rowA.standardInfo?.duration || DEFAULT_TIME_TEXT,
       );
       const rowACompare = convertDurationToTotalMinutes(
-        rowA.compareInfo?.categoryDuration || DEFAULT_TIME_TEXT,
+        rowA.compareInfo?.duration || DEFAULT_TIME_TEXT,
       );
       const rowADiff = rowAStandard - rowACompare;
 
       const rowBStandard = convertDurationToTotalMinutes(
-        rowB.standardInfo?.categoryDuration || DEFAULT_TIME_TEXT,
+        rowB.standardInfo?.duration || DEFAULT_TIME_TEXT,
       );
       const rowBCompare = convertDurationToTotalMinutes(
-        rowB.compareInfo?.categoryDuration || DEFAULT_TIME_TEXT,
+        rowB.compareInfo?.duration || DEFAULT_TIME_TEXT,
       );
       const rowBDiff = rowBStandard - rowBCompare;
 
@@ -410,9 +418,508 @@ const LineChartCompare = ({
     setTableData(sortedArr);
   };
 
-  const columns: ColumnDef<MergedTableCategory>[] = [
+  const mergeCategories = (
+    data: MyDockLineChartTableItem[],
+  ): MergedMyDockLineChartTable[] => {
+    const grouped: Record<string, MergedMyDockLineChartTable> = {};
+
+    data.forEach((item) => {
+      const key = item.id ?? 'null'; // Ensure `null` is treated as a string key
+
+      if (!grouped[key]) {
+        grouped[key] = {
+          id: item.id,
+          name: item.name,
+          color: item.color,
+        };
+      }
+
+      if (item.type === StatisticChartType.STANDARD) {
+        grouped[key].standardInfo = {
+          duration: item.duration,
+          percent: item.percent,
+        };
+      } else if (item.type === StatisticChartType.COMPARE) {
+        grouped[key].compareInfo = {
+          duration: item.duration,
+          percent: item.percent,
+        };
+      }
+    });
+
+    return Object.values(grouped);
+  };
+
+  useEffect(() => {
+    if (selectedOrganization?.value != ALL_TEAM_STATISTIC) {
+      const color =
+        statisticCategoryList && statisticCategoryList.largeCategories
+          ? statisticCategoryList?.largeCategories.find(
+              (item) => item.categoryId === selectedLarge?.value,
+            )?.categoryColor || ''
+          : '';
+
+      const standardLabels: { name: string; color: string }[] = [];
+      const comparedLabels: { name: string; color: string }[] = [];
+      let standardDateLabelsList: string[] = [];
+      let comparedDateLabelsList: string[] = [];
+      const tableDetail: MyDockLineChartTableItem[] = [];
+      const standardTotalDurationList: string[] = [];
+      const compareTotalDurationList: string[] = [];
+
+      const normalizeStandardTaskDurations = {
+        data: statisticTaskDurationsList?.data || [],
+        durations: normalizeDurationsWithStatisticCategoryTaskDurations({
+          durations: statisticTaskDurationsList?.durations || [],
+          data: statisticTaskDurationsList?.data || [],
+        }),
+      };
+
+      const normalizeComparedTaskDurations = {
+        data: statisticTaskDurationsCompareList?.data || [],
+        durations: normalizeDurationsWithStatisticCategoryTaskDurations({
+          durations: statisticTaskDurationsCompareList?.durations || [],
+          data: statisticTaskDurationsCompareList?.data || [],
+        }),
+      };
+
+      if (
+        normalizeStandardTaskDurations?.data &&
+        normalizeStandardTaskDurations?.data?.length > 0
+      ) {
+        normalizeStandardTaskDurations.data.forEach((data) => {
+          tableDetail.push({
+            id: data.categoryId as number,
+            name: data.categoryName,
+            duration: data.duration,
+            percent: String(data?.percent || 0),
+            color:
+              data.categoryColor ||
+              (color && lightenColor(color, data?.percent || 0)) ||
+              getRandomColor(),
+            type: StatisticChartType.STANDARD,
+          });
+
+          standardLabels.push({
+            color:
+              data.categoryColor ||
+              (color && lightenColor(color, data?.percent || 0)) ||
+              getRandomColor(),
+            name: data.categoryName,
+          });
+
+          standardTotalDurationList.push(data.duration);
+        });
+        setStandardLabelsInfo(standardLabels);
+      } else {
+        setStandardLabelsInfo([]);
+      }
+
+      if (
+        normalizeComparedTaskDurations?.data &&
+        normalizeComparedTaskDurations?.data?.length > 0
+      ) {
+        normalizeComparedTaskDurations.data.forEach((data) => {
+          tableDetail.push({
+            id: data.categoryId as number,
+            name: data.categoryName,
+            duration: data.duration,
+            percent: String(data?.percent || 0),
+            color:
+              data.categoryColor ||
+              (color && lightenColor(color, data?.percent || 0)) ||
+              getRandomColor(),
+            type: StatisticChartType.COMPARE,
+          });
+
+          comparedLabels.push({
+            color:
+              data.categoryColor ||
+              (color && lightenColor(color, data?.percent || 0)) ||
+              getRandomColor(),
+            name: data.categoryName,
+          });
+
+          compareTotalDurationList.push(data.duration);
+        });
+        setComparedLabelsInfo(comparedLabels);
+      } else {
+        setComparedLabelsInfo([]);
+      }
+      setStandardTotalDuration(
+        totalDurationsForStatistic(standardTotalDurationList),
+      );
+      setCompareTotalDuration(
+        totalDurationsForStatistic(compareTotalDurationList),
+      );
+
+      const mergedCategories = mergeCategories(tableDetail) || [];
+      setTableData(mergedCategories);
+
+      if (
+        normalizeStandardTaskDurations.durations &&
+        normalizeStandardTaskDurations.durations.length > 0
+      ) {
+        const durationList = normalizeStandardTaskDurations.durations.map(
+          (duration) => ({
+            startDate: duration.startDate,
+            endDate: duration.endDate,
+          }),
+        );
+        standardDateLabelsList =
+          extractDateLabelsListFromTaskDuration(durationList);
+      }
+      if (
+        normalizeComparedTaskDurations.durations &&
+        normalizeComparedTaskDurations.durations.length > 0
+      ) {
+        const durationList = normalizeComparedTaskDurations.durations.map(
+          (duration) => ({
+            startDate: duration.startDate,
+            endDate: duration.endDate,
+          }),
+        );
+        comparedDateLabelsList =
+          extractDateLabelsListFromTaskDuration(durationList);
+      }
+
+      const shownLabels = generateShownLineChartDateLabels(
+        standardDateLabelsList,
+        comparedDateLabelsList,
+      );
+
+      const datasetMap = new Map<string, CategoryLineChartDatasetInfo>();
+
+      mergedCategories.forEach((category) => {
+        const color = category.color || getRandomColor();
+        datasetMap.set(`${category.id}${StatisticChartType.STANDARD}`, {
+          label: category.name,
+          data: [],
+          borderColor: color,
+          backgroundColor: 'rgba(217, 83, 79, 0.04)',
+          borderDash: [],
+          fill: true,
+          tension: 0,
+          pointRadius: 4,
+          pointBorderColor: 'transparent',
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: color,
+          pointHoverBorderColor: 'transparent',
+          pointHoverBorderWidth: 2,
+        });
+        datasetMap.set(`${category.id}${StatisticChartType.COMPARE}`, {
+          label: category.name,
+          data: [],
+          borderColor: color,
+          backgroundColor: 'rgba(217, 83, 79, 0.04)',
+          borderDash: [3, 3],
+          fill: true,
+          tension: 0,
+          pointRadius: 4,
+          pointBorderColor: 'transparent',
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: color,
+          pointHoverBorderColor: 'transparent',
+          pointHoverBorderWidth: 2,
+        });
+      });
+
+      shownLabels.forEach((labelDate, index) => {
+        const standardDetail = normalizeStandardTaskDurations.durations[index];
+        const comparedDetail = normalizeComparedTaskDurations.durations[index];
+
+        mergedCategories.forEach((category) => {
+          const color = category.color || getRandomColor();
+
+          const standardCat = standardDetail?.data.find(
+            (standardCategory) => standardCategory.categoryId == category.id,
+          );
+          const compareCat = comparedDetail?.data.find(
+            (comparedCategory) => comparedCategory.categoryId == category.id,
+          );
+
+          const x = labelDate;
+
+          const standardDataset = datasetMap.get(
+            `${category.id}${StatisticChartType.STANDARD}`,
+          );
+          const compareDataset = datasetMap.get(
+            `${category.id}${StatisticChartType.COMPARE}`,
+          );
+
+          standardDataset?.data.push({
+            x,
+            y: standardCat ? convertTimeToDecimal(standardCat.duration) : 0,
+            startDate: standardDetail?.startDate,
+            endDate: standardDetail?.endDate,
+            duration: standardCat?.duration,
+            label: category.name,
+            type: StatisticChartType.STANDARD,
+            anotherDuration: compareCat?.duration,
+            anotherStartDate: comparedDetail?.startDate,
+            anotherEndDate: comparedDetail?.endDate,
+            color,
+          });
+
+          compareDataset?.data.push({
+            x,
+            y: compareCat ? convertTimeToDecimal(compareCat.duration) : 0,
+            startDate: comparedDetail?.startDate,
+            endDate: comparedDetail?.endDate,
+            duration: compareCat?.duration,
+            label: category.name,
+            type: StatisticChartType.COMPARE,
+            anotherDuration: standardCat?.duration,
+            anotherStartDate: standardDetail?.startDate,
+            anotherEndDate: standardDetail?.endDate,
+            color,
+          });
+        });
+      });
+
+      setStandardDateLabels(standardDateLabelsList);
+      setCompareDateLabels(comparedDateLabelsList);
+
+      setLineChartData({
+        labels: shownLabels,
+        datasets: Array.from(datasetMap.values()) || [],
+      });
+    }
+  }, [
+    statisticTaskDurationsList,
+    statisticTaskDurationsCompareList,
+    statisticCategoryList,
+    selectedOrganization,
+    selectedLarge,
+  ]);
+
+  useEffect(() => {
+    if (selectedOrganization?.value == ALL_TEAM_STATISTIC) {
+      const standardLabels: { name: string; color: string }[] = [];
+      const comparedLabels: { name: string; color: string }[] = [];
+      let standardDateLabelsList: string[] = [];
+      let comparedDateLabelsList: string[] = [];
+      const tableDetail: MyDockLineChartTableItem[] = [];
+      const standardTotalDurationList: string[] = [];
+      const compareTotalDurationList: string[] = [];
+
+      const normalizeStandardTaskDurations = {
+        data: statisticAllTeamTaskDurationsList?.data || [],
+        durations: normalizeDurationsWithStatisticAllTeamCategoryTaskDurations({
+          durations: statisticAllTeamTaskDurationsList?.durations || [],
+          data: statisticAllTeamTaskDurationsList?.data || [],
+        }),
+      };
+
+      const normalizeComparedTaskDurations = {
+        data: statisticAllTeamTaskDurationsCompareList?.data || [],
+        durations: normalizeDurationsWithStatisticAllTeamCategoryTaskDurations({
+          durations: statisticAllTeamTaskDurationsCompareList?.durations || [],
+          data: statisticAllTeamTaskDurationsCompareList?.data || [],
+        }),
+      };
+
+      if (
+        normalizeStandardTaskDurations?.data &&
+        normalizeStandardTaskDurations?.data?.length > 0
+      ) {
+        normalizeStandardTaskDurations.data.forEach((data) => {
+          tableDetail.push({
+            id: data.organizationId as number,
+            name: data.organizationName,
+            duration: data.duration,
+            percent: String(data?.percent || 0),
+            color: data.color || getRandomColor(),
+            type: StatisticChartType.STANDARD,
+          });
+
+          standardLabels.push({
+            color: data.color || getRandomColor(),
+            name: data.organizationName,
+          });
+
+          standardTotalDurationList.push(data.duration);
+        });
+        setStandardLabelsInfo(standardLabels);
+      } else {
+        setStandardLabelsInfo([]);
+      }
+
+      if (
+        normalizeComparedTaskDurations?.data &&
+        normalizeComparedTaskDurations?.data?.length > 0
+      ) {
+        normalizeComparedTaskDurations.data.forEach((data) => {
+          tableDetail.push({
+            id: data.organizationId as number,
+            name: data.organizationName,
+            duration: data.duration,
+            percent: String(data?.percent || 0),
+            color: data.color || getRandomColor(),
+            type: StatisticChartType.COMPARE,
+          });
+
+          comparedLabels.push({
+            color: data.color || getRandomColor(),
+            name: data.organizationName,
+          });
+
+          compareTotalDurationList.push(data.duration);
+        });
+        setComparedLabelsInfo(comparedLabels);
+      } else {
+        setComparedLabelsInfo([]);
+      }
+      setStandardTotalDuration(
+        totalDurationsForStatistic(standardTotalDurationList),
+      );
+      setCompareTotalDuration(
+        totalDurationsForStatistic(compareTotalDurationList),
+      );
+
+      const mergedCategories = mergeCategories(tableDetail) || [];
+      setTableData(mergedCategories);
+
+      if (
+        normalizeStandardTaskDurations.durations &&
+        normalizeStandardTaskDurations.durations.length > 0
+      ) {
+        const durationList = normalizeStandardTaskDurations.durations.map(
+          (duration) => ({
+            startDate: duration.startDate,
+            endDate: duration.endDate,
+          }),
+        );
+        standardDateLabelsList =
+          extractDateLabelsListFromTaskDuration(durationList);
+      }
+      if (
+        normalizeComparedTaskDurations.durations &&
+        normalizeComparedTaskDurations.durations.length > 0
+      ) {
+        const durationList = normalizeComparedTaskDurations.durations.map(
+          (duration) => ({
+            startDate: duration.startDate,
+            endDate: duration.endDate,
+          }),
+        );
+        comparedDateLabelsList =
+          extractDateLabelsListFromTaskDuration(durationList);
+      }
+
+      const shownLabels = generateShownLineChartDateLabels(
+        standardDateLabelsList,
+        comparedDateLabelsList,
+      );
+
+      const datasetMap = new Map<string, CategoryLineChartDatasetInfo>();
+
+      mergedCategories.forEach((category) => {
+        const color = category.color || getRandomColor();
+        datasetMap.set(`${category.id}${StatisticChartType.STANDARD}`, {
+          label: category.name,
+          data: [],
+          borderColor: color,
+          backgroundColor: 'rgba(217, 83, 79, 0.04)',
+          borderDash: [],
+          fill: true,
+          tension: 0,
+          pointRadius: 4,
+          pointBorderColor: 'transparent',
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: color,
+          pointHoverBorderColor: 'transparent',
+          pointHoverBorderWidth: 2,
+        });
+        datasetMap.set(`${category.id}${StatisticChartType.COMPARE}`, {
+          label: category.name,
+          data: [],
+          borderColor: color,
+          backgroundColor: 'rgba(217, 83, 79, 0.04)',
+          borderDash: [3, 3],
+          fill: true,
+          tension: 0,
+          pointRadius: 4,
+          pointBorderColor: 'transparent',
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: color,
+          pointHoverBorderColor: 'transparent',
+          pointHoverBorderWidth: 2,
+        });
+      });
+
+      shownLabels.forEach((labelDate, index) => {
+        const standardDetail = normalizeStandardTaskDurations.durations[index];
+        const comparedDetail = normalizeComparedTaskDurations.durations[index];
+
+        mergedCategories.forEach((category) => {
+          const color = category.color || getRandomColor();
+
+          const standardCat = standardDetail?.data.find(
+            (standardCategory) =>
+              standardCategory.organizationId == category.id,
+          );
+          const compareCat = comparedDetail?.data.find(
+            (comparedCategory) =>
+              comparedCategory.organizationId == category.id,
+          );
+
+          const x = labelDate;
+
+          const standardDataset = datasetMap.get(
+            `${category.id}${StatisticChartType.STANDARD}`,
+          );
+          const compareDataset = datasetMap.get(
+            `${category.id}${StatisticChartType.COMPARE}`,
+          );
+
+          standardDataset?.data.push({
+            x,
+            y: standardCat ? convertTimeToDecimal(standardCat.duration) : 0,
+            startDate: standardDetail?.startDate,
+            endDate: standardDetail?.endDate,
+            duration: standardCat?.duration,
+            label: category.name,
+            type: StatisticChartType.STANDARD,
+            anotherDuration: compareCat?.duration,
+            anotherStartDate: comparedDetail?.startDate,
+            anotherEndDate: comparedDetail?.endDate,
+            color,
+          });
+
+          compareDataset?.data.push({
+            x,
+            y: compareCat ? convertTimeToDecimal(compareCat.duration) : 0,
+            startDate: comparedDetail?.startDate,
+            endDate: comparedDetail?.endDate,
+            duration: compareCat?.duration,
+            label: category.name,
+            type: StatisticChartType.COMPARE,
+            anotherDuration: standardCat?.duration,
+            anotherStartDate: standardDetail?.startDate,
+            anotherEndDate: standardDetail?.endDate,
+            color,
+          });
+        });
+      });
+
+      setStandardDateLabels(standardDateLabelsList);
+      setCompareDateLabels(comparedDateLabelsList);
+
+      setLineChartData({
+        labels: shownLabels,
+        datasets: Array.from(datasetMap.values()) || [],
+      });
+    }
+  }, [
+    statisticAllTeamTaskDurationsList,
+    statisticAllTeamTaskDurationsCompareList,
+    selectedOrganization,
+  ]);
+
+  const columns: ColumnDef<MergedMyDockLineChartTable>[] = [
     {
-      accessorKey: 'categoryName',
+      accessorKey: 'name',
       header: () => {
         return (
           <div className="font-medium px-3 text-[16px] break-all line-clamp-3 text-left text-black flex gap-2 items-center">
@@ -436,7 +943,7 @@ const LineChartCompare = ({
         return (
           <div className="flex gap-2 !px-3 items-start">
             <div
-              style={{ backgroundColor: info.row.original.categoryColor }}
+              style={{ backgroundColor: info.row.original.color }}
               className={`w-4 h-4 min-w-4 rounded-[3px] flex items-center justify-center mt-1`}>
               <ImageRound
                 name="Check task"
@@ -480,7 +987,7 @@ const LineChartCompare = ({
       enableSorting: false,
     },
     {
-      accessorKey: 'categoryDuration',
+      accessorKey: 'duration',
       size: 50,
       header: () => {
         return (
@@ -518,39 +1025,29 @@ const LineChartCompare = ({
             <div className="h-[22px]"></div>
             <div className="font-medium flex text-[14px] justify-end text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
               <p>
-                {info.row.original.standardInfo?.categoryDuration.split(
-                  ':',
-                )[0] || '00'}
+                {info.row.original.standardInfo?.duration.split(':')[0] || '00'}
                 時間
               </p>
               <p>
-                {info.row.original.standardInfo?.categoryDuration.split(
-                  ':',
-                )[1] || '00'}
+                {info.row.original.standardInfo?.duration.split(':')[1] || '00'}
                 分
               </p>
             </div>
             <div className="font-medium flex text-[14px] justify-end text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
               <p>
-                {info.row.original.compareInfo?.categoryDuration.split(
-                  ':',
-                )[0] || '00'}
+                {info.row.original.compareInfo?.duration.split(':')[0] || '00'}
                 時間
               </p>
               <p>
-                {info.row.original.compareInfo?.categoryDuration.split(
-                  ':',
-                )[1] || '00'}
+                {info.row.original.compareInfo?.duration.split(':')[1] || '00'}
                 分
               </p>
             </div>
             <div className="font-medium flex text-[14px] justify-end text-black">
               <p>
                 {subtractDurations(
-                  info.row.original.standardInfo?.categoryDuration ||
-                    DEFAULT_TIME_TEXT,
-                  info.row.original.compareInfo?.categoryDuration ||
-                    DEFAULT_TIME_TEXT,
+                  info.row.original.standardInfo?.duration || DEFAULT_TIME_TEXT,
+                  info.row.original.compareInfo?.duration || DEFAULT_TIME_TEXT,
                 )}
               </p>
             </div>
@@ -559,7 +1056,7 @@ const LineChartCompare = ({
       },
     },
     {
-      accessorKey: 'categoryPercent',
+      accessorKey: 'percent',
       size: 30,
       header: () => {
         return (
@@ -595,9 +1092,9 @@ const LineChartCompare = ({
       enableSorting: false,
       cell: (info) => {
         const standardPercent =
-          Number(info.row.original.standardInfo?.categoryPercent) || 0;
+          Number(info.row.original.standardInfo?.percent) || 0;
         const comparePercent =
-          Number(info.row.original.compareInfo?.categoryPercent) || 0;
+          Number(info.row.original.compareInfo?.percent) || 0;
         const difference = standardPercent - comparePercent;
 
         return (
@@ -772,8 +1269,8 @@ const LineChartCompare = ({
                       </p>
                     </div>
                     <p className="font-medium text-[16px]">
-                      合計 {totalDurationTask?.split(':')[0] || '00'}時間
-                      {totalDurationTask?.split(':')[1] || '00'}分
+                      合計 {standardTotalDuration?.split(':')[0] || '00'}時間
+                      {standardTotalDuration?.split(':')[1] || '00'}分
                     </p>
                   </div>
                 )}
@@ -796,8 +1293,8 @@ const LineChartCompare = ({
                       </p>
                     </div>
                     <p className="font-medium text-[16px]">
-                      合計 {totalDurationTaskCompare?.split(':')[0] || '00'}時間
-                      {totalDurationTaskCompare?.split(':')[1] || '00'}分
+                      合計 {compareTotalDuration?.split(':')[0] || '00'}時間
+                      {compareTotalDuration?.split(':')[1] || '00'}分
                     </p>
                   </div>
                 )}
@@ -824,8 +1321,10 @@ const LineChartCompare = ({
               </div>
             </div>
           </div>
-          {isFetchedStatisticTaskDurationsList &&
-          isFetchedStatisticTaskDurationsCompareList ? (
+          {(isFetchedStatisticTaskDurationsList &&
+            isFetchedStatisticTaskDurationsCompareList) ||
+          (isFetchedStatisticAllTeamTaskDurationsList &&
+            isFetchedStatisticAllTeamTaskDurationsCompareList) ? (
             <div
               style={{ position: 'relative' }}
               className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
@@ -856,48 +1355,52 @@ const LineChartCompare = ({
           )}
 
           <div className="px-[30px]">
-            {isFetchedStatisticTaskDurationsList &&
-              isFetchedStatisticTaskDurationsCompareList && (
-                <>
-                  <div className="flex gap-8 items-center justify-end flex-wrap mb-3">
-                    <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
-                      基準
-                    </p>
-                    {standardLabelsInfo.map((label, index) => {
-                      return (
-                        <div key={index} className="flex gap-1 items-center">
-                          <div
-                            className="w-8 h-1"
-                            style={{ backgroundColor: label.color }}></div>
-                          <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
-                            {label.name}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="flex gap-8 items-center justify-end flex-wrap">
-                    <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
-                      比較
-                    </p>
-                    {comparedLabelsInfo.map((label, index) => {
-                      return (
-                        <div key={index} className="flex gap-1 items-center">
-                          <div
-                            className="w-8 h-1 border-t-2 border-dashed"
-                            style={{ borderColor: label.color }}></div>
-                          <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
-                            {label.name}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
+            {(isFetchedStatisticTaskDurationsList &&
+              isFetchedStatisticTaskDurationsCompareList) ||
+              (isFetchedStatisticAllTeamTaskDurationsList &&
+                isFetchedStatisticAllTeamTaskDurationsCompareList && (
+                  <>
+                    <div className="flex gap-8 items-center justify-end flex-wrap mb-3">
+                      <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                        基準
+                      </p>
+                      {standardLabelsInfo.map((label, index) => {
+                        return (
+                          <div key={index} className="flex gap-1 items-center">
+                            <div
+                              className="w-8 h-1"
+                              style={{ backgroundColor: label.color }}></div>
+                            <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
+                              {label.name}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="flex gap-8 items-center justify-end flex-wrap">
+                      <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                        比較
+                      </p>
+                      {comparedLabelsInfo.map((label, index) => {
+                        return (
+                          <div key={index} className="flex gap-1 items-center">
+                            <div
+                              className="w-8 h-1 border-t-2 border-dashed"
+                              style={{ borderColor: label.color }}></div>
+                            <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
+                              {label.name}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                ))}
 
-            {isFetchedStatisticTaskDurationsList &&
-            isFetchedStatisticTaskDurationsCompareList ? (
+            {(isFetchedStatisticTaskDurationsList &&
+              isFetchedStatisticTaskDurationsCompareList) ||
+            (isFetchedStatisticAllTeamTaskDurationsList &&
+              isFetchedStatisticAllTeamTaskDurationsCompareList) ? (
               <Table
                 className={`w-full border border-gray-300 mt-5 rounded-md ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>
                 <thead>
