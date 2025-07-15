@@ -165,6 +165,10 @@ const StatisticBoard = () => {
     onSuccess: (data) => {
       setLargeOptions([]);
       setTotalDurationLarge(data.largeTotalDuration);
+      setTotalDurationTask(data.largeTotalDuration);
+      setIsLoadingOrganization(false);
+      setIsLoadingLarge(false);
+      setIsLoadingMedium(false);
     },
   });
 
@@ -238,6 +242,10 @@ const StatisticBoard = () => {
       onSuccess: (data) => {
         setLargeOptions([]);
         setTotalDurationLargeCompare(data.largeTotalDuration);
+        setTotalDurationTaskCompare(data.largeTotalDuration);
+        setIsLoadingOrganizationCompare(false);
+        setIsLoadingLargeCompare(false);
+        setIsLoadingMediumCompare(false);
       },
     });
 
@@ -291,7 +299,7 @@ const StatisticBoard = () => {
   // Get compared task durations for ALL TEAM option
   const {
     statisticAllTeamTaskDurationsCompareList,
-    isFetchedStatisticAllTeamTaskDurationsCompareList
+    isFetchedStatisticAllTeamTaskDurationsCompareList,
   } = useStatisticAllTeamTaskDurationsCompare({
     filter: {
       fromDate: formatDateToYMD(startDateCompare) || '',
@@ -650,14 +658,28 @@ const StatisticBoard = () => {
             startDateCompare={startDateCompare}
             endDateCompare={endDateCompare}
             statisticCategoryList={statisticCategoryList}
-            statisticTaskDurationsCompareList={statisticTaskDurationsCompareList}
+            statisticTaskDurationsCompareList={
+              statisticTaskDurationsCompareList
+            }
             statisticTaskDurationsList={statisticTaskDurationsList}
-            statisticAllTeamTaskDurationsList={statisticAllTeamTaskDurationsList}
-            statisticAllTeamTaskDurationsCompareList={statisticAllTeamTaskDurationsCompareList}
-            isFetchedStatisticAllTeamTaskDurationsList={isFetchedStatisticAllTeamTaskDurationsList}
-            isFetchedStatisticAllTeamTaskDurationsCompareList={isFetchedStatisticAllTeamTaskDurationsCompareList}
-            isFetchedStatisticTaskDurationsCompareList={isFetchedStatisticTaskDurationsCompareList}
-            isFetchedStatisticTaskDurationsList={isFetchedStatisticTaskDurationsList}
+            statisticAllTeamTaskDurationsList={
+              statisticAllTeamTaskDurationsList
+            }
+            statisticAllTeamTaskDurationsCompareList={
+              statisticAllTeamTaskDurationsCompareList
+            }
+            isFetchedStatisticAllTeamTaskDurationsList={
+              isFetchedStatisticAllTeamTaskDurationsList
+            }
+            isFetchedStatisticAllTeamTaskDurationsCompareList={
+              isFetchedStatisticAllTeamTaskDurationsCompareList
+            }
+            isFetchedStatisticTaskDurationsCompareList={
+              isFetchedStatisticTaskDurationsCompareList
+            }
+            isFetchedStatisticTaskDurationsList={
+              isFetchedStatisticTaskDurationsList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}

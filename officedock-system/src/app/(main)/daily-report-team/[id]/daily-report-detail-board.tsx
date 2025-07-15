@@ -916,7 +916,7 @@ const DailyReportDetailBoard = () => {
                 placeholder=""
                 showArrow
                 forceMenuPlacementBottom
-                options={optionData}
+                options={removeDuplicateOptions(optionData)}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({

@@ -18,7 +18,7 @@ import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 import useStatisticTagsCompare from '@hooks/useStatisticTagsCompare';
 import useStatisticsTags from '@hooks/useStatisticTags';
 
-import { ALL_TEAM_STATISTIC } from '@constants';
+import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
 import { pageRouters } from '@constants/routers';
 
 import { OptionDropdownType } from '@interfaces/common';
@@ -28,6 +28,8 @@ import { OrganizationStatisticType } from '@constants/enums';
 import useStatisticAllTeamCategories from '@hooks/useStatisticAllTeamCategories';
 import { removeDuplicateOptions } from '@utils';
 import useStatisticAllTeamCategoriesCompare from '@hooks/useStatisticAllTeamCategoriesCompare';
+import useStatisticAllTeamTaskDurations from '@hooks/useStatisticAllTeamTaskDurations';
+import useStatisticTaskDurationsTag from '@hooks/useStatisticTaskDurationsTag';
 
 const StatisticTagBoard = () => {
   const {
@@ -41,6 +43,7 @@ const StatisticTagBoard = () => {
     selectedOrganization,
     selectedTags,
     selectedSmall,
+    lineChartViewBy,
     setSelectedTags,
     setTagsOptions,
     setTotalDurationSmall,
@@ -69,6 +72,7 @@ const StatisticTagBoard = () => {
     setIsLoadingSmallCompare,
     setCurrentPage,
     setDataMediumCalendar,
+    setTotalDurationTask,
   } = useContext(StatisticTagStateContext);
   const [isMyTask, setIsMyTask] = useState(true);
   const router = useRouter();
@@ -108,6 +112,34 @@ const StatisticTagBoard = () => {
       setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmall(sumDurations(data.smallCategories ?? []));
       setTotalDurationCategory(sumDurations(data.category ?? []));
+      if (data.largeTotalDuration) {
+        if (data.mediumTotalDuration) {
+          if (data.smallTotalDuration) {
+            if (data.categoryTotalDuration) {
+              setTotalDurationTask(data.categoryTotalDuration);
+            } else {
+              setTotalDurationTask(data.smallTotalDuration);
+            }
+          } else {
+            if (
+              selectedMedium &&
+              selectedMedium.value &&
+              selectedOrganization?.type === OrganizationStatisticType.CALENDAR
+            ) {
+              setTotalDurationTask(DEFAULT_TIME_TEXT);
+              return;
+            }
+            if (selectedSmall && selectedSmall.value) return;
+
+            setTotalDurationTask(data.mediumTotalDuration);
+          }
+        } else {
+          if (selectedLarge && selectedLarge.value) return;
+          setTotalDurationTask(data.largeTotalDuration);
+        }
+      } else {
+        setTotalDurationTask(DEFAULT_TIME_TEXT);
+      }
     },
   });
   // Get statistic categories for ALL TEAM option
@@ -146,22 +178,55 @@ const StatisticTagBoard = () => {
     },
   });
   // Get statistic compared categories for ALL TEAM option
-  useStatisticAllTeamCategoriesCompare({
+  const { statisticAllTeamCategoryCompareList } =
+    useStatisticAllTeamCategoriesCompare({
+      filter: {
+        fromDate: formatDateToYMD(startDateCompare) || '',
+        endDate: formatDateToYMD(`${endDateCompare}`) || '',
+        tagIds: selectedTags,
+        isCompare: isCheckCompare,
+        isTagPage: true,
+      },
+      condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
+      onSuccess: (data) => {
+        setLargeOptions([]);
+        setTotalDurationLargeCompare(data.largeTotalDuration);
+      },
+    });
+
+  // Get task durations for options that except ALL TEAM option
+  const {
+    statisticTaskDurationsListTag,
+    isFetchedStatisticTaskDurationsListTag,
+  } = useStatisticTaskDurationsTag({
     filter: {
-      fromDate: formatDateToYMD(startDateCompare) || '',
-      endDate: formatDateToYMD(`${endDateCompare}`) || '',
+      fromDate: formatDateToYMD(startDate) || '',
+      endDate: formatDateToYMD(`${endDate}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: selectedLarge?.value || '',
+      mediumCategoryId: selectedMedium?.value || '',
       tagIds: selectedTags,
-      isCompare: isCheckCompare,
+      statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
+    },
+    condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
+  });
+
+  // Get task durations for ALL TEAM option
+  const {
+    statisticAllTeamTaskDurationsList,
+    isFetchedStatisticAllTeamTaskDurationsList,
+  } = useStatisticAllTeamTaskDurations({
+    filter: {
+      fromDate: formatDateToYMD(startDate) || '',
+      endDate: formatDateToYMD(`${endDate}`) || '',
+      tagIds: selectedTags,
+      statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
       isTagPage: true,
     },
     condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
-    onSuccess: (data) => {
-      setLargeOptions([]);
-      setTotalDurationLargeCompare(data.largeTotalDuration);
-    },
   });
-  // Get data creation
 
+  // Get data creation
   const { creationDataStatisticData } = useCreationDataStatistic({
     is_statistic: true,
 
@@ -382,6 +447,10 @@ const StatisticTagBoard = () => {
             endDateCompare={endDateCompare}
             statisticTagsList={statisticTagsList}
             statisticTagsCompareList={statisticTagsListCompare}
+            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
+            statisticAllTeamCategoryCompareList={
+              statisticAllTeamCategoryCompareList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -449,6 +518,16 @@ const StatisticTagBoard = () => {
             startDate={startDate}
             endDate={endDate}
             statisticTagsList={statisticTagsList}
+            statisticTaskDurationsList={statisticTaskDurationsListTag}
+            statisticAllTeamTaskDurationsList={
+              statisticAllTeamTaskDurationsList
+            }
+            isFetchedStatisticTaskDurationsListTag={
+              isFetchedStatisticTaskDurationsListTag
+            }
+            isFetchedStatisticAllTeamTaskDurationsList={
+              isFetchedStatisticAllTeamTaskDurationsList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}

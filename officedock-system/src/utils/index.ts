@@ -31,6 +31,7 @@ import {
   StatisticCategoryInfo,
   StatisticsAllTeamTaskDuration,
   StatisticsTaskDuration,
+  StatisticsTaskDurationTag,
 } from '@interfaces/statistic';
 import {
   ResultTeam,
@@ -1651,6 +1652,44 @@ export const normalizeDurationsWithStatisticCategoryTaskDurations = (
     return {
       ...duration,
       data: filledCategories,
+    };
+  });
+};
+export const normalizeDurationsWithStatisticTagTaskDurations = (
+  taskDurationObject: StatisticsTaskDurationTag,
+): {
+  startDate: string;
+  endDate: string;
+  data: {
+    organizationId: number;
+    tagId: number;
+    tagName: string;
+    duration: string;
+    percent: number;
+  }[];
+}[] => {
+  return taskDurationObject.durations.map((duration) => {
+    const filledTags = taskDurationObject.data.map((templateTag) => {
+      const match = duration.data.find(
+        (tag) =>
+          tag.organizationId === templateTag.organizationId &&
+          tag.tagId === templateTag.tagId,
+      );
+
+      return (
+        match || {
+          organizationId: templateTag.organizationId,
+          tagId: templateTag.tagId,
+          tagName: templateTag.tagName,
+          duration: '00:00:00',
+          percent: 0,
+        }
+      );
+    });
+
+    return {
+      ...duration,
+      data: filledTags,
     };
   });
 };

@@ -87,7 +87,7 @@ const StackedAreaChart = ({
     selectedOrganization,
     lineChartViewBy,
     selectedSmall,
-
+    selectedTags,
     setLineChartViewBy,
   } = useContext(StatisticStateContext);
 
@@ -988,7 +988,9 @@ const StackedAreaChart = ({
               <div
                 style={{
                   height:
-                    dataChart.length > 1 ? chartHeight + 5 : chartHeight + 5,
+                    selectedTags.length > 0
+                      ? chartHeight - (selectedTags.length < 3 ? 1 : 2)
+                      : chartHeight + 5,
                 }}
                 className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'}  pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
                 {!(dataChart.length == 1 && !dataChart[0].name) &&
