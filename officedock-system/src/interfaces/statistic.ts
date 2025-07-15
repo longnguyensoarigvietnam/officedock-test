@@ -609,9 +609,22 @@ export interface ListTaskStatistic {
 
 export interface CategoryLineChartDatasetInfo {
   label: string;
-  data: { x: any; y: number; endDate: any; color: any; label: any }[];
+  data: {
+    x: string;
+    y: number;
+    endDate: any;
+    color: string;
+    label: string;
+    type?: StatisticChartType;
+    startDate?: any;
+    duration?: string;
+    anotherStartDate?: any;
+    anotherEndDate?: any;
+    anotherDuration?: string;
+  }[];
   borderColor: string;
   backgroundColor: string;
+  borderDash?: number[];
   fill: boolean;
   tension: number;
   pointRadius: number;
@@ -620,4 +633,27 @@ export interface CategoryLineChartDatasetInfo {
   pointHoverBackgroundColor: string;
   pointHoverBorderColor: string;
   pointHoverBorderWidth: number;
+}
+
+export interface MergedMyDockLineChartTable {
+  id: string | number | null;
+  name: string;
+  color: string;
+  standardInfo?: {
+    duration: string;
+    percent: string;
+  };
+  compareInfo?: {
+    duration: string;
+    percent: string;
+  };
+}
+
+export interface MyDockLineChartTableItem {
+  id: string | number | null;
+  name: string;
+  duration: string;
+  percent: string;
+  color: string;
+  type?: StatisticChartType.STANDARD | StatisticChartType.COMPARE;
 }

@@ -1706,3 +1706,45 @@ export const getTimeDifference = (
 
   return formatted;
 };
+// Get date labels list from statistic task durations
+export const extractDateLabelsListFromTaskDuration = (
+  durations: { startDate: string; endDate: string }[],
+): string[] => {
+  const labels: string[] = [];
+
+  if (!durations || durations.length === 0) return [];
+
+  durations.forEach((detail, index) => {
+    labels.push(detail.startDate);
+
+    const isLast = index === durations.length - 1;
+    const lastItem = durations.at(-1);
+
+    if (
+      isLast &&
+      lastItem &&
+      String(lastItem.startDate) !== String(lastItem.endDate) &&
+      lastItem.endDate
+    ) {
+      labels.push(lastItem.endDate);
+    }
+  });
+
+  return labels;
+};
+
+export const generateShownLineChartDateLabels = (
+  standardLabels: string[],
+  compareLabels: string[],
+): string[] => {
+  const result = [...standardLabels];
+
+  if (standardLabels.length < compareLabels.length) {
+    const numOfHiddenLabels = compareLabels.length - standardLabels.length;
+    for (let i = 0; i < numOfHiddenLabels; i++) {
+      result.push(`${i}`);
+    }
+  }
+
+  return result;
+};

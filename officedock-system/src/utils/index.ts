@@ -1346,7 +1346,6 @@ export function getStatisticMilestones(
   statisticBy: 'DAY' | 'WEEK' | 'MONTH',
 ): string[] {
   const result: string[] = [];
-
   const start = parseISODateLocally(fromDate);
   const end = parseISODateLocally(endDate);
 

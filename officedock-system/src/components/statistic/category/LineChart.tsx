@@ -32,6 +32,7 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import { TooltipDiv } from '@interfaces/tooltip';
 import {
+  MyDockLineChartTableItem,
   StatisticsAllTeamTaskDuration,
   StatisticsCategories,
   StatisticsTaskDuration,
@@ -49,6 +50,7 @@ import {
   convertDurationToTotalMinutes,
   convertToStatisticJapaneseLabels,
   formatDateToYMD,
+  totalDurationsForStatistic,
 } from '@utils/date';
 import {
   getLineChartDataFromStatisticAllTeamTaskDurations,
@@ -102,7 +104,6 @@ const LineChart = ({
   const {
     isDisableCalendar,
     isHasLoading,
-    totalDurationTask,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -134,15 +135,8 @@ const LineChart = ({
     labels: [],
     datasets: [],
   });
-  const [tableData, setTableData] = useState<
-    {
-      categoryId: number | string;
-      categoryName: string;
-      categoryDuration: string;
-      categoryPercent: string;
-      categoryColor: string;
-    }[]
-  >([]);
+  const [tableData, setTableData] = useState<MyDockLineChartTableItem[]>([]);
+  const [totalDuration, setTotalDuration] = useState<string>(DEFAULT_TIME_TEXT);
 
   const [standardLabelsInfo, setStandardLabelsInfo] = useState<
     {
@@ -372,13 +366,8 @@ const LineChart = ({
         )?.categoryColor || '';
 
       const standardLabels: { name: string; color: string }[] = [];
-      const tableDetail: {
-        categoryId: number;
-        categoryName: string;
-        categoryDuration: string;
-        categoryPercent: string;
-        categoryColor: string;
-      }[] = [];
+      const tableDetail: MyDockLineChartTableItem[] = [];
+      const totalDurationList: string[] = [];
 
       const normalizeDataObject = {
         data: statisticTaskDurationsList?.data || [],
@@ -391,11 +380,11 @@ const LineChart = ({
       if (normalizeDataObject?.data && normalizeDataObject?.data?.length > 0) {
         normalizeDataObject.data.forEach((data) => {
           tableDetail.push({
-            categoryId: data.categoryId as number,
-            categoryName: data.categoryName,
-            categoryDuration: data.duration,
-            categoryPercent: String(data?.percent || 0),
-            categoryColor:
+            id: data.categoryId as number,
+            name: data.categoryName,
+            duration: data.duration,
+            percent: String(data?.percent || 0),
+            color:
               data.categoryColor ||
               (color && lightenColor(color, data?.percent || 0)) ||
               getRandomColor(),
@@ -408,13 +397,17 @@ const LineChart = ({
               getRandomColor(),
             name: data.categoryName,
           });
+
+          totalDurationList.push(data.duration);
         });
 
         setTableData(tableDetail);
         setStandardLabelsInfo(standardLabels);
+        setTotalDuration(totalDurationsForStatistic(totalDurationList));
       } else {
         setTableData([]);
         setStandardLabelsInfo([]);
+        setTotalDuration(DEFAULT_TIME_TEXT);
       }
 
       if (
@@ -456,13 +449,8 @@ const LineChart = ({
         )?.categoryColor || '';
 
       const standardLabels: { name: string; color: string }[] = [];
-      const tableDetail: {
-        categoryId: number | string;
-        categoryName: string;
-        categoryDuration: string;
-        categoryPercent: string;
-        categoryColor: string;
-      }[] = [];
+      const tableDetail: MyDockLineChartTableItem[] = [];
+      const totalDurationList: string[] = [];
 
       const normalizeDataObject: StatisticsAllTeamTaskDuration = {
         data: statisticAllTeamTaskDurationsList?.data || [],
@@ -475,11 +463,11 @@ const LineChart = ({
       if (normalizeDataObject?.data && normalizeDataObject?.data?.length > 0) {
         normalizeDataObject.data.forEach((data) => {
           tableDetail.push({
-            categoryId: data.organizationId,
-            categoryName: data.organizationName,
-            categoryDuration: data.duration,
-            categoryPercent: String(data?.percent || 0),
-            categoryColor:
+            id: data.organizationId,
+            name: data.organizationName,
+            duration: data.duration,
+            percent: String(data?.percent || 0),
+            color:
               data.color ||
               (color && lightenColor(color, data?.percent || 0)) ||
               getRandomColor(),
@@ -492,13 +480,17 @@ const LineChart = ({
               getRandomColor(),
             name: data.organizationName,
           });
+
+          totalDurationList.push(data.duration);
         });
 
         setTableData(tableDetail);
         setStandardLabelsInfo(standardLabels);
+        setTotalDuration(totalDurationsForStatistic(totalDurationList));
       } else {
         setTableData([]);
         setStandardLabelsInfo([]);
+        setTotalDuration(DEFAULT_TIME_TEXT);
       }
 
       if (
@@ -529,18 +521,12 @@ const LineChart = ({
   ]);
 
   const sortByPercentDifference = (
-    data: {
-      categoryId: number | string;
-      categoryName: string;
-      categoryDuration: string;
-      categoryPercent: string;
-      categoryColor: string;
-    }[],
+    data: MyDockLineChartTableItem[],
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
-      const rowAPercentage = Number(rowA.categoryPercent || 0);
-      const rowBPercentage = Number(rowB.categoryPercent || 0);
+      const rowAPercentage = Number(rowA.percent || 0);
+      const rowBPercentage = Number(rowB.percent || 0);
 
       return sortingType == SortingType.ASC
         ? rowAPercentage - rowBPercentage
@@ -550,21 +536,15 @@ const LineChart = ({
   };
 
   const sortByDurationDifference = (
-    data: {
-      categoryId: number | string;
-      categoryName: string;
-      categoryDuration: string;
-      categoryPercent: string;
-      categoryColor: string;
-    }[],
+    data: MyDockLineChartTableItem[],
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
       const rowADuration = convertDurationToTotalMinutes(
-        rowA.categoryDuration || DEFAULT_TIME_TEXT,
+        rowA.duration || DEFAULT_TIME_TEXT,
       );
       const rowBDuration = convertDurationToTotalMinutes(
-        rowB.categoryDuration || DEFAULT_TIME_TEXT,
+        rowB.duration || DEFAULT_TIME_TEXT,
       );
 
       return sortingType == SortingType.ASC
@@ -574,15 +554,9 @@ const LineChart = ({
     setTableData(sortedArr);
   };
 
-  const columns: ColumnDef<{
-    categoryId: number | string;
-    categoryName: string;
-    categoryDuration: string;
-    categoryPercent: string;
-    categoryColor: string;
-  }>[] = [
+  const columns: ColumnDef<MyDockLineChartTableItem>[] = [
     {
-      accessorKey: 'categoryName',
+      accessorKey: 'name',
       header: () => {
         return (
           <div className="font-medium px-[18px] text-[16px] break-all line-clamp-3 text-left text-black flex gap-2 items-center">
@@ -606,7 +580,7 @@ const LineChart = ({
         return (
           <div className="font-medium px-[18px] text-[16px] break-all line-clamp-3 text-left text-black flex gap-2 items-center">
             <div
-              style={{ backgroundColor: info.row.original.categoryColor }}
+              style={{ backgroundColor: info.row.original.color }}
               className={`w-4 h-4 min-w-[16px] rounded-[3px] flex items-center justify-center`}>
               <ImageRound
                 name="Check task"
@@ -621,7 +595,7 @@ const LineChart = ({
       enableSorting: false,
     },
     {
-      accessorKey: 'categoryDuration',
+      accessorKey: 'duration',
       size: 50,
       header: () => {
         return (
@@ -664,7 +638,7 @@ const LineChart = ({
       },
     },
     {
-      accessorKey: 'categoryPercent',
+      accessorKey: 'percent',
       size: 30,
       header: () => {
         return (
@@ -844,13 +818,13 @@ const LineChart = ({
                 <p>合計時間</p>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-[34px] leading-none">
-                    {totalDurationTask?.split(':')[0]}
+                    {totalDuration?.split(':')[0]}
                   </p>
                   <p className="text-[25px] leading-none">時間</p>
                 </div>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-[34px] leading-none">
-                    {totalDurationTask?.split(':')[1]}
+                    {totalDuration?.split(':')[1]}
                   </p>
                   <p className="text-[25px] leading-none">分</p>
                 </div>
