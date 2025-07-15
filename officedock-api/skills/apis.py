@@ -12,7 +12,10 @@ from base.messages import ERROR_MESSAGES, KEYWORDS
 from base.permissions import ActionPermission
 from chat.models import ChatMessage
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
-from common.utils import split_id_from_string
+from common.utils import (
+    get_user_organizations_with_descendants,
+    split_id_from_string,
+)
 from organizations.models import (
     OrganizationsStatisticCategories,
     OrganizationsStatisticCategoriesSkills,
@@ -173,7 +176,7 @@ class ManageSkillMapViewSet(
         FilterByPermission,
         DjangoFilterBackend,
     ]
-    screen_name = Screens.SKILL_MAP.value
+    screen_name = Screens.SKILL_MAP_MANAGEMENT.value
 
     def get_queryset(self):
         """
@@ -278,6 +281,10 @@ class ManageSkillMapViewSet(
         ).order_by("-created_at")
         if organization_id:
             organizations = organizations.filter(id=organization_id).all()
+
+        # Handle filter data by role permissions
+        organizations = self.filter_queryset(organizations)
+
         data = []
         for organization in organizations:
             data.append(
@@ -298,6 +305,18 @@ class SkillMapViewSet(
 
     queryset = SkillMap.objects.filter(is_valid=True).all()
     serializer_class = SkillMapSerializer
+    permission_classes = [ActionPermission]
+    filter_backends = [
+        FilterByPermission,
+        DjangoFilterBackend,
+    ]
+    screen_name = Screens.MY_TASK_SKILL_MAP.value
+
+    def get_permissions(self):
+        """Override screen name to get data"""
+        if current_screen := self.request.query_params.get("current_screen"):
+            self.screen_name = current_screen
+        return super().get_permissions()
 
     @extend_schema(
         parameters=[
@@ -348,6 +367,10 @@ class SkillMapViewSet(
             "next_user": next_user,
             "organizations": [],
         }
+
+        # Handle filter data by permissions
+        organizations = self.filter_queryset(organizations)
+
         for organization in organizations:
             skill_maps = (
                 self.get_queryset()
@@ -409,6 +432,10 @@ class SkillMapViewSet(
         organizations = user.organizations.all().order_by("-created_at")
         if organization_id:
             organizations = organizations.filter(id=organization_id)
+
+        # Handle filter data by permissions
+        organizations = self.filter_queryset(organizations)
+
         data = []
         for organization in organizations:
             skills = Skill.objects.filter(
@@ -532,26 +559,53 @@ class SkillMapViewSet(
                     SubmitLevelStatus.APPLYING.value,
                 ],
             ).first()
-            # Get users have permission update skill map
-            permission = Screens.SKILL_MAP.value + "_" + Actions.UPDATE.value
-            selection_results = [SelectionResultOptions.ALLOWED.value]
-            role_ids = RoleDetail.objects.filter(
+
+            # Get approvers have permission skill map for data options
+            # Determine the permission name to check (e.g., 'TEAM_DOCK_SKILL_MAP_UPDATE')
+            permission = (
+                Screens.TEAM_DOCK_SKILL_MAP.value + "_" + Actions.UPDATE.value
+            )
+            allowed_selection_results = [SelectionResultOptions.ALLOWED.value]
+            only_org_selection_results = [
+                SelectionResultOptions.ONLY_DATA_ORGANIZATION.value
+            ]
+
+            # Get all RoleDetail with the required permission for the company or system roles
+            all_roles = RoleDetail.objects.filter(
                 Q(permission__name=permission)
-                & Q(selection_result__in=selection_results)
                 & Q(Q(company=skill_map.company) | Q(role__system_role=True))
-            ).values_list("role_id", flat=True)
-            users = (
-                User.objects.filter(
-                    roles__id__in=role_ids, company=skill_map.company
-                )
-                .exclude(id=skill_map.staff.id)
+            ).all()
+            # Get all users in the company, excluding the current staff
+            all_users = (
+                User.objects.filter(Q(company=skill_map.company))
+                .exclude(id=skill_map.staff_id)
                 .all()
                 .distinct()
             )
+
+            # Get role IDs that are fully allowed
+            allowed_role_ids = all_roles.filter(
+                selection_result__in=allowed_selection_results
+            ).values_list("role_id", flat=True)
+            # Get role IDs that are only allowed within the organization
+            only_org_role_ids = all_roles.filter(
+                selection_result__in=only_org_selection_results
+            ).values_list("role_id", flat=True)
+
+            # Get users with roles that are fully allowed (can approve for any organization)
+            users = list(all_users.filter(roles__id__in=allowed_role_ids))
+
+            # For users only allowed within their organization
+            # check if they belong to the skill_map's organization
+            for user in all_users.filter(roles__id__in=only_org_role_ids):
+                org_ids = get_user_organizations_with_descendants(user)
+                if skill_map.organization_id in set(org_ids):
+                    users.append(user)
+
             data = {
-                "organization": skill_map.organization.id,
+                "organization": skill_map.organization_id,
                 "skill": {
-                    "id": skill_map.skill.id,
+                    "id": skill_map.skill_id,
                     "name": skill_map.skill.name,
                 },
                 "skill_map_skill_level": skill_map_skill_level.id,
@@ -664,7 +718,7 @@ class SkillViewSet(
         FilterByPermission,
         DjangoFilterBackend,
     ]
-    screen_name = Screens.SKILL.value
+    screen_name = Screens.SKILL_MAP_MANAGEMENT.value
 
     def get_queryset(self):
         """
@@ -959,6 +1013,10 @@ class SkillViewSet(
         ).order_by("-created_at")
         if organization_id:
             organizations = organizations.filter(id=organization_id).all()
+
+        # Handle filter data by permissions
+        organizations = self.filter_queryset(organizations)
+
         data = []
         steps = []
         if not screen:

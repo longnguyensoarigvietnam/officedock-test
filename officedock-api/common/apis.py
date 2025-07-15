@@ -52,10 +52,11 @@ from .serializers import (
     CreationDataOrganizationWithUserSerializer,
 )
 from .utils import (
-    send_web_socket_event,
-    transform_statistic_categories,
     check_task_overtime,
     get_organizations_of_user_by_screen_role,
+    send_web_socket_event,
+    to_snake_case,
+    transform_statistic_categories,
     validate_company_organization,
 )
 
@@ -95,7 +96,9 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 type=str,
                 enum=[
                     Screens.CATEGORY_HIERARCHY.value,
-                    Screens.SKILL_MAP.value,
+                    Screens.MY_TASK_SKILL_MAP.value,
+                    Screens.TEAM_DOCK_SKILL_MAP.value,
+                    Screens.SKILL_MAP_MANAGEMENT.value,
                     Screens.USER.value,
                     Screens.TEAMDOCK.value,
                 ],
@@ -125,6 +128,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
 
         # Filter organizations by role permissions
         if screen:
+            screen = to_snake_case(screen)
             if screen == Screens.TEAMDOCK.value:
                 user = (
                     get_object_or_404(User, id=user_id)
@@ -152,19 +156,13 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     item.selection_result for item in role_permissions
                 ]
                 if SelectionResultOptions.ALLOWED.value in selection_results:
-                    # FIXME: Rollback code when implement skill map permission
-                    # organizations = organizations -> OLD CODE
-                    organizations = (
-                        request.user.organizations.all()
-                        if screen == Screens.SKILL_MAP.value
-                        else organizations
-                    )
+                    organizations = organizations
                 elif (
                     SelectionResultOptions.ONLY_DATA_ORGANIZATION.value
                     in selection_results
                 ):
-                    org_ids = request.user.organizations.values_list(
-                        "id", flat=True
+                    org_ids = list(
+                        request.user.organizations.values_list("id", flat=True)
                     )
                     # Handle get hierarchy
                     def _get_children(instance):

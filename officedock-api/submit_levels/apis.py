@@ -57,7 +57,7 @@ class SubmitLevelViewSet(
         FilterByPermission,
         DjangoFilterBackend,
     ]
-    screen_name = Screens.SUBMIT_LEVEL.value
+    screen_name = Screens.TEAM_DOCK_SKILL_MAP.value
 
     def get_queryset(self):
         """Filtering by company"""
@@ -364,6 +364,10 @@ class SubmitLevelViewSet(
         ).order_by("-created_at")
         if organization_id:
             organizations = organizations.filter(id=organization_id)
+
+        # Handle filter data by permissions
+        organizations = self.filter_queryset(organizations)
+
         data = []
         for organization in organizations:
             submit_levels = organization.submit_level_histories.filter(
