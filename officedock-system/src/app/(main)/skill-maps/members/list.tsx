@@ -36,7 +36,7 @@ const ListSkillsMapByMembers = () => {
   >([]);
 
   const { organizationOptions } = useOrganizationOptions({
-    current_screen: ScreenName.SKILL_MAP,
+    current_screen: ScreenName.SKILL_MAP_MANAGEMENT,
   });
 
   // Fetch organization skills

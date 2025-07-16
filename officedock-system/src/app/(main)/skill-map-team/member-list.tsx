@@ -10,6 +10,7 @@ import Button from '@components/common/Button';
 import useMemberOrganizationList from '@hooks/userMemberOrganizationList';
 
 import { pageRouters } from '@constants/routers';
+import { ScreenName } from '@constants/enums';
 
 const MemberList = () => {
   const router = useRouter();
@@ -32,6 +33,7 @@ const MemberList = () => {
   // Get members by organization
   useMemberOrganizationList({
     search: '',
+    currentScreen: ScreenName.TEAM_DOCK_SKILL_MAP,
     onSuccess: (data) => {
       setOrganizationList(() => {
         return data.map((org) => {

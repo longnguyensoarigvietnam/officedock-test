@@ -122,7 +122,7 @@ export const SCREEN_LIST = [
   {
     name: 'スキルマップ画面',
     value: 'skillMap',
-    show: false,
+    show: true,
   },
   {
     name: '組織_スキル画面',

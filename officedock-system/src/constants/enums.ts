@@ -316,6 +316,24 @@ export enum PermissionsSystem {
   SKILL_MAP_UPDATE = 'skill_map_update',
   SKILL_MAP_DELETE = 'skill_map_delete',
 
+  // Skill Map Management Permissions
+  SKILL_MAP_MANAGEMENT_VIEW = 'skill_map_management_view',
+  SKILL_MAP_MANAGEMENT_ADD = 'skill_map_management_add',
+  SKILL_MAP_MANAGEMENT_UPDATE = 'skill_map_management_update',
+  SKILL_MAP_MANAGEMENT_DELETE = 'skill_map_management_delete',
+
+  // Team Dock Skill Map Permissions
+  TEAM_DOCK_SKILL_MAP_VIEW = 'team_dock_skill_map_view',
+  TEAM_DOCK_SKILL_MAP_ADD = 'team_dock_skill_map_add',
+  TEAM_DOCK_SKILL_MAP_UPDATE = 'team_dock_skill_map_update',
+  TEAM_DOCK_SKILL_MAP_DELETE = 'team_dock_skill_map_delete',
+
+  // My Dock Skill Map Permissions
+  MY_DOCK_SKILL_MAP_VIEW = 'my_task_skill_map_view',
+  MY_DOCK_SKILL_MAP_ADD = 'my_task_skill_map_add',
+  MY_DOCK_SKILL_MAP_UPDATE = 'my_task_skill_map_update',
+  MY_DOCK_SKILL_MAP_DELETE = 'my_task_skill_map_delete',
+
   // Organization Skill Permissions
   ORGANIZATION_SKILL_VIEW = 'organization_skill_view',
   ORGANIZATION_SKILL_ADD = 'organization_skill_add',
@@ -403,6 +421,9 @@ export enum ScreenName {
   TEAM_DOCK = 'teamdock',
   TEAM_DAILY_REPORT = 'teamDailyReport',
   CALENDAR_MANAGEMENT = 'calendarManagement',
+  MY_TASK_SKILL_MAP = 'my_task_skill_map',
+  TEAM_DOCK_SKILL_MAP = 'team_dock_skill_map',
+  SKILL_MAP_MANAGEMENT = 'skill_map_management',
 }
 
 export enum PermissionType {

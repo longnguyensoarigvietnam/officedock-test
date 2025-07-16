@@ -13,6 +13,7 @@ import { UserOrganization } from '@interfaces/user';
 interface UseMemberOrganizationListHooksProps {
   conditions?: boolean[];
   search?: string;
+  currentScreen?: string;
   onSuccess?: (success: UserOrganization[]) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
@@ -21,6 +22,7 @@ interface UseMemberOrganizationListHooksProps {
 const useMemberOrganizationList = ({
   conditions,
   search,
+  currentScreen,
   onSuccess,
   onError,
   onSettled,
@@ -33,7 +35,16 @@ const useMemberOrganizationList = ({
   // Handle call API get list member organization
   const getListMemberOrganization = async () => {
     setIsLoading(true);
-    const apiUrl = `${apiRouters.MEMBER_ORGANIZATION_LIST}${search && `?search=${search}`}`;
+    const params = new URLSearchParams();
+
+    if (search) {
+      params.append('search', search);
+    }
+    if (currentScreen) {
+      params.append('current_screen', currentScreen);
+    }
+
+    const apiUrl = `${apiRouters.MEMBER_ORGANIZATION_LIST}?${params.toString()}`;
 
     const { data } = await api.get<UserOrganization[]>(apiUrl);
     return data;
