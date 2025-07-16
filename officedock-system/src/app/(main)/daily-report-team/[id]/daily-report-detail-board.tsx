@@ -61,7 +61,7 @@ import { DATE_TEXT_FORMAT, NO_SETTING } from '@constants';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
-  ERROR_DELETE_MESSAGE,
+  ERROR_DELETE_TASK_RUNNING,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
 } from '@constants/message';
@@ -270,6 +270,7 @@ const DailyReportDetailBoard = () => {
         pausedAt: duration.pausedAt
           ? new Date(duration.pausedAt)
           : dataDatePicker,
+        isCalculate: duration.pausedAt ? false : true,
         start: new Date(duration.startedAt),
         end: duration.pausedAt ? new Date(duration.pausedAt) : new Date(),
         largeColor:
@@ -566,7 +567,7 @@ const DailyReportDetailBoard = () => {
         refetchDataStatisticPDF();
       },
       onError: (error: AxiosError<any>) => {
-        showErrorToast(error, ERROR_DELETE_MESSAGE);
+        showErrorToast(error, ERROR_DELETE_TASK_RUNNING);
       },
       onSettled: () => {},
     },
@@ -2483,10 +2484,9 @@ const DailyReportDetailBoard = () => {
                       <td className="border-r border-black text-center text-xs">
                         <div className="-translate-y-[25%]">
                           {item.startedAt &&
-                            item.pausedAt &&
                             calculateTotalMinutes(
                               item.startedAt,
-                              item.pausedAt,
+                              item.pausedAt || String(new Date()),
                             )}
                           分
                         </div>

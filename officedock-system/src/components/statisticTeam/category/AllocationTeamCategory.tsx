@@ -5,19 +5,26 @@ import ImageRound from '@components/common/ImageRound';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import ProgressBarTeamStatistic from './ProgressBarTeamStatistic';
+// Currently using for ALL TEAM taken from my dock
+import ProgressBarStatistic from '@components/statistic/category/ProgressBarStatistic';
 
 import { EventWorkCategory } from '@constants/enums';
-import { NO_SETTING } from '@constants';
+import { ALL_TEAM_STATISTIC, NO_SETTING } from '@constants';
 
 import {
+  ProgressDataType,
   StatisticCategoryInfo,
+  StatisticsAllTeams,
   StatisticsCategories,
   UserListStatisticType,
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
 import { formatTimeToJapanese, sumDurationsChart } from '@utils/date';
-import { lightenColor } from '@utils';
+import {
+  lightenColor,
+  mapStatisticAllTeamCategoryInfoToProgressData,
+} from '@utils';
 
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import FilterTeamStatistic from './filter/FilterTeamStatistic';
@@ -26,20 +33,21 @@ type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticTeamCategoryList: StatisticsCategories | undefined;
+  statisticAllTeamCategoryList: StatisticsAllTeams | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
 };
 
-type ProgressDataType = {
+type ProgressDataTypeTeam = {
   id: number;
   label: string;
   value: number;
   color: string;
   duration: string;
   optionData: UserListStatisticType[];
-  mergedItems?: ProgressDataType[];
+  mergedItems?: ProgressDataTypeTeam[];
   organizationId?: string;
 };
 export function transformStatisticCategoryInfoToProgressData({
@@ -55,10 +63,10 @@ export function transformStatisticCategoryInfoToProgressData({
   threshold?: number;
   colorData?: string;
 }): {
-  finalData: ProgressDataType[];
-  mergedItem?: ProgressDataType;
+  finalData: ProgressDataTypeTeam[];
+  mergedItem?: ProgressDataTypeTeam;
 } {
-  const progressData: ProgressDataType[] = data.map((item) => ({
+  const progressData: ProgressDataTypeTeam[] = data.map((item) => ({
     id: item.categoryId,
     label: item.categoryName,
     value: item.percent,
@@ -93,7 +101,7 @@ export function transformStatisticCategoryInfoToProgressData({
 
   const totalDuration = sumDurationsChart(durations);
 
-  const mergedItem: ProgressDataType = {
+  const mergedItem: ProgressDataTypeTeam = {
     id: -1,
     label: mergeLabel,
     value: totalMergedPercent,
@@ -114,6 +122,7 @@ const AllocationTeamCategory = memo(
     startDate,
     endDate,
     statisticTeamCategoryList,
+    statisticAllTeamCategoryList,
     handleSelectOrganization,
     handleSelectLarge,
     handleSelectMedium,
@@ -132,15 +141,19 @@ const AllocationTeamCategory = memo(
     } | null>(null);
 
     const [progressDataLarge, setProgressDataLarge] = useState<
+      ProgressDataTypeTeam[]
+    >([]);
+    const [progressDataLargeAllTeam, setProgressDataLargeAllTeam] = useState<
       ProgressDataType[]
     >([]);
 
     const [progressDataMedium, setProgressDataMedium] = useState<
-      ProgressDataType[]
+      ProgressDataTypeTeam[]
     >([]);
     const [progressDataSmall, setProgressDataSmall] = useState<
-      ProgressDataType[]
+      ProgressDataTypeTeam[]
     >([]);
+
     const {
       isDisableCalendar,
       isHasLoading,
@@ -162,7 +175,10 @@ const AllocationTeamCategory = memo(
     } = useContext(StatisticTeamStateContext);
 
     useEffect(() => {
-      if (statisticTeamCategoryList) {
+      if (
+        statisticTeamCategoryList &&
+        selectedOrganization?.value != ALL_TEAM_STATISTIC
+      ) {
         if (statisticTeamCategoryList.largeCategories) {
           const { finalData } = transformStatisticCategoryInfoToProgressData({
             data: statisticTeamCategoryList.largeCategories,
@@ -198,7 +214,29 @@ const AllocationTeamCategory = memo(
           setProgressDataSmall([]);
         }
       }
-    }, [statisticTeamCategoryList]);
+    }, [
+      selectedLarge?.value,
+      selectedOrganization?.value,
+      statisticTeamCategoryList,
+    ]);
+    useEffect(() => {
+      if (
+        statisticAllTeamCategoryList &&
+        selectedOrganization?.value == ALL_TEAM_STATISTIC
+      ) {
+        if (statisticAllTeamCategoryList.largeCategories) {
+          const { finalData } = mapStatisticAllTeamCategoryInfoToProgressData({
+            data: statisticAllTeamCategoryList.largeCategories,
+          });
+          setProgressDataLargeAllTeam(finalData);
+        } else {
+          setProgressDataLargeAllTeam([]);
+        }
+        setProgressDataLarge([]);
+        setProgressDataMedium([]);
+        setProgressDataSmall([]);
+      }
+    }, [statisticAllTeamCategoryList, selectedOrganization?.value]);
 
     const handleClickTooltip = ({
       id,
@@ -361,7 +399,25 @@ const AllocationTeamCategory = memo(
                         </div>
                       ) : (
                         <div className="flex flex-col gap-4">
+                          {selectedOrganization?.value == ALL_TEAM_STATISTIC &&
+                            progressDataLargeAllTeam.length > 0 &&
+                            progressDataLargeAllTeam.map((item, index) => (
+                              <ProgressBarStatistic
+                                key={index}
+                                isAllTeam={
+                                  selectedOrganization?.value ==
+                                  ALL_TEAM_STATISTIC
+                                }
+                                classProgressClass="h-[20px] rounded-[4px]"
+                                handleClickTooltip={() => {}}
+                                organizationId={item.organizationId}
+                                handleClickChart={() => {}}
+                                {...item}
+                              />
+                            ))}
+
                           {progressDataLarge.length > 0 &&
+                            selectedOrganization?.value != ALL_TEAM_STATISTIC &&
                             progressDataLarge.map((item, index) => (
                               <ProgressBarTeamStatistic
                                 key={index}

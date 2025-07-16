@@ -35,6 +35,7 @@ import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import useStatisticAllTeamCategories from '@hooks/useStatisticAllTeamCategories';
 import { removeDuplicateOptions } from '@utils';
+import useStatisticAllTeamCategoriesCompare from '@hooks/useStatisticAllTeamCategoriesCompare';
 
 const StatisticTeamBoard = () => {
   const {
@@ -104,6 +105,7 @@ const StatisticTeamBoard = () => {
 
   const organizationId = searchParams.get('organization');
 
+  // Get statistic categories for options that except ALL TEAM option
   const { statisticCategoryListTeam } = useStatisticCategoriesTeam({
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
@@ -196,19 +198,47 @@ const StatisticTeamBoard = () => {
     },
   });
 
-  useStatisticAllTeamCategories({
+  //  Get statistic categories for ALL TEAM option
+  const { statisticAllTeamCategoryList } = useStatisticAllTeamCategories({
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
       tagIds: orderingOptions?.tag_ids,
+      userIds: orderingOptions?.user_ids,
+      mainOrganizationId: selectedOrganizationSideBar?.value as number,
     },
     condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
     onSuccess: (data) => {
       setLargeOptions([]);
       setTotalDurationLarge(data.largeTotalDuration);
+      setTotalDurationTask(data.largeTotalDuration);
+      setIsLoadingOrganization(false);
+      setIsLoadingLarge(false);
+      setIsLoadingMedium(false);
     },
   });
 
+  // Get statistic compared categories for ALL TEAM option
+  const { statisticAllTeamCategoryCompareList } =
+    useStatisticAllTeamCategoriesCompare({
+      filter: {
+        fromDate: formatDateToYMD(startDateCompare) || '',
+        endDate: formatDateToYMD(`${endDateCompare}`) || '',
+        tagIds: orderingOptions?.tag_ids,
+        userIds: orderingOptions?.user_ids,
+        mainOrganizationId: selectedOrganizationSideBar?.value as number,
+        isCompare: isCheckCompare,
+      },
+      condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
+      onSuccess: (data) => {
+        setLargeOptions([]);
+        setTotalDurationLargeCompare(data.largeTotalDuration);
+        setTotalDurationTaskCompare(data.largeTotalDuration);
+        setIsLoadingOrganizationCompare(false);
+        setIsLoadingLargeCompare(false);
+        setIsLoadingMediumCompare(false);
+      },
+    });
   const { statisticCategoryListTeamCompare } =
     useStatisticCategoriesTeamCompare({
       filter: {
@@ -729,6 +759,10 @@ const StatisticTeamBoard = () => {
             endDateCompare={endDateCompare}
             statisticTeamCategoryList={statisticCategoryListTeam}
             statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
+            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
+            statisticAllTeamCategoryCompareList={
+              statisticAllTeamCategoryCompareList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectOrganizationCustom={handleSelectOrganizationCustom}
             handleSelectLarge={handleSelectLarge}
@@ -743,6 +777,10 @@ const StatisticTeamBoard = () => {
             endDateCompare={endDateCompare}
             statisticTeamCategoryList={statisticCategoryListTeam}
             statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
+            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
+            statisticAllTeamCategoryCompareList={
+              statisticAllTeamCategoryCompareList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -766,6 +804,7 @@ const StatisticTeamBoard = () => {
             startDate={startDate}
             endDate={endDate}
             statisticTeamCategoryList={statisticCategoryListTeam}
+            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectOrganizationCustom={handleSelectOrganizationCustom}
             handleSelectLarge={handleSelectLarge}
@@ -776,6 +815,7 @@ const StatisticTeamBoard = () => {
             startDate={startDate}
             endDate={endDate}
             statisticTeamCategoryList={statisticCategoryListTeam}
+            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}

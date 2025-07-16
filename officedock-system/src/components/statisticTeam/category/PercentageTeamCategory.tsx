@@ -7,21 +7,25 @@ import { SkeletonElement } from '@components/common/SkeletonLoading';
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
   DataTaskModalStatisticType,
+  StatisticAllTeamInfo,
   StatisticCategoryInfo,
+  StatisticsAllTeams,
   StatisticsCategories,
   UserListStatisticType,
 } from '@interfaces/statistic';
 
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
-import { LoadingContext } from '@providers/LoadingProvider';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import FilterTeamStatistic from './filter/FilterTeamStatistic';
+import { ALL_TEAM_STATISTIC, SUB_TEAMS } from '@constants';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticTeamCategoryList: StatisticsCategories | undefined;
+  statisticAllTeamCategoryList: StatisticsAllTeams | undefined;
+
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectOrganizationCustom: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
@@ -30,6 +34,7 @@ type Props = {
 
 const PercentageCategoryTeam = ({
   statisticTeamCategoryList,
+  statisticAllTeamCategoryList,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectOrganization,
@@ -51,7 +56,6 @@ const PercentageCategoryTeam = ({
     isLoadingOrganization,
     isHasLoading,
   } = useContext(StatisticTeamStateContext);
-  const { setIsLoading } = useContext(LoadingContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
 
@@ -177,9 +181,63 @@ const PercentageCategoryTeam = ({
       mergedItems: mergedItems,
     };
   };
+  const processChartDataWithAllTeamOption = (
+    dataCategories: StatisticAllTeamInfo[],
+    colorData?: string,
+  ) => {
+    const categories = dataCategories.filter((item) => item.percent >= 0);
+
+    // Get list percent
+    const listPercent = categories.map((percent) => percent.percent);
+
+    // Get list color
+    const listColor = categories.map((color, index) =>
+      color.color !== null
+        ? color.color
+        : lightenColor(colorData as string, listPercent[index]) ||
+          getRandomColor(),
+    );
+    // Get list label
+    const listLabel = categories.map((label) => label?.organizationName || '');
+    // Get list value
+    const listValueActualChart = categories.map((item) =>
+      convertToJapaneseTime(item.duration),
+    );
+    // Get list options
+    const listDataOptions = categories.map((item) =>
+      item.organizationId == SUB_TEAMS
+        ? item?.subTeams?.slice(0, 3).map((team) => {
+            return { label: team?.organizationName || '' };
+          }) || []
+        : item?.data?.slice(0, 3).map((category) => {
+            return { label: category?.categoryName || '' };
+          }) || [],
+    );
+
+    // Get list Organization for all team
+    const listDataOrganizations = categories.map((org) =>
+      String(org.organizationId),
+    );
+
+    // Get list id
+    const listDataIds = categories.map((item) => item.organizationId);
+
+    return {
+      colors: listColor,
+      labels: listLabel,
+      data: listPercent,
+      actualValue: listValueActualChart,
+      optionData: listDataOptions,
+      listId: listDataIds,
+      dataOrganization: listDataOrganizations,
+    };
+  };
 
   useEffect(() => {
-    if (statisticTeamCategoryList) {
+    if (
+      statisticTeamCategoryList &&
+      selectedOrganization?.value != ALL_TEAM_STATISTIC
+    ) {
       if (statisticTeamCategoryList.largeCategories) {
         const largeChartData = processChartData(
           statisticTeamCategoryList.largeCategories,
@@ -239,9 +297,32 @@ const PercentageCategoryTeam = ({
           mergedItems: [],
         });
       }
-      setIsLoading(false);
     }
-  }, [statisticTeamCategoryList]);
+  }, [selectedLarge, selectedOrganization, statisticTeamCategoryList]);
+
+  // With ALL TEAM
+  useEffect(() => {
+    if (
+      statisticAllTeamCategoryList &&
+      selectedOrganization?.value == ALL_TEAM_STATISTIC
+    ) {
+      if (statisticAllTeamCategoryList.largeCategories) {
+        const largeChartData = processChartDataWithAllTeamOption(
+          statisticAllTeamCategoryList.largeCategories,
+        );
+        setDataChartLarge(largeChartData);
+      } else {
+        setDataChartLarge({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+        });
+      }
+    }
+  }, [statisticAllTeamCategoryList, selectedOrganization?.value]);
 
   return (
     <>
@@ -335,6 +416,9 @@ const PercentageCategoryTeam = ({
                               );
                             handleSelectLarge(data);
                           }}
+                          isAllTeamOption={
+                            selectedOrganization?.value == ALL_TEAM_STATISTIC
+                          }
                         />
                       ) : (
                         <div className="w-[280px] h-[280px]  rounded-full bg-[#EBF1F7]"></div>
