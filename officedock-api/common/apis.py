@@ -535,9 +535,6 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             organizations_by_role = get_organizations_of_user_by_screen_role(
                 user, Screens.TEAMDOCK.value, Actions.VIEW.value
             )
-            users = User.objects.filter(
-                organizations__in=organizations_by_role
-            ).distinct()
             # Insert option all team to pulldown choose organization for statistic to start of a list
             tags = _get_tags_by_organizations(organizations_by_role)
             data["organizations"].insert(
@@ -549,9 +546,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     "tags": CreationDataTagSerializer(
                         tags, many=True, context={"user": user}
                     ).data,
-                    "members": CreationDataUserSerializer(
-                        users, many=True
-                    ).data,
+                    "members": [],
                 },
             )
             return data

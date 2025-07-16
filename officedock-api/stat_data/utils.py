@@ -527,7 +527,7 @@ def process_users(total_duration, durations):
         combined_ids = list(user_tasks[uid]) + list(user_schedules[uid])
         tasks = [
             combined_task_map[tid]
-            for tid in combined_ids[:4]
+            for tid in combined_ids[:3]
             if tid in combined_task_map
         ]
 
