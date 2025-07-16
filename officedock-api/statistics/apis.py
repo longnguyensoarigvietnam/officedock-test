@@ -24,7 +24,7 @@ from base.apis import BaseAPIViewSet
 from base.filters import FilterByPermission
 from base.messages import ERROR_MESSAGES
 from base.paginations import BasePagination
-from common.constants import BASE_DATE_FORMAT
+from common.constants import BASE_DATE_FORMAT, AVATAR_GCS_EXPIRATION_SECONDS
 from common.serializers import (
     CreationDataUserSerializer,
 )
@@ -34,10 +34,17 @@ from common.utils import (
     split_id_from_string,
     get_organizations_of_user_by_screen_role,
     validate_company_organization,
+    get_signed_url,
 )
 from organizations.constants import OrganizationTypes
 from organizations.models import Organization
-from stat_data.constants import ALL_TEAM, FilterTime
+from stat_data.constants import (
+    ALL_TEAM,
+    CALENDAR,
+    FilterTime,
+    MAIN_TEAM,
+    SUB_TEAM,
+)
 from stat_data.serializers import (
     StatisticTaskSerializer,
     StatisticEventSerializer,
@@ -1406,6 +1413,16 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                 ],
                 required=True,
             ),
+            OpenApiParameter(
+                name="option",
+                type=str,
+                enum=[
+                    MAIN_TEAM,
+                    SUB_TEAM,
+                    CALENDAR,
+                ],
+                required=False,
+            ),
         ]
     )
     @action(
@@ -1429,6 +1446,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         tag_ids_param = request.query_params.get("tag_ids")
         statistic_by = request.query_params.get("statistic_by")
         is_tag_page = request.query_params.get("is_tag_page")
+        option = request.query_params.get("option")
 
         from_date = validate_date_by_regex_and_reformat(
             request.query_params.get("from_date")
@@ -1505,16 +1523,55 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                     main_organization=main_organization,
                     calendar_organization=calendar_org,
                 )
+            break_team = []
             for team in teams:
-                if team.get("sub_teams"):
-                    team.pop("sub_teams")
                 if team.get("data"):
                     team.pop("data")
+                subteams = []
+                if team.get("sub_teams"):
+                    subteams = team.pop("sub_teams")
+                if user_ids and option:
+                    team["users"] = []
+                    if (
+                        option == CALENDAR == team["organization_name"]
+                        or option == MAIN_TEAM
+                        and team["organization_id"] == int(main_organization_id)
+                    ):
+                        users_in_org = users.filter(
+                            organizations__id=team["organization_id"]
+                        )
+                        team["users"] += self._get_list_users_duration_by_team(
+                            users_in_org,
+                            filter_duration_by_range,
+                            team["organization_id"],
+                            team["organization_name"],
+                            time_str_to_timedelta(team["duration"]),
+                        )
+                        break_team = team
+                        break
+                    elif option == SUB_TEAM:
+                        for subteam in subteams:
+                            users_in_org = users.filter(
+                                organizations__id=subteam["organization_id"]
+                            )
+                            team[
+                                "users"
+                            ] += self._get_list_users_duration_by_team(
+                                users_in_org,
+                                filter_duration_by_range,
+                                subteam["organization_id"],
+                                subteam["organization_name"],
+                                time_str_to_timedelta(team["duration"]),
+                            )
+                        break_team = team
+                        break
+
+            break_team = break_team if user_ids and option else teams
             data["durations"].append(
                 {
                     "start_date": start_date_min.strftime(BASE_DATE_FORMAT),
                     "end_date": end_date_max.strftime(BASE_DATE_FORMAT),
-                    "data": teams,
+                    "data": break_team,
                 }
             )
         if is_tag_page:
@@ -1542,11 +1599,87 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                 main_organization=main_organization,
                 calendar_organization=calendar_org,
             )
-        # TODO: Refactor later
+
         for team in teams:
+            if user_ids and option:
+                team["users"] = []
+                if team["organization_id"] != SUB_TEAM:
+                    users_in_org = users.filter(
+                        organizations__id=team["organization_id"]
+                    )
+                    team["users"] += self._get_list_users_duration_by_team(
+                        users_in_org,
+                        durations,
+                        team["organization_id"],
+                        team["organization_name"],
+                        time_str_to_timedelta(team["duration"]),
+                    )
             if team.get("sub_teams"):
-                team.pop("sub_teams")
+                subteams = team.pop("sub_teams")
+                if user_ids and option:
+                    for subteam in subteams:
+                        users_in_org = users.filter(
+                            organizations__id=subteam["organization_id"]
+                        )
+                        team["users"] += self._get_list_users_duration_by_team(
+                            users_in_org,
+                            durations,
+                            subteam["organization_id"],
+                            subteam["organization_name"],
+                            time_str_to_timedelta(team["duration"]),
+                        )
             if team.get("data"):
                 team.pop("data")
+
         data["data"] = teams
         return self.response_ok(data)
+
+    def _get_list_users_duration_by_team(
+        self,
+        users,
+        durations,
+        organization_id,
+        organization_name,
+        total_duration,
+    ):
+        """
+        Handle get list users duration for chart 3, 4
+        """
+        users_in_team = []
+        percent = 0
+        for user in users.values(
+            "id", "profile__full_name", "avatar", "avatar_color"
+        ):
+            filter_duration_by_range_by_user = get_list_durations_by_users(
+                durations=durations,
+                users=[user["id"]],
+                organizations=[organization_id],
+            )
+            duration_by_user = get_total_durations(
+                filter_duration_by_range_by_user
+            )
+            # Calculate the percentage of the total duration
+            (
+                percent_per_total_duration,
+                percent,
+            ) = percentage_calculation_of_duration(
+                total_duration.total_seconds(),
+                duration_by_user.total_seconds(),
+                percent,
+            )
+            users_in_team.append(
+                {
+                    "id": user["id"],
+                    "full_name": organization_name
+                    + " "
+                    + user["profile__full_name"],
+                    "avatar": get_signed_url(
+                        user["avatar"], AVATAR_GCS_EXPIRATION_SECONDS
+                    ),
+                    "avatar_color": user["avatar_color"],
+                    "total_duration": format_duration(duration_by_user),
+                    "percent": percent_per_total_duration,
+                }
+            )
+
+        return users_in_team
