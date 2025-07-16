@@ -149,6 +149,7 @@ export interface dataTaskDaily {
   type: string;
   todoList: TodoItem[];
   totalDuration: string;
+  isCalculate?: boolean;
 }
 
 export interface ChildTask {

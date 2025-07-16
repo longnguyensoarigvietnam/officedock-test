@@ -18,8 +18,10 @@ interface FilterProps {
   endDate: string | Date;
   fromDate: string | Date;
   tagIds?: OptionDropdownType[];
+  userIds?: OptionDropdownType[];
   isCompare: boolean;
   isTagPage?: boolean;
+  mainOrganizationId?: number;
 }
 
 const useStatisticAllTeamCategoriesCompare = ({
@@ -56,6 +58,12 @@ const useStatisticAllTeamCategoriesCompare = ({
       const tagValues = filter.tagIds.map((item) => item.value).join(',');
       params.append('tag_ids', tagValues);
     }
+    if (filter?.userIds) {
+      const userValues = filter.userIds.map((item) => item.value).join(',');
+      params.append('user_ids', userValues);
+    }
+    if (filter?.mainOrganizationId)
+      params.append('main_organization_id', String(filter.mainOrganizationId));
     if (filter?.isTagPage) {
       params.append('is_tag_page', String(true));
     }

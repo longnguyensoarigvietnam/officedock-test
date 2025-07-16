@@ -1,13 +1,10 @@
 import ImageRound from '@components/common/ImageRound';
-import { ALL_TEAM_STATISTIC } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
-import { StatisticStateContext } from '@providers/StatisticProvider';
 import {
   formatShowStatisticTask,
   formatTimeToJapanese,
   getJapaneseDayName,
 } from '@utils/date';
-import React, { useContext } from 'react';
 
 interface ProgressBarProps {
   label: string;
@@ -34,6 +31,7 @@ interface ProgressBarProps {
   endDate?: Date | null;
   startDateCompare?: Date;
   endDateCompare?: Date | null;
+  isAllTeam?: boolean;
   handleClickTooltip: (id: number | null, organizationId?: string) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
 }
@@ -55,11 +53,10 @@ const ProgressBarStatistic = ({
   startDateCompare,
   endDateCompare,
   organizationId,
+  isAllTeam = false,
   handleClickTooltip,
   handleClickChart,
 }: ProgressBarProps) => {
-  const { selectedOrganization } = useContext(StatisticStateContext);
-
   const percentage = Math.round(Math.min((value / maxValue) * 100, 100));
   return (
     <>
@@ -157,7 +154,7 @@ const ProgressBarStatistic = ({
                       </li>
                     ))}
                   </ul>
-                  {selectedOrganization?.value != ALL_TEAM_STATISTIC && (
+                  {!isAllTeam && (
                     <div className="flex w-full justify-end mt-3">
                       <div
                         onClick={() => {
@@ -242,8 +239,7 @@ const ProgressBarStatistic = ({
                                   formatTimeToJapanese(item.duration)}
                               </span>
                             </div>
-                            {selectedOrganization?.value !=
-                              ALL_TEAM_STATISTIC && (
+                            {isAllTeam && (
                               <div className="flex w-full justify-end mt-3">
                                 <div
                                   onClick={() => {

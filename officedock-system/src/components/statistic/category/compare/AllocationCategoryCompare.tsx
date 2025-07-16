@@ -796,6 +796,10 @@ const AllocationCategoryCompare = memo(
                                       organizationId,
                                     );
                                   }}
+                                  isAllTeam={
+                                    selectedOrganization?.value ==
+                                    ALL_TEAM_STATISTIC
+                                  }
                                   handleClickChart={(
                                     data: OptionDropdownType,
                                   ) => {
@@ -847,6 +851,10 @@ const AllocationCategoryCompare = memo(
                                       organizationId,
                                     );
                                   }}
+                                  isAllTeam={
+                                    selectedOrganization?.value ==
+                                    ALL_TEAM_STATISTIC
+                                  }
                                   handleClickChart={(
                                     data: OptionDropdownType,
                                   ) => {

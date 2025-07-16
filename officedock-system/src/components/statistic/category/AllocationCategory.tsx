@@ -305,6 +305,10 @@ const AllocationCategory = memo(
                                     organizationId,
                                   );
                                 }}
+                                isAllTeam={
+                                  selectedOrganization?.value ==
+                                  ALL_TEAM_STATISTIC
+                                }
                                 organizationId={item.organizationId}
                                 handleClickChart={(
                                   data: OptionDropdownType,

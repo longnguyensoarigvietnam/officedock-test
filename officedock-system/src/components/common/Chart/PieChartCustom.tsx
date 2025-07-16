@@ -33,7 +33,7 @@ interface PieChartProps {
     avatarColor?: string;
     mergedItems?: StatisticCategoryInfo[];
   }[][];
-  isAllTeamOption?: boolean
+  isAllTeamOption?: boolean;
   listIdData?: (string | number)[];
   mergedItems: StatisticCategoryInfo[];
   dataOrganization?: string[];
@@ -222,7 +222,7 @@ const PieChartCustom = ({
             zIndex: 999,
           }}>
           <ModalCustomTooltip
-            isTeam={isTeam}
+            isTeam={isTeam && !isAllTeamOption}
             tooltipData={tooltipData}
             colors={colors || []}
             actualValues={actualValues}

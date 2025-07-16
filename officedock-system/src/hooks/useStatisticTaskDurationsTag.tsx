@@ -77,7 +77,7 @@ const useStatisticTaskDurationsTag = ({
     refetch: refetchStatisticTaskDurationsListTag,
     isFetched: isFetchedStatisticTaskDurationsListTag,
   } = useQuery({
-    queryKey: ['getStatisticTaskDurations', [filter]],
+    queryKey: ['getStatisticTaskDurationsTag', [filter]],
     queryFn: ({ signal }) => getStatisticTaskDurations({ signal }),
 
     retry: 0,

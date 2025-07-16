@@ -200,7 +200,7 @@ const ListLocation = () => {
   // Handle blur Input
   const handleBlur = (uuid: string) => {
     const trimmedText = editText.trim();
-    if (trimmedText === '') {
+    if (trimmedText === '' || trimmedText.length > 255) {
       setErrors((prev) => ({ ...prev, [uuid]: true }));
       setTimeout(() => {
         inputRef.current?.focus();
