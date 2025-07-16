@@ -169,7 +169,6 @@ const PercentageTagsCompare = ({
     dataCategories: StatisticAllTeamInfo[],
   ) => {
     if (!dataCategories) return [];
-    const colorTag = '#2E9267';
     const categories = dataCategories.filter((item) => item.percent >= 0);
 
     const mappedMainItems = categories.map((item) => ({
@@ -177,7 +176,7 @@ const PercentageTagsCompare = ({
       label: item?.organizationName || '',
       percentage: item.percent,
       organizationId: item.organizationId,
-      color: lightenColor(colorTag as string, item.percent) || getRandomColor(),
+      color: item.color || getRandomColor(),
       totalDuration: item.duration,
       optionData:
         item.organizationId == SUB_TEAMS
