@@ -1548,7 +1548,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                             team["organization_name"],
                             time_str_to_timedelta(team["duration"]),
                         )
-                        break_team = team
+                        break_team.append(team)
                         break
                     elif option == SUB_TEAM:
                         for subteam in subteams:
@@ -1564,7 +1564,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                                 subteam["organization_name"],
                                 time_str_to_timedelta(team["duration"]),
                             )
-                        break_team = team
+                        break_team.append(team)
                         break
 
             break_team = break_team if user_ids and option else teams
