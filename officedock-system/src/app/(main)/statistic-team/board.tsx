@@ -239,6 +239,8 @@ const StatisticTeamBoard = () => {
         setIsLoadingMediumCompare(false);
       },
     });
+
+  // Get statistic categories compare for options that except ALL TEAM option
   const { statisticCategoryListTeamCompare } =
     useStatisticCategoriesTeamCompare({
       filter: {

@@ -22,6 +22,7 @@ interface Props {
   totalDurationCompare: string;
   isLoading: boolean;
   isLoadingCompare: boolean;
+  isAllTeam?: boolean;
   handleClickTooltip: (id: number | null, isCompare: boolean) => void;
   handleClickChart: (data: string) => void;
 }
@@ -33,6 +34,7 @@ const PercentageBarCompareTeam = ({
   endDate,
   isLast = false,
   isTag = false,
+  isAllTeam = false,
   startDateCompare,
   endDateCompare,
   totalDuration,
@@ -207,24 +209,40 @@ const PercentageBarCompareTeam = ({
                         </div>
                         <div className="max-h-[250px] overflow-y-auto px-5">
                           <ul>
-                            {item.optionData.map((itemOption, index) => (
-                              <li
-                                key={index}
-                                className="break-all text-start flex items-center justify-between gap-2 line-clamp-3 text-[#77858F] text-sm font-normal mb-2">
-                                <div className="flex items-center w-fit">
-                                  <CustomUserAvatar
-                                    avatarUrl={itemOption?.avatarUrl || ''}
-                                    avatarColor={itemOption?.avatarColor || ''}
-                                    size={30}
-                                  />
-                                  <span className="relative ml-3 max-w-[160px] truncate top-[-3px]">
-                                    {' '}
-                                    {itemOption.label}
-                                  </span>
-                                </div>
-                                <span>{itemOption.percent}%</span>
-                              </li>
-                            ))}
+                            {!isAllTeam &&
+                              item.optionData.map((itemOption, index) => (
+                                <li
+                                  key={index}
+                                  className="break-all text-start flex items-center justify-between gap-2 line-clamp-3 text-[#77858F] text-sm font-normal mb-2">
+                                  <div className="flex items-center w-fit">
+                                    <CustomUserAvatar
+                                      avatarUrl={itemOption?.avatarUrl || ''}
+                                      avatarColor={
+                                        itemOption?.avatarColor || ''
+                                      }
+                                      size={30}
+                                    />
+                                    <span className="relative ml-3 max-w-[160px] truncate top-[-3px]">
+                                      {' '}
+                                      {itemOption.label}
+                                    </span>
+                                  </div>
+                                  <span>{itemOption.percent}%</span>
+                                </li>
+                              ))}
+                            {isAllTeam &&
+                              item.optionData.map((itemOption, index) => (
+                                <li
+                                  key={index}
+                                  className="break-all text-start flex items-center justify-between gap-2 line-clamp-3 text-[#77858F] text-sm font-normal mb-2">
+                                  <div className="flex items-center w-fit">
+                                    <span className="relative ml-3 max-w-[160px] truncate top-[-3px]">
+                                      {' '}
+                                      {itemOption.label}
+                                    </span>
+                                  </div>
+                                </li>
+                              ))}
                           </ul>
                         </div>
                       </>

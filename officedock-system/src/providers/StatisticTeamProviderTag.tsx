@@ -146,6 +146,10 @@ interface ContextValue {
   setDataMediumCalendar: Dispatch<
     SetStateAction<OptionDropdownType | undefined>
   >;
+  totalDurationTask: string;
+  setTotalDurationTask: Dispatch<SetStateAction<string>>;
+  totalDurationTaskCompare: string;
+  setTotalDurationTaskCompare: Dispatch<SetStateAction<string>>;
 }
 
 const defaultValue: ContextValue = {
@@ -245,6 +249,10 @@ const defaultValue: ContextValue = {
   removeTag: () => {},
   dataMediumCalendar: undefined,
   setDataMediumCalendar: () => {},
+  totalDurationTask: '',
+  totalDurationTaskCompare: '',
+  setTotalDurationTask: () => {},
+  setTotalDurationTaskCompare: () => {},
 };
 
 export const StatisticTeamTagsStateContext =
@@ -322,6 +330,11 @@ export const StatisticTeamTagsStateProvider = ({
   const [totalDurationSmallCompare, setTotalDurationSmallCompare] =
     useState<string>('');
   const [totalDurationCategoryCompare, setTotalDurationCategoryCompare] =
+    useState<string>('');
+  // Total
+  // Total duration
+  const [totalDurationTask, setTotalDurationTask] = useState<string>('');
+  const [totalDurationTaskCompare, setTotalDurationTaskCompare] =
     useState<string>('');
 
   // Data Date calendar
@@ -513,6 +526,10 @@ export const StatisticTeamTagsStateProvider = ({
     dataMediumCalendar,
     setDataMediumCalendar,
     isDisableCalendar,
+    totalDurationTask,
+    totalDurationTaskCompare,
+    setTotalDurationTask,
+    setTotalDurationTaskCompare,
   };
 
   return (

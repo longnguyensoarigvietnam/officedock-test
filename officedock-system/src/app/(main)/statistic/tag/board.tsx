@@ -75,6 +75,7 @@ const StatisticTagBoard = () => {
     setCurrentPage,
     setDataMediumCalendar,
     setTotalDurationTask,
+    setTotalDurationTaskCompare,
   } = useContext(StatisticTagStateContext);
   const [isMyTask, setIsMyTask] = useState(true);
   const router = useRouter();
@@ -172,6 +173,34 @@ const StatisticTagBoard = () => {
       setTotalDurationMediumCompare(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmallCompare(sumDurations(data.smallCategories ?? []));
       setTotalDurationCategoryCompare(sumDurations(data.category ?? []));
+      if (data.largeTotalDuration) {
+        if (data.mediumTotalDuration) {
+          if (data.smallTotalDuration) {
+            if (data.categoryTotalDuration) {
+              setTotalDurationTaskCompare(data.categoryTotalDuration);
+            } else {
+              setTotalDurationTaskCompare(data.smallTotalDuration);
+            }
+          } else {
+            if (
+              selectedMedium &&
+              selectedMedium.value &&
+              selectedOrganization?.type === OrganizationStatisticType.CALENDAR
+            ) {
+              setTotalDurationTaskCompare(DEFAULT_TIME_TEXT);
+              return;
+            }
+            if (selectedSmall && selectedSmall.value) return;
+
+            setTotalDurationTaskCompare(data.mediumTotalDuration);
+          }
+        } else {
+          if (selectedLarge && selectedLarge.value) return;
+          setTotalDurationTaskCompare(data.largeTotalDuration);
+        }
+      } else {
+        setTotalDurationTaskCompare(DEFAULT_TIME_TEXT);
+      }
     },
   });
   // Get statistic compared categories for ALL TEAM option

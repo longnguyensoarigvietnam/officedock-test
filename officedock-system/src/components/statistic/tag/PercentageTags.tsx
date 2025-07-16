@@ -195,7 +195,6 @@ const PercentageTags = ({
   };
   const processChartDataWithAllTeamOption = (
     dataCategories: StatisticAllTeamInfo[],
-    colorData?: string,
   ) => {
     const categories = dataCategories.filter((item) => item.percent >= 0);
 
@@ -203,11 +202,8 @@ const PercentageTags = ({
     const listPercent = categories.map((percent) => percent.percent);
 
     // Get list color
-    const listColor = categories.map((color, index) =>
-      color.color !== null
-        ? color.color
-        : lightenColor(colorData as string, listPercent[index]) ||
-          getRandomColor(),
+    const listColor = categories.map((color) =>
+      color.color !== null ? color.color : getRandomColor(),
     );
     // Get list label
     const listLabel = categories.map((label) => label?.organizationName || '');
