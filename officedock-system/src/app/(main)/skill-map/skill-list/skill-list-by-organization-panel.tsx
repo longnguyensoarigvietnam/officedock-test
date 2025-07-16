@@ -146,9 +146,9 @@ export const SkillListByOrganizationPanel = ({
             <div
               key={index}
               className={`flex w-full ${index != normalizeSkillMaps(skillMapDetail.skillMaps).length - 1 && 'mb-5'} gap-2`}>
-              {skillMap.map((skill) => {
+              {skillMap.map((skill, idx) => {
                 return (
-                  <div key={skill.id}>
+                  <div key={skill.id ?? `${index}-${idx}`}>
                     {!skill.id ? (
                       <div
                         className="px-5 w-[613px] h-[90px] bg-white rounded-[6px]"

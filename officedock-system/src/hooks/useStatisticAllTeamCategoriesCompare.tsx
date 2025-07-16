@@ -13,6 +13,7 @@ import { StatisticsAllTeams } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
 import api from '@base/api';
+import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 interface FilterProps {
   endDate: string | Date;
@@ -41,6 +42,13 @@ const useStatisticAllTeamCategoriesCompare = ({
     setIsLoadingMediumCompare,
     setIsLoadingOrganizationCompare,
   } = useContext(StatisticStateContext);
+
+  const {
+    setIsLoadingLargeCompare: setIsLoadingLargeCompareTag,
+    setIsLoadingMediumCompare: setIsLoadingMediumCompareTag,
+    setIsLoadingSmallCompare: setIsLoadingSmallCompareTag,
+    setIsLoadingOrganizationCompare: setIsLoadingOrganizationCompareTag,
+  } = useContext(StatisticTagStateContext);
 
   // Handle call API get statistic category list
   const getStatisticAllTeamCategoryCompareList = async ({
@@ -88,6 +96,10 @@ const useStatisticAllTeamCategoriesCompare = ({
       setIsLoadingLargeCompare(false);
       setIsLoadingMediumCompare(false);
       setIsLoadingOrganizationCompare(false);
+      setIsLoadingLargeCompareTag(false)
+      setIsLoadingMediumCompareTag(false)
+      setIsLoadingSmallCompareTag(false)
+      setIsLoadingOrganizationCompareTag(false)
     },
   });
 

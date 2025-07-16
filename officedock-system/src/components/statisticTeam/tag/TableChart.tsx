@@ -237,6 +237,10 @@ const TableChart = ({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTagsListTeam',
         });
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            query.queryKey[0] === 'getStatisticTableInTeamTagLineChart',
+        });
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
@@ -249,6 +253,11 @@ const TableChart = ({
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTagsListTeamCompare',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] ===
+              'getStatisticTableInTeamTagLineChartCompare',
           });
         }
       },
@@ -311,6 +320,10 @@ const TableChart = ({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticTagsListTeam',
         });
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            query.queryKey[0] === 'getStatisticTableInTeamTagLineChart',
+        });
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
@@ -323,6 +336,11 @@ const TableChart = ({
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTagsListTeamCompare',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] ===
+              'getStatisticTableInTeamTagLineChartCompare',
           });
         }
       },

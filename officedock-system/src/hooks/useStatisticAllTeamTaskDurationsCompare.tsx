@@ -17,6 +17,7 @@ interface FilterProps {
   fromDate: string | Date;
   tagIds?: OptionDropdownType[];
   statisticBy?: string;
+  isTagPage?: boolean;
 }
 
 const useStatisticAllTeamTaskDurationsCompare = ({
@@ -39,10 +40,25 @@ const useStatisticAllTeamTaskDurationsCompare = ({
   }: {
     signal?: AbortSignal;
   }) => {
-    const apiUrl = `${apiRouters.STATISTICS_ALL_TEAMS_TASK_DURATIONS}?${
-      filter?.fromDate ? `from_date=${filter.fromDate}` : ''
-    }${filter?.endDate ? `&end_date=${filter.endDate}` : ''}${filter?.statisticBy ? `&statistic_by=${filter.statisticBy}` : '&statistic_by=WEEK'}${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
+    const params = new URLSearchParams();
 
+    if (filter?.fromDate) {
+      params.append('from_date', String(filter?.fromDate));
+    }
+    if (filter?.endDate) {
+      params.append('end_date', String(filter?.endDate));
+    }
+    params.append('statistic_by', filter?.statisticBy || 'WEEK');
+
+    if (filter?.tagIds?.length) {
+      const tagIds = filter.tagIds.map((item) => item.value).join(',');
+      params.append('tag_ids', tagIds);
+    }
+    if (filter?.isTagPage) {
+      params.append('is_tag_page', 'true');
+    }
+
+    const apiUrl = `${apiRouters.STATISTICS_ALL_TEAMS_TASK_DURATIONS}?${params.toString()}`;
     const { data } = await api.get<StatisticsAllTeamTaskDuration>(apiUrl, {
       signal,
     });

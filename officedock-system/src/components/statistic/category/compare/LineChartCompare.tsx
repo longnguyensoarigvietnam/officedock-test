@@ -71,6 +71,7 @@ import {
   getSafeTooltipLeft,
   getStatisticMilestones,
   lightenColor,
+  mergeMyDockLineChartTableItems,
   normalizeDurationsWithStatisticAllTeamCategoryTaskDurations,
   normalizeDurationsWithStatisticCategoryTaskDurations,
 } from '@utils';
@@ -418,38 +419,6 @@ const LineChartCompare = ({
     setTableData(sortedArr);
   };
 
-  const mergeCategories = (
-    data: MyDockLineChartTableItem[],
-  ): MergedMyDockLineChartTable[] => {
-    const grouped: Record<string, MergedMyDockLineChartTable> = {};
-
-    data.forEach((item) => {
-      const key = item.id ?? 'null'; // Ensure `null` is treated as a string key
-
-      if (!grouped[key]) {
-        grouped[key] = {
-          id: item.id,
-          name: item.name,
-          color: item.color,
-        };
-      }
-
-      if (item.type === StatisticChartType.STANDARD) {
-        grouped[key].standardInfo = {
-          duration: item.duration,
-          percent: item.percent,
-        };
-      } else if (item.type === StatisticChartType.COMPARE) {
-        grouped[key].compareInfo = {
-          duration: item.duration,
-          percent: item.percent,
-        };
-      }
-    });
-
-    return Object.values(grouped);
-  };
-
   useEffect(() => {
     if (selectedOrganization?.value != ALL_TEAM_STATISTIC) {
       const color =
@@ -553,7 +522,7 @@ const LineChartCompare = ({
         totalDurationsForStatistic(compareTotalDurationList),
       );
 
-      const mergedCategories = mergeCategories(tableDetail) || [];
+      const mergedCategories = mergeMyDockLineChartTableItems(tableDetail) || [];
       setTableData(mergedCategories);
 
       if (
@@ -777,7 +746,7 @@ const LineChartCompare = ({
         totalDurationsForStatistic(compareTotalDurationList),
       );
 
-      const mergedCategories = mergeCategories(tableDetail) || [];
+      const mergedCategories = mergeMyDockLineChartTableItems(tableDetail) || [];
       setTableData(mergedCategories);
 
       if (

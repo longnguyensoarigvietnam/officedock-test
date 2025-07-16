@@ -24,10 +24,12 @@ interface FilterProps {
 
 const useStatisticsTags = ({
   filter,
+  condition,
   onSuccess,
   onError,
 }: {
   filter?: FilterProps;
+  condition?: boolean[];
   onSuccess?: (data: StatisticsCategories) => void;
   onError?: (error: AxiosError) => void;
 }) => {
@@ -78,9 +80,8 @@ const useStatisticsTags = ({
   } = useQuery({
     queryKey: ['getStatisticTagsList', [filter]],
     queryFn: ({ signal }) => getStatisticTagsList({ signal }),
-
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && condition?.every(Boolean),
     staleTime: 0,
     cacheTime: 0,
     refetchOnMount: true,
