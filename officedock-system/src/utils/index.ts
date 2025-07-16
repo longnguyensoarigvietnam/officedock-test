@@ -480,6 +480,13 @@ export const getPermissionOptionDropdown = (
       PermissionType.TEAM_AND_SUB,
     ]);
   }
+  if ([ScreenName.SKILL_MAP].includes(screen)) {
+    return includePermissions([
+      PermissionType.EDITABLE,
+      PermissionType.TEAM_AND_SUB_EDIT,
+      PermissionType.NOT_ALLOWED,
+    ]);
+  }
   return includePermissions([
     PermissionType.VIEW_ONLY,
     PermissionType.EDITABLE,

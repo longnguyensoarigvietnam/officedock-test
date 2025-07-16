@@ -60,7 +60,7 @@ const MySkillDetailByUser = ({ detailSkillData }: Props) => {
           <div
             key={index}
             className="w-full rounded-[14px] p-[30px] font-medium bg-[#F8FAFC]">
-            <p className="text-[#77858F] text-base mb-4">
+            <p className="text-[#77858F] text-base mb-4 max-w-full break-all">
               {item.organizationName}
             </p>
             <div>

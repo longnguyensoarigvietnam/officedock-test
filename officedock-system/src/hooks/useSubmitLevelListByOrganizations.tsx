@@ -2,10 +2,10 @@
 
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { AxiosError } from 'axios';
 
+import { useSessionCache } from '@providers/SessionCacheProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 
 import { apiRouters } from '@constants/routers';
@@ -16,11 +16,13 @@ import api from '@base/api';
 
 const useSubmitLevelListByOrganizations = ({
   organizationId,
+  currentScreen,
   onSuccess,
   onError,
   onSettled,
 }: {
   organizationId?: number;
+  currentScreen?: string;
   onSuccess?: (success: SubmitLevelByOrganization[]) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
@@ -33,8 +35,16 @@ const useSubmitLevelListByOrganizations = ({
   // Handle call API get level up confirmation list
   const getSubmitLevelList = async () => {
     setIsLoading(true);
+    const params = new URLSearchParams();
 
-    const apiUrl = `${apiRouters.SUBMIT_LEVELS_LIST}?${organizationId ? `&organization_id=${organizationId}` : ''}`;
+    if (organizationId) {
+      params.append('organization_id', String(organizationId));
+    }
+    if (currentScreen) {
+      params.append('current_screen', currentScreen);
+    }
+
+    const apiUrl = `${apiRouters.SUBMIT_LEVELS_LIST}?${params.toString()}`;
 
     const { data } = await api.get<SubmitLevelByOrganization[]>(apiUrl);
     return data;

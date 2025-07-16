@@ -67,7 +67,7 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     },
     current: false,
     companyMenu: true,
-    requiredPermission: PermissionsSystem.SKILL_MAP_VIEW,
+    requiredPermission: PermissionsSystem.SKILL_MAP_MANAGEMENT_VIEW,
   },
   {
     ...pageRouters.TAGS_MANAGEMENT,
@@ -152,7 +152,7 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     },
     current: false,
     companyMenu: false,
-    requiredPermission: PermissionsSystem.SKILL_MAP_VIEW,
+    requiredPermission: PermissionsSystem.MY_DOCK_SKILL_MAP_VIEW,
   },
   {
     ...pageRouters.MEMBER_MANAGEMENT,
@@ -226,6 +226,6 @@ export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
     },
     current: false,
     companyMenu: false,
-    requiredPermission: PermissionsSystem.SKILL_MAP_VIEW,
+    requiredPermission: PermissionsSystem.TEAM_DOCK_SKILL_MAP_VIEW,
   },
 ];

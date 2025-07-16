@@ -19,7 +19,7 @@ const SkillListPage = () => {
       title={pageRouters.SKILL_LIST_MANAGEMENT.name}
       showFooter={false}
       className={`!px-0 !py-0 ${expanded ? '!w-[calc(100%_-_210px)]' : '!w-[calc(100%_-_70px)]'} `}
-      permission={PermissionsSystem.SKILL_MAP_VIEW}>
+      permission={PermissionsSystem.MY_DOCK_SKILL_MAP_VIEW}>
       <SkillList />
     </MainLayout>
   );

@@ -10,7 +10,7 @@ const SkillMapTeamDetailPage = () => {
       title={pageRouters.SKILL_MAP_TEAM_DETAIL.name}
       showFooter={false}
       className="!px-0 !py-0"
-      permission={PermissionsSystem.SKILL_MAP_VIEW}>
+      permission={PermissionsSystem.TEAM_DOCK_SKILL_MAP_VIEW}>
       <BoardSkillUser />
     </MainLayout>
   );
