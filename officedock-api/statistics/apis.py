@@ -373,6 +373,7 @@ class StatisticViewSet(BaseAPIViewSet):
             durations=durations,
             large_id=large_category_id,
             medium_id=medium_category_id,
+            small_id=small_category_id,
             tags=tag_ids,
         )
         data = {"durations": []}
