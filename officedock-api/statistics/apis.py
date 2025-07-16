@@ -32,7 +32,6 @@ from common.utils import (
     format_duration,
     time_str_to_timedelta,
     split_id_from_string,
-    get_organizations_of_user_by_screen_role,
     validate_company_organization,
     get_signed_url,
 )
@@ -69,7 +68,7 @@ from stat_data.utils import (
 from tasks.constants import TaskCategoryTypes
 from tasks.models import Task
 from users.models import User
-from roles.constants import Screens, Actions
+from roles.constants import Screens
 from base.permissions import ActionPermission
 
 
@@ -143,19 +142,7 @@ class StatisticViewSet(BaseAPIViewSet):
         end_of_day = datetime.combine(end_date, time.max)
         if user_id:
             user = get_object_or_404(User, id=user_id)
-        if organization_ids_param is None or organization_ids_param == ALL_TEAM:
-            organization_by_role = get_organizations_of_user_by_screen_role(
-                user, Screens.TEAMDOCK.value, Actions.VIEW.value
-            )
-            filter_orgs = Q(id__in=organization_by_role)
-            # Filter a organization in all team
-            if organization_id_param:
-                filter_orgs &= Q(id=organization_id_param)
-            organization_ids = Organization.all_objects.filter(
-                filter_orgs
-            ).values_list("id", flat=True)
-        else:
-            organization_ids = split_id_from_string(organization_ids_param)
+        organization_ids = split_id_from_string(organization_ids_param)
 
         if tag_ids_param:
             tag_ids = split_id_from_string(tag_ids_param)
@@ -536,7 +523,7 @@ class StatisticViewSet(BaseAPIViewSet):
                     durations=durations,
                 )
                 # Process medium categories if large_category_id is provided
-                if large_category_id and organization_ids_param != ALL_TEAM:
+                if large_category_id:
                     durations = get_list_durations_by_users(
                         durations=durations,
                         large_id=large_category_id,
@@ -778,16 +765,12 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         calendar_org = user.company.get_calendar_organization()
         if not organization_id:
             raise NotFound()
-        if organization_id == ALL_TEAM:
-            organizations = get_organizations_of_user_by_screen_role(
-                user, Screens.TEAMDOCK.value, Actions.VIEW.value
-            )
-        else:
-            organizations = [
-                Organization.all_objects.filter(id=organization_id).first()
-            ]
-            if not organizations[0]:
-                raise NotFound(ERROR_MESSAGES["organization_not_exists"])
+
+        organizations = [
+            Organization.all_objects.filter(id=organization_id).first()
+        ]
+        if not organizations[0]:
+            raise NotFound(ERROR_MESSAGES["organization_not_exists"])
         if user_ids_param:
             users = User.objects.filter(
                 id__in=split_id_from_string(user_ids_param)
@@ -833,7 +816,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             is_with_users=True,
         )
         # Process medium categories if large_category_id is provided
-        if large_category_id and organization_id != ALL_TEAM:
+        if large_category_id:
             data = self._handle_get_statistic_category(
                 durations,
                 data,
@@ -941,17 +924,8 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             "organization_get_members_id"
         )
         calendar_org = company.get_calendar_organization()
-
-        if organization_id == ALL_TEAM:
-            organizations = get_organizations_of_user_by_screen_role(
-                user, Screens.TEAMDOCK.value, Actions.VIEW.value
-            )
-        else:
-            organization = validate_company_organization(
-                company, organization_id
-            )
-            organizations = [organization.id]
-
+        organization = validate_company_organization(company, organization_id)
+        organizations = [organization.id]
         if user_ids_param:
             users = User.objects.filter(
                 id__in=split_id_from_string(user_ids_param)
@@ -971,7 +945,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         tag_ids = split_id_from_string(tag_ids_param)
         data = {}
 
-        if not tag_ids:
+        if not tag_ids or not users:
             return self.response_ok(data)
 
         durations = get_list_durations_by_users(
@@ -999,7 +973,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             durations=durations,
         )
 
-        if large_category_id and organization_id != ALL_TEAM:
+        if large_category_id:
             data = self._handle_get_statistic_tag_by_categories(
                 durations,
                 tag_ids,
@@ -1326,7 +1300,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
             else user.get_main_organization()
         )
         is_tag_page = request.query_params.get("is_tag_page")
-        user_ids = request.query_params.get("user_ids")
+        user_ids = request.query_params.get("user_ids", None)
         tag_ids_param = request.query_params.get("tag_ids")
         tag_ids = []
         from_date = validate_date_by_regex_and_reformat(
@@ -1338,12 +1312,16 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
         calendar_org = user.company.get_calendar_organization()
-        if not user_ids:
+        if "user_ids" not in request.query_params:
             users = [user]
         else:
             users = User.objects.filter(
                 id__in=split_id_from_string(user_ids)
             ).all()
+        data = {}
+        if not users:
+            return self.response_ok(data)
+
         organization_ids = (
             Organization.all_objects.filter(users__in=users)
             .values_list("id", flat=True)
@@ -1352,7 +1330,6 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         if tag_ids_param:
             tag_ids = split_id_from_string(tag_ids_param)
 
-        data = {}
         if organization_ids:
             durations = get_list_durations_by_users(
                 start_of_day,
