@@ -7,7 +7,11 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
 from chat.constants import WebSocketEventType
-from roles.constants import ROLE_PERMISSION_BY_OPTIONS
+from roles.constants import (
+    Screens,
+    ROLE_PERMISSION_BY_OPTIONS,
+    SKILL_MAP_ROLE_PERMISSION_BY_OPTIONS,
+)
 from roles.filters import RoleFilter
 from common.utils import send_web_socket_event
 from roles.serializers import (
@@ -69,15 +73,27 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         validated_data = serializer.validated_data
         permissions = validated_data.pop("permissions")
+        permissions_to_create = {}
+
+        for key, action in permissions.items():
+            # ======== This code is update permission ADD, DELETE base on UPDATE  =======
+            if key == Screens.SKILL_MAP.value:
+                skillmap_permisions = SKILL_MAP_ROLE_PERMISSION_BY_OPTIONS[
+                    action["actions"]
+                ]
+                for k, ac in skillmap_permisions.items():
+                    permissions_to_create[k] = ac
+            else:
+                permissions_to_create[key] = ROLE_PERMISSION_BY_OPTIONS[
+                    action["actions"]
+                ]
+            # ======== End update permission =======
+
         role = serializer.save(
             company=self.request.user.company, system_role=False
         )
-        for key, action in permissions.items():
-            # ======== This code is update permission ADD, DELETE base on UPDATE  =======
-            permissions[key] = ROLE_PERMISSION_BY_OPTIONS[action["actions"]]
-            # ======== End update permission =======
 
-        create_role_with_permissions(role, permissions)
+        create_role_with_permissions(role, permissions_to_create)
 
     @transaction.atomic
     def perform_update(self, serializer):
@@ -90,41 +106,40 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 {"detail": ERROR_MESSAGES["cannot_edit_system_role"]}
             )
 
-        role = self.get_object()
         validated_data = serializer.validated_data
         permissions = validated_data.pop("permissions")
-        serializer.save()
-        role_details = role.role_details.values(
-            "selection_result", "permission__name"
+        before_role_details = sorted(
+            list(
+                role.role_details.values("selection_result", "permission__name")
+            ),
+            key=lambda x: (x["permission__name"], x["selection_result"]),
         )
-        parsed_queryset = {}
-        is_matching = True
-        for item in role_details:
-            permission = item["permission__name"].split("_")
-            group, action = "_".join(permission[:-1]), permission[-1]
-            if group not in parsed_queryset:
-                parsed_queryset[group] = {}
-            parsed_queryset[group][action] = item["selection_result"]
-
-        for key, action in permissions.items():
-            if key not in parsed_queryset:
-                is_matching = False
-                break
-
-            for action, expected_value in ROLE_PERMISSION_BY_OPTIONS[
-                action["actions"]
-            ].items():
-                if parsed_queryset[key].get(action, None) != expected_value:
-                    is_matching = False
-                    break
+        serializer.save()
 
         # Compare specified permissions with request data
+        permissions_to_update = {}
         for key, action in permissions.items():
-            permissions[key] = ROLE_PERMISSION_BY_OPTIONS[action["actions"]]
+            if key == Screens.SKILL_MAP.value:
+                skillmap_permisions = SKILL_MAP_ROLE_PERMISSION_BY_OPTIONS[
+                    action["actions"]
+                ]
+                for k, ac in skillmap_permisions.items():
+                    permissions_to_update[k] = ac
+            else:
+                permissions_to_update[key] = ROLE_PERMISSION_BY_OPTIONS[
+                    action["actions"]
+                ]
 
-        create_role_with_permissions(role, permissions)
+        create_role_with_permissions(role, permissions_to_update)
 
-        if not is_matching:
+        after_role_details = sorted(
+            list(
+                role.role_details.values("selection_result", "permission__name")
+            ),
+            key=lambda x: (x["permission__name"], x["selection_result"]),
+        )
+
+        if before_role_details != after_role_details:
             for user in role.users.all():
                 send_web_socket_event(
                     {
