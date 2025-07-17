@@ -1625,7 +1625,12 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                         )
             if team.get("data"):
                 team.pop("data")
+        priority_order = {main_organization.name: 0, SUB_TEAM: 1, CALENDAR: 2}
 
+        # Sort based on priority_order
+        teams.sort(
+            key=lambda x: priority_order.get(x["organization_name"], 999)
+        )
         data["data"] = teams
         return self.response_ok(data)
 
