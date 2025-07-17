@@ -371,7 +371,7 @@ class SubmitLevelViewSet(
         data = []
         for organization in organizations:
             submit_levels = organization.submit_level_histories.filter(
-                status=SubmitLevelStatus.APPLYING.value
+                status=SubmitLevelStatus.APPLYING.value, approver=user
             ).all()
             data.append(
                 {

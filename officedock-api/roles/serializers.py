@@ -112,6 +112,7 @@ class RolePermissionSerializer(serializers.ModelSerializer):
                 Screens.TEAM_DOCK_SKILL_MAP.value,
                 Screens.SKILL_MAP_MANAGEMENT.value,
                 Screens.SKILL_MAP_OTHER.value,
+                Screens.SKILL_MAP.value,
             ]:
                 # Handle get option data for skill-map
                 if (
