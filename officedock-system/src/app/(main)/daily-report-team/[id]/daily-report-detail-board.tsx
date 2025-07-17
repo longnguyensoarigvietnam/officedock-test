@@ -224,6 +224,7 @@ const DailyReportDetailBoard = () => {
     eventList: any[];
     clientX: number;
     clientY: number;
+    isCalculate: boolean;
   }) => {
     setPopoverInfo({
       uuid: data.uuid,
@@ -239,6 +240,7 @@ const DailyReportDetailBoard = () => {
         top: Number(data.clientY),
         left: Number(data.clientX),
       }).top,
+      isCalculate: data.isCalculate,
     });
   };
   const handleEventClick = (clickInfo?: any) => {
@@ -255,6 +257,7 @@ const DailyReportDetailBoard = () => {
       eventList: taskTimeStatisticList,
       clientX: clickInfo.jsEvent.clientX,
       clientY: clickInfo.jsEvent.clientY,
+      isCalculate: clickInfo.event?.extendedProps.isCalculate,
     });
   };
 

@@ -224,6 +224,7 @@ export interface DataActualDetail {
   left?: number;
   top?: number;
   uuid: string;
+  isCalculate?: boolean;
 }
 
 export interface DataUserDetailDailyType {

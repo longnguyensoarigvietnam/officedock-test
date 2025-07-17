@@ -170,13 +170,13 @@ const StatisticTeamTagBoard = () => {
       largeCategoryId: selectedLarge?.value as number,
       mediumCategoryId: selectedMedium?.value as number,
       smallCategoryId: selectedSmall?.value as number,
-
       tagIds: selectedTags,
       organizationMemberId:
         selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     },
+    condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
     onSuccess: (data) => {
       if (selectedOrganization?.value !== ALL_TEAM_STATISTIC) {
         setIsSkeletonTagTeamTask(false);
@@ -324,6 +324,10 @@ const StatisticTeamTagBoard = () => {
       tagIds: selectedTags,
       mainOrganizationId: selectedOrganizationSideBar?.value as number,
       isTagPage: true,
+      userIds: listMemberTeam.map((user) => ({
+        label: user.fullName,
+        value: user.id,
+      })),
     },
     condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
     onSuccess: (data) => {
@@ -347,6 +351,10 @@ const StatisticTeamTagBoard = () => {
         mainOrganizationId: selectedOrganizationSideBar?.value as number,
         isCompare: isCheckCompare,
         isTagPage: true,
+        userIds: listMemberTeam.map((user) => ({
+          label: user.fullName,
+          value: user.id,
+        })),
       },
       condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
       onSuccess: (data) => {

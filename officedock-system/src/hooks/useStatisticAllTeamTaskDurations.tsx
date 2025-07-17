@@ -11,6 +11,7 @@ import { StatisticsAllTeamTaskDuration } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
 import api from '@base/api';
+import { normalizeStatisticAllTeamTaskDurations } from '@utils';
 
 interface FilterProps {
   endDate: string | Date;
@@ -87,6 +88,8 @@ const useStatisticAllTeamTaskDurations = ({
   } = useQuery({
     queryKey: ['getStatisticAllTeamTaskDurations', [filter]],
     queryFn: ({ signal }) => getStatisticAllTeamTaskDurations({ signal }),
+    select: (data) =>
+      normalizeStatisticAllTeamTaskDurations(data, filter?.option),
 
     retry: 0,
     enabled: !!token && condition?.every(Boolean),

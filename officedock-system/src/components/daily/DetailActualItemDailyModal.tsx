@@ -94,7 +94,9 @@ const DetailActualItemDailyModal = ({
             <div className="flex gap-1 items-center">
               <span>終了</span>
               <span className="text-base font-normal text-black">
-                {formatTime24h(popoverInfo.end)}
+                {popoverInfo.isCalculate
+                  ? '計測中'
+                  : formatTime24h(popoverInfo.end)}
               </span>
             </div>
           </div>

@@ -194,6 +194,7 @@ const DailyReportBoard = () => {
     clientX: number;
     clientY: number;
     uuid: string;
+    isCalculate: boolean;
   }) => {
     setPopoverInfo({
       largeColor: data.largeColor ? data.largeColor : '',
@@ -209,6 +210,7 @@ const DailyReportBoard = () => {
         top: Number(data.clientY),
         left: Number(data.clientX),
       }).top,
+      isCalculate: data.isCalculate,
     });
   };
   const handleEventClick = (clickInfo?: any) => {
@@ -225,6 +227,7 @@ const DailyReportBoard = () => {
       uuid: clickInfo.event.extendedProps.uuid
         ? clickInfo.event.extendedProps.uuid
         : '',
+      isCalculate: clickInfo.event?.extendedProps.isCalculate,
     });
   };
 

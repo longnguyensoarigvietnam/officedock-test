@@ -15,6 +15,7 @@ import {
 } from '@constants/enums';
 import {
   DATE_FORMAT,
+  DEFAULT_TIME_TEXT,
   MAX_HEX_COLOR_VALUE,
   SKILL_MAP_STEPS,
   SUB_TEAMS,
@@ -1771,4 +1772,88 @@ export const mergeMyDockLineChartTableItems = (
   });
 
   return Object.values(grouped);
+};
+export const normalizeStatisticAllTeamTaskDurations = (
+  rawData: StatisticsAllTeamTaskDuration,
+  option?: string,
+): StatisticsAllTeamTaskDuration => {
+  if (!option) return rawData;
+
+  const { durations } = rawData;
+
+  // Step 1: Create map: orgName => Set all users (id + fullName)
+  const orgUserMap = new Map<
+    string,
+    {
+      id: number;
+      fullName: string;
+      avatar: string | null;
+      avatarColor: string;
+    }[]
+  >();
+
+  durations.forEach((durationItem) => {
+    durationItem.data.forEach((orgData) => {
+      const orgName = orgData.organizationName;
+
+      const existing = orgUserMap.get(orgName) || [];
+      const combined = [...existing];
+
+      orgData.users?.forEach((user) => {
+        const exists = combined.some(
+          (u) => u.id === user.id && u.fullName === user.fullName,
+        );
+        if (!exists) {
+          combined.push({
+            id: user.id,
+            fullName: user.fullName,
+            avatar: user.avatar,
+            avatarColor: user.avatarColor,
+          });
+        }
+      });
+
+      orgUserMap.set(orgName, combined);
+    });
+  });
+
+  // Step 2: For each orgData.users, if there is a missing user, add it
+  const updatedDurations = durations.map((durationItem) => {
+    const updatedData = durationItem.data.map((orgData) => {
+      const orgName = orgData.organizationName;
+      const fullUserList = orgUserMap.get(orgName) || [];
+
+      const existingUsers = orgData.users || [];
+
+      const filledUsers = [...existingUsers];
+
+      fullUserList.forEach((user) => {
+        const exists = existingUsers.some(
+          (u) => u.id === user.id && u.fullName === user.fullName,
+        );
+        if (!exists) {
+          filledUsers.push({
+            ...user,
+            percent: 0,
+            totalDuration: DEFAULT_TIME_TEXT,
+          });
+        }
+      });
+
+      return {
+        ...orgData,
+        users: filledUsers,
+      };
+    });
+
+    return {
+      ...durationItem,
+      data: updatedData,
+    };
+  });
+
+  return {
+    ...rawData,
+    durations: updatedDurations,
+  };
 };

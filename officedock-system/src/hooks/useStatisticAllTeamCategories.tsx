@@ -89,7 +89,7 @@ const useStatisticAllTeamCategories = ({
     refetch: refetchStatisticAllTeamCategoryList,
     isFetched: isFetchedStatisticAllTeamCategoryList,
   } = useQuery({
-    queryKey: ['getStatisticAllTeamCategoryList', [filter]],
+    queryKey: ['getStatisticAllTeamCategoryList', JSON.stringify(filter)],
     queryFn: ({ signal }) => getStatisticAllTeamCategoryList({ signal }),
 
     retry: 0,
