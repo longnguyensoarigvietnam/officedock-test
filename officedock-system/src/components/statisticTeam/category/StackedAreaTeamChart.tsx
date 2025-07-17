@@ -29,6 +29,7 @@ import {
   STATISTIC_CHART_VIEW_OPTIONS,
 } from '@constants';
 
+import useStatisticAllTeamTaskDurations from '@hooks/useStatisticAllTeamTaskDurations';
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 
 import { OptionDropdownType } from '@interfaces/common';
@@ -53,7 +54,6 @@ import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import FilterTeamStatistic from './filter/FilterTeamStatistic';
-import useStatisticAllTeamTaskDurations from '@hooks/useStatisticAllTeamTaskDurations';
 
 type Props = {
   startDate: Date;
@@ -258,13 +258,13 @@ const StackedAreaTeamChart = ({
           : selectedMembers?.filter(Boolean).join(','),
     },
     condition: [
-      Boolean(
-        areaTableData.length > 0 &&
-          isTableDataRendered &&
-          selectedCategory?.id &&
-          selectedOrganizationInTable &&
-          selectedOrganization?.value != ALL_TEAM_STATISTIC,
-      ),
+      selectedOrganization?.value != ALL_TEAM_STATISTIC &&
+        Boolean(
+          areaTableData.length > 0 &&
+            isTableDataRendered &&
+            selectedCategory?.id &&
+            selectedOrganizationInTable,
+        ),
     ],
   });
   // Get task durations for ALL TEAM option
@@ -481,48 +481,50 @@ const StackedAreaTeamChart = ({
 
       setTimeRange(formattedTimeRange);
 
-      // Map theo user ID
+      // ✅ Map by `id-fullName`
       const userMap = new Map<
-        number,
+        string,
         { name: string; color: string; data: number[] }
       >();
 
       durations.forEach((range) => {
-        const userIdsInRange = new Set<number>();
+        const userKeysInRange = new Set<string>();
 
         range.data.forEach((org) => {
           org.users?.forEach((user) => {
-            userIdsInRange.add(user.id);
+            const key = `${user.id}-${user.fullName}`;
+            userKeysInRange.add(key);
 
-            if (!userMap.has(user.id)) {
-              userMap.set(user.id, {
+            if (!userMap.has(key)) {
+              userMap.set(key, {
                 name: user.fullName,
                 color: user.avatarColor ?? '#ccc',
                 data: [],
               });
             }
 
-            userMap.get(user.id)?.data.push(user.percent);
+            userMap.get(key)?.data.push(user.percent);
           });
         });
 
-        userMap.forEach((userData, userId) => {
-          if (!userIdsInRange.has(userId)) {
-            userData.data.push(0);
+        // ✅ If user is not in this range, add 0
+        userMap.forEach((_value, key) => {
+          if (!userKeysInRange.has(key)) {
+            userMap.get(key)?.data.push(0);
           }
         });
       });
 
       const chartData = Array.from(userMap.values()).map((user) => ({
         name: user.name,
-        data: [user.data[0], ...user.data],
+        data: [user.data[0], ...user.data], // duplicated first to match chart
       }));
 
       const colorList = Array.from(userMap.values()).map((user) => user.color);
+
       setDataChart(chartData);
       setColorList(colorList);
     } else {
-      // Trường hợp fallback
       const timeMilestones = getStatisticMilestones(
         formatDateToYMD(startDate) as string,
         formatDateToYMD(endDate || '') as string,
@@ -680,7 +682,7 @@ const StackedAreaTeamChart = ({
     },
 
     tooltip: {
-      enabled: true,
+      enabled: false,
       intersect: false,
       shared: true,
     },
