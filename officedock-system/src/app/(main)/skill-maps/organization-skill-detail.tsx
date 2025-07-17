@@ -435,7 +435,7 @@ export const OrganizationSkillDetail = ({
         {session?.user.permissions &&
           hasPermissionInArray(
             session?.user.permissions,
-            PermissionsSystem.SKILL_MAP_ADD,
+            PermissionsSystem.SKILL_MAP_MANAGEMENT_ADD,
           ) && (
             <Button
               className="!py-[4px] !px-3 !h-[30px]"

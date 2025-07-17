@@ -494,13 +494,13 @@ const ListSkillsMap = () => {
     session?.user.permissions &&
     hasPermissionInArray(
       session?.user.permissions,
-      PermissionsSystem.SKILL_MAP_ADD,
+      PermissionsSystem.SKILL_MAP_MANAGEMENT_ADD,
     );
   const hasUpdatePermission =
     session?.user.permissions &&
     hasPermissionInArray(
       session?.user.permissions,
-      PermissionsSystem.SKILL_MAP_UPDATE,
+      PermissionsSystem.SKILL_MAP_MANAGEMENT_UPDATE,
     );
 
   return (

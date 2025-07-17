@@ -102,7 +102,7 @@ const DetailProfileMemberModal = memo(
       session?.user.permissions &&
       hasPermissionInArray(
         session?.user.permissions,
-        PermissionsSystem.SKILL_MAP_VIEW,
+        PermissionsSystem.TEAM_DOCK_SKILL_MAP_VIEW,
       );
     const isPermissionDailyTeamView =
       session?.user.permissions &&
