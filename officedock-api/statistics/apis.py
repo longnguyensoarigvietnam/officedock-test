@@ -37,6 +37,7 @@ from common.utils import (
 )
 from organizations.constants import OrganizationTypes
 from organizations.models import Organization
+from skills.constants import DEFAULT_TIME
 from stat_data.constants import (
     ALL_TEAM,
     CALENDAR,
@@ -1527,7 +1528,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                         )
                         break_team.append(team)
                         break
-                    elif option == SUB_TEAM:
+                    elif option == SUB_TEAM and subteams:
                         for subteam in subteams:
                             users_in_org = users.filter(
                                 organizations__id=subteam["organization_id"]
@@ -1545,6 +1546,22 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                         break
 
             break_team = break_team if user_ids and option else teams
+            if not break_team:
+                fake_data = {
+                    "duration": DEFAULT_TIME,
+                    "percent": 0,
+                    "users": [],
+                }
+                if option == SUB_TEAM:
+                    fake_data["organization_name"] = SUB_TEAM
+                    fake_data["organization_id"] = SUB_TEAM
+                elif option == MAIN_TEAM:
+                    fake_data["organization_name"] = main_organization.name
+                    fake_data["organization_id"] = main_organization.id
+                elif option == CALENDAR:
+                    fake_data["organization_name"] = CALENDAR
+                    fake_data["organization_id"] = calendar_org.id
+                break_team = [fake_data]
             data["durations"].append(
                 {
                     "start_date": start_date_min.strftime(BASE_DATE_FORMAT),
