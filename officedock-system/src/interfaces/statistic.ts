@@ -444,6 +444,14 @@ export interface StatisticsAllTeamTaskDuration {
     organizationId: string | number;
     organizationName: string;
     percent: number;
+    users?: {
+      avatar: string | null;
+      avatarColor: string;
+      fullName: string;
+      id: number;
+      percent: number;
+      totalDuration: string;
+    }[];
   }[];
   durations: {
     startDate: string;
@@ -454,6 +462,14 @@ export interface StatisticsAllTeamTaskDuration {
       duration: string;
       percent: number;
       color: string;
+      users?: {
+        avatar: string | null;
+        avatarColor: string;
+        fullName: string;
+        id: number;
+        percent: number;
+        totalDuration: string;
+      }[];
     }[];
   }[];
 }

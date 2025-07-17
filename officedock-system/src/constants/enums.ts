@@ -594,3 +594,8 @@ export enum ChatMemoType {
 export enum OrganizationStatisticType {
   CALENDAR = 'CALENDAR',
 }
+export enum OptionOrganizationStatisticType {
+  MAIN_TEAM = 'メインチーム',
+  OTHER = 'サブチーム',
+  CALENDAR = 'カレンダー',
+}

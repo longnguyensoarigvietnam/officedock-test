@@ -100,6 +100,7 @@ const useStatisticUserTaskDurations = ({
     data: statisticUserTaskDurationsList,
     refetch: refetchStatisticUserTaskDurationsList,
     isLoading: isLoadingStatisticUserTaskDurationsList,
+    isFetched: isFetchedStatisticUserTaskDurationsList,
   } = useQuery({
     queryKey: ['getStatisticUserTaskDurations', JSON.stringify(filter)],
     queryFn: ({ signal }) => getStatisticUserTaskDurations({ signal }),
@@ -122,6 +123,7 @@ const useStatisticUserTaskDurations = ({
     statisticUserTaskDurationsList,
     refetchStatisticUserTaskDurationsList,
     isLoadingStatisticUserTaskDurationsList,
+    isFetchedStatisticUserTaskDurationsList,
   };
 };
 
