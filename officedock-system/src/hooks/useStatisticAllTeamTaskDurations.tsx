@@ -15,6 +15,7 @@ import api from '@base/api';
 interface FilterProps {
   endDate: string | Date;
   fromDate: string | Date;
+  option?: string;
   tagIds?: OptionDropdownType[];
   userIds?: OptionDropdownType[];
   statisticBy?: string;
@@ -65,6 +66,9 @@ const useStatisticAllTeamTaskDurations = ({
     }
     if (filter?.mainOrganizationId) {
       params.append('main_organization_id', String(filter?.mainOrganizationId));
+    }
+    if (filter?.option) {
+      params.append('option', String(filter?.option));
     }
 
     const apiUrl = `${apiRouters.STATISTICS_ALL_TEAMS_TASK_DURATIONS}?${params.toString()}`;

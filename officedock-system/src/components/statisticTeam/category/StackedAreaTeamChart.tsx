@@ -18,6 +18,7 @@ import RowSkeleton from '@components/skeleton/RowSkeleton';
 import StatisticLineChartTableSkeleton from '@components/common/SkeletonLoading/StatisticLineChartTableSkeleton';
 
 import {
+  OptionOrganizationStatisticType,
   OrganizationStatisticType,
   SortingType,
   StatisticViewOptions,
@@ -52,13 +53,12 @@ import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import FilterTeamStatistic from './filter/FilterTeamStatistic';
+import useStatisticAllTeamTaskDurations from '@hooks/useStatisticAllTeamTaskDurations';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticTeamCategoryList: StatisticsCategories | undefined;
-  statisticAllTeamTaskDurationsList: StatisticsAllTeamTaskDuration | undefined;
-  isFetchedStatisticAllTeamTaskDurationsList: boolean;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -107,22 +107,39 @@ const buildTableDetail = (
 
 const buildAllTeamTableDetail = (
   data: StatisticsAllTeamTaskDuration['data'] = [],
-): CategoryTableRowDetail[] =>
-  data.map((item) => ({
-    categoryId: Number(item.organizationId),
-    categoryName: item.organizationName,
-    categoryDuration: item.duration,
-    categoryPercent: item.percent,
-    organizationId: Number(item.organizationId),
-    userList: [],
-  }));
+): CategoryTableRowDetail[] => {
+  if (!Array.isArray(data)) return [];
+
+  return data.map((item) => {
+    const orgId = item.organizationId;
+    const safeOrgId = orgId && !isNaN(Number(orgId)) ? Number(orgId) : 0;
+
+    return {
+      categoryId: safeOrgId,
+      categoryName: item.organizationName,
+      categoryDuration: item.duration,
+      categoryPercent: item.percent,
+      organizationId: safeOrgId,
+      userList:
+        Array.isArray(item.users) && item.users.length > 0
+          ? item.users.map((user) => ({
+              userId: user.id,
+              userName: user.fullName,
+              userAvatar: user.avatar,
+              userAvatarColor: user.avatarColor,
+              userDuration: user.totalDuration,
+              userPercent: user.percent,
+            }))
+          : [],
+    };
+  });
+};
 
 const StackedAreaTeamChart = ({
   statisticTeamCategoryList,
   startDate,
   endDate,
-  statisticAllTeamTaskDurationsList,
-  isFetchedStatisticAllTeamTaskDurationsList,
+
   handleSelectOrganization,
   handleSelectLarge,
   handleSelectMedium,
@@ -157,6 +174,10 @@ const StackedAreaTeamChart = ({
     id: number;
     name: string;
   } | null>(null);
+  const [
+    selectedOptionOrganizationInTable,
+    setSelectedOptionOrganizationInTable,
+  ] = useState(OptionOrganizationStatisticType.MAIN_TEAM);
 
   const [isExtendData, setIsExtendData] = useState(true);
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
@@ -207,7 +228,7 @@ const StackedAreaTeamChart = ({
   // Get user task durations
   const {
     statisticUserTaskDurationsList,
-    isLoadingStatisticUserTaskDurationsList,
+    isFetchedStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
     filter: {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -241,9 +262,26 @@ const StackedAreaTeamChart = ({
         areaTableData.length > 0 &&
           isTableDataRendered &&
           selectedCategory?.id &&
-          selectedOrganizationInTable,
+          selectedOrganizationInTable &&
+          selectedOrganization?.value != ALL_TEAM_STATISTIC,
       ),
     ],
+  });
+  // Get task durations for ALL TEAM option
+  const {
+    statisticAllTeamTaskDurationsList,
+    isFetchedStatisticAllTeamTaskDurationsList,
+  } = useStatisticAllTeamTaskDurations({
+    filter: {
+      fromDate: formatDateToYMD(startDate) || '',
+      endDate: formatDateToYMD(`${endDate}`) || '',
+      tagIds: orderingOptions?.tag_ids,
+      statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
+      userIds: orderingOptions?.user_ids,
+      mainOrganizationId: selectedOrganizationSideBar?.value as number,
+      option: selectedOptionOrganizationInTable,
+    },
+    condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
   });
 
   const [dataChart, setDataChart] = useState<
@@ -314,6 +352,7 @@ const StackedAreaTeamChart = ({
     selectedLarge,
     selectedMedium,
   ]);
+  // Data CHART with option no ALL TEAM
 
   useEffect(() => {
     if (
@@ -386,11 +425,15 @@ const StackedAreaTeamChart = ({
     statisticUserTaskDurationsList,
     lineChartViewBy,
     selectedOrganization?.value,
+    startDate,
+    endDate,
   ]);
+
+  // Data Table with option ALL TEAM
 
   useEffect(() => {
     if (
-      statisticAllTeamTaskDurationsList &&
+      statisticAllTeamTaskDurationsList?.data &&
       selectedOrganization?.value === ALL_TEAM_STATISTIC
     ) {
       const tableDetail = buildAllTeamTableDetail(
@@ -412,16 +455,19 @@ const StackedAreaTeamChart = ({
     }
   }, [statisticAllTeamTaskDurationsList, selectedOrganization]);
 
+  // Data CHART with option ALL TEAM
+
   useEffect(() => {
-    if (
+    const isAllTeamView = selectedOrganization?.value === ALL_TEAM_STATISTIC;
+    const hasData =
       statisticAllTeamTaskDurationsList &&
-      statisticAllTeamTaskDurationsList.durations.length > 0 &&
-      selectedOrganization?.value === ALL_TEAM_STATISTIC // ⚠️ ALL_TEAM_STATISTIC
-    ) {
+      statisticAllTeamTaskDurationsList?.durations?.length > 0;
+
+    if (isAllTeamView && hasData) {
       const { durations } = statisticAllTeamTaskDurationsList;
 
       const startDates = durations.map((d) => d.startDate);
-      const lastEndDate = durations[durations.length - 1].endDate;
+      const lastEndDate = durations[durations.length - 1]?.endDate;
       const rawTimeRange = [...startDates, lastEndDate];
 
       const formattedTimeRange = rawTimeRange.map((date, index, arr) => {
@@ -435,49 +481,56 @@ const StackedAreaTeamChart = ({
 
       setTimeRange(formattedTimeRange);
 
-      const orgMap = new Map<
-        string | number,
-        {
-          name: string;
-          color: string;
-          data: number[];
-        }
+      // Map theo user ID
+      const userMap = new Map<
+        number,
+        { name: string; color: string; data: number[] }
       >();
 
       durations.forEach((range) => {
+        const userIdsInRange = new Set<number>();
+
         range.data.forEach((org) => {
-          if (!orgMap.has(org.organizationId)) {
-            orgMap.set(org.organizationId, {
-              name: org.organizationName,
-              color: org.color,
-              data: [],
-            });
+          org.users?.forEach((user) => {
+            userIdsInRange.add(user.id);
+
+            if (!userMap.has(user.id)) {
+              userMap.set(user.id, {
+                name: user.fullName,
+                color: user.avatarColor ?? '#ccc',
+                data: [],
+              });
+            }
+
+            userMap.get(user.id)?.data.push(user.percent);
+          });
+        });
+
+        userMap.forEach((userData, userId) => {
+          if (!userIdsInRange.has(userId)) {
+            userData.data.push(0);
           }
-          orgMap.get(org.organizationId)?.data.push(org.percent);
         });
       });
 
-      const chartData = Array.from(orgMap.values()).map((org) => {
-        return {
-          name: org.name,
-          data: [org.data[0], ...org.data],
-        };
-      });
+      const chartData = Array.from(userMap.values()).map((user) => ({
+        name: user.name,
+        data: [user.data[0], ...user.data],
+      }));
 
-      const colorList = Array.from(orgMap.values()).map((org) => org.color);
-
+      const colorList = Array.from(userMap.values()).map((user) => user.color);
       setDataChart(chartData);
       setColorList(colorList);
     } else {
-      // fallback khi không có dữ liệu
+      // Trường hợp fallback
       const timeMilestones = getStatisticMilestones(
-        `${formatDateToYMD(startDate)}`,
-        `${formatDateToYMD(endDate || '')}`,
+        formatDateToYMD(startDate) as string,
+        formatDateToYMD(endDate || '') as string,
         lineChartViewBy?.value as StatisticViewOptions,
       );
 
       const uniqueSortedDates = Array.from(new Set(timeMilestones)).sort(
-        (pre, next) => new Date(pre).getTime() - new Date(next).getTime(),
+        (a, b) => new Date(a).getTime() - new Date(b).getTime(),
       );
 
       const transformedDates = uniqueSortedDates.map((date, index, arr) => {
@@ -490,6 +543,7 @@ const StackedAreaTeamChart = ({
       });
 
       setTimeRange(transformedDates);
+
       setDataChart([
         {
           name: '',
@@ -497,7 +551,13 @@ const StackedAreaTeamChart = ({
         },
       ]);
     }
-  }, [statisticAllTeamTaskDurationsList, lineChartViewBy]);
+  }, [
+    statisticAllTeamTaskDurationsList,
+    lineChartViewBy,
+    selectedOrganization?.value,
+    startDate,
+    endDate,
+  ]);
 
   const annotations = dataChart.map((s, seriesIndex) => {
     // Sum of heights of all previous series at index 0
@@ -686,17 +746,48 @@ const StackedAreaTeamChart = ({
             <RadioButton
               name="categoryNameArea"
               isChecked={
-                info.row.original.categoryName == selectedCategory?.name
+                selectedOrganization?.value != ALL_TEAM_STATISTIC
+                  ? info.row.original.categoryName == selectedCategory?.name
+                  : info.row.original.categoryName ===
+                      selectedOptionOrganizationInTable ||
+                    (![
+                      OptionOrganizationStatisticType.CALENDAR,
+                      OptionOrganizationStatisticType.OTHER,
+                    ].includes(
+                      info.row.original
+                        .categoryName as OptionOrganizationStatisticType,
+                    ) &&
+                      selectedOptionOrganizationInTable ===
+                        OptionOrganizationStatisticType.MAIN_TEAM)
               }
               onChange={(e: any) => {
                 if (e) {
-                  setSelectedCategory({
-                    id: info.row.original.categoryId,
-                    name: info.row.original.categoryName,
-                  });
-                  setSelectedOrganizationInTable(
-                    info.row.original.organizationId,
-                  );
+                  if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+                    const categoryName = info.row.original
+                      .categoryName as OptionOrganizationStatisticType;
+
+                    const finalCategoryName = [
+                      OptionOrganizationStatisticType.CALENDAR,
+                      OptionOrganizationStatisticType.OTHER,
+                    ].includes(categoryName)
+                      ? categoryName
+                      : OptionOrganizationStatisticType.MAIN_TEAM;
+
+                    setSelectedCategory({
+                      id: info.row.original.categoryId,
+                      name: categoryName,
+                    });
+
+                    setSelectedOptionOrganizationInTable(finalCategoryName);
+                  } else {
+                    setSelectedCategory({
+                      id: info.row.original.categoryId,
+                      name: info.row.original.categoryName,
+                    });
+                    setSelectedOrganizationInTable(
+                      info.row.original.organizationId,
+                    );
+                  }
                 }
               }}
             />
@@ -1144,7 +1235,7 @@ const StackedAreaTeamChart = ({
               </div>
             </div>
           </div>
-          {(!isLoadingStatisticUserTaskDurationsList &&
+          {(!isFetchedStatisticUserTaskDurationsList &&
             selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
           (!isFetchedStatisticAllTeamTaskDurationsList &&
             selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
@@ -1181,6 +1272,11 @@ const StackedAreaTeamChart = ({
                       const dataDetailAllTeam =
                         statisticAllTeamTaskDurationsList &&
                         statisticAllTeamTaskDurationsList.durations[idx];
+                      const totalDurationAllTeam = dataDetailAllTeam
+                        ? sumDurationsChart(
+                            dataDetailAllTeam.data.map((user) => user.duration),
+                          )
+                        : DEFAULT_TIME_TEXT;
 
                       return (
                         <div
@@ -1250,48 +1346,59 @@ const StackedAreaTeamChart = ({
                               </div>
                             </div>
                           )}
-                          {statisticAllTeamTaskDurationsList &&
-                            selectedOrganization?.value ===
-                              ALL_TEAM_STATISTIC && (
-                              <div
-                                style={{
-                                  boxShadow: '0px 2px 8px 0px #0000001A',
-                                }}
-                                className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
-                                <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-center w-full block">
-                                  {convertToJapaneseDateRange(
-                                    dataDetailAllTeam?.startDate as string,
-                                    dataDetailAllTeam?.endDate as string,
+                          {selectedOrganization?.value ==
+                            ALL_TEAM_STATISTIC && (
+                            <div
+                              style={{
+                                boxShadow: '0px 2px 8px 0px #0000001A',
+                              }}
+                              className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                              <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-center w-full block">
+                                {dataDetailAllTeam &&
+                                  convertToJapaneseDateRange(
+                                    dataDetailAllTeam.startDate,
+                                    dataDetailAllTeam.endDate,
                                   )}
+                              </p>
+                              <p className="text-start px-5 mt-4">
+                                {selectedOptionOrganizationInTable ==
+                                OptionOrganizationStatisticType.MAIN_TEAM
+                                  ? selectedOrganizationSideBar?.label
+                                  : selectedOptionOrganizationInTable}
+                              </p>
+                              <div className="flex text-base my-3 font-normal gap-[10px] px-5">
+                                <p>
+                                  {totalDurationAllTeam &&
+                                    formatTimeToJapanese(totalDurationAllTeam)}
                                 </p>
-                                <div className="max-h-[250px] overflow-y-auto px-5">
-                                  {dataDetailAllTeam?.data.map(
-                                    (org, orgIndex) => {
+                              </div>
+                              <div className="max-h-[200px] overflow-y-auto px-5">
+                                {dataDetailAllTeam &&
+                                  dataDetailAllTeam.data.length > 0 &&
+                                  dataDetailAllTeam.data[0].users?.map(
+                                    (user, userIndex) => {
                                       return (
                                         <div
-                                          key={orgIndex}
-                                          className="flex items-baseline gap-1.5">
-                                          <div
-                                            className="w-3 h-3 rounded-sm"
-                                            style={{
-                                              backgroundColor: org.color,
-                                            }}
+                                          key={userIndex}
+                                          className="flex items-center gap-1.5 mb-1.5">
+                                          <CustomUserAvatar
+                                            avatarUrl={user.avatar || ''}
+                                            avatarColor={user.avatarColor || ''}
+                                            size={30}
                                           />
-                                          <div className="flex flex-grow items-baseline justify-between text-base font-medium w-full">
-                                            <div className=" text-black w-[calc(100%_-_60px)] max-w-[calc(100%_-_60px)] line-clamp-3 break-all text-left">
-                                              {org.organizationName}
+                                          <div className="flex flex-grow items-center justify-between text-base font-medium">
+                                            <div className=" text-black w-fit  max-w-[140px] line-clamp-3 break-all text-left">
+                                              {user.fullName}
                                             </div>
-                                            <p className="w-[50px] text-right">
-                                              {org.percent}%
-                                            </p>
+                                            <div>{user.percent}%</div>
                                           </div>
                                         </div>
                                       );
                                     },
                                   )}
-                                </div>
                               </div>
-                            )}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -1299,7 +1406,7 @@ const StackedAreaTeamChart = ({
             </div>
           )}
           <div className="px-[30px]">
-            {(!isLoadingStatisticUserTaskDurationsList &&
+            {(!isFetchedStatisticUserTaskDurationsList &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
             (!isFetchedStatisticAllTeamTaskDurationsList &&
               selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
