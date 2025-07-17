@@ -1525,6 +1525,8 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                             team["organization_id"],
                             team["organization_name"],
                             time_str_to_timedelta(team["duration"]),
+                            tag_ids,
+                            is_tag_page,
                         )
                         break_team.append(team)
                         break
@@ -1541,6 +1543,8 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                                 subteam["organization_id"],
                                 subteam["organization_name"],
                                 time_str_to_timedelta(team["duration"]),
+                                tag_ids,
+                                is_tag_page,
                             )
                         break_team.append(team)
                         break
@@ -1608,6 +1612,8 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                         team["organization_id"],
                         team["organization_name"],
                         time_str_to_timedelta(team["duration"]),
+                        tag_ids,
+                        is_tag_page,
                     )
             if team.get("sub_teams"):
                 subteams = team.pop("sub_teams")
@@ -1622,6 +1628,8 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                             subteam["organization_id"],
                             subteam["organization_name"],
                             time_str_to_timedelta(team["duration"]),
+                            tag_ids,
+                            is_tag_page,
                         )
             if team.get("data"):
                 team.pop("data")
@@ -1636,6 +1644,8 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         organization_id,
         organization_name,
         total_duration,
+        tag_ids=[],
+        is_tag_page=False,
     ):
         """
         Handle get list users duration for chart 3, 4
@@ -1651,7 +1661,9 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                 organizations=[organization_id],
             )
             duration_by_user = get_total_durations(
-                filter_duration_by_range_by_user
+                filter_duration_by_range_by_user,
+                is_tag_page=is_tag_page,
+                tag_ids=tag_ids,
             )
             # Calculate the percentage of the total duration
             (
