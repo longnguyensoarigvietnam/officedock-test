@@ -831,12 +831,13 @@ class TaskViewSet(
                 if show_deadline_time
                 else False,
             }
-
         if (
             (current_task_status.name != TaskStatus.MY_ROUTINE.value)
             and (current_task.deadline != serializer_data.get("deadline"))
             or (
-                current_task.is_important != serializer_data.get("is_important")
+                user.setting.is_sorting_task_by_important
+                and current_task.is_important
+                != serializer_data.get("is_important")
             )
         ):
             reset_sort_task(user)
