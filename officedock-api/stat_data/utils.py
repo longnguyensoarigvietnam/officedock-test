@@ -1011,9 +1011,11 @@ def _handle_structure_data_for_team(
                     reverse=True,
                 )
 
+    data_list = list(response_data.values())
+
     # Check total percentage and sort subteams by duration
     percent = 0
-    for index, data in enumerate(list(response_data.values())):
+    for index, data in enumerate(data_list):
         last_element = index == len(response_data) - 1
         data["duration"] = format_duration(data["duration"])
         percent += data["percent"]
