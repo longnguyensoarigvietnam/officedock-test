@@ -522,14 +522,10 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 organization.id: CreationDataUserSerializer(
                     organization.users.order_by("created_at"), many=True
                 ).data,
-                calendar_org.id: CreationDataUserSerializer(
-                    organization.users.order_by("created_at"),
-                    many=True,  # Get list user of calendar organization base on organization selected
-                ).data,
             }
 
             for org in data["organizations"]:
-                org["members"] = members[org["id"]]
+                org["members"] = members[organization.id]
             organizations_by_role = get_organizations_of_user_by_screen_role(
                 user, Screens.TEAMDOCK.value, Actions.VIEW.value
             )
@@ -544,7 +540,9 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     "tags": CreationDataTagSerializer(
                         tags, many=True, context={"user": user}
                     ).data,
-                    "members": [],
+                    "members": members[
+                        organization.id
+                    ],  # Get list user of current organization for all team
                 },
             )
             return data
