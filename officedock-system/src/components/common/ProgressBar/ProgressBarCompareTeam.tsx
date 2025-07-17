@@ -234,9 +234,9 @@ const PercentageBarCompareTeam = ({
                               item.optionData.map((itemOption, index) => (
                                 <li
                                   key={index}
-                                  className="break-all text-start flex items-center justify-between gap-2 line-clamp-3 text-[#77858F] text-sm font-normal mb-2">
+                                  className="break-all mt-1 text-start flex items-center justify-between gap-2 line-clamp-3 text-[#77858F] text-sm font-normal mb-2">
                                   <div className="flex items-center w-fit">
-                                    <span className="relative ml-3 max-w-[160px] truncate top-[-3px]">
+                                    <span className="relative max-w-[160px] truncate ">
                                       {' '}
                                       {itemOption.label}
                                     </span>
@@ -353,6 +353,34 @@ const PercentageBarCompareTeam = ({
                                           </li>
                                         );
                                       })}
+                                    {mergeItem.users &&
+                                      mergeItem.users.map((item, index) => {
+                                        return (
+                                          <li
+                                            key={index}
+                                            className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                              <div>
+                                                <CustomUserAvatar
+                                                  avatarUrl={
+                                                    item.user?.avatar || ''
+                                                  }
+                                                  avatarColor={
+                                                    item?.user.avatarColor || ''
+                                                  }
+                                                  size={30}
+                                                />
+                                              </div>
+                                              <span className="inline-block text-black  ml-3 max-w-[180px] overflow-hidden whitespace-nowrap text-ellipsis">
+                                                {item.user.fullName}
+                                              </span>
+                                            </div>
+                                            <span className="text-black">
+                                              {item.percent}%
+                                            </span>
+                                          </li>
+                                        );
+                                      })}
                                   </ul>
                                 </div>
 
@@ -402,24 +430,38 @@ const PercentageBarCompareTeam = ({
                         </div>
                         <div className="max-h-[250px] overflow-y-auto px-5">
                           <ul>
-                            {item.optionData.map((item, index) => (
-                              <li
-                                key={index}
-                                className="break-all text-start flex items-center justify-between gap-2 line-clamp-3 text-[#77858F] text-sm font-normal">
-                                <div className="flex items-center w-fit">
-                                  <CustomUserAvatar
-                                    avatarUrl={item?.avatarUrl || ''}
-                                    avatarColor={item?.avatarColor || ''}
-                                    size={30}
-                                  />
-                                  <span className="relative ml-3 max-w-[160px] truncate top-[-3px]">
-                                    {' '}
-                                    {item.label}
-                                  </span>
-                                </div>
-                                <span>{item.percent}%</span>
-                              </li>
-                            ))}
+                            {!isAllTeam &&
+                              item.optionData.map((item, index) => (
+                                <li
+                                  key={index}
+                                  className="break-all text-start flex items-center justify-between gap-2 line-clamp-3 text-[#77858F] text-sm font-normal">
+                                  <div className="flex items-center w-fit">
+                                    <CustomUserAvatar
+                                      avatarUrl={item?.avatarUrl || ''}
+                                      avatarColor={item?.avatarColor || ''}
+                                      size={30}
+                                    />
+                                    <span className="relative ml-3 max-w-[160px] truncate top-[-3px]">
+                                      {' '}
+                                      {item.label}
+                                    </span>
+                                  </div>
+                                  <span>{item.percent}%</span>
+                                </li>
+                              ))}
+                            {isAllTeam &&
+                              item.optionData.map((item, index) => (
+                                <li
+                                  key={index}
+                                  className="break-all mt-1 text-start flex items-center justify-between gap-2 line-clamp-3 text-[#77858F] text-sm font-normal">
+                                  <div className="flex items-center w-fit">
+                                    <span className="relative max-w-[160px] truncate">
+                                      {' '}
+                                      {item.label}
+                                    </span>
+                                  </div>
+                                </li>
+                              ))}
                           </ul>
                         </div>
                       </>

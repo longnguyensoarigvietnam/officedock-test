@@ -16,8 +16,10 @@ interface FilterProps {
   endDate: string | Date;
   fromDate: string | Date;
   tagIds?: OptionDropdownType[];
+  userIds?: OptionDropdownType[];
   statisticBy?: string;
   isTagPage?: boolean;
+  mainOrganizationId?: number;
 }
 
 const useStatisticAllTeamTaskDurationsCompare = ({
@@ -54,8 +56,15 @@ const useStatisticAllTeamTaskDurationsCompare = ({
       const tagIds = filter.tagIds.map((item) => item.value).join(',');
       params.append('tag_ids', tagIds);
     }
+    if (filter?.userIds?.length) {
+      const userIds = filter.userIds.map((item) => item.value).join(',');
+      params.append('user_ids', userIds);
+    }
     if (filter?.isTagPage) {
       params.append('is_tag_page', 'true');
+    }
+    if (filter?.mainOrganizationId) {
+      params.append('main_organization_id', String(filter?.mainOrganizationId));
     }
 
     const apiUrl = `${apiRouters.STATISTICS_ALL_TEAMS_TASK_DURATIONS}?${params.toString()}`;
@@ -72,7 +81,8 @@ const useStatisticAllTeamTaskDurationsCompare = ({
     isFetched: isFetchedStatisticAllTeamTaskDurationsCompareList,
   } = useQuery({
     queryKey: ['getStatisticAllTeamTaskDurationsCompare', [filter]],
-    queryFn: ({ signal }) => getStatisticAllTeamTaskDurationsCompare({ signal }),
+    queryFn: ({ signal }) =>
+      getStatisticAllTeamTaskDurationsCompare({ signal }),
 
     retry: 0,
     enabled: !!token && condition?.every(Boolean),

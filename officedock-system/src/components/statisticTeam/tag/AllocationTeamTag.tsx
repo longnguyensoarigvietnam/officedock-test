@@ -338,10 +338,7 @@ const AllocationTeamTag = memo(
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
                                 handleClickTooltip={() => {}}
-                                isAllTeam={
-                                  selectedOrganization?.value ==
-                                  ALL_TEAM_STATISTIC
-                                }
+                                isAllTeam
                                 organizationId={item.organizationId}
                                 handleClickChart={() => {}}
                                 {...item}

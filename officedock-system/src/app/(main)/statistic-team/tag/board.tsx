@@ -317,6 +317,7 @@ const StatisticTeamTagBoard = () => {
   });
   //  Get statistic categories for ALL TEAM option
   const { statisticAllTeamCategoryList } = useStatisticAllTeamCategories({
+    isTeam: true,
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
@@ -338,6 +339,7 @@ const StatisticTeamTagBoard = () => {
   // Get statistic compared categories for ALL TEAM option
   const { statisticAllTeamCategoryCompareList } =
     useStatisticAllTeamCategoriesCompare({
+      isTeam: true,
       filter: {
         fromDate: formatDateToYMD(startDateCompare) || '',
         endDate: formatDateToYMD(`${endDateCompare}`) || '',
@@ -378,9 +380,7 @@ const StatisticTeamTagBoard = () => {
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === data.value,
     );
-    const organizationMember = creationDataStatisticData?.organizations?.find(
-      (org) => org.id === selectedOrganizationSideBar?.value,
-    );
+
     if (organization) {
       const largeCategories = organization.statisticCategories.map((stat) => ({
         value: stat.LARGE.id,
@@ -392,44 +392,22 @@ const StatisticTeamTagBoard = () => {
       }));
       setTagsOptions(optionsTagList);
       setSelectedTags(optionsTagList);
-      if (
-        selectedOrganization?.type === OrganizationStatisticType.CALENDAR &&
-        organizationMember
-      ) {
-        setListMemberTeam(
-          organizationMember.members.map((member) => ({
-            id: member.id,
-            fullName: member.fullName,
-            color: member?.avatarColor || '',
-            avatarUrl: member?.avatar || '',
-          })),
-        );
-        setOrderingOptions({
-          user_ids: organizationMember.members.map((member) => ({
-            value: member.id,
-            label: member.fullName,
-            color: member?.avatarColor || '',
-            avatarUrl: member?.avatar || '',
-          })),
-        });
-      } else {
-        setListMemberTeam(
-          organization.members.map((member) => ({
-            id: member.id,
-            fullName: member.fullName,
-            color: member?.avatarColor || '',
-            avatarUrl: member?.avatar || '',
-          })),
-        );
-        setOrderingOptions({
-          user_ids: organization.members.map((member) => ({
-            value: member.id,
-            label: member.fullName,
-            color: member?.avatarColor || '',
-            avatarUrl: member?.avatar || '',
-          })),
-        });
-      }
+      setListMemberTeam(
+        organization.members.map((member) => ({
+          id: member.id,
+          fullName: member.fullName,
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
+        })),
+      );
+      setOrderingOptions({
+        user_ids: organization.members.map((member) => ({
+          value: member.id,
+          label: member.fullName,
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
+        })),
+      });
 
       setCurrentPage(1);
       // If organization is all team then return here

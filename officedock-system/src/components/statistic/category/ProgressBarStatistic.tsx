@@ -239,7 +239,7 @@ const ProgressBarStatistic = ({
                                   formatTimeToJapanese(item.duration)}
                               </span>
                             </div>
-                            {isAllTeam && (
+                            {
                               <div className="flex w-full justify-end mt-3">
                                 <div
                                   onClick={() => {
@@ -259,7 +259,7 @@ const ProgressBarStatistic = ({
                                   </div>
                                 </div>
                               </div>
-                            )}
+                            }
 
                             <div className=" w-full mb-5  border-b border-[#D2DBE1]"></div>
                           </div>
