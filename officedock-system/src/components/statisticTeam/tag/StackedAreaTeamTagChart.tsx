@@ -212,20 +212,20 @@ const StackedAreaTeamTagChart = ({
   const [durationSortingStatus, setDurationSortingStatus] =
     useState<string>('');
   const [selectedOrganizationInTable, setSelectedOrganizationInTable] =
-    useState<number>(0);
+    useState<string | number>(0);
 
   // Collapse statuses
   const [tagCollapseStatuses, setTagCollapseStatuses] = useState<
     {
       tagId: number | string;
       status: boolean;
-      organizationId: number;
+      organizationId: string | number;
     }[]
   >([]);
   const [selectedTag, setSelectedTag] = useState<{
-    id: number;
+    id: string | number;
     name: string;
-    organizationId: number;
+    organizationId: string | number;
   } | null>(null);
 
   // Get initial member options

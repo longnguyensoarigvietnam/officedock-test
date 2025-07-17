@@ -268,6 +268,7 @@ const StatisticTeamTagBoard = () => {
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     },
+    condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
     onSuccess: (data) => {
       if (selectedOrganization?.value !== ALL_TEAM_STATISTIC) {
         setIsSkeletonTagTeamTask(false);

@@ -556,6 +556,11 @@ export enum LevelUpConditionBy {
   MEASUREMENT_TIME = 'MEASUREMENT_TIME',
   PERIOD = 'PERIOD',
 }
+export enum AllTeamStatisticOption {
+  CALENDAR = 'カレンダー',
+  SUB_TEAMS = 'サブチーム',
+  MAIN_TEAM = 'メインチーム',
+}
 export enum SkillMapStep {
   STEP_1 = 'ステップ1',
   STEP_2 = 'ステップ2',
@@ -599,3 +604,4 @@ export enum OptionOrganizationStatisticType {
   OTHER = 'サブチーム',
   CALENDAR = 'カレンダー',
 }
+

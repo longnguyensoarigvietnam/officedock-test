@@ -85,12 +85,12 @@ const Tabs = ({
       (item) =>
         item.companyMenu == false &&
         item.href !== pageRouters.MEMBER_MANAGEMENT.href,
-    ).some((item) => item.href === pathname);
+    ).some((item) => pathname.includes(item.href));
     const isTeamDockPage = TEAM_MENU_ITEMS.filter(
       (item) =>
         item.companyMenu == false &&
         item.href !== pageRouters.MEMBER_MANAGEMENT.href,
-    ).some((item) => item.href === pathname);
+    ).some((item) => pathname.includes(item.href));
 
     if (Number(tabIdParam) == 1 && isTeamDockPage) {
       setLastVisitedByTab((prev) => ({ ...prev, secondTab: url }));

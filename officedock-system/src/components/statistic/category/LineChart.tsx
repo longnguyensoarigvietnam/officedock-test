@@ -119,7 +119,7 @@ const LineChart = ({
     labels: string[];
     datasets: {
       label: string;
-      data: { x: any; y: number; endDate: any; color: any; label: any }[];
+      data: { x: any; y: number; endDate: any; color?: any; label: any }[];
       borderColor: string;
       backgroundColor: string;
       fill: boolean;

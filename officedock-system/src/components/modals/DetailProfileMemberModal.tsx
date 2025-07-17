@@ -215,6 +215,7 @@ const DetailProfileMemberModal = memo(
 
                       params.set('is_map', 'true');
                       params.set('user_organization', organizationId);
+                      params.set('tabId', '1');
 
                       const newPath = `${pageRouters.SKILL_MAP_TEAM_DETAIL.href(Number(userDetail?.id))}?${params.toString()}`;
                       router.push(newPath);
