@@ -25,11 +25,13 @@ interface FilterProps {
 }
 
 const useStatisticAllTeamCategories = ({
+  isTeam,
   filter,
   condition,
   onSuccess,
   onError,
 }: {
+  isTeam?: boolean;
   filter?: FilterProps;
   condition?: boolean[];
   onSuccess?: (data: StatisticsAllTeams) => void;
@@ -61,9 +63,13 @@ const useStatisticAllTeamCategories = ({
       const tagValues = filter.tagIds.map((item) => item.value).join(',');
       params.append('tag_ids', tagValues);
     }
-    if (filter?.userIds) {
+    if (filter?.userIds?.length) {
       const userValues = filter.userIds.map((item) => item.value).join(',');
       params.append('user_ids', userValues);
+    } else {
+      if (isTeam) {
+        params.append('user_ids', String(null));
+      }
     }
     if (filter?.mainOrganizationId)
       params.append('main_organization_id', String(filter.mainOrganizationId));
@@ -100,10 +106,10 @@ const useStatisticAllTeamCategories = ({
       setIsLoadingLarge(false);
       setIsLoadingMedium(false);
       setIsLoadingOrganization(false);
-      setIsLoadingLargeTag(false)
-      setIsLoadingMediumTag(false)
-      setIsLoadingSmallTag(false)
-      setIsLoadingOrganizationTag(false)
+      setIsLoadingLargeTag(false);
+      setIsLoadingMediumTag(false);
+      setIsLoadingSmallTag(false);
+      setIsLoadingOrganizationTag(false);
     },
   });
 

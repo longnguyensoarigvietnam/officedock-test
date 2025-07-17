@@ -465,6 +465,15 @@ function StatisticTeamCalendar() {
       <div className="flex items-center gap-3">
         <div
           onClick={(e) => {
+            if (
+              isLoadingLarge ||
+              isLoadingLargeCompare ||
+              isLoadingMedium ||
+              isLoadingMediumCompare ||
+              isLoadingOrganization ||
+              isLoadingOrganizationCompare
+            )
+              return;
             e.preventDefault();
             setIsOpenModal(true);
 
@@ -540,6 +549,15 @@ function StatisticTeamCalendar() {
         <div
           ref={buttonNext}
           onClick={(e) => {
+            if (
+              isLoadingLarge ||
+              isLoadingLargeCompare ||
+              isLoadingMedium ||
+              isLoadingMediumCompare ||
+              isLoadingOrganization ||
+              isLoadingOrganizationCompare
+            )
+              return;
             e.preventDefault();
             setIsOpenModal(true);
 

@@ -272,6 +272,7 @@ const AllocationTagCompare = memo(
                 value: item.percent,
                 organizationId: String(item.organizationId),
                 color:
+                  item.color ||
                   lightenColor(colorData as string, item.percent) ||
                   getRandomColor(),
                 duration: item.duration,
@@ -298,6 +299,7 @@ const AllocationTagCompare = memo(
                 organizationId: String(compareItem.organizationId),
 
                 color:
+                  compareItem.color ||
                   lightenColor(colorData as string, compareItem.percent) ||
                   getRandomColor(),
                 duration: compareItem.duration,

@@ -183,6 +183,7 @@ const AllocationTag = memo(
               label: item.organizationName as string,
               value: item.percent,
               color:
+                item.color ||
                 lightenColor('#2E9267' as string, item.percent) ||
                 getRandomColor(),
               duration: item.duration,

@@ -153,6 +153,7 @@ const StatisticTagBoard = () => {
     onSuccess: (data) => {
       setLargeOptions([]);
       setTotalDurationLarge(data.largeTotalDuration);
+      setTotalDurationTask(data.largeTotalDuration);
     },
   });
 
@@ -217,6 +218,7 @@ const StatisticTagBoard = () => {
       onSuccess: (data) => {
         setLargeOptions([]);
         setTotalDurationLargeCompare(data.largeTotalDuration);
+        setTotalDurationTaskCompare(data.largeTotalDuration);
       },
     });
 
@@ -525,7 +527,9 @@ const StatisticTagBoard = () => {
             statisticTagsList={statisticTagsList}
             statisticTagsCompareList={statisticTagsListCompare}
             statisticAllTeamCategoryList={statisticAllTeamCategoryList}
-            statisticAllTeamCategoryCompareList={statisticAllTeamCategoryCompareList}
+            statisticAllTeamCategoryCompareList={
+              statisticAllTeamCategoryCompareList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -538,13 +542,27 @@ const StatisticTagBoard = () => {
             startDateCompare={startDateCompare}
             endDateCompare={endDateCompare}
             statisticTaskDurationsListTag={statisticTaskDurationsListTag}
-            statisticTagTaskDurationsCompareList={statisticTagTaskDurationsCompareList}
-            statisticAllTeamTaskDurationsList={statisticAllTeamTaskDurationsList}
-            statisticAllTeamTaskDurationsCompareList={statisticAllTeamTaskDurationsCompareList}
-            isFetchedStatisticTaskDurationsListTag={isFetchedStatisticTaskDurationsListTag}
-            isFetchedStatisticTagTaskDurationsCompareList={isFetchedStatisticTagTaskDurationsCompareList}
-            isFetchedStatisticAllTeamTaskDurationsList={isFetchedStatisticAllTeamTaskDurationsList}
-            isFetchedStatisticAllTeamTaskDurationsCompareList={isFetchedStatisticAllTeamTaskDurationsCompareList}
+            statisticTagTaskDurationsCompareList={
+              statisticTagTaskDurationsCompareList
+            }
+            statisticAllTeamTaskDurationsList={
+              statisticAllTeamTaskDurationsList
+            }
+            statisticAllTeamTaskDurationsCompareList={
+              statisticAllTeamTaskDurationsCompareList
+            }
+            isFetchedStatisticTaskDurationsListTag={
+              isFetchedStatisticTaskDurationsListTag
+            }
+            isFetchedStatisticTagTaskDurationsCompareList={
+              isFetchedStatisticTagTaskDurationsCompareList
+            }
+            isFetchedStatisticAllTeamTaskDurationsList={
+              isFetchedStatisticAllTeamTaskDurationsList
+            }
+            isFetchedStatisticAllTeamTaskDurationsCompareList={
+              isFetchedStatisticAllTeamTaskDurationsCompareList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -580,9 +598,15 @@ const StatisticTagBoard = () => {
             startDate={startDate}
             endDate={endDate}
             statisticTaskDurationsListTag={statisticTaskDurationsListTag}
-            statisticAllTeamTaskDurationsList={statisticAllTeamTaskDurationsList}
-            isFetchedStatisticTaskDurationsListTag={isFetchedStatisticTaskDurationsListTag}
-            isFetchedStatisticAllTeamTaskDurationsList={isFetchedStatisticAllTeamTaskDurationsList}
+            statisticAllTeamTaskDurationsList={
+              statisticAllTeamTaskDurationsList
+            }
+            isFetchedStatisticTaskDurationsListTag={
+              isFetchedStatisticTaskDurationsListTag
+            }
+            isFetchedStatisticAllTeamTaskDurationsList={
+              isFetchedStatisticAllTeamTaskDurationsList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
