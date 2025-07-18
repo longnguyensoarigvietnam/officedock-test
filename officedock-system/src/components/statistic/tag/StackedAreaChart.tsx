@@ -198,7 +198,7 @@ const StackedAreaChart = ({
         });
 
         setTableData(tableDetail);
-        setColorList(colorListData.reverse());
+        setColorList(colorListData);
       } else {
         setTableData([]);
       }
@@ -368,7 +368,7 @@ const StackedAreaChart = ({
         });
 
         setTableData(tableDetail);
-        setColorList(colorListData);
+        setColorList(colorListData.reverse());
       } else {
         setTableData([]);
         setColorList([]);
