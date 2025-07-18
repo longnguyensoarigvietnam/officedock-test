@@ -445,8 +445,8 @@ def get_list_basic_task_or_event_of_durations(durations):
     """
     tasks = {}
     for filter_duration in durations:
-        # Limit just 4 cards return
-        if len(tasks) >= 4:
+        # Limit just 3 cards return
+        if len(tasks) >= 3:
             break
         model_object = filter_duration.task or filter_duration.schedule
         if model_object.id not in tasks:
