@@ -46,8 +46,10 @@ const ListSkillsMapByMembers = () => {
 
   // Fetch organization skills
   const { organizationSkillList } = useOrganizationSkillList({
-    organizationId: Number(selectedOrganizationOption.value),
-    screen: ScreenName.SKILL_MAP,
+    filter: {
+      organizationId: Number(selectedOrganizationOption.value),
+      screen: ScreenName.SKILL_MAP,
+    },
   });
 
   useEffect(() => {

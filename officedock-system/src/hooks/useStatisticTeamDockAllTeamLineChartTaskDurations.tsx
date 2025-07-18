@@ -61,6 +61,8 @@ const useStatisticTeamDockAllTeamLineChartTaskDurations = ({
     }
     if (filter?.userIds) {
       params.append('user_ids', filter.userIds);
+    } else{
+      params.append('user_ids', 'null');
     }
     if (filter?.option) {
       params.append('option', filter?.option);

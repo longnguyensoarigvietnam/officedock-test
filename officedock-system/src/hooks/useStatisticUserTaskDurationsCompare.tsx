@@ -98,7 +98,7 @@ const useStatisticUserTaskDurationsCompare = ({
   const {
     data: statisticUserTaskDurationsCompareList,
     refetch: refetchStatisticUserTaskDurationsCompareList,
-    isLoading: isLoadingStatisticUserTaskDurationsCompareList,
+    isFetching: isFetchingStatisticUserTaskDurationsCompareList,
   } = useQuery({
     queryKey: ['getStatisticUserTaskDurationsCompare', JSON.stringify(filter)],
     queryFn: ({ signal }) => getStatisticUserTaskDurationsCompare({ signal }),
@@ -118,7 +118,7 @@ const useStatisticUserTaskDurationsCompare = ({
   return {
     statisticUserTaskDurationsCompareList,
     refetchStatisticUserTaskDurationsCompareList,
-    isLoadingStatisticUserTaskDurationsCompareList,
+    isFetchingStatisticUserTaskDurationsCompareList,
   };
 };
 

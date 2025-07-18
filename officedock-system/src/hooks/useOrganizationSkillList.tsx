@@ -23,7 +23,13 @@ interface FilterProps {
   screen?: string;
 }
 
-const useOrganizationSkillList = (filter?: FilterProps) => {
+const useOrganizationSkillList = ({
+  filter,
+  showLoadingIndicator = false,
+}: {
+  filter?: FilterProps;
+  showLoadingIndicator?: boolean;
+}) => {
   const { data: session } = useSessionCache();
   const router = useRouter();
   const token = session?.accessToken;
@@ -32,7 +38,7 @@ const useOrganizationSkillList = (filter?: FilterProps) => {
 
   // Handle call API get organization skill list
   const getOrganizationSkillList = async () => {
-    setIsLoading(true);
+    showLoadingIndicator && setIsLoading(true);
     const queryParams = [];
 
     if (filter?.filterOrganizationIds) {
@@ -86,7 +92,7 @@ const useOrganizationSkillList = (filter?: FilterProps) => {
       }
     },
     onSettled: () => {
-      setIsLoading(false);
+      showLoadingIndicator && setIsLoading(false);
     },
   });
 
