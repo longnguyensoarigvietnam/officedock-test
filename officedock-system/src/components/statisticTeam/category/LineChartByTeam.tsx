@@ -1062,6 +1062,14 @@ const LineChartByTeam = ({
         tableDetail.forEach((detail) => {
           totalDurationList.push(detail.categoryDuration);
         });
+        const foundSelectedOrganizationOption = tableDetail.find(
+          (org) => org.categoryId == selectedOrganizationOptionInTable,
+        );
+        if (!foundSelectedOrganizationOption) {
+          setSelectedOrganizationOptionInTable(
+            String(tableDetail[0]?.categoryId) as AllTeamStatisticOption,
+          );
+        }
         setTotalDuration(totalDurationsForStatistic(totalDurationList));
         setLegendList(legendList);
         setCategoryCollapseStatuses(

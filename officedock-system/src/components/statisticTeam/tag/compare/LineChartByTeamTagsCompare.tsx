@@ -1295,6 +1295,14 @@ const LineChartByTeamTagsCompare = ({
           true,
         ) || [];
       setMergedTableData(mergedCategories);
+      const foundSelectedOrganizationOption = mergedCategories.find(
+        (org) => org.tagId == selectedOrganizationOptionInTable,
+      );
+      if (!foundSelectedOrganizationOption) {
+        setSelectedOrganizationOptionInTable(
+          String(mergedCategories[0]?.tagId) as AllTeamStatisticOption,
+        );
+      }
 
       setTagCollapseStatuses(
         mergedCategories.map((organization) => {

@@ -1510,7 +1510,7 @@ export const getLineChartDataFromStatisticTaskDurations = ({
           endDate: durationDetail.endDate,
           color:
             category.categoryColor ||
-            (color && lightenColor(color, category?.percent || 0)) ||
+            (color && lightenColor(color,  category?.percent || 0)) ||
             getRandomColor(),
           label: category.categoryName,
         };
@@ -1518,7 +1518,10 @@ export const getLineChartDataFromStatisticTaskDurations = ({
         datasetMap.set(category.categoryId, {
           label: category.categoryName,
           data: dataArray,
-          borderColor: category.categoryColor || getRandomColor(),
+          borderColor:
+            category.categoryColor ||
+            (color && lightenColor(color, category?.percent || 0)) ||
+            getRandomColor(),
           backgroundColor: 'rgba(217, 83, 79, 0.04)',
           fill: true,
           tension: 0,
@@ -1527,7 +1530,7 @@ export const getLineChartDataFromStatisticTaskDurations = ({
           pointHoverRadius: 6,
           pointHoverBackgroundColor:
             category.categoryColor ||
-            (color && lightenColor(color, 50)) ||
+            (color && lightenColor(color, category?.percent || 0)) ||
             getRandomColor(),
           pointHoverBorderColor: 'transparent',
           pointHoverBorderWidth: 2,
