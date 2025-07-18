@@ -20,7 +20,7 @@ from roles.serializers import (
 )
 from roles.utils import create_role_with_permissions
 from users.constants import RoleTypes
-from users.models import Role
+from users.models import LoginToken, Role
 from base.apis import BaseAPIViewSet
 from base.messages import ERROR_MESSAGES
 
@@ -141,6 +141,8 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         if before_role_details != after_role_details:
             for user in role.users.all():
+                # Block access token for logged user
+                LoginToken.objects.filter(user=user).update(is_block=True)
                 send_web_socket_event(
                     {
                         "is_change_role": True,
@@ -167,6 +169,8 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     user.roles.add(
                         normal_role, through_defaults={"company": user.company}
                     )
+                # Block access token for logged user
+                LoginToken.objects.filter(user=user).update(is_block=True)
                 send_web_socket_event(
                     {
                         "is_change_role": True,
