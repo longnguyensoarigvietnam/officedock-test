@@ -1637,7 +1637,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                         break_team.append(team)
                         break
             break_team = break_team if (user_ids and option) else teams
-            if not break_team:
+            if (user_ids and option) and not break_team:
                 break_team = [fake_data]
 
             data["durations"].append(
