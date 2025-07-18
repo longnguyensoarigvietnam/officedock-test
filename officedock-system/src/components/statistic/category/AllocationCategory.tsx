@@ -136,8 +136,12 @@ const AllocationCategory = memo(
             data: statisticAllTeamCategoryList.largeCategories,
           });
           setProgressDataLarge(finalData);
+          setProgressDataMedium([]);
+          setProgressDataSmall([]);
         } else {
           setProgressDataLarge([]);
+          setProgressDataMedium([]);
+          setProgressDataSmall([]);
         }
       }
     }, [statisticAllTeamCategoryList, selectedOrganization?.value]);

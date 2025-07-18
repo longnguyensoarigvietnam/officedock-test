@@ -342,8 +342,68 @@ const PercentageTeamTags = ({
           statisticAllTeamCategoryList.largeCategories,
         );
         setDataChartLarge(largeChartData);
+        setDataChartMedium({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+          listDuration: [],
+          mergedItems: [],
+        });
+        setDataChartSmall({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+          listDuration: [],
+          mergedItems: [],
+        });
+        setDataChartCategory({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+          listDuration: [],
+          mergedItems: [],
+        });
       } else {
         setDataChartLarge({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+          listDuration: [],
+          mergedItems: [],
+        });
+        setDataChartMedium({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+          listDuration: [],
+          mergedItems: [],
+        });
+        setDataChartSmall({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+          listDuration: [],
+          mergedItems: [],
+        });
+        setDataChartCategory({
           actualValue: [],
           colors: [],
           data: [],

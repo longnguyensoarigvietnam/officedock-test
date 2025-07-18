@@ -305,6 +305,9 @@ const PercentageTeamTagsCompare = ({
           statisticAllTeamCategoryList.largeCategories || [],
         ),
       );
+      setDataChartMedium([]);
+      setDataChartSmall([]);
+      setDataChartCategory([]);
     }
   }, [statisticAllTeamCategoryList, selectedOrganization?.value]);
   useEffect(() => {
@@ -317,6 +320,9 @@ const PercentageTeamTagsCompare = ({
           statisticAllTeamCategoryCompareList.largeCategories || [],
         ),
       );
+      setDataChartMediumCompare([]);
+      setDataChartSmallCompare([]);
+      setDataChartCategoryCompare([]);
     }
   }, [statisticAllTeamCategoryCompareList, selectedOrganization?.value]);
 
