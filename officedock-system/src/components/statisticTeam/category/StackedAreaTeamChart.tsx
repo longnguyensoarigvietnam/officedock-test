@@ -171,7 +171,7 @@ const StackedAreaTeamChart = ({
     useState<boolean>(false);
 
   const [selectedCategory, setSelectedCategory] = useState<{
-    id: number;
+    id: number | string;
     name: string;
   } | null>(null);
   const [
@@ -196,7 +196,7 @@ const StackedAreaTeamChart = ({
     }[]
   >([]);
   const [selectedOrganizationInTable, setSelectedOrganizationInTable] =
-    useState<number>(0);
+    useState<number | string>(0);
 
   // Get initial member options
   useEffect(() => {

@@ -118,20 +118,7 @@ const LineChart = ({
   const [isExtendData, setIsExtendData] = useState(true);
   const [lineChartData, setLineChartData] = useState<{
     labels: string[];
-    datasets: {
-      label: string;
-      data: { x: any; y: number; endDate: any; color: any; label: any }[];
-      borderColor: string;
-      backgroundColor: string;
-      fill: boolean;
-      tension: number;
-      pointRadius: number;
-      pointBorderColor: string;
-      pointHoverRadius: number;
-      pointHoverBackgroundColor: string;
-      pointHoverBorderColor: string;
-      pointHoverBorderWidth: number;
-    }[];
+    datasets: CategoryLineChartDatasetInfo[];
   }>({
     labels: [],
     datasets: [],

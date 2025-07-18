@@ -9,7 +9,7 @@ import SubmitLevelUpModal from '@components/modals/SubmitLevelUpModal';
 import ViewSkillMapCommentModal from '@components/modals/ViewSkillMapCommentModal';
 import { StepInfoTooltip } from '@components/tooltip/StepInfoTooltip';
 
-import { SubmitLevelStatus } from '@constants/enums';
+import { ScreenName, SubmitLevelStatus } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
 import { ERROR_SAVE_MESSAGE, SUCCESS_SAVE_MESSAGE } from '@constants/message';
 import { SKILL_MAP_LEVEL_COUNT } from '@constants';
@@ -265,7 +265,7 @@ export const SkillMapByOrganizationPanel = ({
   // Call API to edit submitted level up
   const handleEditSubmittedLevelUp = async (data: SubmitLevelUpRequest) => {
     const { data: response } = await api.put(
-      apiRouters.SUBMIT_LEVELS_DETAIL(Number(data.submitLevel)),
+      `${apiRouters.SUBMIT_LEVELS_DETAIL(Number(data.submitLevel))}?current_screen=${ScreenName.MY_TASK_SKILL_MAP}`,
       { status: SubmitLevelStatus.PENDING, approverId: data.approverId },
     );
     return response;
@@ -293,7 +293,7 @@ export const SkillMapByOrganizationPanel = ({
   // Call API to submit level up
   const handleSubmitLevelUp = async (data: SubmitLevelUpRequest) => {
     const { data: response } = await api.post(
-      apiRouters.SUBMIT_LEVELS_LIST,
+      `${apiRouters.SUBMIT_LEVELS_LIST}?current_screen=${ScreenName.MY_TASK_SKILL_MAP}`,
       data,
     );
     return response;

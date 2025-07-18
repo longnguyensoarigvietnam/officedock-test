@@ -29,10 +29,12 @@ interface FilterProps {
 
 const useStatisticTagsTeamCompare = ({
   filter,
+  condition,
   onSuccess,
   onError,
 }: {
   filter?: FilterProps;
+  condition?: boolean[];
   onSuccess?: (data: StatisticsCategories) => void;
   onError?: (error: AxiosError) => void;
 }) => {
@@ -93,7 +95,7 @@ const useStatisticTagsTeamCompare = ({
     queryFn: ({ signal }) => getStatisticTagsListTeamCompare({ signal }),
 
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (data: StatisticsCategories) => {

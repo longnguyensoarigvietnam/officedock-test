@@ -475,6 +475,43 @@ export interface StatisticsAllTeamTaskDuration {
   }[];
 }
 
+export interface TeamDockStatisticsAllTeamTaskDuration {
+  data: {
+    color: string;
+    duration: string;
+    organizationId: string | number;
+    organizationName: string;
+    percent: number;
+    users: {
+      id: number;
+      fullName: string;
+      avatarColor: string;
+      avatar: string | null;
+      percent: number;
+      totalDuration: string;
+    }[];
+  }[];
+  durations: {
+    startDate: string;
+    endDate: string;
+    data: {
+      organizationId: string | number;
+      organizationName: string;
+      duration: string;
+      percent: number;
+      color: string;
+      users: {
+        id: number;
+        fullName: string;
+        avatarColor: string;
+        avatar: string | null;
+        percent: number;
+        totalDuration: string;
+      }[];
+    }[];
+  }[];
+}
+
 export interface StatisticsTagTaskDuration {
   tagId: number;
   tagName: string;
@@ -538,8 +575,8 @@ export type ProgressDataType = {
   organizationId?: string;
 };
 export interface CategoryTableRowDetail {
-  categoryId: number;
-  organizationId: number;
+  categoryId: string | number;
+  organizationId: string | number;
   categoryName: string;
   categoryDuration: string;
   categoryPercent: number;
@@ -554,11 +591,11 @@ export interface CategoryTableRowDetail {
 }
 
 export interface TagTableRowDetail {
-  tagId: number;
+  tagId: number | string;
   tagName: string;
   tagDuration: string;
   tagPercent: number;
-  organizationId: number;
+  organizationId: number | string;
   userList: {
     userId: number;
     userName: string;
@@ -652,7 +689,7 @@ export interface CategoryLineChartDatasetInfo {
     x: string;
     y: number;
     endDate: any;
-    color: string;
+    color?: string;
     label: string;
     type?: StatisticChartType;
     startDate?: any;
@@ -660,6 +697,15 @@ export interface CategoryLineChartDatasetInfo {
     anotherStartDate?: any;
     anotherEndDate?: any;
     anotherDuration?: string;
+    avatarColor?: string,
+    avatar?: string,
+    userId?: number,
+    user?: {
+      avatar: string | null,
+      avatarColor: string,
+      fullName: string,
+      id: number
+    }
   }[];
   borderColor: string;
   backgroundColor: string;
@@ -695,4 +741,50 @@ export interface MyDockLineChartTableItem {
   percent: string;
   color: string;
   type?: StatisticChartType.STANDARD | StatisticChartType.COMPARE;
+}
+
+export interface TeamDockAllTeamTableRowDetail {
+  id: string | number;
+  name: string;
+  duration: string;
+  percent: number;
+  userList: {
+    userId: number;
+    userName: string;
+    userAvatar?: string | null;
+    userAvatarColor: string;
+    userDuration: string;
+    userPercent: number;
+  }[];
+  type?: StatisticChartType.STANDARD | StatisticChartType.COMPARE;
+}
+
+export interface TeamDockMergedTable {
+  categoryId?: string | number
+  categoryName?: string;
+  tagId?: string | number;
+  tagName?: string
+  organizationId?: string | number;
+  standardInfo?: {
+    duration: string;
+    percent: number;
+  };
+  compareInfo?: {
+    duration: string;
+    percent: number;
+  };
+  userList: {
+    userId: number;
+    userName: string;
+    userAvatar?: string | null;
+    userAvatarColor: string;
+    standardInfo?: {
+      userDuration: string;
+      userPercent: number;
+    };
+    compareInfo?: {
+      userDuration: string;
+      userPercent: number;
+    };
+  }[];
 }

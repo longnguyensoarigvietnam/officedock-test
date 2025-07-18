@@ -259,6 +259,7 @@ const StatisticTeamBoard = () => {
             ? String(selectedOrganizationSideBar?.value || '')
             : undefined,
       },
+      condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
       onSuccess: (data) => {
         setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
         setTotalDurationMediumCompare(

@@ -136,7 +136,7 @@ const SkillList = () => {
           {session?.user.permissions &&
             hasPermissionInArray(
               session?.user.permissions,
-              PermissionsSystem.SKILL_MAP_UPDATE,
+              PermissionsSystem.SKILL_MAP_MANAGEMENT_VIEW,
             ) && (
               <Link href={pageRouters.SKILL_MAPS_MANAGEMENT.href}>
                 <Button className="w-[158px] !p-0 text-sm h-[34px] !border-transparent !text-[#77858F] bg-white rounded-[6px]">
