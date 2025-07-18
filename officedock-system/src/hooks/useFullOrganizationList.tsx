@@ -1,10 +1,8 @@
 'use client';
-import { useContext } from 'react';
 import { useQuery } from 'react-query';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
-import { LoadingContext } from '@providers/LoadingProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters, pageRouters } from '@constants/routers';
@@ -31,11 +29,8 @@ const useOrganizationOptions = ({
   const { data: session } = useSessionCache();
   const router = useRouter();
   const token = session?.accessToken;
-  const { setIsLoading } = useContext(LoadingContext);
   // Handle call API get organization list
   const getOrganizationList = async () => {
-    setIsLoading(true);
-
     const queryParams = [];
     if (is_with_staff) {
       queryParams.push(`is_with_staff=${is_with_staff}`);
@@ -78,7 +73,6 @@ const useOrganizationOptions = ({
       }
     },
     onSettled: () => {
-      setIsLoading(false);
     },
   });
   return {

@@ -111,13 +111,16 @@ const ListSkillsMap = () => {
   // Get organization skills
   const { organizationSkillList, refetchOrganizationSkillList } =
     useOrganizationSkillList({
-      organizationId: Number(selectedOrganizationOption.value),
-      filterSteps: selectedFilterStepDetail
-        ? String(selectedFilterStepDetail.filterStep)
-        : undefined,
-      filterOrganizationIds: selectedFilterStepDetail
-        ? Number(selectedFilterStepDetail.filterOrganizationId)
-        : undefined,
+      filter: {
+        organizationId: Number(selectedOrganizationOption.value),
+        filterSteps: selectedFilterStepDetail
+          ? String(selectedFilterStepDetail.filterStep)
+          : undefined,
+        filterOrganizationIds: selectedFilterStepDetail
+          ? Number(selectedFilterStepDetail.filterOrganizationId)
+          : undefined,
+      },
+      showLoadingIndicator: true
     });
 
   // Get skill map detail

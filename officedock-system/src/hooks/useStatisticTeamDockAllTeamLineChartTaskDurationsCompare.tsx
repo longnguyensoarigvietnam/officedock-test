@@ -61,6 +61,8 @@ const useStatisticTeamDockAllTeamLineChartTaskDurationsCompare = ({
     }
     if (filter?.userIds) {
       params.append('user_ids', filter.userIds);
+    } else{
+      params.append('user_ids', 'null');
     }
     if (filter?.option) {
       params.append('option', filter?.option);
@@ -81,7 +83,7 @@ const useStatisticTeamDockAllTeamLineChartTaskDurationsCompare = ({
   const {
     data: statisticTeamDockAllTeamLineChartTaskDurationsListCompare,
     refetch: refetchStatisticTeamDockAllTeamLineChartTaskDurationsListCompare,
-    isFetched: isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsListCompare,
+    isFetching: isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsListCompare
   } = useQuery({
     queryKey: ['getStatisticTeamDockAllTeamLineChartTaskDurationsCompare', [filter]],
     queryFn: ({ signal }) => getStatisticTeamDockAllTeamLineChartTaskDurationsCompare({ signal }),
@@ -101,7 +103,7 @@ const useStatisticTeamDockAllTeamLineChartTaskDurationsCompare = ({
   return {
     statisticTeamDockAllTeamLineChartTaskDurationsListCompare,
     refetchStatisticTeamDockAllTeamLineChartTaskDurationsListCompare,
-    isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsListCompare,
+    isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsListCompare,
   };
 };
 

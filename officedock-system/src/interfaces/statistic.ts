@@ -404,7 +404,7 @@ export interface StatisticsTaskDuration {
     endDate: string;
     data: {
       organizationId: number | string;
-      organizationName: string;
+      organizationName?: string;
       categoryId: number | string;
       categoryName: string;
       categoryColor: string;

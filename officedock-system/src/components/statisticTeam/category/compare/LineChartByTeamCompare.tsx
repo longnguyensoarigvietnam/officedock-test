@@ -294,7 +294,7 @@ const LineChartByTeamCompare = ({
   };
 
   // Get table info (statistic team standard categories)
-  const { isLoadingStatisticTableInTeamLineChart } =
+  const { isFetchingStatisticTableInTeamLineChart } =
     useStatisticTableInTeamLineChart({
       filter: {
         fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -340,7 +340,7 @@ const LineChartByTeamCompare = ({
     });
 
   // Get table info (statistic team compare categories)
-  const { isLoadingStatisticTableInTeamLineChartCompare } =
+  const { isFetchingStatisticTableInTeamLineChartCompare } =
     useStatisticTableInTeamLineChartCompare({
       filter: {
         fromDate: startDateCompare
@@ -432,7 +432,7 @@ const LineChartByTeamCompare = ({
   // Get user task durations
   const {
     statisticUserTaskDurationsList,
-    isLoadingStatisticUserTaskDurationsList,
+    isFetchingStatisticUserTaskDurationsList
   } = useStatisticUserTaskDurations({
     filter: {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -474,7 +474,7 @@ const LineChartByTeamCompare = ({
   // Get user task durations (compared)
   const {
     statisticUserTaskDurationsCompareList,
-    isLoadingStatisticUserTaskDurationsCompareList,
+    isFetchingStatisticUserTaskDurationsCompareList,
   } = useStatisticUserTaskDurationsCompare({
     filter: {
       fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
@@ -516,7 +516,7 @@ const LineChartByTeamCompare = ({
   // Get user task durations (all team case)
   const {
     statisticTeamDockAllTeamLineChartTaskDurationsList,
-    isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsList,
+    isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList
   } = useStatisticTeamDockAllTeamLineChartTaskDurations({
     filter: {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -541,7 +541,7 @@ const LineChartByTeamCompare = ({
   // Get compared user task durations (all team case)
   const {
     statisticTeamDockAllTeamLineChartTaskDurationsListCompare,
-    isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsListCompare,
+    isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsListCompare,
   } = useStatisticTeamDockAllTeamLineChartTaskDurationsCompare({
     filter: {
       fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
@@ -2130,10 +2130,10 @@ const LineChartByTeamCompare = ({
                         isChecked={selectedMembers.includes(member.id)}
                         color={member.color}
                         disable={
-                          isLoadingStatisticTableInTeamLineChart ||
-                          isLoadingStatisticTableInTeamLineChartCompare ||
-                          isLoadingStatisticUserTaskDurationsList ||
-                          isLoadingStatisticUserTaskDurationsCompareList
+                          isFetchingStatisticTableInTeamLineChart ||
+                          isFetchingStatisticTableInTeamLineChartCompare ||
+                          isFetchingStatisticUserTaskDurationsList ||
+                          isFetchingStatisticUserTaskDurationsCompareList
                         }
                         onChange={(state) => {
                           setMergedTableData([]);
@@ -2196,13 +2196,13 @@ const LineChartByTeamCompare = ({
             <></>
           )}
 
-          {(!isLoadingStatisticUserTaskDurationsList &&
-            !isLoadingStatisticUserTaskDurationsCompareList &&
-            !isLoadingStatisticTableInTeamLineChart &&
-            !isLoadingStatisticTableInTeamLineChartCompare &&
+          {(!isFetchingStatisticUserTaskDurationsList &&
+            !isFetchingStatisticUserTaskDurationsCompareList &&
+            !isFetchingStatisticTableInTeamLineChart &&
+            !isFetchingStatisticTableInTeamLineChartCompare &&
             selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-          (isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsList &&
-            isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsListCompare &&
+          (!isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList &&
+            !isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsListCompare &&
             selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
             <div
               style={{ position: 'relative' }}
@@ -2235,13 +2235,13 @@ const LineChartByTeamCompare = ({
           )}
 
           <div className="px-[30px]">
-            {(!isLoadingStatisticUserTaskDurationsList &&
-              !isLoadingStatisticUserTaskDurationsCompareList &&
-              !isLoadingStatisticTableInTeamLineChart &&
-              !isLoadingStatisticTableInTeamLineChartCompare &&
+            {(!isFetchingStatisticUserTaskDurationsList &&
+              !isFetchingStatisticUserTaskDurationsCompareList &&
+              !isFetchingStatisticTableInTeamLineChart &&
+              !isFetchingStatisticTableInTeamLineChartCompare &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-              (isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsList &&
-                isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsListCompare &&
+              (!isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList &&
+                !isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsListCompare &&
                 selectedOrganization?.value == ALL_TEAM_STATISTIC && (
                   <>
                     <div className="flex gap-8 items-center justify-end flex-wrap mb-3">
@@ -2281,10 +2281,10 @@ const LineChartByTeamCompare = ({
                   </>
                 ))}
 
-            {(!isLoadingStatisticTableInTeamLineChart &&
-              !isLoadingStatisticTableInTeamLineChartCompare) ||
-            (isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsList &&
-              isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsListCompare &&
+            {(!isFetchingStatisticTableInTeamLineChart &&
+              !isFetchingStatisticTableInTeamLineChartCompare) ||
+            (!isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList &&
+              !isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsListCompare &&
               selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <Table
                 className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${mergedTableData.length && 'max-h-[500px] overflow-y-auto'}`}>

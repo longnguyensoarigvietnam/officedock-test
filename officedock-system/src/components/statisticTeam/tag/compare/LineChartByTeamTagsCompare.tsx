@@ -317,7 +317,7 @@ const LineChartByTeamTagsCompare = ({
   // Get user task durations
   const {
     statisticUserTaskDurationsList,
-    isLoadingStatisticUserTaskDurationsList,
+    isFetchingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
     filter: {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -357,7 +357,7 @@ const LineChartByTeamTagsCompare = ({
   // Get user task durations (compared)
   const {
     statisticUserTaskDurationsCompareList,
-    isLoadingStatisticUserTaskDurationsCompareList,
+    isFetchingStatisticUserTaskDurationsCompareList,
   } = useStatisticUserTaskDurationsCompare({
     filter: {
       fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
@@ -397,7 +397,7 @@ const LineChartByTeamTagsCompare = ({
   // Get user task durations (all team case)
   const {
     statisticTeamDockAllTeamLineChartTaskDurationsList,
-    isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsList,
+    isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList,
   } = useStatisticTeamDockAllTeamLineChartTaskDurations({
     filter: {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -423,7 +423,7 @@ const LineChartByTeamTagsCompare = ({
   // Get compared user task durations (all team case)
   const {
     statisticTeamDockAllTeamLineChartTaskDurationsListCompare,
-    isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsListCompare,
+    isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsListCompare,
   } = useStatisticTeamDockAllTeamLineChartTaskDurationsCompare({
     filter: {
       fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
@@ -537,7 +537,7 @@ const LineChartByTeamTagsCompare = ({
   }, [allLabelUser]);
 
   // Get table info (statistic team standard categories)
-  const { isLoadingStatisticTableInTeamTagLineChart } =
+  const { isFetchingStatisticTableInTeamTagLineChart } =
     useStatisticTableInTeamTagLineChart({
       filter: {
         fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -608,7 +608,7 @@ const LineChartByTeamTagsCompare = ({
     });
 
   // Get table info (statistic team compare categories)
-  const { isLoadingStatisticTableInTeamTagLineChartCompare } =
+  const { isFetchingStatisticTableInTeamTagLineChartCompare } =
     useStatisticTableInTeamTagLineChartCompare({
       filter: {
         fromDate: startDateCompare
@@ -2366,10 +2366,10 @@ const LineChartByTeamTagsCompare = ({
                         id={String(member.id)}
                         isChecked={selectedMembers.includes(member.id)}
                         disable={
-                          isLoadingStatisticTableInTeamTagLineChart ||
-                          isLoadingStatisticTableInTeamTagLineChartCompare ||
-                          isLoadingStatisticUserTaskDurationsList ||
-                          isLoadingStatisticUserTaskDurationsCompareList
+                          isFetchingStatisticTableInTeamTagLineChart ||
+                          isFetchingStatisticTableInTeamTagLineChartCompare ||
+                          isFetchingStatisticUserTaskDurationsList ||
+                          isFetchingStatisticUserTaskDurationsCompareList
                         }
                         color={member.color}
                         onChange={(state) => {
@@ -2433,11 +2433,11 @@ const LineChartByTeamTagsCompare = ({
             <></>
           )}
 
-          {(!isLoadingStatisticUserTaskDurationsList &&
-            !isLoadingStatisticUserTaskDurationsCompareList &&
+          {(!isFetchingStatisticUserTaskDurationsList &&
+            !isFetchingStatisticUserTaskDurationsCompareList &&
             selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-          (isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsList &&
-            isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsListCompare &&
+          (!isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList &&
+            !isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsListCompare &&
             selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
             <div
               style={{ position: 'relative' }}
@@ -2470,11 +2470,11 @@ const LineChartByTeamTagsCompare = ({
           )}
 
           <div className="px-[30px]">
-            {(!isLoadingStatisticUserTaskDurationsList &&
-              !isLoadingStatisticUserTaskDurationsCompareList &&
+            {(!isFetchingStatisticUserTaskDurationsList &&
+              !isFetchingStatisticUserTaskDurationsCompareList &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-            (isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsList &&
-              isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsListCompare &&
+            (!isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList &&
+              !isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsListCompare &&
               selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <>
                 <div className="flex gap-8 items-center justify-end flex-wrap mb-3">
@@ -2516,11 +2516,11 @@ const LineChartByTeamTagsCompare = ({
               <></>
             )}
 
-            {(!isLoadingStatisticUserTaskDurationsList &&
-              !isLoadingStatisticUserTaskDurationsCompareList &&
+            {(!isFetchingStatisticUserTaskDurationsList &&
+              !isFetchingStatisticUserTaskDurationsCompareList &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-            (isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsList &&
-              isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsListCompare &&
+            (!isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList &&
+              !isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsListCompare &&
               selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <Table
                 className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${mergedTableData.length && 'max-h-[500px] overflow-y-auto'}`}>
