@@ -1455,7 +1455,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
             tags=tag_ids,
         )
         data = {"durations": [], "data": []}
-        if not durations.exists():
+        if not durations.exists() or not users:
             return self.response_ok(data)
 
         ranges = split_ranges(
@@ -1476,6 +1476,9 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
             fake_data["organization_name"] = CALENDAR
             fake_data["organization_id"] = calendar_org.id
         data = {"durations": []}
+        user_list = users.values(
+            "id", "profile__full_name", "avatar", "avatar_color"
+        )
         if is_tag_page:
             total_duration, data_list = process_merge_card_per_tag(
                 tag_ids,
@@ -1506,9 +1509,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
             if user_ids and option:
                 team["users"] = []
                 if team["organization_id"] != SUB_TEAM:
-                    for user in users.values(
-                        "id", "profile__full_name", "avatar", "avatar_color"
-                    ):
+                    for user in user_list:
                         team["users"].append(
                             self.build_user_duration_object(
                                 user,
@@ -1524,9 +1525,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                 all_subteams = team.pop("sub_teams")
                 if user_ids and option:
                     for subteam in all_subteams:
-                        for user in users.values(
-                            "id", "profile__full_name", "avatar", "avatar_color"
-                        ):
+                        for user in user_list:
                             team["users"].append(
                                 self.build_user_duration_object(
                                     user,
@@ -1585,7 +1584,6 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                     main_organization=main_organization,
                     calendar_organization=calendar_org,
                 )
-
             break_team = []
             for team in teams:
                 team.pop("data", None)
@@ -1599,16 +1597,14 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                         or option == MAIN_TEAM
                         and team["organization_id"] == int(main_organization_id)
                     ):
-                        for user in users.values(
-                            "id", "profile__full_name", "avatar", "avatar_color"
-                        ):
+                        for user in user_list:
                             team["users"].append(
                                 self.build_user_duration_object(
                                     user,
                                     filter_duration_by_range,
                                     team["organization_id"],
                                     team["organization_name"],
-                                    total_duration,
+                                    time_str_to_timedelta(team["duration"]),
                                     tag_ids,
                                     is_tag_page,
                                 )
@@ -1617,19 +1613,14 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                         break
                     elif option == SUB_TEAM and subteams:
                         for sub in all_subteams:
-                            for user in users.values(
-                                "id",
-                                "profile__full_name",
-                                "avatar",
-                                "avatar_color",
-                            ):
+                            for user in user_list:
                                 team["users"].append(
                                     self.build_user_duration_object(
                                         user,
                                         filter_duration_by_range,
                                         sub["organization_id"],
                                         sub["organization_name"],
-                                        total_duration,
+                                        time_str_to_timedelta(sub["duration"]),
                                         tag_ids,
                                         is_tag_page,
                                     )
