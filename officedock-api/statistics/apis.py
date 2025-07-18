@@ -1623,7 +1623,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                                         filter_duration_by_range,
                                         sub["organization_id"],
                                         sub["organization_name"],
-                                        time_str_to_timedelta(sub["duration"]),
+                                        time_str_to_timedelta(team["duration"]),
                                         tag_ids,
                                         is_tag_page,
                                     )
