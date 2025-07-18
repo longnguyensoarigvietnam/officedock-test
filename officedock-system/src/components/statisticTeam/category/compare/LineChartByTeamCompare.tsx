@@ -1226,6 +1226,14 @@ const LineChartByTeamCompare = ({
           selectedOrganizationSideBar?.value as number,
         ) || [];
       setMergedTableData(mergedCategories);
+      const foundSelectedOrganizationOption = mergedCategories.find(
+        (org) => org.categoryId == selectedOrganizationOptionInTable,
+      );
+      if (!foundSelectedOrganizationOption) {
+        setSelectedOrganizationOptionInTable(
+          String(mergedCategories[0]?.categoryId) as AllTeamStatisticOption,
+        );
+      }
 
       setCategoryCollapseStatuses(
         mergedCategories.map((category) => {

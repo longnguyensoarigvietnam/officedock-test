@@ -886,23 +886,25 @@ const LineChart = ({
           <div className="px-[30px]">
             {(!isFetchingStatisticTaskDurationsList &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-              (!isFetchingStatisticAllTeamTaskDurationsList &&
-                selectedOrganization?.value == ALL_TEAM_STATISTIC && (
-                  <div className="flex gap-8 items-center justify-end flex-wrap">
-                    {standardLabelsInfo.map((label, index) => {
-                      return (
-                        <div key={index} className="flex gap-1 items-center">
-                          <div
-                            className="w-8 h-1"
-                            style={{ backgroundColor: label.color }}></div>
-                          <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
-                            {label.name}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
+            (!isFetchingStatisticAllTeamTaskDurationsList &&
+              selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
+              <div className="flex gap-8 items-center justify-end flex-wrap">
+                {standardLabelsInfo.map((label, index) => {
+                  return (
+                    <div key={index} className="flex gap-1 items-center">
+                      <div
+                        className="w-8 h-1"
+                        style={{ backgroundColor: label.color }}></div>
+                      <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
+                        {label.name}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <></>
+            )}
 
             {(isFetchingStatisticTaskDurationsList &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
