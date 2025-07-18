@@ -1636,14 +1636,15 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                                 )
                         break_team.append(team)
                         break
+            break_team = break_team if (user_ids and option) else teams
+            if not break_team:
+                break_team = [fake_data]
 
             data["durations"].append(
                 {
                     "start_date": current_start.strftime(BASE_DATE_FORMAT),
                     "end_date": current_end.strftime(BASE_DATE_FORMAT),
-                    "data": break_team
-                    if (user_ids and option and break_team)
-                    else teams or [fake_data],
+                    "data": break_team,
                 }
             )
 
