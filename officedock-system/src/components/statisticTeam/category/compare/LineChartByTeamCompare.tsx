@@ -432,7 +432,7 @@ const LineChartByTeamCompare = ({
   // Get user task durations
   const {
     statisticUserTaskDurationsList,
-    isFetchingStatisticUserTaskDurationsList
+    isFetchingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
     filter: {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -516,7 +516,7 @@ const LineChartByTeamCompare = ({
   // Get user task durations (all team case)
   const {
     statisticTeamDockAllTeamLineChartTaskDurationsList,
-    isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList
+    isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList,
   } = useStatisticTeamDockAllTeamLineChartTaskDurations({
     filter: {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -718,7 +718,8 @@ const LineChartByTeamCompare = ({
     const tooltipEl = tooltipRef.current as TooltipDiv;
 
     if (!tooltipEl || !tooltipModel) return;
-    if(selectedOrganization?.value != ALL_TEAM_STATISTIC && !selectedCategory) return;
+    if (selectedOrganization?.value != ALL_TEAM_STATISTIC && !selectedCategory)
+      return;
 
     if (!tooltipModel.dataPoints || tooltipModel.dataPoints.length === 0) {
       tooltipEl.style.display = 'none';
@@ -784,7 +785,14 @@ const LineChartByTeamCompare = ({
     tooltipEl._reactRoot.render(
       <TeamDockCompareLineChartTooltip
         data={matchingDataPoints}
-        selectedOptionName={selectedCategory?.name || ''}
+        selectedOptionName={
+          selectedOrganization?.value != ALL_TEAM_STATISTIC
+            ? selectedCategory?.name || ''
+            : selectedOrganizationOptionInTable ==
+                AllTeamStatisticOption.MAIN_TEAM
+              ? selectedOrganizationSideBar?.label || ''
+              : selectedOrganizationOptionInTable
+        }
       />,
     );
 
@@ -1141,14 +1149,14 @@ const LineChartByTeamCompare = ({
         normalizeDurationUsersWithTeamDockStatisticAllTeam(
           statisticTeamDockAllTeamLineChartTaskDurationsList,
           selectedOrganizationOptionInTable,
-          selectedOrganizationSideBar?.value as number
+          selectedOrganizationSideBar?.value as number,
         );
 
       const normalizeComparedTaskDurations =
         normalizeDurationUsersWithTeamDockStatisticAllTeam(
           statisticTeamDockAllTeamLineChartTaskDurationsListCompare,
           selectedOrganizationOptionInTable,
-          selectedOrganizationSideBar?.value as number
+          selectedOrganizationSideBar?.value as number,
         );
 
       if (

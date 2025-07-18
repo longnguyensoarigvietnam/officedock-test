@@ -660,7 +660,14 @@ const LineChartByTeam = ({
     tooltipEl._reactRoot.render(
       <TeamDockLineChartTooltip
         data={matchingDataPoints}
-        selectedOptionName={selectedCategory?.name || ''}
+        selectedOptionName={
+          selectedOrganization?.value != ALL_TEAM_STATISTIC
+            ? selectedCategory?.name || ''
+            : selectedOrganizationOptionInTable ==
+                AllTeamStatisticOption.MAIN_TEAM
+              ? selectedOrganizationSideBar?.label || ''
+              : selectedOrganizationOptionInTable
+        }
       />,
     );
 
@@ -917,8 +924,9 @@ const LineChartByTeam = ({
       statisticTeamDockAllTeamLineChartTaskDurationsList
     ) {
       let labelList: string[] = [];
-      const legendList: { name: string; color: string }[] = [];
+      let legendList: { name: string; color: string }[] = [];
       let tableDetail: TableRowDetail[] = [];
+      const totalDurationList: string[] = [];
 
       // Map: organizationId -> dataset info
       const datasetMap = new Map<
@@ -1030,13 +1038,11 @@ const LineChartByTeam = ({
           labels: labelList,
           datasets: Array.from(datasetMap.values()),
         });
-        setLegendList(legendList);
       } else {
         setLineChartData({
           labels: [],
           datasets: [],
         });
-        setLegendList([]);
         setImages([]);
       }
 
@@ -1044,6 +1050,20 @@ const LineChartByTeam = ({
         tableDetail = buildTableDetailWithAllTeamOption(
           normalizeDataObject.data,
         );
+        legendList =
+          tableDetail
+            ?.find((org) => org.categoryId == selectedOrganizationOptionInTable)
+            ?.userList.map((user) => {
+              return {
+                color: user.userAvatarColor,
+                name: user.userName,
+              };
+            }) || [];
+        tableDetail.forEach((detail) => {
+          totalDurationList.push(detail.categoryDuration);
+        });
+        setTotalDuration(totalDurationsForStatistic(totalDurationList));
+        setLegendList(legendList);
         setCategoryCollapseStatuses(
           normalizeDataObject.data.map((organization) => {
             return {
@@ -1055,10 +1075,14 @@ const LineChartByTeam = ({
         setLineChartTableData(tableDetail);
       } else {
         setLineChartTableData([]);
+        setLegendList([]);
+        setTotalDuration(DEFAULT_TIME_TEXT);
       }
     }
   }, [
     statisticTeamDockAllTeamLineChartTaskDurationsList,
+    selectedOrganizationOptionInTable,
+    selectedOrganizationSideBar?.value,
     selectedOrganization?.value,
   ]);
 
