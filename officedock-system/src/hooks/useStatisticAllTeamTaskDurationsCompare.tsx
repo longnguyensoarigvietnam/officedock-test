@@ -78,7 +78,7 @@ const useStatisticAllTeamTaskDurationsCompare = ({
   const {
     data: statisticAllTeamTaskDurationsCompareList,
     refetch: refetchStatisticAllTeamTaskDurationsCompareList,
-    isFetched: isFetchedStatisticAllTeamTaskDurationsCompareList,
+    isFetching: isFetchingStatisticAllTeamTaskDurationsCompareList,
   } = useQuery({
     queryKey: ['getStatisticAllTeamTaskDurationsCompare', [filter]],
     queryFn: ({ signal }) =>
@@ -100,7 +100,7 @@ const useStatisticAllTeamTaskDurationsCompare = ({
   return {
     statisticAllTeamTaskDurationsCompareList,
     refetchStatisticAllTeamTaskDurationsCompareList,
-    isFetchedStatisticAllTeamTaskDurationsCompareList,
+    isFetchingStatisticAllTeamTaskDurationsCompareList,
   };
 };
 

@@ -47,7 +47,7 @@ const useStatisticTaskDurationsCompare = ({
   }) => {
     if (!filter?.organizationIds) return [];
     if (!filter?.isCompare) return [];
-    
+
     const apiUrl = `${apiRouters.STATISTICS_TASK_DURATIONS}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
     }${filter?.endDate ? `&end_date=${filter.endDate}` : ''}${
@@ -82,7 +82,7 @@ const useStatisticTaskDurationsCompare = ({
   const {
     data: statisticTaskDurationsCompareList,
     refetch: refetchStatisticTaskDurationsCompareList,
-    isFetched: isFetchedStatisticTaskDurationsCompareList,
+    isFetching: isFetchingStatisticTaskDurationsCompareList,
   } = useQuery({
     queryKey: ['getStatisticTaskDurationsCompareList', [filter]],
     queryFn: ({ signal }) => getStatisticTaskDurationsCompareList({ signal }),
@@ -102,7 +102,7 @@ const useStatisticTaskDurationsCompare = ({
   return {
     statisticTaskDurationsCompareList,
     refetchStatisticTaskDurationsCompareList,
-    isFetchedStatisticTaskDurationsCompareList,
+    isFetchingStatisticTaskDurationsCompareList,
   };
 };
 

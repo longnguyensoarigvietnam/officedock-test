@@ -220,35 +220,56 @@ const TableChart = ({
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
+        if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticAllTeamCategoryList',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticAllTeamTaskDurations',
+          });
+        } else {
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticCategoryListTeam',
+          });
+
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTableInTeamLineChart',
+          });
+        }
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
-        });
-
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            query.queryKey[0] === 'getStatisticCategoryListTeam',
-        });
-
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            query.queryKey[0] === 'getStatisticTableInTeamLineChart',
         });
 
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingOrganizationCompare(true);
+          if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticAllTeamCategoryCompareList',
+            });
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticAllTeamTaskDurationsCompare',
+            });
+          } else {
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
+            });
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticTableInTeamLineChartCompare',
+            });
+          }
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTaskListCompare',
-          });
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
-          });
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              query.queryKey[0] === 'getStatisticTableInTeamLineChartCompare',
           });
         }
       },
@@ -302,40 +323,56 @@ const TableChart = ({
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
+        if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticAllTeamCategoryList',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticAllTeamTaskDurations',
+          });
+        } else {
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticCategoryListTeam',
+          });
+
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTableInTeamLineChart',
+          });
+        }
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
         });
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            query.queryKey[0] === 'getStatisticCategoryListTeam',
-        });
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            query.queryKey[0] === 'getStatisticTableInTeamLineChart',
-        });
 
-        queryClient.invalidateQueries({
-          predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
-        });
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingOrganizationCompare(true);
+          if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticAllTeamCategoryCompareList',
+            });
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticAllTeamTaskDurationsCompare',
+            });
+          } else {
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
+            });
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticTableInTeamLineChartCompare',
+            });
+          }
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTaskListCompare',
-          });
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
-          });
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              query.queryKey[0] === 'getStatisticTableInTeamLineChartCompare',
-          });
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              query.queryKey[0] === 'getStatisticTagsListCompare',
           });
         }
       },

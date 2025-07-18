@@ -59,6 +59,7 @@ const ModalCustomTooltip = ({
     dataOrganization && dataOrganization.length > tooltipData.value
       ? dataOrganization[tooltipData.value]
       : undefined;
+
   return (
     <div className="py-5">
       {id == -1 ? (
@@ -192,7 +193,11 @@ const ModalCustomTooltip = ({
                       );
                     })
                   : option &&
-                    option.map((opt) => <li key={opt.label}>{opt.label}</li>)}
+                    option.map((opt) => (
+                      <li className="list-none line-clamp-3" key={opt.label}>
+                        {opt.label}
+                      </li>
+                    ))}
               </div>
             </div>
             {!isTeam && !isAllTeamOption && (

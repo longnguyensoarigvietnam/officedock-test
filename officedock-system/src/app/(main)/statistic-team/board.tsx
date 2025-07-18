@@ -22,6 +22,8 @@ import { pageRouters } from '@constants/routers';
 import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
 import { OrganizationStatisticType } from '@constants/enums';
 
+import useStatisticAllTeamCategories from '@hooks/useStatisticAllTeamCategories';
+import useStatisticAllTeamCategoriesCompare from '@hooks/useStatisticAllTeamCategoriesCompare';
 import useStatisticCategoriesTeam from '@hooks/useStatisticCategoriesTeam';
 import useStatisticCategoriesTeamCompare from '@hooks/useStatisticCategoriesTeamCompare';
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
@@ -29,13 +31,11 @@ import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import { OptionDropdownType } from '@interfaces/common';
 
 import { formatDateToYMD, sumDurations } from '@utils/date';
+import { removeDuplicateOptions } from '@utils';
 
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import useStatisticAllTeamCategories from '@hooks/useStatisticAllTeamCategories';
-import { removeDuplicateOptions } from '@utils';
-import useStatisticAllTeamCategoriesCompare from '@hooks/useStatisticAllTeamCategoriesCompare';
 
 const StatisticTeamBoard = () => {
   const {

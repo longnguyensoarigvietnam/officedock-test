@@ -26,10 +26,12 @@ interface FilterProps {
 
 const useStatisticAllTeamTaskDurations = ({
   filter,
+  isTeam,
   condition,
   onSuccess,
   onError,
 }: {
+  isTeam?: boolean;
   filter?: FilterProps;
   condition?: boolean[];
   onSuccess?: (data: StatisticsAllTeamTaskDuration) => void;
@@ -61,6 +63,8 @@ const useStatisticAllTeamTaskDurations = ({
     if (filter?.userIds?.length) {
       const userIds = filter.userIds.map((item) => item.value).join(',');
       params.append('user_ids', userIds);
+    } else {
+      if (isTeam) params.append('user_ids', String(null));
     }
     if (filter?.isTagPage) {
       params.append('is_tag_page', 'true');
@@ -84,7 +88,7 @@ const useStatisticAllTeamTaskDurations = ({
   const {
     data: statisticAllTeamTaskDurationsList,
     refetch: refetchStatisticAllTeamTaskDurationsList,
-    isFetched: isFetchedStatisticAllTeamTaskDurationsList,
+    isFetching: isFetchingStatisticAllTeamTaskDurationsList,
   } = useQuery({
     queryKey: ['getStatisticAllTeamTaskDurations', [filter]],
     queryFn: ({ signal }) => getStatisticAllTeamTaskDurations({ signal }),
@@ -107,7 +111,7 @@ const useStatisticAllTeamTaskDurations = ({
   return {
     statisticAllTeamTaskDurationsList,
     refetchStatisticAllTeamTaskDurationsList,
-    isFetchedStatisticAllTeamTaskDurationsList,
+    isFetchingStatisticAllTeamTaskDurationsList,
   };
 };
 

@@ -9,6 +9,7 @@ import {
   SkeletonElement,
 } from '@components/common/SkeletonLoading';
 import { Table, TableBody } from '@components/common/Table';
+import Spinner from '@components/common/Spinner';
 
 import useStatisticTask from '@hooks/useStatisticTask';
 import { ALL_TEAM_STATISTIC, PAGINATION_PAGE_SIZE_SMALL } from '@constants';
@@ -17,7 +18,6 @@ import { EventWorkCategory, OrderingDataType } from '@constants/enums';
 import { formatDateToYMD, formatTimeToJapanese } from '@utils/date';
 import { DataTaskListStatisticListType } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
-import Spinner from '@components/common/Spinner';
 
 type Props = {
   isDisable?: boolean;
@@ -135,8 +135,8 @@ const ListTaskDetailStatisticModal = ({
       if (
         chatContainer &&
         hastMore &&
-        chatContainer.clientHeight + Math.abs(chatContainer.scrollTop) ===
-          chatContainer.scrollHeight
+        chatContainer.clientHeight + Math.abs(chatContainer.scrollTop) >=
+          chatContainer.scrollHeight - 10
       ) {
         setIsFetching(true);
         refetchStatisticCategoryList();

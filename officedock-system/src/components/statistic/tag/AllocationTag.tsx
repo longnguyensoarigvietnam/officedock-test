@@ -15,12 +15,12 @@ import { formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
 
 import { EventWorkCategory } from '@constants/enums';
+import { ALL_TEAM_STATISTIC, SUB_TEAMS } from '@constants';
 
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 import ProgressBarStatistic from './ProgressBarStatistic';
 import FilterTag from './filter/FilterTag';
-import { ALL_TEAM_STATISTIC, SUB_TEAMS } from '@constants';
 
 type Props = {
   startDate: Date;

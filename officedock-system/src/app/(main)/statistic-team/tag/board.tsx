@@ -24,6 +24,8 @@ import { OrganizationStatisticType } from '@constants/enums';
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useStatisticTagsTeam from '@hooks/useStatisticTagsTeam';
 import useStatisticTagsTeamCompare from '@hooks/useStatisticTagsTeamCompare';
+import useStatisticAllTeamCategories from '@hooks/useStatisticAllTeamCategories';
+import useStatisticAllTeamCategoriesCompare from '@hooks/useStatisticAllTeamCategoriesCompare';
 
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import { useToast } from '@providers/ToastProvider';
@@ -33,8 +35,6 @@ import { OptionDropdownType } from '@interfaces/common';
 
 import { formatDateToYMD, sumDurations } from '@utils/date';
 import { removeDuplicateOptions } from '@utils';
-import useStatisticAllTeamCategories from '@hooks/useStatisticAllTeamCategories';
-import useStatisticAllTeamCategoriesCompare from '@hooks/useStatisticAllTeamCategoriesCompare';
 
 const StatisticTeamTagBoard = () => {
   const {

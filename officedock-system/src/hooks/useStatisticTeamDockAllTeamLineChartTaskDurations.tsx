@@ -19,8 +19,8 @@ interface FilterProps {
   userIds?: string;
   statisticBy?: string;
   isTagPage?: boolean;
-  option?: string
-  mainOrganizationId?: string
+  option?: string;
+  mainOrganizationId?: string;
 }
 
 const useStatisticTeamDockAllTeamLineChartTaskDurations = ({
@@ -71,9 +71,12 @@ const useStatisticTeamDockAllTeamLineChartTaskDurations = ({
 
     const apiUrl = `${apiRouters.STATISTICS_ALL_TEAMS_TASK_DURATIONS}?${params.toString()}`;
 
-    const { data } = await api.get<TeamDockStatisticsAllTeamTaskDuration>(apiUrl, {
-      signal,
-    });
+    const { data } = await api.get<TeamDockStatisticsAllTeamTaskDuration>(
+      apiUrl,
+      {
+        signal,
+      },
+    );
     return data;
   };
 
@@ -81,10 +84,11 @@ const useStatisticTeamDockAllTeamLineChartTaskDurations = ({
   const {
     data: statisticTeamDockAllTeamLineChartTaskDurationsList,
     refetch: refetchStatisticTeamDockAllTeamLineChartTaskDurationsList,
-    isFetched: isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsList,
+    isFetching: isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList,
   } = useQuery({
     queryKey: ['getStatisticTeamDockAllTeamLineChartTaskDurations', [filter]],
-    queryFn: ({ signal }) => getStatisticTeamDockAllTeamLineChartTaskDurations({ signal }),
+    queryFn: ({ signal }) =>
+      getStatisticTeamDockAllTeamLineChartTaskDurations({ signal }),
     retry: 0,
     enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,
@@ -101,7 +105,7 @@ const useStatisticTeamDockAllTeamLineChartTaskDurations = ({
   return {
     statisticTeamDockAllTeamLineChartTaskDurationsList,
     refetchStatisticTeamDockAllTeamLineChartTaskDurationsList,
-    isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsList,
+    isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList,
   };
 };
 

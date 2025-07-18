@@ -228,7 +228,7 @@ const StackedAreaTeamChart = ({
   // Get user task durations
   const {
     statisticUserTaskDurationsList,
-    isFetchedStatisticUserTaskDurationsList,
+    isFetchingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
     filter: {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -270,8 +270,9 @@ const StackedAreaTeamChart = ({
   // Get task durations for ALL TEAM option
   const {
     statisticAllTeamTaskDurationsList,
-    isFetchedStatisticAllTeamTaskDurationsList,
+    isFetchingStatisticAllTeamTaskDurationsList,
   } = useStatisticAllTeamTaskDurations({
+    isTeam: true,
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
@@ -1237,9 +1238,9 @@ const StackedAreaTeamChart = ({
               </div>
             </div>
           </div>
-          {(!isFetchedStatisticUserTaskDurationsList &&
+          {(isFetchingStatisticUserTaskDurationsList &&
             selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-          (!isFetchedStatisticAllTeamTaskDurationsList &&
+          (isFetchingStatisticAllTeamTaskDurationsList &&
             selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
             <RowSkeleton
               numberOfRows={1}
@@ -1255,7 +1256,12 @@ const StackedAreaTeamChart = ({
               />
               <div
                 style={{
-                  height: chartHeight + 5,
+                  height:
+                    selectedOrganization?.value == ALL_TEAM_STATISTIC &&
+                    orderingOptions?.user_ids &&
+                    orderingOptions?.user_ids.length > 5
+                      ? chartHeight + 3
+                      : chartHeight + 5,
                 }}
                 className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'} pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
                 {!(dataChart.length == 1 && !dataChart[0].name) &&
@@ -1408,9 +1414,9 @@ const StackedAreaTeamChart = ({
             </div>
           )}
           <div className="px-[30px]">
-            {(!isFetchedStatisticUserTaskDurationsList &&
+            {(isFetchingStatisticUserTaskDurationsList &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-            (!isFetchedStatisticAllTeamTaskDurationsList &&
+            (isFetchingStatisticAllTeamTaskDurationsList &&
               selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <StatisticLineChartTableSkeleton />
             ) : (

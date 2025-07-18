@@ -17,21 +17,21 @@ import StackedAreaChart from '@components/statistic/tag/StackedAreaChart';
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 import useStatisticTagsCompare from '@hooks/useStatisticTagsCompare';
 import useStatisticsTags from '@hooks/useStatisticTags';
-
-import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
-import { pageRouters } from '@constants/routers';
-
-import { OptionDropdownType } from '@interfaces/common';
-import { formatDateToYMD, sumDurations } from '@utils/date';
-import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
-import { OrganizationStatisticType } from '@constants/enums';
 import useStatisticAllTeamCategories from '@hooks/useStatisticAllTeamCategories';
-import { removeDuplicateOptions } from '@utils';
 import useStatisticAllTeamCategoriesCompare from '@hooks/useStatisticAllTeamCategoriesCompare';
 import useStatisticAllTeamTaskDurations from '@hooks/useStatisticAllTeamTaskDurations';
 import useStatisticTaskDurationsTag from '@hooks/useStatisticTaskDurationsTag';
 import useStatisticAllTeamTaskDurationsCompare from '@hooks/useStatisticAllTeamTaskDurationsCompare';
 import useStatisticTagTaskDurationsCompare from '@hooks/useStatisticTagTaskDurationsCompare';
+
+import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
+import { pageRouters } from '@constants/routers';
+import { OrganizationStatisticType } from '@constants/enums';
+
+import { OptionDropdownType } from '@interfaces/common';
+import { formatDateToYMD, sumDurations } from '@utils/date';
+import { removeDuplicateOptions } from '@utils';
+import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 const StatisticTagBoard = () => {
   const {
@@ -225,7 +225,7 @@ const StatisticTagBoard = () => {
   // Get task durations for options that except ALL TEAM option
   const {
     statisticTaskDurationsListTag,
-    isFetchedStatisticTaskDurationsListTag,
+    isFetchingStatisticTaskDurationsListTag,
   } = useStatisticTaskDurationsTag({
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
@@ -243,7 +243,7 @@ const StatisticTagBoard = () => {
   // Get compared task durations for options that except ALL TEAM option
   const {
     statisticTagTaskDurationsCompareList,
-    isFetchedStatisticTagTaskDurationsCompareList,
+    isFetchingStatisticTagTaskDurationsCompareList,
   } = useStatisticTagTaskDurationsCompare({
     filter: {
       fromDate: formatDateToYMD(startDateCompare) || '',
@@ -261,7 +261,7 @@ const StatisticTagBoard = () => {
   // Get task durations for ALL TEAM option
   const {
     statisticAllTeamTaskDurationsList,
-    isFetchedStatisticAllTeamTaskDurationsList,
+    isFetchingStatisticAllTeamTaskDurationsList,
   } = useStatisticAllTeamTaskDurations({
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
@@ -276,7 +276,7 @@ const StatisticTagBoard = () => {
   // Get compared task durations for ALL TEAM option
   const {
     statisticAllTeamTaskDurationsCompareList,
-    isFetchedStatisticAllTeamTaskDurationsCompareList,
+    isFetchingStatisticAllTeamTaskDurationsCompareList,
   } = useStatisticAllTeamTaskDurationsCompare({
     filter: {
       fromDate: formatDateToYMD(startDateCompare) || '',
@@ -551,17 +551,17 @@ const StatisticTagBoard = () => {
             statisticAllTeamTaskDurationsCompareList={
               statisticAllTeamTaskDurationsCompareList
             }
-            isFetchedStatisticTaskDurationsListTag={
-              isFetchedStatisticTaskDurationsListTag
+            isFetchingStatisticTaskDurationsListTag={
+              isFetchingStatisticTaskDurationsListTag
             }
-            isFetchedStatisticTagTaskDurationsCompareList={
-              isFetchedStatisticTagTaskDurationsCompareList
+            isFetchingStatisticTagTaskDurationsCompareList={
+              isFetchingStatisticTagTaskDurationsCompareList
             }
-            isFetchedStatisticAllTeamTaskDurationsList={
-              isFetchedStatisticAllTeamTaskDurationsList
+            isFetchingStatisticAllTeamTaskDurationsList={
+              isFetchingStatisticAllTeamTaskDurationsList
             }
-            isFetchedStatisticAllTeamTaskDurationsCompareList={
-              isFetchedStatisticAllTeamTaskDurationsCompareList
+            isFetchingStatisticAllTeamTaskDurationsCompareList={
+              isFetchingStatisticAllTeamTaskDurationsCompareList
             }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
@@ -601,11 +601,11 @@ const StatisticTagBoard = () => {
             statisticAllTeamTaskDurationsList={
               statisticAllTeamTaskDurationsList
             }
-            isFetchedStatisticTaskDurationsListTag={
-              isFetchedStatisticTaskDurationsListTag
+            isFetchingStatisticTaskDurationsListTag={
+              isFetchingStatisticTaskDurationsListTag
             }
-            isFetchedStatisticAllTeamTaskDurationsList={
-              isFetchedStatisticAllTeamTaskDurationsList
+            isFetchingStatisticAllTeamTaskDurationsList={
+              isFetchingStatisticAllTeamTaskDurationsList
             }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
@@ -620,11 +620,11 @@ const StatisticTagBoard = () => {
             statisticAllTeamTaskDurationsList={
               statisticAllTeamTaskDurationsList
             }
-            isFetchedStatisticTaskDurationsListTag={
-              isFetchedStatisticTaskDurationsListTag
+            isFetchingStatisticTaskDurationsListTag={
+              isFetchingStatisticTaskDurationsListTag
             }
-            isFetchedStatisticAllTeamTaskDurationsList={
-              isFetchedStatisticAllTeamTaskDurationsList
+            isFetchingStatisticAllTeamTaskDurationsList={
+              isFetchingStatisticAllTeamTaskDurationsList
             }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}

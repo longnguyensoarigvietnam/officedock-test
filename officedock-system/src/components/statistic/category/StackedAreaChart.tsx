@@ -55,8 +55,8 @@ type Props = {
   statisticCategoryList: StatisticsCategories | undefined;
   statisticTaskDurationsList: StatisticsTaskDuration | undefined;
   statisticAllTeamTaskDurationsList: StatisticsAllTeamTaskDuration | undefined;
-  isFetchedStatisticTaskDurationsList: boolean;
-  isFetchedStatisticAllTeamTaskDurationsList: boolean;
+  isFetchingStatisticTaskDurationsList: boolean;
+  isFetchingStatisticAllTeamTaskDurationsList: boolean;
 
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
@@ -69,8 +69,8 @@ const StackedAreaChart = ({
   statisticAllTeamTaskDurationsList,
   startDate,
   endDate,
-  isFetchedStatisticTaskDurationsList,
-  isFetchedStatisticAllTeamTaskDurationsList,
+  isFetchingStatisticTaskDurationsList,
+  isFetchingStatisticAllTeamTaskDurationsList,
   handleSelectOrganization,
   handleSelectLarge,
   handleSelectMedium,
@@ -92,7 +92,6 @@ const StackedAreaChart = ({
   } = useContext(StatisticStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
-
   // Sorting
   const [percentageSortingStatus, setPercentageSortingStatus] =
     useState<string>('');
@@ -261,7 +260,6 @@ const StackedAreaChart = ({
           },
         );
 
-        // Sắp xếp theo danh sách đã chọn nếu có
         let sortSource: StatisticCategoryInfo[] | undefined =
           statisticCategoryList?.largeCategories;
 
@@ -337,11 +335,6 @@ const StackedAreaChart = ({
       statisticAllTeamTaskDurationsList &&
       selectedOrganization?.value === ALL_TEAM_STATISTIC
     ) {
-      const baseColor =
-        statisticCategoryList?.largeCategories?.find(
-          (item) => item.categoryId === selectedLarge?.value,
-        )?.categoryColor || '';
-
       const colorListData: string[] = [];
       const tableDetail: {
         categoryId: number | string;
@@ -362,10 +355,7 @@ const StackedAreaChart = ({
       // ===== TABLE DATA =====
       if (normalizeDataObject?.data?.length > 0) {
         normalizeDataObject.data.forEach((data) => {
-          const finalColor =
-            data.color ||
-            (baseColor && lightenColor(baseColor, data?.percent || 0)) ||
-            getRandomColor();
+          const finalColor = data.color || getRandomColor();
 
           tableDetail.push({
             categoryId: data.organizationId,
@@ -379,7 +369,7 @@ const StackedAreaChart = ({
         });
 
         setTableData(tableDetail);
-        setColorList(colorListData);
+        setColorList(colorListData.reverse());
       } else {
         setTableData([]);
         setColorList([]);
@@ -969,9 +959,9 @@ const StackedAreaChart = ({
               </div>
             </div>
           </div>
-          {(!isFetchedStatisticTaskDurationsList &&
+          {(isFetchingStatisticTaskDurationsList &&
             selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-          (!isFetchedStatisticAllTeamTaskDurationsList &&
+          (isFetchingStatisticAllTeamTaskDurationsList &&
             selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
             <RowSkeleton
               numberOfRows={1}
@@ -988,9 +978,13 @@ const StackedAreaChart = ({
               <div
                 style={{
                   height:
-                    selectedTags.length > 0
-                      ? chartHeight - (selectedTags.length < 3 ? 1 : 2)
-                      : chartHeight + 5,
+                    selectedOrganization?.value == ALL_TEAM_STATISTIC
+                      ? selectedTags.length > 5
+                        ? chartHeight + 2
+                        : chartHeight + 5
+                      : selectedTags.length > 1
+                        ? chartHeight + 2
+                        : chartHeight + 5,
                 }}
                 className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'}  pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
                 {!(dataChart.length == 1 && !dataChart[0].name) &&
@@ -1006,6 +1000,10 @@ const StackedAreaChart = ({
                       const dataDetailAllTeam =
                         statisticAllTeamTaskDurationsList &&
                         statisticAllTeamTaskDurationsList.durations[idx];
+                      const dataEmpty =
+                        dataDetailAllTeam && dataDetailAllTeam.data.length
+                          ? []
+                          : tableData;
                       return (
                         <div
                           key={actualIndex}
@@ -1088,30 +1086,55 @@ const StackedAreaChart = ({
                                   )}
                                 </p>
                                 <div className="max-h-[250px] overflow-y-auto px-5">
-                                  {dataDetailAllTeam?.data.map(
-                                    (org, orgIndex) => {
-                                      return (
-                                        <div
-                                          key={orgIndex}
-                                          className="flex items-baseline gap-1.5">
-                                          <div
-                                            className="w-3 h-3 rounded-sm"
-                                            style={{
-                                              backgroundColor: org.color,
-                                            }}
-                                          />
-                                          <div className="flex flex-grow items-baseline justify-between text-base font-medium w-full">
-                                            <div className=" text-black w-[calc(100%_-_60px)] max-w-[calc(100%_-_60px)] line-clamp-3 break-all text-left">
-                                              {org.organizationName}
+                                  {dataDetailAllTeam?.data &&
+                                  dataDetailAllTeam.data.length
+                                    ? dataDetailAllTeam?.data.map(
+                                        (org, orgIndex) => {
+                                          return (
+                                            <div
+                                              key={orgIndex}
+                                              className="flex items-baseline gap-1.5">
+                                              <div
+                                                className="w-3 h-3 rounded-sm"
+                                                style={{
+                                                  backgroundColor: org.color,
+                                                }}
+                                              />
+                                              <div className="flex flex-grow items-baseline justify-between text-base font-medium w-full">
+                                                <div className=" text-black w-[calc(100%_-_60px)] max-w-[calc(100%_-_60px)] line-clamp-3 break-all text-left">
+                                                  {org.organizationName}
+                                                </div>
+                                                <p className="w-[50px] text-right">
+                                                  {org.percent}%
+                                                </p>
+                                              </div>
                                             </div>
-                                            <p className="w-[50px] text-right">
-                                              {org.percent}%
-                                            </p>
+                                          );
+                                        },
+                                      )
+                                    : dataEmpty?.map((org, orgIndex) => {
+                                        return (
+                                          <div
+                                            key={orgIndex}
+                                            className="flex items-baseline gap-1.5">
+                                            <div
+                                              className="w-3 h-3 rounded-sm"
+                                              style={{
+                                                backgroundColor:
+                                                  org.categoryColor,
+                                              }}
+                                            />
+                                            <div className="flex flex-grow items-baseline justify-between text-base font-medium w-full">
+                                              <div className=" text-black w-[calc(100%_-_60px)] max-w-[calc(100%_-_60px)] line-clamp-3 break-all text-left">
+                                                {org.categoryName}
+                                              </div>
+                                              <p className="w-[50px] text-right">
+                                                {0}%
+                                              </p>
+                                            </div>
                                           </div>
-                                        </div>
-                                      );
-                                    },
-                                  )}
+                                        );
+                                      })}
                                 </div>
                               </div>
                             )}
@@ -1122,9 +1145,9 @@ const StackedAreaChart = ({
             </div>
           )}
           <div className="px-[30px]">
-            {(!isFetchedStatisticTaskDurationsList &&
+            {(isFetchingStatisticTaskDurationsList &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-            (!isFetchedStatisticAllTeamTaskDurationsList &&
+            (isFetchingStatisticAllTeamTaskDurationsList &&
               selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <StatisticLineChartTableSkeleton />
             ) : (

@@ -99,10 +99,10 @@ type Props = {
   statisticAllTeamTaskDurationsCompareList:
     | StatisticsAllTeamTaskDuration
     | undefined;
-  isFetchedStatisticTaskDurationsListTag: boolean;
-  isFetchedStatisticTagTaskDurationsCompareList: boolean;
-  isFetchedStatisticAllTeamTaskDurationsList: boolean;
-  isFetchedStatisticAllTeamTaskDurationsCompareList: boolean;
+  isFetchingStatisticTaskDurationsListTag: boolean;
+  isFetchingStatisticTagTaskDurationsCompareList: boolean;
+  isFetchingStatisticAllTeamTaskDurationsList: boolean;
+  isFetchingStatisticAllTeamTaskDurationsCompareList: boolean;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -118,10 +118,10 @@ const LineChartCompare = ({
   statisticTagTaskDurationsCompareList,
   statisticAllTeamTaskDurationsList,
   statisticAllTeamTaskDurationsCompareList,
-  isFetchedStatisticTaskDurationsListTag,
-  isFetchedStatisticTagTaskDurationsCompareList,
-  isFetchedStatisticAllTeamTaskDurationsList,
-  isFetchedStatisticAllTeamTaskDurationsCompareList,
+  isFetchingStatisticTaskDurationsListTag,
+  isFetchingStatisticTagTaskDurationsCompareList,
+  isFetchingStatisticAllTeamTaskDurationsList,
+  isFetchingStatisticAllTeamTaskDurationsCompareList,
   handleSelectOrganization,
   handleSelectLarge,
   handleSelectMedium,
@@ -1334,11 +1334,11 @@ const LineChartCompare = ({
               </div>
             </div>
           </div>
-          {(isFetchedStatisticTagTaskDurationsCompareList &&
-            isFetchedStatisticTaskDurationsListTag &&
+          {(!isFetchingStatisticTagTaskDurationsCompareList &&
+            !isFetchingStatisticTaskDurationsListTag &&
             selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-          (isFetchedStatisticAllTeamTaskDurationsCompareList &&
-            isFetchedStatisticAllTeamTaskDurationsList &&
+          (!isFetchingStatisticAllTeamTaskDurationsCompareList &&
+            !isFetchingStatisticAllTeamTaskDurationsList &&
             selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
             <div
               style={{ position: 'relative' }}
@@ -1370,11 +1370,11 @@ const LineChartCompare = ({
           )}
 
           <div className="px-[30px]">
-            {(isFetchedStatisticTagTaskDurationsCompareList &&
-              isFetchedStatisticTaskDurationsListTag &&
+            {(!isFetchingStatisticTagTaskDurationsCompareList &&
+              !isFetchingStatisticTaskDurationsListTag &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-            (isFetchedStatisticAllTeamTaskDurationsCompareList &&
-              isFetchedStatisticAllTeamTaskDurationsList &&
+            (!isFetchingStatisticAllTeamTaskDurationsCompareList &&
+              !isFetchingStatisticAllTeamTaskDurationsList &&
               selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <>
                 <div className="flex gap-8 items-center justify-end flex-wrap mb-3">
@@ -1416,11 +1416,11 @@ const LineChartCompare = ({
               <></>
             )}
 
-            {(isFetchedStatisticTagTaskDurationsCompareList &&
-              isFetchedStatisticTaskDurationsListTag &&
+            {(!isFetchingStatisticTagTaskDurationsCompareList &&
+              !isFetchingStatisticTaskDurationsListTag &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-            (isFetchedStatisticAllTeamTaskDurationsCompareList &&
-              isFetchedStatisticAllTeamTaskDurationsList &&
+            (!isFetchingStatisticAllTeamTaskDurationsCompareList &&
+              !isFetchingStatisticAllTeamTaskDurationsList &&
               selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <Table
                 className={`w-full border border-gray-300 mt-5 !rounded-md ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>
