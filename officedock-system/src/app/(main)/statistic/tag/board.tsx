@@ -17,14 +17,21 @@ import StackedAreaChart from '@components/statistic/tag/StackedAreaChart';
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 import useStatisticTagsCompare from '@hooks/useStatisticTagsCompare';
 import useStatisticsTags from '@hooks/useStatisticTags';
+import useStatisticAllTeamCategories from '@hooks/useStatisticAllTeamCategories';
+import useStatisticAllTeamCategoriesCompare from '@hooks/useStatisticAllTeamCategoriesCompare';
+import useStatisticAllTeamTaskDurations from '@hooks/useStatisticAllTeamTaskDurations';
+import useStatisticTaskDurationsTag from '@hooks/useStatisticTaskDurationsTag';
+import useStatisticAllTeamTaskDurationsCompare from '@hooks/useStatisticAllTeamTaskDurationsCompare';
+import useStatisticTagTaskDurationsCompare from '@hooks/useStatisticTagTaskDurationsCompare';
 
-import { ALL_TEAM_STATISTIC } from '@constants';
+import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
 import { pageRouters } from '@constants/routers';
+import { OrganizationStatisticType } from '@constants/enums';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
+import { removeDuplicateOptions } from '@utils';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
-import { OrganizationStatisticType } from '@constants/enums';
 
 const StatisticTagBoard = () => {
   const {
@@ -38,6 +45,7 @@ const StatisticTagBoard = () => {
     selectedOrganization,
     selectedTags,
     selectedSmall,
+    lineChartViewBy,
     setSelectedTags,
     setTagsOptions,
     setTotalDurationSmall,
@@ -66,6 +74,8 @@ const StatisticTagBoard = () => {
     setIsLoadingSmallCompare,
     setCurrentPage,
     setDataMediumCalendar,
+    setTotalDurationTask,
+    setTotalDurationTaskCompare,
   } = useContext(StatisticTagStateContext);
   const [isMyTask, setIsMyTask] = useState(true);
   const router = useRouter();
@@ -80,6 +90,7 @@ const StatisticTagBoard = () => {
       smallCategoryId: selectedSmall?.value as number,
       tagIds: selectedTags,
     },
+    condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
     onSuccess: (data) => {
       const organization = creationDataStatisticData?.organizations?.find(
         (org) => org.id === selectedOrganization?.value,
@@ -91,12 +102,7 @@ const StatisticTagBoard = () => {
             label: stat.LARGE.name,
           }),
         );
-        // If organization is all team then return here
-        if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
-          setLargeOptions([]);
-        } else {
-          setLargeOptions(largeCategories);
-        }
+        setLargeOptions(largeCategories);
       } else {
         setLargeOptions([]);
       }
@@ -105,8 +111,52 @@ const StatisticTagBoard = () => {
       setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmall(sumDurations(data.smallCategories ?? []));
       setTotalDurationCategory(sumDurations(data.category ?? []));
+      if (data.largeTotalDuration) {
+        if (data.mediumTotalDuration) {
+          if (data.smallTotalDuration) {
+            if (data.categoryTotalDuration) {
+              setTotalDurationTask(data.categoryTotalDuration);
+            } else {
+              setTotalDurationTask(data.smallTotalDuration);
+            }
+          } else {
+            if (
+              selectedMedium &&
+              selectedMedium.value &&
+              selectedOrganization?.type === OrganizationStatisticType.CALENDAR
+            ) {
+              setTotalDurationTask(DEFAULT_TIME_TEXT);
+              return;
+            }
+            if (selectedSmall && selectedSmall.value) return;
+
+            setTotalDurationTask(data.mediumTotalDuration);
+          }
+        } else {
+          if (selectedLarge && selectedLarge.value) return;
+          setTotalDurationTask(data.largeTotalDuration);
+        }
+      } else {
+        setTotalDurationTask(DEFAULT_TIME_TEXT);
+      }
     },
   });
+  // Get statistic categories for ALL TEAM option
+  const { statisticAllTeamCategoryList } = useStatisticAllTeamCategories({
+    filter: {
+      fromDate: formatDateToYMD(startDate) || '',
+      endDate: formatDateToYMD(`${endDate}`) || '',
+      tagIds: selectedTags,
+      isTagPage: true,
+    },
+    condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
+    onSuccess: (data) => {
+      setLargeOptions([]);
+      setTotalDurationLarge(data.largeTotalDuration);
+      setTotalDurationTask(data.largeTotalDuration);
+    },
+  });
+
   const { statisticTagsListCompare } = useStatisticTagsCompare({
     filter: {
       fromDate: formatDateToYMD(startDateCompare) || '',
@@ -114,19 +164,131 @@ const StatisticTagBoard = () => {
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: selectedLarge?.value as number,
       mediumCategoryId: selectedMedium?.value as number,
-
       smallCategoryId: selectedSmall?.value as number,
       tagIds: selectedTags,
-
       isCompare: isCheckCompare,
     },
+    condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
     onSuccess: (data) => {
       setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
       setTotalDurationMediumCompare(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmallCompare(sumDurations(data.smallCategories ?? []));
       setTotalDurationCategoryCompare(sumDurations(data.category ?? []));
+      if (data.largeTotalDuration) {
+        if (data.mediumTotalDuration) {
+          if (data.smallTotalDuration) {
+            if (data.categoryTotalDuration) {
+              setTotalDurationTaskCompare(data.categoryTotalDuration);
+            } else {
+              setTotalDurationTaskCompare(data.smallTotalDuration);
+            }
+          } else {
+            if (
+              selectedMedium &&
+              selectedMedium.value &&
+              selectedOrganization?.type === OrganizationStatisticType.CALENDAR
+            ) {
+              setTotalDurationTaskCompare(DEFAULT_TIME_TEXT);
+              return;
+            }
+            if (selectedSmall && selectedSmall.value) return;
+
+            setTotalDurationTaskCompare(data.mediumTotalDuration);
+          }
+        } else {
+          if (selectedLarge && selectedLarge.value) return;
+          setTotalDurationTaskCompare(data.largeTotalDuration);
+        }
+      } else {
+        setTotalDurationTaskCompare(DEFAULT_TIME_TEXT);
+      }
     },
   });
+  // Get statistic compared categories for ALL TEAM option
+  const { statisticAllTeamCategoryCompareList } =
+    useStatisticAllTeamCategoriesCompare({
+      filter: {
+        fromDate: formatDateToYMD(startDateCompare) || '',
+        endDate: formatDateToYMD(`${endDateCompare}`) || '',
+        tagIds: selectedTags,
+        isCompare: isCheckCompare,
+        isTagPage: true,
+      },
+      condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
+      onSuccess: (data) => {
+        setLargeOptions([]);
+        setTotalDurationLargeCompare(data.largeTotalDuration);
+        setTotalDurationTaskCompare(data.largeTotalDuration);
+      },
+    });
+
+  // Get task durations for options that except ALL TEAM option
+  const {
+    statisticTaskDurationsListTag,
+    isFetchingStatisticTaskDurationsListTag,
+  } = useStatisticTaskDurationsTag({
+    filter: {
+      fromDate: formatDateToYMD(startDate) || '',
+      endDate: formatDateToYMD(`${endDate}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: selectedLarge?.value || '',
+      mediumCategoryId: selectedMedium?.value || '',
+      smallCategoryId: selectedSmall?.value as number,
+      tagIds: selectedTags,
+      statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
+    },
+    condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
+  });
+
+  // Get compared task durations for options that except ALL TEAM option
+  const {
+    statisticTagTaskDurationsCompareList,
+    isFetchingStatisticTagTaskDurationsCompareList,
+  } = useStatisticTagTaskDurationsCompare({
+    filter: {
+      fromDate: formatDateToYMD(startDateCompare) || '',
+      endDate: formatDateToYMD(`${endDateCompare}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: selectedLarge?.value || '',
+      mediumCategoryId: selectedMedium?.value || '',
+      smallCategoryId: selectedSmall?.value || '',
+      tagIds: selectedTags,
+      statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
+    },
+    condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
+  });
+
+  // Get task durations for ALL TEAM option
+  const {
+    statisticAllTeamTaskDurationsList,
+    isFetchingStatisticAllTeamTaskDurationsList,
+  } = useStatisticAllTeamTaskDurations({
+    filter: {
+      fromDate: formatDateToYMD(startDate) || '',
+      endDate: formatDateToYMD(`${endDate}`) || '',
+      tagIds: selectedTags,
+      statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
+      isTagPage: true,
+    },
+    condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
+  });
+
+  // Get compared task durations for ALL TEAM option
+  const {
+    statisticAllTeamTaskDurationsCompareList,
+    isFetchingStatisticAllTeamTaskDurationsCompareList,
+  } = useStatisticAllTeamTaskDurationsCompare({
+    filter: {
+      fromDate: formatDateToYMD(startDateCompare) || '',
+      endDate: formatDateToYMD(`${endDateCompare}`) || '',
+      tagIds: selectedTags,
+      statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
+      isTagPage: true,
+    },
+    condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
+  });
+
+  // Get data creation
   const { creationDataStatisticData } = useCreationDataStatistic({
     is_statistic: true,
 
@@ -202,7 +364,7 @@ const StatisticTagBoard = () => {
       if (data?.value === ALL_TEAM_STATISTIC) {
         setLargeOptions([]);
       } else {
-        setLargeOptions(largeCategories);
+        setLargeOptions(removeDuplicateOptions(largeCategories));
       }
     } else {
       setLargeOptions([]);
@@ -239,7 +401,7 @@ const StatisticTagBoard = () => {
         label: medium.MEDIUM?.name || '',
       }));
 
-      setMediumOptions(mediumCategories);
+      setMediumOptions(removeDuplicateOptions(mediumCategories));
     } else {
       setMediumOptions([]);
     }
@@ -278,7 +440,7 @@ const StatisticTagBoard = () => {
           value: small.id,
           label: small.name,
         }));
-      setSmallOptions(smallCategories);
+      setSmallOptions(removeDuplicateOptions(smallCategories));
     } else {
       setSmallOptions([]);
     }
@@ -347,6 +509,10 @@ const StatisticTagBoard = () => {
             endDateCompare={endDateCompare}
             statisticTagsList={statisticTagsList}
             statisticTagsCompareList={statisticTagsListCompare}
+            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
+            statisticAllTeamCategoryCompareList={
+              statisticAllTeamCategoryCompareList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -360,6 +526,10 @@ const StatisticTagBoard = () => {
             endDateCompare={endDateCompare}
             statisticTagsList={statisticTagsList}
             statisticTagsCompareList={statisticTagsListCompare}
+            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
+            statisticAllTeamCategoryCompareList={
+              statisticAllTeamCategoryCompareList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -371,6 +541,28 @@ const StatisticTagBoard = () => {
             endDate={endDate}
             startDateCompare={startDateCompare}
             endDateCompare={endDateCompare}
+            statisticTaskDurationsListTag={statisticTaskDurationsListTag}
+            statisticTagTaskDurationsCompareList={
+              statisticTagTaskDurationsCompareList
+            }
+            statisticAllTeamTaskDurationsList={
+              statisticAllTeamTaskDurationsList
+            }
+            statisticAllTeamTaskDurationsCompareList={
+              statisticAllTeamTaskDurationsCompareList
+            }
+            isFetchingStatisticTaskDurationsListTag={
+              isFetchingStatisticTaskDurationsListTag
+            }
+            isFetchingStatisticTagTaskDurationsCompareList={
+              isFetchingStatisticTagTaskDurationsCompareList
+            }
+            isFetchingStatisticAllTeamTaskDurationsList={
+              isFetchingStatisticAllTeamTaskDurationsList
+            }
+            isFetchingStatisticAllTeamTaskDurationsCompareList={
+              isFetchingStatisticAllTeamTaskDurationsCompareList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -384,6 +576,7 @@ const StatisticTagBoard = () => {
             startDate={startDate}
             endDate={endDate}
             statisticTagsList={statisticTagsList}
+            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectSmall={handleSelectSmall}
@@ -394,6 +587,7 @@ const StatisticTagBoard = () => {
             startDate={startDate}
             endDate={endDate}
             statisticTagsList={statisticTagsList}
+            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -403,6 +597,16 @@ const StatisticTagBoard = () => {
           <LineChart
             startDate={startDate}
             endDate={endDate}
+            statisticTaskDurationsListTag={statisticTaskDurationsListTag}
+            statisticAllTeamTaskDurationsList={
+              statisticAllTeamTaskDurationsList
+            }
+            isFetchingStatisticTaskDurationsListTag={
+              isFetchingStatisticTaskDurationsListTag
+            }
+            isFetchingStatisticAllTeamTaskDurationsList={
+              isFetchingStatisticAllTeamTaskDurationsList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -412,6 +616,16 @@ const StatisticTagBoard = () => {
             startDate={startDate}
             endDate={endDate}
             statisticTagsList={statisticTagsList}
+            statisticTaskDurationsList={statisticTaskDurationsListTag}
+            statisticAllTeamTaskDurationsList={
+              statisticAllTeamTaskDurationsList
+            }
+            isFetchingStatisticTaskDurationsListTag={
+              isFetchingStatisticTaskDurationsListTag
+            }
+            isFetchingStatisticAllTeamTaskDurationsList={
+              isFetchingStatisticAllTeamTaskDurationsList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -427,7 +641,6 @@ const StatisticTagBoard = () => {
         startDateCompare={startDateCompare}
         endDateCompare={endDateCompare}
         isCheckCompare={isCheckCompare}
-        statisticTagsList={statisticTagsList}
         handleSelectOrganization={handleSelectOrganization}
         handleSelectLarge={handleSelectLarge}
         handleSelectMedium={handleSelectMedium}

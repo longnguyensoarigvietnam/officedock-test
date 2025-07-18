@@ -102,7 +102,7 @@ const DetailProfileMemberModal = memo(
       session?.user.permissions &&
       hasPermissionInArray(
         session?.user.permissions,
-        PermissionsSystem.SKILL_MAP_VIEW,
+        PermissionsSystem.TEAM_DOCK_SKILL_MAP_VIEW,
       );
     const isPermissionDailyTeamView =
       session?.user.permissions &&
@@ -215,6 +215,7 @@ const DetailProfileMemberModal = memo(
 
                       params.set('is_map', 'true');
                       params.set('user_organization', organizationId);
+                      params.set('tabId', '1');
 
                       const newPath = `${pageRouters.SKILL_MAP_TEAM_DETAIL.href(Number(userDetail?.id))}?${params.toString()}`;
                       router.push(newPath);

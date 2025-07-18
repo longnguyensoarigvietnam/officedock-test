@@ -22,6 +22,8 @@ import { pageRouters } from '@constants/routers';
 import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
 import { OrganizationStatisticType } from '@constants/enums';
 
+import useStatisticAllTeamCategories from '@hooks/useStatisticAllTeamCategories';
+import useStatisticAllTeamCategoriesCompare from '@hooks/useStatisticAllTeamCategoriesCompare';
 import useStatisticCategoriesTeam from '@hooks/useStatisticCategoriesTeam';
 import useStatisticCategoriesTeamCompare from '@hooks/useStatisticCategoriesTeamCompare';
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
@@ -29,6 +31,7 @@ import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import { OptionDropdownType } from '@interfaces/common';
 
 import { formatDateToYMD, sumDurations } from '@utils/date';
+import { removeDuplicateOptions } from '@utils';
 
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import { useToast } from '@providers/ToastProvider';
@@ -102,6 +105,7 @@ const StatisticTeamBoard = () => {
 
   const organizationId = searchParams.get('organization');
 
+  // Get statistic categories for options that except ALL TEAM option
   const { statisticCategoryListTeam } = useStatisticCategoriesTeam({
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
@@ -116,6 +120,7 @@ const StatisticTeamBoard = () => {
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
     },
+    condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
     onSuccess: (data) => {
       if (creationDataStatisticData?.organizations.length === 0) {
         return;
@@ -137,12 +142,7 @@ const StatisticTeamBoard = () => {
             label: stat.LARGE?.name,
           }),
         );
-        // If organization is all team then return here
-        if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
-          setLargeOptions([]);
-        } else {
-          setLargeOptions(largeCategories);
-        }
+        setLargeOptions(largeCategories);
       } else {
         setLargeOptions([]);
       }
@@ -198,6 +198,51 @@ const StatisticTeamBoard = () => {
     },
   });
 
+  //  Get statistic categories for ALL TEAM option
+  const { statisticAllTeamCategoryList } = useStatisticAllTeamCategories({
+    isTeam: true,
+    filter: {
+      fromDate: formatDateToYMD(startDate) || '',
+      endDate: formatDateToYMD(`${endDate}`) || '',
+      tagIds: orderingOptions?.tag_ids,
+      userIds: orderingOptions?.user_ids,
+      mainOrganizationId: selectedOrganizationSideBar?.value as number,
+    },
+    condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
+    onSuccess: (data) => {
+      setLargeOptions([]);
+      setTotalDurationLarge(data.largeTotalDuration);
+      setTotalDurationTask(data.largeTotalDuration);
+      setIsLoadingOrganization(false);
+      setIsLoadingLarge(false);
+      setIsLoadingMedium(false);
+    },
+  });
+
+  // Get statistic compared categories for ALL TEAM option
+  const { statisticAllTeamCategoryCompareList } =
+    useStatisticAllTeamCategoriesCompare({
+      isTeam: true,
+      filter: {
+        fromDate: formatDateToYMD(startDateCompare) || '',
+        endDate: formatDateToYMD(`${endDateCompare}`) || '',
+        tagIds: orderingOptions?.tag_ids,
+        userIds: orderingOptions?.user_ids,
+        mainOrganizationId: selectedOrganizationSideBar?.value as number,
+        isCompare: isCheckCompare,
+      },
+      condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
+      onSuccess: (data) => {
+        setLargeOptions([]);
+        setTotalDurationLargeCompare(data.largeTotalDuration);
+        setTotalDurationTaskCompare(data.largeTotalDuration);
+        setIsLoadingOrganizationCompare(false);
+        setIsLoadingLargeCompare(false);
+        setIsLoadingMediumCompare(false);
+      },
+    });
+
+  // Get statistic categories compare for options that except ALL TEAM option
   const { statisticCategoryListTeamCompare } =
     useStatisticCategoriesTeamCompare({
       filter: {
@@ -214,6 +259,7 @@ const StatisticTeamBoard = () => {
             ? String(selectedOrganizationSideBar?.value || '')
             : undefined,
       },
+      condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
       onSuccess: (data) => {
         setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
         setTotalDurationMediumCompare(
@@ -349,12 +395,9 @@ const StatisticTeamBoard = () => {
     setSelectedSmall(null);
 
     const organization = creationDataStatisticData?.organizations?.find(
-      (org) => org.id === data.value,
-    );
-
-    const organizationMember = creationDataStatisticData?.organizations?.find(
       (org) => org.id === selectedOrganizationSideBar?.value,
     );
+
     if (organization) {
       const largeCategories = organization.statisticCategories.map((stat) => ({
         value: stat.LARGE.id,
@@ -366,46 +409,23 @@ const StatisticTeamBoard = () => {
       }));
 
       setTagsOptions(optionsTagList);
-      if (
-        selectedOrganization?.type === OrganizationStatisticType.CALENDAR &&
-        organizationMember
-      ) {
-        setListMemberTeam(
-          organizationMember.members.map((member) => ({
-            id: member.id,
-            fullName: member.fullName,
-            color: member?.avatarColor || '',
-            avatarUrl: member?.avatar || '',
-          })),
-        );
-        setOrderingOptions({
-          tag_ids: [],
-          user_ids: organizationMember.members.map((member) => ({
-            value: member.id,
-            label: member.fullName,
-            color: member?.avatarColor || '',
-            avatarUrl: member?.avatar || '',
-          })),
-        });
-      } else {
-        setListMemberTeam(
-          organization.members?.map((member) => ({
-            id: member.id,
-            fullName: member.fullName,
-            color: member?.avatarColor || '',
-            avatarUrl: member?.avatar || '',
-          })),
-        );
-        setOrderingOptions({
-          tag_ids: [],
-          user_ids: organization.members.map((member) => ({
-            value: member.id,
-            label: member.fullName,
-            color: member?.avatarColor || '',
-            avatarUrl: member?.avatar || '',
-          })),
-        });
-      }
+      setOrderingOptions({
+        tag_ids: [],
+        user_ids: organization.members.map((member) => ({
+          value: member.id,
+          label: member.fullName,
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
+        })),
+      });
+      setListMemberTeam(
+        organization.members.map((member) => ({
+          id: member.id,
+          fullName: member.fullName,
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
+        })),
+      );
 
       setCurrentPage(1);
 
@@ -459,7 +479,7 @@ const StatisticTeamBoard = () => {
       if (data?.value === ALL_TEAM_STATISTIC) {
         setLargeOptions([]);
       } else {
-        setLargeOptions(largeCategories);
+        setLargeOptions(removeDuplicateOptions(largeCategories));
       }
     } else {
       setLargeOptions([]);
@@ -499,7 +519,7 @@ const StatisticTeamBoard = () => {
         label: medium.MEDIUM?.name || '',
       }));
 
-      setMediumOptions(mediumCategories);
+      setMediumOptions(removeDuplicateOptions(mediumCategories));
     } else {
       setMediumOptions([]);
     }
@@ -542,7 +562,7 @@ const StatisticTeamBoard = () => {
           value: small.id,
           label: small.name,
         }));
-      setSmallOptions(smallCategories);
+      setSmallOptions(removeDuplicateOptions(smallCategories));
     } else {
       setSmallOptions([]);
     }
@@ -718,6 +738,10 @@ const StatisticTeamBoard = () => {
             endDateCompare={endDateCompare}
             statisticTeamCategoryList={statisticCategoryListTeam}
             statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
+            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
+            statisticAllTeamCategoryCompareList={
+              statisticAllTeamCategoryCompareList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectOrganizationCustom={handleSelectOrganizationCustom}
             handleSelectLarge={handleSelectLarge}
@@ -732,6 +756,10 @@ const StatisticTeamBoard = () => {
             endDateCompare={endDateCompare}
             statisticTeamCategoryList={statisticCategoryListTeam}
             statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
+            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
+            statisticAllTeamCategoryCompareList={
+              statisticAllTeamCategoryCompareList
+            }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -755,6 +783,7 @@ const StatisticTeamBoard = () => {
             startDate={startDate}
             endDate={endDate}
             statisticTeamCategoryList={statisticCategoryListTeam}
+            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectOrganizationCustom={handleSelectOrganizationCustom}
             handleSelectLarge={handleSelectLarge}
@@ -765,6 +794,7 @@ const StatisticTeamBoard = () => {
             startDate={startDate}
             endDate={endDate}
             statisticTeamCategoryList={statisticCategoryListTeam}
+            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}

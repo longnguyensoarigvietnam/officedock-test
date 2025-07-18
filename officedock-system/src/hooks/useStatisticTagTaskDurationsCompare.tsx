@@ -7,7 +7,7 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import { apiRouters } from '@constants/routers';
 
 import api from '@base/api';
-import { StatisticsTagTaskDuration } from '@interfaces/statistic';
+import { StatisticsTaskDurationTag } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
 interface FilterProps {
@@ -23,11 +23,13 @@ interface FilterProps {
 
 const useStatisticTagTaskDurationsCompare = ({
   filter,
+  condition,
   onSuccess,
   onError,
 }: {
   filter?: FilterProps;
-  onSuccess?: (data: StatisticsTagTaskDuration[]) => void;
+  condition?: boolean[];
+  onSuccess?: (data: StatisticsTaskDurationTag) => void;
   onError?: (error: AxiosError) => void;
 }) => {
   const { data: session } = useSessionCache();
@@ -60,7 +62,7 @@ const useStatisticTagTaskDurationsCompare = ({
         : ''
     }${filter?.statisticBy ? `&statistic_by=${filter.statisticBy}` : '&statistic_by=WEEK'}${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
-    const { data } = await api.get<StatisticsTagTaskDuration[]>(apiUrl, {
+    const { data } = await api.get<StatisticsTaskDurationTag>(apiUrl, {
       signal,
     });
     return data;
@@ -70,16 +72,16 @@ const useStatisticTagTaskDurationsCompare = ({
   const {
     data: statisticTagTaskDurationsCompareList,
     refetch: refetchStatisticTagTaskDurationsCompareList,
-    isFetched: isFetchedStatisticTagTaskDurationsCompareList,
+    isFetching: isFetchingStatisticTagTaskDurationsCompareList,
   } = useQuery({
     queryKey: ['getStatisticTagTaskDurationsCompare', [filter]],
     queryFn: ({ signal }) => getStatisticTagTaskDurationsCompare({ signal }),
 
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onSuccess: (data: StatisticsTagTaskDuration[]) => {
+    onSuccess: (data: StatisticsTaskDurationTag) => {
       onSuccess && onSuccess(data);
     },
     onError: (error: AxiosError) => {
@@ -91,7 +93,7 @@ const useStatisticTagTaskDurationsCompare = ({
   return {
     statisticTagTaskDurationsCompareList,
     refetchStatisticTagTaskDurationsCompareList,
-    isFetchedStatisticTagTaskDurationsCompareList,
+    isFetchingStatisticTagTaskDurationsCompareList,
   };
 };
 

@@ -207,6 +207,24 @@ const ListLocation = () => {
       }, 0);
       return;
     }
+    if (trimmedText.length > 255) {
+      if (isCreating) {
+        showToast({
+          variant: 'error',
+          description: ERROR_CREATE_MESSAGE,
+        });
+      } else {
+        showToast({
+          variant: 'error',
+          description: ERROR_UPDATE_MESSAGE,
+        });
+      }
+      setErrors((prev) => ({ ...prev, [uuid]: true }));
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+      return;
+    }
 
     // Check for duplicate names, skip the item being edited
     const isDuplicate = dataLocation.some(

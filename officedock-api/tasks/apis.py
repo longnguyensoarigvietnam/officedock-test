@@ -831,12 +831,13 @@ class TaskViewSet(
                 if show_deadline_time
                 else False,
             }
-
         if (
             (current_task_status.name != TaskStatus.MY_ROUTINE.value)
             and (current_task.deadline != serializer_data.get("deadline"))
             or (
-                current_task.is_important != serializer_data.get("is_important")
+                user.setting.is_sorting_task_by_important
+                and current_task.is_important
+                != serializer_data.get("is_important")
             )
         ):
             reset_sort_task(user)
@@ -1436,7 +1437,7 @@ class TaskViewSet(
                         minus = True
                     for user in task.people_in_charge.all():
                         calculate_progress_skill_map(
-                            task, user, is_minus=minus, case=case
+                            task, user, is_minus=minus, case=case, is_plus=False
                         )
                 for user in task.people_in_charge.all():
                     send_web_socket_event(
@@ -2097,10 +2098,7 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 people_in_charge__isnull=True,
                 company=user.company,
             )
-            .exclude(
-                Q(type=TaskTypes.MY_TEMPLATE.value)
-                | Q(status__name=TaskStatus.MY_ROUTINE.value)
-            )
+            .exclude(type=TaskTypes.MY_TEMPLATE.value)
             .all()
         )
 

@@ -5,13 +5,17 @@ import ImageRound from '@components/common/ImageRound';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 
-import { StatisticsCategories } from '@interfaces/statistic';
+import {
+  StatisticsAllTeams,
+  StatisticsCategories,
+} from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
 import { formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
 
 import { EventWorkCategory } from '@constants/enums';
+import { ALL_TEAM_STATISTIC, SUB_TEAMS } from '@constants';
 
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
@@ -22,6 +26,7 @@ type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticTagsList: StatisticsCategories | undefined;
+  statisticAllTeamCategoryList: StatisticsAllTeams | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -29,7 +34,7 @@ type Props = {
 };
 
 type ProgressDataType = {
-  id: number;
+  id: number | string;
   label: string;
   value: number;
   color: string;
@@ -42,6 +47,7 @@ const AllocationTag = memo(
     startDate,
     endDate,
     statisticTagsList,
+    statisticAllTeamCategoryList,
     handleSelectOrganization,
     handleSelectLarge,
     handleSelectMedium,
@@ -89,7 +95,10 @@ const AllocationTag = memo(
     } = useContext(StatisticTagStateContext);
 
     useEffect(() => {
-      if (statisticTagsList) {
+      if (
+        statisticTagsList &&
+        selectedOrganization?.value !== ALL_TEAM_STATISTIC
+      ) {
         if (statisticTagsList.largeCategories) {
           const listDataLarge = statisticTagsList.largeCategories.map(
             (item) => ({
@@ -160,7 +169,43 @@ const AllocationTag = memo(
           setProgressDataCategory([]);
         }
       }
-    }, [statisticTagsList]);
+    }, [statisticTagsList, selectedOrganization?.value]);
+
+    useEffect(() => {
+      if (
+        statisticAllTeamCategoryList &&
+        selectedOrganization?.value == ALL_TEAM_STATISTIC
+      ) {
+        if (statisticAllTeamCategoryList.largeCategories) {
+          const listDataLarge =
+            statisticAllTeamCategoryList.largeCategories.map((item) => ({
+              id: item.organizationId,
+              label: item.organizationName as string,
+              value: item.percent,
+              color:
+                item.color ||
+                lightenColor('#2E9267' as string, item.percent) ||
+                getRandomColor(),
+              duration: item.duration,
+              optionData:
+                item.organizationId == SUB_TEAMS
+                  ? item?.subTeams
+                      ?.slice(0, 3)
+                      .map((team) => team?.organizationName || '') || []
+                  : item?.data
+                      ?.slice(0, 3)
+                      .map(
+                        (category) =>
+                          category?.categoryName || category?.tagName || '',
+                      ) || [],
+              organizationId: item.organizationId,
+            }));
+          setProgressDataLarge(listDataLarge);
+        } else {
+          setProgressDataLarge([]);
+        }
+      }
+    }, [statisticAllTeamCategoryList, selectedOrganization?.value]);
 
     const handleClickTooltip = ({
       id,
@@ -470,7 +515,6 @@ const AllocationTag = memo(
             selectedSmall={selectedSmall}
             detailCategory={detailCategory}
             selectedOrganization={selectedOrganization}
-            statisticTagsListTeam={statisticTagsList}
             onClose={() => {
               setIsShowModal(false);
             }}

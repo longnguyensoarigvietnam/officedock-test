@@ -9,20 +9,23 @@ import { EventWorkCategory } from '@constants/enums';
 
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
+  StatisticAllTeamInfo,
   StatisticCategoryInfo,
+  StatisticsAllTeams,
   StatisticsCategories,
 } from '@interfaces/statistic';
 import { getRandomColor, lightenColor } from '@utils';
-import { LoadingContext } from '@providers/LoadingProvider';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import FilterTagTeam from '../filter/FilterTagTeam';
+import { ALL_TEAM_STATISTIC, SUB_TEAMS } from '@constants';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticTagsListTeam: StatisticsCategories | undefined;
   statisticTagsListTeamCompare: StatisticsCategories | undefined;
-
+  statisticAllTeamCategoryList: StatisticsAllTeams | undefined;
+  statisticAllTeamCategoryCompareList: StatisticsAllTeams | undefined;
   startDateCompare: Date;
   endDateCompare: Date | null;
   handleSelectOrganization: (data: OptionDropdownType) => void;
@@ -38,6 +41,8 @@ const PercentageTeamTagsCompare = ({
   endDateCompare,
   statisticTagsListTeamCompare,
   statisticTagsListTeam,
+  statisticAllTeamCategoryList,
+  statisticAllTeamCategoryCompareList,
   handleSelectSmall,
   handleSelectLarge,
   handleSelectMedium,
@@ -56,7 +61,6 @@ const PercentageTeamTagsCompare = ({
     totalDurationMedium,
     totalDurationSmall,
     totalDurationCategory,
-
     totalDurationLargeCompare,
     totalDurationMediumCompare,
     totalDurationSmallCompare,
@@ -72,7 +76,6 @@ const PercentageTeamTagsCompare = ({
     isLoadingMediumCompare,
     isLoadingSmallCompare,
   } = useContext(StatisticTeamTagsStateContext);
-  const { setIsLoading } = useContext(LoadingContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
   const [isShowModal, setIsShowModal] = useState(false);
@@ -197,10 +200,39 @@ const PercentageTeamTagsCompare = ({
       ...(otherItem.percentage > 0 ? [otherItem] : []),
     ];
   };
+  const mapCategoryDataWithAllTeamOption = (
+    dataCategories: StatisticAllTeamInfo[],
+  ) => {
+    if (!dataCategories) return [];
+    const categories = dataCategories.filter((item) => item.percent >= 0);
+
+    const mappedMainItems = categories.map((item) => ({
+      id: item.organizationId,
+      label: item?.organizationName || '',
+      percentage: item.percent,
+      organizationId: item.organizationId,
+      color: item.color || getRandomColor(),
+      totalDuration: item.duration,
+      optionData:
+        item.organizationId == SUB_TEAMS
+          ? item?.subTeams?.slice(0, 3).map((team) => {
+              return { label: team?.organizationName || '' };
+            }) || []
+          : item?.data?.slice(0, 3).map((category) => {
+              return { label: category?.tagName || '' };
+            }) || [],
+      mergedItems: [],
+    }));
+
+    return [...mappedMainItems];
+  };
 
   // Set data from category list
   useEffect(() => {
-    if (statisticTagsListTeam) {
+    if (
+      statisticTagsListTeam &&
+      selectedOrganization?.value != ALL_TEAM_STATISTIC
+    ) {
       const color =
         statisticTagsListTeam.largeCategories &&
         statisticTagsListTeam.largeCategories.find(
@@ -229,13 +261,19 @@ const PercentageTeamTagsCompare = ({
       setDataChartCategory(
         mapCategoryData(statisticTagsListTeam.category || [], '#2E9267'),
       );
-      setIsLoading(false);
     }
-  }, [statisticTagsListTeam]);
+  }, [
+    selectedLarge?.value,
+    selectedOrganization?.value,
+    statisticTagsListTeam,
+  ]);
 
   // Set data from category compare list
   useEffect(() => {
-    if (statisticTagsListTeamCompare) {
+    if (
+      statisticTagsListTeamCompare &&
+      selectedOrganization?.value != ALL_TEAM_STATISTIC
+    ) {
       setDataChartLargeCompare(
         mapCategoryData(statisticTagsListTeamCompare.largeCategories || []),
       );
@@ -254,9 +292,33 @@ const PercentageTeamTagsCompare = ({
       setDataChartCategoryCompare(
         mapCategoryData(statisticTagsListTeamCompare.category || [], '#2E9267'),
       );
-      setIsLoading(false);
     }
-  }, [statisticTagsListTeamCompare]);
+  }, [selectedOrganization?.value, statisticTagsListTeamCompare]);
+
+  useEffect(() => {
+    if (
+      statisticAllTeamCategoryList &&
+      selectedOrganization?.value == ALL_TEAM_STATISTIC
+    ) {
+      setDataChartLarge(
+        mapCategoryDataWithAllTeamOption(
+          statisticAllTeamCategoryList.largeCategories || [],
+        ),
+      );
+    }
+  }, [statisticAllTeamCategoryList, selectedOrganization?.value]);
+  useEffect(() => {
+    if (
+      statisticAllTeamCategoryCompareList &&
+      selectedOrganization?.value == ALL_TEAM_STATISTIC
+    ) {
+      setDataChartLargeCompare(
+        mapCategoryDataWithAllTeamOption(
+          statisticAllTeamCategoryCompareList.largeCategories || [],
+        ),
+      );
+    }
+  }, [statisticAllTeamCategoryCompareList, selectedOrganization?.value]);
 
   const handleClickTooltip = (
     id: number | null,
@@ -374,6 +436,7 @@ const PercentageTeamTagsCompare = ({
                         data={dataChartLarge}
                         startDate={startDate}
                         endDate={endDate}
+                        isAllTeam
                         isLoading={isLoadingOrganization}
                         isLoadingCompare={isLoadingOrganizationCompare}
                         totalDuration={totalDurationLarge}
@@ -381,7 +444,7 @@ const PercentageTeamTagsCompare = ({
                         startDateCompare={startDateCompare}
                         endDateCompare={endDateCompare}
                         dataCompare={dataChartLargeCompare}
-                        handleClickChart={(_data: number) => {}}
+                        handleClickChart={(_data: string) => {}}
                         handleClickTooltip={(
                           id: number | null,
                           isCompare: boolean,
@@ -431,7 +494,7 @@ const PercentageTeamTagsCompare = ({
                         dataCompare={dataChartMediumCompare}
                         totalDuration={totalDurationMedium}
                         totalDurationCompare={totalDurationMediumCompare}
-                        handleClickChart={(_data: number) => {}}
+                        handleClickChart={(_data: string) => {}}
                         handleClickTooltip={(
                           id: number | null,
                           isCompare: boolean,
@@ -483,7 +546,7 @@ const PercentageTeamTagsCompare = ({
                         dataCompare={dataChartSmallCompare}
                         totalDuration={totalDurationSmall}
                         totalDurationCompare={totalDurationSmallCompare}
-                        handleClickChart={(_data: number) => {}}
+                        handleClickChart={(_data: string) => {}}
                         handleClickTooltip={(
                           id: number | null,
                           isCompare: boolean,
@@ -536,7 +599,7 @@ const PercentageTeamTagsCompare = ({
                         dataCompare={dataChartCategoryCompare}
                         totalDuration={totalDurationCategory}
                         totalDurationCompare={totalDurationCategoryCompare}
-                        handleClickChart={(_data: number) => {}}
+                        handleClickChart={(_data: string) => {}}
                         handleClickTooltip={(
                           id: number | null,
                           isCompare: boolean,
@@ -561,7 +624,6 @@ const PercentageTeamTagsCompare = ({
           open={isShowModal}
           selectedLarge={selectedLarge}
           selectedMedium={selectedMedium}
-          statisticTagsListTeam={statisticTagsListTeam}
           selectedSmall={selectedSmall}
           startDate={startDate}
           endDate={endDate}
@@ -578,7 +640,6 @@ const PercentageTeamTagsCompare = ({
           open={isShowModalCompare}
           selectedLarge={selectedLarge}
           selectedMedium={selectedMedium}
-          statisticTagsListTeam={statisticTagsListTeam}
           selectedSmall={selectedSmall}
           startDate={startDateCompare}
           endDate={endDateCompare}

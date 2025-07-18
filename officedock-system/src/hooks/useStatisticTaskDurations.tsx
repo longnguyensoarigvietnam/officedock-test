@@ -2,13 +2,15 @@
 
 import { useQuery } from 'react-query';
 import { AxiosError } from 'axios';
+
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 
-import api from '@base/api';
 import { StatisticsTaskDuration } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
+
+import api from '@base/api';
 
 interface FilterProps {
   endDate: string | Date;
@@ -24,11 +26,13 @@ interface FilterProps {
 
 const useStatisticTaskDurations = ({
   filter,
+  condition,
   onSuccess,
   onError,
 }: {
   filter?: FilterProps;
-  onSuccess?: (data: StatisticsTaskDuration[]) => void;
+  condition?: boolean[];
+  onSuccess?: (data: StatisticsTaskDuration) => void;
   onError?: (error: AxiosError) => void;
 }) => {
   const { data: session } = useSessionCache();
@@ -65,9 +69,10 @@ const useStatisticTaskDurations = ({
         : ''
     }${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
-    const { data } = await api.get<StatisticsTaskDuration[]>(apiUrl, {
+    const { data } = await api.get<StatisticsTaskDuration>(apiUrl, {
       signal,
     });
+
     return data;
   };
 
@@ -75,16 +80,16 @@ const useStatisticTaskDurations = ({
   const {
     data: statisticTaskDurationsList,
     refetch: refetchStatisticTaskDurationsList,
-    isFetched: isFetchedStatisticTaskDurationsList,
+    isFetching: isFetchingStatisticTaskDurationsList,
   } = useQuery({
     queryKey: ['getStatisticTaskDurations', [filter]],
     queryFn: ({ signal }) => getStatisticTaskDurations({ signal }),
 
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onSuccess: (data: StatisticsTaskDuration[]) => {
+    onSuccess: (data: StatisticsTaskDuration) => {
       onSuccess && onSuccess(data);
     },
     onError: (error: AxiosError) => {
@@ -96,7 +101,7 @@ const useStatisticTaskDurations = ({
   return {
     statisticTaskDurationsList,
     refetchStatisticTaskDurationsList,
-    isFetchedStatisticTaskDurationsList,
+    isFetchingStatisticTaskDurationsList,
   };
 };
 

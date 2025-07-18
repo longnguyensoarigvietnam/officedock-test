@@ -505,12 +505,12 @@ const ActionsSkillMapModal = ({
     ((action === ActionsEvent.EDIT &&
       !hasPermissionInArray(
         session?.user.permissions,
-        PermissionsSystem.SKILL_MAP_UPDATE,
+        PermissionsSystem.SKILL_MAP_MANAGEMENT_UPDATE,
       )) ||
       (action === ActionsEvent.CREATE &&
         !hasPermissionInArray(
           session?.user.permissions,
-          PermissionsSystem.SKILL_MAP_ADD,
+          PermissionsSystem.SKILL_MAP_MANAGEMENT_ADD,
         )));
 
   type StepField = keyof StepFormDataDetail;

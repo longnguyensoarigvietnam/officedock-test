@@ -51,6 +51,7 @@ import { useErrorToast } from '@hooks/useErrorToast';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import useCreationDataStatisticAllTeam from '@hooks/useCreationDataStatisticAllTeam';
 import { Task } from '@interfaces/task';
+import { removeDuplicateOptions } from '@utils';
 
 interface TableChartProps {
   ordering: string;
@@ -229,25 +230,57 @@ const TableChart = ({
         setIsLoadingMedium(true);
         setIsLoadingSmall(true);
         setIsLoadingOrganization(true);
+        if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticAllTeamCategoryList',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticAllTeamTaskDurations',
+          });
+        } else {
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTagsListTeam',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTableInTeamTagLineChart',
+          });
+        }
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
         });
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            query.queryKey[0] === 'getStatisticTagsListTeam',
-        });
+
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingSmallCompare(true);
           setIsLoadingOrganizationCompare(true);
+          if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticAllTeamCategoryCompareList',
+            });
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticAllTeamTaskDurationsCompare',
+            });
+          } else {
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticTagsListTeamCompare',
+            });
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] ===
+                'getStatisticTableInTeamTagLineChartCompare',
+            });
+          }
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTaskListCompare',
-          });
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              query.queryKey[0] === 'getStatisticTagsListTeamCompare',
           });
         }
       },
@@ -302,26 +335,57 @@ const TableChart = ({
         setIsLoadingMedium(true);
         setIsLoadingSmall(true);
         setIsLoadingOrganization(true);
+        if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticAllTeamCategoryList',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticAllTeamTaskDurations',
+          });
+        } else {
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTagsListTeam',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTableInTeamTagLineChart',
+          });
+        }
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
         });
 
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            query.queryKey[0] === 'getStatisticTagsListTeam',
-        });
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingSmallCompare(true);
           setIsLoadingOrganizationCompare(true);
+          if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticAllTeamCategoryCompareList',
+            });
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticAllTeamTaskDurationsCompare',
+            });
+          } else {
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticTagsListTeamCompare',
+            });
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] ===
+                'getStatisticTableInTeamTagLineChartCompare',
+            });
+          }
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTaskListCompare',
-          });
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              query.queryKey[0] === 'getStatisticTagsListTeamCompare',
           });
         }
       },
@@ -622,7 +686,7 @@ const TableChart = ({
                   )
                 }
                 placeholder=""
-                options={largeCategories}
+                options={removeDuplicateOptions(largeCategories)}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
@@ -689,7 +753,7 @@ const TableChart = ({
                 }
                 placeholder=""
                 showArrow
-                options={mediumCategories}
+                options={removeDuplicateOptions(mediumCategories)}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
@@ -761,6 +825,7 @@ const TableChart = ({
                   )
                 }
                 placeholder=""
+                options={removeDuplicateOptions(smallCategories)}
                 showArrow={info.row.original.type === EventCalendarType.TASK}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {

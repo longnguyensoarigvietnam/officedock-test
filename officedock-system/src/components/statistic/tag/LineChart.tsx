@@ -29,27 +29,38 @@ import StatisticLineChartTableSkeleton from '@components/common/SkeletonLoading/
 
 import { OptionDropdownType } from '@interfaces/common';
 import { TooltipDiv } from '@interfaces/tooltip';
+import {
+  CategoryLineChartDatasetInfo,
+  MyDockLineChartTableItem,
+  StatisticsAllTeamTaskDuration,
+  StatisticsTaskDurationTag,
+} from '@interfaces/statistic';
 
 import { SortingType, StatisticViewOptions } from '@constants/enums';
-import { DEFAULT_TIME_TEXT, STATISTIC_CHART_VIEW_OPTIONS } from '@constants';
+import {
+  ALL_TEAM_STATISTIC,
+  DEFAULT_TIME_TEXT,
+  STATISTIC_CHART_VIEW_OPTIONS,
+} from '@constants';
 
 import {
   convertDurationToTotalMinutes,
   convertTimeToDecimal,
   convertToStatisticJapaneseLabels,
   formatDateToYMD,
+  totalDurationsForStatistic,
 } from '@utils/date';
 import {
   getLineChartEnableViews,
   getRandomColor,
   getStatisticMilestones,
   lightenColor,
+  normalizeDurationsWithStatisticAllTeamCategoryTaskDurations,
+  normalizeDurationsWithStatisticTagTaskDurations,
 } from '@utils';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
-
-import useStatisticTagTaskDurations from '@hooks/useStatisticTagTaskDurations';
 
 import FilterTag from './filter/FilterTag';
 
@@ -67,6 +78,10 @@ ChartJS.register(
 type Props = {
   startDate: Date;
   endDate: Date | null;
+  statisticTaskDurationsListTag: StatisticsTaskDurationTag | undefined;
+  statisticAllTeamTaskDurationsList: StatisticsAllTeamTaskDuration | undefined;
+  isFetchingStatisticTaskDurationsListTag: boolean;
+  isFetchingStatisticAllTeamTaskDurationsList: boolean;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -76,6 +91,10 @@ type Props = {
 const LineChart = ({
   startDate,
   endDate,
+  statisticTaskDurationsListTag,
+  statisticAllTeamTaskDurationsList,
+  isFetchingStatisticTaskDurationsListTag,
+  isFetchingStatisticAllTeamTaskDurationsList,
   handleSelectOrganization,
   handleSelectLarge,
   handleSelectMedium,
@@ -84,10 +103,6 @@ const LineChart = ({
   const {
     isDisableCalendar,
     isHasLoading,
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
-    totalDurationCategory,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -96,7 +111,6 @@ const LineChart = ({
     selectedMedium,
     selectedOrganization,
     selectedSmall,
-    selectedTags,
     lineChartViewBy,
     setLineChartViewBy,
   } = useContext(StatisticTagStateContext);
@@ -104,29 +118,13 @@ const LineChart = ({
   const [isExtendData, setIsExtendData] = useState(true);
   const [lineChartData, setLineChartData] = useState<{
     labels: string[];
-    datasets: {
-      label: string;
-      data: number[];
-      borderColor: string;
-      backgroundColor: string;
-      fill: boolean;
-      tension: number;
-      borderDash: any;
-    }[];
+    datasets: CategoryLineChartDatasetInfo[];
   }>({
     labels: [],
     datasets: [],
   });
-  const [tableData, setTableData] = useState<
-    {
-      tagId: number;
-      tagName: string;
-      tagDuration: string;
-      tagPercent: string;
-      tagColor: string;
-    }[]
-  >([]);
-  const [totalDuration, setTotalDuration] = useState<string>('00:00');
+  const [tableData, setTableData] = useState<MyDockLineChartTableItem[]>([]);
+  const [totalDuration, setTotalDuration] = useState<string>(DEFAULT_TIME_TEXT);
   const [standardLabelsInfo, setStandardLabelsInfo] = useState<
     {
       color: string;
@@ -344,185 +342,307 @@ const LineChart = ({
     },
   };
 
-  const {
-    statisticTagTaskDurationsList,
-    isFetchedStatisticTagTaskDurationsList,
-  } = useStatisticTagTaskDurations({
-    filter: {
-      fromDate: formatDateToYMD(startDate) || '',
-      endDate: formatDateToYMD(`${endDate}`) || '',
-      organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value || '',
-      mediumCategoryId: selectedMedium?.value || '',
-      smallCategoryId: selectedSmall?.value || '',
-      tagIds: selectedTags,
-      statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
-    },
-  });
-
   useEffect(() => {
-    if (statisticTagTaskDurationsList) {
-      let labelList: string[] = [];
-      const datasets: any[] = [];
-      let standardLabels: { name: string; color: string }[] = [];
-      const tableDetail: {
-        tagId: number;
-        tagName: string;
-        tagDuration: string;
-        tagPercent: string;
-        tagColor: string;
-      }[] = [];
+    if (
+      statisticTaskDurationsListTag &&
+      selectedOrganization?.value != ALL_TEAM_STATISTIC
+    ) {
+      const standardLabels: { name: string; color: string }[] = [];
+      const tableDetail: MyDockLineChartTableItem[] = [];
+      const totalDurationList: string[] = [];
 
-      if (statisticTagTaskDurationsList.length > 0) {
-        statisticTagTaskDurationsList.forEach((categoryDetail, index) => {
-          labelList = categoryDetail.durations.map(
-            (duration) => duration.startDate,
-          );
+      const normalizeDataObject = {
+        data: statisticTaskDurationsListTag?.data || [],
+        durations: normalizeDurationsWithStatisticTagTaskDurations({
+          durations: statisticTaskDurationsListTag?.durations || [],
+          data: statisticTaskDurationsListTag?.data || [],
+        }),
+      };
+
+      if (normalizeDataObject?.data && normalizeDataObject?.data?.length > 0) {
+        normalizeDataObject.data.forEach((data) => {
+          tableDetail.push({
+            id: data.tagId as number,
+            name: data.tagName,
+            duration: data.duration,
+            percent: String(data?.percent || 0),
+            color:
+              lightenColor('#2E9267', data?.percent || 0) || getRandomColor(),
+          });
+
+          standardLabels.push({
+            color:
+              lightenColor('#2E9267', data?.percent || 0) || getRandomColor(),
+            name: data.tagName,
+          });
+
+          totalDurationList.push(data.duration);
+        });
+
+        setTableData(tableDetail);
+        setStandardLabelsInfo(standardLabels);
+        setTotalDuration(totalDurationsForStatistic(totalDurationList));
+      } else {
+        setTableData([]);
+        setStandardLabelsInfo([]);
+        setTotalDuration(DEFAULT_TIME_TEXT);
+      }
+
+      if (
+        normalizeDataObject.durations &&
+        normalizeDataObject.durations?.length > 0
+      ) {
+        const labelList: string[] = [];
+        // Map: organizationId -> dataset info
+        const datasetMap = new Map<
+          string | number,
+          CategoryLineChartDatasetInfo
+        >();
+        normalizeDataObject.durations.forEach((durationDetail, index) => {
+          labelList.push(durationDetail.startDate);
           if (
-            index === statisticTagTaskDurationsList.length - 1 &&
-            String(categoryDetail.durations.at(-1)?.endDate) !=
-              String(categoryDetail.durations.at(-1)?.startDate)
+            index === normalizeDataObject.durations.length - 1 &&
+            String(normalizeDataObject.durations.at(-1)?.endDate) !=
+              String(normalizeDataObject.durations.at(-1)?.startDate)
           ) {
-            const endDate = categoryDetail.durations.at(-1)?.endDate;
+            const endDate = normalizeDataObject.durations.at(-1)?.endDate;
             if (endDate) {
               labelList.push(endDate);
             }
           }
 
-          standardLabels = [
-            ...standardLabels,
-            {
-              color:
-                lightenColor('#2E9267', categoryDetail?.percent || 0) ||
-                getRandomColor(),
-              name: categoryDetail.tagName,
-            },
-          ];
+          durationDetail.data.forEach((tag) => {
+            const existing = datasetMap.get(tag.tagId);
 
-          tableDetail.push({
-            tagId: categoryDetail.tagId,
-            tagName: categoryDetail.tagName,
-            tagDuration: categoryDetail.duration,
-            tagPercent: String(categoryDetail?.percent || 0),
-            tagColor:
-              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) ||
-              getRandomColor(),
-          });
-          datasets.push({
-            label: categoryDetail.tagName,
-            data: categoryDetail.durations.flatMap((duration, index) => [
-              {
-                x: duration.startDate,
-                y: duration.duration
-                  ? convertTimeToDecimal(duration.duration)
-                  : 0,
-                endDate: duration.endDate,
-                color: '#2E9267',
-                label: categoryDetail.tagName,
-              },
-              ...(index === categoryDetail.durations.length - 1 &&
-              String(duration.endDate) != String(duration.startDate)
-                ? [
-                    {
-                      x: duration.endDate,
-                      y: duration.duration
-                        ? convertTimeToDecimal(duration.duration)
-                        : 0,
-                      endDate: duration.endDate,
-                      color: '#2E9267',
-                      label: categoryDetail.tagName,
-                    },
-                  ]
-                : []),
-            ]),
-            borderColor:
-              lightenColor('#2E9267' as string, categoryDetail?.percent || 0) ||
-              getRandomColor(),
-            backgroundColor: 'rgba(217, 83, 79, 0.04)',
-            fill: true,
-            tension: 0,
-            pointRadius: 4,
-            pointBorderColor: 'transparent',
-            pointHoverRadius: 6,
-            pointHoverBackgroundColor:
-              lightenColor('#2E9267', categoryDetail?.percent || 0) ||
-              getRandomColor(),
-            pointHoverBorderColor: 'transparent',
-            pointHoverBorderWidth: 2,
+            if (existing) {
+              existing.data[index] = {
+                x: durationDetail.startDate,
+                y: tag.duration ? convertTimeToDecimal(tag.duration) : 0,
+                endDate: durationDetail.endDate,
+                color:
+                  lightenColor('#2E9267', tag?.percent || 0) ||
+                  getRandomColor(),
+                label: tag.tagName,
+              };
+              if (
+                index === normalizeDataObject.durations.length - 1 &&
+                String(normalizeDataObject.durations.at(-1)?.endDate) !=
+                  String(normalizeDataObject.durations.at(-1)?.startDate)
+              ) {
+                existing.data[index + 1] = {
+                  x: durationDetail.endDate,
+                  y: tag.duration ? convertTimeToDecimal(tag.duration) : 0,
+                  endDate: durationDetail.endDate,
+                  color:
+                    lightenColor('#2E9267', tag?.percent || 0) ||
+                    getRandomColor(),
+                  label: tag.tagName,
+                };
+              }
+            } else {
+              // Initialize new dataset with placeholders
+              const dataArray = Array(
+                normalizeDataObject.durations.length,
+              ).fill(0);
+              dataArray[index] = {
+                x: durationDetail.startDate,
+                y: tag.duration ? convertTimeToDecimal(tag.duration) : 0,
+                endDate: durationDetail.endDate,
+                color:
+                  lightenColor('#2E9267', tag?.percent || 0) ||
+                  getRandomColor(),
+                label: tag.tagName,
+              };
+
+              datasetMap.set(tag.tagId, {
+                label: tag.tagName,
+                data: dataArray,
+                borderColor: '#2E9267',
+                backgroundColor: 'rgba(217, 83, 79, 0.04)',
+                fill: true,
+                tension: 0,
+                pointRadius: 4,
+                pointBorderColor: 'transparent',
+                pointHoverRadius: 6,
+                pointHoverBackgroundColor:
+                  lightenColor('#2E9267', 50) || getRandomColor(),
+                pointHoverBorderColor: 'transparent',
+                pointHoverBorderWidth: 2,
+              });
+            }
           });
         });
 
         setLineChartData({
           labels: labelList,
-          datasets,
+          datasets: Array.from(datasetMap.values()),
         });
-
-        setTableData(tableDetail);
-        if (
-          selectedOrganization?.value &&
-          !selectedLarge?.value &&
-          !selectedMedium?.value &&
-          !selectedSmall?.value
-        ) {
-          setTotalDuration(totalDurationLarge);
-        } else if (
-          selectedOrganization?.value &&
-          selectedLarge?.value &&
-          !selectedMedium?.value &&
-          !selectedSmall?.value
-        ) {
-          setTotalDuration(totalDurationMedium);
-        } else if (
-          selectedOrganization?.value &&
-          selectedLarge?.value &&
-          selectedMedium?.value &&
-          !selectedSmall?.value
-        ) {
-          setTotalDuration(totalDurationSmall);
-        } else if (
-          selectedOrganization?.value &&
-          selectedLarge?.value &&
-          selectedMedium?.value &&
-          selectedSmall?.value
-        ) {
-          setTotalDuration(totalDurationCategory);
-        }
-        setStandardLabelsInfo(standardLabels);
       } else {
         setLineChartData({
           labels: [],
           datasets: [],
         });
-        setTableData([]);
-        setTotalDuration('00:00');
-        setStandardLabelsInfo([]);
       }
     }
-  }, [
-    statisticTagTaskDurationsList,
-    selectedOrganization,
-    selectedLarge,
-    selectedMedium,
-    selectedSmall,
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
-    totalDurationCategory,
-  ]);
+  }, [statisticTaskDurationsListTag, selectedOrganization]);
+
+  useEffect(() => {
+    if (
+      statisticAllTeamTaskDurationsList &&
+      selectedOrganization?.value == ALL_TEAM_STATISTIC
+    ) {
+      const standardLabels: { name: string; color: string }[] = [];
+      const tableDetail: MyDockLineChartTableItem[] = [];
+      const totalDurationList: string[] = [];
+
+      const normalizeDataObject = {
+        data: statisticAllTeamTaskDurationsList?.data || [],
+        durations: normalizeDurationsWithStatisticAllTeamCategoryTaskDurations({
+          durations: statisticAllTeamTaskDurationsList?.durations || [],
+          data: statisticAllTeamTaskDurationsList?.data || [],
+        }),
+      };
+
+      if (normalizeDataObject?.data && normalizeDataObject?.data?.length > 0) {
+        normalizeDataObject.data.forEach((data) => {
+          tableDetail.push({
+            id: data.organizationId,
+            name: data.organizationName,
+            duration: data.duration,
+            percent: String(data?.percent || 0),
+            color:
+              lightenColor('#2E9267', data?.percent || 0) || getRandomColor(),
+          });
+
+          standardLabels.push({
+            color:
+              lightenColor('#2E9267', data?.percent || 0) || getRandomColor(),
+            name: data.organizationName,
+          });
+
+          totalDurationList.push(data.duration);
+        });
+
+        setTableData(tableDetail);
+        setStandardLabelsInfo(standardLabels);
+        setTotalDuration(totalDurationsForStatistic(totalDurationList));
+      } else {
+        setTableData([]);
+        setStandardLabelsInfo([]);
+        setTotalDuration(DEFAULT_TIME_TEXT);
+      }
+
+      if (
+        normalizeDataObject.durations &&
+        normalizeDataObject.durations?.length > 0
+      ) {
+        const labelList: string[] = [];
+        // Map: organizationId -> dataset info
+        const datasetMap = new Map<
+          string | number,
+          CategoryLineChartDatasetInfo
+        >();
+        normalizeDataObject.durations.forEach((durationDetail, index) => {
+          labelList.push(durationDetail.startDate);
+          if (
+            index === normalizeDataObject.durations.length - 1 &&
+            String(normalizeDataObject.durations.at(-1)?.endDate) !=
+              String(normalizeDataObject.durations.at(-1)?.startDate)
+          ) {
+            const endDate = normalizeDataObject.durations.at(-1)?.endDate;
+            if (endDate) {
+              labelList.push(endDate);
+            }
+          }
+
+          durationDetail.data.forEach((organization) => {
+            const existing = datasetMap.get(organization.organizationId);
+
+            if (existing) {
+              existing.data[index] = {
+                x: durationDetail.startDate,
+                y: organization.duration
+                  ? convertTimeToDecimal(organization.duration)
+                  : 0,
+                endDate: durationDetail.endDate,
+                color:
+                  lightenColor('#2E9267', organization?.percent || 0) ||
+                  getRandomColor(),
+                label: organization.organizationName,
+              };
+              if (
+                index === normalizeDataObject.durations.length - 1 &&
+                String(normalizeDataObject.durations.at(-1)?.endDate) !=
+                  String(normalizeDataObject.durations.at(-1)?.startDate)
+              ) {
+                existing.data[index + 1] = {
+                  x: durationDetail.endDate,
+                  y: organization.duration
+                    ? convertTimeToDecimal(organization.duration)
+                    : 0,
+                  endDate: durationDetail.endDate,
+                  color:
+                    lightenColor('#2E9267', organization?.percent || 0) ||
+                    getRandomColor(),
+                  label: organization.organizationName,
+                };
+              }
+            } else {
+              // Initialize new dataset with placeholders
+              const dataArray = Array(
+                normalizeDataObject.durations.length,
+              ).fill(0);
+              dataArray[index] = {
+                x: durationDetail.startDate,
+                y: organization.duration
+                  ? convertTimeToDecimal(organization.duration)
+                  : 0,
+                endDate: durationDetail.endDate,
+                color:
+                  lightenColor('#2E9267', organization?.percent || 0) ||
+                  getRandomColor(),
+                label: organization.organizationName,
+              };
+
+              datasetMap.set(organization.organizationId, {
+                label: organization.organizationName,
+                data: dataArray,
+                borderColor: '#2E9267',
+                backgroundColor: 'rgba(217, 83, 79, 0.04)',
+                fill: true,
+                tension: 0,
+                pointRadius: 4,
+                pointBorderColor: 'transparent',
+                pointHoverRadius: 6,
+                pointHoverBackgroundColor:
+                  lightenColor('#2E9267', 50) || getRandomColor(),
+                pointHoverBorderColor: 'transparent',
+                pointHoverBorderWidth: 2,
+              });
+            }
+          });
+        });
+
+        setLineChartData({
+          labels: labelList,
+          datasets: Array.from(datasetMap.values()),
+        });
+      } else {
+        setLineChartData({
+          labels: [],
+          datasets: [],
+        });
+      }
+    }
+  }, [statisticAllTeamTaskDurationsList, selectedOrganization]);
 
   const sortByPercentDifference = (
-    data: {
-      tagId: number;
-      tagName: string;
-      tagDuration: string;
-      tagPercent: string;
-      tagColor: string;
-    }[],
+    data: MyDockLineChartTableItem[],
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
-      const rowAPercentage = Number(rowA.tagPercent || 0);
-      const rowBPercentage = Number(rowB.tagPercent || 0);
+      const rowAPercentage = Number(rowA.percent || 0);
+      const rowBPercentage = Number(rowB.percent || 0);
 
       return sortingType == SortingType.ASC
         ? rowAPercentage - rowBPercentage
@@ -532,21 +652,15 @@ const LineChart = ({
   };
 
   const sortByDurationDifference = (
-    data: {
-      tagId: number;
-      tagName: string;
-      tagDuration: string;
-      tagPercent: string;
-      tagColor: string;
-    }[],
+    data: MyDockLineChartTableItem[],
     sortingType: string,
   ) => {
     const sortedArr = data.slice().sort((rowA, rowB) => {
       const rowADuration = convertDurationToTotalMinutes(
-        rowA.tagDuration || DEFAULT_TIME_TEXT,
+        rowA.duration || DEFAULT_TIME_TEXT,
       );
       const rowBDuration = convertDurationToTotalMinutes(
-        rowB.tagDuration || DEFAULT_TIME_TEXT,
+        rowB.duration || DEFAULT_TIME_TEXT,
       );
 
       return sortingType == SortingType.ASC
@@ -556,15 +670,9 @@ const LineChart = ({
     setTableData(sortedArr);
   };
 
-  const columns: ColumnDef<{
-    tagId: number;
-    tagName: string;
-    tagDuration: string;
-    tagPercent: string;
-    tagColor: string;
-  }>[] = [
+  const columns: ColumnDef<MyDockLineChartTableItem>[] = [
     {
-      accessorKey: 'tagName',
+      accessorKey: 'name',
       header: () => {
         return (
           <div className="font-medium px-[18px] text-[16px] break-all line-clamp-3 text-left text-black flex gap-2 items-center">
@@ -588,7 +696,7 @@ const LineChart = ({
         return (
           <div className="font-medium px-[18px] text-[16px] break-all line-clamp-3 text-left text-black flex gap-2 items-center">
             <div
-              style={{ backgroundColor: info.row.original.tagColor }}
+              style={{ backgroundColor: info.row.original.color }}
               className={`w-4 h-4 min-w-[16px] rounded-[3px] flex items-center justify-center`}>
               <ImageRound
                 name="Check task"
@@ -603,7 +711,7 @@ const LineChart = ({
       enableSorting: false,
     },
     {
-      accessorKey: 'tagDuration',
+      accessorKey: 'duration',
       size: 50,
       header: () => {
         return (
@@ -646,7 +754,7 @@ const LineChart = ({
       },
     },
     {
-      accessorKey: 'tagPercent',
+      accessorKey: 'percent',
       size: 30,
       header: () => {
         return (
@@ -919,7 +1027,10 @@ const LineChart = ({
               </div>
             </div>
           </div>
-          {!isFetchedStatisticTagTaskDurationsList ? (
+          {(isFetchingStatisticTaskDurationsListTag &&
+            selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
+          (isFetchingStatisticAllTeamTaskDurationsList &&
+            selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
             <RowSkeleton
               numberOfRows={1}
               className={`!h-[395px] w-[calc(100%_-_60px)] mx-auto`}
@@ -949,24 +1060,30 @@ const LineChart = ({
           )}
 
           <div className="px-[30px]">
-            {isFetchedStatisticTagTaskDurationsList && (
-              <div className="flex gap-8 items-center justify-end flex-wrap">
-                {standardLabelsInfo.map((label, index) => {
-                  return (
-                    <div key={index} className="flex gap-1 items-center">
-                      <div
-                        className="w-8 h-1"
-                        style={{ backgroundColor: label.color }}></div>
-                      <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
-                        {label.name}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            {(!isFetchingStatisticTaskDurationsListTag &&
+              selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
+              (!isFetchingStatisticAllTeamTaskDurationsList &&
+                selectedOrganization?.value == ALL_TEAM_STATISTIC && (
+                  <div className="flex gap-8 items-center justify-end flex-wrap">
+                    {standardLabelsInfo.map((label, index) => {
+                      return (
+                        <div key={index} className="flex gap-1 items-center">
+                          <div
+                            className="w-8 h-1"
+                            style={{ backgroundColor: label.color }}></div>
+                          <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
+                            {label.name}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
 
-            {!isFetchedStatisticTagTaskDurationsList ? (
+            {(isFetchingStatisticTaskDurationsListTag &&
+              selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
+            (isFetchingStatisticAllTeamTaskDurationsList &&
+              selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <StatisticLineChartTableSkeleton />
             ) : (
               <Table

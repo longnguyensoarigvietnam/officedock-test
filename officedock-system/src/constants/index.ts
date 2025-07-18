@@ -120,11 +120,6 @@ export const SCREEN_LIST = [
     show: false,
   },
   {
-    name: 'スキルマップ画面',
-    value: 'skillMap',
-    show: false,
-  },
-  {
     name: '組織_スキル画面',
     value: 'organizationSkill',
     show: false,
@@ -165,18 +160,23 @@ export const SCREEN_LIST = [
     show: false,
   },
   {
-    name: 'チームドック画面',
-    value: 'teamdock',
-    show: true,
-  },
-  {
     name: '日報一覧画面',
     value: 'teamDailyReport',
     show: true,
   },
   {
+    name: 'チームドック画面',
+    value: 'teamdock',
+    show: true,
+  },
+  {
     name: 'カレンダー設定画面',
     value: 'calendarManagement',
+    show: true,
+  },
+  {
+    name: 'スキルマップ画面',
+    value: 'skillMap',
     show: true,
   },
 ];
@@ -467,3 +467,5 @@ export const DEFAULT_EMPTY_CATEGORY = [
     color: '',
   },
 ];
+
+export const SUB_TEAMS = 'サブチーム';

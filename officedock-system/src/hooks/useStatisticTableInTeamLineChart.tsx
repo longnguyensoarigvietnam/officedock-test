@@ -86,8 +86,7 @@ const useStatisticTableInTeamLineChart = ({
   const {
     data: statisticTableInTeamLineChart,
     refetch: refetchStatisticTableInTeamLineChart,
-    isLoading: isLoadingStatisticTableInTeamLineChart,
-    isFetched: isFetchedStatisticTableInTeamLineChart,
+    isFetching: isFetchingStatisticTableInTeamLineChart,
   } = useQuery({
     queryKey: ['getStatisticTableInTeamLineChart', JSON.stringify(filter)],
     queryFn: ({ signal }) => getStatisticTableInTeamLineChart({ signal }),
@@ -106,8 +105,7 @@ const useStatisticTableInTeamLineChart = ({
   return {
     statisticTableInTeamLineChart,
     refetchStatisticTableInTeamLineChart,
-    isLoadingStatisticTableInTeamLineChart,
-    isFetchedStatisticTableInTeamLineChart,
+    isFetchingStatisticTableInTeamLineChart,
   };
 };
 

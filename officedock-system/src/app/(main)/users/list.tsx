@@ -334,14 +334,24 @@ const ListUsers = () => {
       profile?: { fullName?: string[] };
       password?: string[];
     }>) => {
-      if (Object.keys(response?.data || {}).length) {
-        setErrorMessages({
-          username: response?.data?.username?.[0] || '',
-          email: response?.data?.email?.[0] || '',
-          fullName: response?.data?.profile?.fullName?.[0] || '',
-          password: response?.data?.password?.[0] || '',
-        });
-      } else {
+      const errorData = response?.data || {};
+
+      // Extract known fields
+      const { username, email, profile, password, ...rest } = errorData;
+      const fullName = profile?.fullName;
+
+      // Set known errors to form
+      setErrorMessages({
+        username: username?.[0] || '',
+        email: email?.[0] || '',
+        fullName: fullName?.[0] || '',
+        password: password?.[0] || '',
+      });
+
+      // Flatten remaining keys and check if any unknown error exists
+      const hasOtherErrors = Object.keys(rest).length > 0;
+
+      if (hasOtherErrors) {
         showToast({
           variant: 'error',
           description: ERROR_UPDATE_MESSAGE,
@@ -436,13 +446,23 @@ const ListUsers = () => {
         email?: string[];
         profile?: { fullName?: string[] };
       }>) => {
-        if (Object.keys(response?.data || {}).length) {
-          setErrorMessages({
-            username: response?.data?.username?.[0] || '',
-            email: response?.data?.email?.[0] || '',
-            fullName: response?.data?.profile?.fullName?.[0] || '',
-          });
-        } else {
+        const errorData = response?.data || {};
+
+        // Extract known fields
+        const { username, email, profile, ...rest } = errorData;
+        const fullName = profile?.fullName;
+
+        // Set known errors to form
+        setErrorMessages({
+          username: username?.[0] || '',
+          email: email?.[0] || '',
+          fullName: fullName?.[0] || '',
+        });
+
+        // Flatten remaining keys and check if any unknown error exists
+        const hasOtherErrors = Object.keys(rest).length > 0;
+
+        if (hasOtherErrors) {
           showToast({
             variant: 'error',
             description: ERROR_CREATE_MESSAGE,

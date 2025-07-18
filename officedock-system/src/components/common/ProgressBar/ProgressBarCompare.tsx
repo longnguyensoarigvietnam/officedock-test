@@ -22,6 +22,7 @@ interface Props {
   endDateCompare: Date | null;
   totalDuration: string;
   totalDurationCompare: string;
+  isAllTeamOption?: boolean;
   handleClickTooltip: (
     id: number | null,
     isCompare: boolean,
@@ -41,6 +42,7 @@ const PercentageBarCompare = ({
   endDateCompare,
   totalDuration,
   totalDurationCompare,
+  isAllTeamOption = false,
   handleClickTooltip,
   handleClickChart,
   isLoading,
@@ -79,7 +81,7 @@ const PercentageBarCompare = ({
                 <div
                   key={index}
                   onClick={() => {
-                    if (item.id !== -1) {
+                    if (item.id !== -1 && typeof item.id === 'number') {
                       handleClickChart(item.id);
                     }
                   }}
@@ -201,26 +203,28 @@ const PercentageBarCompare = ({
                             </li>
                           ))}
                         </ul>
-                        <div className="flex w-full justify-end mt-3">
-                          <div
-                            onClick={() => {
-                              handleClickTooltip(
-                                item.id,
-                                false,
-                                String(item.organizationId),
-                              );
-                            }}
-                            className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md">
-                            <span>タスクを見る</span>
-                            <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
-                              <ImageRound
-                                className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
-                                src="/icons/right-statistic.svg"
-                                name="right"
-                              />
+                        {!isAllTeamOption && (
+                          <div className="flex w-full justify-end mt-3">
+                            <div
+                              onClick={() => {
+                                handleClickTooltip(
+                                  item.id as number,
+                                  false,
+                                  String(item.organizationId),
+                                );
+                              }}
+                              className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md">
+                              <span>タスクを見る</span>
+                              <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
+                                <ImageRound
+                                  className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
+                                  src="/icons/right-statistic.svg"
+                                  name="right"
+                                />
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )}
                       </>
                     )}
                   </div>
@@ -245,7 +249,7 @@ const PercentageBarCompare = ({
                 <div
                   key={index}
                   onClick={() => {
-                    if (item.id !== -1) {
+                    if (item.id !== -1 && typeof item.id === 'number') {
                       handleClickChart(item.id);
                     }
                   }}
@@ -379,26 +383,28 @@ const PercentageBarCompare = ({
                             </li>
                           ))}
                         </ul>
-                        <div className="flex w-full justify-end mt-3">
-                          <div
-                            onClick={() => {
-                              handleClickTooltip(
-                                item.id,
-                                true,
-                                String(item.organizationId),
-                              );
-                            }}
-                            className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md">
-                            <span>タスクを見る</span>
-                            <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
-                              <ImageRound
-                                className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
-                                src="/icons/right-statistic.svg"
-                                name="right"
-                              />
+                        {!isAllTeamOption && (
+                          <div className="flex w-full justify-end mt-3">
+                            <div
+                              onClick={() => {
+                                handleClickTooltip(
+                                  item.id as number,
+                                  true,
+                                  String(item.organizationId),
+                                );
+                              }}
+                              className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md">
+                              <span>タスクを見る</span>
+                              <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
+                                <ImageRound
+                                  className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
+                                  src="/icons/right-statistic.svg"
+                                  name="right"
+                                />
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )}
                       </>
                     )}
                   </div>

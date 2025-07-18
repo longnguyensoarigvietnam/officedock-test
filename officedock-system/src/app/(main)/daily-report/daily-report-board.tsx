@@ -56,7 +56,7 @@ import {
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
-  ERROR_DELETE_MESSAGE,
+  ERROR_DELETE_TASK_RUNNING,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
 } from '@constants/message';
@@ -194,6 +194,7 @@ const DailyReportBoard = () => {
     clientX: number;
     clientY: number;
     uuid: string;
+    isCalculate: boolean;
   }) => {
     setPopoverInfo({
       largeColor: data.largeColor ? data.largeColor : '',
@@ -209,6 +210,7 @@ const DailyReportBoard = () => {
         top: Number(data.clientY),
         left: Number(data.clientX),
       }).top,
+      isCalculate: data.isCalculate,
     });
   };
   const handleEventClick = (clickInfo?: any) => {
@@ -225,6 +227,7 @@ const DailyReportBoard = () => {
       uuid: clickInfo.event.extendedProps.uuid
         ? clickInfo.event.extendedProps.uuid
         : '',
+      isCalculate: clickInfo.event?.extendedProps.isCalculate,
     });
   };
 
@@ -238,6 +241,7 @@ const DailyReportBoard = () => {
           ? new Date(duration.startedAt)
           : new Date(),
         pausedAt: duration.pausedAt ? new Date(duration.pausedAt) : currentDate,
+        isCalculate: duration.pausedAt ? false : true,
         start: new Date(duration.startedAt),
         end: duration.pausedAt ? new Date(duration.pausedAt) : new Date(),
         largeColor:
@@ -526,7 +530,7 @@ const DailyReportBoard = () => {
         refetchDataStatisticPDF();
       },
       onError: (error: AxiosError<any>) => {
-        showErrorToast(error, ERROR_DELETE_MESSAGE);
+        showErrorToast(error, ERROR_DELETE_TASK_RUNNING);
       },
       onSettled: () => {},
     },
@@ -844,7 +848,7 @@ const DailyReportBoard = () => {
                 isDisabled={!isPermissionAction}
                 placeholder=""
                 showArrow
-                options={optionData}
+                options={removeDuplicateOptions(optionData)}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
@@ -2175,8 +2179,9 @@ const DailyReportBoard = () => {
                         <div className="flex items-center gap-1 text-xs">
                           <span className="">メインチーム</span>
                           <span className="">
-                            {dataStatisticPDF?.subOrganization?.percent &&
-                              100 - dataStatisticPDF?.subOrganization?.percent}
+                            {dataStatisticPDF?.subOrganization?.percent
+                              ? 100 - dataStatisticPDF?.subOrganization?.percent
+                              : 100}
                             %
                           </span>
                           <div className="flex items-center gap-1">
@@ -2338,10 +2343,9 @@ const DailyReportBoard = () => {
                       <td className="border-r border-black text-center text-xs">
                         <div className="-translate-y-[25%]">
                           {item.startedAt &&
-                            item.pausedAt &&
                             calculateTotalMinutes(
                               item.startedAt,
-                              item.pausedAt,
+                              item.pausedAt || String(new Date()),
                             )}
                           分
                         </div>

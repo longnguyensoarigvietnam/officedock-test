@@ -78,14 +78,6 @@ class ActionPermission(BasePermission):
 
         permission_name = f"{screen_name}_{action}"
 
-        # Check if logged user has permission view skill map, allow create submit level
-        if (
-            permission_name
-            == f"{Screens.SUBMIT_LEVEL.value}_{Actions.ADD.value}"
-        ):
-            skill_map_view = f"{Screens.SKILL_MAP.value}_{Actions.VIEW.value}"
-            return check_permission_exists(request, skill_map_view)
-
         # FIXME: Make new hierarchy category screen later
         # Check if logged user has permission add hierarchies category, allow update hierarchies category
         if (
@@ -101,16 +93,6 @@ class ActionPermission(BasePermission):
             return check_permission_exists(
                 request, category_hierarchy_add
             ) or check_permission_exists(request, category_hierarchy_update)
-
-        # Check if permission is add skill map, allow update skill map
-        if permission_name == f"{Screens.SKILL_MAP.value}_{Actions.ADD.value}":
-            skill_map_add = f"{Screens.SKILL_MAP.value}_{Actions.ADD.value}"
-            skill_map_update = (
-                f"{Screens.SKILL_MAP.value}_{Actions.UPDATE.value}"
-            )
-            return check_permission_exists(
-                request, skill_map_add
-            ) or check_permission_exists(request, skill_map_update)
 
         return check_permission_exists(request, permission_name)
 

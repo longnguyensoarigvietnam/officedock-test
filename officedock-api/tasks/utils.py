@@ -174,6 +174,7 @@ def calculate_progress_skill_map(
     case=None,
     duration_created_at=None,
     organization=None,
+    is_plus=True,
 ):
     """
     Handle calculate progress skill map by task
@@ -251,7 +252,7 @@ def calculate_progress_skill_map(
                     user,
                     skill_map_level=current_skill_level,
                 )
-            if total_duration_of_task:
+            if total_duration_of_task and is_plus:
                 # Update skill map skill level actual measure time
                 # Get new actual measure time
                 time_duration = total_duration_of_task or duration_time

@@ -4,9 +4,15 @@ import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
+import FilterTagTeam from '../filter/FilterTagTeam';
+// Currently using for ALL TEAM taken from my dock
+import ProgressBarStatistic from '@components/statistic/category/ProgressBarStatistic';
 
 import {
+  ProgressDataType,
+  StatisticAllTeamInfo,
   StatisticCategoryInfo,
+  StatisticsAllTeams,
   StatisticsCategories,
   UserListStatisticType,
 } from '@interfaces/statistic';
@@ -17,20 +23,21 @@ import {
   formatTimeToJapanese,
   sumDurationsChart,
 } from '@utils/date';
-import { lightenColor } from '@utils';
+import { getRandomColor, lightenColor } from '@utils';
 
 import { EventWorkCategory } from '@constants/enums';
 
 import ProgressBarTeamTagCompare from './ProgressBarTeamTag';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
-import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
-import FilterTagTeam from '../filter/FilterTagTeam';
+import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT, SUB_TEAMS } from '@constants';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticTagsList: StatisticsCategories | undefined;
   statisticTagsCompareList: StatisticsCategories | undefined;
+  statisticAllTeamCategoryList: StatisticsAllTeams | undefined;
+  statisticAllTeamCategoryCompareList: StatisticsAllTeams | undefined;
   startDateCompare: Date;
   endDateCompare: Date | null;
   handleSelectOrganization: (data: OptionDropdownType) => void;
@@ -39,19 +46,19 @@ type Props = {
   handleSelectSmall: (data: OptionDropdownType) => void;
 };
 
-type ProgressDataType = {
+type ProgressDataTypeTeam = {
   id: number | string; // Allow string for merged items
   label: string;
   value: number;
   color: string;
   duration: string;
   optionData: UserListStatisticType[];
-  mergedItems?: ProgressDataType[];
+  mergedItems?: ProgressDataTypeTeam[];
   organizationId?: string;
 };
 type ProgressDataCompareItem = {
-  item: ProgressDataType;
-  itemCompare?: ProgressDataType;
+  item: ProgressDataTypeTeam;
+  itemCompare?: ProgressDataTypeTeam;
 };
 
 function transformAndMergeProgressData({
@@ -64,8 +71,8 @@ function transformAndMergeProgressData({
   mergeLabel?: string;
   mergeColor?: string;
   threshold?: number;
-}): ProgressDataType[] {
-  const progressData: ProgressDataType[] = data.map((item) => ({
+}): ProgressDataTypeTeam[] {
+  const progressData: ProgressDataTypeTeam[] = data.map((item) => ({
     id: item.tagId as number,
     label: item.tagName || '',
     value: item.percent,
@@ -88,7 +95,7 @@ function transformAndMergeProgressData({
 
   const totalDuration = sumDurationsChart(durations);
 
-  const mergedItem: ProgressDataType = {
+  const mergedItem: ProgressDataTypeTeam = {
     id: -1,
     label: mergeLabel,
     value: totalMergedPercent,
@@ -100,7 +107,7 @@ function transformAndMergeProgressData({
 
   return [...mainItems, mergedItem];
 }
-const buildKey = (item: ProgressDataType, isAll: boolean) =>
+const buildKey = (item: ProgressDataTypeTeam, isAll: boolean) =>
   isAll ? `${item.organizationId}-${item.id}` : `${item.id}`;
 
 const parseKey = (key: string, isAll: boolean) => {
@@ -149,7 +156,7 @@ export function buildProgressDataCompareWithMergedOthers({
 
   /* Step B – get the unique “key” (id or org‑id) */
   const allKeys = new Set<string>();
-  const collectKeys = (arr: ProgressDataType[]) => {
+  const collectKeys = (arr: ProgressDataTypeTeam[]) => {
     arr.forEach((item) => {
       allKeys.add(buildKey(item, isAllTeam));
       if (item.id === -1 && item.mergedItems) {
@@ -165,10 +172,10 @@ export function buildProgressDataCompareWithMergedOthers({
   /* Step C – function to find item by key */
   const findByKey = (
     key: string,
-    arr: ProgressDataType[],
-  ): ProgressDataType | undefined => {
+    arr: ProgressDataTypeTeam[],
+  ): ProgressDataTypeTeam | undefined => {
     const { id, orgId } = parseKey(key, isAllTeam);
-    const match = (el: ProgressDataType) =>
+    const match = (el: ProgressDataTypeTeam) =>
       String(el.id) == id && (!isAllTeam || el.organizationId == orgId);
 
     return (
@@ -186,7 +193,7 @@ export function buildProgressDataCompareWithMergedOthers({
       const cmpItem = findByKey(key, mergedCompare);
       const { id, orgId } = parseKey(key, isAllTeam);
 
-      const empty: ProgressDataType = {
+      const empty: ProgressDataTypeTeam = {
         id,
         label: baseItem?.label ?? cmpItem?.label ?? '',
         value: 0,
@@ -220,6 +227,8 @@ const AllocationTagTeamCompare = memo(
     startDateCompare,
     endDateCompare,
     statisticTagsCompareList,
+    statisticAllTeamCategoryList,
+    statisticAllTeamCategoryCompareList,
     handleSelectOrganization,
     handleSelectLarge,
     handleSelectMedium,
@@ -235,6 +244,12 @@ const AllocationTagTeamCompare = memo(
     } | null>(null);
 
     const [isModalCompare, setIsModalCompare] = useState(false);
+    const [progressDataAllTeam, setProgressDataAllTeam] = useState<
+      {
+        main: ProgressDataType | null;
+        compare: ProgressDataType | null;
+      }[]
+    >([]);
 
     const [progressDataPairsLarge, setProgressDataPairsLarge] = useState<
       ProgressDataCompareItem[]
@@ -281,7 +296,11 @@ const AllocationTagTeamCompare = memo(
     } = useContext(StatisticTeamTagsStateContext);
 
     useEffect(() => {
-      if (statisticTagsList && statisticTagsCompareList) {
+      if (
+        statisticTagsList &&
+        statisticTagsCompareList &&
+        selectedOrganization?.value != ALL_TEAM_STATISTIC
+      ) {
         const compareResult = buildProgressDataCompareWithMergedOthers({
           baseData: statisticTagsList.largeCategories || [],
           compareData: statisticTagsCompareList.largeCategories || [],
@@ -310,6 +329,102 @@ const AllocationTagTeamCompare = memo(
       statisticTagsList,
       statisticTagsCompareList,
       selectedOrganization?.label,
+      selectedOrganization?.value,
+    ]);
+
+    useEffect(() => {
+      if (
+        statisticAllTeamCategoryList &&
+        statisticAllTeamCategoryCompareList &&
+        selectedOrganization?.value == ALL_TEAM_STATISTIC
+      ) {
+        const mergeCategories = (
+          mainCategories: StatisticAllTeamInfo[],
+          compareCategories: StatisticAllTeamInfo[],
+        ) => {
+          const mergedMap = new Map<
+            number | string,
+            {
+              main: ProgressDataType | null;
+              compare: ProgressDataType | null;
+            }
+          >();
+
+          // Add main categories first
+          mainCategories.forEach((item) => {
+            const mainData: ProgressDataType = {
+              id: item.organizationId,
+              label: item?.organizationName || '',
+              value: item.percent,
+              organizationId: String(item.organizationId),
+
+              color: item.color || getRandomColor(),
+              duration: item.duration,
+              optionData:
+                item.organizationId == SUB_TEAMS
+                  ? item?.subTeams
+                      ?.slice(0, 3)
+                      .map((team) => team?.organizationName || '') || []
+                  : item?.data
+                      ?.slice(0, 3)
+                      .map((category) => category?.tagName || '') || [],
+            };
+
+            mergedMap.set(`${item.organizationId}`, {
+              main: mainData,
+              compare: null,
+            });
+          });
+
+          // Add compare categories, updating existing ones or creating new entries
+          compareCategories.forEach((compareItem) => {
+            const compareData: ProgressDataType = {
+              id: compareItem.organizationId,
+              label: compareItem?.organizationName || '',
+              value: compareItem.percent,
+              organizationId: String(compareItem.organizationId),
+
+              color: compareItem.color || getRandomColor(),
+              duration: compareItem.duration,
+              optionData:
+                compareItem.organizationId == SUB_TEAMS
+                  ? compareItem?.subTeams
+                      ?.slice(0, 3)
+                      .map((team) => team?.organizationName || '') || []
+                  : compareItem?.data
+                      ?.slice(0, 3)
+                      .map((category) => category?.tagName || '') || [],
+            };
+
+            if (mergedMap.has(`${compareItem.organizationId}`)) {
+              mergedMap.get(`${compareItem.organizationId}`)!.compare =
+                compareData;
+            } else {
+              mergedMap.set(`${compareItem.organizationId}`, {
+                main: null,
+                compare: compareData,
+              });
+            }
+          });
+
+          return Array.from(mergedMap.values());
+        };
+
+        const largePairs = mergeCategories(
+          statisticAllTeamCategoryList.largeCategories || [],
+          statisticAllTeamCategoryCompareList.largeCategories || [],
+        );
+
+        setProgressDataAllTeam(largePairs);
+        setProgressDataPairsLarge([]);
+        setProgressDataPairsMedium([]);
+        setProgressDataPairsSmall([]);
+        setProgressDataPairsCategory([]);
+      }
+    }, [
+      statisticAllTeamCategoryList,
+      statisticAllTeamCategoryCompareList,
+      selectedOrganization?.value,
     ]);
 
     const handleClickTooltip = ({
@@ -475,60 +590,149 @@ const AllocationTagTeamCompare = memo(
                         </div>
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
-                          {progressDataPairsLarge.map((item, index) => {
-                            return (
-                              <div key={index}>
-                                <ProgressBarTeamTagCompare
-                                  key={index}
-                                  startDate={startDate}
-                                  endDate={endDate}
-                                  startDateCompare={startDateCompare}
-                                  endDateCompare={endDateCompare}
-                                  classProgressClass="h-[20px] rounded-[4px]"
-                                  organizationId={
-                                    item.item.organizationId ||
-                                    item.itemCompare?.organizationId
-                                  }
-                                  handleClickTooltip={({
-                                    userId,
-                                    categoryId,
-                                    isCompare,
-                                    organizationId,
-                                  }: {
-                                    userId: number;
-                                    categoryId: number;
-                                    isCompare?: boolean;
-                                    organizationId?: string;
-                                  }) => {
-                                    handleClickTooltip({
-                                      id: categoryId,
+                          {selectedOrganization?.value == ALL_TEAM_STATISTIC &&
+                            progressDataAllTeam.map((pair, index) => {
+                              return (
+                                <div key={index}>
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-sm font-medium truncate max-w-40">
+                                      {pair.main
+                                        ? pair.main.label
+                                        : pair.compare?.label || ''}
+                                    </span>
+                                    <span className="text-sm font-medium truncate max-w-24">
+                                      {formatTimeToJapanese(
+                                        pair.main?.duration ||
+                                          DEFAULT_TIME_TEXT,
+                                      )}
+                                    </span>
+                                  </div>
+                                  <ProgressBarStatistic
+                                    key={index}
+                                    isAllTeam
+                                    classProgressClass="h-[20px] rounded-[4px]"
+                                    handleClickTooltip={() => {}}
+                                    handleClickChart={() => {}}
+                                    id={pair.main ? pair.main.id : 0}
+                                    label={pair.main ? pair.main.label : ''}
+                                    value={pair.main ? pair.main.value : 0}
+                                    color={pair.main ? pair.main.color : ''}
+                                    duration={
+                                      pair.main
+                                        ? String(pair.main.duration)
+                                        : ''
+                                    }
+                                    optionData={
+                                      pair.main ? pair.main.optionData : []
+                                    }
+                                    mergedItems={
+                                      pair.main ? pair.main.mergedItems : []
+                                    }
+                                    showInfo={false}
+                                    startDate={startDate}
+                                    endDate={endDate}
+                                    organizationId={
+                                      pair.main?.organizationId ||
+                                      pair.compare?.organizationId
+                                    }
+                                  />
+                                  <ProgressBarStatistic
+                                    key={index}
+                                    isAllTeam
+                                    classProgressClass="h-[20px] rounded-[4px]"
+                                    handleClickTooltip={() => {}}
+                                    handleClickChart={() => {}}
+                                    id={pair.compare ? pair.compare.id : 0}
+                                    label={
+                                      pair.compare ? pair.compare.label : ''
+                                    }
+                                    value={
+                                      pair.compare ? pair.compare.value : 0
+                                    }
+                                    color={
+                                      pair.compare ? pair.compare.color : ''
+                                    }
+                                    duration={
+                                      pair.compare
+                                        ? String(pair.compare.duration)
+                                        : ''
+                                    }
+                                    optionData={
+                                      pair.compare
+                                        ? pair.compare.optionData
+                                        : []
+                                    }
+                                    mergedItems={
+                                      pair.compare
+                                        ? pair.compare.mergedItems
+                                        : []
+                                    }
+                                    showInfo={false}
+                                    startDateCompare={startDateCompare}
+                                    endDateCompare={endDateCompare}
+                                    organizationId={
+                                      pair.main?.organizationId ||
+                                      pair.compare?.organizationId
+                                    }
+                                  />
+                                </div>
+                              );
+                            })}
+                          {selectedOrganization?.value != ALL_TEAM_STATISTIC &&
+                            progressDataPairsLarge.map((item, index) => {
+                              return (
+                                <div key={index}>
+                                  <ProgressBarTeamTagCompare
+                                    key={index}
+                                    startDate={startDate}
+                                    endDate={endDate}
+                                    startDateCompare={startDateCompare}
+                                    endDateCompare={endDateCompare}
+                                    classProgressClass="h-[20px] rounded-[4px]"
+                                    organizationId={
+                                      item.item.organizationId ||
+                                      item.itemCompare?.organizationId
+                                    }
+                                    handleClickTooltip={({
                                       userId,
-                                      type: EventWorkCategory.ALL,
+                                      categoryId,
                                       isCompare,
                                       organizationId,
-                                    });
-                                  }}
-                                  handleClickChart={(
-                                    data: OptionDropdownType,
-                                  ) => {
-                                    if (
-                                      data.value &&
-                                      data.value != selectedMedium?.value
-                                    ) {
-                                      const select = mediumOptions.find(
-                                        (item) => item.value === data.value,
-                                      );
+                                    }: {
+                                      userId: number;
+                                      categoryId: number;
+                                      isCompare?: boolean;
+                                      organizationId?: string;
+                                    }) => {
+                                      handleClickTooltip({
+                                        id: categoryId,
+                                        userId,
+                                        type: EventWorkCategory.ALL,
+                                        isCompare,
+                                        organizationId,
+                                      });
+                                    }}
+                                    handleClickChart={(
+                                      data: OptionDropdownType,
+                                    ) => {
+                                      if (
+                                        data.value &&
+                                        data.value != selectedMedium?.value
+                                      ) {
+                                        const select = mediumOptions.find(
+                                          (item) => item.value === data.value,
+                                        );
 
-                                      if (select) {
-                                        handleSelectMedium(select);
+                                        if (select) {
+                                          handleSelectMedium(select);
+                                        }
                                       }
-                                    }
-                                  }}
-                                  {...item}
-                                />
-                              </div>
-                            );
-                          })}
+                                    }}
+                                    {...item}
+                                  />
+                                </div>
+                              );
+                            })}
                         </div>
                       )}
                     </div>
@@ -951,9 +1155,6 @@ const AllocationTagTeamCompare = memo(
             startDate={isModalCompare ? startDateCompare : startDate}
             endDate={isModalCompare ? endDateCompare : endDate}
             selectedOrganization={selectedOrganization}
-            statisticTagsListTeam={
-              isModalCompare ? statisticTagsCompareList : statisticTagsList
-            }
             onClose={() => {
               setIsShowModal(false);
             }}

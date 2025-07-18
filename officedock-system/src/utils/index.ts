@@ -3,25 +3,43 @@ import moment from 'moment';
 import { format, isSameDay } from 'date-fns';
 
 import {
+  AllTeamStatisticOption,
   CalendarViewOptions,
   EventWorkCategory,
   PermissionsSystem,
   PermissionType,
   ScreenName,
+  StatisticChartType,
   StatisticViewOptions,
   StatusTask,
   TaskRepetitiveValue,
 } from '@constants/enums';
-import { DATE_FORMAT, MAX_HEX_COLOR_VALUE, SKILL_MAP_STEPS } from '@constants';
+import {
+  DATE_FORMAT,
+  DEFAULT_TIME_TEXT,
+  MAX_HEX_COLOR_VALUE,
+  SKILL_MAP_STEPS,
+  SUB_TEAMS,
+} from '@constants';
 import { PASSWORD_REGEX, URL_REGEX } from '@constants/regex';
 
 import { JwtDecode } from '@interfaces/auth';
 import { Organizations } from '@interfaces/organization';
 import {
+  CategoryLineChartDatasetInfo,
   dataTaskDaily,
   dataTaskDailyTable,
+  MergedMyDockLineChartTable,
+  MyDockLineChartTableItem,
   ProgressDataType,
+  StatisticAllTeamInfo,
   StatisticCategoryInfo,
+  StatisticsAllTeamTaskDuration,
+  StatisticsTaskDuration,
+  StatisticsTaskDurationTag,
+  TeamDockAllTeamTableRowDetail,
+  TeamDockMergedTable,
+  TeamDockStatisticsAllTeamTaskDuration,
 } from '@interfaces/statistic';
 import {
   ResultTeam,
@@ -35,6 +53,7 @@ import { UserRoleType } from '@interfaces/user';
 import { ChatMessageResponse } from '@interfaces/chat';
 
 import {
+  convertTimeToDecimal,
   convertToTimeString,
   formatHoursAndMinutesForDateTime,
   formatShowDeadline,
@@ -43,7 +62,6 @@ import {
   getJapaneseWeekDay,
   sumDurationsChart,
 } from './date';
-import { EventApi } from '@fullcalendar/core';
 
 export function hasPermissionInArray(
   requiredPermissions: PermissionsSystem[],
@@ -465,6 +483,13 @@ export const getPermissionOptionDropdown = (
     return includePermissions([
       PermissionType.ALL_TEAMS,
       PermissionType.TEAM_AND_SUB,
+    ]);
+  }
+  if ([ScreenName.SKILL_MAP].includes(screen)) {
+    return includePermissions([
+      PermissionType.EDITABLE,
+      PermissionType.TEAM_AND_SUB_EDIT,
+      PermissionType.NOT_ALLOWED,
     ]);
   }
   return includePermissions([
@@ -1228,7 +1253,7 @@ export const getSafeTooltipLeft = ({
 
   return left;
 };
-
+// Map statistic category info to progress data
 export const mapStatisticCategoryInfoToProgressData = ({
   data,
   mergeLabel = 'その他',
@@ -1288,6 +1313,36 @@ export const mapStatisticCategoryInfoToProgressData = ({
     finalData: [...mainItems, mergedItem],
   };
 };
+// Map statistic all team categories info to progress data
+export const mapStatisticAllTeamCategoryInfoToProgressData = ({
+  data,
+}: {
+  data: StatisticAllTeamInfo[];
+}): {
+  finalData: ProgressDataType[];
+} => {
+  const progressData: ProgressDataType[] = data.map((item) => ({
+    id: item.organizationId,
+    label: item?.organizationName || '',
+    value: item.percent,
+    color: item.color || getRandomColor(),
+    duration: item.duration,
+    optionData:
+      item.organizationId == SUB_TEAMS
+        ? item?.subTeams
+            ?.slice(0, 3)
+            .map((team) => team?.organizationName || '') || []
+        : item?.data
+            ?.slice(0, 3)
+            .map(
+              (category) => category?.categoryName || category?.tagName || '',
+            ) || [],
+  }));
+
+  return {
+    finalData: progressData,
+  };
+};
 // Parse to ISO Date locally
 export function parseISODateLocally(str: string): Date {
   const [year, month, day] = str.split('-').map(Number);
@@ -1307,7 +1362,6 @@ export function getStatisticMilestones(
   statisticBy: 'DAY' | 'WEEK' | 'MONTH',
 ): string[] {
   const result: string[] = [];
-
   const start = parseISODateLocally(fromDate);
   const end = parseISODateLocally(endDate);
 
@@ -1393,16 +1447,587 @@ export function removeDuplicateOptions(
     return true;
   });
 }
-export const isOverlappedAndBelow = (a: EventApi, b: EventApi) => {
-  if (a.id === b.id) return false;
 
-  const aStart = a.start?.getTime() ?? 0;
-  const aEnd = a.end?.getTime() ?? 0;
-  const bStart = b.start?.getTime() ?? 0;
-  const bEnd = b.end?.getTime() ?? 0;
+export const getLineChartDataFromStatisticTaskDurations = ({
+  normalizeDataObject,
+  color,
+}: {
+  normalizeDataObject: StatisticsTaskDuration;
+  color: string;
+}) => {
+  const labelList: string[] = [];
+  // Map: organizationId -> dataset info
+  const datasetMap = new Map<string | number, CategoryLineChartDatasetInfo>();
+  normalizeDataObject.durations.forEach((durationDetail, index) => {
+    labelList.push(durationDetail.startDate);
+    if (
+      index === normalizeDataObject.durations.length - 1 &&
+      String(normalizeDataObject.durations.at(-1)?.endDate) !=
+        String(normalizeDataObject.durations.at(-1)?.startDate)
+    ) {
+      const endDate = normalizeDataObject.durations.at(-1)?.endDate;
+      if (endDate) {
+        labelList.push(endDate);
+      }
+    }
 
-  const isOverlapping = aStart < bEnd && aEnd > bStart;
-  const isBelow = aStart > bStart;
+    durationDetail.data.forEach((category) => {
+      const existing = datasetMap.get(category.categoryId);
 
-  return isOverlapping && isBelow;
+      if (existing) {
+        existing.data[index] = {
+          x: durationDetail.startDate,
+          y: category.duration ? convertTimeToDecimal(category.duration) : 0,
+          endDate: durationDetail.endDate,
+          color:
+            category.categoryColor ||
+            (color && lightenColor(color, category?.percent || 0)) ||
+            getRandomColor(),
+          label: category.categoryName,
+        };
+        if (
+          index === normalizeDataObject.durations.length - 1 &&
+          String(normalizeDataObject.durations.at(-1)?.endDate) !=
+            String(normalizeDataObject.durations.at(-1)?.startDate)
+        ) {
+          existing.data[index + 1] = {
+            x: durationDetail.endDate,
+            y: category.duration ? convertTimeToDecimal(category.duration) : 0,
+            endDate: durationDetail.endDate,
+            color:
+              category.categoryColor ||
+              (color && lightenColor(color, category?.percent || 0)) ||
+              getRandomColor(),
+            label: category.categoryName,
+          };
+        }
+      } else {
+        // Initialize new dataset with placeholders
+        const dataArray = Array(normalizeDataObject.durations.length).fill(0);
+        dataArray[index] = {
+          x: durationDetail.startDate,
+          y: category.duration ? convertTimeToDecimal(category.duration) : 0,
+          endDate: durationDetail.endDate,
+          color:
+            category.categoryColor ||
+            (color && lightenColor(color, category?.percent || 0)) ||
+            getRandomColor(),
+          label: category.categoryName,
+        };
+
+        datasetMap.set(category.categoryId, {
+          label: category.categoryName,
+          data: dataArray,
+          borderColor: category.categoryColor || getRandomColor(),
+          backgroundColor: 'rgba(217, 83, 79, 0.04)',
+          fill: true,
+          tension: 0,
+          pointRadius: 4,
+          pointBorderColor: 'transparent',
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor:
+            category.categoryColor ||
+            (color && lightenColor(color, 50)) ||
+            getRandomColor(),
+          pointHoverBorderColor: 'transparent',
+          pointHoverBorderWidth: 2,
+        });
+      }
+    });
+  });
+
+  return {
+    labelList,
+    datasetMap,
+  };
+};
+
+export const getLineChartDataFromStatisticAllTeamTaskDurations = ({
+  normalizeDataObject,
+  color,
+}: {
+  normalizeDataObject: StatisticsAllTeamTaskDuration;
+  color: string;
+}) => {
+  const labelList: string[] = [];
+  // Map: organizationId -> dataset info
+  const datasetMap = new Map<string | number, CategoryLineChartDatasetInfo>();
+  normalizeDataObject.durations.forEach((categoryDetail, index) => {
+    labelList.push(categoryDetail.startDate);
+    if (
+      index === normalizeDataObject.durations.length - 1 &&
+      String(normalizeDataObject.durations.at(-1)?.endDate) !=
+        String(normalizeDataObject.durations.at(-1)?.startDate)
+    ) {
+      const endDate = normalizeDataObject.durations.at(-1)?.endDate;
+      if (endDate) {
+        labelList.push(endDate);
+      }
+    }
+
+    categoryDetail.data.forEach((team) => {
+      const existing = datasetMap.get(team.organizationId);
+
+      if (existing) {
+        existing.data[index] = {
+          x: categoryDetail.startDate,
+          y: team.duration ? convertTimeToDecimal(team.duration) : 0,
+          endDate: categoryDetail.endDate,
+          color:
+            team.color ||
+            (color && lightenColor(color, team?.percent || 0)) ||
+            getRandomColor(),
+          label: team.organizationName,
+        };
+        if (
+          index === normalizeDataObject.durations.length - 1 &&
+          String(normalizeDataObject.durations.at(-1)?.endDate) !=
+            String(normalizeDataObject.durations.at(-1)?.startDate)
+        ) {
+          existing.data[index + 1] = {
+            x: categoryDetail.endDate,
+            y: team.duration ? convertTimeToDecimal(team.duration) : 0,
+            endDate: categoryDetail.endDate,
+            color:
+              team.color ||
+              (color && lightenColor(color, team?.percent || 0)) ||
+              getRandomColor(),
+            label: team.organizationName,
+          };
+        }
+      } else {
+        // Initialize new dataset with placeholders
+        const dataArray = Array(normalizeDataObject.durations.length).fill(0);
+        dataArray[index] = {
+          x: categoryDetail.startDate,
+          y: team.duration ? convertTimeToDecimal(team.duration) : 0,
+          endDate: categoryDetail.endDate,
+          color:
+            team.color ||
+            (color && lightenColor(color, team?.percent || 0)) ||
+            getRandomColor(),
+          label: team.organizationName,
+        };
+
+        datasetMap.set(team.organizationId, {
+          label: team.organizationName,
+          data: dataArray,
+          borderColor: team.color || getRandomColor(),
+          backgroundColor: 'rgba(217, 83, 79, 0.04)',
+          fill: true,
+          tension: 0,
+          pointRadius: 4,
+          pointBorderColor: 'transparent',
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor:
+            team.color ||
+            (color && lightenColor(color, 50)) ||
+            getRandomColor(),
+          pointHoverBorderColor: 'transparent',
+          pointHoverBorderWidth: 2,
+        });
+      }
+    });
+  });
+  return {
+    labelList,
+    datasetMap,
+  };
+};
+
+export const normalizeDurationsWithStatisticCategoryTaskDurations = (
+  taskDurationObject: StatisticsTaskDuration,
+): {
+  startDate: string;
+  endDate: string;
+  data: {
+    organizationId: number | string;
+    organizationName?: string;
+    categoryId: number | string;
+    categoryName: string;
+    categoryColor: string;
+    duration: string;
+    percent: number;
+    tasks: {
+      id: number;
+      title: string;
+      type: string;
+    }[];
+  }[];
+}[] => {
+  return taskDurationObject.durations.map((duration) => {
+    const filledCategories = taskDurationObject.data.map((templateCategory) => {
+      const match = duration.data.find(
+        (cat) =>
+          cat.organizationId == templateCategory.organizationId &&
+          cat.categoryId == templateCategory.categoryId,
+      );
+
+      return (
+        match || {
+          organizationId: templateCategory.organizationId,
+          categoryId: templateCategory.categoryId,
+          categoryName: templateCategory.categoryName,
+          categoryColor: templateCategory.categoryColor,
+          duration: '00:00:00',
+          percent: 0,
+          tasks: [],
+        }
+      );
+    });
+
+    return {
+      ...duration,
+      data: filledCategories,
+    };
+  });
+};
+export const normalizeDurationsWithStatisticTagTaskDurations = (
+  taskDurationObject: StatisticsTaskDurationTag,
+): {
+  startDate: string;
+  endDate: string;
+  data: {
+    organizationId: number;
+    tagId: number;
+    tagName: string;
+    duration: string;
+    percent: number;
+  }[];
+}[] => {
+  return taskDurationObject.durations.map((duration) => {
+    const filledTags = taskDurationObject.data.map((templateTag) => {
+      const match = duration.data.find(
+        (tag) =>
+          tag.organizationId === templateTag.organizationId &&
+          tag.tagId === templateTag.tagId,
+      );
+
+      return (
+        match || {
+          organizationId: templateTag.organizationId,
+          tagId: templateTag.tagId,
+          tagName: templateTag.tagName,
+          duration: '00:00:00',
+          percent: 0,
+        }
+      );
+    });
+
+    return {
+      ...duration,
+      data: filledTags,
+    };
+  });
+};
+
+export const normalizeDurationsWithStatisticAllTeamCategoryTaskDurations = (
+  taskDurationObject: StatisticsAllTeamTaskDuration,
+): {
+  startDate: string;
+  endDate: string;
+  data: {
+    organizationId: string | number;
+    organizationName: string;
+    duration: string;
+    percent: number;
+    color: string;
+  }[];
+}[] => {
+  return taskDurationObject.durations.map((duration) => {
+    const filledCategories = taskDurationObject.data.map((templateCategory) => {
+      const match = duration.data.find(
+        (cat) => cat.organizationId == templateCategory.organizationId,
+      );
+
+      return (
+        match || {
+          organizationId: templateCategory.organizationId,
+          organizationName: templateCategory.organizationName,
+          color: templateCategory.color,
+          duration: '00:00:00',
+          percent: 0,
+        }
+      );
+    });
+
+    return {
+      ...duration,
+      data: filledCategories,
+    };
+  });
+};
+
+export const normalizeDurationUsersWithTeamDockStatisticAllTeam = (
+  teamDockData: TeamDockStatisticsAllTeamTaskDuration,
+  selectedOrganizationOptionInTable: AllTeamStatisticOption,
+  selectedOrganizationSideBarValue: number,
+): TeamDockStatisticsAllTeamTaskDuration => {
+  const { data, durations } = teamDockData;
+
+  const matchesSelectedOrganization = (orgId: number | string): boolean => {
+    if (selectedOrganizationOptionInTable == AllTeamStatisticOption.SUB_TEAMS) {
+      return orgId == AllTeamStatisticOption.SUB_TEAMS;
+    }
+
+    if (selectedOrganizationOptionInTable == AllTeamStatisticOption.MAIN_TEAM) {
+      return orgId == selectedOrganizationSideBarValue;
+    }
+
+    return (
+      orgId != AllTeamStatisticOption.SUB_TEAMS &&
+      orgId != selectedOrganizationSideBarValue
+    );
+  };
+
+  // Find target organization from main data
+  const targetOrg = data.find((org) =>
+    matchesSelectedOrganization(org.organizationId),
+  );
+
+  // Normalize its user list
+  const fallbackUsers =
+    targetOrg?.users.map((user) => ({
+      ...user,
+      percent: 0,
+      totalDuration: '00:00:00',
+    })) || [];
+
+  // Normalize durations
+  const normalizedDurations = durations.map((duration) => {
+    const foundOrg = duration.data.find((org) =>
+      matchesSelectedOrganization(org.organizationId),
+    );
+
+    if (!foundOrg)
+      return {
+        startDate: duration.startDate,
+        endDate: duration.endDate,
+        data: [
+          {
+            ...targetOrg,
+            organizationId: targetOrg?.organizationId || '',
+            organizationName: targetOrg?.organizationName || '',
+            color: targetOrg?.color || getRandomColor(),
+            duration: targetOrg?.duration || '00:00:00',
+            percent: targetOrg?.percent || 0,
+            users: fallbackUsers,
+          },
+        ],
+      };
+
+    const users = foundOrg.users?.length ? foundOrg.users : fallbackUsers;
+
+    return {
+      ...duration,
+      data: [
+        {
+          ...foundOrg,
+          users,
+        },
+      ],
+    };
+  });
+
+  return {
+    ...teamDockData,
+    durations: normalizedDurations,
+  };
+};
+
+export const mergeMyDockLineChartTableItems = (
+  data: MyDockLineChartTableItem[],
+): MergedMyDockLineChartTable[] => {
+  const grouped: Record<string, MergedMyDockLineChartTable> = {};
+
+  data.forEach((item) => {
+    const key = item.id ?? 'null'; // Ensure `null` is treated as a string key
+
+    if (!grouped[key]) {
+      grouped[key] = {
+        id: item.id,
+        name: item.name,
+        color: item.color,
+      };
+    }
+
+    if (item.type === StatisticChartType.STANDARD) {
+      grouped[key].standardInfo = {
+        duration: item.duration,
+        percent: item.percent,
+      };
+    } else if (item.type === StatisticChartType.COMPARE) {
+      grouped[key].compareInfo = {
+        duration: item.duration,
+        percent: item.percent,
+      };
+    }
+  });
+
+  return Object.values(grouped);
+};
+export const normalizeStatisticAllTeamTaskDurations = (
+  rawData: StatisticsAllTeamTaskDuration,
+  option?: string,
+): StatisticsAllTeamTaskDuration => {
+  if (!option) return rawData;
+
+  const { durations } = rawData;
+
+  // Step 1: Create map: orgName => Set all users (id + fullName)
+  const orgUserMap = new Map<
+    string,
+    {
+      id: number;
+      fullName: string;
+      avatar: string | null;
+      avatarColor: string;
+    }[]
+  >();
+
+  durations.forEach((durationItem) => {
+    durationItem.data.forEach((orgData) => {
+      const orgName = orgData.organizationName;
+
+      const existing = orgUserMap.get(orgName) || [];
+      const combined = [...existing];
+
+      orgData.users?.forEach((user) => {
+        const exists = combined.some(
+          (u) => u.id === user.id && u.fullName === user.fullName,
+        );
+        if (!exists) {
+          combined.push({
+            id: user.id,
+            fullName: user.fullName,
+            avatar: user.avatar,
+            avatarColor: user.avatarColor,
+          });
+        }
+      });
+
+      orgUserMap.set(orgName, combined);
+    });
+  });
+
+  // Step 2: For each orgData.users, if there is a missing user, add it
+  const updatedDurations = durations.map((durationItem) => {
+    const updatedData = durationItem.data.map((orgData) => {
+      const orgName = orgData.organizationName;
+      const fullUserList = orgUserMap.get(orgName) || [];
+
+      const existingUsers = orgData.users || [];
+
+      const filledUsers = [...existingUsers];
+
+      fullUserList.forEach((user) => {
+        const exists = existingUsers.some(
+          (u) => u.id === user.id && u.fullName === user.fullName,
+        );
+        if (!exists) {
+          filledUsers.push({
+            ...user,
+            percent: 0,
+            totalDuration: DEFAULT_TIME_TEXT,
+          });
+        }
+      });
+
+      return {
+        ...orgData,
+        users: filledUsers,
+      };
+    });
+
+    return {
+      ...durationItem,
+      data: updatedData,
+    };
+  });
+
+  return {
+    ...rawData,
+    durations: updatedDurations,
+  };
+};
+export const mergeTeamDockLineChartTableItems = (
+  data: TeamDockAllTeamTableRowDetail[],
+  selectedOrganizationSideBar: number,
+  isTagPage = false,
+): TeamDockMergedTable[] => {
+  const grouped: Record<string, TeamDockMergedTable> = {};
+
+  data.forEach((item) => {
+    const organizationId = item.id;
+
+    if (!grouped[organizationId]) {
+      if (isTagPage) {
+        grouped[organizationId] = {
+          tagName: item.name,
+          tagId:
+            item.id == AllTeamStatisticOption.SUB_TEAMS
+              ? AllTeamStatisticOption.SUB_TEAMS
+              : item.id == selectedOrganizationSideBar
+                ? AllTeamStatisticOption.MAIN_TEAM
+                : AllTeamStatisticOption.CALENDAR,
+          userList: [],
+        };
+      } else {
+        grouped[organizationId] = {
+          categoryName: item.name,
+          categoryId:
+            item.id == AllTeamStatisticOption.SUB_TEAMS
+              ? AllTeamStatisticOption.SUB_TEAMS
+              : item.id == selectedOrganizationSideBar
+                ? AllTeamStatisticOption.MAIN_TEAM
+                : AllTeamStatisticOption.CALENDAR,
+          userList: [],
+        };
+      }
+    }
+
+    // Set standard or compare info for the category
+    const organizationInfo = {
+      duration: item.duration,
+      percent: item.percent,
+    };
+
+    if (item.type === StatisticChartType.STANDARD) {
+      grouped[organizationId].standardInfo = organizationInfo;
+    } else if (item.type === StatisticChartType.COMPARE) {
+      grouped[organizationId].compareInfo = organizationInfo;
+    }
+
+    // Merge userList
+    item.userList.forEach((user) => {
+      const existingUser = grouped[organizationId].userList.find(
+        (u) => u.userId === user.userId,
+      );
+
+      const userInfo = {
+        userDuration: user.userDuration,
+        userPercent: user.userPercent,
+      };
+
+      if (existingUser) {
+        if (item.type === StatisticChartType.STANDARD) {
+          existingUser.standardInfo = userInfo;
+        } else if (item.type === StatisticChartType.COMPARE) {
+          existingUser.compareInfo = userInfo;
+        }
+      } else {
+        grouped[organizationId].userList.push({
+          userId: user.userId,
+          userName: user.userName,
+          userAvatar: user.userAvatar,
+          userAvatarColor: user.userAvatarColor,
+          ...(item.type === StatisticChartType.STANDARD
+            ? { standardInfo: userInfo }
+            : { compareInfo: userInfo }),
+        });
+      }
+    });
+  });
+
+  return Object.values(grouped);
 };

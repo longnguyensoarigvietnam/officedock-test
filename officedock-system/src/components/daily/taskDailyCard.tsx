@@ -1,6 +1,6 @@
 import React from 'react';
 import { EventContentArg } from '@fullcalendar/core/index.js';
-import { isMoreThanSixtyMinutes } from '@utils/date';
+import { convertToTimeString, isMoreThanSixtyMinutes } from '@utils/date';
 
 type Props = {
   event: EventContentArg;
@@ -11,6 +11,7 @@ const TaskDailyCard = ({ event, isDownload }: Props) => {
   const differentTime =
     event.timeText && isMoreThanSixtyMinutes(event.timeText);
   const largeColor = event.event?.extendedProps.largeColor;
+  const isCalculate = event.event?.extendedProps.isCalculate;
 
   return (
     <>
@@ -26,10 +27,18 @@ const TaskDailyCard = ({ event, isDownload }: Props) => {
             {event.event.title}
           </p>
 
-          {event.timeText && differentTime && (
+          {event.timeText && differentTime && !isCalculate && event && (
             <p
               className={`text-xs ${isDownload ? '-translate-y-[50%] h-8' : ''}`}>
               {event.timeText}
+            </p>
+          )}
+          {isCalculate && (
+            <p
+              className={`text-xs ${isDownload ? '-translate-y-[50%] h-8' : ''}`}>
+              {event.event?.extendedProps?.startedAt &&
+                convertToTimeString(event.event?.extendedProps?.startedAt)}{' '}
+              ~ 計測中
             </p>
           )}
         </div>

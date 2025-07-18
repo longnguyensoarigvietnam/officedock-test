@@ -207,32 +207,55 @@ const TableChart = ({
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
-
         queryClient.invalidateQueries({
-          predicate: (query) =>
-            query.queryKey[0] === 'getStatisticCategoryList',
+          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
         });
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            query.queryKey[0] === 'getStatisticTaskDurations',
-        });
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            query.queryKey[0] === 'getStatisticPercentChart',
-        });
+        if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticAllTeamCategoryList',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticAllTeamTaskDurations',
+          });
+        } else {
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticCategoryList',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTaskDurations',
+          });
+        }
 
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingOrganizationCompare(true);
-
+          if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticAllTeamCategoryCompareList',
+            });
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticAllTeamTaskDurationsCompare',
+            });
+          } else {
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticCategoryCompareList',
+            });
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticTaskDurationsCompareList',
+            });
+          }
           queryClient.invalidateQueries({
             predicate: (query) =>
-              query.queryKey[0] === 'getStatisticCategoryCompareList',
-          });
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              query.queryKey[0] === 'getStatisticTaskDurationsCompareList',
+              query.queryKey[0] === 'getStatisticTaskListCompare',
           });
         }
       },
@@ -289,34 +312,52 @@ const TableChart = ({
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
         });
+        if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticAllTeamCategoryList',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticAllTeamTaskDurations',
+          });
+        } else {
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticCategoryList',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTaskDurations',
+          });
+        }
 
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            query.queryKey[0] === 'getStatisticCategoryList',
-        });
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            query.queryKey[0] === 'getStatisticTaskDurations',
-        });
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            query.queryKey[0] === 'getStatisticPercentChart',
-        });
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
           setIsLoadingOrganizationCompare(true);
+          if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticAllTeamCategoryCompareList',
+            });
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticAllTeamTaskDurationsCompare',
+            });
+          } else {
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticCategoryCompareList',
+            });
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] === 'getStatisticTaskDurationsCompareList',
+            });
+          }
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTaskListCompare',
-          });
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              query.queryKey[0] === 'getStatisticCategoryCompareList',
-          });
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              query.queryKey[0] === 'getStatisticTaskDurationsCompareList',
           });
         }
       },
@@ -600,13 +641,25 @@ const TableChart = ({
                 showArrow
                 className="statistic-custom border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
-                  largeCategories &&
-                  largeCategories.find(
-                    (element) => element.value === largeItem?.value,
-                  )
+                  (largeCategories &&
+                    largeCategories.find(
+                      (element) => element.value === largeItem?.value,
+                    )) || {
+                    value: NO_SETTING,
+                    label: NO_SETTING,
+                  }
                 }
                 placeholder=""
-                options={largeCategories}
+                options={
+                  largeCategories.length
+                    ? largeCategories
+                    : [
+                        {
+                          value: NO_SETTING,
+                          label: NO_SETTING,
+                        },
+                      ]
+                }
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
@@ -666,14 +719,26 @@ const TableChart = ({
               <SingleSelect
                 className="statistic-custom border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
-                  mediumCategories &&
-                  mediumCategories.find(
-                    (element) => element.value === mediumItem?.value,
-                  )
+                  (mediumCategories &&
+                    mediumCategories.find(
+                      (element) => element.value === mediumItem?.value,
+                    )) || {
+                    value: NO_SETTING,
+                    label: NO_SETTING,
+                  }
                 }
                 showArrow
                 placeholder=""
-                options={mediumCategories}
+                options={
+                  mediumCategories.length
+                    ? mediumCategories
+                    : [
+                        {
+                          value: NO_SETTING,
+                          label: NO_SETTING,
+                        },
+                      ]
+                }
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
@@ -739,14 +804,26 @@ const TableChart = ({
               <SingleSelect
                 className="statistic-custom border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
-                  smallCategories &&
-                  smallCategories.find(
-                    (element) => element.value === smallItem?.value,
-                  )
+                  (smallCategories &&
+                    smallCategories.find(
+                      (element) => element.value === smallItem?.value,
+                    )) || {
+                    value: NO_SETTING,
+                    label: NO_SETTING,
+                  }
                 }
                 placeholder=""
                 showArrow={info.row.original.type === EventCalendarType.TASK}
-                options={smallCategories}
+                options={
+                  smallCategories.length
+                    ? smallCategories
+                    : [
+                        {
+                          value: NO_SETTING,
+                          label: NO_SETTING,
+                        },
+                      ]
+                }
                 isDisabled={info.row.original.type !== EventCalendarType.TASK}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {

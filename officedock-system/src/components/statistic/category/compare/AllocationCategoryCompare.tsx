@@ -6,7 +6,9 @@ import { SkeletonElement } from '@components/common/SkeletonLoading';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 
 import {
+  StatisticAllTeamInfo,
   StatisticCategoryInfo,
+  StatisticsAllTeams,
   StatisticsCategories,
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
@@ -18,7 +20,12 @@ import {
 } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
 
-import { DEFAULT_TIME_TEXT, NO_SETTING } from '@constants';
+import {
+  ALL_TEAM_STATISTIC,
+  DEFAULT_TIME_TEXT,
+  NO_SETTING,
+  SUB_TEAMS,
+} from '@constants';
 import { EventWorkCategory } from '@constants/enums';
 
 import { StatisticStateContext } from '@providers/StatisticProvider';
@@ -31,6 +38,8 @@ type Props = {
   endDate: Date | null;
   statisticCategoryList: StatisticsCategories | undefined;
   statisticCategoryCompareList: StatisticsCategories | undefined;
+  statisticAllTeamCategoryList: StatisticsAllTeams | undefined;
+  statisticAllTeamCategoryCompareList: StatisticsAllTeams | undefined;
   startDateCompare: Date;
   endDateCompare: Date | null;
   handleSelectOrganization: (data: OptionDropdownType) => void;
@@ -40,7 +49,7 @@ type Props = {
 };
 
 type ProgressDataType = {
-  id: number;
+  id: number | string;
   label: string;
   value: number;
   color: string;
@@ -66,6 +75,8 @@ const AllocationCategoryCompare = memo(
     startDateCompare,
     endDateCompare,
     statisticCategoryCompareList,
+    statisticAllTeamCategoryList,
+    statisticAllTeamCategoryCompareList,
     handleSelectOrganization,
     handleSelectLarge,
     handleSelectMedium,
@@ -133,7 +144,11 @@ const AllocationCategoryCompare = memo(
     } = useContext(StatisticStateContext);
 
     useEffect(() => {
-      if (statisticCategoryList && statisticCategoryCompareList) {
+      if (
+        statisticCategoryList &&
+        statisticCategoryCompareList &&
+        selectedOrganization?.value != ALL_TEAM_STATISTIC
+      ) {
         const mergeCategories = (
           mainCategories: StatisticCategoryInfo[],
           compareCategories: StatisticCategoryInfo[],
@@ -273,6 +288,7 @@ const AllocationCategoryCompare = memo(
                         .slice(0, 3),
                       mergedItems: smallMainCategories.map((item) => ({
                         ...item,
+                        id: item.id as number,
                         color:
                           (selectedLargeCategoryColor &&
                             lightenColor(
@@ -314,6 +330,7 @@ const AllocationCategoryCompare = memo(
                         .slice(0, 3),
                       mergedItems: smallCompareCategories.map((item) => ({
                         ...item,
+                        id: item.id as number,
                         color:
                           (selectedLargeCategoryColor &&
                             lightenColor(
@@ -370,7 +387,103 @@ const AllocationCategoryCompare = memo(
         setProgressDataPairsMedium(mediumPairs);
         setProgressDataPairsSmall(smallPairs);
       }
-    }, [statisticCategoryList, statisticCategoryCompareList]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+      statisticCategoryList,
+      statisticCategoryCompareList,
+      selectedOrganization?.value,
+    ]);
+
+    useEffect(() => {
+      if (
+        statisticAllTeamCategoryList &&
+        statisticAllTeamCategoryCompareList &&
+        selectedOrganization?.value == ALL_TEAM_STATISTIC
+      ) {
+        const mergeCategories = (
+          mainCategories: StatisticAllTeamInfo[],
+          compareCategories: StatisticAllTeamInfo[],
+        ) => {
+          const mergedMap = new Map<
+            number | string,
+            {
+              main: ProgressDataType | null;
+              compare: ProgressDataType | null;
+            }
+          >();
+
+          // Add main categories first
+          mainCategories.forEach((item) => {
+            const mainData: ProgressDataType = {
+              id: item.organizationId,
+              label: item?.organizationName || '',
+              value: item.percent,
+              organizationId: String(item.organizationId),
+
+              color: item.color || getRandomColor(),
+              duration: item.duration,
+              optionData:
+                item.organizationId == SUB_TEAMS
+                  ? item?.subTeams
+                      ?.slice(0, 3)
+                      .map((team) => team?.organizationName || '') || []
+                  : item?.data
+                      ?.slice(0, 3)
+                      .map((category) => category?.categoryName || '') || [],
+            };
+
+            mergedMap.set(`${item.organizationId}`, {
+              main: mainData,
+              compare: null,
+            });
+          });
+
+          // Add compare categories, updating existing ones or creating new entries
+          compareCategories.forEach((compareItem) => {
+            const compareData: ProgressDataType = {
+              id: compareItem.organizationId,
+              label: compareItem?.organizationName || '',
+              value: compareItem.percent,
+              organizationId: String(compareItem.organizationId),
+
+              color: compareItem.color || getRandomColor(),
+              duration: compareItem.duration,
+              optionData:
+                compareItem.organizationId == SUB_TEAMS
+                  ? compareItem?.subTeams
+                      ?.slice(0, 3)
+                      .map((team) => team?.organizationName || '') || []
+                  : compareItem?.data
+                      ?.slice(0, 3)
+                      .map((category) => category?.categoryName || '') || [],
+            };
+
+            if (mergedMap.has(`${compareItem.organizationId}`)) {
+              mergedMap.get(`${compareItem.organizationId}`)!.compare =
+                compareData;
+            } else {
+              mergedMap.set(`${compareItem.organizationId}`, {
+                main: null,
+                compare: compareData,
+              });
+            }
+          });
+
+          return Array.from(mergedMap.values());
+        };
+
+        const largePairs = mergeCategories(
+          statisticAllTeamCategoryList.largeCategories || [],
+          statisticAllTeamCategoryCompareList.largeCategories || [],
+        );
+
+        setProgressDataPairsLarge(largePairs);
+      }
+    }, [
+      statisticAllTeamCategoryList,
+      statisticAllTeamCategoryCompareList,
+      selectedOrganization?.value,
+    ]);
 
     const handleClickTooltip = (
       id: number | null,
@@ -683,6 +796,10 @@ const AllocationCategoryCompare = memo(
                                       organizationId,
                                     );
                                   }}
+                                  isAllTeam={
+                                    selectedOrganization?.value ==
+                                    ALL_TEAM_STATISTIC
+                                  }
                                   handleClickChart={(
                                     data: OptionDropdownType,
                                   ) => {
@@ -734,6 +851,10 @@ const AllocationCategoryCompare = memo(
                                       organizationId,
                                     );
                                   }}
+                                  isAllTeam={
+                                    selectedOrganization?.value ==
+                                    ALL_TEAM_STATISTIC
+                                  }
                                   handleClickChart={(
                                     data: OptionDropdownType,
                                   ) => {
@@ -1158,7 +1279,6 @@ const AllocationCategoryCompare = memo(
             open={isShowModal}
             startDate={startDate}
             endDate={endDate}
-            statisticCategoryList={statisticCategoryList}
             selectedLarge={selectedLarge}
             selectedMedium={selectedMedium}
             selectedSmall={selectedSmall}
@@ -1176,7 +1296,6 @@ const AllocationCategoryCompare = memo(
             open={isShowModalCompare}
             selectedTags={selectedTags}
             startDate={startDateCompare}
-            statisticCategoryList={statisticCategoryList}
             endDate={endDateCompare}
             selectedLarge={selectedLarge}
             selectedMedium={selectedMedium}

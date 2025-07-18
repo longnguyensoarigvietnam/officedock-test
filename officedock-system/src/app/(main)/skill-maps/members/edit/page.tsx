@@ -13,7 +13,7 @@ const EditSkillMapByMemberPage = () => {
       title={pageRouters.EDIT_SKILL_MAPS_MEMBERS.name}
       className="px-0 !pt-0 !bg-[#EBF1F7]"
       showFooter={false}
-      permission={PermissionsSystem.SKILL_MAP_UPDATE}>
+      permission={PermissionsSystem.SKILL_MAP_MANAGEMENT_UPDATE}>
       <EditSkillMapByMemberBoard />
     </MainLayout>
   );

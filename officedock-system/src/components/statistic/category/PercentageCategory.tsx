@@ -6,12 +6,14 @@ import ImageRound from '@components/common/ImageRound';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 
-import { NO_SETTING } from '@constants';
+import { ALL_TEAM_STATISTIC, NO_SETTING, SUB_TEAMS } from '@constants';
 import { EventWorkCategory } from '@constants/enums';
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
   DataTaskModalStatisticType,
+  StatisticAllTeamInfo,
   StatisticCategoryInfo,
+  StatisticsAllTeams,
   StatisticsCategories,
 } from '@interfaces/statistic';
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
@@ -23,6 +25,7 @@ type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticCategoryList: StatisticsCategories | undefined;
+  statisticAllTeamCategoryList: StatisticsAllTeams | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectOrganizationCustom: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
@@ -34,6 +37,7 @@ const PercentageCategory = ({
   startDate,
   endDate,
   statisticCategoryList,
+  statisticAllTeamCategoryList,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectOrganization,
@@ -78,6 +82,7 @@ const PercentageCategory = ({
     listDuration: [],
     mergedItems: [],
   });
+
   const [dataChartMedium, setDataChartMedium] = useState<DataChartType>({
     actualValue: [],
     colors: [],
@@ -188,8 +193,64 @@ const PercentageCategory = ({
       mergedItems: mergedItems,
     };
   };
+
+  const processChartDataWithAllTeamOption = (
+    dataCategories: StatisticAllTeamInfo[],
+    colorData?: string,
+  ) => {
+    const categories = dataCategories.filter((item) => item.percent >= 0);
+
+    // Get list percent
+    const listPercent = categories.map((percent) => percent.percent);
+
+    // Get list color
+    const listColor = categories.map((color, index) =>
+      color.color !== null
+        ? color.color
+        : lightenColor(colorData as string, listPercent[index]) ||
+          getRandomColor(),
+    );
+    // Get list label
+    const listLabel = categories.map((label) => label?.organizationName || '');
+    // Get list value
+    const listValueActualChart = categories.map((item) =>
+      convertToJapaneseTime(item.duration),
+    );
+    // Get list options
+    const listDataOptions = categories.map((item) =>
+      item.organizationId == SUB_TEAMS
+        ? item?.subTeams?.slice(0, 3).map((team) => {
+            return { label: team?.organizationName || '' };
+          }) || []
+        : item?.data?.slice(0, 3).map((category) => {
+            return { label: category?.categoryName || '' };
+          }) || [],
+    );
+
+    // Get list Organization for all team
+    const listDataOrganizations = categories.map((org) =>
+      String(org.organizationId),
+    );
+
+    // Get list id
+    const listDataIds = categories.map((item) => item.organizationId);
+
+    return {
+      colors: listColor,
+      labels: listLabel,
+      data: listPercent,
+      actualValue: listValueActualChart,
+      optionData: listDataOptions,
+      listId: listDataIds,
+      dataOrganization: listDataOrganizations,
+    };
+  };
+
   useEffect(() => {
-    if (statisticCategoryList) {
+    if (
+      statisticCategoryList &&
+      selectedOrganization?.value != ALL_TEAM_STATISTIC
+    ) {
       if (statisticCategoryList.largeCategories) {
         const largeChartData = processChartData(
           statisticCategoryList.largeCategories,
@@ -252,7 +313,34 @@ const PercentageCategory = ({
         });
       }
     }
-  }, [statisticCategoryList]);
+  }, [
+    statisticCategoryList,
+    selectedOrganization?.value,
+    selectedLarge?.value,
+  ]);
+
+  useEffect(() => {
+    if (
+      statisticAllTeamCategoryList &&
+      selectedOrganization?.value == ALL_TEAM_STATISTIC
+    ) {
+      if (statisticAllTeamCategoryList.largeCategories) {
+        const largeChartData = processChartDataWithAllTeamOption(
+          statisticAllTeamCategoryList.largeCategories,
+        );
+        setDataChartLarge(largeChartData);
+      } else {
+        setDataChartLarge({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+        });
+      }
+    }
+  }, [statisticAllTeamCategoryList, selectedOrganization?.value]);
 
   const handleClickTooltip = ({
     id,
@@ -408,7 +496,7 @@ const PercentageCategory = ({
                           {dataChartLarge.data.length > 0 ? (
                             <PieChartCustom
                               isClickTooltip
-                              mergedItems={dataChartLarge.mergedItems}
+                              mergedItems={dataChartLarge?.mergedItems || []}
                               colors={dataChartLarge.colors}
                               data={dataChartLarge?.data}
                               labels={dataChartLarge?.labels}
@@ -417,6 +505,10 @@ const PercentageCategory = ({
                               optionsData={dataChartLarge.optionData}
                               listIdData={dataChartLarge.listId}
                               dataOrganization={dataChartLarge.dataOrganization}
+                              isAllTeamOption={
+                                selectedOrganization?.value ==
+                                ALL_TEAM_STATISTIC
+                              }
                               handleClickTooltip={(
                                 id: number | null,
                                 organizationId?: string,
@@ -485,7 +577,7 @@ const PercentageCategory = ({
                           {dataChartMedium.data.length > 0 ? (
                             <PieChartCustom
                               isClickTooltip
-                              mergedItems={dataChartMedium.mergedItems}
+                              mergedItems={dataChartMedium?.mergedItems || []}
                               colors={dataChartMedium.colors}
                               data={dataChartMedium?.data}
                               labels={dataChartMedium?.labels}
@@ -493,6 +585,10 @@ const PercentageCategory = ({
                               optionsData={dataChartMedium.optionData}
                               className="w-[280px] h-[280px] "
                               listIdData={dataChartMedium.listId}
+                              isAllTeamOption={
+                                selectedOrganization?.value ==
+                                ALL_TEAM_STATISTIC
+                              }
                               handleClickTooltip={(
                                 id: number | null,
                                 organizationId?: string,
@@ -562,11 +658,15 @@ const PercentageCategory = ({
                               data={dataChartSmall?.data}
                               isLast
                               labels={dataChartSmall?.labels}
-                              mergedItems={dataChartSmall.mergedItems}
+                              mergedItems={dataChartSmall?.mergedItems || []}
                               actualValues={dataChartSmall?.actualValue}
                               className="w-[280px] h-[280px]"
                               optionsData={dataChartSmall.optionData}
                               listIdData={dataChartSmall.listId}
+                              isAllTeamOption={
+                                selectedOrganization?.value ==
+                                ALL_TEAM_STATISTIC
+                              }
                               handleClickTooltip={(
                                 id: number | null,
                                 organizationId?: string,
@@ -601,7 +701,6 @@ const PercentageCategory = ({
           selectedSmall={selectedSmall}
           startDate={startDate}
           endDate={endDate}
-          statisticCategoryList={statisticCategoryList}
           detailCategory={detailCategory}
           selectedOrganization={selectedOrganization}
           onClose={() => {

@@ -5,14 +5,21 @@ import ImageRound from '@components/common/ImageRound';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 
-import { ProgressDataType, StatisticsCategories } from '@interfaces/statistic';
+import {
+  ProgressDataType,
+  StatisticsAllTeams,
+  StatisticsCategories,
+} from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
 import { formatTimeToJapanese } from '@utils/date';
-import { mapStatisticCategoryInfoToProgressData } from '@utils';
+import {
+  mapStatisticAllTeamCategoryInfoToProgressData,
+  mapStatisticCategoryInfoToProgressData,
+} from '@utils';
 
 import { EventWorkCategory } from '@constants/enums';
-import { NO_SETTING } from '@constants';
+import { ALL_TEAM_STATISTIC, NO_SETTING } from '@constants';
 
 import { StatisticStateContext } from '@providers/StatisticProvider';
 
@@ -23,6 +30,7 @@ type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticCategoryList: StatisticsCategories | undefined;
+  statisticAllTeamCategoryList: StatisticsAllTeams | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -34,6 +42,7 @@ const AllocationCategory = memo(
     startDate,
     endDate,
     statisticCategoryList,
+    statisticAllTeamCategoryList,
     handleSelectOrganization,
     handleSelectLarge,
     handleSelectMedium,
@@ -77,7 +86,10 @@ const AllocationCategory = memo(
     } = useContext(StatisticStateContext);
 
     useEffect(() => {
-      if (statisticCategoryList) {
+      if (
+        statisticCategoryList &&
+        selectedOrganization?.value != ALL_TEAM_STATISTIC
+      ) {
         if (statisticCategoryList.largeCategories) {
           const { finalData } = mapStatisticCategoryInfoToProgressData({
             data: statisticCategoryList.largeCategories,
@@ -112,7 +124,23 @@ const AllocationCategory = memo(
           setProgressDataSmall([]);
         }
       }
-    }, [statisticCategoryList]);
+    }, [statisticCategoryList, selectedOrganization?.value]);
+
+    useEffect(() => {
+      if (
+        statisticAllTeamCategoryList &&
+        selectedOrganization?.value == ALL_TEAM_STATISTIC
+      ) {
+        if (statisticAllTeamCategoryList.largeCategories) {
+          const { finalData } = mapStatisticAllTeamCategoryInfoToProgressData({
+            data: statisticAllTeamCategoryList.largeCategories,
+          });
+          setProgressDataLarge(finalData);
+        } else {
+          setProgressDataLarge([]);
+        }
+      }
+    }, [statisticAllTeamCategoryList, selectedOrganization?.value]);
 
     const handleClickTooltip = (
       id: number | null,
@@ -277,6 +305,10 @@ const AllocationCategory = memo(
                                     organizationId,
                                   );
                                 }}
+                                isAllTeam={
+                                  selectedOrganization?.value ==
+                                  ALL_TEAM_STATISTIC
+                                }
                                 organizationId={item.organizationId}
                                 handleClickChart={(
                                   data: OptionDropdownType,
@@ -447,7 +479,6 @@ const AllocationCategory = memo(
             selectedLarge={selectedLarge}
             selectedMedium={selectedMedium}
             selectedSmall={selectedSmall}
-            statisticCategoryList={statisticCategoryList}
             startDate={startDate}
             endDate={endDate}
             detailCategory={detailCategory}

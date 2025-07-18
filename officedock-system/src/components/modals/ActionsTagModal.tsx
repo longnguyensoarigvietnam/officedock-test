@@ -14,7 +14,7 @@ import Checkbox from '@components/common/Checkbox';
 import { OptionDropdownType } from '@interfaces/common';
 import { Tags, TagFormData } from '@interfaces/tag';
 
-import { ActionsEvent, PermissionsSystem } from '@constants/enums';
+import { ActionsEvent, ActionTask, PermissionsSystem } from '@constants/enums';
 import { UNREGISTERED } from '@constants';
 
 import { formatShowDateJapanese } from '@utils/date';
@@ -37,7 +37,7 @@ export type ActionsTagModalProps = {
 const ActionsTagModal = ({
   open,
   dataTag,
-  action = 'CREATE',
+  action = ActionTask.CREATE,
   dataOrganizationList,
   onClose,
   onEdit,

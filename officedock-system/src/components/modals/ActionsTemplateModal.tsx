@@ -29,13 +29,15 @@ import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { DEFAULT_VALUE_TODO_LIST } from '@constants/message';
-import { COPY_MESSAGE, NO_OPTION_CATEGORY, UNREGISTERED } from '@constants';
+import { COPY_MESSAGE, NO_SETTING, UNREGISTERED } from '@constants';
 import {
   ActionTask,
   EventWorkCategory,
   PermissionsSystem,
   TemplateAction,
 } from '@constants/enums';
+
+import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 
 import { CategoryStructure } from '@interfaces/skills';
 import { Template, TemplateFormData } from '@interfaces/template';
@@ -52,8 +54,6 @@ import {
   hasPermissionInArray,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
-
-import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 
 export type ActionTemplateModalProps = {
   open: boolean;
@@ -72,7 +72,7 @@ export type ActionTemplateModalProps = {
 
 const ActionsTemplateModal = ({
   open,
-  action = 'CREATE',
+  action = ActionTask.CREATE,
   dataTemplate,
   creationDataTaskData,
   disableDeleteAction,
@@ -98,24 +98,24 @@ const ActionsTemplateModal = ({
     OptionDropdownType[]
   >([
     {
-      label: NO_OPTION_CATEGORY,
-      value: NO_OPTION_CATEGORY,
+      label: NO_SETTING,
+      value: NO_SETTING,
     },
   ]);
   const [dataOptionsCategoryMedium, setDataOptionsCategoryMedium] = useState<
     OptionDropdownType[]
   >([
     {
-      label: NO_OPTION_CATEGORY,
-      value: NO_OPTION_CATEGORY,
+      label: NO_SETTING,
+      value: NO_SETTING,
     },
   ]);
   const [dataOptionsCategoryLarge, setDataOptionsCategoryLarge] = useState<
     OptionDropdownType[]
   >([
     {
-      label: NO_OPTION_CATEGORY,
-      value: NO_OPTION_CATEGORY,
+      label: NO_SETTING,
+      value: NO_SETTING,
     },
   ]);
 
@@ -166,20 +166,20 @@ const ActionsTemplateModal = ({
       const organizationCategories = mainItem.statisticCategories.map(
         (category) => {
           const largeCategory = category.LARGE || {
-            id: NO_OPTION_CATEGORY,
-            name: NO_OPTION_CATEGORY,
+            id: NO_SETTING,
+            name: NO_SETTING,
             uuid: '',
           };
 
           const mediumCategories = (category.MEDIUM || []).map(
             (mediumCategory) => {
               const mediumCategoryField = mediumCategory.MEDIUM || {
-                id: NO_OPTION_CATEGORY,
-                name: NO_OPTION_CATEGORY,
+                id: NO_SETTING,
+                name: NO_SETTING,
                 uuid: '',
               };
               const smallCategories = mediumCategory.SMALL || [
-                { id: NO_OPTION_CATEGORY, name: NO_OPTION_CATEGORY, uuid: '' },
+                { id: NO_SETTING, name: NO_SETTING, uuid: '' },
               ];
 
               return {
@@ -200,8 +200,8 @@ const ActionsTemplateModal = ({
       setDataOptionsCategoryLarge(() => {
         const largeCategories: OptionDropdownType[] = [
           {
-            label: NO_OPTION_CATEGORY,
-            value: NO_OPTION_CATEGORY,
+            label: NO_SETTING,
+            value: NO_SETTING,
           },
         ];
         mainItem.statisticCategories.map((category) => {
@@ -299,26 +299,26 @@ const ActionsTemplateModal = ({
         (value.categories.LARGE = {
           label: firstLargeCategory
             ? (firstLargeCategory?.name as string)
-            : NO_OPTION_CATEGORY,
+            : NO_SETTING,
           value: firstLargeCategory
             ? (firstLargeCategory?.id as number)
-            : NO_OPTION_CATEGORY,
+            : NO_SETTING,
         }),
           (value.categories.MEDIUM = {
             label: firstMediumCategory
               ? (firstMediumCategory?.name as string)
-              : NO_OPTION_CATEGORY,
+              : NO_SETTING,
             value: firstMediumCategory
               ? (firstMediumCategory?.id as number)
-              : NO_OPTION_CATEGORY,
+              : NO_SETTING,
           }),
           (value.categories.SMALL = {
             label: firstSmallCategory
               ? (firstSmallCategory?.name as string)
-              : NO_OPTION_CATEGORY,
+              : NO_SETTING,
             value: firstSmallCategory
               ? (firstSmallCategory?.id as number)
-              : NO_OPTION_CATEGORY,
+              : NO_SETTING,
           });
       }
     }
@@ -345,8 +345,8 @@ const ActionsTemplateModal = ({
     if (!dataOrganizationCategories || !watch('categories.LARGE.value')) {
       setDataOptionsCategoryMedium([
         {
-          label: NO_OPTION_CATEGORY,
-          value: NO_OPTION_CATEGORY,
+          label: NO_SETTING,
+          value: NO_SETTING,
         },
       ]);
       return;
@@ -358,8 +358,8 @@ const ActionsTemplateModal = ({
 
     const initialMediumCategory: OptionDropdownType[] = [
       {
-        label: NO_OPTION_CATEGORY,
-        value: NO_OPTION_CATEGORY,
+        label: NO_SETTING,
+        value: NO_SETTING,
       },
     ];
     if (selectedLargeCategory) {
@@ -384,8 +384,8 @@ const ActionsTemplateModal = ({
     if (!dataOrganizationCategories || !watch('categories.MEDIUM.value')) {
       setDataOptionsCategorySmall([
         {
-          label: NO_OPTION_CATEGORY,
-          value: NO_OPTION_CATEGORY,
+          label: NO_SETTING,
+          value: NO_SETTING,
         },
       ]);
       return;
@@ -402,8 +402,8 @@ const ActionsTemplateModal = ({
 
     const initialSmallCategory: OptionDropdownType[] = [
       {
-        label: NO_OPTION_CATEGORY,
-        value: NO_OPTION_CATEGORY,
+        label: NO_SETTING,
+        value: NO_SETTING,
       },
     ];
     if (selectedMediumCategoryOption) {
@@ -617,20 +617,20 @@ const ActionsTemplateModal = ({
   const resetDataCategoryOptions = () => {
     setDataOptionsCategoryLarge([
       {
-        label: NO_OPTION_CATEGORY,
-        value: NO_OPTION_CATEGORY,
+        label: NO_SETTING,
+        value: NO_SETTING,
       },
     ]);
     setDataOptionsCategoryMedium([
       {
-        label: NO_OPTION_CATEGORY,
-        value: NO_OPTION_CATEGORY,
+        label: NO_SETTING,
+        value: NO_SETTING,
       },
     ]);
     setDataOptionsCategorySmall([
       {
-        label: NO_OPTION_CATEGORY,
-        value: NO_OPTION_CATEGORY,
+        label: NO_SETTING,
+        value: NO_SETTING,
       },
     ]);
   };

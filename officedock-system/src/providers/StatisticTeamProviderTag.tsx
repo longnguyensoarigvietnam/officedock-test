@@ -8,7 +8,7 @@ import {
 } from 'react';
 
 import { OptionDropdownType } from '@interfaces/common';
-import { MergedTableTag, TagTableRowDetail } from '@interfaces/statistic';
+import { TagTableRowDetail, TeamDockMergedTable } from '@interfaces/statistic';
 
 import { getAdjustedStartDateDefault } from '@utils/date';
 import {
@@ -136,8 +136,8 @@ interface ContextValue {
   setAreaTableData: Dispatch<SetStateAction<TagTableRowDetail[]>>;
   lineChartTableData: TagTableRowDetail[];
   setLineChartTableData: Dispatch<SetStateAction<TagTableRowDetail[]>>;
-  mergedTableData: MergedTableTag[];
-  setMergedTableData: Dispatch<SetStateAction<MergedTableTag[]>>;
+  mergedTableData: TeamDockMergedTable[];
+  setMergedTableData: Dispatch<SetStateAction<TeamDockMergedTable[]>>;
 
   handleResetTableData: () => void;
 
@@ -146,6 +146,10 @@ interface ContextValue {
   setDataMediumCalendar: Dispatch<
     SetStateAction<OptionDropdownType | undefined>
   >;
+  totalDurationTask: string;
+  setTotalDurationTask: Dispatch<SetStateAction<string>>;
+  totalDurationTaskCompare: string;
+  setTotalDurationTaskCompare: Dispatch<SetStateAction<string>>;
 }
 
 const defaultValue: ContextValue = {
@@ -245,6 +249,10 @@ const defaultValue: ContextValue = {
   removeTag: () => {},
   dataMediumCalendar: undefined,
   setDataMediumCalendar: () => {},
+  totalDurationTask: '',
+  totalDurationTaskCompare: '',
+  setTotalDurationTask: () => {},
+  setTotalDurationTaskCompare: () => {},
 };
 
 export const StatisticTeamTagsStateContext =
@@ -283,7 +291,7 @@ export const StatisticTeamTagsStateProvider = ({
   const [lineChartTableData, setLineChartTableData] = useState<
     TagTableRowDetail[]
   >([]);
-  const [mergedTableData, setMergedTableData] = useState<MergedTableTag[]>([]);
+  const [mergedTableData, setMergedTableData] = useState<TeamDockMergedTable[]>([]);
 
   // Select
   const [selectedOrganization, setSelectedOrganization] =
@@ -322,6 +330,11 @@ export const StatisticTeamTagsStateProvider = ({
   const [totalDurationSmallCompare, setTotalDurationSmallCompare] =
     useState<string>('');
   const [totalDurationCategoryCompare, setTotalDurationCategoryCompare] =
+    useState<string>('');
+  // Total
+  // Total duration
+  const [totalDurationTask, setTotalDurationTask] = useState<string>('');
+  const [totalDurationTaskCompare, setTotalDurationTaskCompare] =
     useState<string>('');
 
   // Data Date calendar
@@ -513,6 +526,10 @@ export const StatisticTeamTagsStateProvider = ({
     dataMediumCalendar,
     setDataMediumCalendar,
     isDisableCalendar,
+    totalDurationTask,
+    totalDurationTaskCompare,
+    setTotalDurationTask,
+    setTotalDurationTaskCompare,
   };
 
   return (

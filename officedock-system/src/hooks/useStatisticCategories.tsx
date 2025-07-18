@@ -31,7 +31,6 @@ const useStatisticCategories = ({
 }: {
   filter?: FilterProps;
   condition?: boolean[];
-
   onSuccess?: (data: StatisticsCategories) => void;
   onError?: (error: AxiosError) => void;
 }) => {
@@ -84,7 +83,6 @@ const useStatisticCategories = ({
   } = useQuery({
     queryKey: ['getStatisticCategoryList', [filter]],
     queryFn: ({ signal }) => getStatisticCategoryList({ signal }),
-
     retry: 0,
     enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,

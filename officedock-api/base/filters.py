@@ -76,9 +76,10 @@ class FilterByPermission(DjangoFilterBackend):
             in selection_results
         ):
             # Filter queryset by organization
-            if queryset.model in [User, StatisticCategory, Skill]:
+            if queryset.model in [User, StatisticCategory]:
                 return queryset.filter(organizations__in=org_ids)
             elif queryset.model in [
+                Skill,
                 SkillMap,
                 SubmitLevelHistory,
             ]:

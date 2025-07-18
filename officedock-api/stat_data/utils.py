@@ -32,7 +32,16 @@ from common.utils import (
 )
 from organizations.constants import CategoryColors
 from organizations.models import OrganizationsStatisticCategories, Organization
-from stat_data.constants import NONE_CATEGORY, FilterTime, ALL_TEAM
+from stat_data.constants import (
+    NONE_CATEGORY,
+    FilterTime,
+    ALL_TEAM,
+    SUB_TEAM,
+    CALENDAR,
+    CALENDAR_COLOR,
+    SUB_TEAM_COLOR,
+    MAIN_TEAM_COLOR,
+)
 from tags.models import Tag
 from tasks.constants import TaskCategoryTypes
 from tasks.models import Task, TaskDuration
@@ -312,14 +321,7 @@ def aggregate_durations(
         if category_id == NONE_CATEGORY:
             category_color = CategoryColors.GRAY.value
 
-        if organization_ids_param == ALL_TEAM and not is_daily_report:
-            category_name = f"{organization.name} {category_name}"
-
-        key = (
-            (category_name, organization.id)
-            if organization_ids_param == ALL_TEAM
-            else category_id
-        )
+        key = (category_name, organization.id)
 
         if key in category_dict:
             category_dict[key]["duration"] += duration
@@ -327,6 +329,7 @@ def aggregate_durations(
             category_dict[key] = {
                 "category_id": category_id,
                 "organization_id": organization.id,
+                "organization_name": organization.name,
                 "category_name": category_name,
                 "category_color": category_color,
                 "duration": duration,
@@ -442,8 +445,8 @@ def get_list_basic_task_or_event_of_durations(durations):
     """
     tasks = {}
     for filter_duration in durations:
-        # Limit just 4 cards return
-        if len(tasks) >= 4:
+        # Limit just 3 cards return
+        if len(tasks) >= 3:
             break
         model_object = filter_duration.task or filter_duration.schedule
         if model_object.id not in tasks:
@@ -524,7 +527,7 @@ def process_users(total_duration, durations):
         combined_ids = list(user_tasks[uid]) + list(user_schedules[uid])
         tasks = [
             combined_task_map[tid]
-            for tid in combined_ids
+            for tid in combined_ids[:3]
             if tid in combined_task_map
         ]
 
@@ -615,7 +618,7 @@ def process_merge_card_per_tag(
     Handle process category per user.
     """
     total_duration = timedelta(0)
-    if durations is None or not durations.exists():
+    if durations is None or not durations.exists() or not organization_ids:
         return total_duration, []
 
     tags = Tag.objects.filter(id__in=tag_ids).only("id", "name")
@@ -672,6 +675,7 @@ def process_merge_card_per_tag(
         )
         tag_totals[key] = {
             "organization_id": org_id,
+            "organization_name": org_map[org_id],
             "tag_id": tag_id,
             "tag_name": name,
             "duration": total,
@@ -852,3 +856,177 @@ def percentage_calculation_of_duration(
         percent_per_total_duration = remaining_percentage
     start_percent += percent_per_total_duration
     return percent_per_total_duration, start_percent
+
+
+def process_team_categories(
+    category_list,
+    total_duration,
+    durations=None,
+    main_organization=None,
+    calendar_organization=None,
+):
+    """Processes team durations, calculates percentages, and returns structured data."""
+    team_data = {}
+    percent = 0
+    if not durations.exists() or category_list is None:
+        return []
+    # Group categories by organization
+    for index, cat in enumerate(category_list):
+        org_id = cat["organization_id"]
+        org_name = cat["organization_name"]
+        category_duration = cat["duration"] or timedelta(0)
+        category = {
+            "category_id": cat["category_id"],
+            "category_name": cat["category_name"],
+            "category_color": cat["category_color"],
+            "duration": format_duration(category_duration),
+        }
+        # Calculate the percentage of the total duration
+        (
+            percent_per_total_duration,
+            percent,
+        ) = percentage_calculation_of_duration(
+            total_duration.total_seconds(),
+            category_duration.total_seconds(),
+            percent,
+        )
+
+        if org_id in team_data:
+            team_data[org_id]["data"].append(category)
+            team_data[org_id]["percent"] += percent_per_total_duration
+            team_data[org_id]["duration"] += category_duration
+        else:
+            team_data[org_id] = {
+                "organization_id": org_id,
+                "organization_name": org_name,
+                "data": [category],
+                "duration": category_duration,
+                "percent": percent_per_total_duration,
+            }
+    return _handle_structure_data_for_team(
+        team_data.values(), main_organization, calendar_organization
+    )
+
+
+def process_team_tags(
+    tag_list,
+    total_duration,
+    durations=None,
+    main_organization=None,
+    calendar_organization=None,
+):
+    """Processes team durations, calculates percentages, and returns structured data."""
+    team_data = {}
+    percent = 0
+    if not durations.exists() or tag_list is None:
+        return []
+    # Group categories by organization
+    for index, tag in enumerate(tag_list):
+        org_id = tag["organization_id"]
+        org_name = tag["organization_name"]
+        duration = tag["duration"] or timedelta(0)
+        tag = {
+            "tag_id": tag["tag_id"],
+            "tag_name": tag["tag_name"],
+            "duration": format_duration(duration),
+        }
+        # Calculate the percentage of the total duration
+        (
+            percent_per_total_duration,
+            percent,
+        ) = percentage_calculation_of_duration(
+            total_duration.total_seconds(),
+            duration.total_seconds(),
+            percent,
+        )
+
+        if org_id in team_data:
+            team_data[org_id]["data"].append(tag)
+            team_data[org_id]["percent"] += percent_per_total_duration
+            team_data[org_id]["duration"] += duration
+        else:
+            team_data[org_id] = {
+                "organization_id": org_id,
+                "organization_name": org_name,
+                "data": [tag],
+                "duration": duration,
+                "percent": percent_per_total_duration,
+            }
+
+    return _handle_structure_data_for_team(
+        team_data.values(), main_organization, calendar_organization
+    )
+
+
+def _handle_structure_data_for_team(
+    team_data, main_organization, calendar_organization
+):
+    """
+    Formatted data and restructure
+    """
+    response_data = {}
+    # Restructure data
+    for index, data in enumerate(team_data):
+        org_id = data["organization_id"]
+        org_name = data["organization_name"]
+        duration = data["duration"]
+        key = "main_org"
+        color = MAIN_TEAM_COLOR
+        if (
+            org_id != main_organization.id
+            and org_id == calendar_organization.id
+        ):
+            key = "calendar_org"
+            org_name = CALENDAR
+            color = CALENDAR_COLOR
+        elif org_id != main_organization.id:
+            key = "sub_org"
+            org_name = SUB_TEAM
+            color = SUB_TEAM_COLOR
+
+        team = {
+            "organization_id": org_id,
+            "organization_name": data["organization_name"],
+            "duration": duration,
+        }
+        if key in response_data:
+            response_data[key]["sub_teams"].append(team)
+            response_data[key]["duration"] += duration
+            response_data[key]["percent"] += data["percent"]
+        else:
+            response_data[key] = {
+                "organization_id": org_id,
+                "organization_name": org_name,
+                "percent": data["percent"],
+                "duration": duration,
+                "color": color,
+            }
+            if key == "sub_org":
+                response_data[key]["sub_teams"] = [team]
+                response_data[key]["organization_id"] = org_name
+            else:
+                response_data[key]["data"] = sorted(
+                    data["data"],
+                    key=lambda x: x["duration"],
+                    reverse=True,
+                )
+
+    data_list = list(response_data.values())
+
+    # Check total percentage and sort subteams by duration
+    percent = 0
+    for index, data in enumerate(data_list):
+        last_element = index == len(response_data) - 1
+        data["duration"] = format_duration(data["duration"])
+        percent += data["percent"]
+        if last_element and percent < 100:
+            data["percent"] += 100 - percent
+        if data.get("sub_teams"):
+            data["sub_teams"] = sorted(
+                data["sub_teams"], key=lambda x: x["duration"], reverse=True
+            )
+            data["sub_teams"] = [
+                {**sub, "duration": format_duration(sub["duration"])}
+                for sub in data["sub_teams"]
+            ]
+    return list(response_data.values())

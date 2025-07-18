@@ -8,6 +8,7 @@ from base.models import BaseModel
 from base.exceptions import LockedError
 from base.messages import ERROR_MESSAGES
 from common.constants import ALLOW_IMAGE_FORMATS, USER_AVATAR_FOLDER_UPLOAD
+from organizations.models import UsersOrganizations
 from utils.jwt import JWTService
 
 from .constants import GenderTypes, LoginTypes, RoleTypes, AvatarColors
@@ -294,6 +295,13 @@ class User(AbstractBaseUser, BaseModel, PermissionsMixin):
             if exclude
             else self.roles.filter(name__in=roles).exists()
         )
+
+    def get_main_organization(self):
+        user_org = UsersOrganizations.objects.filter(
+            is_main=True, user=self
+        ).first()
+
+        return user_org.organization if user_org else None
 
 
 class Setting(BaseModel):

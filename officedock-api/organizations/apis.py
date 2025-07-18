@@ -82,11 +82,14 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         Switch screen name by query params
         """
-        has_statistic_categories = self.request.query_params.get(
-            "has_statistic_categories"
-        )
-        if has_statistic_categories and has_statistic_categories != "false":
-            self.screen_name = Screens.CATEGORY_HIERARCHY.value
+        if current_screen := self.request.query_params.get("current_screen"):
+            self.screen_name = current_screen
+        else:
+            has_statistic_categories = self.request.query_params.get(
+                "has_statistic_categories"
+            )
+            if has_statistic_categories and has_statistic_categories != "false":
+                self.screen_name = Screens.CATEGORY_HIERARCHY.value
 
         return super().get_permissions()
 
@@ -358,7 +361,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         detail=False,
         url_path="members",
         serializer_class=OrganizationMemberSerializer,
-        screen_name=Screens.LIST_MEMBER.value,
+        screen_name=Screens.TEAM_DOCK_SKILL_MAP.value,
     )
     def members(self, request):
         """
@@ -633,7 +636,7 @@ class OrganizationByIDViewSet(BaseAPIViewSet):
         detail=True,
         url_path="define-steps",
         serializer_class=StepSerializer,
-        screen_name=Screens.SKILL_MAP.value,
+        screen_name=Screens.SKILL_MAP_MANAGEMENT.value,
     )
     @transaction.atomic
     def define_steps(self, request, pk=None):

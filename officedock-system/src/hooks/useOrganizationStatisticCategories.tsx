@@ -66,6 +66,10 @@ const useOrganizationStatisticCategories = ({
 
         const updatedMedium: NestedCategory[] = isLargeValid
           ? [
+              {
+                MEDIUM: NO_SETTING_CATEGORY,
+                SMALL: [NO_SETTING_CATEGORY],
+              },
               ...(category.MEDIUM || []).map((nested): NestedCategory => {
                 const updatedMedium =
                   nested.MEDIUM && nested.MEDIUM.id != null
@@ -73,11 +77,11 @@ const useOrganizationStatisticCategories = ({
                     : NO_SETTING_CATEGORY;
 
                 const updatedSmall: ChildCategory[] = [
+                  NO_SETTING_CATEGORY,
                   ...(nested.SMALL || []).map(
                     (small): ChildCategory =>
                       small && small.id != null ? small : NO_SETTING_CATEGORY,
                   ),
-                  NO_SETTING_CATEGORY,
                 ];
 
                 return {
@@ -85,10 +89,6 @@ const useOrganizationStatisticCategories = ({
                   SMALL: updatedSmall,
                 };
               }),
-              {
-                MEDIUM: NO_SETTING_CATEGORY,
-                SMALL: [NO_SETTING_CATEGORY],
-              },
             ]
           : [
               {
@@ -103,6 +103,7 @@ const useOrganizationStatisticCategories = ({
         };
       });
     },
+
     onSuccess: (response: CategoryStructure[]) => {
       onSuccess && onSuccess(response);
     },

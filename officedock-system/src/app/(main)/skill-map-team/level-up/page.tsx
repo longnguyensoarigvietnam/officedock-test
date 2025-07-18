@@ -11,7 +11,7 @@ const LevelUpPage = () => {
       title={pageRouters.LEVEL_UP_TEAM.name}
       showFooter={false}
       className="px-0 !pt-0"
-      permission={PermissionsSystem.SKILL_MAP_VIEW}>
+      permission={PermissionsSystem.TEAM_DOCK_SKILL_MAP_VIEW}>
       <LevelUpList />
     </MainLayout>
   );

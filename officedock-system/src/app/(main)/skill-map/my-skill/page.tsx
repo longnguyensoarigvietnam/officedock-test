@@ -11,7 +11,7 @@ const SkillsPage = () => {
       title={pageRouters.SKILL_MAP_SKILL.name}
       showFooter={false}
       className="!px-0 !py-0"
-      permission={PermissionsSystem.SKILL_MAP_VIEW}>
+      permission={PermissionsSystem.MY_DOCK_SKILL_MAP_VIEW}>
       <MySkill />
     </MainLayout>
   );

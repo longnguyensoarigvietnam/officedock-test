@@ -1315,7 +1315,11 @@ export const totalDurationsForStatistic = (durations: string[]) => {
 // Convert time to decimal
 export function convertTimeToDecimal(timeString: string) {
   const [hours, minutes, seconds] = timeString.split(':').map(Number);
-  return hours + minutes / 60 + seconds / 3600;
+
+  // If seconds >= 30, round minutes up
+  const roundedMinutes = seconds >= 30 ? minutes + 1 : minutes;
+
+  return hours + roundedMinutes / 60;
 }
 
 // Convert from number to Japanese time
@@ -1701,4 +1705,46 @@ export const getTimeDifference = (
   ].join(':');
 
   return formatted;
+};
+// Get date labels list from statistic task durations
+export const extractDateLabelsListFromTaskDuration = (
+  durations: { startDate: string; endDate: string }[],
+): string[] => {
+  const labels: string[] = [];
+
+  if (!durations || durations.length === 0) return [];
+
+  durations.forEach((detail, index) => {
+    labels.push(detail.startDate);
+
+    const isLast = index === durations.length - 1;
+    const lastItem = durations.at(-1);
+
+    if (
+      isLast &&
+      lastItem &&
+      String(lastItem.startDate) !== String(lastItem.endDate) &&
+      lastItem.endDate
+    ) {
+      labels.push(lastItem.endDate);
+    }
+  });
+
+  return labels;
+};
+
+export const generateShownLineChartDateLabels = (
+  standardLabels: string[],
+  compareLabels: string[],
+): string[] => {
+  const result = [...standardLabels];
+
+  if (standardLabels.length < compareLabels.length) {
+    const numOfHiddenLabels = compareLabels.length - standardLabels.length;
+    for (let i = 0; i < numOfHiddenLabels; i++) {
+      result.push(`${i}`);
+    }
+  }
+
+  return result;
 };

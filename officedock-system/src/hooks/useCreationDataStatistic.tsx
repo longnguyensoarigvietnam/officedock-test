@@ -81,7 +81,7 @@ const useCreationDataStatistic = ({
                   ? mediumItem.MEDIUM
                   : NO_SETTING_CATEGORY;
 
-                const updatedSmall: SmallCategory[] = Array.isArray(
+                const updatedSmallRaw: SmallCategory[] = Array.isArray(
                   mediumItem.SMALL,
                 )
                   ? mediumItem.SMALL.map((smallItem) =>
@@ -91,12 +91,13 @@ const useCreationDataStatistic = ({
                     )
                   : [];
 
-                const hasNoSettingSmall = updatedSmall.some(
+                const hasNoSettingSmall = updatedSmallRaw.some(
                   (s) => String(s.id) === String(NO_SETTING_CATEGORY.id),
                 );
-                if (!hasNoSettingSmall) {
-                  updatedSmall.push(NO_SETTING_CATEGORY);
-                }
+
+                const updatedSmall: SmallCategory[] = hasNoSettingSmall
+                  ? updatedSmallRaw
+                  : [NO_SETTING_CATEGORY, ...updatedSmallRaw];
 
                 return {
                   MEDIUM: updatedMediumValue,
@@ -108,11 +109,15 @@ const useCreationDataStatistic = ({
             const hasNoSettingMedium = updatedMedium.some(
               (m) => String(m.MEDIUM?.id) === String(NO_SETTING_CATEGORY.id),
             );
+
             if (!hasNoSettingMedium) {
-              updatedMedium.push({
-                MEDIUM: NO_SETTING_CATEGORY,
-                SMALL: [NO_SETTING_CATEGORY],
-              });
+              updatedMedium = [
+                {
+                  MEDIUM: NO_SETTING_CATEGORY,
+                  SMALL: [NO_SETTING_CATEGORY],
+                },
+                ...updatedMedium,
+              ];
             }
           } else {
             updatedMedium = [

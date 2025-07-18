@@ -2,13 +2,15 @@
 
 import { useQuery } from 'react-query';
 import { AxiosError } from 'axios';
+
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
 
-import api from '@base/api';
-import { StatisticsTagTaskDuration } from '@interfaces/statistic';
+import { StatisticsTaskDurationTag } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
+
+import api from '@base/api';
 
 interface FilterProps {
   endDate: string | Date;
@@ -21,26 +23,28 @@ interface FilterProps {
   statisticBy?: string;
 }
 
-const useStatisticTagTaskDurations = ({
+const useStatisticTaskDurationsTag = ({
   filter,
+  condition,
   onSuccess,
   onError,
 }: {
   filter?: FilterProps;
-  onSuccess?: (data: StatisticsTagTaskDuration[]) => void;
+  condition?: boolean[];
+  onSuccess?: (data: StatisticsTaskDurationTag) => void;
   onError?: (error: AxiosError) => void;
 }) => {
   const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   // Handle call API get statistic task duration list
-  const getStatisticTagTaskDurations = async ({
+  const getStatisticTaskDurations = async ({
     signal,
   }: {
     signal?: AbortSignal;
   }) => {
     if (!filter?.organizationIds) return [];
-    const apiUrl = `${apiRouters.STATISTICS_TASK_DURATIONS}?is_tag_page=true&${
+    const apiUrl = `${apiRouters.STATISTICS_TASK_DURATIONS}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
     }${filter?.endDate ? `&end_date=${filter.endDate}` : ''}${
       filter?.largeCategoryId
@@ -58,27 +62,29 @@ const useStatisticTagTaskDurations = ({
       filter?.smallCategoryId
         ? `&small_category_id=${filter.smallCategoryId}`
         : ''
-    }${filter?.statisticBy ? `&statistic_by=${filter.statisticBy}` : '&statistic_by=WEEK'}${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
+    }${filter?.statisticBy ? `&statistic_by=${filter.statisticBy}` : '&statistic_by=WEEK'}${`&is_tag_page=true`}${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
-    const { data } = await api.get<StatisticsTagTaskDuration[]>(apiUrl, {
+    const { data } = await api.get<StatisticsTaskDurationTag>(apiUrl, {
       signal,
     });
+
     return data;
   };
 
   // Handle API get statistic task duration list
   const {
-    data: statisticTagTaskDurationsList,
-    refetch: refetchStatisticTagTaskDurationsList,
-    isFetched: isFetchedStatisticTagTaskDurationsList,
+    data: statisticTaskDurationsListTag,
+    refetch: refetchStatisticTaskDurationsListTag,
+    isFetching: isFetchingStatisticTaskDurationsListTag,
   } = useQuery({
-    queryKey: ['getStatisticTagTaskDurations', [filter]],
-    queryFn: ({ signal }) => getStatisticTagTaskDurations({ signal }),
+    queryKey: ['getStatisticTaskDurationsTag', [filter]],
+    queryFn: ({ signal }) => getStatisticTaskDurations({ signal }),
+
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onSuccess: (data: StatisticsTagTaskDuration[]) => {
+    onSuccess: (data: StatisticsTaskDurationTag) => {
       onSuccess && onSuccess(data);
     },
     onError: (error: AxiosError) => {
@@ -88,10 +94,10 @@ const useStatisticTagTaskDurations = ({
   });
 
   return {
-    statisticTagTaskDurationsList,
-    refetchStatisticTagTaskDurationsList,
-    isFetchedStatisticTagTaskDurationsList,
+    statisticTaskDurationsListTag,
+    refetchStatisticTaskDurationsListTag,
+    isFetchingStatisticTaskDurationsListTag,
   };
 };
 
-export default useStatisticTagTaskDurations;
+export default useStatisticTaskDurationsTag;

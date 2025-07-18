@@ -6,7 +6,9 @@ import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailSt
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 
 import {
+  StatisticAllTeamInfo,
   StatisticCategoryInfo,
+  StatisticsAllTeams,
   StatisticsCategories,
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
@@ -15,18 +17,20 @@ import { formatShowStatisticTask, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
 
 import { EventWorkCategory } from '@constants/enums';
+import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT, SUB_TEAMS } from '@constants';
 
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 import ProgressBarStatistic from '../ProgressBarStatistic';
 import FilterTag from '../filter/FilterTag';
-import { DEFAULT_TIME_TEXT } from '@constants';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticTagsList: StatisticsCategories | undefined;
   statisticTagsCompareList: StatisticsCategories | undefined;
+  statisticAllTeamCategoryList: StatisticsAllTeams | undefined;
+  statisticAllTeamCategoryCompareList: StatisticsAllTeams | undefined;
   startDateCompare: Date;
   endDateCompare: Date | null;
   handleSelectOrganization: (data: OptionDropdownType) => void;
@@ -36,7 +40,7 @@ type Props = {
 };
 
 type ProgressDataType = {
-  id: number;
+  id: number | string;
   label: string;
   value: number;
   color: string;
@@ -50,9 +54,11 @@ const AllocationTagCompare = memo(
     startDate,
     endDate,
     statisticTagsList,
+    statisticTagsCompareList,
+    statisticAllTeamCategoryList,
+    statisticAllTeamCategoryCompareList,
     startDateCompare,
     endDateCompare,
-    statisticTagsCompareList,
     handleSelectOrganization,
     handleSelectLarge,
     handleSelectMedium,
@@ -128,7 +134,11 @@ const AllocationTagCompare = memo(
     } = useContext(StatisticTagStateContext);
 
     useEffect(() => {
-      if (statisticTagsList && statisticTagsCompareList) {
+      if (
+        statisticTagsList &&
+        statisticTagsCompareList &&
+        selectedOrganization?.value != ALL_TEAM_STATISTIC
+      ) {
         const mergeCategories = (
           mainCategories: StatisticCategoryInfo[],
           compareCategories: StatisticCategoryInfo[],
@@ -228,7 +238,121 @@ const AllocationTagCompare = memo(
         setProgressDataPairsSmall(smallPairs);
         setProgressDataPairsCategory(categoryPairs);
       }
-    }, [statisticTagsList, statisticTagsCompareList]);
+    }, [
+      statisticTagsList,
+      statisticTagsCompareList,
+      selectedOrganization?.value,
+    ]);
+
+    useEffect(() => {
+      if (
+        statisticAllTeamCategoryList &&
+        statisticAllTeamCategoryCompareList &&
+        selectedOrganization?.value == ALL_TEAM_STATISTIC
+      ) {
+        const mergeCategories = (
+          mainCategories: StatisticAllTeamInfo[],
+          compareCategories: StatisticAllTeamInfo[],
+          colorData?: string,
+        ) => {
+          const mergedMap = new Map<
+            number | string,
+            {
+              main: ProgressDataType | null;
+              compare: ProgressDataType | null;
+            }
+          >();
+
+          // Add main categories first
+          mainCategories.forEach((item) => {
+            mergedMap.set(item.organizationId, {
+              main: {
+                id: item.organizationId,
+                label: item.organizationName as string,
+                value: item.percent,
+                organizationId: String(item.organizationId),
+                color:
+                  item.color ||
+                  lightenColor(colorData as string, item.percent) ||
+                  getRandomColor(),
+                duration: item.duration,
+                optionData:
+                  item.organizationId == SUB_TEAMS
+                    ? item?.subTeams
+                        ?.slice(0, 3)
+                        .map((team) => team?.organizationName || '') || []
+                    : item?.data
+                        ?.slice(0, 3)
+                        .map((category) => category?.categoryName || '') || [],
+              },
+              compare: null,
+            });
+          });
+
+          // Add compare categories, updating existing ones or creating new entries
+          compareCategories.forEach((compareItem) => {
+            if (mergedMap.has(compareItem.organizationId)) {
+              mergedMap.get(compareItem.organizationId)!.compare = {
+                id: compareItem.organizationId,
+                label: compareItem.organizationName as string,
+                value: compareItem.percent,
+                organizationId: String(compareItem.organizationId),
+
+                color:
+                  compareItem.color ||
+                  lightenColor(colorData as string, compareItem.percent) ||
+                  getRandomColor(),
+                duration: compareItem.duration,
+                optionData:
+                  compareItem.organizationId == SUB_TEAMS
+                    ? compareItem?.subTeams
+                        ?.slice(0, 3)
+                        .map((team) => team?.organizationName || '') || []
+                    : compareItem?.data
+                        ?.slice(0, 3)
+                        .map((category) => category?.categoryName || '') || [],
+              };
+            } else {
+              mergedMap.set(compareItem.organizationId, {
+                main: null,
+                compare: {
+                  id: compareItem.organizationId,
+                  label: compareItem.organizationName as string,
+                  value: compareItem.percent,
+                  color:
+                    lightenColor(colorData as string, compareItem.percent) ||
+                    getRandomColor(),
+                  duration: compareItem.duration,
+                  optionData:
+                    compareItem.organizationId == SUB_TEAMS
+                      ? compareItem?.subTeams
+                          ?.slice(0, 3)
+                          .map((team) => team?.organizationName || '') || []
+                      : compareItem?.data
+                          ?.slice(0, 3)
+                          .map((category) => category?.categoryName || '') ||
+                        [],
+                },
+              });
+            }
+          });
+
+          return Array.from(mergedMap.values());
+        };
+
+        const largePairs = mergeCategories(
+          statisticAllTeamCategoryList.largeCategories || [],
+          statisticAllTeamCategoryCompareList.largeCategories || [],
+          '#2E9267',
+        );
+
+        setProgressDataPairsLarge(largePairs);
+      }
+    }, [
+      statisticAllTeamCategoryList,
+      statisticAllTeamCategoryCompareList,
+      selectedOrganization?.value,
+    ]);
 
     const handleClickTooltip = (
       id: number | null,
@@ -1010,7 +1134,6 @@ const AllocationTagCompare = memo(
             startDate={startDate}
             endDate={endDate}
             selectedOrganization={selectedOrganization}
-            statisticTagsListTeam={statisticTagsList}
             onClose={() => {
               setIsShowModal(false);
             }}
@@ -1027,7 +1150,6 @@ const AllocationTagCompare = memo(
             endDate={endDateCompare}
             detailCategory={detailCategoryCompare}
             selectedOrganization={selectedOrganization}
-            statisticTagsListTeam={statisticTagsList}
             onClose={() => {
               setIsShowModalCompare(false);
             }}

@@ -333,6 +333,7 @@ class OrganizationForUserSerializer(OrganizationSerializer):
     """
 
     is_main = serializers.SerializerMethodField(read_only=True)
+    has_task_reference = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Organization
@@ -347,6 +348,7 @@ class OrganizationForUserSerializer(OrganizationSerializer):
             "icon",
             "icon_color",
             "type",
+            "has_task_reference",
         ]
 
     def get_is_main(self, obj):
@@ -358,6 +360,15 @@ class OrganizationForUserSerializer(OrganizationSerializer):
             user=user, organization=obj
         ).first()
         return users_org.is_main if users_org else False
+
+    def get_has_task_reference(self, obj):
+        """
+        Check organization to linked to task.
+        """
+        user = self.context.get("user")
+        return (
+            obj.tasks.filter(people_in_charge=user).exists() if user else False
+        )
 
 
 class UserSerializer(BaseUserSerializer):
@@ -692,6 +703,29 @@ class SystemUserInviteSerializer(BaseUserSerializer):
         User.validate_unique_username(
             instance=self.instance, username=value, is_admin_site=False
         )
+        return super().validate(value)
+
+    def validate_organization_ids(self, value):
+        """
+        Validate that organizations linked to tasks cannot be removed from the user's organizations.
+        """
+        instance = self.instance
+
+        if instance and value:
+            # Collect the set of organization IDs provided in the input
+            orgs_to_update = set(item["organization"].id for item in value)
+            # Collect the set of organization IDs where the user is in charge of tasks
+            orgs_with_tasks = set(
+                instance.in_charge_tasks.values_list("organization", flat=True)
+            )
+            # Find organizations with tasks that are being removed
+            orgs_being_removed = orgs_with_tasks - orgs_to_update
+
+            if orgs_being_removed:
+                raise serializers.ValidationError(
+                    ERROR_MESSAGES["organization_linked_to_task"]
+                )
+
         return super().validate(value)
 
 

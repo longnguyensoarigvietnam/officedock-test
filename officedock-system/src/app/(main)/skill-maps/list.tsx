@@ -95,7 +95,7 @@ const ListSkillsMap = () => {
   >([]);
 
   const { organizationOptions } = useOrganizationOptions({
-    current_screen: ScreenName.SKILL_MAP,
+    current_screen: ScreenName.SKILL_MAP_MANAGEMENT,
   });
 
   // Skill map actions
@@ -111,13 +111,16 @@ const ListSkillsMap = () => {
   // Get organization skills
   const { organizationSkillList, refetchOrganizationSkillList } =
     useOrganizationSkillList({
-      organizationId: Number(selectedOrganizationOption.value),
-      filterSteps: selectedFilterStepDetail
-        ? String(selectedFilterStepDetail.filterStep)
-        : undefined,
-      filterOrganizationIds: selectedFilterStepDetail
-        ? Number(selectedFilterStepDetail.filterOrganizationId)
-        : undefined,
+      filter: {
+        organizationId: Number(selectedOrganizationOption.value),
+        filterSteps: selectedFilterStepDetail
+          ? String(selectedFilterStepDetail.filterStep)
+          : undefined,
+        filterOrganizationIds: selectedFilterStepDetail
+          ? Number(selectedFilterStepDetail.filterOrganizationId)
+          : undefined,
+      },
+      showLoadingIndicator: true
     });
 
   // Get skill map detail
@@ -494,13 +497,13 @@ const ListSkillsMap = () => {
     session?.user.permissions &&
     hasPermissionInArray(
       session?.user.permissions,
-      PermissionsSystem.SKILL_MAP_ADD,
+      PermissionsSystem.SKILL_MAP_MANAGEMENT_ADD,
     );
   const hasUpdatePermission =
     session?.user.permissions &&
     hasPermissionInArray(
       session?.user.permissions,
-      PermissionsSystem.SKILL_MAP_UPDATE,
+      PermissionsSystem.SKILL_MAP_MANAGEMENT_UPDATE,
     );
 
   return (

@@ -2,6 +2,7 @@
 
 import { useQuery } from 'react-query';
 import { AxiosError } from 'axios';
+
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
@@ -24,10 +25,12 @@ interface FilterProps {
 
 const useStatisticTableInTeamLineChartCompare = ({
   filter,
+  condition,
   onSuccess,
   onError,
 }: {
   filter?: FilterProps;
+  condition?: boolean[];
   onSuccess?: (data: StatisticsCategories) => void;
   onError?: (error: AxiosError) => void;
 }) => {
@@ -86,15 +89,14 @@ const useStatisticTableInTeamLineChartCompare = ({
   const {
     data: statisticTableInTeamLineChartCompare,
     refetch: refetchStatisticTableInTeamLineChartCompare,
-    isLoading: isLoadingStatisticTableInTeamLineChartCompare,
-    isFetched: isFetchedStatisticTableInTeamLineChartCompare,
+    isFetching: isFetchingStatisticTableInTeamLineChartCompare,
   } = useQuery({
     queryKey: ['getStatisticTableInTeamLineChartCompare', JSON.stringify(filter)],
     queryFn: ({ signal }) =>
       getStatisticTableInTeamLineChartCompare({ signal }),
 
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (data: StatisticsCategories) => {
@@ -108,8 +110,7 @@ const useStatisticTableInTeamLineChartCompare = ({
   return {
     statisticTableInTeamLineChartCompare,
     refetchStatisticTableInTeamLineChartCompare,
-    isLoadingStatisticTableInTeamLineChartCompare,
-    isFetchedStatisticTableInTeamLineChartCompare,
+    isFetchingStatisticTableInTeamLineChartCompare,
   };
 };
 

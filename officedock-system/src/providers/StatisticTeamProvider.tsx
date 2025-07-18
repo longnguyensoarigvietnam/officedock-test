@@ -10,7 +10,7 @@ import {
 import { OptionDropdownType } from '@interfaces/common';
 import {
   CategoryTableRowDetail,
-  MergedTableCategory,
+  TeamDockMergedTable,
 } from '@interfaces/statistic';
 
 import { getAdjustedStartDateDefault } from '@utils/date';
@@ -138,8 +138,8 @@ interface ContextValue {
   setAreaTableData: Dispatch<SetStateAction<CategoryTableRowDetail[]>>;
   lineChartTableData: CategoryTableRowDetail[];
   setLineChartTableData: Dispatch<SetStateAction<CategoryTableRowDetail[]>>;
-  mergedTableData: MergedTableCategory[];
-  setMergedTableData: Dispatch<SetStateAction<MergedTableCategory[]>>;
+  mergedTableData: TeamDockMergedTable[];
+  setMergedTableData: Dispatch<SetStateAction<TeamDockMergedTable[]>>;
   handleResetTableData: () => void;
   removeTag: (selected: OptionDropdownType) => void;
   removeUser: (selected: OptionDropdownType) => void;
@@ -287,7 +287,7 @@ export const StatisticTeamStateProvider = ({
   const [lineChartTableData, setLineChartTableData] = useState<
     CategoryTableRowDetail[]
   >([]);
-  const [mergedTableData, setMergedTableData] = useState<MergedTableCategory[]>(
+  const [mergedTableData, setMergedTableData] = useState<TeamDockMergedTable[]>(
     [],
   );
 

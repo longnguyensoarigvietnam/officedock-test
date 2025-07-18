@@ -26,8 +26,9 @@ type Props = {
   optionsData: OptionModalType[][];
   data: number[];
   mergedItems: StatisticCategoryInfo[];
-  listIdData: number[];
+  listIdData: (string | number)[];
   dataOrganization: string[] | undefined;
+  isAllTeamOption: boolean;
   handleClickTooltip:
     | ((id: number | null, organizationId?: string) => void)
     | undefined;
@@ -44,6 +45,7 @@ const ModalCustomTooltip = ({
   listIdData,
   mergedItems,
   dataOrganization,
+  isAllTeamOption,
   handleClickTooltip,
 }: Props) => {
   const label = labels[tooltipData.value];
@@ -116,7 +118,7 @@ const ModalCustomTooltip = ({
                         )}
                       </ul>
                     </div>
-                    {!isTeam && (
+                    {!isTeam && !isAllTeamOption && (
                       <div className="mt-4 px-5 flex items-center justify-end">
                         <button
                           onClick={() =>
@@ -191,15 +193,19 @@ const ModalCustomTooltip = ({
                       );
                     })
                   : option &&
-                    option.map((opt) => <li key={opt.label}>{opt.label}</li>)}
+                    option.map((opt) => (
+                      <li className="list-none line-clamp-3" key={opt.label}>
+                        {opt.label}
+                      </li>
+                    ))}
               </div>
             </div>
-            {!isTeam && (
+            {!isTeam && !isAllTeamOption && (
               <div className="mt-4 px-5 flex items-center justify-end">
                 <button
                   onClick={() => {
                     handleClickTooltip &&
-                      handleClickTooltip(id, organizationId);
+                      handleClickTooltip(id as number, organizationId);
                   }}
                   className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">
                   <span>タスクを見る</span>

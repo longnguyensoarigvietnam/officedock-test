@@ -774,3 +774,26 @@ def parse_search_date(search):
             continue
 
     return None
+
+
+def get_user_organizations_with_descendants(user: User) -> list[int]:
+    """
+    Retrieve all organizations that the given user belongs to, including all descendant organizations recursively.
+
+    Args:
+        user: The user instance for whom to retrieve organizations.
+
+    Returns:
+        List of organization IDs (integers) that the user is a member of, including all descendant organizations.
+    """
+    org_ids = list()
+
+    def _get_children(instance):
+        children = instance.organizations.all()
+        for child in children:
+            org_ids.append(child.id)
+            _get_children(child)
+
+    _get_children(user)
+
+    return org_ids

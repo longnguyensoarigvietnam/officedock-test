@@ -149,6 +149,7 @@ export interface dataTaskDaily {
   type: string;
   todoList: TodoItem[];
   totalDuration: string;
+  isCalculate?: boolean;
 }
 
 export interface ChildTask {
@@ -223,6 +224,7 @@ export interface DataActualDetail {
   left?: number;
   top?: number;
   uuid: string;
+  isCalculate?: boolean;
 }
 
 export interface DataUserDetailDailyType {
@@ -250,10 +252,15 @@ export interface StatisticsCategories {
   largeTotalDuration: string;
   mediumTotalDuration?: string;
   smallTotalDuration?: string;
+  categoryTotalDuration?: string;
   largeCategories: StatisticCategoryInfo[];
   mediumCategories?: StatisticCategoryInfo[];
   smallCategories?: StatisticCategoryInfo[];
   category?: StatisticCategoryInfo[];
+}
+export interface StatisticsAllTeams {
+  largeTotalDuration: string;
+  largeCategories: StatisticAllTeamInfo[];
 }
 export interface StatisticsTagsType {
   totalDuration: string;
@@ -263,6 +270,26 @@ export interface StatisticsTagsType {
   category?: StatisticCategoryInfo[];
 }
 
+export interface StatisticAllTeamInfo {
+  organizationId: string;
+  organizationName?: string;
+  percent: number;
+  duration: string;
+  color: string;
+  subTeams?: {
+    organizationId: number;
+    organizationName?: string;
+    duration: string;
+  }[];
+  data?: {
+    categoryId: number;
+    categoryName?: string;
+    categoryColor?: string;
+    duration: string;
+    tagId?: number;
+    tagName?: string;
+  }[];
+}
 export interface StatisticCategoryInfo {
   categoryId: number;
   tagId?: number;
@@ -359,17 +386,131 @@ export interface DataTaskListStatisticListType {
 }
 
 export interface StatisticsTaskDuration {
-  categoryId: number;
-  categoryName: string;
-  categoryColor: string;
-  duration: string;
+  data: {
+    organizationId: number | string;
+    categoryId: number | string;
+    categoryName: string;
+    categoryColor: string;
+    duration: string;
+    percent: number;
+    tasks: {
+      id: number;
+      title: string;
+      type: string;
+    }[];
+  }[];
   durations: {
     startDate: string;
     endDate: string;
-    duration: string;
-    percent: number;
+    data: {
+      organizationId: number | string;
+      organizationName?: string;
+      categoryId: number | string;
+      categoryName: string;
+      categoryColor: string;
+      duration: string;
+      percent: number;
+      tasks: {
+        id: number;
+        title: string;
+        type: string;
+      }[];
+    }[];
   }[];
-  percent?: number;
+}
+export interface StatisticsTaskDurationTag {
+  data: {
+    duration: string;
+    organizationId: number;
+    percent: number;
+    tagId: number;
+    tagName: string;
+  }[];
+  durations: {
+    startDate: string;
+    endDate: string;
+    data: {
+      duration: string;
+      organizationId: number;
+      percent: number;
+      tagId: number;
+      tagName: string;
+    }[];
+  }[];
+}
+
+export interface StatisticsAllTeamTaskDuration {
+  data: {
+    color: string;
+    duration: string;
+    organizationId: string | number;
+    organizationName: string;
+    percent: number;
+    users?: {
+      avatar: string | null;
+      avatarColor: string;
+      fullName: string;
+      id: number;
+      percent: number;
+      totalDuration: string;
+    }[];
+  }[];
+  durations: {
+    startDate: string;
+    endDate: string;
+    data: {
+      organizationId: string | number;
+      organizationName: string;
+      duration: string;
+      percent: number;
+      color: string;
+      users?: {
+        avatar: string | null;
+        avatarColor: string;
+        fullName: string;
+        id: number;
+        percent: number;
+        totalDuration: string;
+      }[];
+    }[];
+  }[];
+}
+
+export interface TeamDockStatisticsAllTeamTaskDuration {
+  data: {
+    color: string;
+    duration: string;
+    organizationId: string | number;
+    organizationName: string;
+    percent: number;
+    users: {
+      id: number;
+      fullName: string;
+      avatarColor: string;
+      avatar: string | null;
+      percent: number;
+      totalDuration: string;
+    }[];
+  }[];
+  durations: {
+    startDate: string;
+    endDate: string;
+    data: {
+      organizationId: string | number;
+      organizationName: string;
+      duration: string;
+      percent: number;
+      color: string;
+      users: {
+        id: number;
+        fullName: string;
+        avatarColor: string;
+        avatar: string | null;
+        percent: number;
+        totalDuration: string;
+      }[];
+    }[];
+  }[];
 }
 
 export interface StatisticsTagTaskDuration {
@@ -425,7 +566,7 @@ export interface StatisticsUserTaskDuration {
 }
 
 export type ProgressDataType = {
-  id: number;
+  id: number | string;
   label: string;
   value: number;
   color: string;
@@ -435,8 +576,8 @@ export type ProgressDataType = {
   organizationId?: string;
 };
 export interface CategoryTableRowDetail {
-  categoryId: number;
-  organizationId: number;
+  categoryId: string | number;
+  organizationId: string | number;
   categoryName: string;
   categoryDuration: string;
   categoryPercent: number;
@@ -451,11 +592,11 @@ export interface CategoryTableRowDetail {
 }
 
 export interface TagTableRowDetail {
-  tagId: number;
+  tagId: number | string;
   tagName: string;
   tagDuration: string;
   tagPercent: number;
-  organizationId: number;
+  organizationId: number | string;
   userList: {
     userId: number;
     userName: string;
@@ -541,4 +682,110 @@ export interface ListTaskStatistic {
   organizationName: string;
   organizationType?: string;
   type: string;
+}
+
+export interface CategoryLineChartDatasetInfo {
+  label: string;
+  data: {
+    x: string;
+    y: number;
+    endDate: any;
+    color?: string;
+    label: string;
+    type?: StatisticChartType;
+    startDate?: any;
+    duration?: string;
+    anotherStartDate?: any;
+    anotherEndDate?: any;
+    anotherDuration?: string;
+    avatarColor?: string,
+    avatar?: string,
+    userId?: number,
+    user?: {
+      avatar: string | null,
+      avatarColor: string,
+      fullName: string,
+      id: number
+    }
+  }[];
+  borderColor: string;
+  backgroundColor: string;
+  borderDash?: number[];
+  fill: boolean;
+  tension: number;
+  pointRadius: number;
+  pointBorderColor: string;
+  pointHoverRadius: number;
+  pointHoverBackgroundColor: string;
+  pointHoverBorderColor: string;
+  pointHoverBorderWidth: number;
+}
+
+export interface MergedMyDockLineChartTable {
+  id: string | number | null;
+  name: string;
+  color: string;
+  standardInfo?: {
+    duration: string;
+    percent: string;
+  };
+  compareInfo?: {
+    duration: string;
+    percent: string;
+  };
+}
+
+export interface MyDockLineChartTableItem {
+  id: string | number | null;
+  name: string;
+  duration: string;
+  percent: string;
+  color: string;
+  type?: StatisticChartType.STANDARD | StatisticChartType.COMPARE;
+}
+
+export interface TeamDockAllTeamTableRowDetail {
+  id: string | number;
+  name: string;
+  duration: string;
+  percent: number;
+  userList: {
+    userId: number;
+    userName: string;
+    userAvatar?: string | null;
+    userAvatarColor: string;
+    userDuration: string;
+    userPercent: number;
+  }[];
+  type?: StatisticChartType.STANDARD | StatisticChartType.COMPARE;
+}
+
+export interface TeamDockMergedTable {
+  categoryId?: string | number
+  categoryName?: string;
+  tagId?: string | number;
+  tagName?: string
+  organizationId?: string | number;
+  standardInfo?: {
+    duration: string;
+    percent: number;
+  };
+  compareInfo?: {
+    duration: string;
+    percent: number;
+  };
+  userList: {
+    userId: number;
+    userName: string;
+    userAvatar?: string | null;
+    userAvatarColor: string;
+    standardInfo?: {
+      userDuration: string;
+      userPercent: number;
+    };
+    compareInfo?: {
+      userDuration: string;
+      userPercent: number;
+    };
+  }[];
 }

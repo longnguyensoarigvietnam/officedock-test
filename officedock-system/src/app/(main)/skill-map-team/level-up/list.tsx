@@ -27,6 +27,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import api from '@base/api';
 
 import { LevelUpListByOrganization } from './level-up-list-by-organization';
+import { ScreenName } from '@constants/enums';
 
 const LevelUpList = () => {
   const showErrorToast = useErrorToast();
@@ -52,6 +53,7 @@ const LevelUpList = () => {
 
   // Hooks
   const { refetchSubmitLevelList } = useSubmitLevelListByOrganizations({
+    currentScreen: ScreenName.TEAM_DOCK_SKILL_MAP,
     onSuccess: (data) => {
       setSubmitLevelUpByOrganization(data);
     },
