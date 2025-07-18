@@ -226,6 +226,9 @@ const TableChart = ({
               query.queryKey[0] === 'getStatisticTaskDurationsTag',
           });
         }
+        queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
+        });
 
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',

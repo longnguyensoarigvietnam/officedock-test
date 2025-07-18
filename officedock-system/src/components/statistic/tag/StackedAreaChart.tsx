@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Chart from 'react-apexcharts';
 import {
@@ -109,7 +109,6 @@ const StackedAreaChart = ({
     selectedOrganization,
     selectedSmall,
     lineChartViewBy,
-    selectedTags,
     setLineChartViewBy,
   } = useContext(StatisticTagStateContext);
 
@@ -496,7 +495,7 @@ const StackedAreaChart = ({
       },
     },
     legend: {
-      show: !(dataChart.length == 1 && !dataChart[0].name), // Not show legend with fake data
+      show: false,
       showForSingleSeries: true,
       position: 'bottom',
       horizontalAlign: 'right',
@@ -801,24 +800,6 @@ const StackedAreaChart = ({
   };
 
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const chartRef = useRef<HTMLDivElement>(null);
-  const [chartHeight, setChartHeight] = useState<number>(0);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (chartRef.current) {
-        const inner = chartRef.current.querySelector(
-          '.apexcharts-inner',
-        ) as HTMLElement;
-        if (inner) {
-          const { height } = inner.getBoundingClientRect();
-          setChartHeight(height);
-        }
-      }
-    }, 100);
-
-    return () => clearTimeout(timeout);
-  }, [dataChart]);
 
   return (
     <div
@@ -1036,23 +1017,27 @@ const StackedAreaChart = ({
               className={`!h-[380px] w-[calc(100%_-_60px)] mx-auto`}
             />
           ) : (
-            <div ref={chartRef} className="relative">
+            <div className="relative">
               <Chart
                 options={options as any}
                 series={dataChart}
                 type="area"
                 height={380}
               />
+              <div className="flex flex-wrap gap-x-[30px] gap-y-3 mt-4 justify-end">
+                {dataChart.map((s, index) => (
+                  <div key={index} className="flex items-center gap-2 mb-2">
+                    <div
+                      className="w-[10px] h-[10px]"
+                      style={{ backgroundColor: colorList[index] }}
+                    />
+                    <span className="text-xs text-[#77858F]">{s.name}</span>
+                  </div>
+                ))}
+              </div>
               <div
                 style={{
-                  height:
-                    selectedOrganization?.value == ALL_TEAM_STATISTIC
-                      ? selectedTags.length > 5
-                        ? chartHeight + 2
-                        : chartHeight + 5
-                      : selectedTags.length > 1
-                        ? chartHeight - (selectedTags.length < 3 ? 1 : 2)
-                        : chartHeight + 5,
+                  height: timeRange.length > 10 ? 340 - 70 : '340px',
                 }}
                 className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'} pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
                 {!(dataChart.length == 1 && !dataChart[0].name) &&

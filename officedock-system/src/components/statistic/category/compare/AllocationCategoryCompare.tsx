@@ -478,6 +478,8 @@ const AllocationCategoryCompare = memo(
         );
 
         setProgressDataPairsLarge(largePairs);
+        setProgressDataPairsMedium([]);
+        setProgressDataPairsSmall([]);
       }
     }, [
       statisticAllTeamCategoryList,
