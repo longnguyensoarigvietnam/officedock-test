@@ -1642,6 +1642,7 @@ export const normalizeDurationsWithStatisticCategoryTaskDurations = (
   endDate: string;
   data: {
     organizationId: number | string;
+    organizationName?: string;
     categoryId: number | string;
     categoryName: string;
     categoryColor: string;

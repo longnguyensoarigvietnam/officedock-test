@@ -72,7 +72,7 @@ const useStatisticTaskDurations = ({
     const { data } = await api.get<StatisticsTaskDuration>(apiUrl, {
       signal,
     });
-    
+
     return data;
   };
 
@@ -80,7 +80,7 @@ const useStatisticTaskDurations = ({
   const {
     data: statisticTaskDurationsList,
     refetch: refetchStatisticTaskDurationsList,
-    isFetched: isFetchedStatisticTaskDurationsList,
+    isFetching: isFetchingStatisticTaskDurationsList,
   } = useQuery({
     queryKey: ['getStatisticTaskDurations', [filter]],
     queryFn: ({ signal }) => getStatisticTaskDurations({ signal }),
@@ -101,7 +101,7 @@ const useStatisticTaskDurations = ({
   return {
     statisticTaskDurationsList,
     refetchStatisticTaskDurationsList,
-    isFetchedStatisticTaskDurationsList,
+    isFetchingStatisticTaskDurationsList,
   };
 };
 

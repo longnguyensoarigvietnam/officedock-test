@@ -249,7 +249,7 @@ const StatisticBoard = () => {
     });
 
   // Get task durations for options that except ALL TEAM option
-  const { statisticTaskDurationsList, isFetchedStatisticTaskDurationsList } =
+  const { statisticTaskDurationsList, isFetchingStatisticTaskDurationsList } =
     useStatisticTaskDurations({
       filter: {
         fromDate: formatDateToYMD(startDate) || '',
@@ -266,7 +266,7 @@ const StatisticBoard = () => {
   // Get task durations for ALL TEAM option
   const {
     statisticAllTeamTaskDurationsList,
-    isFetchedStatisticAllTeamTaskDurationsList,
+    isFetchingStatisticAllTeamTaskDurationsList,
   } = useStatisticAllTeamTaskDurations({
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
@@ -280,7 +280,7 @@ const StatisticBoard = () => {
   // Get compared task durations for options that except ALL TEAM option
   const {
     statisticTaskDurationsCompareList,
-    isFetchedStatisticTaskDurationsCompareList,
+    isFetchingStatisticTaskDurationsCompareList,
   } = useStatisticTaskDurationsCompare({
     filter: {
       fromDate: formatDateToYMD(startDateCompare) || '',
@@ -298,7 +298,7 @@ const StatisticBoard = () => {
   // Get compared task durations for ALL TEAM option
   const {
     statisticAllTeamTaskDurationsCompareList,
-    isFetchedStatisticAllTeamTaskDurationsCompareList,
+    isFetchingStatisticAllTeamTaskDurationsCompareList,
   } = useStatisticAllTeamTaskDurationsCompare({
     filter: {
       fromDate: formatDateToYMD(startDateCompare) || '',
@@ -667,17 +667,17 @@ const StatisticBoard = () => {
             statisticAllTeamTaskDurationsCompareList={
               statisticAllTeamTaskDurationsCompareList
             }
-            isFetchedStatisticAllTeamTaskDurationsList={
-              isFetchedStatisticAllTeamTaskDurationsList
+            isFetchingStatisticAllTeamTaskDurationsList={
+              isFetchingStatisticAllTeamTaskDurationsList
             }
-            isFetchedStatisticAllTeamTaskDurationsCompareList={
-              isFetchedStatisticAllTeamTaskDurationsCompareList
+            isFetchingStatisticAllTeamTaskDurationsCompareList={
+              isFetchingStatisticAllTeamTaskDurationsCompareList
             }
-            isFetchedStatisticTaskDurationsCompareList={
-              isFetchedStatisticTaskDurationsCompareList
+            isFetchingStatisticTaskDurationsCompareList={
+              isFetchingStatisticTaskDurationsCompareList
             }
-            isFetchedStatisticTaskDurationsList={
-              isFetchedStatisticTaskDurationsList
+            isFetchingStatisticTaskDurationsList={
+              isFetchingStatisticTaskDurationsList
             }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
@@ -718,11 +718,11 @@ const StatisticBoard = () => {
             statisticAllTeamTaskDurationsList={
               statisticAllTeamTaskDurationsList
             }
-            isFetchedStatisticTaskDurationsList={
-              isFetchedStatisticTaskDurationsList
+            isFetchingStatisticTaskDurationsList={
+              isFetchingStatisticTaskDurationsList
             }
-            isFetchedStatisticAllTeamTaskDurationsList={
-              isFetchedStatisticAllTeamTaskDurationsList
+            isFetchingStatisticAllTeamTaskDurationsList={
+              isFetchingStatisticAllTeamTaskDurationsList
             }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
@@ -737,11 +737,11 @@ const StatisticBoard = () => {
             statisticAllTeamTaskDurationsList={
               statisticAllTeamTaskDurationsList
             }
-            isFetchedStatisticTaskDurationsList={
-              isFetchedStatisticTaskDurationsList
+            isFetchingStatisticTaskDurationsList={
+              isFetchingStatisticTaskDurationsList
             }
-            isFetchedStatisticAllTeamTaskDurationsList={
-              isFetchedStatisticAllTeamTaskDurationsList
+            isFetchingStatisticAllTeamTaskDurationsList={
+              isFetchingStatisticAllTeamTaskDurationsList
             }
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}

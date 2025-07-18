@@ -101,10 +101,10 @@ type Props = {
   statisticAllTeamTaskDurationsCompareList:
     | StatisticsAllTeamTaskDuration
     | undefined;
-  isFetchedStatisticAllTeamTaskDurationsList: boolean;
-  isFetchedStatisticAllTeamTaskDurationsCompareList: boolean;
-  isFetchedStatisticTaskDurationsCompareList: boolean;
-  isFetchedStatisticTaskDurationsList: boolean;
+  isFetchingStatisticAllTeamTaskDurationsList: boolean;
+  isFetchingStatisticAllTeamTaskDurationsCompareList: boolean;
+  isFetchingStatisticTaskDurationsCompareList: boolean;
+  isFetchingStatisticTaskDurationsList: boolean;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -116,10 +116,10 @@ const LineChartCompare = ({
   statisticTaskDurationsCompareList,
   statisticAllTeamTaskDurationsList,
   statisticAllTeamTaskDurationsCompareList,
-  isFetchedStatisticAllTeamTaskDurationsList,
-  isFetchedStatisticAllTeamTaskDurationsCompareList,
-  isFetchedStatisticTaskDurationsCompareList,
-  isFetchedStatisticTaskDurationsList,
+  isFetchingStatisticAllTeamTaskDurationsList,
+  isFetchingStatisticAllTeamTaskDurationsCompareList,
+  isFetchingStatisticTaskDurationsCompareList,
+  isFetchingStatisticTaskDurationsList,
   startDate,
   endDate,
   startDateCompare,
@@ -522,7 +522,8 @@ const LineChartCompare = ({
         totalDurationsForStatistic(compareTotalDurationList),
       );
 
-      const mergedCategories = mergeMyDockLineChartTableItems(tableDetail) || [];
+      const mergedCategories =
+        mergeMyDockLineChartTableItems(tableDetail) || [];
       setTableData(mergedCategories);
 
       if (
@@ -746,7 +747,8 @@ const LineChartCompare = ({
         totalDurationsForStatistic(compareTotalDurationList),
       );
 
-      const mergedCategories = mergeMyDockLineChartTableItems(tableDetail) || [];
+      const mergedCategories =
+        mergeMyDockLineChartTableItems(tableDetail) || [];
       setTableData(mergedCategories);
 
       if (
@@ -1290,10 +1292,10 @@ const LineChartCompare = ({
               </div>
             </div>
           </div>
-          {(isFetchedStatisticTaskDurationsList &&
-            isFetchedStatisticTaskDurationsCompareList) ||
-          (isFetchedStatisticAllTeamTaskDurationsList &&
-            isFetchedStatisticAllTeamTaskDurationsCompareList) ? (
+          {(!isFetchingStatisticTaskDurationsList &&
+            !isFetchingStatisticTaskDurationsCompareList) ||
+          (!isFetchingStatisticAllTeamTaskDurationsList &&
+            !isFetchingStatisticAllTeamTaskDurationsCompareList) ? (
             <div
               style={{ position: 'relative' }}
               className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
@@ -1324,10 +1326,10 @@ const LineChartCompare = ({
           )}
 
           <div className="px-[30px]">
-            {(isFetchedStatisticTaskDurationsList &&
-              isFetchedStatisticTaskDurationsCompareList) ||
-              (isFetchedStatisticAllTeamTaskDurationsList &&
-                isFetchedStatisticAllTeamTaskDurationsCompareList && (
+            {(!isFetchingStatisticTaskDurationsList &&
+              !isFetchingStatisticTaskDurationsCompareList) ||
+              (!isFetchingStatisticAllTeamTaskDurationsList &&
+                !isFetchingStatisticAllTeamTaskDurationsCompareList && (
                   <>
                     <div className="flex gap-8 items-center justify-end flex-wrap mb-3">
                       <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
@@ -1366,10 +1368,10 @@ const LineChartCompare = ({
                   </>
                 ))}
 
-            {(isFetchedStatisticTaskDurationsList &&
-              isFetchedStatisticTaskDurationsCompareList) ||
-            (isFetchedStatisticAllTeamTaskDurationsList &&
-              isFetchedStatisticAllTeamTaskDurationsCompareList) ? (
+            {(!isFetchingStatisticTaskDurationsList &&
+              !isFetchingStatisticTaskDurationsCompareList) ||
+            (!isFetchingStatisticAllTeamTaskDurationsList &&
+              !isFetchingStatisticAllTeamTaskDurationsCompareList) ? (
               <Table
                 className={`w-full border border-gray-300 mt-5 rounded-md ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>
                 <thead>

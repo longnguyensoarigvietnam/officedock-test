@@ -7,6 +7,7 @@ import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailSt
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 
 import { EventWorkCategory } from '@constants/enums';
+import { ALL_TEAM_STATISTIC, SUB_TEAMS } from '@constants';
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
   DataTaskModalStatisticType,
@@ -20,7 +21,6 @@ import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 import FilterTag from './filter/FilterTag';
-import { ALL_TEAM_STATISTIC, SUB_TEAMS } from '@constants';
 
 type Props = {
   startDate: Date;

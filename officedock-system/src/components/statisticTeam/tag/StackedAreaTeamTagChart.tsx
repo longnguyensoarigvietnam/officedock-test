@@ -267,7 +267,7 @@ const StackedAreaTeamTagChart = ({
   // Get user task durations
   const {
     statisticUserTaskDurationsList,
-    isFetchedStatisticUserTaskDurationsList,
+    isFetchingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
     filter: {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -309,8 +309,9 @@ const StackedAreaTeamTagChart = ({
 
   const {
     statisticAllTeamTaskDurationsList,
-    isFetchedStatisticAllTeamTaskDurationsList,
+    isFetchingStatisticAllTeamTaskDurationsList,
   } = useStatisticAllTeamTaskDurations({
+    isTeam: true,
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
@@ -1378,9 +1379,9 @@ const StackedAreaTeamTagChart = ({
               </div>
             </div>
           </div>
-          {(!isFetchedStatisticUserTaskDurationsList &&
+          {(isFetchingStatisticUserTaskDurationsList &&
             selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-          (!isFetchedStatisticAllTeamTaskDurationsList &&
+          (isFetchingStatisticAllTeamTaskDurationsList &&
             selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
             <RowSkeleton
               numberOfRows={1}
@@ -1547,9 +1548,9 @@ const StackedAreaTeamTagChart = ({
             </div>
           )}
           <div className="px-[30px]">
-            {(!isFetchedStatisticUserTaskDurationsList &&
+            {(isFetchingStatisticUserTaskDurationsList &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-            (!isFetchedStatisticAllTeamTaskDurationsList &&
+            (isFetchingStatisticAllTeamTaskDurationsList &&
               selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <StatisticLineChartTableSkeleton />
             ) : (

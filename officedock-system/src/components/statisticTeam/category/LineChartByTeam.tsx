@@ -357,7 +357,7 @@ const LineChartByTeam = ({
   };
 
   // Get table info (statistic team categories)
-  const { isLoadingStatisticTableInTeamLineChart } =
+  const { isFetchingStatisticTableInTeamLineChart } =
     useStatisticTableInTeamLineChart({
       filter: {
         fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -472,7 +472,7 @@ const LineChartByTeam = ({
   // Get user task durations
   const {
     statisticUserTaskDurationsList,
-    isLoadingStatisticUserTaskDurationsList,
+    isFetchingStatisticUserTaskDurationsList,
   } = useStatisticUserTaskDurations({
     filter: {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -514,7 +514,7 @@ const LineChartByTeam = ({
   // Get user task durations (all team case)
   const {
     statisticTeamDockAllTeamLineChartTaskDurationsList,
-    isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsList,
+    isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList,
   } = useStatisticTeamDockAllTeamLineChartTaskDurations({
     filter: {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
@@ -599,7 +599,8 @@ const LineChartByTeam = ({
     const tooltipEl = tooltipRef.current as TooltipDiv;
 
     if (!tooltipEl || !tooltipModel) return;
-    if(selectedOrganization?.value != ALL_TEAM_STATISTIC && !selectedCategory) return;
+    if (selectedOrganization?.value != ALL_TEAM_STATISTIC && !selectedCategory)
+      return;
 
     if (!tooltipModel.dataPoints || tooltipModel.dataPoints.length === 0) {
       tooltipEl.style.display = 'none';
@@ -929,7 +930,7 @@ const LineChartByTeam = ({
         normalizeDurationUsersWithTeamDockStatisticAllTeam(
           statisticTeamDockAllTeamLineChartTaskDurationsList,
           selectedOrganizationOptionInTable,
-          selectedOrganizationSideBar?.value as number
+          selectedOrganizationSideBar?.value as number,
         );
       if (normalizeDataObject.durations.length) {
         const durationList = normalizeDataObject.durations.map((duration) => ({
@@ -1136,8 +1137,7 @@ const LineChartByTeam = ({
                     info.row.original.organizationId,
                   );
                   setSelectedOrganizationOptionInTable(
-                    info.row.original
-                      .categoryId as AllTeamStatisticOption,
+                    info.row.original.categoryId as AllTeamStatisticOption,
                   );
                 }
               }}
@@ -1583,8 +1583,8 @@ const LineChartByTeam = ({
                         isChecked={selectedMembers.includes(member.id)}
                         color={member.color}
                         disable={
-                          isLoadingStatisticTableInTeamLineChart ||
-                          isLoadingStatisticUserTaskDurationsList
+                          isFetchingStatisticTableInTeamLineChart ||
+                          isFetchingStatisticUserTaskDurationsList
                         }
                         onChange={(state) => {
                           setLineChartTableData([]);
@@ -1650,10 +1650,10 @@ const LineChartByTeam = ({
             <></>
           )}
 
-          {(!isLoadingStatisticUserTaskDurationsList &&
-            !isLoadingStatisticTableInTeamLineChart &&
+          {(!isFetchingStatisticUserTaskDurationsList &&
+            !isFetchingStatisticTableInTeamLineChart &&
             selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-          (isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsList &&
+          (!isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList &&
             selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
             <div
               style={{ position: 'relative' }}
@@ -1685,10 +1685,10 @@ const LineChartByTeam = ({
           )}
 
           <div className="px-[30px]">
-            {(!isLoadingStatisticUserTaskDurationsList &&
-              !isLoadingStatisticTableInTeamLineChart &&
+            {(!isFetchingStatisticUserTaskDurationsList &&
+              !isFetchingStatisticTableInTeamLineChart &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-            (isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsList &&
+            (!isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList &&
               selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <div className="flex gap-8 items-center justify-end flex-wrap">
                 {legendList.map((label, index) => {
@@ -1708,9 +1708,9 @@ const LineChartByTeam = ({
               <></>
             )}
 
-            {(isLoadingStatisticTableInTeamLineChart &&
+            {(isFetchingStatisticTableInTeamLineChart &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-            (!isFetchedStatisticTeamDockAllTeamLineChartTaskDurationsList &&
+            (isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList &&
               selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <StatisticLineChartTableSkeleton />
             ) : (

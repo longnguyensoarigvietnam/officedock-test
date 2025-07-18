@@ -72,7 +72,7 @@ const useStatisticTagTaskDurationsCompare = ({
   const {
     data: statisticTagTaskDurationsCompareList,
     refetch: refetchStatisticTagTaskDurationsCompareList,
-    isFetched: isFetchedStatisticTagTaskDurationsCompareList,
+    isFetching: isFetchingStatisticTagTaskDurationsCompareList,
   } = useQuery({
     queryKey: ['getStatisticTagTaskDurationsCompare', [filter]],
     queryFn: ({ signal }) => getStatisticTagTaskDurationsCompare({ signal }),
@@ -93,7 +93,7 @@ const useStatisticTagTaskDurationsCompare = ({
   return {
     statisticTagTaskDurationsCompareList,
     refetchStatisticTagTaskDurationsCompareList,
-    isFetchedStatisticTagTaskDurationsCompareList,
+    isFetchingStatisticTagTaskDurationsCompareList,
   };
 };
 

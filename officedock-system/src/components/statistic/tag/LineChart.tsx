@@ -80,8 +80,8 @@ type Props = {
   endDate: Date | null;
   statisticTaskDurationsListTag: StatisticsTaskDurationTag | undefined;
   statisticAllTeamTaskDurationsList: StatisticsAllTeamTaskDuration | undefined;
-  isFetchedStatisticTaskDurationsListTag: boolean;
-  isFetchedStatisticAllTeamTaskDurationsList: boolean;
+  isFetchingStatisticTaskDurationsListTag: boolean;
+  isFetchingStatisticAllTeamTaskDurationsList: boolean;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -93,8 +93,8 @@ const LineChart = ({
   endDate,
   statisticTaskDurationsListTag,
   statisticAllTeamTaskDurationsList,
-  isFetchedStatisticTaskDurationsListTag,
-  isFetchedStatisticAllTeamTaskDurationsList,
+  isFetchingStatisticTaskDurationsListTag,
+  isFetchingStatisticAllTeamTaskDurationsList,
   handleSelectOrganization,
   handleSelectLarge,
   handleSelectMedium,
@@ -1027,9 +1027,9 @@ const LineChart = ({
               </div>
             </div>
           </div>
-          {(!isFetchedStatisticTaskDurationsListTag &&
+          {(isFetchingStatisticTaskDurationsListTag &&
             selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-          (!isFetchedStatisticAllTeamTaskDurationsList &&
+          (isFetchingStatisticAllTeamTaskDurationsList &&
             selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
             <RowSkeleton
               numberOfRows={1}
@@ -1060,9 +1060,9 @@ const LineChart = ({
           )}
 
           <div className="px-[30px]">
-            {(isFetchedStatisticTaskDurationsListTag &&
+            {(!isFetchingStatisticTaskDurationsListTag &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-              (isFetchedStatisticAllTeamTaskDurationsList &&
+              (!isFetchingStatisticAllTeamTaskDurationsList &&
                 selectedOrganization?.value == ALL_TEAM_STATISTIC && (
                   <div className="flex gap-8 items-center justify-end flex-wrap">
                     {standardLabelsInfo.map((label, index) => {
@@ -1080,9 +1080,9 @@ const LineChart = ({
                   </div>
                 ))}
 
-            {(!isFetchedStatisticTaskDurationsListTag &&
+            {(isFetchingStatisticTaskDurationsListTag &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-            (!isFetchedStatisticAllTeamTaskDurationsList &&
+            (isFetchingStatisticAllTeamTaskDurationsList &&
               selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <StatisticLineChartTableSkeleton />
             ) : (
