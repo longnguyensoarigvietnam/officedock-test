@@ -2004,7 +2004,7 @@ export const mergeTeamDockLineChartTableItems = (
     // Merge userList
     item.userList.forEach((user) => {
       const existingUser = grouped[organizationId].userList.find(
-        (u) => u.userId === user.userId,
+        (member) => `${member.userId}${member.userName}` === `${user.userId}${user.userName}`,
       );
 
       const userInfo = {

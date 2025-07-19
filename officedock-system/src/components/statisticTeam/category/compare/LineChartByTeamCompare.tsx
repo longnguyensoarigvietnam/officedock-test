@@ -1158,7 +1158,6 @@ const LineChartByTeamCompare = ({
           selectedOrganizationOptionInTable,
           selectedOrganizationSideBar?.value as number,
         );
-
       if (
         normalizeStandardTaskDurations?.data &&
         normalizeStandardTaskDurations?.data?.length > 0
