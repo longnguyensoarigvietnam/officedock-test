@@ -224,6 +224,9 @@ const PercentageTagsCompare = ({
           statisticAllTeamCategoryList.largeCategories || [],
         ),
       );
+      setDataChartMedium([]);
+      setDataChartSmall([]);
+      setDataChartCategory([]);
     }
   }, [statisticAllTeamCategoryList, selectedOrganization?.value]);
 
@@ -265,6 +268,9 @@ const PercentageTagsCompare = ({
           statisticAllTeamCategoryCompareList.largeCategories || [],
         ),
       );
+      setDataChartMediumCompare([]);
+      setDataChartSmallCompare([]);
+      setDataChartCategoryCompare([]);
     }
   }, [statisticAllTeamCategoryCompareList, selectedOrganization?.value]);
 
