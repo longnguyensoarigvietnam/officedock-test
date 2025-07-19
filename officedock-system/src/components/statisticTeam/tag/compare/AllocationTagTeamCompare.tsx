@@ -546,10 +546,15 @@ const AllocationTagTeamCompare = memo(
                         <div className="font-medium text-sm flex gap-1 mt-[10px]">
                           合計
                           <span>
-                            {totalDurationLarge &&
-                            progressDataPairsLarge.length > 0
-                              ? formatTimeToJapanese(totalDurationLarge)
-                              : '-'}
+                            {selectedOrganization?.value == ALL_TEAM_STATISTIC
+                              ? totalDurationLarge &&
+                                progressDataAllTeam.length > 0
+                                ? formatTimeToJapanese(totalDurationLarge)
+                                : '-'
+                              : totalDurationLarge &&
+                                  progressDataPairsLarge.length > 0
+                                ? formatTimeToJapanese(totalDurationLarge)
+                                : '-'}
                           </span>
                         </div>
                       </div>
@@ -574,10 +579,19 @@ const AllocationTagTeamCompare = memo(
                         <div className="font-medium text-sm flex gap-1 mt-[10px]">
                           合計
                           <span>
-                            {totalDurationLargeCompare &&
-                            progressDataPairsLarge.length > 0
-                              ? formatTimeToJapanese(totalDurationLargeCompare)
-                              : '-'}
+                            {selectedOrganization?.value == ALL_TEAM_STATISTIC
+                              ? totalDurationLargeCompare &&
+                                progressDataAllTeam.length > 0
+                                ? formatTimeToJapanese(
+                                    totalDurationLargeCompare,
+                                  )
+                                : '-'
+                              : totalDurationLargeCompare &&
+                                  progressDataPairsLarge.length > 0
+                                ? formatTimeToJapanese(
+                                    totalDurationLargeCompare,
+                                  )
+                                : '-'}
                           </span>
                         </div>
                       </div>
