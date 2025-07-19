@@ -470,7 +470,7 @@ const StackedAreaChart = ({
     };
   });
 
-  const isLargerTime = timeRange?.length > 12;
+  const isLargerTime = timeRange?.length > 7;
 
   const options = {
     chart: {

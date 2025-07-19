@@ -224,6 +224,9 @@ const PercentageTagsCompare = ({
           statisticAllTeamCategoryList.largeCategories || [],
         ),
       );
+      setDataChartMedium([]);
+      setDataChartSmall([]);
+      setDataChartCategory([]);
     }
   }, [statisticAllTeamCategoryList, selectedOrganization?.value]);
 
@@ -265,6 +268,9 @@ const PercentageTagsCompare = ({
           statisticAllTeamCategoryCompareList.largeCategories || [],
         ),
       );
+      setDataChartMediumCompare([]);
+      setDataChartSmallCompare([]);
+      setDataChartCategoryCompare([]);
     }
   }, [statisticAllTeamCategoryCompareList, selectedOrganization?.value]);
 
@@ -377,6 +383,9 @@ const PercentageTagsCompare = ({
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
                         isTag
+                        isAllTeamOption={
+                          selectedOrganization?.value == ALL_TEAM_STATISTIC
+                        }
                         data={dataChartLarge}
                         startDate={startDate}
                         endDate={endDate}
@@ -387,7 +396,7 @@ const PercentageTagsCompare = ({
                         startDateCompare={startDateCompare}
                         endDateCompare={endDateCompare}
                         dataCompare={dataChartLargeCompare}
-                        handleClickChart={(_data: number) => {}}
+                        handleClickChart={() => {}}
                         handleClickTooltip={(
                           id: number | null,
                           isCompare: boolean,
@@ -439,7 +448,7 @@ const PercentageTagsCompare = ({
                         dataCompare={dataChartMediumCompare}
                         totalDuration={totalDurationMedium}
                         totalDurationCompare={totalDurationMediumCompare}
-                        handleClickChart={(_data: number) => {}}
+                        handleClickChart={() => {}}
                         handleClickTooltip={(
                           id: number | null,
                           isCompare: boolean,
@@ -491,7 +500,7 @@ const PercentageTagsCompare = ({
                         totalDurationCompare={totalDurationSmallCompare}
                         isLoading={isLoadingMedium}
                         isLoadingCompare={isLoadingMediumCompare}
-                        handleClickChart={(_data: number) => {}}
+                        handleClickChart={() => {}}
                         handleClickTooltip={(
                           id: number | null,
                           isCompare: boolean,
@@ -544,7 +553,7 @@ const PercentageTagsCompare = ({
                         totalDurationCompare={totalDurationCategoryCompare}
                         isLoading={isLoadingSmall}
                         isLoadingCompare={isLoadingSmallCompare}
-                        handleClickChart={(_data: number) => {}}
+                        handleClickChart={() => {}}
                         handleClickTooltip={(
                           id: number | null,
                           isCompare: boolean,

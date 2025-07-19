@@ -154,6 +154,9 @@ const StatisticTagBoard = () => {
       setLargeOptions([]);
       setTotalDurationLarge(data.largeTotalDuration || DEFAULT_TIME_TEXT);
       setTotalDurationTask(data.largeTotalDuration || DEFAULT_TIME_TEXT);
+      setTotalDurationMedium(DEFAULT_TIME_TEXT);
+      setTotalDurationSmall(DEFAULT_TIME_TEXT);
+      setTotalDurationCategory(DEFAULT_TIME_TEXT);
     },
   });
 

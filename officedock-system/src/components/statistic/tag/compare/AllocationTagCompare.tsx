@@ -283,7 +283,7 @@ const AllocationTagCompare = memo(
                         .map((team) => team?.organizationName || '') || []
                     : item?.data
                         ?.slice(0, 3)
-                        .map((category) => category?.categoryName || '') || [],
+                        .map((tag) => tag?.tagName || '') || [],
               },
               compare: null,
             });
@@ -310,7 +310,7 @@ const AllocationTagCompare = memo(
                         .map((team) => team?.organizationName || '') || []
                     : compareItem?.data
                         ?.slice(0, 3)
-                        .map((category) => category?.categoryName || '') || [],
+                        .map((tag) => tag?.tagName || '') || [],
               };
             } else {
               mergedMap.set(compareItem.organizationId, {
@@ -330,7 +330,7 @@ const AllocationTagCompare = memo(
                           .map((team) => team?.organizationName || '') || []
                       : compareItem?.data
                           ?.slice(0, 3)
-                          .map((category) => category?.categoryName || '') ||
+                          .map((tag) => tag?.tagName || '') ||
                         [],
                 },
               });
@@ -347,6 +347,9 @@ const AllocationTagCompare = memo(
         );
 
         setProgressDataPairsLarge(largePairs);
+        setProgressDataPairsMedium([]);
+        setProgressDataPairsSmall([]);
+        setProgressDataPairsCategory([]);
       }
     }, [
       statisticAllTeamCategoryList,
