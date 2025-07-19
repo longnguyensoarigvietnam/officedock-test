@@ -152,8 +152,8 @@ const StatisticTagBoard = () => {
     condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
     onSuccess: (data) => {
       setLargeOptions([]);
-      setTotalDurationLarge(data.largeTotalDuration);
-      setTotalDurationTask(data.largeTotalDuration);
+      setTotalDurationLarge(data.largeTotalDuration || DEFAULT_TIME_TEXT);
+      setTotalDurationTask(data.largeTotalDuration || DEFAULT_TIME_TEXT);
     },
   });
 
@@ -217,8 +217,12 @@ const StatisticTagBoard = () => {
       condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
       onSuccess: (data) => {
         setLargeOptions([]);
-        setTotalDurationLargeCompare(data.largeTotalDuration);
-        setTotalDurationTaskCompare(data.largeTotalDuration);
+        setTotalDurationLargeCompare(
+          data.largeTotalDuration || DEFAULT_TIME_TEXT,
+        );
+        setTotalDurationTaskCompare(
+          data.largeTotalDuration || DEFAULT_TIME_TEXT,
+        );
       },
     });
 

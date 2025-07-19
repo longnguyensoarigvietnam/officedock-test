@@ -1007,7 +1007,7 @@ def _handle_structure_data_for_team(
             else:
                 response_data[key]["data"] = sorted(
                     data["data"],
-                    key=lambda x: x["duration"],
+                    key=lambda x: time_str_to_timedelta(x["duration"]),
                     reverse=True,
                 )
 

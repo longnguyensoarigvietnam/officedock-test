@@ -617,10 +617,16 @@ const AllocationTeamCategoryCompare = memo(
                               </div>
                               <div className="font-medium text-sm">
                                 合計
-                                {totalDurationLarge &&
-                                progressDataLarge.length > 0
-                                  ? formatTimeToJapanese(totalDurationLarge)
-                                  : '-'}
+                                {selectedOrganization?.value ==
+                                ALL_TEAM_STATISTIC
+                                  ? totalDurationLarge &&
+                                    progressDataAllTeam.length > 0
+                                    ? formatTimeToJapanese(totalDurationLarge)
+                                    : '-'
+                                  : totalDurationLarge &&
+                                      progressDataLarge.length > 0
+                                    ? formatTimeToJapanese(totalDurationLarge)
+                                    : '-'}
                               </div>
                             </div>
                             <div

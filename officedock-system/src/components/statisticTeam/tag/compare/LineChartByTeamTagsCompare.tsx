@@ -788,7 +788,8 @@ const LineChartByTeamTagsCompare = ({
     const tooltipEl = tooltipRef.current as TooltipDiv;
 
     if (!tooltipEl || !tooltipModel) return;
-    if(selectedOrganization?.value != ALL_TEAM_STATISTIC && !selectedTag) return;
+    if (selectedOrganization?.value != ALL_TEAM_STATISTIC && !selectedTag)
+      return;
 
     if (!tooltipModel.dataPoints || tooltipModel.dataPoints.length === 0) {
       tooltipEl.style.display = 'none';
@@ -854,7 +855,14 @@ const LineChartByTeamTagsCompare = ({
     tooltipEl._reactRoot.render(
       <TeamDockCompareLineChartTooltip
         data={matchingDataPoints}
-        selectedOptionName={selectedTag?.name || ''}
+        selectedOptionName={
+          selectedOrganization?.value != ALL_TEAM_STATISTIC
+            ? selectedTag?.name || ''
+            : selectedOrganizationOptionInTable ==
+                AllTeamStatisticOption.MAIN_TEAM
+              ? selectedOrganizationSideBar?.label || ''
+              : selectedOrganizationOptionInTable
+        }
       />,
     );
 
@@ -1287,6 +1295,14 @@ const LineChartByTeamTagsCompare = ({
           true,
         ) || [];
       setMergedTableData(mergedCategories);
+      const foundSelectedOrganizationOption = mergedCategories.find(
+        (org) => org.tagId == selectedOrganizationOptionInTable,
+      );
+      if (!foundSelectedOrganizationOption) {
+        setSelectedOrganizationOptionInTable(
+          String(mergedCategories[0]?.tagId) as AllTeamStatisticOption,
+        );
+      }
 
       setTagCollapseStatuses(
         mergedCategories.map((organization) => {

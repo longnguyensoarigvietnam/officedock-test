@@ -1050,6 +1050,8 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 ChatRoomTypes.SELF.value,
             ],
         ).delete()
+        # Block access token for logged user
+        LoginToken.objects.filter(user=instance).update(is_block=True)
         # Send socket for logout user deleted
         send_web_socket_event(
             {

@@ -711,12 +711,14 @@ class SystemUserInviteSerializer(BaseUserSerializer):
         """
         instance = self.instance
 
-        if instance and value:
+        if instance and value is not None:
             # Collect the set of organization IDs provided in the input
             orgs_to_update = set(item["organization"].id for item in value)
             # Collect the set of organization IDs where the user is in charge of tasks
             orgs_with_tasks = set(
-                instance.in_charge_tasks.values_list("organization", flat=True)
+                instance.in_charge_tasks.filter(
+                    organization__isnull=False
+                ).values_list("organization", flat=True)
             )
             # Find organizations with tasks that are being removed
             orgs_being_removed = orgs_with_tasks - orgs_to_update

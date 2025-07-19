@@ -52,6 +52,7 @@ import {
 import { formatShowDateJapanese } from '@utils/date';
 import {
   hasPermissionInArray,
+  removeDuplicateOptions,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
 
@@ -791,7 +792,7 @@ const ActionsTemplateModal = ({
                       classNameOption="!text-xs"
                       classNameError="!text-xs"
                       disabled={isCheckActionPermission}
-                      options={dataOptionsCategoryLarge}
+                      options={removeDuplicateOptions(dataOptionsCategoryLarge)}
                       selectedOption={dataOptionsCategoryLarge.find(
                         (element) => element.value === value?.value,
                       )}
@@ -828,7 +829,9 @@ const ActionsTemplateModal = ({
                           classNameOption="!text-xs"
                           classNameError="!text-xs"
                           disabled={isCheckActionPermission}
-                          options={dataOptionsCategoryMedium}
+                          options={removeDuplicateOptions(
+                            dataOptionsCategoryMedium,
+                          )}
                           selectedOption={dataOptionsCategoryMedium.find(
                             (element) => element.value === value?.value,
                           )}
@@ -861,7 +864,9 @@ const ActionsTemplateModal = ({
                         classNameOption="!text-xs"
                         classNameError="!text-xs"
                         disabled={isCheckActionPermission}
-                        options={dataOptionsCategorySmall}
+                        options={removeDuplicateOptions(
+                          dataOptionsCategorySmall,
+                        )}
                         selectedOption={dataOptionsCategorySmall.find(
                           (element) => element.value === value?.value,
                         )}

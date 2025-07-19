@@ -570,7 +570,8 @@ const LineChartByTeamTags = ({
     const tooltipEl = tooltipRef.current as TooltipDiv;
 
     if (!tooltipEl || !tooltipModel) return;
-    if(selectedOrganization?.value != ALL_TEAM_STATISTIC && !selectedTag) return;
+    if (selectedOrganization?.value != ALL_TEAM_STATISTIC && !selectedTag)
+      return;
 
     if (!tooltipModel.dataPoints || tooltipModel.dataPoints.length === 0) {
       tooltipEl.style.display = 'none';
@@ -631,7 +632,14 @@ const LineChartByTeamTags = ({
     tooltipEl._reactRoot.render(
       <TeamDockLineChartTooltip
         data={matchingDataPoints}
-        selectedOptionName={selectedTag?.name || ''}
+        selectedOptionName={
+          selectedOrganization?.value != ALL_TEAM_STATISTIC
+            ? selectedTag?.name || ''
+            : selectedOrganizationOptionInTable ==
+                AllTeamStatisticOption.MAIN_TEAM
+              ? selectedOrganizationSideBar?.label || ''
+              : selectedOrganizationOptionInTable
+        }
       />,
     );
 
@@ -887,8 +895,9 @@ const LineChartByTeamTags = ({
       statisticTeamDockAllTeamLineChartTaskDurationsList
     ) {
       let labelList: string[] = [];
-      const legendList: { name: string; color: string }[] = [];
+      let legendList: { name: string; color: string }[] = [];
       let tableDetail = [];
+      const totalDurationList: string[] = [];
 
       // Map: organizationId -> dataset info
       const datasetMap = new Map<
@@ -900,7 +909,7 @@ const LineChartByTeamTags = ({
         normalizeDurationUsersWithTeamDockStatisticAllTeam(
           statisticTeamDockAllTeamLineChartTaskDurationsList,
           selectedOrganizationOptionInTable,
-          selectedOrganizationSideBar?.value as number
+          selectedOrganizationSideBar?.value as number,
         );
       if (normalizeDataObject.durations.length) {
         const durationList = normalizeDataObject.durations.map((duration) => ({
@@ -1000,13 +1009,11 @@ const LineChartByTeamTags = ({
           labels: labelList,
           datasets: Array.from(datasetMap.values()),
         });
-        setLegendList(legendList);
       } else {
         setLineChartData({
           labels: [],
           datasets: [],
         });
-        setLegendList([]);
         setImages([]);
       }
 
@@ -1014,6 +1021,26 @@ const LineChartByTeamTags = ({
         tableDetail = buildTableDetailWithAllTeamOption(
           normalizeDataObject.data,
         );
+        legendList =
+          tableDetail
+            ?.find((org) => org.tagId == selectedOrganizationOptionInTable)
+            ?.userList.map((user) => {
+              return {
+                color: user.userAvatarColor,
+                name: user.userName,
+              };
+            }) || [];
+        tableDetail.forEach((detail) => {
+          totalDurationList.push(detail.tagDuration);
+        });
+        const foundSelectedOrganizationOption = tableDetail.find(
+          (org) => org.tagId == selectedOrganizationOptionInTable,
+        );
+        if (!foundSelectedOrganizationOption) {
+          setSelectedOrganizationOptionInTable(tableDetail[0].tagId);
+        }
+        setTotalDuration(totalDurationsForStatistic(totalDurationList));
+        setLegendList(legendList);
         setTagCollapseStatuses(
           normalizeDataObject.data.map((organization) => {
             return {
@@ -1032,12 +1059,15 @@ const LineChartByTeamTags = ({
         setLineChartTableData(tableDetail);
       } else {
         setLineChartTableData([]);
+        setLegendList([]);
+        setTotalDuration(DEFAULT_TIME_TEXT);
       }
     }
   }, [
     statisticTeamDockAllTeamLineChartTaskDurationsList,
     selectedOrganizationSideBar?.value,
     selectedOrganization?.value,
+    selectedOrganizationOptionInTable,
   ]);
 
   // Sort by percent difference

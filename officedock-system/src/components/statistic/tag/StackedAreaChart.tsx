@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Chart from 'react-apexcharts';
 import {
@@ -109,7 +109,6 @@ const StackedAreaChart = ({
     selectedOrganization,
     selectedSmall,
     lineChartViewBy,
-    selectedTags,
     setLineChartViewBy,
   } = useContext(StatisticTagStateContext);
 
@@ -198,7 +197,7 @@ const StackedAreaChart = ({
         });
 
         setTableData(tableDetail);
-        setColorList(colorListData.reverse());
+        setColorList(colorListData);
       } else {
         setTableData([]);
       }
@@ -329,8 +328,6 @@ const StackedAreaChart = ({
       statisticAllTeamTaskDurationsList &&
       selectedOrganization?.value === ALL_TEAM_STATISTIC
     ) {
-      const baseColor = '#2E9267';
-
       const colorListData: string[] = [];
       const tableDetail: {
         tagId: number;
@@ -351,24 +348,21 @@ const StackedAreaChart = ({
       // ===== TABLE DATA =====
       if (normalizeDataObject?.data?.length > 0) {
         normalizeDataObject.data.forEach((data) => {
-          const finalColor =
-            data.color ||
-            (baseColor && lightenColor(baseColor, data?.percent || 0)) ||
-            getRandomColor();
+          const finalColor = data.color || getRandomColor();
 
           tableDetail.push({
             tagId: Number(data.organizationId),
             tagName: data.organizationName,
             tagDuration: data.duration,
             tagPercent: String(data?.percent || 0),
-            tagColor: finalColor,
+            tagColor: data.color,
           });
 
           colorListData.push(finalColor);
         });
 
         setTableData(tableDetail);
-        setColorList(colorListData);
+        setColorList(colorListData.reverse());
       } else {
         setTableData([]);
         setColorList([]);
@@ -496,7 +490,7 @@ const StackedAreaChart = ({
       },
     },
     legend: {
-      show: !(dataChart.length == 1 && !dataChart[0].name), // Not show legend with fake data
+      show: false,
       showForSingleSeries: true,
       position: 'bottom',
       horizontalAlign: 'right',
@@ -670,12 +664,15 @@ const StackedAreaChart = ({
           <div className="font-medium px-[18px] text-[16px] break-all line-clamp-3 text-left text-black flex gap-2 items-center">
             <div
               style={{
-                backgroundColor: info.row.original.tagColor
-                  ? lightenColor(
-                      '#2E9267' as string,
-                      Number(info.row.original.tagPercent),
-                    )
-                  : '',
+                backgroundColor:
+                  selectedOrganization?.value == ALL_TEAM_STATISTIC
+                    ? info.row.original.tagColor
+                    : info.row.original.tagColor
+                      ? lightenColor(
+                          '#2E9267' as string,
+                          Number(info.row.original.tagPercent),
+                        )
+                      : '',
               }}
               className={`w-4 h-4 min-w-[16px] rounded-[3px] flex items-center justify-center`}>
               <ImageRound
@@ -801,24 +798,6 @@ const StackedAreaChart = ({
   };
 
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const chartRef = useRef<HTMLDivElement>(null);
-  const [chartHeight, setChartHeight] = useState<number>(0);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (chartRef.current) {
-        const inner = chartRef.current.querySelector(
-          '.apexcharts-inner',
-        ) as HTMLElement;
-        if (inner) {
-          const { height } = inner.getBoundingClientRect();
-          setChartHeight(height);
-        }
-      }
-    }, 100);
-
-    return () => clearTimeout(timeout);
-  }, [dataChart]);
 
   return (
     <div
@@ -1036,23 +1015,27 @@ const StackedAreaChart = ({
               className={`!h-[380px] w-[calc(100%_-_60px)] mx-auto`}
             />
           ) : (
-            <div ref={chartRef} className="relative">
+            <div className="relative">
               <Chart
                 options={options as any}
                 series={dataChart}
                 type="area"
                 height={380}
               />
+              <div className="flex flex-wrap gap-x-[30px] gap-y-3 mt-4 justify-end px-[30px]">
+                {dataChart.map((s, index) => (
+                  <div key={index} className="flex items-center gap-2 mb-2">
+                    <div
+                      className="w-[10px] h-[10px]"
+                      style={{ backgroundColor: colorList[index] }}
+                    />
+                    <span className="text-xs text-[#77858F]">{s.name}</span>
+                  </div>
+                ))}
+              </div>
               <div
                 style={{
-                  height:
-                    selectedOrganization?.value == ALL_TEAM_STATISTIC
-                      ? selectedTags.length > 5
-                        ? chartHeight + 2
-                        : chartHeight + 5
-                      : selectedTags.length > 1
-                        ? chartHeight - (selectedTags.length < 3 ? 1 : 2)
-                        : chartHeight + 5,
+                  height: timeRange.length > 10 ? 340 - 70 : '340px',
                 }}
                 className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'} pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
                 {!(dataChart.length == 1 && !dataChart[0].name) &&

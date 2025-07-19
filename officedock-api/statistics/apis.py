@@ -1436,12 +1436,17 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
         calendar_org = user.company.get_calendar_organization()
+        user_list = None
         if not user_ids:
             users = [user]
         else:
             users = User.objects.filter(
                 id__in=split_id_from_string(user_ids)
             ).all()
+            if users:
+                user_list = users.values(
+                    "id", "profile__full_name", "avatar", "avatar_color"
+                )
         organization_ids = Organization.all_objects.filter(
             users__in=users
         ).values_list("id", flat=True)
@@ -1476,9 +1481,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
             fake_data["organization_name"] = CALENDAR
             fake_data["organization_id"] = calendar_org.id
         data = {"durations": []}
-        user_list = users.values(
-            "id", "profile__full_name", "avatar", "avatar_color"
-        )
+
         if is_tag_page:
             total_duration, data_list = process_merge_card_per_tag(
                 tag_ids,
@@ -1516,7 +1519,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                                 durations,
                                 team["organization_id"],
                                 team["organization_name"],
-                                total_duration,
+                                time_str_to_timedelta(team["duration"]),
                                 tag_ids,
                                 is_tag_page,
                             )
@@ -1532,7 +1535,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                                     durations,
                                     subteam["organization_id"],
                                     subteam["organization_name"],
-                                    total_duration,
+                                    time_str_to_timedelta(team["duration"]),
                                     tag_ids,
                                     is_tag_page,
                                 )
@@ -1620,7 +1623,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                                         filter_duration_by_range,
                                         sub["organization_id"],
                                         sub["organization_name"],
-                                        time_str_to_timedelta(sub["duration"]),
+                                        time_str_to_timedelta(team["duration"]),
                                         tag_ids,
                                         is_tag_page,
                                     )

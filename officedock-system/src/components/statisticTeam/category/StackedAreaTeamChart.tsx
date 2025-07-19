@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import Chart from 'react-apexcharts';
 import Image from 'next/image';
 import {
@@ -30,7 +30,6 @@ import {
 } from '@constants';
 
 import useStatisticAllTeamTaskDurations from '@hooks/useStatisticAllTeamTaskDurations';
-import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
@@ -54,6 +53,7 @@ import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import FilterTeamStatistic from './filter/FilterTeamStatistic';
+import useStatisticUserTaskDurationsAreaChart from '@hooks/useStatisticUserTaskDurationsAreaChart';
 
 type Props = {
   startDate: Date;
@@ -207,7 +207,7 @@ const StackedAreaTeamChart = ({
     } else {
       setSelectedMembers(listMemberTeam.map((user) => Number(user.id)));
     }
-  }, [orderingOptions?.user_ids, listMemberTeam]);
+  }, [orderingOptions?.user_ids, listMemberTeam, selectedOrganization]);
 
   const handleCategorySelection = (
     categoryList: StatisticCategoryInfo[] | undefined,
@@ -229,7 +229,7 @@ const StackedAreaTeamChart = ({
   const {
     statisticUserTaskDurationsList,
     isFetchingStatisticUserTaskDurationsList,
-  } = useStatisticUserTaskDurations({
+  } = useStatisticUserTaskDurationsAreaChart({
     filter: {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
@@ -258,15 +258,14 @@ const StackedAreaTeamChart = ({
           : selectedMembers?.filter(Boolean).join(','),
     },
     condition: [
-      selectedOrganization?.value != ALL_TEAM_STATISTIC &&
-        Boolean(
-          areaTableData.length > 0 &&
-            isTableDataRendered &&
-            selectedCategory?.id &&
-            selectedOrganizationInTable,
-        ),
+      Boolean(
+        areaTableData.length > 0 &&
+          selectedCategory?.id &&
+          selectedOrganizationInTable,
+      ),
     ],
   });
+
   // Get task durations for ALL TEAM option
   const {
     statisticAllTeamTaskDurationsList,
@@ -465,6 +464,27 @@ const StackedAreaTeamChart = ({
       statisticAllTeamTaskDurationsList?.durations?.length > 0;
 
     if (isAllTeamView && hasData) {
+      const hasMyOrganization = statisticAllTeamTaskDurationsList.data.some(
+        (item) =>
+          String(item.organizationId) ==
+          String(selectedOrganizationSideBar?.value),
+      );
+      if (!hasMyOrganization) {
+        const hasMyOtherTeam = statisticAllTeamTaskDurationsList.data.some(
+          (item) =>
+            String(item.organizationId) ==
+            OptionOrganizationStatisticType.OTHER,
+        );
+        if (!hasMyOtherTeam) {
+          setSelectedOptionOrganizationInTable(
+            OptionOrganizationStatisticType.CALENDAR,
+          );
+        } else {
+          setSelectedOptionOrganizationInTable(
+            OptionOrganizationStatisticType.OTHER,
+          );
+        }
+      }
       const { durations } = statisticAllTeamTaskDurationsList;
 
       const startDates = durations.map((d) => d.startDate);
@@ -560,6 +580,7 @@ const StackedAreaTeamChart = ({
     selectedOrganization?.value,
     startDate,
     endDate,
+    selectedOrganizationSideBar?.value,
   ]);
 
   const annotations = dataChart.map((s, seriesIndex) => {
@@ -610,7 +631,7 @@ const StackedAreaTeamChart = ({
       },
     },
     legend: {
-      show: !(dataChart.length == 1 && !dataChart[0].name), // Not show legend with fake data
+      show: false,
       showForSingleSeries: true,
       position: 'bottom',
       horizontalAlign: 'right',
@@ -1056,24 +1077,6 @@ const StackedAreaTeamChart = ({
     });
   };
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const chartRef = useRef<HTMLDivElement>(null);
-  const [chartHeight, setChartHeight] = useState<number>(0);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (chartRef.current) {
-        const inner = chartRef.current.querySelector(
-          '.apexcharts-inner',
-        ) as HTMLElement;
-        if (inner) {
-          const { height } = inner.getBoundingClientRect();
-          setChartHeight(height);
-        }
-      }
-    }, 100);
-
-    return () => clearTimeout(timeout);
-  }, [dataChart]);
 
   return (
     <div
@@ -1135,7 +1138,6 @@ const StackedAreaTeamChart = ({
                     options={listOptionsOrganization}
                     selectedOption={selectedOrganization || undefined}
                     onChange={(data) => {
-                      setSelectedMembers([]);
                       setAreaTableData([]);
                       setSelectedCategory(null);
                       setIsTableDataRendered(false);
@@ -1247,21 +1249,28 @@ const StackedAreaTeamChart = ({
               className={`!h-[380px] w-[calc(100%_-_60px)] mx-auto`}
             />
           ) : (
-            <div ref={chartRef} className="relative">
+            <div className="relative">
               <Chart
                 options={options as any}
                 series={dataChart}
                 type="area"
                 height={380}
               />
+              <div className="flex flex-wrap gap-x-[30px] gap-y-3 mt-4 justify-end px-[30px]">
+                {dataChart.map((s, index) => (
+                  <div key={index} className="flex items-center gap-2 mb-2">
+                    <div
+                      className="w-[10px] h-[10px]"
+                      style={{ backgroundColor: colorList[index] }}
+                    />
+                    <span className="text-xs text-[#77858F]">{s.name}</span>
+                  </div>
+                ))}
+              </div>
+
               <div
                 style={{
-                  height:
-                    selectedOrganization?.value == ALL_TEAM_STATISTIC &&
-                    orderingOptions?.user_ids &&
-                    orderingOptions?.user_ids.length > 5
-                      ? chartHeight + 3
-                      : chartHeight + 5,
+                  height: timeRange.length > 10 ? 340 - 70 : '340px',
                 }}
                 className={`w-full ${isLargerTime ? 'pl-[90px]' : 'pl-[45px]'} pr-[51px] h-[320px] flex absolute top-0 left-0 bg-transparent`}>
                 {!(dataChart.length == 1 && !dataChart[0].name) &&
