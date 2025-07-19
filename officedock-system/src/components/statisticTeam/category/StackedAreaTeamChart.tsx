@@ -282,6 +282,30 @@ const StackedAreaTeamChart = ({
       option: selectedOptionOrganizationInTable,
     },
     condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
+    onSuccess: (data) => {
+      const hasMyOrganization = data.data.some(
+        (item) =>
+          String(item.organizationId) ==
+          String(selectedOrganizationSideBar?.value),
+      );
+
+      if (!hasMyOrganization && areaTableData.length) {
+        const hasMyOtherTeam = data.data.some(
+          (item) =>
+            String(item.organizationId) ==
+            OptionOrganizationStatisticType.OTHER,
+        );
+        if (!hasMyOtherTeam) {
+          setSelectedOptionOrganizationInTable(
+            OptionOrganizationStatisticType.CALENDAR,
+          );
+        } else {
+          setSelectedOptionOrganizationInTable(
+            OptionOrganizationStatisticType.OTHER,
+          );
+        }
+      }
+    },
   });
 
   const [dataChart, setDataChart] = useState<
@@ -464,27 +488,6 @@ const StackedAreaTeamChart = ({
       statisticAllTeamTaskDurationsList?.durations?.length > 0;
 
     if (isAllTeamView && hasData) {
-      const hasMyOrganization = statisticAllTeamTaskDurationsList.data.some(
-        (item) =>
-          String(item.organizationId) ==
-          String(selectedOrganizationSideBar?.value),
-      );
-      if (!hasMyOrganization) {
-        const hasMyOtherTeam = statisticAllTeamTaskDurationsList.data.some(
-          (item) =>
-            String(item.organizationId) ==
-            OptionOrganizationStatisticType.OTHER,
-        );
-        if (!hasMyOtherTeam) {
-          setSelectedOptionOrganizationInTable(
-            OptionOrganizationStatisticType.CALENDAR,
-          );
-        } else {
-          setSelectedOptionOrganizationInTable(
-            OptionOrganizationStatisticType.OTHER,
-          );
-        }
-      }
       const { durations } = statisticAllTeamTaskDurationsList;
 
       const startDates = durations.map((d) => d.startDate);
@@ -581,6 +584,7 @@ const StackedAreaTeamChart = ({
     startDate,
     endDate,
     selectedOrganizationSideBar?.value,
+    areaTableData,
   ]);
 
   const annotations = dataChart.map((s, seriesIndex) => {
@@ -611,7 +615,7 @@ const StackedAreaTeamChart = ({
     };
   });
 
-  const isLargerTime = timeRange?.length > 12;
+  const isLargerTime = timeRange?.length > 7;
 
   const options = {
     chart: {
@@ -789,7 +793,6 @@ const StackedAreaTeamChart = ({
                   if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
                     const categoryName = info.row.original
                       .categoryName as OptionOrganizationStatisticType;
-
                     const finalCategoryName = [
                       OptionOrganizationStatisticType.CALENDAR,
                       OptionOrganizationStatisticType.OTHER,
@@ -801,7 +804,6 @@ const StackedAreaTeamChart = ({
                       id: info.row.original.categoryId,
                       name: categoryName,
                     });
-
                     setSelectedOptionOrganizationInTable(finalCategoryName);
                   } else {
                     setSelectedCategory({

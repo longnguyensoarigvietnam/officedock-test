@@ -28,7 +28,7 @@ interface Props {
     isCompare: boolean,
     organizationId?: string,
   ) => void;
-  handleClickChart: (data: number) => void;
+  handleClickChart: (data: number | string) => void;
 }
 
 const PercentageBarCompare = ({
@@ -81,7 +81,7 @@ const PercentageBarCompare = ({
                 <div
                   key={index}
                   onClick={() => {
-                    if (item.id !== -1 && typeof item.id === 'number') {
+                    if (item.id !== -1) {
                       handleClickChart(item.id);
                     }
                   }}
@@ -249,7 +249,7 @@ const PercentageBarCompare = ({
                 <div
                   key={index}
                   onClick={() => {
-                    if (item.id !== -1 && typeof item.id === 'number') {
+                    if (item.id !== -1) {
                       handleClickChart(item.id);
                     }
                   }}

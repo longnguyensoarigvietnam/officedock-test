@@ -90,7 +90,7 @@ const useStatisticAllTeamTaskDurations = ({
     refetch: refetchStatisticAllTeamTaskDurationsList,
     isFetching: isFetchingStatisticAllTeamTaskDurationsList,
   } = useQuery({
-    queryKey: ['getStatisticAllTeamTaskDurations', [filter]],
+    queryKey: ['getStatisticAllTeamTaskDurations', JSON.stringify(filter)],
     queryFn: ({ signal }) => getStatisticAllTeamTaskDurations({ signal }),
     select: (data) =>
       normalizeStatisticAllTeamTaskDurations(data, filter?.option),
