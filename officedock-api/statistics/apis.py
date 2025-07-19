@@ -292,7 +292,8 @@ class StatisticViewSet(BaseAPIViewSet):
         paginator = self.pagination_class()
         paginated_data = paginator.paginate_queryset(merged_duration, request)
         return paginator.get_paginated_response(
-            paginated_data, total_duration=total_duration
+            paginated_data,
+            total_duration=total_duration if merged_duration else DEFAULT_TIME,
         )
 
     @extend_schema(
