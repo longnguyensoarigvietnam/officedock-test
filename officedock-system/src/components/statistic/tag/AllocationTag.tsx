@@ -201,8 +201,14 @@ const AllocationTag = memo(
               organizationId: item.organizationId,
             }));
           setProgressDataLarge(listDataLarge);
+          setProgressDataMedium([]);
+          setProgressDataSmall([]);
+          setProgressDataCategory([]);
         } else {
           setProgressDataLarge([]);
+          setProgressDataMedium([]);
+          setProgressDataSmall([]);
+          setProgressDataCategory([]);
         }
       }
     }, [statisticAllTeamCategoryList, selectedOrganization?.value]);

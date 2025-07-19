@@ -239,6 +239,11 @@ const TableChart = ({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticAllTeamTaskDurations',
           });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] ===
+              'getStatisticTeamDockAllTeamLineChartTaskDurations',
+          });
         } else {
           queryClient.invalidateQueries({
             predicate: (query) =>
@@ -266,6 +271,11 @@ const TableChart = ({
             queryClient.invalidateQueries({
               predicate: (query) =>
                 query.queryKey[0] === 'getStatisticAllTeamTaskDurationsCompare',
+            });
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] ===
+                'getStatisticTeamDockAllTeamLineChartTaskDurationsCompare',
             });
           } else {
             queryClient.invalidateQueries({
@@ -344,6 +354,11 @@ const TableChart = ({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticAllTeamTaskDurations',
           });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] ===
+              'getStatisticTeamDockAllTeamLineChartTaskDurations',
+          });
         } else {
           queryClient.invalidateQueries({
             predicate: (query) =>
@@ -371,6 +386,11 @@ const TableChart = ({
             queryClient.invalidateQueries({
               predicate: (query) =>
                 query.queryKey[0] === 'getStatisticAllTeamTaskDurationsCompare',
+            });
+            queryClient.invalidateQueries({
+              predicate: (query) =>
+                query.queryKey[0] ===
+                'getStatisticTeamDockAllTeamLineChartTaskDurationsCompare',
             });
           } else {
             queryClient.invalidateQueries({

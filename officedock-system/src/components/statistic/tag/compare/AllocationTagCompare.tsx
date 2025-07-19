@@ -347,6 +347,9 @@ const AllocationTagCompare = memo(
         );
 
         setProgressDataPairsLarge(largePairs);
+        setProgressDataPairsMedium([]);
+        setProgressDataPairsSmall([]);
+        setProgressDataPairsCategory([]);
       }
     }, [
       statisticAllTeamCategoryList,

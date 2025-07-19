@@ -164,6 +164,8 @@ const StatisticBoard = () => {
     onSuccess: (data) => {
       setLargeOptions([]);
       setTotalDurationLarge(data.largeTotalDuration || DEFAULT_TIME_TEXT);
+      setTotalDurationMedium(DEFAULT_TIME_TEXT);
+      setTotalDurationSmall(DEFAULT_TIME_TEXT);
       setTotalDurationTask(data.largeTotalDuration || DEFAULT_TIME_TEXT);
       setIsLoadingOrganization(false);
       setIsLoadingLarge(false);
