@@ -290,32 +290,18 @@ const LineChartByTeamTags = ({
       tagPercent: organization.percent,
       tagDuration: organization.duration,
       organizationId: organization.organizationId ?? 0,
-      userList:
-        allLabelUser.length > 0
-          ? allLabelUser.map((userInfo) => {
-              const foundUser = organization.users?.find(
-                (user) => user.id == userInfo.value,
-              );
-              if (foundUser) {
-                return {
-                  userId: foundUser.id,
-                  userName: foundUser.fullName,
-                  userAvatar: foundUser.avatar,
-                  userAvatarColor: foundUser.avatarColor,
-                  userDuration: foundUser.totalDuration,
-                  userPercent: foundUser.percent,
-                };
-              }
-              return {
-                userId: Number(userInfo.value),
-                userName: userInfo?.label,
-                userAvatar: userInfo?.avatarUrl || '',
-                userAvatarColor: userInfo?.color || '',
-                userDuration: DEFAULT_TIME_TEXT,
-                userPercent: 0,
-              };
-            })
-          : [],
+      userList: organization.users.length
+        ? organization.users.map((user) => {
+            return {
+              userId: user.id,
+              userName: user.fullName,
+              userAvatar: user.avatar,
+              userAvatarColor: user.avatarColor,
+              userDuration: user.totalDuration,
+              userPercent: user.percent,
+            };
+          })
+        : [],
     }));
 
   const handleTagSelection = (tagList: StatisticCategoryInfo[] | undefined) => {
