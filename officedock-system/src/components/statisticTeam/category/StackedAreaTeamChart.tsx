@@ -465,12 +465,15 @@ const StackedAreaTeamChart = ({
 
     if (isAllTeamView && hasData) {
       const hasMyOrganization = statisticAllTeamTaskDurationsList.data.some(
-        (item) => item.organizationId === selectedOrganizationSideBar?.value,
+        (item) =>
+          String(item.organizationId) ==
+          String(selectedOrganizationSideBar?.value),
       );
       if (!hasMyOrganization) {
         const hasMyOtherTeam = statisticAllTeamTaskDurationsList.data.some(
           (item) =>
-            item.organizationId == OptionOrganizationStatisticType.OTHER,
+            String(item.organizationId) ==
+            OptionOrganizationStatisticType.OTHER,
         );
         if (!hasMyOtherTeam) {
           setSelectedOptionOrganizationInTable(
@@ -1253,7 +1256,7 @@ const StackedAreaTeamChart = ({
                 type="area"
                 height={380}
               />
-              <div className="flex flex-wrap gap-x-[30px] gap-y-3 mt-4 justify-end">
+              <div className="flex flex-wrap gap-x-[30px] gap-y-3 mt-4 justify-end px-[30px]">
                 {dataChart.map((s, index) => (
                   <div key={index} className="flex items-center gap-2 mb-2">
                     <div

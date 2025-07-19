@@ -328,8 +328,6 @@ const StackedAreaChart = ({
       statisticAllTeamTaskDurationsList &&
       selectedOrganization?.value === ALL_TEAM_STATISTIC
     ) {
-      const baseColor = '#2E9267';
-
       const colorListData: string[] = [];
       const tableDetail: {
         tagId: number;
@@ -350,17 +348,14 @@ const StackedAreaChart = ({
       // ===== TABLE DATA =====
       if (normalizeDataObject?.data?.length > 0) {
         normalizeDataObject.data.forEach((data) => {
-          const finalColor =
-            data.color ||
-            (baseColor && lightenColor(baseColor, data?.percent || 0)) ||
-            getRandomColor();
+          const finalColor = data.color || getRandomColor();
 
           tableDetail.push({
             tagId: Number(data.organizationId),
             tagName: data.organizationName,
             tagDuration: data.duration,
             tagPercent: String(data?.percent || 0),
-            tagColor: finalColor,
+            tagColor: data.color,
           });
 
           colorListData.push(finalColor);
@@ -669,12 +664,15 @@ const StackedAreaChart = ({
           <div className="font-medium px-[18px] text-[16px] break-all line-clamp-3 text-left text-black flex gap-2 items-center">
             <div
               style={{
-                backgroundColor: info.row.original.tagColor
-                  ? lightenColor(
-                      '#2E9267' as string,
-                      Number(info.row.original.tagPercent),
-                    )
-                  : '',
+                backgroundColor:
+                  selectedOrganization?.value == ALL_TEAM_STATISTIC
+                    ? info.row.original.tagColor
+                    : info.row.original.tagColor
+                      ? lightenColor(
+                          '#2E9267' as string,
+                          Number(info.row.original.tagPercent),
+                        )
+                      : '',
               }}
               className={`w-4 h-4 min-w-[16px] rounded-[3px] flex items-center justify-center`}>
               <ImageRound
@@ -1024,7 +1022,7 @@ const StackedAreaChart = ({
                 type="area"
                 height={380}
               />
-              <div className="flex flex-wrap gap-x-[30px] gap-y-3 mt-4 justify-end">
+              <div className="flex flex-wrap gap-x-[30px] gap-y-3 mt-4 justify-end px-[30px]">
                 {dataChart.map((s, index) => (
                   <div key={index} className="flex items-center gap-2 mb-2">
                     <div
