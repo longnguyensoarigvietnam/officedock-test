@@ -326,6 +326,29 @@ const StackedAreaTeamTagChart = ({
       isTagPage: true,
     },
     condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
+    onSuccess: (data) => {
+      const hasMyOrganization = data.data.some(
+        (item) =>
+          String(item.organizationId) ==
+          String(selectedOrganizationSideBar?.value),
+      );
+      if (!hasMyOrganization) {
+        const hasMyOtherTeam = data.data.some(
+          (item) =>
+            String(item.organizationId) ==
+            OptionOrganizationStatisticType.OTHER,
+        );
+        if (!hasMyOtherTeam) {
+          setSelectedOptionOrganizationInTable(
+            OptionOrganizationStatisticType.CALENDAR,
+          );
+        } else {
+          setSelectedOptionOrganizationInTable(
+            OptionOrganizationStatisticType.OTHER,
+          );
+        }
+      }
+    },
   });
 
   const [dataChart, setDataChart] = useState<
@@ -501,7 +524,6 @@ const StackedAreaTeamTagChart = ({
       const tableDetail = buildAllTeamTableDetail(
         statisticAllTeamTaskDurationsList.data,
       );
-
       setTagCollapseStatuses(
         tableDetail.map((category) => ({
           tagId: category.tagId,
@@ -532,27 +554,6 @@ const StackedAreaTeamTagChart = ({
 
     if (isAllTeamView && hasData) {
       const { durations } = statisticAllTeamTaskDurationsList;
-      const hasMyOrganization = statisticAllTeamTaskDurationsList.data.some(
-        (item) =>
-          String(item.organizationId) ==
-          String(selectedOrganizationSideBar?.value),
-      );
-      if (!hasMyOrganization) {
-        const hasMyOtherTeam = statisticAllTeamTaskDurationsList.data.some(
-          (item) =>
-            String(item.organizationId) ==
-            OptionOrganizationStatisticType.OTHER,
-        );
-        if (!hasMyOtherTeam) {
-          setSelectedOptionOrganizationInTable(
-            OptionOrganizationStatisticType.CALENDAR,
-          );
-        } else {
-          setSelectedOptionOrganizationInTable(
-            OptionOrganizationStatisticType.OTHER,
-          );
-        }
-      }
 
       const startDates = durations.map((d) => d.startDate);
       const lastEndDate = durations[durations.length - 1]?.endDate;
@@ -677,7 +678,7 @@ const StackedAreaTeamTagChart = ({
       borderColor: 'transparent',
     };
   });
-  const isLargerTime = timeRange?.length > 12;
+  const isLargerTime = timeRange?.length > 7;
 
   const options = {
     chart: {
@@ -1017,11 +1018,12 @@ const StackedAreaTeamTagChart = ({
       cell: (info) => {
         const value = info.getValue() as string;
         const collapseStatus =
-          tagCollapseStatuses.find(
-            (tagCollapseStatus) =>
-              tagCollapseStatus.tagId == info.row.original.tagId &&
-              info.row.original.organizationId ==
-                tagCollapseStatus?.organizationId,
+          tagCollapseStatuses.find((tagCollapseStatus) =>
+            selectedOrganization?.value != ALL_TEAM_STATISTIC
+              ? tagCollapseStatus.tagId == info.row.original.tagId &&
+                info.row.original.organizationId ==
+                  tagCollapseStatus?.organizationId
+              : tagCollapseStatus.tagId == info.row.original.tagId,
           )?.status || false;
 
         return (
@@ -1099,11 +1101,12 @@ const StackedAreaTeamTagChart = ({
       cell: (info) => {
         const value = Number(info.getValue()) || 0;
         const collapseStatus =
-          tagCollapseStatuses.find(
-            (tagCollapseStatus) =>
-              tagCollapseStatus.tagId == info.row.original.tagId &&
-              info.row.original.organizationId ==
-                tagCollapseStatus?.organizationId,
+          tagCollapseStatuses.find((tagCollapseStatus) =>
+            selectedOrganization?.value != ALL_TEAM_STATISTIC
+              ? tagCollapseStatus.tagId == info.row.original.tagId &&
+                info.row.original.organizationId ==
+                  tagCollapseStatus?.organizationId
+              : tagCollapseStatus.tagId == info.row.original.tagId,
           )?.status || false;
 
         return (

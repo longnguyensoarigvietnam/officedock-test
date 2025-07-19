@@ -519,13 +519,12 @@ const PercentageCategoryCompare = ({
                         isAllTeamOption={
                           selectedOrganization?.value == ALL_TEAM_STATISTIC
                         }
-                        handleClickChart={(data: number) => {
+                        handleClickChart={(data: string | number) => {
                           if (
                             selectedOrganization?.value === ALL_TEAM_STATISTIC
                           ) {
                             return;
                           }
-
                           const select = largeOptions.find(
                             (item) => item.value === data,
                           );
@@ -597,7 +596,7 @@ const PercentageCategoryCompare = ({
                         isAllTeamOption={
                           selectedOrganization?.value == ALL_TEAM_STATISTIC
                         }
-                        handleClickChart={(data: number) => {
+                        handleClickChart={(data: number | string) => {
                           const select = mediumOptions.find(
                             (item) => item.value === data,
                           );
@@ -667,7 +666,7 @@ const PercentageCategoryCompare = ({
                         isAllTeamOption={
                           selectedOrganization?.value == ALL_TEAM_STATISTIC
                         }
-                        handleClickChart={(data: number) => {
+                        handleClickChart={(data: number | string) => {
                           const select = smallOptions.find(
                             (item) => item.value === data,
                           );
