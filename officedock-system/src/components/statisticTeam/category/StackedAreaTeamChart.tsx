@@ -285,16 +285,20 @@ const StackedAreaTeamChart = ({
     onSuccess: (data) => {
       const hasMyOrganization = data.data.some(
         (item) =>
-          String(item.organizationId) ==
+          String(item.organizationId) ===
           String(selectedOrganizationSideBar?.value),
       );
 
-      if (!hasMyOrganization && areaTableData.length) {
+      if (
+        !hasMyOrganization &&
+        selectedOptionOrganizationInTable ===
+          OptionOrganizationStatisticType.MAIN_TEAM
+      ) {
         const hasMyOtherTeam = data.data.some(
           (item) =>
-            String(item.organizationId) ==
-            OptionOrganizationStatisticType.OTHER,
+            item.organizationName === OptionOrganizationStatisticType.OTHER,
         );
+
         if (!hasMyOtherTeam) {
           setSelectedOptionOrganizationInTable(
             OptionOrganizationStatisticType.CALENDAR,
@@ -303,6 +307,24 @@ const StackedAreaTeamChart = ({
           setSelectedOptionOrganizationInTable(
             OptionOrganizationStatisticType.OTHER,
           );
+        }
+
+        return;
+      } else {
+        if (
+          selectedOptionOrganizationInTable !==
+          OptionOrganizationStatisticType.MAIN_TEAM
+        ) {
+          const hasCurrentOption = data.data.some(
+            (item) =>
+              item.organizationName === selectedOptionOrganizationInTable,
+          );
+
+          if (!hasCurrentOption && data.data.length > 0) {
+            setSelectedOptionOrganizationInTable(
+              data.data[0].organizationName as OptionOrganizationStatisticType,
+            );
+          }
         }
       }
     },
