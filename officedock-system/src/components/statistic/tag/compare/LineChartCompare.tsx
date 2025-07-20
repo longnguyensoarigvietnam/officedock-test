@@ -635,13 +635,17 @@ const LineChartCompare = ({
             duration: data.duration,
             percent: String(data?.percent || 0),
             color:
-              lightenColor('#2E9267', data?.percent || 0) || getRandomColor(),
+              data.color ||
+              lightenColor('#2E9267', data?.percent || 0) ||
+              getRandomColor(),
             type: StatisticChartType.STANDARD,
           });
 
           standardLabels.push({
             color:
-              lightenColor('#2E9267', data?.percent || 0) || getRandomColor(),
+              data.color ||
+              lightenColor('#2E9267', data?.percent || 0) ||
+              getRandomColor(),
             name: data.organizationName,
           });
 
@@ -663,13 +667,17 @@ const LineChartCompare = ({
             duration: data.duration,
             percent: String(data?.percent || 0),
             color:
-              lightenColor('#2E9267', data?.percent || 0) || getRandomColor(),
+              data.color ||
+              lightenColor('#2E9267', data?.percent || 0) ||
+              getRandomColor(),
             type: StatisticChartType.COMPARE,
           });
 
           comparedLabels.push({
             color:
-              lightenColor('#2E9267', data?.percent || 0) || getRandomColor(),
+              data.color ||
+              lightenColor('#2E9267', data?.percent || 0) ||
+              getRandomColor(),
             name: data.organizationName,
           });
 

@@ -511,12 +511,16 @@ const LineChart = ({
             duration: data.duration,
             percent: String(data?.percent || 0),
             color:
-              lightenColor('#2E9267', data?.percent || 0) || getRandomColor(),
+              data.color ||
+              lightenColor('#2E9267', data?.percent || 0) ||
+              getRandomColor(),
           });
 
           standardLabels.push({
             color:
-              lightenColor('#2E9267', data?.percent || 0) || getRandomColor(),
+              data.color ||
+              lightenColor('#2E9267', data?.percent || 0) ||
+              getRandomColor(),
             name: data.organizationName,
           });
 
@@ -566,6 +570,7 @@ const LineChart = ({
                   : 0,
                 endDate: durationDetail.endDate,
                 color:
+                  organization.color ||
                   lightenColor('#2E9267', organization?.percent || 0) ||
                   getRandomColor(),
                 label: organization.organizationName,
@@ -582,6 +587,7 @@ const LineChart = ({
                     : 0,
                   endDate: durationDetail.endDate,
                   color:
+                    organization.color ||
                     lightenColor('#2E9267', organization?.percent || 0) ||
                     getRandomColor(),
                   label: organization.organizationName,
@@ -599,6 +605,7 @@ const LineChart = ({
                   : 0,
                 endDate: durationDetail.endDate,
                 color:
+                  organization.color ||
                   lightenColor('#2E9267', organization?.percent || 0) ||
                   getRandomColor(),
                 label: organization.organizationName,
@@ -607,7 +614,10 @@ const LineChart = ({
               datasetMap.set(organization.organizationId, {
                 label: organization.organizationName,
                 data: dataArray,
-                borderColor: '#2E9267',
+                borderColor:
+                  organization.color ||
+                  lightenColor('#2E9267', organization?.percent || 0) ||
+                  getRandomColor(),
                 backgroundColor: 'rgba(217, 83, 79, 0.04)',
                 fill: true,
                 tension: 0,

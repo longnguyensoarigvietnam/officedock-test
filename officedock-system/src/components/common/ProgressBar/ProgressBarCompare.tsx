@@ -303,7 +303,7 @@ const PercentageBarCompare = ({
                                 </span>
                               </div>
                               <ul>
-                                {mergeItem.tasks.map((item, index) => (
+                                {mergeItem.tasks?.map((item, index) => (
                                   <li
                                     key={index}
                                     className="break-all text-start line-clamp-3 text-[#77858F] text-sm font-normal]">
