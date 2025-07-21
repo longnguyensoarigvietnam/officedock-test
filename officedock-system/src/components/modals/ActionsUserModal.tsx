@@ -59,6 +59,8 @@ export type ActionsUserModalProps = {
     password?: string;
     fullName?: string;
   };
+  resetOrganizationFields: boolean;
+  setResetOrganizationFields: Dispatch<SetStateAction<boolean>>;
   setErrorMessages: Dispatch<
     SetStateAction<{
       email?: string;
@@ -80,6 +82,8 @@ const ActionsUserModal = ({
   roleUserOptions,
   originalOrganizationOptions,
   errorMessages,
+  resetOrganizationFields,
+  setResetOrganizationFields,
   setErrorMessages,
   onClose,
   onDelete,
@@ -245,6 +249,15 @@ const ActionsUserModal = ({
     return value;
   }, [dataUserDetail]);
 
+  useEffect(() => {
+    if (resetOrganizationFields) {
+      setValue('mainOrganization', defaultValues.mainOrganization);
+      setValue('organizations', defaultValues.organizations);
+      setResetOrganizationFields(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetOrganizationFields]);
+
   // Update default value
   useEffect(() => {
     reset(defaultValues);
@@ -341,7 +354,6 @@ const ActionsUserModal = ({
   const handleDeleteUser = () => {
     onDelete && onDelete(dataUserDetail!);
   };
-
   return (
     <Drawer
       open={open}
@@ -367,7 +379,8 @@ const ActionsUserModal = ({
               session?.user.permissions,
               PermissionsSystem.USER_DELETE,
             ) &&
-            dataUserDetail && (
+            dataUserDetail &&
+            dataUserDetail.id != session.user.id && (
               <ImageRound
                 className="mt-1 w-[14px] h-[17px] hover:cursor-pointer"
                 src="/icons/delete-event.svg"
@@ -691,6 +704,12 @@ const ActionsUserModal = ({
                         type="button"
                         name="Remove TagId"
                         onClick={() => {
+                          setSelectedOrganizationOptions((prevState) =>
+                            prevState.filter(
+                              (item) =>
+                                item.value != watch('mainOrganization')?.value,
+                            ),
+                          );
                           setValue('mainOrganization', undefined);
                         }}>
                         削除
