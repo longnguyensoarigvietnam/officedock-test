@@ -321,7 +321,11 @@ def aggregate_durations(
         if category_id == NONE_CATEGORY:
             category_color = CategoryColors.GRAY.value
 
-        key = (category_name, organization.id)
+        key = (
+            (category_name, organization.id)
+            if not is_daily_report
+            else category_id
+        )
 
         if key in category_dict:
             category_dict[key]["duration"] += duration

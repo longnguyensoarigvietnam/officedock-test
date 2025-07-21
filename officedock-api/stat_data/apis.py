@@ -209,7 +209,9 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         total_duration = get_total_durations(durations)
         data["total_duration"] = format_duration(total_duration)
         data["categories"] = []
-        category_list = aggregate_durations(durations=durations)
+        category_list = aggregate_durations(
+            durations=durations, is_daily_report=True
+        )
         percent = 0
         for index, cat in enumerate(category_list):
             is_last_element = index == len(category_list) - 1
