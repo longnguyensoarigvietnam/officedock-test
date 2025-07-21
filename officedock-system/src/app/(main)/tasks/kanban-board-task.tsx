@@ -3357,11 +3357,13 @@ const KanbanBoardTask = () => {
                                     <span className="w-[71px] truncate">
                                       {item.label}
                                     </span>
-                                    <ImageRound
-                                      src={`/icons/close.svg`}
-                                      name="close"
-                                      className="w-fit h-fit cursor-pointer"
-                                    />
+                                    {!isLoadingDataTask && (
+                                      <ImageRound
+                                        src={`/icons/close.svg`}
+                                        name="close"
+                                        className="w-fit h-fit cursor-pointer"
+                                      />
+                                    )}
                                   </div>
                                 ))}
                                 <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
@@ -3388,11 +3390,13 @@ const KanbanBoardTask = () => {
                                     <span className="w-[71px] truncate">
                                       {item.label}
                                     </span>
-                                    <ImageRound
-                                      src={`/icons/close.svg`}
-                                      name="close"
-                                      className="w-fit h-fit cursor-pointer"
-                                    />
+                                    {!isLoadingDataTask && (
+                                      <ImageRound
+                                        src={`/icons/close.svg`}
+                                        name="close"
+                                        className="w-fit h-fit cursor-pointer"
+                                      />
+                                    )}
                                   </div>
                                 ))}
                               </>
@@ -3411,6 +3415,7 @@ const KanbanBoardTask = () => {
                               <ActionFilterTask
                                 creationDataTaskData={creationDataTaskData}
                                 saveZoomKanban={saveZoomKanban}
+                                isLoadingDataTask={isLoadingDataTask}
                                 handleClose={() => setIsOpenModalFilter(false)}
                               />
                             </PopoverPanel>
@@ -3441,6 +3446,7 @@ const KanbanBoardTask = () => {
                         name="List view icon"
                         className="w-12 h-12 hover:cursor-pointer"
                         onClick={() => {
+                          if (isLoadingDataTask) return;
                           setIsListView(!isListView);
                           saveZoomKanban({
                             isShowListKanban: !isListView,

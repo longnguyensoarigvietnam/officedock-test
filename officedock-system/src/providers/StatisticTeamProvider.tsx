@@ -5,7 +5,10 @@ import {
   useState,
   Dispatch,
   SetStateAction,
+  useContext,
+  useEffect,
 } from 'react';
+import { usePathname } from 'next/navigation';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
@@ -20,6 +23,7 @@ import {
   StatisticViewLabels,
   StatisticViewOptions,
 } from '@constants/enums';
+import { GlobalStateContext } from './GlobalStateProvider';
 
 interface ContextValue {
   isDisableCalendar: boolean;
@@ -257,6 +261,9 @@ export const StatisticTeamStateProvider = ({
 }: {
   children: ReactNode;
 }) => {
+  const { setIsHasLoadingSkeleton } = useContext(GlobalStateContext);
+  const pathname = usePathname();
+
   // Loading
   const [isLoadingOrganization, setIsLoadingOrganization] = useState(false);
   const [isLoadingLarge, setIsLoadingLarge] = useState(false);
@@ -440,6 +447,18 @@ export const StatisticTeamStateProvider = ({
     isLoadingOrganizationCompare ||
     isLoadingLargeCompare ||
     isLoadingMediumCompare;
+
+  useEffect(() => {
+    setIsHasLoadingSkeleton(isHasLoading);
+  }, [isHasLoading, setIsHasLoadingSkeleton]);
+
+  useEffect(() => {
+    return () => {
+      setIsHasLoadingSkeleton(false);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
   const isDisableCalendar =
     selectedOrganization?.type === OrganizationStatisticType.CALENDAR;
 
