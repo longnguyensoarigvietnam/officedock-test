@@ -20,7 +20,7 @@ interface FilterProps {
   statisticBy?: string;
   isTagPage?: boolean;
   mainOrganizationId?: number;
-  isCompare: boolean;
+  isCompare?: boolean;
 }
 
 const useStatisticAllTeamTaskDurationsCompare = ({

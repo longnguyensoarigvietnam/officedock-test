@@ -257,8 +257,9 @@ const StackedAreaTeamChart = ({
           ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
           : selectedMembers?.filter(Boolean).join(','),
     },
-    condition: [
+    condition: [ 
       Boolean(
+        selectedOrganization?.value != ALL_TEAM_STATISTIC &&
         areaTableData.length > 0 &&
           selectedCategory?.id &&
           selectedOrganizationInTable,
