@@ -502,33 +502,35 @@ const StackedAreaTeamTagChart = ({
       setDataChart(chartData);
       setColorList(colors);
     } else {
-      const timeMilestones = getStatisticMilestones(
-        `${formatDateToYMD(startDate)}`,
-        `${formatDateToYMD(endDate || '')}`,
-        lineChartViewBy?.value as StatisticViewOptions,
-      );
-
-      const uniqueSortedDates = Array.from(new Set(timeMilestones)).sort(
-        (pre, next) => new Date(pre).getTime() - new Date(next).getTime(),
-      );
-
-      const transformedDates = uniqueSortedDates.map((date, index, arr) => {
-        const isEdge = index === 0 || index === arr.length - 1;
-        return convertToStatisticJapaneseLabels(
-          date,
-          lineChartViewBy?.value as string,
-          isEdge,
+      if (selectedOrganization?.value !== ALL_TEAM_STATISTIC) {
+        const timeMilestones = getStatisticMilestones(
+          `${formatDateToYMD(startDate)}`,
+          `${formatDateToYMD(endDate || '')}`,
+          lineChartViewBy?.value as StatisticViewOptions,
         );
-      });
 
-      setTimeRange(transformedDates);
-      setDataChart([
-        {
-          name: '',
-          data: Array(timeMilestones.length).fill(0),
-        },
-      ]);
-      return;
+        const uniqueSortedDates = Array.from(new Set(timeMilestones)).sort(
+          (pre, next) => new Date(pre).getTime() - new Date(next).getTime(),
+        );
+
+        const transformedDates = uniqueSortedDates.map((date, index, arr) => {
+          const isEdge = index === 0 || index === arr.length - 1;
+          return convertToStatisticJapaneseLabels(
+            date,
+            lineChartViewBy?.value as string,
+            isEdge,
+          );
+        });
+
+        setTimeRange(transformedDates);
+        setDataChart([
+          {
+            name: '',
+            data: Array(timeMilestones.length).fill(0),
+          },
+        ]);
+        return;
+      }
     }
   }, [
     statisticUserTaskDurationsList,
@@ -637,33 +639,35 @@ const StackedAreaTeamTagChart = ({
       setDataChart(chartData);
       setColorList(colorList);
     } else {
-      const timeMilestones = getStatisticMilestones(
-        formatDateToYMD(startDate) as string,
-        formatDateToYMD(endDate || '') as string,
-        lineChartViewBy?.value as StatisticViewOptions,
-      );
-
-      const uniqueSortedDates = Array.from(new Set(timeMilestones)).sort(
-        (a, b) => new Date(a).getTime() - new Date(b).getTime(),
-      );
-
-      const transformedDates = uniqueSortedDates.map((date, index, arr) => {
-        const isEdge = index === 0 || index === arr.length - 1;
-        return convertToStatisticJapaneseLabels(
-          date,
-          lineChartViewBy?.value as string,
-          isEdge,
+      if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+        const timeMilestones = getStatisticMilestones(
+          formatDateToYMD(startDate) as string,
+          formatDateToYMD(endDate || '') as string,
+          lineChartViewBy?.value as StatisticViewOptions,
         );
-      });
 
-      setTimeRange(transformedDates);
+        const uniqueSortedDates = Array.from(new Set(timeMilestones)).sort(
+          (a, b) => new Date(a).getTime() - new Date(b).getTime(),
+        );
 
-      setDataChart([
-        {
-          name: '',
-          data: Array(timeMilestones.length).fill(0),
-        },
-      ]);
+        const transformedDates = uniqueSortedDates.map((date, index, arr) => {
+          const isEdge = index === 0 || index === arr.length - 1;
+          return convertToStatisticJapaneseLabels(
+            date,
+            lineChartViewBy?.value as string,
+            isEdge,
+          );
+        });
+
+        setTimeRange(transformedDates);
+
+        setDataChart([
+          {
+            name: '',
+            data: Array(timeMilestones.length).fill(0),
+          },
+        ]);
+      }
     }
   }, [
     statisticAllTeamTaskDurationsList,
