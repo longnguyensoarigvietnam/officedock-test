@@ -5,7 +5,10 @@ import {
   useState,
   Dispatch,
   SetStateAction,
+  useContext,
+  useEffect,
 } from 'react';
+import { usePathname } from 'next/navigation';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { TagTableRowDetail, TeamDockMergedTable } from '@interfaces/statistic';
@@ -16,6 +19,7 @@ import {
   StatisticViewLabels,
   StatisticViewOptions,
 } from '@constants/enums';
+import { GlobalStateContext } from './GlobalStateProvider';
 
 interface ContextValue {
   isDisableCalendar: boolean;
@@ -263,6 +267,9 @@ export const StatisticTeamTagsStateProvider = ({
 }: {
   children: ReactNode;
 }) => {
+  const { setIsHasLoadingSkeleton } = useContext(GlobalStateContext);
+  const pathname = usePathname();
+
   // Loading
   const [isLoadingOrganization, setIsLoadingOrganization] = useState(false);
   const [isLoadingLarge, setIsLoadingLarge] = useState(false);
@@ -291,7 +298,9 @@ export const StatisticTeamTagsStateProvider = ({
   const [lineChartTableData, setLineChartTableData] = useState<
     TagTableRowDetail[]
   >([]);
-  const [mergedTableData, setMergedTableData] = useState<TeamDockMergedTable[]>([]);
+  const [mergedTableData, setMergedTableData] = useState<TeamDockMergedTable[]>(
+    [],
+  );
 
   // Select
   const [selectedOrganization, setSelectedOrganization] =
@@ -422,6 +431,17 @@ export const StatisticTeamTagsStateProvider = ({
 
   const isDisableCalendar =
     selectedOrganization?.type === OrganizationStatisticType.CALENDAR;
+
+  useEffect(() => {
+    setIsHasLoadingSkeleton(isHasLoading);
+  }, [isHasLoading, setIsHasLoadingSkeleton]);
+
+  useEffect(() => {
+    return () => {
+      setIsHasLoadingSkeleton(false);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   const contextValue: ContextValue = {
     smallOptions,

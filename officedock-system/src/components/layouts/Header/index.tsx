@@ -8,7 +8,12 @@ import {
   PopoverPanel,
   Transition,
 } from '@headlessui/react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from 'next/navigation';
 import { useMutation, useQueryClient } from 'react-query';
 import { AxiosError } from 'axios';
 
@@ -109,7 +114,9 @@ const Header = ({ className }: HeaderProps) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const params = new URLSearchParams(searchParams);
+  const params = useParams();
+
+  const paramsURL = new URLSearchParams(searchParams);
 
   const showErrorToast = useErrorToast();
 
@@ -120,6 +127,11 @@ const Header = ({ className }: HeaderProps) => {
 
   const actionType = searchParams.get('action');
   const { creationDataEventCalendar } = useCreationDataEventCalendar({});
+
+  const isDailyReportPage = pathname.startsWith('/daily-report');
+  const teamId = params.id; // '300'
+
+  const isDailyReportTeamPage = pathname.startsWith('/daily-report-team');
 
   const isTaskPage = pathname.startsWith('/task');
   const isTaskTeamPage = pathname.startsWith('/task-teams');
@@ -346,29 +358,29 @@ const Header = ({ className }: HeaderProps) => {
     action: string;
   }) => {
     if (id) {
-      params.set('task', id);
+      paramsURL.set('task', id);
     }
-    params.delete('event');
-    params.delete('action');
-    params.delete('type');
-    params.set('action', action);
-    params.set('type', ItemStartType.TASK);
-    router.push(`?${params.toString()}`);
+    paramsURL.delete('event');
+    paramsURL.delete('action');
+    paramsURL.delete('type');
+    paramsURL.set('action', action);
+    paramsURL.set('type', ItemStartType.TASK);
+    router.push(`?${paramsURL.toString()}`);
   };
 
   const handleRemoveParam = () => {
-    params.delete('task');
-    params.delete('action');
-    params.delete('type');
+    paramsURL.delete('task');
+    paramsURL.delete('action');
+    paramsURL.delete('type');
 
-    router.replace(`?${params.toString()}`);
+    router.replace(`?${paramsURL.toString()}`);
     setShowModalTask(false);
   };
   const handleRemoveEventParam = () => {
-    params.delete('event');
-    params.delete('type');
-    params.delete('action');
-    router.replace(`?${params.toString()}`);
+    paramsURL.delete('event');
+    paramsURL.delete('type');
+    paramsURL.delete('action');
+    router.replace(`?${paramsURL.toString()}`);
   };
 
   // Task
@@ -382,7 +394,17 @@ const Header = ({ className }: HeaderProps) => {
       handleRemoveParam();
       queryClient.refetchQueries(['getDataTaskHeaderList']);
       queryClient.refetchQueries(['getTaskHeaderStart']);
-      queryClient.refetchQueries(['getDataStatistic']);
+      if (isDailyReportPage) {
+        queryClient.refetchQueries(['getDataStatistic']);
+        queryClient.refetchQueries(['getDataStatisticPDF']);
+      }
+      if (
+        isDailyReportTeamPage &&
+        (teamId as string) == String(session?.user.id)
+      ) {
+        queryClient.refetchQueries(['getDataStatistic']);
+        queryClient.refetchQueries(['getDataStatisticPDF']);
+      }
       queryClient.refetchQueries(['getTaskDurationDetail']);
 
       showToast({
@@ -417,6 +439,21 @@ const Header = ({ className }: HeaderProps) => {
     handleEditTaskRemind,
     {
       onSuccess: async () => {
+        queryClient.refetchQueries(['getDataTaskHeaderList']);
+        queryClient.refetchQueries(['getTaskHeaderStart']);
+        if (isDailyReportPage) {
+          queryClient.refetchQueries(['getDataStatistic']);
+          queryClient.refetchQueries(['getDataStatisticPDF']);
+        }
+        if (
+          isDailyReportTeamPage &&
+          (teamId as string) == String(session?.user.id)
+        ) {
+          queryClient.refetchQueries(['getDataStatistic']);
+          queryClient.refetchQueries(['getDataStatisticPDF']);
+        }
+
+        queryClient.refetchQueries(['getTaskDurationDetail']);
         setOpenWarningDeadlineModal(false);
       },
       onError: (error: AxiosError<any>) => {
@@ -591,7 +628,21 @@ const Header = ({ className }: HeaderProps) => {
       handleRemoveParam();
       setDataTaskEdit(null);
       setIdEventDelete(taskDetailId as string);
+
+      queryClient.refetchQueries(['getDataTaskHeaderList']);
       queryClient.refetchQueries(['getTaskHeaderStart']);
+      if (isDailyReportPage) {
+        queryClient.refetchQueries(['getDataStatistic']);
+        queryClient.refetchQueries(['getDataStatisticPDF']);
+      }
+      if (
+        isDailyReportTeamPage &&
+        (teamId as string) == String(session?.user.id)
+      ) {
+        queryClient.refetchQueries(['getDataStatistic']);
+        queryClient.refetchQueries(['getDataStatisticPDF']);
+      }
+
       queryClient.refetchQueries(['getTaskDurationDetail']);
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
@@ -777,7 +828,21 @@ const Header = ({ className }: HeaderProps) => {
     handleEditEventCalendar,
     {
       onSuccess: async () => {
+        queryClient.refetchQueries(['getDataTaskHeaderList']);
         queryClient.refetchQueries(['getTaskHeaderStart']);
+        if (isDailyReportPage) {
+          queryClient.refetchQueries(['getDataStatistic']);
+          queryClient.refetchQueries(['getDataStatisticPDF']);
+        }
+        if (
+          isDailyReportTeamPage &&
+          (teamId as string) == String(session?.user.id)
+        ) {
+          queryClient.refetchQueries(['getDataStatistic']);
+          queryClient.refetchQueries(['getDataStatisticPDF']);
+        }
+
+        queryClient.refetchQueries(['getTaskDurationDetail']);
 
         handleRemoveEventParam();
         setOpenConfirmEditEventModal(false);
@@ -819,7 +884,21 @@ const Header = ({ className }: HeaderProps) => {
     handleDeleteEventCalendar,
     {
       onSuccess: (data, task) => {
+        queryClient.refetchQueries(['getDataTaskHeaderList']);
         queryClient.refetchQueries(['getTaskHeaderStart']);
+        if (isDailyReportPage) {
+          queryClient.refetchQueries(['getDataStatistic']);
+          queryClient.refetchQueries(['getDataStatisticPDF']);
+        }
+        if (
+          isDailyReportTeamPage &&
+          (teamId as string) == String(session?.user.id)
+        ) {
+          queryClient.refetchQueries(['getDataStatistic']);
+          queryClient.refetchQueries(['getDataStatisticPDF']);
+        }
+
+        queryClient.refetchQueries(['getTaskDurationDetail']);
 
         handleRemoveEventParam();
         setOpenConfirmDeleteEventModal(false);

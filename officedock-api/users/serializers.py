@@ -717,7 +717,7 @@ class SystemUserInviteSerializer(BaseUserSerializer):
             # Collect the set of organization IDs where the user is in charge of tasks
             orgs_with_tasks = set(
                 instance.in_charge_tasks.filter(
-                    organization__isnull=False
+                    organization__isnull=False, deleted_at__isnull=True
                 ).values_list("organization", flat=True)
             )
             # Find organizations with tasks that are being removed

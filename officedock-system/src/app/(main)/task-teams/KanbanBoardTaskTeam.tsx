@@ -2513,6 +2513,7 @@ const KanbanBoardTaskTeam = () => {
                     <PopoverPanel className="absolute left-0 top-5 z-[1] w-[400px] transform">
                       <ActionFilterTaskTeam
                         creationDataTaskData={creationDataTaskData}
+                        isLoadingDataTask={isLoadingDataTask}
                         listMemberTeam={listMemberTeam}
                         handleClose={() => setIsOpenModalFilter(false)}
                         handleReadyToFetch={() => setIsReadyToFetch(true)}

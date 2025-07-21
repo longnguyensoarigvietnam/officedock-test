@@ -10,11 +10,11 @@ import {
 import { Droppable } from '@hello-pangea/dnd';
 import { useInView } from 'react-intersection-observer';
 
-import ListViewItem from './ListViewItem';
 
 import ImageRound from '@components/common/ImageRound';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import Spinner from '@components/common/Spinner';
+import ListViewItem from './ListViewItem';
 
 import {
   Columns,
@@ -23,13 +23,13 @@ import {
   KanbanDataResponse,
   Task,
 } from '@interfaces/task';
+
 import { TaskContext } from '@providers/TaskProvider';
 
 import { apiRouters } from '@constants/routers';
-import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
-import { StatusTask, StatusValueTask } from '@constants/enums';
+import { COLOR_BY_TASK_STATUS, PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
+import { StatusValueTask } from '@constants/enums';
 
-import { encodeFormatDateISO } from '@utils/date';
 import api from '@base/api';
 
 interface ListViewByStatusProps {
@@ -40,7 +40,6 @@ interface ListViewByStatusProps {
   totalCount: number;
   userId: string;
   searchValue: string;
-  orderingRequest: string;
   matchingTaskIds: number[];
   handlePinItem: (id: string) => void;
   handleActionEditTask: (id: number) => void;
@@ -72,7 +71,6 @@ const ListViewByStatus = ({
   userId,
   searchValue,
   matchingTaskIds,
-  orderingRequest,
   handlePinItem,
   handleActionEditTask,
   handleConfirmCopyTask,
@@ -89,32 +87,18 @@ const ListViewByStatus = ({
   const [lastIndex, setLastIndex] = useState<number | null>(null);
   const [initialLoad, setInitialLoad] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
-  const [taskLast, setTaskLast] = useState<number | null>(null);
-  const [deadlineLast, setDeadlineLast] = useState<string | null>(null);
   const [pinAtLast, setPinAtLast] = useState<string | null>(null);
   const [isChange, setChange] = useState(false);
   const { ref: listTaskRef, inView: inViewListTask } = useInView({
     threshold: 0.2,
   });
-  const { extendByStatus, setExtendByStatus } = useContext(TaskContext);
-  const colorByStatus = [
-    {
-      name: StatusTask.NOT_STARTED,
-      color: '#A3EBF0',
-    },
-    {
-      name: StatusTask.IN_PROGRESS,
-      color: '#92E9AF',
-    },
-    {
-      name: StatusTask.CONFIRMING,
-      color: '#FCCF79',
-    },
-    {
-      name: StatusTask.COMPLETED,
-      color: '#F58383',
-    },
-  ];
+  const {
+    extendByStatus,
+    isLoadingDataTask,
+    orderingOptions,
+    setExtendByStatus,
+  } = useContext(TaskContext);
+  const [count, setCount] = useState<number>(totalCount);
 
   const handleGetDataTaskMore = async (pageNumber: number) => {
     setInitialLoad(true);
@@ -125,13 +109,7 @@ const ListViewByStatus = ({
     if (pinAtLast) {
       apiUrl += `&pin_at=${pinAtLast}`;
     }
-    if (orderingRequest) {
-      if (orderingRequest === 'deadline') {
-        apiUrl += `&ordering=${orderingRequest}${idTasks ? `&ids=${idTasks}` : ''}&task_id=${taskLast}${deadlineLast ? `&deadline=${encodeFormatDateISO(new Date(deadlineLast))}` : ''}`;
-      } else {
-        apiUrl += `&ordering=${orderingRequest}${idTasks ? `&ids=${idTasks}` : ''}&task_id=${taskLast}`;
-      }
-    } else if (lastIndex) {
+    if (lastIndex) {
       apiUrl += `&index=${lastIndex}`;
     }
 
@@ -141,6 +119,17 @@ const ListViewByStatus = ({
 
     if (searchValue) {
       apiUrl += `&search=${searchValue}${idTasks ? `&ids=${idTasks}` : ''}`;
+    }
+    if (orderingOptions?.organization_ids?.length) {
+      apiUrl += `&organization_ids=${orderingOptions.organization_ids.map((item) => item.value).join(',')}`;
+    }
+
+    if (orderingOptions?.category_ids?.length) {
+      apiUrl += `&category_ids=${orderingOptions.category_ids.map((item) => item.value).join(',')}`;
+    }
+
+    if (orderingOptions?.tag_ids?.length) {
+      apiUrl += `&tag_ids=${orderingOptions.tag_ids.map((item) => item.value).join(',')}`;
     }
 
     return await api.get<KanbanDataResponse>(apiUrl);
@@ -154,17 +143,6 @@ const ListViewByStatus = ({
     }
   }, [hasNext]);
 
-  const [count, setCount] = useState<number>(totalCount);
-  useEffect(() => {
-    let remainingCount = totalCount - page * PAGINATION_PAGE_SIZE_KANBAN;
-    if (remainingCount < 0) {
-      remainingCount = 0;
-    }
-
-    setCount(remainingCount + listItems.length);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [totalCount, listItems, listItems.length, columnsKanbanData]);
-
   useEffect(() => {
     if (listItems) {
       listItems.length && setLastIndex(listItems[listItems.length - 1].index);
@@ -175,15 +153,6 @@ const ListViewByStatus = ({
       }
       if (listItems.length > PAGINATION_PAGE_SIZE_KANBAN - 1) {
         setChange(true);
-      }
-      if (orderingRequest) {
-        if (listItems.length) {
-          setDeadlineLast(listItems[listItems.length - 1].deadline);
-          setTaskLast(parseInt(`${listItems[listItems.length - 1].id}`));
-        } else {
-          setDeadlineLast(null);
-          setTaskLast(null);
-        }
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -236,6 +205,16 @@ const ListViewByStatus = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inViewListTask, hasMore]);
 
+  useEffect(() => {
+    let remainingCount = totalCount - page * PAGINATION_PAGE_SIZE_KANBAN;
+    if (remainingCount < 0) {
+      remainingCount = 0;
+    }
+
+    setCount(remainingCount + listItems.length);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalCount, listItems, listItems.length, columnsKanbanData]);
+
   return (
     <>
       <div className="flex items-center gap-3 mb-3">
@@ -282,11 +261,11 @@ const ListViewByStatus = ({
 
         {listId != StatusValueTask.MY_ROUTINE && (
           <div
-            className={`bg-[${colorByStatus.find((status) => status.name == listTitle)?.color}] w-3 h-3 rounded-full right-1.5 top-2`}
+            className={`bg-[${COLOR_BY_TASK_STATUS.find((status) => status.name == listTitle)?.color}] w-3 h-3 rounded-full right-1.5 top-2`}
           />
         )}
         <p className="font-medium text-[14px]">{listTitle}</p>
-        {listId != StatusValueTask.MY_ROUTINE && (
+        {listId != StatusValueTask.MY_ROUTINE && !isLoadingDataTask && (
           <p className="text-[#77858F] text-[14px]">{count}</p>
         )}
 
@@ -312,6 +291,7 @@ const ListViewByStatus = ({
             <p className="w-[20%] border-r-2 text-center">予定日時</p>
           </div>
         )}
+
       <Droppable droppableId={String(listId)}>
         {(provided, snapshot) => (
           <div
