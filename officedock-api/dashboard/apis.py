@@ -427,6 +427,11 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             task=task, schedule=schedule
         )
         if duration_started.exists():
+            obj_type = (
+                CalendarTypes.TASK.value
+                if duration_started.first().task
+                else CalendarTypes.SCHEDULE.value
+            )
             data = {
                 "is_another_task_started": duration_started.exists(),
                 "id": (
