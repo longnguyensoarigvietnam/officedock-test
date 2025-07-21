@@ -83,6 +83,8 @@ const ListUsers = () => {
   const [userEditId, setUserEditId] = useState<number | null>(null);
   const [userEditDetail, setUserEditDetail] = useState<User | null>(null);
 
+  const [resetOrganizationFields, setResetOrganizationFields] = useState<boolean>(false)
+
   // Error messages
   const [errorMessages, setErrorMessages] = useState<{
     email?: string;
@@ -324,6 +326,7 @@ const ListUsers = () => {
           password: '',
           fullName: '',
         });
+        setResetOrganizationFields(false)
       }
     },
     onError: ({
@@ -350,6 +353,9 @@ const ListUsers = () => {
 
       // Flatten remaining keys and check if any unknown error exists
       const hasOtherErrors = Object.keys(rest).length > 0;
+      if(Object.keys(rest).includes('organizationIds')){
+        setResetOrganizationFields(true)
+      }
 
       if (hasOtherErrors) {
         showToast({
@@ -438,6 +444,7 @@ const ListUsers = () => {
           password: '',
           fullName: '',
         });
+        setResetOrganizationFields(false)
       },
       onError: ({
         response,
@@ -816,6 +823,8 @@ const ListUsers = () => {
             roleUserOptions={roleUserOptions.filter((role) => role.value)}
             errorMessages={errorMessages}
             setErrorMessages={setErrorMessages}
+            resetOrganizationFields={resetOrganizationFields}
+            setResetOrganizationFields={setResetOrganizationFields}
             onClose={() => {
               handleRemoveParam();
               setOpenActionsUserModal(false);
@@ -827,6 +836,7 @@ const ListUsers = () => {
                 password: '',
                 fullName: '',
               });
+              setResetOrganizationFields(false)
             }}
             onDelete={(userToDelete: User) => {
               handleOpenDeleteUserModal(userToDelete);

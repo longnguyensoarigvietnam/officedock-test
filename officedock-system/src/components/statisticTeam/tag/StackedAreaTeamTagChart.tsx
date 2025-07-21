@@ -329,15 +329,20 @@ const StackedAreaTeamTagChart = ({
     onSuccess: (data) => {
       const hasMyOrganization = data.data.some(
         (item) =>
-          String(item.organizationId) ==
+          String(item.organizationId) ===
           String(selectedOrganizationSideBar?.value),
       );
-      if (!hasMyOrganization) {
+
+      if (
+        !hasMyOrganization &&
+        selectedOptionOrganizationInTable ===
+          OptionOrganizationStatisticType.MAIN_TEAM
+      ) {
         const hasMyOtherTeam = data.data.some(
           (item) =>
-            String(item.organizationId) ==
-            OptionOrganizationStatisticType.OTHER,
+            item.organizationName === OptionOrganizationStatisticType.OTHER,
         );
+
         if (!hasMyOtherTeam) {
           setSelectedOptionOrganizationInTable(
             OptionOrganizationStatisticType.CALENDAR,
@@ -346,6 +351,24 @@ const StackedAreaTeamTagChart = ({
           setSelectedOptionOrganizationInTable(
             OptionOrganizationStatisticType.OTHER,
           );
+        }
+
+        return;
+      } else {
+        if (
+          selectedOptionOrganizationInTable !==
+          OptionOrganizationStatisticType.MAIN_TEAM
+        ) {
+          const hasCurrentOption = data.data.some(
+            (item) =>
+              item.organizationName === selectedOptionOrganizationInTable,
+          );
+
+          if (!hasCurrentOption && data.data.length > 0) {
+            setSelectedOptionOrganizationInTable(
+              data.data[0].organizationName as OptionOrganizationStatisticType,
+            );
+          }
         }
       }
     },
@@ -479,33 +502,35 @@ const StackedAreaTeamTagChart = ({
       setDataChart(chartData);
       setColorList(colors);
     } else {
-      const timeMilestones = getStatisticMilestones(
-        `${formatDateToYMD(startDate)}`,
-        `${formatDateToYMD(endDate || '')}`,
-        lineChartViewBy?.value as StatisticViewOptions,
-      );
-
-      const uniqueSortedDates = Array.from(new Set(timeMilestones)).sort(
-        (pre, next) => new Date(pre).getTime() - new Date(next).getTime(),
-      );
-
-      const transformedDates = uniqueSortedDates.map((date, index, arr) => {
-        const isEdge = index === 0 || index === arr.length - 1;
-        return convertToStatisticJapaneseLabels(
-          date,
-          lineChartViewBy?.value as string,
-          isEdge,
+      if (selectedOrganization?.value !== ALL_TEAM_STATISTIC) {
+        const timeMilestones = getStatisticMilestones(
+          `${formatDateToYMD(startDate)}`,
+          `${formatDateToYMD(endDate || '')}`,
+          lineChartViewBy?.value as StatisticViewOptions,
         );
-      });
 
-      setTimeRange(transformedDates);
-      setDataChart([
-        {
-          name: '',
-          data: Array(timeMilestones.length).fill(0),
-        },
-      ]);
-      return;
+        const uniqueSortedDates = Array.from(new Set(timeMilestones)).sort(
+          (pre, next) => new Date(pre).getTime() - new Date(next).getTime(),
+        );
+
+        const transformedDates = uniqueSortedDates.map((date, index, arr) => {
+          const isEdge = index === 0 || index === arr.length - 1;
+          return convertToStatisticJapaneseLabels(
+            date,
+            lineChartViewBy?.value as string,
+            isEdge,
+          );
+        });
+
+        setTimeRange(transformedDates);
+        setDataChart([
+          {
+            name: '',
+            data: Array(timeMilestones.length).fill(0),
+          },
+        ]);
+        return;
+      }
     }
   }, [
     statisticUserTaskDurationsList,
@@ -614,33 +639,35 @@ const StackedAreaTeamTagChart = ({
       setDataChart(chartData);
       setColorList(colorList);
     } else {
-      const timeMilestones = getStatisticMilestones(
-        formatDateToYMD(startDate) as string,
-        formatDateToYMD(endDate || '') as string,
-        lineChartViewBy?.value as StatisticViewOptions,
-      );
-
-      const uniqueSortedDates = Array.from(new Set(timeMilestones)).sort(
-        (a, b) => new Date(a).getTime() - new Date(b).getTime(),
-      );
-
-      const transformedDates = uniqueSortedDates.map((date, index, arr) => {
-        const isEdge = index === 0 || index === arr.length - 1;
-        return convertToStatisticJapaneseLabels(
-          date,
-          lineChartViewBy?.value as string,
-          isEdge,
+      if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
+        const timeMilestones = getStatisticMilestones(
+          formatDateToYMD(startDate) as string,
+          formatDateToYMD(endDate || '') as string,
+          lineChartViewBy?.value as StatisticViewOptions,
         );
-      });
 
-      setTimeRange(transformedDates);
+        const uniqueSortedDates = Array.from(new Set(timeMilestones)).sort(
+          (a, b) => new Date(a).getTime() - new Date(b).getTime(),
+        );
 
-      setDataChart([
-        {
-          name: '',
-          data: Array(timeMilestones.length).fill(0),
-        },
-      ]);
+        const transformedDates = uniqueSortedDates.map((date, index, arr) => {
+          const isEdge = index === 0 || index === arr.length - 1;
+          return convertToStatisticJapaneseLabels(
+            date,
+            lineChartViewBy?.value as string,
+            isEdge,
+          );
+        });
+
+        setTimeRange(transformedDates);
+
+        setDataChart([
+          {
+            name: '',
+            data: Array(timeMilestones.length).fill(0),
+          },
+        ]);
+      }
     }
   }, [
     statisticAllTeamTaskDurationsList,

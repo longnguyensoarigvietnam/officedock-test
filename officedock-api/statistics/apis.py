@@ -1467,20 +1467,35 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         ranges = split_ranges(
             from_date, end_date, trim_whitespace(statistic_by)
         )
-        fake_data = {
+        fake_data_subteam = {
+            "organization_name": SUB_TEAM,
+            "organization_id": SUB_TEAM,
             "duration": DEFAULT_TIME,
             "percent": 0,
             "users": [],
         }
+        fake_data_mainteam = {
+            "organization_name": main_organization.name,
+            "organization_id": main_organization.id,
+            "duration": DEFAULT_TIME,
+            "percent": 0,
+            "users": [],
+        }
+        fake_data_calendar = {
+            "organization_name": CALENDAR,
+            "organization_id": calendar_org.id,
+            "duration": DEFAULT_TIME,
+            "percent": 0,
+            "users": [],
+        }
+        fake_data_duration = None
         if option == SUB_TEAM:
-            fake_data["organization_name"] = SUB_TEAM
-            fake_data["organization_id"] = SUB_TEAM
+            fake_data_duration = fake_data_subteam
         elif option == MAIN_TEAM:
-            fake_data["organization_name"] = main_organization.name
-            fake_data["organization_id"] = main_organization.id
+            fake_data_duration = fake_data_mainteam
         elif option == CALENDAR:
-            fake_data["organization_name"] = CALENDAR
-            fake_data["organization_id"] = calendar_org.id
+            fake_data_duration = fake_data_calendar
+
         data = {"durations": []}
 
         if is_tag_page:
@@ -1509,6 +1524,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                 calendar_organization=calendar_org,
             )
         all_subteams = []
+        team_names = []
         for team in teams:
             if user_ids and option:
                 team["users"] = []
@@ -1543,6 +1559,15 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                             )
             if team.get("data"):
                 team.pop("data")
+            team_names.append(team.get("organization_name"))
+        # Append fake data to table under chart
+        if 1 <= len(team_names) < 3:
+            if main_organization.name not in team_names:
+                teams.append(fake_data_mainteam)
+            if SUB_TEAM not in team_names:
+                teams.append(fake_data_subteam)
+            if CALENDAR not in team_names:
+                teams.append(fake_data_calendar)
 
         priority_order = {main_organization.name: 0, SUB_TEAM: 1, CALENDAR: 2}
         # Sort based on priority_order
@@ -1633,7 +1658,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                         break
             break_team = break_team if (user_ids and option) else teams
             if (user_ids and option) and not break_team:
-                break_team = [fake_data]
+                break_team = [fake_data_duration]
 
             data["durations"].append(
                 {
