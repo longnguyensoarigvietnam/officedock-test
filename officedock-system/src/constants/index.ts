@@ -4,6 +4,7 @@ import {
   ReactionIconValue,
   StatisticViewLabels,
   StatisticViewOptions,
+  StatusTask,
   TaskRepetitiveType,
   WorkItemType,
 } from './enums';
@@ -469,3 +470,22 @@ export const DEFAULT_EMPTY_CATEGORY = [
 ];
 
 export const SUB_TEAMS = 'サブチーム';
+
+export const COLOR_BY_TASK_STATUS = [
+  {
+    name: StatusTask.NOT_STARTED,
+    color: '#A3EBF0',
+  },
+  {
+    name: StatusTask.IN_PROGRESS,
+    color: '#92E9AF',
+  },
+  {
+    name: StatusTask.CONFIRMING,
+    color: '#FCCF79',
+  },
+  {
+    name: StatusTask.COMPLETED,
+    color: '#F58383',
+  },
+];

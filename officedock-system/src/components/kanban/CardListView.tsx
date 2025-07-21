@@ -3,6 +3,9 @@ import { useMutation } from 'react-query';
 import { Dispatch, SetStateAction, useContext } from 'react';
 import { useSearchParams } from 'next/navigation';
 
+import RowSkeleton from '@components/skeleton/RowSkeleton';
+import ImageRound from '@components/common/ImageRound';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import ListViewByStatus from './ListViewByStatus';
 
 import {
@@ -14,14 +17,15 @@ import {
 } from '@interfaces/task';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { useToast } from '@providers/ToastProvider';
 import { TaskContext } from '@providers/TaskProvider';
 
-import { StatusTask } from '@constants/enums';
+import { StatusTask, StatusValueTask } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
 import { ERROR_EXTEND_COLUMN } from '@constants/message';
+import { COLOR_BY_TASK_STATUS } from '@constants';
 
 import api from '@base/api';
-import { useToast } from '@providers/ToastProvider';
 
 interface CardListViewProps {
   creationDataTaskData?: CreationDataTask;
@@ -68,7 +72,7 @@ const CardListView = ({
 }: CardListViewProps) => {
   const { expanded } = useContext(GlobalStateContext);
   const searchParams = useSearchParams();
-  const { memberSelected, orderingRequest, searchValue } =
+  const { extendByStatus, memberSelected, searchValue, isLoadingDataTask } =
     useContext(TaskContext);
   const userIdTask = searchParams.get('user');
   const { showToast } = useToast();
@@ -101,6 +105,7 @@ const CardListView = ({
 
   return (
     <>
+      {' '}
       {columnsKanbanData &&
         Object.values(columnsKanbanData) &&
         Object.values(columnsKanbanData)
@@ -128,32 +133,82 @@ const CardListView = ({
                     <p className="px-5 border-r-2">ステータス</p>
                   </div>
                 )}
-                <ListViewByStatus
-                  listId={listByStatus.id}
-                  listItems={listByStatus.items}
-                  listTitle={listByStatus.title}
-                  hasNext={hasNext}
-                  handlePinItem={handlePinItem}
-                  creationDataTaskData={creationDataTaskData}
-                  handleActionEditTask={handleActionEditTask}
-                  handleConfirmCopyTask={handleConfirmCopyTask}
-                  handleUpdateItemInline={handleUpdateItemInline}
-                  editTaskInline={editTaskInline}
-                  addTask={addTask}
-                  totalCount={count || 0}
-                  setColumnsKanbanData={setColumnsKanbanData}
-                  columnsKanbanData={columnsKanbanData}
-                  setNumberPagesData={setNumberPagesData}
-                  orderingRequest={orderingRequest}
-                  matchingTaskIds={matchingTaskIds}
-                  searchValue={searchValue}
-                  userId={
-                    `${memberSelected}` || `${userIdTask ? userIdTask : ''}`
-                  }
-                  saveExtendColumn={(data: Record<string, boolean>) => {
-                    saveExtendColumn(data);
-                  }}
-                />
+                {isLoadingDataTask ? (
+                  <>
+                    <div className="flex items-center gap-3 mb-3">
+                      <DynamicTooltip
+                        content={
+                          extendByStatus.find(
+                            (list) => list.id == listByStatus.id,
+                          )?.status
+                            ? '閉じる'
+                            : '開く'
+                        }
+                        placement="top">
+                        <div className="flex items-center justify-center cursor-pointer hover:bg-[#E3EAED] rounded-full w-[22px] h-[22px]">
+                          <ImageRound
+                            src="/icons/extend-column.svg"
+                            name="Extend column"
+                            className={`!w-3 !h-3 hover:cursor-pointer ${
+                              extendByStatus.find(
+                                (list) => list.id == listByStatus.id,
+                              )?.status
+                                ? '-rotate-90'
+                                : 'rotate-180'
+                            }`}
+                            style={{
+                              width: `8px`,
+                              height: `12px`,
+                            }}
+                          />
+                        </div>
+                      </DynamicTooltip>
+
+                      {listByStatus.id != StatusValueTask.MY_ROUTINE && (
+                        <div
+                          className={`bg-[${COLOR_BY_TASK_STATUS.find((status) => status.name == listByStatus.title)?.color}] w-3 h-3 rounded-full right-1.5 top-2`}
+                        />
+                      )}
+                      <p className="font-medium text-[14px]">
+                        {listByStatus.title}
+                      </p>
+                      {listByStatus.id != StatusValueTask.MY_ROUTINE &&
+                        !isLoadingDataTask && (
+                          <p className="text-[#77858F] text-[14px]">{count}</p>
+                        )}
+                    </div>
+                    <RowSkeleton
+                      className="!h-[50px] w-full mb-1"
+                      numberOfRows={5}
+                    />
+                  </>
+                ) : (
+                  <ListViewByStatus
+                    listId={listByStatus.id}
+                    listItems={listByStatus.items}
+                    listTitle={listByStatus.title}
+                    hasNext={hasNext}
+                    handlePinItem={handlePinItem}
+                    creationDataTaskData={creationDataTaskData}
+                    handleActionEditTask={handleActionEditTask}
+                    handleConfirmCopyTask={handleConfirmCopyTask}
+                    handleUpdateItemInline={handleUpdateItemInline}
+                    editTaskInline={editTaskInline}
+                    addTask={addTask}
+                    totalCount={count || 0}
+                    setColumnsKanbanData={setColumnsKanbanData}
+                    columnsKanbanData={columnsKanbanData}
+                    setNumberPagesData={setNumberPagesData}
+                    matchingTaskIds={matchingTaskIds}
+                    searchValue={searchValue}
+                    userId={
+                      `${memberSelected}` || `${userIdTask ? userIdTask : ''}`
+                    }
+                    saveExtendColumn={(data: Record<string, boolean>) => {
+                      saveExtendColumn(data);
+                    }}
+                  />
+                )}
               </div>
             );
           })}
