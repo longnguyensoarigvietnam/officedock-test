@@ -1328,45 +1328,47 @@ const LineChartCompare = ({
           <div className="px-[30px]">
             {(!isFetchingStatisticTaskDurationsList &&
               !isFetchingStatisticTaskDurationsCompareList) ||
-              (!isFetchingStatisticAllTeamTaskDurationsList &&
-                !isFetchingStatisticAllTeamTaskDurationsCompareList && (
-                  <>
-                    <div className="flex gap-8 items-center justify-end flex-wrap mb-3">
-                      <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
-                        基準
-                      </p>
-                      {standardLabelsInfo.map((label, index) => {
-                        return (
-                          <div key={index} className="flex gap-1 items-center">
-                            <div
-                              className="w-8 h-1"
-                              style={{ backgroundColor: label.color }}></div>
-                            <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
-                              {label.name}
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="flex gap-8 items-center justify-end flex-wrap">
-                      <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
-                        比較
-                      </p>
-                      {comparedLabelsInfo.map((label, index) => {
-                        return (
-                          <div key={index} className="flex gap-1 items-center">
-                            <div
-                              className="w-8 h-1 border-t-2 border-dashed"
-                              style={{ borderColor: label.color }}></div>
-                            <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
-                              {label.name}
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                ))}
+            (!isFetchingStatisticAllTeamTaskDurationsList &&
+              !isFetchingStatisticAllTeamTaskDurationsCompareList) ? (
+              <>
+                <div className="flex gap-8 items-center justify-end flex-wrap mb-3">
+                  <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                    基準
+                  </p>
+                  {standardLabelsInfo.map((label, index) => {
+                    return (
+                      <div key={index} className="flex gap-1 items-center">
+                        <div
+                          className="w-8 h-1"
+                          style={{ backgroundColor: label.color }}></div>
+                        <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
+                          {label.name}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-8 items-center justify-end flex-wrap">
+                  <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                    比較
+                  </p>
+                  {comparedLabelsInfo.map((label, index) => {
+                    return (
+                      <div key={index} className="flex gap-1 items-center">
+                        <div
+                          className="w-8 h-1 border-t-2 border-dashed"
+                          style={{ borderColor: label.color }}></div>
+                        <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
+                          {label.name}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <></>
+            )}
 
             {(!isFetchingStatisticTaskDurationsList &&
               !isFetchingStatisticTaskDurationsCompareList) ||

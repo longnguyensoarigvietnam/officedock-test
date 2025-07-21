@@ -261,6 +261,7 @@ const StatisticTagBoard = () => {
       smallCategoryId: selectedSmall?.value || '',
       tagIds: selectedTags,
       statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
+      isCompare: isCheckCompare,
     },
     condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
   });
@@ -291,6 +292,7 @@ const StatisticTagBoard = () => {
       tagIds: selectedTags,
       statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
       isTagPage: true,
+      isCompare: isCheckCompare,
     },
     condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
   });

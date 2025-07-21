@@ -20,6 +20,7 @@ interface FilterProps {
   statisticBy?: string;
   isTagPage?: boolean;
   mainOrganizationId?: number;
+  isCompare: boolean;
 }
 
 const useStatisticAllTeamTaskDurationsCompare = ({
@@ -43,6 +44,7 @@ const useStatisticAllTeamTaskDurationsCompare = ({
     signal?: AbortSignal;
   }) => {
     const params = new URLSearchParams();
+    if (!filter?.isCompare) return [];
 
     if (filter?.fromDate) {
       params.append('from_date', String(filter?.fromDate));
