@@ -30,6 +30,7 @@ import {
 } from '@constants';
 
 import useStatisticAllTeamTaskDurations from '@hooks/useStatisticAllTeamTaskDurations';
+import useStatisticUserTaskDurationsAreaChart from '@hooks/useStatisticUserTaskDurationsAreaChart';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
@@ -53,7 +54,6 @@ import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import FilterTeamStatistic from './filter/FilterTeamStatistic';
-import useStatisticUserTaskDurationsAreaChart from '@hooks/useStatisticUserTaskDurationsAreaChart';
 
 type Props = {
   startDate: Date;
@@ -257,10 +257,10 @@ const StackedAreaTeamChart = ({
           ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
           : selectedMembers?.filter(Boolean).join(','),
     },
-    condition: [ 
+    condition: [
       Boolean(
         selectedOrganization?.value != ALL_TEAM_STATISTIC &&
-        areaTableData.length > 0 &&
+          areaTableData.length > 0 &&
           selectedCategory?.id &&
           selectedOrganizationInTable,
       ),

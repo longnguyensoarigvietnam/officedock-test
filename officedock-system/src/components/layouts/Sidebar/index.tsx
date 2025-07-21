@@ -91,6 +91,7 @@ const Sidebar = ({ className }: Props) => {
     expanded,
     selectedOrganization,
     isChatFilesUploading,
+    isHasLoadingSkeleton,
     setOrganizationTeamList,
     setSelectedOrganization,
     setExpanded,
@@ -563,6 +564,7 @@ const Sidebar = ({ className }: Props) => {
                             )?.imgComponent,
                           }
                         }
+                        disabled={isHasLoadingSkeleton}
                         labelClass="max-w-[100px]"
                         labelOptionClass="!text-sm max-w-[200px] !truncate"
                         imgClassname="!w-6 !h-6"

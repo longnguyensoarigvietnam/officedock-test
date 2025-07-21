@@ -15,6 +15,7 @@ import { AxiosError } from 'axios';
 
 type ActionTaskFilterProp = {
   creationDataTaskData: CreationDataTask | undefined;
+  isLoadingDataTask?: boolean;
   handleClose: () => void;
   saveZoomKanban: UseMutateFunction<
     any,
@@ -35,6 +36,7 @@ type ActionTaskFilterProp = {
 
 const ActionFilterTask = ({
   creationDataTaskData,
+  isLoadingDataTask,
   saveZoomKanban,
   handleClose,
 }: ActionTaskFilterProp) => {
@@ -400,7 +402,10 @@ const ActionFilterTask = ({
           <Button variant="outline" onClick={handleClose} className="h-9">
             キャンセル
           </Button>
-          <Button onClick={handleSearch} className="h-9">
+          <Button
+            onClick={handleSearch}
+            disabled={isLoadingDataTask}
+            className="h-9">
             絞り込む
           </Button>
         </div>

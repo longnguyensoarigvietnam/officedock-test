@@ -1,6 +1,4 @@
 'use client';
-import { CalendarDashboardMember } from '@interfaces/calendar';
-import { OptionDropdownType } from '@interfaces/common';
 import {
   ReactNode,
   createContext,
@@ -11,6 +9,9 @@ import {
   MutableRefObject,
   createRef,
 } from 'react';
+
+import { CalendarDashboardMember } from '@interfaces/calendar';
+import { OptionDropdownType } from '@interfaces/common';
 
 interface ContextValue {
   isExtendCalendar: boolean;
@@ -45,6 +46,8 @@ interface ContextValue {
       secondTab: string;
     }>
   >;
+  isHasLoadingSkeleton: boolean;
+  setIsHasLoadingSkeleton: Dispatch<SetStateAction<boolean>>;
 }
 
 const defaultValue: ContextValue = {
@@ -74,6 +77,8 @@ const defaultValue: ContextValue = {
   getDelay: () => 100 | 1000,
   recordHover: () => {},
   setLastVisitedByTab: () => {},
+  isHasLoadingSkeleton: false,
+  setIsHasLoadingSkeleton: () => {},
 };
 
 export const GlobalStateContext = createContext<ContextValue>(defaultValue);
@@ -97,6 +102,8 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     firstTab: '',
     secondTab: '',
   });
+  // Loading Statistic
+  const [isHasLoadingSkeleton, setIsHasLoadingSkeleton] = useState(false);
 
   // Uploading files
   const [isChatFilesUploading, setIsChatFilesUploading] = useState(false);
@@ -149,6 +156,8 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     getDelay,
     recordHover,
     setLastVisitedByTab,
+    isHasLoadingSkeleton,
+    setIsHasLoadingSkeleton,
   };
 
   return (

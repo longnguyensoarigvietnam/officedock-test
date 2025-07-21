@@ -10,6 +10,7 @@ import MultiSelectUserDropdown from '@components/common/MultiSelectDropdown/Mult
 
 type ActionTaskFilterProp = {
   creationDataTaskData: CreationDataTask | undefined;
+  isLoadingDataTask?: boolean;
   listMemberTeam: {
     id: number;
     fullName: string;
@@ -23,6 +24,7 @@ type ActionTaskFilterProp = {
 const ActionFilterTaskTeam = ({
   creationDataTaskData,
   listMemberTeam,
+  isLoadingDataTask,
   handleClose,
   handleReadyToFetch,
 }: ActionTaskFilterProp) => {
@@ -307,7 +309,10 @@ const ActionFilterTaskTeam = ({
           <Button variant="outline" onClick={handleClose} className="h-9">
             キャンセル
           </Button>
-          <Button onClick={handleSearch} className="h-9">
+          <Button
+            onClick={handleSearch}
+            disabled={isLoadingDataTask}
+            className="h-9">
             絞り込む
           </Button>
         </div>
