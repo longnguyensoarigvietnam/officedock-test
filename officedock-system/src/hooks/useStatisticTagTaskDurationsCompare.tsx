@@ -19,6 +19,7 @@ interface FilterProps {
   organizationIds?: string;
   tagIds?: OptionDropdownType[];
   statisticBy?: string;
+  isCompare: boolean;
 }
 
 const useStatisticTagTaskDurationsCompare = ({
@@ -41,7 +42,7 @@ const useStatisticTagTaskDurationsCompare = ({
   }: {
     signal?: AbortSignal;
   }) => {
-    if (!filter?.organizationIds) return [];
+    if (!filter?.organizationIds || !filter?.isCompare) return [];
     const apiUrl = `${apiRouters.STATISTICS_TASK_DURATIONS}?is_tag_page=true&${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
     }${filter?.endDate ? `&end_date=${filter.endDate}` : ''}${
