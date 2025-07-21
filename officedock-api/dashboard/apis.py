@@ -977,7 +977,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         schedule_type = item.pop("schedule_type", None)
         started_at = item.pop("started_at", None)
         paused_at = item.pop("paused_at", None)
-        uuid = item.pop("uuid", None)
+        uuid = item.pop("uuid", uuid4())
         model = task or schedule
         # Create or update tags
         if tags is not None:
