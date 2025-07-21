@@ -382,7 +382,7 @@ class Memo(BaseModel):
         """
         Custom save method
         """
-        self.company = self.user.company
+        self.company_id = self.user.company_id
         super().save(*args, **kwargs)
 
 
@@ -486,7 +486,7 @@ class ReadTerm(BaseModel):
         Set default company
         """
         if self.user:
-            self.company = self.user.company
+            self.company_id = self.user.company_id
 
         super().save(*args, **kwargs)
 
@@ -517,7 +517,7 @@ class DailyReport(BaseModel):
         Set default company
         """
         if self.user:
-            self.company = self.user.company
+            self.company_id = self.user.company_id
 
         super().save(*args, **kwargs)
 
@@ -554,6 +554,6 @@ class ConfirmReport(BaseModel):
         Set default company
         """
         if self.user:
-            self.company = self.user.company
+            self.company_id = self.user.company_id
 
         super().save(*args, **kwargs)

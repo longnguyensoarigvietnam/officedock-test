@@ -135,11 +135,16 @@ class TaskViewSet(
                 super()
                 .get_queryset()
                 .filter(
-                    company=self.request.user.company, deleted_at__isnull=True
+                    company_id=self.request.user.company_id,
+                    deleted_at__isnull=True,
                 )
             )
 
-        return super().get_queryset().filter(company=self.request.user.company)
+        return (
+            super()
+            .get_queryset()
+            .filter(company_id=self.request.user.company_id)
+        )
 
     @transaction.atomic()
     def create(self, request, *args, **kwargs):
@@ -485,7 +490,7 @@ class TaskViewSet(
         task_room = ChatRoom.objects.filter(
             type=ChatRoomTypes.TASK.value,
             chat_rooms_participants__user=user,
-            company=user.company,
+            company_id=user.company_id,
         ).first()
         task_message = task_room.chat_messages.create(**message)
         chat_room_participant = task_room.chat_rooms_participants.filter(
@@ -551,11 +556,11 @@ class TaskViewSet(
 
         if not chat_room_participant:
             chat_room = ChatRoom.objects.create(
-                company=user.company, type=ChatRoomTypes.PRIVATE.value
+                company_id=user.company_id, type=ChatRoomTypes.PRIVATE.value
             )
             chat_room.participants.set(
                 [user, participant],
-                through_defaults={"company": user.company},
+                through_defaults={"company_id": user.company_id},
             )
             chat_room_participant = chat_room.chat_rooms_participants.filter(
                 user_id=participant.id
@@ -727,7 +732,7 @@ class TaskViewSet(
         )
         # Retrieve or create TaskFrequent and set the default company
         task_frequent, created = TaskFrequent.objects.get_or_create(
-            user=user, task=task, defaults={"company": task.company}
+            user=user, task=task, defaults={"company_id": task.company_id}
         )
 
         # Increment the count if it's not a newly created instance
@@ -1060,7 +1065,9 @@ class TaskViewSet(
                 # Add new users in charge.
                 task.people_in_charge.add(
                     user,
-                    through_defaults={"company": self.request.user.company},
+                    through_defaults={
+                        "company_id": self.request.user.company_id
+                    },
                 )
 
                 # Update last index if add new user
@@ -1110,7 +1117,9 @@ class TaskViewSet(
             for item in tag_ids:
                 task.tags.add(
                     item["tag"],
-                    through_defaults={"company": self.request.user.company},
+                    through_defaults={
+                        "company_id": self.request.user.company_id
+                    },
                 )
         elif tag_ids == []:
             task.tags.clear()
@@ -1272,7 +1281,7 @@ class TaskViewSet(
         frequent_tasks = (
             TaskFrequent.objects.filter(
                 user=user,
-                company=user.company,
+                company_id=user.company_id,
                 task__people_in_charge__id=user.id,
             )
             .order_by("-count")
@@ -1604,7 +1613,7 @@ class TaskCalendarViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 task_schedules__plan_start_date__lte=end_date,
             ).distinct()
 
-        return queryset.filter(company=user.company)
+        return queryset.filter(company_id=user.company_id)
 
 
 @extend_schema(tags=["System > Task"])
@@ -1791,7 +1800,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = super().get_queryset().filter(company=user.company)
+        queryset = super().get_queryset().filter(company_id=user.company_id)
         query_params = self.request.query_params
         user_id = query_params.get("user_id")
         ordering = query_params.get("ordering")
@@ -1803,7 +1812,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         if is_team_task:
             validate_company_organization(
-                user.company, organization_id, required_field=True
+                user.company_id, organization_id, required_field=True
             )
             # Filter only in organization
             if not is_cross_team_task:
@@ -1974,7 +1983,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             if "deadline" in ordering:
                 Setting.objects.update_or_create(
                     user=user,
-                    company=user.company,
+                    company_id=user.company_id,
                     defaults={
                         "is_sorting_task_by_deadline": True,
                         "is_sorting_task_by_important": False,
@@ -1983,7 +1992,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             if "is_important" in ordering:
                 Setting.objects.update_or_create(
                     user=user,
-                    company=user.company,
+                    company_id=user.company_id,
                     defaults={
                         "is_sorting_task_by_deadline": False,
                         "is_sorting_task_by_important": True,
@@ -2028,7 +2037,9 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     def get_queryset(self):
         """Filter queryset"""
         user_logged = self.request.user
-        queryset = super().get_queryset().filter(company=user_logged.company)
+        queryset = (
+            super().get_queryset().filter(company_id=user_logged.company_id)
+        )
 
         # Filter by organization id
         if organization_id := self.request.query_params.get("organization_id"):
@@ -2096,7 +2107,7 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             Task.objects.filter(
                 organization_id=organization_id,
                 people_in_charge__isnull=True,
-                company=user.company,
+                company_id=user.company_id,
             )
             .exclude(type=TaskTypes.MY_TEMPLATE.value)
             .all()
@@ -2238,5 +2249,5 @@ class TodoListViewSet(
 
     def get_queryset(self):
         user = self.request.user
-        queryset = super().get_queryset().filter(company=user.company)
+        queryset = super().get_queryset().filter(company_id=user.company_id)
         return queryset

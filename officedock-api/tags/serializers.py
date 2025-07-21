@@ -65,15 +65,15 @@ class TagSerializer(serializers.ModelSerializer):
         name = data.get("name")
         if organizations:
             for organization in organizations:
-                if not user.company.organizations.filter(
-                    id=organization.id
+                if not Organization.objects.filter(
+                    company_id=user.company_id, id=organization.id
                 ).exists():
                     raise serializers.ValidationError(
                         {"detail": ERROR_MESSAGES["organization_not_exists"]}
                     )
         if (
             name
-            and Tag.objects.filter(name=name, company=user.company)
+            and Tag.objects.filter(name=name, company_id=user.company_id)
             .exclude(id=self.instance.id if self.instance else None)
             .exists()
         ):
@@ -82,14 +82,6 @@ class TagSerializer(serializers.ModelSerializer):
             )
 
         return data
-
-    def to_representation(self, instance):
-        """
-        Custom sorting by index for list people in charge
-        """
-        representation = super().to_representation(instance)
-
-        return representation
 
     def get_actions(self, obj):
         """

@@ -79,8 +79,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
 
         user = self.request.user
-        company = user.company
-        return super().get_queryset().filter(company=company)
+        return super().get_queryset().filter(company_id=user.company_id)
 
     def get_serializer(self, *args, **kwargs):
         if self.action == "retrieve":
@@ -236,7 +235,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             instance, data=request.data, partial=True
         )
         serializer.is_valid(raise_exception=True)
-        company = request.user.company
+        company_id = request.user.company_id
         validated_data = serializer.validated_data
         participants = validated_data.pop("participant_ids", None)
 
@@ -247,7 +246,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 {"name": [ERROR_MESSAGES["name_of_chat_room_required"]]}
             )
 
-        chat_room = serializer.save(company=company)
+        chat_room = serializer.save(company_id=company_id)
 
         if participants is not None:
             # Unique element in list participants
@@ -271,7 +270,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
 
             chat_room.participants.set(
-                unique_participants, through_defaults={"company": company}
+                unique_participants, through_defaults={"company_id": company_id}
             )
 
             # Handle websocket to delete participants
@@ -712,13 +711,13 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             serializer_data = serializer.validated_data
             file_uuids = serializer_data.pop("file_uuids", [])
             message = serializer.save(
-                sender=user, chat_room=chat_room, company=user.company
+                sender=user, chat_room=chat_room, company_id=user.company_id
             )
 
             if file_uuids:
                 # Create chat files
                 ChatFile.create_files(
-                    company=chat_room.company,
+                    company_id=chat_room.company_id,
                     room=chat_room,
                     message=message,
                     uuids=file_uuids,
@@ -798,7 +797,7 @@ class ChatMessageViewSet(
         if self.action in ["destroy", "perform_update"]:
             return queryset.filter(sender=user)
 
-        return queryset.filter(company=user.company)
+        return queryset.filter(company_id=user.company_id)
 
     def get_serializer_class(self):
         """
@@ -906,7 +905,7 @@ class ChatMessageViewSet(
             instance.reactions.filter(user=user, icon=icon).delete()
         else:
             instance.reactions.create(
-                company=user.company, user=user, icon=icon
+                company_id=user.company_id, user=user, icon=icon
             )
         participants = instance.chat_room.chat_rooms_participants.all()
         for participant in participants:
@@ -1018,7 +1017,11 @@ class ChatFileViewSet(
     screen_name = Screens.CHAT.value
 
     def get_queryset(self):
-        return super().get_queryset().filter(company=self.request.user.company)
+        return (
+            super()
+            .get_queryset()
+            .filter(company_id=self.request.user.company_id)
+        )
 
     @extend_schema(
         parameters=[

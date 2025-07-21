@@ -125,7 +125,7 @@ class IsSystemAdminOnly(BasePermission):
         ):
             return False
 
-        return user.company.id == obj.company.id
+        return user.company_id == obj.company_id
 
 
 class IsManagerOnly(BasePermission):

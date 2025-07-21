@@ -43,7 +43,9 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         return (
             super()
             .get_queryset()
-            .filter(Q(system_role=True) | Q(company=self.request.user.company))
+            .filter(
+                Q(system_role=True) | Q(company_id=self.request.user.company_id)
+            )
         )
 
     def get_serializer_context(self):
@@ -90,7 +92,7 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             # ======== End update permission =======
 
         role = serializer.save(
-            company=self.request.user.company, system_role=False
+            company_id=self.request.user.company_id, system_role=False
         )
 
         create_role_with_permissions(role, permissions_to_create)
@@ -167,7 +169,8 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             for user in instance.users.all():
                 if user.roles.count() == 1:
                     user.roles.add(
-                        normal_role, through_defaults={"company": user.company}
+                        normal_role,
+                        through_defaults={"company_id": user.company_id},
                     )
                 # Block access token for logged user
                 LoginToken.objects.filter(user=user).update(is_block=True)

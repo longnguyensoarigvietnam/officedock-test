@@ -290,7 +290,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         Filtering duration by company.
         """
         user = self.request.user
-        queryset = super().get_queryset().filter(company=user.company)
+        queryset = super().get_queryset().filter(company_id=user.company_id)
 
         return queryset.order_by("started_at")
 
@@ -760,7 +760,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     def get_queryset(self):
         """Get queryset"""
         user = self.request.user
-        queryset = super().get_queryset().filter(company=user.company)
+        queryset = super().get_queryset().filter(company_id=user.company_id)
 
         return queryset.order_by("-created_at")
 
@@ -892,7 +892,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             for item in tags:
                 model.tags.add(
                     item,
-                    through_defaults={"company": user.company},
+                    through_defaults={"company_id": user.company_id},
                 )
         elif tags == []:
             model.tags.clear()
@@ -992,7 +992,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             for item in tags:
                 model.tags.add(
                     item,
-                    through_defaults={"company": user.company},
+                    through_defaults={"company_id": user.company_id},
                 )
         elif tags == []:
             model.tags.clear()
@@ -1023,7 +1023,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     schedule=model if isinstance(model, Schedule) else None,
                     started_at=start,
                     paused_at=end,
-                    company=user.company,
+                    company_id=user.company_id,
                     user=user,
                     uuid=uuid,
                 )
@@ -1034,7 +1034,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 schedule=model if isinstance(model, Schedule) else None,
                 started_at=started_at,
                 paused_at=paused_at,
-                company=user.company,
+                company_id=user.company_id,
                 user=user,
                 uuid=uuid,
             )

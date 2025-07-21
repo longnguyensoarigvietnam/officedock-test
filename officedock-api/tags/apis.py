@@ -33,8 +33,8 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
 
         user = self.request.user
-        company = user.company
-        queryset = super().get_queryset().filter(company=company)
+        company_id = user.company_id
+        queryset = super().get_queryset().filter(company_id=company_id)
 
         return queryset
 

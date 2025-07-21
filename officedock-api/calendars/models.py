@@ -107,7 +107,7 @@ class RepeatSchedule(BaseModel):
         """
         Set default company
         """
-        self.company = self.schedule.company
+        self.company_id = self.schedule.company_id
         super().save(*args, **kwargs)
 
 

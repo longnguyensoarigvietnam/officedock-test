@@ -75,7 +75,7 @@ class ChatRoomSerializer(serializers.ModelSerializer):
 
         if participants:
             for participant in participants:
-                if participant.company != request.user.company:
+                if participant.company_id != request.user.company_id:
                     raise serializers.ValidationError(
                         {
                             "participant_ids": {

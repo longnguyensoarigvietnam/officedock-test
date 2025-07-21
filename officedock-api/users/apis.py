@@ -801,12 +801,12 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
 
         user = self.request.user
-        company = user.company
+        company_id = user.company_id
 
         queryset = (
             super()
             .get_queryset()
-            .filter(company=company)
+            .filter(company_id=company_id)
             .exclude(roles__name=RoleTypes.OPERATION_ADMIN.value)
             .distinct()
         )
@@ -1009,7 +1009,7 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 user.organizations.add(
                     data_org.get("organization"),
                     through_defaults={
-                        "company": user.company,
+                        "company_id": user.company_id,
                         "is_main": data_org.get("is_main", False),
                     },
                 )
@@ -1019,7 +1019,7 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             for role in roles_data:
                 user.roles.add(
                     role,
-                    through_defaults={"company": user.company},
+                    through_defaults={"company_id": user.company_id},
                 )
 
     @transaction.atomic()
@@ -1139,7 +1139,9 @@ class SystemUserMemoViewSet(BaseAPIViewSet):
         """
 
         user = self.request.user
-        return super().get_queryset().filter(user=user, company=user.company)
+        return (
+            super().get_queryset().filter(user=user, company_id=user.company_id)
+        )
 
     @action(
         detail=False,
@@ -1254,18 +1256,18 @@ class AdminUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         profile_data = serializer_data.pop("profile")
 
         # Save data to User and Profile
-        company = self.request.user.company
+        company_id = self.request.user.company_id
         password = get_random_string(8)
         role = Role.get_role(RoleTypes.OPERATION_ADMIN.value)
         user = serializer.save(
-            company=company,
+            company_id=company_id,
             password=password,
             username_alias=username_alias,
         )
-        Profile.objects.create(user=user, company=company, **profile_data)
+        Profile.objects.create(user=user, company_id=company_id, **profile_data)
 
         # Set role Operation Admin
-        user.roles.add(role, through_defaults={"company": user.company})
+        user.roles.add(role, through_defaults={"company_id": user.company_id})
 
         # Send mail to invited user
         mail_service = MailService()
