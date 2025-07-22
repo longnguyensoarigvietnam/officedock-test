@@ -1019,12 +1019,6 @@ const LineChartByTeamTags = ({
         tableDetail.forEach((detail) => {
           totalDurationList.push(detail.tagDuration);
         });
-        const foundSelectedOrganizationOption = tableDetail.find(
-          (org) => org.tagId == selectedOrganizationOptionInTable,
-        );
-        if (!foundSelectedOrganizationOption) {
-          setSelectedOrganizationOptionInTable(tableDetail[0].tagId);
-        }
         setTotalDuration(totalDurationsForStatistic(totalDurationList));
         setLegendList(legendList);
         setTagCollapseStatuses(
