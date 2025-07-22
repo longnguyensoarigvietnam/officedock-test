@@ -639,6 +639,7 @@ class TaskCalendarSerializer(TaskCommonSerializer):
     categories = serializers.SerializerMethodField()
     task_schedules = serializers.SerializerMethodField()
     is_start = serializers.SerializerMethodField()
+    deadline = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
@@ -689,6 +690,16 @@ class TaskCalendarSerializer(TaskCommonSerializer):
         Return task type for calendar event
         """
         return CalendarTypes.TASK.value
+
+    def get_deadline(self, instance):
+        """
+        Return task deadline
+        """
+        return (
+            instance.deadline
+            if instance.status_name != TaskStatusConstant.MY_ROUTINE.value
+            else None
+        )
 
     def get_categories(self, obj):
         """Handle retrieving categories of a Task."""

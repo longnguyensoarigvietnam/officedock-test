@@ -1889,7 +1889,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             if ids := split_id_from_string(organization_ids):
                 queryset = queryset.filter(Q(organization__in=ids))
 
-        return queryset
+        return queryset.distinct()
 
     @extend_schema(
         parameters=[
