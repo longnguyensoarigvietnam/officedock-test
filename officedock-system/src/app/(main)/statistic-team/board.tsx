@@ -449,6 +449,7 @@ const StatisticTeamBoard = () => {
 
   // Handle Choose organization with option large
   const handleSelectOrganizationCustom = (data: OptionDropdownType) => {
+    if (selectedOrganization?.value == ALL_TEAM_STATISTIC) return;
     setCurrentPage(1);
     handleResetTableData();
     setSelectedOrganization(data);
