@@ -1799,7 +1799,7 @@ export const normalizeDurationUsersWithTeamDockStatisticAllTeam = (
   // Normalize durations
   const normalizedDurations = durations.map((duration) => {
     const foundOrg = duration.data.find((org) =>
-      matchesSelectedOrganization(org.organizationId),
+      matchesSelectedOrganization(org?.organizationId),
     );
 
     if (!foundOrg)

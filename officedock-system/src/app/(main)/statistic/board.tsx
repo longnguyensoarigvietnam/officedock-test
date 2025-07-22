@@ -311,6 +311,7 @@ const StatisticBoard = () => {
       endDate: formatDateToYMD(`${endDateCompare}`) || '',
       tagIds: selectedTags,
       statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
+      isCompare: isCheckCompare,
     },
     condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
   });
