@@ -22,8 +22,8 @@ import { apiRouters } from '@constants/routers';
 import { useToast } from '@providers/ToastProvider';
 
 interface BoardKanbanProps {
+  isFetchingTaskBoards: boolean;
   columnsKanbanData: Columns | undefined;
-  isLoadingDataTask: boolean;
   showFrequentlyTasks: boolean;
   numberPagesData: {
     id: string;
@@ -54,8 +54,8 @@ interface BoardKanbanProps {
 }
 
 const BoardKanban = ({
+  isFetchingTaskBoards,
   columnsKanbanData,
-  isLoadingDataTask,
   showFrequentlyTasks,
   numberPagesData,
   orderTaskSave,
@@ -114,7 +114,7 @@ const BoardKanban = ({
     },
   );
 
-  return columnsKanbanData && !isLoadingDataTask ? (
+  return columnsKanbanData && !isFetchingTaskBoards ? (
     <Droppable
       droppableId="columns"
       direction="horizontal"

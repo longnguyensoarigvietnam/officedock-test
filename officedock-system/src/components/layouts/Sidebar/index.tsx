@@ -569,6 +569,7 @@ const Sidebar = ({ className }: Props) => {
                         labelOptionClass="!text-sm max-w-[200px] !truncate"
                         imgClassname="!w-6 !h-6"
                         onChange={(e: OptionDropdownType) => {
+                          if (isHasLoadingSkeleton) return;
                           setSelectedOrganization({
                             label: e.label,
                             value: e.value,

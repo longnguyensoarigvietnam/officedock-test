@@ -29,6 +29,7 @@ import api from '@base/api';
 
 interface CardListViewProps {
   creationDataTaskData?: CreationDataTask;
+  isFetchingTaskBoards: boolean;
   numberPagesData: {
     id: string;
     count: number;
@@ -57,6 +58,7 @@ interface CardListViewProps {
   orderTaskSave: Task[];
 }
 const CardListView = ({
+  isFetchingTaskBoards,
   columnsKanbanData,
   setColumnsKanbanData,
   numberPagesData,
@@ -72,7 +74,7 @@ const CardListView = ({
 }: CardListViewProps) => {
   const { expanded } = useContext(GlobalStateContext);
   const searchParams = useSearchParams();
-  const { extendByStatus, memberSelected, searchValue, isLoadingDataTask } =
+  const { extendByStatus, memberSelected, searchValue } =
     useContext(TaskContext);
   const userIdTask = searchParams.get('user');
   const { showToast } = useToast();
@@ -133,7 +135,7 @@ const CardListView = ({
                     <p className="px-5 border-r-2">ステータス</p>
                   </div>
                 )}
-                {isLoadingDataTask ? (
+                {isFetchingTaskBoards ? (
                   <>
                     <div className="flex items-center gap-3 mb-3">
                       <DynamicTooltip
@@ -173,7 +175,7 @@ const CardListView = ({
                         {listByStatus.title}
                       </p>
                       {listByStatus.id != StatusValueTask.MY_ROUTINE &&
-                        !isLoadingDataTask && (
+                        !isFetchingTaskBoards && (
                           <p className="text-[#77858F] text-[14px]">{count}</p>
                         )}
                     </div>
