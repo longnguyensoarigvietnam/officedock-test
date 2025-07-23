@@ -2726,6 +2726,19 @@ const TimeSchedule = memo(
               (item) => item.uuid !== draggedEvent.extendedProps.uuid,
             );
             setTaskTimeScheduleList(newDataTimeList);
+            const hasMatchingItem = newDataTimeList.some(
+              (item) =>
+                item.taskId === draggedEvent.extendedProps.taskId &&
+                item.resourceId === ItemScheduleType.PLANS &&
+                item.start &&
+                isTodaySchedule(item.start),
+            );
+            if (!hasMatchingItem) {
+              handleEditShowClockItem(
+                parseInt(draggedEvent.extendedProps.taskId as string),
+                false,
+              );
+            }
             deletePlanTask(draggedEvent.extendedProps.uuid);
           }
           info.event.remove();

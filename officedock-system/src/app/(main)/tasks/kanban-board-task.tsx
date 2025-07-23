@@ -175,7 +175,6 @@ const KanbanBoardTask = () => {
     taskSelectedToStart,
     showWarningStartTaskModal,
     showEditTaskModal,
-    isLoadingDataTask,
     widthCalendar,
     columnWidth,
     selectedOptionZoom,
@@ -308,7 +307,7 @@ const KanbanBoardTask = () => {
     useState<boolean>(true);
 
   // Call API get task board list
-  const { taskBoardList, numberPages } = useTaskBoardList(
+  const { taskBoardList, numberPages, isFetchingTaskBoards } = useTaskBoardList(
     {
       search: searchValue,
       tagId: `${tagSelected}`,
@@ -3282,7 +3281,7 @@ const KanbanBoardTask = () => {
                     />
                     <>
                       <Button
-                        disabled={isLoadingDataTask}
+                        disabled={isFetchingTaskBoards}
                         onClick={() => {
                           if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
                             setIsReadyToFetch(true);
@@ -3292,17 +3291,17 @@ const KanbanBoardTask = () => {
                           }
                         }}
                         variant={
-                          isLoadingDataTask
+                          isFetchingTaskBoards
                             ? 'outline'
                             : dataOrderRing === FilterTypeKanban.DEADLINE
                               ? 'primary'
                               : 'outline'
                         }
-                        className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
+                        className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
                         締切期間
                       </Button>
                       <Button
-                        disabled={isLoadingDataTask}
+                        disabled={isFetchingTaskBoards}
                         onClick={() => {
                           if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
                             setIsReadyToFetch(true);
@@ -3312,13 +3311,13 @@ const KanbanBoardTask = () => {
                           }
                         }}
                         variant={
-                          isLoadingDataTask
+                          isFetchingTaskBoards
                             ? 'outline'
                             : dataOrderRing === FilterTypeKanban.IMPORTANT
                               ? 'primary'
                               : 'outline'
                         }
-                        className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
+                        className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
                         重要
                       </Button>
                     </>
@@ -3357,7 +3356,7 @@ const KanbanBoardTask = () => {
                                     <span className="w-[71px] truncate">
                                       {item.label}
                                     </span>
-                                    {!isLoadingDataTask && (
+                                    {!isFetchingTaskBoards && (
                                       <ImageRound
                                         src={`/icons/close.svg`}
                                         name="close"
@@ -3390,7 +3389,7 @@ const KanbanBoardTask = () => {
                                     <span className="w-[71px] truncate">
                                       {item.label}
                                     </span>
-                                    {!isLoadingDataTask && (
+                                    {!isFetchingTaskBoards && (
                                       <ImageRound
                                         src={`/icons/close.svg`}
                                         name="close"
@@ -3415,7 +3414,7 @@ const KanbanBoardTask = () => {
                               <ActionFilterTask
                                 creationDataTaskData={creationDataTaskData}
                                 saveZoomKanban={saveZoomKanban}
-                                isLoadingDataTask={isLoadingDataTask}
+                                isLoadingDataTask={isFetchingTaskBoards}
                                 handleClose={() => setIsOpenModalFilter(false)}
                               />
                             </PopoverPanel>
@@ -3446,7 +3445,7 @@ const KanbanBoardTask = () => {
                         name="List view icon"
                         className="w-12 h-12 hover:cursor-pointer"
                         onClick={() => {
-                          if (isLoadingDataTask) return;
+                          if (isFetchingTaskBoards) return;
                           setIsListView(!isListView);
                           saveZoomKanban({
                             isShowListKanban: !isListView,
@@ -3465,13 +3464,13 @@ const KanbanBoardTask = () => {
                     <div className="flex-grow">
                       <BoardKanban
                         columnsKanbanData={columnsKanbanData}
-                        isLoadingDataTask={isLoadingDataTask}
                         showFrequentlyTasks={showFrequentlyTasks}
                         numberPagesData={numberPagesData}
                         orderTaskSave={orderTaskSave}
                         creationDataTaskData={creationDataTaskData}
                         setColumnsKanbanData={setColumnsKanbanData}
                         setNumberPagesData={setNumberPagesData}
+                        isFetchingTaskBoards={isFetchingTaskBoards}
                         editTaskInline={(data: DataStatusChangeInline) => {
                           if (
                             data.oldIdStatus ===
@@ -3506,6 +3505,7 @@ const KanbanBoardTask = () => {
                   </div>
                 ) : (
                   <CardListView
+                    isFetchingTaskBoards={isFetchingTaskBoards}
                     columnsKanbanData={columnsKanbanData}
                     setColumnsKanbanData={setColumnsKanbanData}
                     setNumberPagesData={setNumberPagesData}
