@@ -8,14 +8,12 @@ from calendars.constants import CalendarTypes
 from calendars.models import Schedule
 from common.utils import (
     format_duration,
-    time_str_to_timedelta,
     get_common_categories_with_none_category,
 )
 from dashboard.serializers import ActualDurationListSerializer
 from tags.serializers import BaseTagSerializer
 from tasks.models import TaskDuration, Task
 from tasks.serializers import TaskCommonSerializer, TodoListSerializer
-from organizations.serializers import BaseOrganizationSerializer
 
 
 class DurationSerializer(serializers.ModelSerializer):
@@ -244,144 +242,6 @@ class DailyEventSerializer(serializers.ModelSerializer):
             total_duration = total_duration * related_tag_count
         # Format the output as desired (HH:MM:SS)
         return format_duration(total_duration)
-
-
-class StatisticTaskSerializer(DailyTaskSerializer):
-    """Statistic task serializer"""
-
-    organization = BaseOrganizationSerializer()
-    percent = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = Task
-        fields = [
-            "id",
-            "title",
-            "tags",
-            "total_duration",
-            "percent",
-            "categories",
-            "type",
-            "organization",
-            "created_at",
-        ]
-
-    def get_percent(self, obj):
-        """
-        Handle calculate percent of total duration
-        """
-        start_of_day = self.context.get("start_of_day")
-        end_of_day = self.context.get("end_of_day")
-        total_duration = self.context.get("total_duration")
-        tag_ids = self.context.get("tag_ids")
-        user = self.context.get("user")
-        current_total_percent = self.context.get("current_total_percent")
-        if not total_duration:
-            return None
-
-        durations = _get_list_durations(obj, start_of_day, end_of_day, user)
-
-        duration = timedelta()
-        # Calculate time between started and paused
-        for task_duration in durations:
-            paused_at = (
-                task_duration.paused_at
-                if task_duration.paused_at
-                else timezone.now()
-            )
-            duration += paused_at - task_duration.started_at
-        if tag_ids:
-            related_tag_count = obj.tags.filter(id__in=tag_ids).count()
-            duration = duration * related_tag_count
-        duration = time_str_to_timedelta(format_duration(duration))
-        total_sec = time_str_to_timedelta(total_duration).total_seconds()
-        duration_sec = duration.total_seconds()
-        if not total_sec or not duration_sec:
-            return 0
-        percent_per_total_duration = (duration_sec / total_sec) * 100
-        # Limit the amount we can add to keep percent <= 100
-        percent_per_total_duration = min(
-            round(percent_per_total_duration), 100 - current_total_percent
-        )
-        return percent_per_total_duration
-
-
-class StatisticEventSerializer(DailyEventSerializer):
-    """Statistic event serializer"""
-
-    organization = BaseOrganizationSerializer()
-    percent = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = Schedule
-        fields = [
-            "id",
-            "title",
-            "tags",
-            "total_duration",
-            "percent",
-            "categories",
-            "organization",
-            "type",
-            "created_at",
-        ]
-
-    def get_percent(self, obj):
-        """
-        Handle calculate percent of total duration
-        """
-        start_of_day = self.context.get("start_of_day")
-        end_of_day = self.context.get("end_of_day")
-        total_duration = self.context.get("total_duration")
-        tag_ids = self.context.get("tag_ids")
-        user = self.context.get("user")
-        current_total_percent = self.context.get("current_total_percent")
-        if not total_duration:
-            return None
-        durations = _get_list_durations(obj, start_of_day, end_of_day, user)
-
-        duration = timedelta()
-        # Calculate time between started and paused
-        for task_duration in durations:
-            paused_at = (
-                task_duration.paused_at
-                if task_duration.paused_at
-                else timezone.now()
-            )
-            duration += paused_at - task_duration.started_at
-        if tag_ids:
-            related_tag_count = obj.tags.filter(id__in=tag_ids).count()
-            duration = duration * related_tag_count
-        total_sec = time_str_to_timedelta(total_duration).total_seconds()
-        duration_sec = duration.total_seconds()
-        if not total_sec or not duration_sec:
-            return 0
-        percent_per_total_duration = (duration_sec / total_sec) * 100
-        # Limit the amount we can add to keep percent <= 100
-        percent_per_total_duration = min(
-            round(percent_per_total_duration), 100 - current_total_percent
-        )
-        return percent_per_total_duration
-
-
-class BaseStatisticTaskSerializer(StatisticTaskSerializer):
-    """
-    Base statistic task serializer
-    """
-
-    class Meta:
-        model = Task
-        fields = ["id", "title", "type"]
-
-
-class BaseStatisticEventSerializer(StatisticEventSerializer):
-    """
-    Base statistic task serializer
-    """
-
-    class Meta:
-        model = Schedule
-        fields = ["id", "title", "type"]
 
 
 class DurationDetailForPDFSerializer(ActualDurationListSerializer):
