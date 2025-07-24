@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, time
 
 from django.db import transaction
+from django.db.models import Q
+from django.utils.timezone import now
 from rest_framework.exceptions import ValidationError
 
 from chat.constants import WebSocketEventType
@@ -175,6 +177,7 @@ def calculate_progress_skill_map(
     duration_created_at=None,
     organization=None,
     is_plus=True,
+    old_task_updated=None,
 ):
     """
     Handle calculate progress skill map by task
@@ -210,14 +213,19 @@ def calculate_progress_skill_map(
             is_valid=True,
         ).first()
         if skill_map:
-            if (
-                duration_created_at
-                and duration_created_at < skill_map.created_at
-            ):
-                continue
             current_skill_level = skill_map.skill_map_skill_levels.filter(
                 is_complete=False
             ).first()
+            if (
+                (
+                    duration_created_at
+                    and duration_created_at < current_skill_level.created_at
+                )
+                or old_task_updated
+                and old_task_updated < current_skill_level.created_at
+            ):
+                continue
+
             actual_measure_count = current_skill_level.actual_measure_count
             actual_measure_time = current_skill_level.actual_measure_time
             if is_minus and (
@@ -226,7 +234,7 @@ def calculate_progress_skill_map(
             ):
                 continue
             duration = duration_time or get_total_hours_of_task(
-                task, skill_map_created_at=skill_map.created_at
+                task, skill_map_level_created_at=current_skill_level.created_at
             )
             total_duration_of_task = -duration if is_minus else duration
             if case in {
@@ -297,26 +305,45 @@ def calculate_progress_skill_map(
                 else 0,
                 actual_measure_time=actual_measure_time,
                 measure_task_ids=measure_task_ids,
+                updated_at=now(),
             )
     # Update old level up contain task
     skill_map_levels = SkillMapSkillLevel.objects.filter(
         measure_task_ids__contains=[task.id], is_complete=True
     ).all()
     for skill_map_level in skill_map_levels:
-        # Check task status for minus or plus count and duration
-        if task.status.name == TaskStatus.COMPLETED.value:
-            count = 1
-            total_duration_of_task = get_total_hours_of_task(task)
-        else:
-            count = -1
-            total_duration_of_task = -get_total_hours_of_task(task)
-        # Calculate actual measure count
-        actual_measure_count = skill_map_level.actual_measure_count + count
+        if (
+            duration_created_at
+            and duration_created_at > skill_map_level.updated_at
+        ):
+            continue
+        actual_measure_count = skill_map_level.actual_measure_count
+        if not duration_time:
+            durations = TaskDuration.objects.filter(
+                task=task,
+                created_at__gte=skill_map_level.created_at,
+                created_at__lte=skill_map_level.updated_at,
+            ).all()
+            total_duration = timedelta()
+            for duration in durations:
+                if duration.paused_at:
+                    total_duration += duration.paused_at - duration.started_at
+
+            # Check task status for minus or plus count and duration
+            if task.status.name == TaskStatus.COMPLETED.value and not is_minus:
+                count = 1
+                duration_time = total_duration
+            else:
+                count = -1
+                duration_time = -total_duration
+
+            # Calculate actual measure count
+            actual_measure_count = skill_map_level.actual_measure_count + count
         # Calculate actual measure time
         try:
             new_actual_measure_time = (
                 time_str_to_timedelta(skill_map_level.actual_measure_time)
-                + total_duration_of_task
+                + duration_time
             )
         except:
             raise ValidationError()
@@ -332,6 +359,7 @@ def calculate_progress_skill_map(
             if actual_measure_count > 0
             else 0,
             actual_measure_time=actual_measure_time,
+            updated_at=now(),
         )
 
 
@@ -367,16 +395,16 @@ def _send_socket_show_popup_complete(
     )
 
 
-def get_total_hours_of_task(task, skill_map_created_at=None):
+def get_total_hours_of_task(task, skill_map_level_created_at=None):
     """
     Return total hours of task
     """
-    durations = TaskDuration.objects.filter(task=task).all()
+    filter_duration = Q(task=task, paused_at__isnull=False)
+    if skill_map_level_created_at:
+        filter_duration &= Q(created_at__gte=skill_map_level_created_at)
+    durations = TaskDuration.objects.filter(filter_duration).all()
     total_duration = timedelta()
     for duration in durations:
-        if skill_map_created_at and skill_map_created_at > duration.created_at:
-            continue
-        if duration.paused_at:
-            total_duration += duration.paused_at - duration.started_at
+        total_duration += duration.paused_at - duration.started_at
 
     return total_duration

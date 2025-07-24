@@ -1049,6 +1049,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     user,
                     duration_time=total_duration,
                     case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
+                    duration_created_at=task_duration.created_at,
                 )
         return durations
 
