@@ -758,6 +758,7 @@ class TaskViewSet(
         """
         user = self.request.user
         current_task = self.get_object()
+        old_task_updated = current_task.updated_at
         current_task_status = current_task.status
         current_org = current_task.organization
         serializer = self.get_serializer(
@@ -1196,12 +1197,13 @@ class TaskViewSet(
                     case=case,
                     organization=current_org,
                 )
-
             # Update new categories
             create_categories_by_model(task, categories)
             for user in task.people_in_charge.all():
                 # Plus skill map process have new categories of updated task
-                calculate_progress_skill_map(task, user, case=case)
+                calculate_progress_skill_map(
+                    task, user, case=case, old_task_updated=old_task_updated
+                )
         elif (
             previous != completed
             and current == completed
