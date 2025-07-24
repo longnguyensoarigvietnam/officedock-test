@@ -69,7 +69,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         Filtering schedule by company.
         """
         user = self.request.user
-        queryset = super().get_queryset().filter(company=user.company)
+        queryset = super().get_queryset().filter(company_id=user.company_id)
         if self.action in ["list", "retrieve"]:
             queryset = queryset.filter(deleted_at__isnull=True)
 
@@ -210,7 +210,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if repeat_type == FrequencyMap.ONCE.value:
             RepeatSchedule.objects.create(
                 schedule=schedule,
-                company=schedule.company,
+                company_id=schedule.company_id,
                 plan_start_date=start_date,
                 plan_end_date=end_date,
             )
@@ -268,7 +268,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             schedules.append(
                 RepeatSchedule(
                     schedule=schedule,
-                    company=schedule.company,
+                    company_id=schedule.company_id,
                     plan_start_date=occurrence,
                     plan_end_date=plan_end_date,
                 )
@@ -283,7 +283,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         schedule.tags.clear()
         for tag in tags:
             schedule.tags.add(
-                tag, through_defaults={"company": schedule.company}
+                tag, through_defaults={"company_id": schedule.company_id}
             )
 
     def _compare_objects(self, list_object, queryset_object):
@@ -1291,7 +1291,7 @@ class CalendarViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         if not user_id:
             queryset = queryset.none()
 
-        return queryset.filter(company=user.company)
+        return queryset.filter(company=user.company_id)
 
 
 @extend_schema(tags=["System > Event Locations"])
@@ -1317,10 +1317,14 @@ class EventLocationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         Filter the queryset to only return event locations belonging to the user's company.
         """
-        return super().get_queryset().filter(company=self.request.user.company)
+        return (
+            super()
+            .get_queryset()
+            .filter(company_id=self.request.user.company_id)
+        )
 
     def perform_create(self, serializer):
         """
         Create a new event location and associate it with the user's company.
         """
-        serializer.save(company=self.request.user.company)
+        serializer.save(company_id=self.request.user.company_id)

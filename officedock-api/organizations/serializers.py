@@ -372,7 +372,7 @@ class OrganizationHierarchySerializer(serializers.ModelSerializer):
 
         # Fetch the child tags of the current tag
         children = Organization.objects.filter(
-            company=user.company, superior=obj
+            company_id=user.company_id, superior=obj
         ).order_by("hierarchize_at", "updated_at")
 
         # Serialize each child tag
@@ -687,7 +687,7 @@ class OrganizationCategoryHierarchyForCreateSerializer(serializers.Serializer):
         child=serializers.IntegerField(), allow_null=True, required=False
     )
 
-    def validate_category(self, category_data, organization, company):
+    def validate_category(self, category_data, organization, company_id):
         """
         Validate that the category belongs to the same team as the organization.
         """
@@ -699,7 +699,7 @@ class OrganizationCategoryHierarchyForCreateSerializer(serializers.Serializer):
             return
 
         category = StatisticCategory.objects.filter(
-            company=company, uuid=category_uuid
+            company_id=company_id, uuid=category_uuid
         ).first()
 
         if category and category.team and category.team != organization:
@@ -709,20 +709,20 @@ class OrganizationCategoryHierarchyForCreateSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         request = self.context.get("request")
-        company = request.user.company
+        company_id = request.user.company_id
         items = attrs.get("items", [])
 
         for item in items:
             organization = item.get("organization")
 
             self.validate_category(
-                item.get("large_statistic_category"), organization, company
+                item.get("large_statistic_category"), organization, company_id
             )
             self.validate_category(
-                item.get("medium_statistic_category"), organization, company
+                item.get("medium_statistic_category"), organization, company_id
             )
             self.validate_category(
-                item.get("small_statistic_category"), organization, company
+                item.get("small_statistic_category"), organization, company_id
             )
 
         return super().validate(attrs)

@@ -89,10 +89,14 @@ class EventLocationSerializer(serializers.ModelSerializer):
         """
         instance = self.instance
         request = self.context.get("request")
-        company = request.user.company if not instance else instance.company
+        company_id = (
+            request.user.company_id if not instance else instance.company_id
+        )
         name = attrs.get("name")
 
-        queryset = EventLocation.objects.filter(company=company, name=name)
+        queryset = EventLocation.objects.filter(
+            company_id=company_id, name=name
+        )
 
         if instance:
             queryset = queryset.exclude(id=instance.id)
@@ -196,9 +200,6 @@ class ScheduleSerializer(serializers.ModelSerializer):
 
     def get_categories(self, obj):
         """Handle retrieving categories of a Task."""
-        if not obj.categories.exists():
-            return []
-
         return get_common_categories(obj.categories.first(), obj)
 
     def validate(self, data):
@@ -214,7 +215,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError()
 
         for participant in participants:
-            if participant.company != request.user.company:
+            if participant.company_id != request.user.company_id:
                 raise serializers.ValidationError(
                     {
                         "participant_ids": {
@@ -269,7 +270,6 @@ class BaseScheduleSerializer(ScheduleSerializer):
     type = serializers.SerializerMethodField()
     event_type = serializers.SerializerMethodField()
     is_my_schedule = serializers.SerializerMethodField()
-    categories = serializers.SerializerMethodField()
     is_start = serializers.SerializerMethodField()
 
     class Meta:
@@ -320,15 +320,8 @@ class BaseScheduleSerializer(ScheduleSerializer):
             return TaskDuration.objects.filter(
                 schedule=instance, user=user, paused_at__isnull=True
             ).exists()
-        else:
-            return False
 
-    def get_categories(self, obj):
-        """Handle retrieving categories of a Schedule."""
-        if not obj.categories.exists():
-            return []
-
-        return get_common_categories(obj.categories.first(), obj)
+        return False
 
     def get_type(self, obj):
         """
@@ -346,10 +339,12 @@ class BaseScheduleSerializer(ScheduleSerializer):
         """
         Return True if schedule is my schedule, otherwise return False.
         """
-        user = self.context.get("request").user
-        return user.id in instance.participants_schedules.values_list(
-            "user", flat=True
-        )
+        request = self.context.get("request")
+
+        if user := request.user:
+            return instance.participants_schedules.filter(user=user).exists()
+
+        return False
 
 
 class TaskScheduleSerializer(serializers.ModelSerializer):
@@ -562,9 +557,9 @@ class ScheduleDetailSerializer(ScheduleSerializer):
 
     def get_is_event_overlapping(self, obj: Schedule) -> bool:
         """
-        Check if a schedule overlaps with existing events at a given location and time period.x
+        Check if a schedule overlaps with existing events at a given location and time period.
         """
-        if not obj.location:
+        if not obj.location_id:
             return False
 
         request = self.context.get("request")
@@ -579,7 +574,7 @@ class ScheduleDetailSerializer(ScheduleSerializer):
 
             return is_event_overlapping(
                 instance=obj,
-                location=obj.location,
+                location=obj.location_id,
                 start_date=repeat_schedule.plan_start_date,
                 end_date=repeat_schedule.plan_end_date,
             )

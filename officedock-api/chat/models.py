@@ -71,7 +71,7 @@ class ChatRoomsParticipants(BaseModel):
 
     def save(self, *args, **kwargs):
         # Set default company when creating
-        self.company = self.user.company
+        self.company_id = self.user.company_id
 
         # Romove pin if hide chat room
         if self.hidden_at:

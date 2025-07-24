@@ -120,9 +120,7 @@ class TaskCommonSerializer(serializers.ModelSerializer):
         Return tag order by created_at
         """
         # Get tags ordered by `created`
-        tags_tasks = obj.tags_tasks.order_by("created_at").all()
-        tags = [tag_tasks.tag for tag_tasks in tags_tasks]
-
+        tags = obj.tags.order_by("id")
         return BaseTagSerializer(tags, many=True).data
 
     def get_is_my_task(self, instance):
@@ -130,10 +128,11 @@ class TaskCommonSerializer(serializers.ModelSerializer):
         Return True if task is my task, otherwise return False.
         """
 
-        user = self.context.get("request").user
-        return user.id in instance.people_in_charge_tasks.values_list(
-            "user", flat=True
-        )
+        request = self.context.get("request")
+        if user := request.user:
+            return instance.people_in_charge_tasks.filter(user=user).exists()
+
+        return False
 
     def get_status(self, instance):
         """
@@ -434,9 +433,6 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
 
     def get_categories(self, obj):
         """Handle retrieving categories of a Task."""
-        if not obj.categories.exists():
-            return []
-
         return get_common_categories(obj.categories.first(), obj)
 
     def to_representation(self, instance):
@@ -498,6 +494,9 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         """
         Return index of task
         """
+        if hasattr(instance, "index"):
+            return instance.index
+
         last_task = get_task_index(
             instance,
             self.context.get("request"),
@@ -554,7 +553,7 @@ class TaskBoardSerializer(TaskCommonSerializer):
         Custom representation
         """
         representation = super().to_representation(instance)
-        if instance.status.name == TaskStatusConstant.MY_ROUTINE.value:
+        if instance.status_name == TaskStatusConstant.MY_ROUTINE.value:
             recurring = instance.recurring
             fields = [
                 "plan_start_date",
@@ -573,9 +572,6 @@ class TaskBoardSerializer(TaskCommonSerializer):
 
     def get_categories(self, obj):
         """Handle retrieving categories of a Task."""
-        if not obj.categories.exists():
-            return []
-
         return get_common_categories(obj.categories.first(), obj)
 
     def get_index(self, instance):
@@ -623,11 +619,11 @@ class TaskBoardSerializer(TaskCommonSerializer):
             return False
 
         # If task has no organization, it's not cross-team
-        if not instance.organization:
+        if not instance.organization_id:
             return False
 
         # Compare organization IDs
-        return int(instance.organization.id) != int(organization_id)
+        return int(instance.organization_id) != int(organization_id)
 
 
 class TaskCalendarSerializer(TaskCommonSerializer):
@@ -703,9 +699,6 @@ class TaskCalendarSerializer(TaskCommonSerializer):
 
     def get_categories(self, obj):
         """Handle retrieving categories of a Task."""
-        if not obj.categories.exists():
-            return []
-
         return get_common_categories(obj.categories.first(), obj)
 
 

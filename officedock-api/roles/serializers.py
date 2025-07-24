@@ -63,11 +63,11 @@ class RolePermissionForCreateSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
     def validate_name(self, value):
-        company = self.context.get("request").user.company
+        company_id = self.context.get("request").user.company_id
         instance = self.instance
 
         if (
-            Role.objects.filter(company=company, name=value)
+            Role.objects.filter(company_id=company_id, name=value)
             .exclude(id=instance.id if instance else None)
             .exists()
         ):

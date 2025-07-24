@@ -88,7 +88,9 @@ class SystemTermViewSet(BaseAPIViewSet):
             and term.period_start <= today
             and (term.period_end is None or today <= term.period_end)
         ):
-            user.terms.add(term, through_defaults={"company": user.company})
+            user.terms.add(
+                term, through_defaults={"company_id": user.company_id}
+            )
             return self.response_ok()
         else:
             return self.response(
