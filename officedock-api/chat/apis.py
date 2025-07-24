@@ -1023,6 +1023,7 @@ class ChatFileViewSet(
     serializer_class = ChatFileDetailSerializer
     permission_classes = [ActionPermission]
     screen_name = Screens.CHAT.value
+    lookup_field = "uuid"
 
     def get_queryset(self):
         return (

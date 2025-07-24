@@ -26,9 +26,7 @@ class CreationDataUserForChatSerializer(BaseUserSerializer):
     """
 
     full_name = serializers.SerializerMethodField()
-    organizations = CreationDataOrganizationSerializer(
-        many=True, read_only=True
-    )
+    organizations = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -39,6 +37,15 @@ class CreationDataUserForChatSerializer(BaseUserSerializer):
         Return full name of user.
         """
         return obj.profile.full_name
+
+    def get_organizations(self, obj):
+        """
+        Get the main organization.
+        """
+        organization = obj.organizations.filter(
+            usersorganizations__is_main=True
+        ).first()
+        return CreationDataOrganizationSerializer(organization).data
 
 
 class ChatRoomSerializer(serializers.ModelSerializer):
@@ -203,6 +210,9 @@ class ChatFileSerializer(serializers.ModelSerializer):
 class ChatFileDetailSerializer(serializers.ModelSerializer):
     """Serializer for chat file detail"""
 
+    chat_message_id = serializers.IntegerField(
+        source="chat_message.id", read_only=True
+    )
     chat_message_uuid = serializers.UUIDField(
         source="chat_message.uuid", read_only=True
     )
@@ -212,6 +222,8 @@ class ChatFileDetailSerializer(serializers.ModelSerializer):
         model = ChatFile
         fields = [
             "id",
+            "uuid",
+            "chat_message_id",
             "chat_message_uuid",
             "file_name",
             "original_file",
