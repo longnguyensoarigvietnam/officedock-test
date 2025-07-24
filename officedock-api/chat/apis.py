@@ -1026,11 +1026,16 @@ class ChatFileViewSet(
     lookup_field = "uuid"
 
     def get_queryset(self):
-        return (
+        queryset = (
             super()
             .get_queryset()
             .filter(company_id=self.request.user.company_id)
         )
+
+        if chat_room_code := self.request.query_params.get("chat_room_code"):
+            queryset = queryset.filter(chat_room__code=chat_room_code)
+
+        return queryset
 
     @extend_schema(
         parameters=[
@@ -1038,9 +1043,6 @@ class ChatFileViewSet(
         ]
     )
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        if chat_room_code := request.query_params.get("chat_room_code"):
-            queryset = queryset.filter(chat_room__code=chat_room_code)
         return super().list(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
