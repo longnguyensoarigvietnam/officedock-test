@@ -1055,9 +1055,15 @@ def normalize_percentages(items, percent_field="percent", id_field="id"):
         return []
 
     # Step 1: Sort items in descending order of percent
-    sorted_items = sorted(items, key=lambda x: x[percent_field], reverse=True)
+    active_items = [item for item in items if item[percent_field] > 0]
+    if not active_items:
+        return items
 
-    # Step 2: Floor and calculate remainders
+    sorted_items = sorted(
+        active_items, key=lambda x: x[percent_field], reverse=True
+    )
+
+    # Step 2: Floor and collect remainders
     percent_map = {}  # id -> floored percent
     remainder_map = {}  # id -> decimal remainder
     total_floored = 0
@@ -1090,7 +1096,6 @@ def normalize_percentages(items, percent_field="percent", id_field="id"):
                 percent_map[item_id] += 1
                 count += 1
             i += 1
-
     elif remaining < 0:
         # Subtract -1 from items with lowest remainder, only if > 0%
         sorted_by_remainder = sorted(remainder_map.items(), key=lambda x: x[1])
@@ -1103,9 +1108,13 @@ def normalize_percentages(items, percent_field="percent", id_field="id"):
                 count += 1
             i += 1
 
-    # Step 4: Update original items with new percent values
+    # Step 4: Update the original list
     for item in items:
-        item[percent_field] = percent_map[item[id_field]]
+        item_id = item[id_field]
+        if item_id in percent_map:
+            item[percent_field] = percent_map[item_id]
+        else:
+            item[percent_field] = 0  # keep 0% unchanged
 
     return items
 

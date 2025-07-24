@@ -381,7 +381,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         Handle delete actual duration
         """
         model = instance.task or instance.schedule
-        if model and model.is_start:
+        if model and model.is_start and instance.paused_at is None:
             model.is_start = False
             model.save()
         if instance.task:
@@ -522,7 +522,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             and last_task_duration.schedule == schedule
         ):
             # Check if last task/event running is current task/event, stop it and return early
-            self._stopDuration(user)
+            self._stop_duration(user)
             last_task_duration.refresh_from_db()
 
             return self.response_ok(
@@ -532,16 +532,16 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             )
         else:
             # Stop currently running duration
-            self._stopDuration(user)
+            self._stop_duration(user)
 
-        task_duration = self._startDuration(user, schedule=schedule, task=task)
+        task_duration = self._start_duration(user, schedule=schedule, task=task)
         data = DurationSerializer(
             task_duration, context={"request": request}
         ).data
         data["is_another_task_started"] = False
         return self.response_ok(data)
 
-    def _stopDuration(self, user):
+    def _stop_duration(self, user):
         """
         Handle stop duration is running of user
         """
@@ -578,7 +578,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                         duration_created_at=duration.created_at,
                     )
 
-    def _startDuration(self, user, task=None, schedule=None):
+    def _start_duration(self, user, task=None, schedule=None):
         """
         Handle start duration
         """
@@ -952,7 +952,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         Handle delete actual duration
         """
         model = instance.task or instance.schedule
-        if model and model.is_start:
+        if model and model.is_start and instance.paused_at is None:
             model.is_start = False
             model.save()
         if instance.task:

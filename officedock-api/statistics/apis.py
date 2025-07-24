@@ -17,6 +17,7 @@ from django.db.models import (
     ExpressionWrapper,
     DurationField,
     F,
+    Sum,
 )
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
@@ -1550,7 +1551,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                             self.build_user_duration_object(
                                 user,
                                 durations_by_user[
-                                    team["organization_id"] + user["id"]
+                                    team["organization_id"], user["id"]
                                 ],
                                 team["organization_name"],
                                 time_str_to_timedelta(team["duration"]),
@@ -1565,7 +1566,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                                 self.build_user_duration_object(
                                     user,
                                     durations_by_user[
-                                        subteam["organization_id"] + user["id"]
+                                        subteam["organization_id"], user["id"]
                                     ],
                                     subteam["organization_name"],
                                     time_str_to_timedelta(team["duration"]),
@@ -1599,9 +1600,10 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                         team.get("users"), id_field="full_name"
                     )
         # This code for TEAMDOCK:
+        organization_filters = []
+        organization_map = {}
         if user_ids and option:
             # Take organization is option for handle data
-            organization_map = {}
             if option == CALENDAR:
                 organization_map[calendar_org.id] = calendar_org.name
             elif option == MAIN_TEAM:
@@ -1654,11 +1656,14 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                         data_by_range["users"].append(
                             self.build_user_duration_object(
                                 user,
-                                durations_by_user[org_id + user["id"]],
+                                durations_by_user[org_id, user["id"]],
                                 organization_map.get(org_id),
                                 total_duration_by_range,
                             )
                         )
+                data_by_range["users"] = normalize_percentages(
+                    data_by_range["users"], id_field="full_name"
+                )
             else:
                 # This for MYDOCK
                 if is_tag_page:
@@ -1728,9 +1733,20 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         """
         Take duration once for all users
         """
+        # Preload related objects to avoid additional DB hits
         durations = durations.select_related(
             "user", "task__organization", "schedule__organization"
         ).annotate(
+            # Determine organization_id from either task or schedule
+            organization_id=Case(
+                When(task__isnull=False, then=F("task__organization_id")),
+                When(
+                    schedule__isnull=False, then=F("schedule__organization_id")
+                ),
+                default=Value(None),
+                output_field=IntegerField(),
+            ),
+            # Count how many related tags (either via task or schedule)
             related_tag_count=Case(
                 When(
                     task__isnull=False,
@@ -1748,35 +1764,42 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                         distinct=True,
                     ),
                 ),
-                default=1,
+                default=1,  # Default tag count if none found
                 output_field=IntegerField(),
             ),
+            # Determine the effective paused time: use now() if paused_at is null
             effective_paused=Case(
                 When(paused_at__isnull=True, then=Value(now())),
                 default=F("paused_at"),
                 output_field=DateTimeField(),
             ),
+            # Calculate the actual duration: effective_paused - started_at
             actual_duration=ExpressionWrapper(
                 F("effective_paused") - F("started_at"),
                 output_field=DurationField(),
             ),
         )
-        durations_by_user = defaultdict(timedelta)
 
-        for d in durations:
-            org_id = (
-                d.task.organization_id
-                if d.task_id
-                else d.schedule.organization_id
-                if d.schedule_id
-                else None
+        # If viewing a tag-specific page, multiply actual duration by tag count
+        if is_tag_page:
+            durations = durations.annotate(
+                weighted_duration=ExpressionWrapper(
+                    F("actual_duration") * F("related_tag_count"),
+                    output_field=DurationField(),
+                )
             )
-            if org_id is None:
-                continue
-            actual_duration = (
-                d.actual_duration
-                if not is_tag_page
-                else d.actual_duration * d.related_tag_count
-            )
-            durations_by_user[org_id + d.user_id] += actual_duration
+            # Group by organization and user, summing the weighted durations
+            grouped_durations = durations.values(
+                "organization_id", "user_id"
+            ).annotate(total_duration=Sum("weighted_duration"))
+        else:
+            # Group by organization and user, summing the weighted durations
+            grouped_durations = durations.values(
+                "organization_id", "user_id"
+            ).annotate(total_duration=Sum("actual_duration"))
+        durations_by_user = defaultdict(timedelta)
+        for row in grouped_durations:
+            durations_by_user[row["organization_id"], row["user_id"]] += row[
+                "total_duration"
+            ]
         return durations_by_user
