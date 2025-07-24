@@ -203,12 +203,16 @@ class ChatFileSerializer(serializers.ModelSerializer):
 class ChatFileDetailSerializer(serializers.ModelSerializer):
     """Serializer for chat file detail"""
 
+    chat_message_uuid = serializers.UUIDField(
+        source="chat_message.uuid", read_only=True
+    )
     images = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatFile
         fields = [
             "id",
+            "chat_message_uuid",
             "file_name",
             "original_file",
             "file_type",

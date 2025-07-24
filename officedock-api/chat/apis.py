@@ -56,7 +56,12 @@ from chat.serializers import (
     ReactionSerializer,
 )
 from chat.utils import remove_chat_files
-from common.utils import StripTags, generate_file_name, send_web_socket_event
+from common.utils import (
+    StripTags,
+    generate_file_name,
+    send_web_socket_event,
+    delete_file,
+)
 from base.permissions import ActionPermission
 from roles.constants import Screens
 
@@ -962,7 +967,7 @@ class ChatMessageViewSet(
         if uuids_to_create:
             # Create chat files
             ChatFile.create_files(
-                company=instance.company,
+                company_id=instance.company_id,
                 room=chat_room,
                 message=instance,
                 uuids=uuids_to_create,
@@ -1005,13 +1010,16 @@ class ChatMessageViewSet(
 
 @extend_schema(tags=["System > Chat Message > File"])
 class ChatFileViewSet(
-    BaseAPIViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin
+    BaseAPIViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
 ):
     """
     API endpoint for chat file.
     """
 
-    queryset = ChatFile.objects.order_by("created_at")
+    queryset = ChatFile.objects.order_by("-created_at")
     serializer_class = ChatFileDetailSerializer
     permission_classes = [ActionPermission]
     screen_name = Screens.CHAT.value
@@ -1033,3 +1041,20 @@ class ChatFileViewSet(
         if chat_room_code := request.query_params.get("chat_room_code"):
             queryset = queryset.filter(chat_room__code=chat_room_code)
         return super().list(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Handle delete file
+        """
+
+        instance = self.get_object()
+
+        if instance.original_file:
+            delete_file(instance.original_file.name)
+
+        if instance.compressed_file:
+            delete_file(instance.compressed_file.name)
+
+        instance.delete()
+
+        return self.response_ok()

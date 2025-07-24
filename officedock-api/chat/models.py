@@ -238,7 +238,7 @@ class ChatFile(BaseModel):
     file_size = models.FloatField()
 
     @classmethod
-    def create_files(cls, company, room, message, uuids=[]):
+    def create_files(cls, company_id, room, message, uuids=[]):
         """
         Custom create method to handle file upload logic
         """
@@ -289,7 +289,7 @@ class ChatFile(BaseModel):
                 with transaction.atomic():
                     ChatFile.objects.create(
                         uuid=uuid,
-                        company=company,
+                        company_id=company_id,
                         chat_room=room,
                         chat_message=message,
                         file_name=file_name,
