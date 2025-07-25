@@ -2070,7 +2070,8 @@ const TimeSchedule = memo(
       } else if (
         searchParams.get('view') === ViewOptions.WEEK &&
         areDatesDifferent(`${startDrop}`, `${endDrop}`) &&
-        !resourcePlanWeek
+        !resourcePlanWeek &&
+        resourcePlanDay
       ) {
         moveSingleEventAddActual(droppedEvent);
         await new Promise((resolve) => setTimeout(resolve, 100));

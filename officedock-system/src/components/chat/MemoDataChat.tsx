@@ -1,21 +1,35 @@
-import React, { useState } from 'react';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 
 import { ChatMemoType } from '@constants/enums';
 import TabMemoChat from './memo/TabMemoChat';
-import { ChatRoomDetail } from '@interfaces/chat';
+import {
+  ChatMessageResponse,
+  ChatRoomDetail,
+  DataChatFileMemo,
+} from '@interfaces/chat';
+import TabFileChat from './memo/TabFileChat';
+import TabParticipantsChat from './memo/TabParticipantsChat';
 
 interface MemoDataProps {
   chatRoomCode: string;
   chatRoomDetail: ChatRoomDetail | undefined;
+  dataFileAddList: DataChatFileMemo[];
+  setChatRoomDetail: Dispatch<SetStateAction<ChatRoomDetail | undefined>>;
+  setDataMessageDetail: Dispatch<SetStateAction<ChatMessageResponse[]>>;
+  onGotoMessage: (data: { messageId: string | number }) => void;
   onClose: () => void;
 }
 
 const MemoDataChat = ({
   chatRoomCode,
   chatRoomDetail,
+  dataFileAddList,
+  setChatRoomDetail,
+  setDataMessageDetail,
+  onGotoMessage,
   onClose,
 }: MemoDataProps) => {
   const [activeTab, setActiveTab] = useState<ChatMemoType>(ChatMemoType.MEMO);
@@ -27,12 +41,20 @@ const MemoDataChat = ({
           <TabMemoChat
             chatRoomCode={chatRoomCode}
             memoDetail={chatRoomDetail?.memo}
+            setChatRoomDetail={setChatRoomDetail}
           />
         );
       case ChatMemoType.FILE:
-        return <div></div>;
+        return (
+          <TabFileChat
+            chatRoomCode={chatRoomCode}
+            dataFileAddList={dataFileAddList}
+            setDataMessageDetail={setDataMessageDetail}
+            onGotoMessage={onGotoMessage}
+          />
+        );
       case ChatMemoType.MEMBER:
-        return <div></div>;
+        return <TabParticipantsChat chatRoomDetail={chatRoomDetail} />;
       default:
         return null;
     }

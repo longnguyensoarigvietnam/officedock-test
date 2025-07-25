@@ -4,19 +4,28 @@ import React, { useState } from 'react';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import TextAreaLink from '@components/common/TextAreaLink';
+import './style.css';
 
 import { apiRouters } from '@constants/routers';
 import { ERROR_CREATE_MESSAGE } from '@constants/message';
 
 import api from '@base/api';
 import { useToast } from '@providers/ToastProvider';
+import { ChatRoomDetail } from '@interfaces/chat';
 
 interface TabMemoChatProps {
   chatRoomCode: string;
   memoDetail: string | undefined;
+  setChatRoomDetail: React.Dispatch<
+    React.SetStateAction<ChatRoomDetail | undefined>
+  >;
 }
 
-const TabMemoChat = ({ chatRoomCode, memoDetail }: TabMemoChatProps) => {
+const TabMemoChat = ({
+  chatRoomCode,
+  memoDetail,
+  setChatRoomDetail,
+}: TabMemoChatProps) => {
   const { showToast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [dataText, setDataText] = useState<string>('');
@@ -32,7 +41,11 @@ const TabMemoChat = ({ chatRoomCode, memoDetail }: TabMemoChatProps) => {
     'postCreateMemoChat',
     handleCreateMemo,
     {
-      onSuccess: () => {},
+      onSuccess: () => {
+        setChatRoomDetail((prev) =>
+          prev ? { ...prev, memo: dataText } : prev,
+        );
+      },
       onError: () => {
         showToast({
           variant: 'error',
@@ -64,7 +77,7 @@ const TabMemoChat = ({ chatRoomCode, memoDetail }: TabMemoChatProps) => {
         />
       </div>
       <TextAreaLink
-        className="rounded-[4px] p-[10px] min-h-[100px] whitespace-pre-wrap leading-[22px] tracking-[0] focus:border-none mt-1 max-h-[calc(100vh_-_386px)] overflow-y-auto focus-visible:border-none focus-visible:outline-none text-sm font-normal"
+        className="rounded-[4px] p-[10px] min-h-[100px] !border-none h-auto whitespace-pre-wrap leading-[22px] tracking-[0] focus:border-none mt-1 max-h-[calc(100vh_-_386px)] overflow-y-auto focus-visible:border-none focus-visible:outline-none text-sm font-normal"
         initialValue={memoDetail || ''}
         onChange={(data) => setDataText(data)}
       />
