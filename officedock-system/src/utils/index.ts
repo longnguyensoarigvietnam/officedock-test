@@ -1510,7 +1510,7 @@ export const getLineChartDataFromStatisticTaskDurations = ({
           endDate: durationDetail.endDate,
           color:
             category.categoryColor ||
-            (color && lightenColor(color,  category?.percent || 0)) ||
+            (color && lightenColor(color, category?.percent || 0)) ||
             getRandomColor(),
           label: category.categoryName,
         };
@@ -2004,7 +2004,9 @@ export const mergeTeamDockLineChartTableItems = (
     // Merge userList
     item.userList.forEach((user) => {
       const existingUser = grouped[organizationId].userList.find(
-        (member) => `${member.userId}${member.userName}` === `${user.userId}${user.userName}`,
+        (member) =>
+          `${member.userId}${member.userName}` ===
+          `${user.userId}${user.userName}`,
       );
 
       const userInfo = {
@@ -2034,3 +2036,18 @@ export const mergeTeamDockLineChartTableItems = (
 
   return Object.values(grouped);
 };
+export function getTruncatedFileName(
+  fileName: string,
+  maxLength: number = 20,
+): string {
+  const dotIndex = fileName.lastIndexOf('.');
+  if (dotIndex === -1) return fileName;
+
+  const name = fileName.slice(0, dotIndex);
+  const extension = fileName.slice(dotIndex); // include the dot
+
+  const availableLength = maxLength - extension.length - 3; // 3 for "..."
+  if (name.length <= availableLength) return fileName;
+
+  return name.slice(0, availableLength) + '...' + extension;
+}

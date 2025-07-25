@@ -119,6 +119,8 @@ export interface OrganizationDetail {
 
 export interface ChatParticipant {
   id: number | null;
+  avatar?: string | null;
+  avatarColor?: string;
   fullName: string;
   organizations?: {
     id: number;
@@ -196,4 +198,16 @@ export interface WebSocketMessageSortKanban {
 export interface DataChatRoomSocket {
   code: string;
   lastMessageAt: string | null;
+}
+
+export interface DataChatFileMemo {
+  id: number;
+  createdAt: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  originalFile: string;
+  chatMessageUuid: string;
+  chatMessageId: number;
+  uuid: string;
 }

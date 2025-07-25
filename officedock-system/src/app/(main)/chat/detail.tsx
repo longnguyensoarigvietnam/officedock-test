@@ -104,7 +104,9 @@ import {
   ChatDashboardMember,
   ChatMessageResponse,
   ChatParticipant,
+  ChatRoomDetail,
   ChatRoomItem,
+  DataChatFileMemo,
   WebSocketMessageData,
 } from '@interfaces/chat';
 import { BasePagination, OptionDropdownType } from '@interfaces/common';
@@ -235,8 +237,16 @@ const ChatDetail = ({
   const [msgIdDeleted, setMsgIdDeleted] = useState<string>();
   const [msgIdUpdated, setMsgIdUpdated] = useState<string>();
   const [msgEditing, setMsgEditing] = useState<string | undefined>();
-  const { refetchChatRoomDetail, chatRoomDetail } = useChatRoomDetail({
+  const [chatRoomDetail, setChatRoomDetail] = useState<ChatRoomDetail>();
+  const { refetchChatRoomDetail } = useChatRoomDetail({
     code: `${chatRoomCode}`,
+    onSuccess: (data) => {
+      if (data) {
+        setChatRoomDetail(data);
+      } else {
+        setChatRoomDetail(undefined);
+      }
+    },
   });
 
   // User info
@@ -323,6 +333,10 @@ const ChatDetail = ({
   const actionType = searchParams.get('action');
   const typeDetail = searchParams.get('type');
   const taskDetailId = searchParams.get('task');
+
+  const [dataFileAddList, setDataFileAddList] = useState<DataChatFileMemo[]>(
+    [],
+  );
 
   const controllerRef = useRef<AbortController | null>(null);
 
@@ -1145,11 +1159,19 @@ const ChatDetail = ({
   };
 
   const { mutate: handleSendMsgChat } = useMutation(postSendMsg, {
-    onSuccess: async (_data, variables) => {
+    onSuccess: async (data, variables) => {
       setUploadFileStatus((prev) => ({
         ...prev,
         [variables.uuid]: { progress: 100 },
       }));
+      setDataFileAddList(
+        data.chatFiles.map((item: any) => ({
+          ...item,
+          chatMessageUuid: data.uuid,
+          chatMessageId: data.id,
+          originalFile: item.compressedFile,
+        })),
+      );
     },
     onError: (error: AxiosError<any>) => {
       setUploadFileStatus({});
@@ -1191,6 +1213,7 @@ const ChatDetail = ({
         uuid: file.uuid,
       };
     });
+
     setDataMessageDetail([
       {
         uuid: uuidMsg,
@@ -2502,7 +2525,7 @@ const ChatDetail = ({
                                   onClick={() => {
                                     setOpenSettingBox(true);
                                     // Refetch to get the latest room name
-                                    refetchChatRoomDetail()
+                                    refetchChatRoomDetail();
                                   }}
                                 />
                               </div>
@@ -2931,6 +2954,15 @@ const ChatDetail = ({
                   <MemoDataChat
                     chatRoomCode={chatRoomCode}
                     chatRoomDetail={chatRoomDetail}
+                    dataFileAddList={dataFileAddList}
+                    setChatRoomDetail={setChatRoomDetail}
+                    setDataMessageDetail={setDataMessageDetail}
+                    onGotoMessage={(data: { messageId: string | number }) => {
+                      setOpenSearchMessagesModal(false);
+                      gotoSelectedMessage({
+                        bookmarkMessageId: Number(data.messageId),
+                      });
+                    }}
                     onClose={() => setExtendMoreData(false)}
                   />
                 )}

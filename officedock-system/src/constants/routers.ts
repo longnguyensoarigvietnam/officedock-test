@@ -467,6 +467,8 @@ export const apiRouters = {
   CHAT_SETTING: '/users/chat-setting/',
   CHAT_UPLOAD_CHUNK: '/chat/chunk-files/',
   MEMO_CHAT_ACTION: (code: string) => `/chat/${code}/memo/`,
+  LIST_CHAT_FILE: '/chat-files/',
+  FILE_DETAIL: (id: string) => `/chat-files/${id}`,
 
   // BOOKMARK
   BOOKMARK_LIST: '/messages/',
