@@ -448,12 +448,21 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     id__lt=repeat_schedule.id
                 ).exists():
                     child.task_durations.update(schedule=new_schedule)
+                    child.task_durations.filter(paused_at__isnull=True).update(
+                        paused_at=now()
+                    )
+                    if child == parent_schedule:
+                        new_schedule.parent = None
+                        new_schedule.save()
                     child.delete()
         elif recurring_event_option == ScheduleRepeatOption.ALL_EVENTS.value:
             remove_schedules = parent_schedule.child_schedules.all()
             for child in remove_schedules:
                 child.repeat_schedules.update(schedule=parent_schedule)
                 child.task_durations.update(schedule=parent_schedule)
+                child.task_durations.filter(paused_at__isnull=True).update(
+                    paused_at=now()
+                )
                 child.delete()
 
     @transaction.atomic()
@@ -556,7 +565,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             and recurring_event_option
             and (is_difference_repeat_option or is_difference_repeat_date)
         ):
-            serializer_data["parent"] = instance
+            serializer_data["parent"] = instance.parent or instance
             instance = self._handle_recurring_event_option(
                 recurring_event_option,
                 serializer_data,
@@ -761,6 +770,9 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         id__lt=repeat_schedule_id
                     ).exists():
                         child.task_durations.update(schedule=instance)
+                        child.task_durations.filter(
+                            paused_at__isnull=True
+                        ).update(paused_at=now())
                         child.delete()
                 instance.repeat_schedules.filter(
                     id__gte=repeat_schedule_id

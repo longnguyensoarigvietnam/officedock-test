@@ -37,6 +37,7 @@ class ChatRoom(BaseModel):
         max_length=15, null=True, blank=True, choices=ChatRoomTypes.choices()
     )
     memo = models.TextField(null=True, blank=True)
+    select_organizations = models.JSONField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # Generate unique code when creating
@@ -68,6 +69,7 @@ class ChatRoomsParticipants(BaseModel):
     unread_messages = models.IntegerField(default=0)
     hidden_at = models.DateTimeField(null=True, blank=True)
     pin_at = models.DateTimeField(null=True, blank=True)
+    is_muted = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         # Set default company when creating

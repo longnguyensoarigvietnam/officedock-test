@@ -773,6 +773,39 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         return self.response_ok()
 
+    @action(
+        methods=["PUT"],
+        detail=True,
+        url_path="mute",
+        serializer_class=None,
+    )
+    def mute(self, request, code=None):
+        """
+        Mute a chat room
+        """
+        instance = self.get_object()
+        current_user = request.user
+        participant = instance.chat_rooms_participants.filter(
+            user=current_user
+        ).first()
+
+        if participant is None:
+            raise ValidationError(
+                {
+                    "chat_room_participant": [
+                        ERROR_MESSAGES["participant_does_not_exist"]
+                    ]
+                }
+            )
+
+        if participant.is_muted:
+            participant.is_muted = False
+        else:
+            participant.is_muted = True
+        participant.save()
+
+        return self.response_ok()
+
 
 @extend_schema(tags=["System > Chat Message"])
 class ChatMessageViewSet(
