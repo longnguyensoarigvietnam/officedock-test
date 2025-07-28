@@ -56,6 +56,7 @@ type StepRawCategoriesProps = {
       step3: OptionDropdownType[][];
     }>
   >;
+  setIsFormTouched: Dispatch<SetStateAction<boolean>>
 };
 const CategoryStepRaw = ({
   stepKey,
@@ -72,6 +73,7 @@ const CategoryStepRaw = ({
   dataOrganizationCategories,
   setDataOptionsCategoryMedium,
   setDataOptionsCategorySmall,
+  setIsFormTouched
 }: StepRawCategoriesProps) => {
   const {
     fields: outerFields,
@@ -242,6 +244,7 @@ const CategoryStepRaw = ({
                             (element) => element.value === value?.value,
                           )}
                           onChange={(e) => {
+                            setIsFormTouched(true);
                             if (size === EventWorkCategory.LARGE) {
                               //  Reset data MEDIUM and SMALL if LARGE change
                               setValue(
@@ -391,6 +394,7 @@ const CategoryStepRaw = ({
               type="button"
               name="Remove Category"
               onClick={() => {
+                setIsFormTouched(true);
                 removeOuter(index);
 
                 setDataOptionsCategoryMedium((prev) => ({
@@ -415,6 +419,7 @@ const CategoryStepRaw = ({
           className="w-6 h-6 mr-[54px] text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
           type="button"
           onClick={() => {
+            setIsFormTouched(true);
             appendOuter({
               LARGE: { value: '', label: '' },
               MEDIUM: { value: '', label: '' },

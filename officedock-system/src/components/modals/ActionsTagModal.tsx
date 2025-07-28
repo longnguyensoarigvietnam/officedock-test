@@ -53,11 +53,10 @@ const ActionsTagModal = ({
     getValues,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<TagFormData>({
     mode: 'onSubmit',
   });
-
   const defaultValues = useMemo<TagFormData>(() => {
     const value: TagFormData = {
       name: '',
@@ -91,7 +90,7 @@ const ActionsTagModal = ({
       onCreate && onCreate(data as TagFormData);
     }
     if (action === ActionsEvent.EDIT) {
-      onEdit && onEdit(data as TagFormData);
+      !isDirty ? onClose() : onEdit && onEdit(data as TagFormData);
     }
   };
 
@@ -246,7 +245,9 @@ const ActionsTagModal = ({
                           org.value != selected.value,
                       );
                     }
-                    setValue('organizations', updatedOrganizations);
+                    setValue('organizations', updatedOrganizations, {
+                      shouldDirty: true,
+                    });
                   }}
                 />
               </div>
@@ -260,7 +261,9 @@ const ActionsTagModal = ({
                 className="!w-4"
                 isChecked={watch('calendarOrganizationCheck')}
                 onChange={(state) => {
-                  setValue('calendarOrganizationCheck', state);
+                  setValue('calendarOrganizationCheck', state, {
+                    shouldDirty: true,
+                  });
                 }}
               />
             </div>

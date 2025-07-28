@@ -1,5 +1,13 @@
 'use client';
-import { ChangeEvent, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  ChangeEvent,
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
@@ -35,6 +43,7 @@ import {
   EventWorkCategory,
   PermissionsSystem,
   TaskRepetitiveType,
+  TaskRepetitiveValue,
   ViewOptions,
 } from '@constants/enums';
 import {
@@ -84,13 +93,14 @@ export type ActionsEventModalProps = {
   creationDataEventCalendar: CreationDataEventCalendar | undefined;
   action?: string;
   authenticatedUser?: User | undefined;
+  defaultStartDate?: Date | undefined;
+  calendarView?: string | null;
+  backToEditing?: boolean;
+  setIsEditingRepetitiveFields: Dispatch<SetStateAction<boolean>>;
   onDelete?: (values: EventEditFormData) => void;
   onClose: () => void;
   onSubmit?: (values: EventFormData) => void;
   onEdit?: (values: EventEditFormData) => void;
-  defaultStartDate?: Date | undefined;
-  calendarView?: string | null;
-  backToEditing?: boolean;
 };
 
 const ActionsEventModal = ({
@@ -98,14 +108,15 @@ const ActionsEventModal = ({
   dataEvent,
   action = ActionsEvent.CREATE,
   authenticatedUser,
-  onClose,
-  onEdit,
-  onDelete,
-  onSubmit,
   creationDataEventCalendar,
   defaultStartDate,
   calendarView,
   backToEditing,
+  setIsEditingRepetitiveFields,
+  onClose,
+  onEdit,
+  onDelete,
+  onSubmit,
 }: ActionsEventModalProps) => {
   // Creation data
   const [dataOptionsEventTypes, setDataOptionsEventTypes] = useState<
@@ -159,7 +170,7 @@ const ActionsEventModal = ({
     getValues,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<EventFormData | EventEditFormData>({
     mode: 'onSubmit',
     defaultValues: {
@@ -267,11 +278,7 @@ const ActionsEventModal = ({
       tagIds: dataEvent ? [] : [{ label: '', value: '' }],
       repeatType: {
         label: TaskRepetitiveType.ONCE,
-        value: String(
-          TASK_REPETITIVE_OPTIONS.find(
-            (option) => option.label == TaskRepetitiveType.ONCE,
-          )?.value,
-        ),
+        value: TaskRepetitiveValue.ONCE,
       },
       repeatInterval: undefined,
       month: undefined,
@@ -577,7 +584,9 @@ const ActionsEventModal = ({
     handleCheckOverlappingLocation,
     {
       onSuccess: ({ data }) => {
-        setValue('isEventOverlapping', data.isEventOverlapping);
+        setValue('isEventOverlapping', data.isEventOverlapping, {
+          shouldDirty: true,
+        });
       },
     },
   );
@@ -623,7 +632,9 @@ const ActionsEventModal = ({
       onSubmit && onSubmit(data as EventFormData);
     }
     if (action === ActionsEvent.EDIT) {
-      onEdit && onEdit(data as EventEditFormData);
+      !backToEditing && !isDirty
+        ? onClose()
+        : onEdit && onEdit(data as EventEditFormData);
     }
   };
 
@@ -709,8 +720,10 @@ const ActionsEventModal = ({
         updatedParticipantList.push(memberId);
       }
 
-      setValue('participantIds', updatedParticipantList);
-      setValue('selectOrganizations', updatedOrganizationList);
+      setValue('participantIds', updatedParticipantList, { shouldDirty: true });
+      setValue('selectOrganizations', updatedOrganizationList, {
+        shouldDirty: true,
+      });
     } else if (isOrganization) {
       const isAlreadySelected = currentOrganizationList.includes(memberId);
       const organizationMembers = member.userIds || [];
@@ -756,8 +769,10 @@ const ActionsEventModal = ({
         }
       }
 
-      setValue('selectOrganizations', updatedOrganizationList);
-      setValue('participantIds', updatedParticipantList);
+      setValue('selectOrganizations', updatedOrganizationList, {
+        shouldDirty: true,
+      });
+      setValue('participantIds', updatedParticipantList, { shouldDirty: true });
     }
   };
 
@@ -916,10 +931,17 @@ const ActionsEventModal = ({
                                       setValue(
                                         'startTime',
                                         convertToTimeString(`${currentDate}`),
+                                        {
+                                          shouldDirty: true,
+                                        },
                                       );
                                     }
-                                    setValue('endDate', null);
-                                    setValue('endTime', '');
+                                    setValue('endDate', null, {
+                                      shouldDirty: true,
+                                    });
+                                    setValue('endTime', '', {
+                                      shouldDirty: true,
+                                    });
                                     handleConfirmCheckOverlappingLocation();
                                   }}
                                 />
@@ -943,9 +965,14 @@ const ActionsEventModal = ({
                                           today.setHours(0, 0, 0, 0);
                                           return today;
                                         })(),
+                                        { shouldDirty: true },
                                       );
-                                      setValue('endDate', null);
-                                      setValue('endTime', '');
+                                      setValue('endDate', null, {
+                                        shouldDirty: true,
+                                      });
+                                      setValue('endTime', '', {
+                                        shouldDirty: true,
+                                      });
                                       setMinDatePlan(new Date());
                                     }
                                   },
@@ -954,6 +981,7 @@ const ActionsEventModal = ({
                                       setValue(
                                         'startTime',
                                         formatTimeInput(time),
+                                        { shouldDirty: true },
                                       );
                                     }
                                     setTime('');
@@ -966,7 +994,9 @@ const ActionsEventModal = ({
                                 disabled={isDisabled}
                                 options={optionTimeInput}
                                 onChangeDropdown={(e) => {
-                                  setValue('startTime', e.label);
+                                  setValue('startTime', e.label, {
+                                    shouldDirty: true,
+                                  });
                                   if (getValues('startDate') === null) {
                                     setValue(
                                       'startDate',
@@ -975,6 +1005,7 @@ const ActionsEventModal = ({
                                         today.setHours(0, 0, 0, 0);
                                         return today;
                                       })(),
+                                      { shouldDirty: true },
                                     );
                                   }
                                   handleConfirmCheckOverlappingLocation();
@@ -1014,6 +1045,7 @@ const ActionsEventModal = ({
                                       setValue(
                                         'endTime',
                                         convertToTimeString(`${currentDate}`),
+                                        { shouldDirty: true },
                                       );
                                     }
                                     handleConfirmCheckOverlappingLocation();
@@ -1053,6 +1085,7 @@ const ActionsEventModal = ({
                                         setValue(
                                           'endDate',
                                           getValues('startDate'),
+                                          { shouldDirty: true },
                                         );
                                       } else {
                                         setValue(
@@ -1062,6 +1095,7 @@ const ActionsEventModal = ({
                                             today.setHours(0, 0, 0, 0);
                                             return today;
                                           })(),
+                                          { shouldDirty: true },
                                         );
                                       }
                                     }
@@ -1071,6 +1105,7 @@ const ActionsEventModal = ({
                                       setValue(
                                         'endTime',
                                         formatTimeInput(time),
+                                        { shouldDirty: true },
                                       );
                                     }
 
@@ -1100,12 +1135,15 @@ const ActionsEventModal = ({
                                 disabled={isDisabled}
                                 options={optionTimeInput}
                                 onChangeDropdown={(e) => {
-                                  setValue('endTime', e.label);
+                                  setValue('endTime', e.label, {
+                                    shouldDirty: true,
+                                  });
                                   if (getValues('endDate') === null) {
                                     if (getValues('startDate') !== null) {
                                       setValue(
                                         'endDate',
                                         getValues('startDate'),
+                                        { shouldDirty: true },
                                       );
                                     } else {
                                       setValue(
@@ -1115,6 +1153,7 @@ const ActionsEventModal = ({
                                           today.setHours(0, 0, 0, 0);
                                           return today;
                                         })(),
+                                        { shouldDirty: true },
                                       );
                                     }
                                   }
@@ -1139,10 +1178,10 @@ const ActionsEventModal = ({
                       type="button"
                       name="Remove plan"
                       onClick={() => {
-                        setValue('endDate', null);
-                        setValue('endTime', '');
-                        setValue('startDate', null);
-                        setValue('startTime', '');
+                        setValue('endDate', null, { shouldDirty: true });
+                        setValue('endTime', '', { shouldDirty: true });
+                        setValue('startDate', null, { shouldDirty: true });
+                        setValue('startTime', '', { shouldDirty: true });
                       }}>
                       削除
                     </Button>
@@ -1157,7 +1196,7 @@ const ActionsEventModal = ({
                       <Checkbox
                         label="終日"
                         onChange={(state) => {
-                          setValue('isAllDay', state);
+                          setValue('isAllDay', state, { shouldDirty: true });
                           handleConfirmCheckOverlappingLocation();
                         }}
                         isChecked={defaultValues.isAllDay}
@@ -1191,11 +1230,27 @@ const ActionsEventModal = ({
                                 )}
                                 onChange={(e) => {
                                   onChange(e);
-                                  setValue('isAllDay', false);
-                                  setValue('repeatInterval', undefined);
-                                  setValue('weekDay', undefined);
-                                  setValue('monthDay', undefined);
-                                  setValue('month', undefined);
+                                  if (
+                                    e.value != TaskRepetitiveValue.ONCE &&
+                                    action == ActionsEvent.EDIT
+                                  ) {
+                                    setIsEditingRepetitiveFields(true);
+                                  }
+                                  setValue('isAllDay', false, {
+                                    shouldDirty: true,
+                                  });
+                                  setValue('repeatInterval', undefined, {
+                                    shouldDirty: true,
+                                  });
+                                  setValue('weekDay', undefined, {
+                                    shouldDirty: true,
+                                  });
+                                  setValue('monthDay', undefined, {
+                                    shouldDirty: true,
+                                  });
+                                  setValue('month', undefined, {
+                                    shouldDirty: true,
+                                  });
                                 }}
                               />
                             );
@@ -1232,6 +1287,8 @@ const ActionsEventModal = ({
                                   )}
                                   onChange={(e) => {
                                     onChange(e);
+                                    action == ActionsEvent.EDIT &&
+                                      setIsEditingRepetitiveFields(true);
                                   }}
                                 />
                               )}
@@ -1282,6 +1339,8 @@ const ActionsEventModal = ({
                                   }
                                   onChange={(e) => {
                                     onChange(e);
+                                    action == ActionsEvent.EDIT &&
+                                      setIsEditingRepetitiveFields(true);
                                   }}
                                 />
                               )}
@@ -1315,6 +1374,8 @@ const ActionsEventModal = ({
                                   )}
                                   onChange={(e) => {
                                     onChange(e);
+                                    action == ActionsEvent.EDIT &&
+                                      setIsEditingRepetitiveFields(true);
                                   }}
                                 />
                               )}
@@ -1351,6 +1412,8 @@ const ActionsEventModal = ({
                                   )}
                                   onChange={(e) => {
                                     onChange(e);
+                                    action == ActionsEvent.EDIT &&
+                                      setIsEditingRepetitiveFields(true);
                                   }}
                                 />
                               )}
@@ -1384,6 +1447,8 @@ const ActionsEventModal = ({
                                   )}
                                   onChange={(e) => {
                                     onChange(e);
+                                    action == ActionsEvent.EDIT &&
+                                      setIsEditingRepetitiveFields(true);
                                   }}
                                 />
                               )}
@@ -1420,6 +1485,8 @@ const ActionsEventModal = ({
                                   )}
                                   onChange={(e) => {
                                     onChange(e);
+                                    action == ActionsEvent.EDIT &&
+                                      setIsEditingRepetitiveFields(true);
                                   }}
                                 />
                               )}
@@ -1450,6 +1517,8 @@ const ActionsEventModal = ({
                                   )}
                                   onChange={(e) => {
                                     onChange(e);
+                                    action == ActionsEvent.EDIT &&
+                                      setIsEditingRepetitiveFields(true);
                                   }}
                                 />
                               )}
@@ -1483,6 +1552,8 @@ const ActionsEventModal = ({
                                   )}
                                   onChange={(e) => {
                                     onChange(e);
+                                    action == ActionsEvent.EDIT &&
+                                      setIsEditingRepetitiveFields(true);
                                   }}
                                 />
                               )}
@@ -1506,11 +1577,21 @@ const ActionsEventModal = ({
                             type="button"
                             name="Remove TagId"
                             onClick={() => {
-                              setValue('repeatType', undefined);
-                              setValue('repeatInterval', undefined);
-                              setValue('weekDay', undefined);
-                              setValue('monthDay', undefined);
-                              setValue('month', undefined);
+                              setValue('repeatType', undefined, {
+                                shouldDirty: true,
+                              });
+                              setValue('repeatInterval', undefined, {
+                                shouldDirty: true,
+                              });
+                              setValue('weekDay', undefined, {
+                                shouldDirty: true,
+                              });
+                              setValue('monthDay', undefined, {
+                                shouldDirty: true,
+                              });
+                              setValue('month', undefined, {
+                                shouldDirty: true,
+                              });
                             }}>
                             削除
                           </Button>
@@ -1539,14 +1620,16 @@ const ActionsEventModal = ({
                           },
                           onBlur: () => {
                             if (time) {
-                              setValue('startTime', formatTimeInput(time));
+                              setValue('startTime', formatTimeInput(time), {
+                                shouldDirty: true,
+                              });
                             }
                             setTime('');
                           },
                         })}
                         className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
                         onChangeDropdown={(e) => {
-                          setValue('startTime', e.label);
+                          setValue('startTime', e.label, { shouldDirty: true });
                         }}
                       />
                     </div>
@@ -1564,7 +1647,9 @@ const ActionsEventModal = ({
                           },
                           onBlur: () => {
                             if (time) {
-                              setValue('endTime', formatTimeInput(time));
+                              setValue('endTime', formatTimeInput(time), {
+                                shouldDirty: true,
+                              });
                             }
                             setTime('');
                           },
@@ -1579,7 +1664,7 @@ const ActionsEventModal = ({
                         })}
                         className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
                         onChangeDropdown={(e) => {
-                          setValue('endTime', e.label);
+                          setValue('endTime', e.label, { shouldDirty: true });
                         }}
                       />
                     </div>
@@ -1594,8 +1679,8 @@ const ActionsEventModal = ({
                         type="button"
                         name="Remove TagId"
                         onClick={() => {
-                          setValue('startTime', '');
-                          setValue('endTime', '');
+                          setValue('startTime', '', { shouldDirty: true });
+                          setValue('endTime', '', { shouldDirty: true });
                         }}>
                         削除
                       </Button>
@@ -1650,7 +1735,11 @@ const ActionsEventModal = ({
                       placeholder={'大カテゴリー'}
                       onChange={(e) => {
                         if (e.value != watch('largeCategory.value')) {
-                          setValue('mediumCategory', { label: '', value: '' });
+                          setValue(
+                            'mediumCategory',
+                            { label: '', value: '' },
+                            { shouldDirty: true },
+                          );
                         }
                         onChange(e);
                       }}
@@ -1723,7 +1812,7 @@ const ActionsEventModal = ({
                           (tag) => tag.value != selected.value,
                         );
                       }
-                      setValue('tagIds', updatedTagIds);
+                      setValue('tagIds', updatedTagIds, { shouldDirty: true });
                     }}
                   />
                   <div className="flex flex-wrap  gap-2 mt-2">
@@ -1750,7 +1839,9 @@ const ActionsEventModal = ({
                                       Number(item.value) != Number(tag.value),
                                   );
 
-                                  setValue('tagIds', updatedTagIds);
+                                  setValue('tagIds', updatedTagIds, {
+                                    shouldDirty: true,
+                                  });
                                 }}>
                                 ✕
                               </button>
@@ -1768,7 +1859,7 @@ const ActionsEventModal = ({
                     name="Remove TagId"
                     disabled={isDisabled}
                     onClick={() => {
-                      setValue('tagIds', []);
+                      setValue('tagIds', [], { shouldDirty: true });
                     }}>
                     削除
                   </Button>
@@ -1853,30 +1944,38 @@ const ActionsEventModal = ({
                             .toLowerCase()
                             .includes(searchName.toLowerCase()),
                         );
-                      setValue('participantIds', [
-                        ...(watch('participantIds') || []),
-                        ...updatedParticipantList
-                          .filter(
-                            (participant) =>
-                              participant.type === EventParticipantType.USER,
-                          )
-                          .map((participant) =>
-                            Number(String(participant.id).split('-')[1]),
-                          ),
-                      ]);
+                      setValue(
+                        'participantIds',
+                        [
+                          ...(watch('participantIds') || []),
+                          ...updatedParticipantList
+                            .filter(
+                              (participant) =>
+                                participant.type === EventParticipantType.USER,
+                            )
+                            .map((participant) =>
+                              Number(String(participant.id).split('-')[1]),
+                            ),
+                        ],
+                        { shouldDirty: true },
+                      );
 
-                      setValue('selectOrganizations', [
-                        ...(watch('selectOrganizations') || []),
-                        ...updatedParticipantList
-                          .filter(
-                            (participant) =>
-                              participant.type ==
-                              EventParticipantType.ORGANIZATION,
-                          )
-                          .map((participant) =>
-                            Number(String(participant.id).split('-')[1]),
-                          ),
-                      ]);
+                      setValue(
+                        'selectOrganizations',
+                        [
+                          ...(watch('selectOrganizations') || []),
+                          ...updatedParticipantList
+                            .filter(
+                              (participant) =>
+                                participant.type ==
+                                EventParticipantType.ORGANIZATION,
+                            )
+                            .map((participant) =>
+                              Number(String(participant.id).split('-')[1]),
+                            ),
+                        ],
+                        { shouldDirty: true },
+                      );
                     }}>
                     全てをチェック
                   </p>
@@ -1917,9 +2016,13 @@ const ActionsEventModal = ({
                             ),
                         );
 
-                      setValue('participantIds', filteredParticipantIds);
+                      setValue('participantIds', filteredParticipantIds, {
+                        shouldDirty: true,
+                      });
 
-                      setValue('selectOrganizations', filteredOrganizationIds);
+                      setValue('selectOrganizations', filteredOrganizationIds, {
+                        shouldDirty: true,
+                      });
                     }}>
                     全てのチェックをクリア
                   </p>
@@ -2023,7 +2126,9 @@ const ActionsEventModal = ({
                         currentParticipantList.filter(
                           (participant) => participant != session?.user.id,
                         );
-                      setValue('participantIds', filterParticipantList);
+                      setValue('participantIds', filterParticipantList, {
+                        shouldDirty: true,
+                      });
 
                       // Remove any org that includes the removed user
                       const currentOrganizationList =
@@ -2045,7 +2150,9 @@ const ActionsEventModal = ({
                       updatedOrganizationList = updatedOrganizationList.filter(
                         (org) => !belongedOrganizations.includes(org),
                       );
-                      setValue('selectOrganizations', updatedOrganizationList);
+                      setValue('selectOrganizations', updatedOrganizationList, {
+                        shouldDirty: true,
+                      });
                     } else {
                       // Add user to currentParticipantList if user belongs to currentOrganizationList
                       const currentOrganizationList =
@@ -2057,10 +2164,14 @@ const ActionsEventModal = ({
                         if (org) {
                           const orgMembers = org.userIds || [];
                           if (orgMembers.includes(Number(session?.user.id))) {
-                            setValue('participantIds', [
-                              ...currentParticipantList,
-                              Number(session?.user.id),
-                            ]);
+                            setValue(
+                              'participantIds',
+                              [
+                                ...currentParticipantList,
+                                Number(session?.user.id),
+                              ],
+                              { shouldDirty: true },
+                            );
                             break;
                           }
                         }

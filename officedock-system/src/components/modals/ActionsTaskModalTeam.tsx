@@ -906,6 +906,7 @@ const ActionsTaskModalTeam = ({
   };
 
   const handleCheck = (index: number) => {
+    setIsFormTouched(true);
     const updatedTodos = todoList.map((todo, i) =>
       i === index ? { ...todo, isChecked: !todo.isChecked } : todo,
     );
@@ -931,6 +932,7 @@ const ActionsTaskModalTeam = ({
     customId?: string;
     content: string;
   }) => {
+    setIsFormTouched(true);
     const newData = todoList.map((todo) => {
       if (id && todo.id && todo.id === id) {
         return { ...todo, content };
@@ -953,6 +955,7 @@ const ActionsTaskModalTeam = ({
   };
   const handleOnDragEnd = (result: DropResult): void => {
     if (!result.destination) return;
+    setIsFormTouched(true);
 
     const items = Array.from(todoList);
 
@@ -977,25 +980,27 @@ const ActionsTaskModalTeam = ({
 
     if (isValid) {
       if (action === ActionTask.EDIT) {
-        onEdit &&
-          onEdit({
-            ...data,
-            todoList: todoList,
-            tagIds: filteredTagIds,
-            oldIdStatus: `${dataTask?.status?.id}`,
-            oldNameStatus: `${dataTask?.status?.name}`,
-            oldIdPeople:
-              dataTask?.peopleInCharge && dataTask.peopleInCharge.length > 0
-                ? String(dataTask.peopleInCharge[0].id)
-                : '',
-            deadlineRemindType: isShowFieldRemind
-              ? data.deadlineRemindType
-              : null,
-            deadlineRemindCountdown: isShowFieldRemind
-              ? data.deadlineRemindCountdown
-              : null,
-            showDeadlineTime: Boolean(watch('deadlineTime')),
-          });
+        !isFormTouched
+          ? onClose()
+          : onEdit &&
+            onEdit({
+              ...data,
+              todoList: todoList,
+              tagIds: filteredTagIds,
+              oldIdStatus: `${dataTask?.status?.id}`,
+              oldNameStatus: `${dataTask?.status?.name}`,
+              oldIdPeople:
+                dataTask?.peopleInCharge && dataTask.peopleInCharge.length > 0
+                  ? String(dataTask.peopleInCharge[0].id)
+                  : '',
+              deadlineRemindType: isShowFieldRemind
+                ? data.deadlineRemindType
+                : null,
+              deadlineRemindCountdown: isShowFieldRemind
+                ? data.deadlineRemindCountdown
+                : null,
+              showDeadlineTime: Boolean(watch('deadlineTime')),
+            });
       }
       if (action === ActionTask.CREATE) {
         onSubmit &&
@@ -3404,6 +3409,7 @@ const ActionsTaskModalTeam = ({
                                                   src="/icons/zoom-out.svg"
                                                   name="remove icon"
                                                   onClick={() => {
+                                                    setIsFormTouched(true);
                                                     if (todo.customId) {
                                                       const listData =
                                                         todoList.filter(

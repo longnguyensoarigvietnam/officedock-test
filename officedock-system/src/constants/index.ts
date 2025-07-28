@@ -6,6 +6,7 @@ import {
   StatisticViewOptions,
   StatusTask,
   TaskRepetitiveType,
+  TaskRepetitiveValue,
   WorkItemType,
 } from './enums';
 
@@ -338,23 +339,23 @@ export const ALL_TEAMS_OPTION = 'すべてのチーム';
 export const TASK_REPETITIVE_OPTIONS = [
   {
     label: TaskRepetitiveType.ONCE,
-    value: 'ONCE',
+    value: TaskRepetitiveValue.ONCE,
   },
   {
     label: TaskRepetitiveType.DAILY,
-    value: 'DAILY',
+    value: TaskRepetitiveValue.DAILY,
   },
   {
     label: TaskRepetitiveType.WEEKLY,
-    value: 'WEEKLY',
+    value: TaskRepetitiveValue.WEEKLY,
   },
   {
     label: TaskRepetitiveType.MONTHLY,
-    value: 'MONTHLY',
+    value: TaskRepetitiveValue.MONTHLY,
   },
   {
     label: TaskRepetitiveType.YEARLY,
-    value: 'YEARLY',
+    value: TaskRepetitiveValue.YEARLY,
   },
 ];
 
