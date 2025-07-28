@@ -1,5 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Count
+from django.db.models import Count, Q
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
 
@@ -207,7 +207,7 @@ class ChatFileSerializer(serializers.ModelSerializer):
         return representation
 
 
-class ChatFileDetailSerializer(serializers.ModelSerializer):
+class BaseChatFileDetailSerializer(serializers.ModelSerializer):
     """Serializer for chat file detail"""
 
     chat_message_id = serializers.IntegerField(
@@ -216,7 +216,6 @@ class ChatFileDetailSerializer(serializers.ModelSerializer):
     chat_message_uuid = serializers.UUIDField(
         source="chat_message.uuid", read_only=True
     )
-    images = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatFile
@@ -230,25 +229,64 @@ class ChatFileDetailSerializer(serializers.ModelSerializer):
             "file_type",
             "file_size",
             "created_at",
-            "images",
         ]
 
-    def get_images(self, obj):
-        """Get next or previous image"""
+    def to_representation(self, instance):
+        """Override file URL representation to ensure consistency"""
+        representation = super().to_representation(instance)
 
-        if obj.file_type.startswith("image"):
-            chat_files = ChatFile.objects.filter(
-                file_type__icontains="image", chat_room=obj.chat_room
-            ).order_by("id")
-            next_file = chat_files.filter(id__gt=obj.id).first()
-            previous_file = chat_files.filter(id__lt=obj.id).last()
+        if instance.original_file:
+            representation["original_file"] = get_signed_url(
+                instance.original_file
+            )
 
-            return {
-                "next_id": next_file.id if next_file else None,
-                "previous_id": previous_file.id if previous_file else None,
-            }
+        return representation
 
-        return None
+
+class ChatFileDetailSerializer(BaseChatFileDetailSerializer):
+    """Serializer for chat file detail"""
+
+    chat_message_id = serializers.IntegerField(
+        source="chat_message.id", read_only=True
+    )
+    chat_message_uuid = serializers.UUIDField(
+        source="chat_message.uuid", read_only=True
+    )
+    files = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ChatFile
+        fields = [
+            "id",
+            "uuid",
+            "chat_message_id",
+            "chat_message_uuid",
+            "file_name",
+            "original_file",
+            "file_type",
+            "file_size",
+            "created_at",
+            "files",
+        ]
+
+    def get_files(self, obj):
+        """Get next or previous file preview"""
+
+        chat_files = ChatFile.objects.filter(
+            Q(file_type__icontains="image") | Q(file_type__icontains="pdf"),
+            chat_room=obj.chat_room,
+        ).order_by("id")
+        next_file = chat_files.filter(id__gt=obj.id).first()
+        previous_file = chat_files.filter(id__lt=obj.id).last()
+
+        return {
+            "next_file": BaseChatFileDetailSerializer(next_file).data
+            if next_file
+            else None,
+            "previous_file": BaseChatFileDetailSerializer(previous_file).data
+            if previous_file
+            else None,
+        }
 
 
 class ChatMessageSerializer(serializers.ModelSerializer):
