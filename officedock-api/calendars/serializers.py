@@ -12,7 +12,11 @@ from tags.serializers import BaseTagSerializer
 from tasks.constants import FrequencyMap
 from users.models import User
 from tasks.models import PeopleInChargeTasks, TaskSchedule, TaskDuration
-from calendars.constants import CalendarTypes, ScheduleCategoryTypes
+from calendars.constants import (
+    CalendarTypes,
+    ScheduleCategoryTypes,
+    ScheduleRepeatOption,
+)
 from calendars.utils import is_event_overlapping
 
 
@@ -165,11 +169,25 @@ class ScheduleSerializer(serializers.ModelSerializer):
         min_value=1, max_value=12, required=False, allow_null=True
     )
     repeat_schedules = serializers.SerializerMethodField(read_only=True)
+    recurring_event_option = serializers.ChoiceField(
+        choices=ScheduleRepeatOption.choices(),
+        allow_null=True,
+        required=False,
+        write_only=True,
+    )
+    repeat_schedule_id = serializers.PrimaryKeyRelatedField(
+        source="repeat_schedule",
+        queryset=RepeatSchedule.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = Schedule
         fields = [
             "id",
+            "parent",
             "title",
             "organization",
             "start_date",
@@ -195,6 +213,8 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "month_day",
             "month",
             "repeat_schedules",
+            "recurring_event_option",
+            "repeat_schedule_id",
         ]
         read_only_fields = ["id"]
 
@@ -276,6 +296,7 @@ class BaseScheduleSerializer(ScheduleSerializer):
         model = Schedule
         fields = [
             "id",
+            "parent",
             "title",
             "start_date",
             "end_date",
@@ -507,6 +528,7 @@ class ScheduleDetailSerializer(ScheduleSerializer):
         model = Schedule
         fields = [
             "id",
+            "parent",
             "title",
             "organization",
             "start_date",

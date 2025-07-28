@@ -45,6 +45,7 @@ from dashboard.serializers import (
 )
 from dashboard.utils import (
     separate_duration,
+    separate_duration_while_keep_running,
 )
 from roles.constants import Screens
 from stat_data.utils import get_total_durations
@@ -634,6 +635,13 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         task_id = object_id if CalendarTypes.TASK.value == obj_type else None
 
         start_of_today = datetime.combine(timezone.now().date(), time.min)
+        durations = TaskDuration.objects.filter(
+            Q(Q(user=user) & Q(paused_at__isnull=True))
+        )
+
+        for duration in durations:
+            separate_duration_while_keep_running(duration, timezone.now(), user)
+
         if task_id or schedule_id:
             # Get current task running
             task_running = user.task_durations.filter(

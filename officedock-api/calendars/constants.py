@@ -47,3 +47,13 @@ class ScheduleCategoryTypes(EnumChoices):
     LARGE = "LARGE"
     MEDIUM = "MEDIUM"
     SMALL = "SMALL"
+
+
+class ScheduleRepeatOption(EnumChoices):
+    """
+    ScheduleRepeatOption constants.
+    """
+
+    THIS_EVENT = "THIS_EVENT"
+    THIS_AND_FOLLOWING_EVENTS = "THIS_AND_FOLLOWING_EVENTS"
+    ALL_EVENTS = "ALL_EVENTS"
