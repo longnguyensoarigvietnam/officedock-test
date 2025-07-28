@@ -1,7 +1,6 @@
 'use client';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import {
   Controller,
@@ -20,6 +19,7 @@ import RadioButton from '@components/common/RadioButton';
 import CategoryStepRaw from '@components/skillMap/CategoryStepRaw';
 
 import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
+
 import {
   ActionsEvent,
   ActionsModal,
@@ -39,11 +39,17 @@ import { ERROR_CREATE_MESSAGE, ERROR_UPDATE_MESSAGE } from '@constants/message';
 
 import { formatShowDateJapanese } from '@utils/date';
 import {
+  getInitialConditionMap,
   hasPermissionInArray,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
+
 import { OptionDropdownType } from '@interfaces/common';
-import { RawCategoryItem, StepKey } from '@interfaces/skill-map';
+import {
+  ConditionByMap,
+  RawCategoryItem,
+  StepKey,
+} from '@interfaces/skill-map';
 import {
   CategoryStructure,
   OrganizationSkillMapDetail,
@@ -51,6 +57,8 @@ import {
   SkillMapFormData,
   StepFormDataDetail,
 } from '@interfaces/skills';
+
+import { useSessionCache } from '@providers/SessionCacheProvider';
 import { useToast } from '@providers/ToastProvider';
 
 export type ActionsSkillMapModalProps = {
@@ -62,6 +70,8 @@ export type ActionsSkillMapModalProps = {
   onCreate?: (values: SkillMapFormData) => void;
   onEdit?: (values: SkillMapFormData) => void;
 };
+
+type StepField = keyof StepFormDataDetail;
 
 const ActionsSkillMapModal = ({
   open,
@@ -83,6 +93,7 @@ const ActionsSkillMapModal = ({
   const [dataOrganizationCategories, setDataOrganizationCategories] = useState<
     CategoryStructure[]
   >([]);
+  const [isFormTouched, setIsFormTouched] = useState<boolean>(false);
 
   const [dataOptionsCategorySmall, setDataOptionsCategorySmall] = useState<{
     step1: OptionDropdownType[][];
@@ -152,6 +163,10 @@ const ActionsSkillMapModal = ({
       value: '',
     },
   ]);
+
+  const [conditionByMap, setConditionByMap] = useState<ConditionByMap>(() => {
+    return action === ActionsModal.CREATE ? getInitialConditionMap() : {};
+  });
 
   const {
     register,
@@ -492,7 +507,7 @@ const ActionsSkillMapModal = ({
       onCreate && onCreate(data as SkillMapFormData);
     }
     if (action === ActionsEvent.EDIT) {
-      onEdit && onEdit(data as SkillMapFormData);
+      !isFormTouched ? onClose() : onEdit && onEdit(data as SkillMapFormData);
     }
   };
 
@@ -513,37 +528,35 @@ const ActionsSkillMapModal = ({
           PermissionsSystem.SKILL_MAP_MANAGEMENT_ADD,
         )));
 
-  type StepField = keyof StepFormDataDetail;
-
-  function getStepField<T extends StepField>(
+  const getStepField = <T extends StepField>(
     step: 1 | 2 | 3,
     field: T,
-  ): `step${1 | 2 | 3}.${T}` {
+  ): `step${1 | 2 | 3}.${T}` => {
     return `step${step}.${field}`;
-  }
+  };
 
-  function getItemListFieldArrayPath(
+  const getItemListFieldArrayPath = (
     step: 1 | 2 | 3,
     level: 1 | 2 | 3,
-  ): `step${1 | 2 | 3}.skillLevels.${1 | 2 | 3}.items` {
+  ): `step${1 | 2 | 3}.skillLevels.${1 | 2 | 3}.items` => {
     return `step${step}.skillLevels.${level}.items` as any;
-  }
+  };
 
-  function getSkillLevelField<K extends keyof SkillLevelDetail>(
+  const getSkillLevelField = <K extends keyof SkillLevelDetail>(
     step: 1 | 2 | 3,
     level: 1 | 2 | 3,
     field: K,
-  ): `step${1 | 2 | 3}.skillLevels.${1 | 2 | 3}.${K}` {
+  ): `step${1 | 2 | 3}.skillLevels.${1 | 2 | 3}.${K}` => {
     return `step${step}.skillLevels.${level}.${field}` as const;
-  }
+  };
 
-  function getItemFieldArrayPath(
+  const getItemFieldArrayPath = (
     step: 1 | 2 | 3,
     level: 1 | 2 | 3,
     index: number,
-  ) {
+  ) => {
     return `step${step}.skillLevels.${level}.items.${index}.value` as any;
-  }
+  };
 
   const resetMeasureFieldsWhenChangeRadioBtn = (
     currentStep: number,
@@ -621,6 +634,7 @@ const ActionsSkillMapModal = ({
                     onChange: (e) => {
                       const cleanValue = e.target.value.replace(/\D/g, ''); // Remove non-digits
                       e.target.value = cleanValue;
+                      setIsFormTouched(true);
                     },
                   },
                 )}
@@ -662,6 +676,7 @@ const ActionsSkillMapModal = ({
                     onChange: (e) => {
                       const cleanValue = e.target.value.replace(/\D/g, ''); // Remove non-digits
                       e.target.value = cleanValue;
+                      setIsFormTouched(true);
                     },
                   },
                 )}
@@ -703,6 +718,7 @@ const ActionsSkillMapModal = ({
                     onChange: (e) => {
                       const cleanValue = e.target.value.replace(/\D/g, ''); // Remove non-digits
                       e.target.value = cleanValue;
+                      setIsFormTouched(true);
                     },
                   },
                 )}
@@ -750,6 +766,7 @@ const ActionsSkillMapModal = ({
                         )?.value,
                     )}
                     onChange={(e) => {
+                      setIsFormTouched(true);
                       onChange(e);
                     }}
                   />
@@ -794,6 +811,7 @@ const ActionsSkillMapModal = ({
             label="回数"
             onChange={(e: any) => {
               if (e) {
+                setIsFormTouched(true);
                 setLevelUpConditionBy(LevelUpConditionBy.NUMBER_OF_TIMES);
                 resetMeasureFieldsWhenChangeRadioBtn(currentStep, levelKey);
               }
@@ -805,6 +823,7 @@ const ActionsSkillMapModal = ({
             label="計測時間"
             onChange={(e: any) => {
               if (e) {
+                setIsFormTouched(true);
                 setLevelUpConditionBy(LevelUpConditionBy.MEASUREMENT_TIME);
                 resetMeasureFieldsWhenChangeRadioBtn(currentStep, levelKey);
               }
@@ -818,6 +837,7 @@ const ActionsSkillMapModal = ({
             label="期間"
             onChange={(e: any) => {
               if (e) {
+                setIsFormTouched(true);
                 setLevelUpConditionBy(LevelUpConditionBy.PERIOD);
                 resetMeasureFieldsWhenChangeRadioBtn(currentStep, levelKey);
               }
@@ -848,6 +868,11 @@ const ActionsSkillMapModal = ({
                         levelKey as 1 | 2 | 3,
                         index,
                       ),
+                      {
+                        onChange: () => {
+                          setIsFormTouched(true);
+                        },
+                      },
                     )}
                     className="shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
                     placeholder="振り返り項目"
@@ -863,6 +888,7 @@ const ActionsSkillMapModal = ({
                 type="button"
                 onClick={() => {
                   append({ value: '' });
+                  setIsFormTouched(true);
                 }}>
                 <ImageRound
                   src="/icons/plus.svg"
@@ -875,12 +901,6 @@ const ActionsSkillMapModal = ({
         </div>
       </div>
     );
-  };
-
-  type ConditionByMap = {
-    [step: number]: {
-      [level: number]: LevelUpConditionBy;
-    };
   };
 
   useEffect(() => {
@@ -909,22 +929,6 @@ const ActionsSkillMapModal = ({
       setConditionByMap(editedMap);
     }
   }, [action, defaultValues]);
-
-  const getInitialConditionMap = (): ConditionByMap => {
-    const map: ConditionByMap = {};
-    for (let step = 1; step <= SKILL_MAP_STEP_COUNT; step++) {
-      map[step] = {};
-      for (let level = 0; level < SKILL_MAP_LEVEL_COUNT; level++) {
-        map[step][level] = LevelUpConditionBy.NUMBER_OF_TIMES;
-      }
-    }
-
-    return map;
-  };
-
-  const [conditionByMap, setConditionByMap] = useState<ConditionByMap>(() => {
-    return action === ActionsModal.CREATE ? getInitialConditionMap() : {};
-  });
 
   const getCondition = (
     step: number,
@@ -1030,6 +1034,9 @@ const ActionsSkillMapModal = ({
                   getStepField(currentStep as 1 | 2 | 3, 'name'),
                   {
                     required: true,
+                    onChange: () => {
+                      setIsFormTouched(true);
+                    },
                   },
                 )}
               />
@@ -1061,6 +1068,11 @@ const ActionsSkillMapModal = ({
             }
             register={register(
               getStepField(currentStep as 1 | 2 | 3, 'description'),
+              {
+                onChange: () => {
+                  setIsFormTouched(true);
+                },
+              },
             )}
           />
         </div>
@@ -1071,6 +1083,7 @@ const ActionsSkillMapModal = ({
           dataOptionsCategoryMedium={dataOptionsCategoryMedium}
           dataOptionsCategorySmall={dataOptionsCategorySmall}
           dataOrganizationCategories={dataOrganizationCategories}
+          setIsFormTouched={setIsFormTouched}
           setDataOptionsCategoryMedium={setDataOptionsCategoryMedium}
           setDataOptionsCategorySmall={setDataOptionsCategorySmall}
           setError={setError}

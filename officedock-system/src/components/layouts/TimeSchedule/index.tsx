@@ -84,6 +84,7 @@ import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ActionsEvent,
   CalendarViewOptions,
+  EventActionType,
   EventCalendarType,
   EventWorkCategory,
   ItemScheduleTitleType,
@@ -157,6 +158,7 @@ import {
   adjustPositionForViewportSchedule,
   hasPermissionInArray,
 } from '@utils';
+import EventActionTypeModal from '@components/modals/EventActionTypeModal';
 
 const formatDateJp = (date: Date) => {
   return format(date, DATE_SCHEDULE_FORMAT, {
@@ -326,6 +328,19 @@ const TimeSchedule = memo(
     const [confirmEventDataToEdit, setConfirmEventDataToEdit] =
       useState<EventEditFormData>();
     const [backToEditing, setBackToEditing] = useState(false);
+    const [openEventActionTypeModal, setOpenEventActionTypeModal] = useState<{
+      status: boolean;
+      type: ActionsEvent | null;
+      showThisEventOption?: boolean;
+    }>({
+      status: false,
+      type: ActionsEvent.EDIT,
+      showThisEventOption: true,
+    });
+    const [eventActionType, setEventActionType] =
+      useState<EventActionType | null>(null);
+    const [isEditingRepetitiveFields, setIsEditingRepetitiveFields] =
+      useState<boolean>(false);
 
     // Style for rbc-current-time-indicator when extend or narrow (show week or day)
 
@@ -3211,6 +3226,7 @@ const TimeSchedule = memo(
           data.month && (data.month as OptionDropdownType).value != ''
             ? Number((data.month as OptionDropdownType).value)
             : null,
+        recurringEventOption: eventActionType || EventActionType.THIS_EVENT,
       });
     };
 
@@ -3393,6 +3409,7 @@ const TimeSchedule = memo(
         onSettled: () => {
           setIsLoading(false);
           setDataEventEditLocal(undefined);
+          setEventActionType(null);
         },
       },
     );
@@ -3418,7 +3435,7 @@ const TimeSchedule = memo(
       sendToChat: boolean;
     }) => {
       return await api.delete(
-        `${apiRouters.DELETE_REPEAT_SCHEDULE(`${data.repeatScheduleId}`)}?message=${encodeURIComponent(actionsEventMessage)}${data.sendToChat ? '&send_to_chat=true' : ''}${data.eventId ? `&repeat_schedule_id=${data.eventId}` : ''}`,
+        `${apiRouters.DELETE_REPEAT_SCHEDULE(`${data.repeatScheduleId}`)}?message=${encodeURIComponent(actionsEventMessage)}${eventActionType ? `&recurring_event_option=${eventActionType}` : ''}${data.sendToChat ? '&send_to_chat=true' : ''}${data.eventId ? `&repeat_schedule_id=${data.eventId}` : ''}`,
       );
     };
     const { mutate: deleteEventRepeatCalendar } = useMutation(
@@ -3448,6 +3465,7 @@ const TimeSchedule = memo(
         onSettled: () => {
           setIsLoading(false);
           setDataEventEditLocal(undefined);
+          setEventActionType(null);
         },
       },
     );
@@ -3465,7 +3483,7 @@ const TimeSchedule = memo(
     }) => {
       const newId = data.id.replace('event', '');
       return await api.delete(
-        `${apiRouters.SCHEDULE_DETAIL(newId)}?message=${actionsEventMessage}${data.sendToChat ? '&send_to_chat=true' : ''}`,
+        `${apiRouters.SCHEDULE_DETAIL(newId)}?message=${actionsEventMessage}${eventActionType ? `&recurring_event_option=${eventActionType}` : ''}${data.sendToChat ? '&send_to_chat=true' : ''}`,
       );
     };
     const { mutate: deleteEventCalendar } = useMutation(
@@ -3524,6 +3542,7 @@ const TimeSchedule = memo(
         onSettled: () => {
           setIsLoading(false);
           setDataEventEditLocal(undefined);
+          setEventActionType(null);
         },
       },
     );
@@ -4299,6 +4318,7 @@ const TimeSchedule = memo(
             open={openCreateEventModal}
             dataEvent={dataEventEdit}
             action={ActionsEvent.EDIT}
+            setIsEditingRepetitiveFields={setIsEditingRepetitiveFields}
             onClose={() => {
               handleRemoveEventParam();
               setDataEventEditLocal(undefined);
@@ -4308,15 +4328,74 @@ const TimeSchedule = memo(
             onEdit={(data) => {
               setConfirmEventDataToEdit(data);
               setOpenCreateEventModal(false);
-              setOpenConfirmEditEventModal(true);
+              if (
+                String((data.repeatType as OptionDropdownType).value) !=
+                TaskRepetitiveValue.ONCE
+              ) {
+                isEditingRepetitiveFields
+                  ? setEventActionType(
+                      EventActionType.THIS_AND_FOLLOWING_EVENTS,
+                    )
+                  : setEventActionType(EventActionType.THIS_EVENT);
+                setOpenEventActionTypeModal({
+                  status: true,
+                  type: ActionsEvent.EDIT,
+                  showThisEventOption: !isEditingRepetitiveFields,
+                });
+              } else {
+                setOpenConfirmEditEventModal(true);
+              }
             }}
             onDelete={(data) => {
               setConfirmEventDataToEdit(data);
               setOpenCreateEventModal(false);
-              setOpenConfirmDeleteEventModal(true);
+              if (
+                String((data.repeatType as OptionDropdownType).value) !=
+                TaskRepetitiveValue.ONCE
+              ) {
+                setEventActionType(EventActionType.THIS_EVENT);
+                setOpenEventActionTypeModal({
+                  status: true,
+                  type: ActionsEvent.DELETE,
+                  showThisEventOption: true,
+                });
+              } else {
+                setOpenConfirmDeleteEventModal(true);
+              }
             }}
             creationDataEventCalendar={creationDataEventCalendar}
             backToEditing={backToEditing}
+          />
+        )}
+        {openEventActionTypeModal.status && openEventActionTypeModal.type && (
+          <EventActionTypeModal
+            open={openEventActionTypeModal.status}
+            openEventActionTypeModal={openEventActionTypeModal}
+            eventActionType={eventActionType}
+            setEventActionType={setEventActionType}
+            onCancel={() => {
+              setOpenCreateEventModal(true);
+              setOpenConfirmEditEventModal(false);
+              setDataEventEditLocal(confirmEventDataToEdit);
+              setBackToEditing(true);
+              setActionsEventMessage('');
+              setEventActionType(EventActionType.THIS_EVENT);
+              setOpenEventActionTypeModal({
+                status: false,
+                type: null,
+              });
+            }}
+            onConfirm={() => {
+              setOpenEventActionTypeModal({
+                status: false,
+                type: null,
+              });
+              if (openEventActionTypeModal.type == ActionsEvent.EDIT) {
+                setOpenConfirmEditEventModal(true);
+              } else {
+                setOpenConfirmDeleteEventModal(true);
+              }
+            }}
           />
         )}
         {openConfirmEditEventModal && (

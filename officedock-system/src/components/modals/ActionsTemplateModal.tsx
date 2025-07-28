@@ -119,6 +119,7 @@ const ActionsTemplateModal = ({
       value: NO_SETTING,
     },
   ]);
+  const [isFormTouched, setIsFormTouched] = useState<boolean>(false);
 
   const [dataOptionsTagIds, setDataOptionsTagIds] = useState<
     OptionDropdownType[]
@@ -495,6 +496,7 @@ const ActionsTemplateModal = ({
   }, [todoList, newlyAddedId]);
 
   const handleAddItem = () => {
+    setIsFormTouched(true);
     const newId = uuidv4();
     setTodoList((prevTodoList) => {
       const newData = [
@@ -514,6 +516,7 @@ const ActionsTemplateModal = ({
   };
 
   const handleCheck = (index: number) => {
+    setIsFormTouched(true);
     const updatedTodos = todoList.map((todo, i) =>
       i === index ? { ...todo, isChecked: !todo.isChecked } : todo,
     );
@@ -539,6 +542,7 @@ const ActionsTemplateModal = ({
     customId?: string;
     content: string;
   }) => {
+    setIsFormTouched(true);
     const newData = todoList.map((todo) => {
       if (id && todo.id && todo.id === id) {
         return { ...todo, content };
@@ -553,6 +557,7 @@ const ActionsTemplateModal = ({
   };
 
   const handleOnDragEnd = (result: DropResult): void => {
+    setIsFormTouched(true);
     if (!result.destination) return;
 
     const items = Array.from(todoList);
@@ -578,12 +583,14 @@ const ActionsTemplateModal = ({
 
     if (isValid) {
       if (action === ActionTask.EDIT) {
-        onEdit &&
-          onEdit({
-            ...data,
-            todoList: todoList,
-            tagIds: filteredTagIds,
-          });
+        !isFormTouched
+          ? onClose()
+          : onEdit &&
+            onEdit({
+              ...data,
+              todoList: todoList,
+              tagIds: filteredTagIds,
+            });
       }
       if (action === ActionTask.CREATE) {
         onSubmit &&
@@ -710,6 +717,9 @@ const ActionsTemplateModal = ({
               className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-centers !py-0 h-[46px] focus:!shadow-none focus:border !border-[#77858F] rounded-md"
               register={register('title', {
                 required: watch('title') !== null ? true : false,
+                onChange: () => {
+                  setIsFormTouched(true);
+                },
               })}
               error={errors.title?.message}
             />
@@ -768,6 +778,7 @@ const ActionsTemplateModal = ({
                         setDataOptionsCategoryMedium([]);
                         setValue('tagIds', []);
                       }
+                      setIsFormTouched(true);
                       onChange(e);
                     }}
                   />
@@ -807,6 +818,7 @@ const ActionsTemplateModal = ({
                             value: '',
                           });
                         }
+                        setIsFormTouched(true);
                         onChange(e);
                       }}
                       error={errors.categories?.LARGE?.message}
@@ -842,6 +854,7 @@ const ActionsTemplateModal = ({
                                 value: '',
                               });
                             }
+                            setIsFormTouched(true);
                             onChange(e);
                           }}
                           error={errors.categories?.MEDIUM?.message}
@@ -872,6 +885,7 @@ const ActionsTemplateModal = ({
                         )}
                         placeholder="小カテゴリ"
                         onChange={(e) => {
+                          setIsFormTouched(true);
                           onChange(e);
                         }}
                         error={errors.categories?.SMALL?.message}
@@ -914,6 +928,7 @@ const ActionsTemplateModal = ({
                           (tag) => tag.value != selected.value,
                         );
                       }
+                      setIsFormTouched(true);
                       setValue('tagIds', updatedTagIds);
                     }}
                   />
@@ -941,6 +956,7 @@ const ActionsTemplateModal = ({
                                       Number(item.value) != Number(tag.value),
                                   );
 
+                                  setIsFormTouched(true);
                                   setValue('tagIds', updatedTagIds);
                                 }}>
                                 ✕
@@ -959,6 +975,7 @@ const ActionsTemplateModal = ({
                       type="button"
                       name="Remove TagId"
                       onClick={() => {
+                        setIsFormTouched(true);
                         setValue('tagIds', []);
                       }}>
                       削除
@@ -987,6 +1004,7 @@ const ActionsTemplateModal = ({
                   initialValue={getValues('description') || ''}
                   onChange={(data) => {
                     setValue('description', data);
+                    setIsFormTouched(true);
                   }}
                 />
               </>
@@ -1113,6 +1131,7 @@ const ActionsTemplateModal = ({
                                             src="/icons/zoom-out.svg"
                                             name="remove icon"
                                             onClick={() => {
+                                              setIsFormTouched(true);
                                               if (todo.customId) {
                                                 const listData =
                                                   todoList.filter(

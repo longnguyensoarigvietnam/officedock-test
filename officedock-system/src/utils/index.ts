@@ -6,6 +6,7 @@ import {
   AllTeamStatisticOption,
   CalendarViewOptions,
   EventWorkCategory,
+  LevelUpConditionBy,
   PermissionsSystem,
   PermissionType,
   ScreenName,
@@ -18,6 +19,8 @@ import {
   DATE_FORMAT,
   DEFAULT_TIME_TEXT,
   MAX_HEX_COLOR_VALUE,
+  SKILL_MAP_LEVEL_COUNT,
+  SKILL_MAP_STEP_COUNT,
   SKILL_MAP_STEPS,
   SUB_TEAMS,
 } from '@constants';
@@ -51,6 +54,7 @@ import {
 import { ChangeTextAreaProps, OptionDropdownType } from '@interfaces/common';
 import { UserRoleType } from '@interfaces/user';
 import { ChatMessageResponse } from '@interfaces/chat';
+import { ConditionByMap } from '@interfaces/skill-map';
 
 import {
   convertTimeToDecimal,
@@ -2051,3 +2055,15 @@ export function getTruncatedFileName(
 
   return name.slice(0, availableLength) + '...' + extension;
 }
+
+export const getInitialConditionMap = (): ConditionByMap => {
+  const map: ConditionByMap = {};
+  for (let step = 1; step <= SKILL_MAP_STEP_COUNT; step++) {
+    map[step] = {};
+    for (let level = 0; level < SKILL_MAP_LEVEL_COUNT; level++) {
+      map[step][level] = LevelUpConditionBy.NUMBER_OF_TIMES;
+    }
+  }
+
+  return map;
+};

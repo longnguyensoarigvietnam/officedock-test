@@ -74,6 +74,8 @@ import {
   PermissionsSystem,
   ReactionIconValue,
   ItemStartType,
+  TaskRepetitiveValue,
+  EventActionType,
 } from '@constants/enums';
 import {
   ERROR_DELETE_MESSAGE,
@@ -125,6 +127,7 @@ import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import api from '@base/api';
+import EventActionTypeModal from '@components/modals/EventActionTypeModal';
 
 interface dataProps {
   clientId: string;
@@ -232,6 +235,19 @@ const ChatDetail = ({
   const { creationDataEventCalendar } = useCreationDataEventCalendar({});
   const [confirmEventDataToEdit, setConfirmEventDataToEdit] =
     useState<EventEditFormData>();
+  const [openEventActionTypeModal, setOpenEventActionTypeModal] = useState<{
+    status: boolean;
+    type: ActionsEvent | null;
+    showThisEventOption?: boolean;
+  }>({
+    status: false,
+    type: ActionsEvent.EDIT,
+    showThisEventOption: true,
+  });
+  const [eventActionType, setEventActionType] =
+    useState<EventActionType | null>(null);
+  const [isEditingRepetitiveFields, setIsEditingRepetitiveFields] =
+    useState<boolean>(false);
 
   // Delete / update messages
   const [msgIdDeleted, setMsgIdDeleted] = useState<string>();
@@ -1628,6 +1644,7 @@ const ChatDetail = ({
         data.month && (data.month as OptionDropdownType).value != ''
           ? Number((data.month as OptionDropdownType).value)
           : null,
+      recurringEventOption: eventActionType || EventActionType.THIS_EVENT,
     });
   };
 
@@ -1653,6 +1670,7 @@ const ChatDetail = ({
       },
       onSettled: () => {
         setIsLoading(false);
+        setEventActionType(null);
       },
     },
   );
@@ -1703,7 +1721,7 @@ const ChatDetail = ({
     sendToChat: boolean;
   }) => {
     return await api.delete(
-      `${apiRouters.SCHEDULE_DETAIL(data.id)}?message=${encodeURIComponent(actionsEventMessage)}${data.sendToChat ? '&send_to_chat=true' : ''}`,
+      `${apiRouters.SCHEDULE_DETAIL(data.id)}?message=${encodeURIComponent(actionsEventMessage)}${eventActionType ? `&recurring_event_option=${eventActionType}` : ''}${data.sendToChat ? '&send_to_chat=true' : ''}`,
     );
   };
 
@@ -1725,6 +1743,7 @@ const ChatDetail = ({
       },
       onSettled: () => {
         setIsLoading(false);
+        setEventActionType(null);
       },
     },
   );
@@ -3125,6 +3144,7 @@ const ChatDetail = ({
           open={openEditEventModal}
           dataEvent={dataEventEdit}
           action={ActionsEvent.EDIT}
+          setIsEditingRepetitiveFields={setIsEditingRepetitiveFields}
           onClose={() => {
             setDataEventEdit(undefined);
             setOpenEditEventModal(false);
@@ -3133,15 +3153,72 @@ const ChatDetail = ({
           onEdit={(data) => {
             setConfirmEventDataToEdit(data);
             setOpenEditEventModal(false);
-            setOpenConfirmEditEventModal(true);
+            if (
+              String((data.repeatType as OptionDropdownType).value) !=
+              TaskRepetitiveValue.ONCE
+            ) {
+              isEditingRepetitiveFields
+                ? setEventActionType(EventActionType.THIS_AND_FOLLOWING_EVENTS)
+                : setEventActionType(EventActionType.THIS_EVENT);
+              setOpenEventActionTypeModal({
+                status: true,
+                type: ActionsEvent.EDIT,
+                showThisEventOption: !isEditingRepetitiveFields,
+              });
+            } else {
+              setOpenConfirmEditEventModal(true);
+            }
           }}
           onDelete={(data) => {
             setConfirmEventDataToEdit(data);
             setOpenEditEventModal(false);
-            setOpenConfirmDeleteEventModal(true);
+            if (
+              String((data.repeatType as OptionDropdownType).value) !=
+              TaskRepetitiveValue.ONCE
+            ) {
+              setEventActionType(EventActionType.THIS_EVENT);
+              setOpenEventActionTypeModal({
+                status: true,
+                type: ActionsEvent.DELETE,
+                showThisEventOption: true,
+              });
+            } else {
+              setOpenConfirmDeleteEventModal(true);
+            }
           }}
           creationDataEventCalendar={creationDataEventCalendar}
           backToEditing={backToEditing}
+        />
+      )}
+      {openEventActionTypeModal.status && openEventActionTypeModal.type && (
+        <EventActionTypeModal
+          open={openEventActionTypeModal.status}
+          openEventActionTypeModal={openEventActionTypeModal}
+          eventActionType={eventActionType}
+          setEventActionType={setEventActionType}
+          onCancel={() => {
+            setOpenEditEventModal(true);
+            setOpenConfirmEditEventModal(false);
+            setDataEventEdit(confirmEventDataToEdit);
+            setBackToEditing(true);
+            setActionsEventMessage('');
+            setEventActionType(EventActionType.THIS_EVENT);
+            setOpenEventActionTypeModal({
+              status: false,
+              type: null,
+            });
+          }}
+          onConfirm={() => {
+            setOpenEventActionTypeModal({
+              status: false,
+              type: null,
+            });
+            if (openEventActionTypeModal.type == ActionsEvent.EDIT) {
+              setOpenConfirmEditEventModal(true);
+            } else {
+              setOpenConfirmDeleteEventModal(true);
+            }
+          }}
         />
       )}
       {openConfirmEditEventModal && (

@@ -109,6 +109,8 @@ export interface EventRequest {
   weekDay?: number | null;
   monthDay?: number | null;
   month?: number | null;
+  recurringEventOption?: string
+  repeatScheduleId?: number
 }
 
 export interface CreationDataEventCalendar {

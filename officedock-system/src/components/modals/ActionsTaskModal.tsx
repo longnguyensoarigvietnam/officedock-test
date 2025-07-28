@@ -932,6 +932,7 @@ const ActionsTaskModal = ({
   };
 
   const handleCheck = (index: number) => {
+    setIsFormTouched(true);
     const updatedTodos = todoList.map((todo, i) =>
       i === index ? { ...todo, isChecked: !todo.isChecked } : todo,
     );
@@ -957,6 +958,7 @@ const ActionsTaskModal = ({
     customId?: string;
     content: string;
   }) => {
+    setIsFormTouched(true);
     const newData = todoList.map((todo) => {
       if (id && todo.id && todo.id === id) {
         return { ...todo, content };
@@ -978,6 +980,7 @@ const ActionsTaskModal = ({
     }));
   };
   const handleOnDragEnd = (result: DropResult): void => {
+    setIsFormTouched(true);
     if (!result.destination) return;
 
     const items = Array.from(todoList);
@@ -1002,20 +1005,22 @@ const ActionsTaskModal = ({
     const isValid = await trigger();
     if (isValid) {
       if (action === ActionTask.EDIT) {
-        onEdit &&
-          onEdit({
-            ...data,
-            todoList: todoList,
-            tagIds: filteredTagIds,
-            oldIdStatus: `${dataTask?.status?.id}`,
-            deadlineRemindType: isShowFieldRemind
-              ? data.deadlineRemindType
-              : null,
-            deadlineRemindCountdown: isShowFieldRemind
-              ? data.deadlineRemindCountdown
-              : null,
-            showDeadlineTime: Boolean(watch('deadlineTime')),
-          });
+        !isFormTouched
+          ? onClose()
+          : onEdit &&
+            onEdit({
+              ...data,
+              todoList: todoList,
+              tagIds: filteredTagIds,
+              oldIdStatus: `${dataTask?.status?.id}`,
+              deadlineRemindType: isShowFieldRemind
+                ? data.deadlineRemindType
+                : null,
+              deadlineRemindCountdown: isShowFieldRemind
+                ? data.deadlineRemindCountdown
+                : null,
+              showDeadlineTime: Boolean(watch('deadlineTime')),
+            });
       }
       if (action === ActionTask.CREATE) {
         onSubmit &&
@@ -3325,6 +3330,7 @@ const ActionsTaskModal = ({
                                                     src="/icons/zoom-out.svg"
                                                     name="remove icon"
                                                     onClick={() => {
+                                                      setIsFormTouched(true);
                                                       if (todo.customId) {
                                                         const listData =
                                                           todoList.filter(
