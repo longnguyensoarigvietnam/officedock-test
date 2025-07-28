@@ -332,10 +332,12 @@ const TimeSchedule = memo(
       status: boolean;
       type: ActionsEvent | null;
       showThisEventOption?: boolean;
+      showAllEventsOption?: boolean;
     }>({
       status: false,
       type: ActionsEvent.EDIT,
       showThisEventOption: true,
+      showAllEventsOption: true
     });
     const [eventActionType, setEventActionType] =
       useState<EventActionType | null>(null);
@@ -1664,15 +1666,13 @@ const TimeSchedule = memo(
                 setDataEventEditLocal(data);
                 setConfirmEventDataToEdit(data);
                 setOpenCreateEventModal(false);
-                if (
-                  String(data.repeatType) !=
-                  TaskRepetitiveValue.ONCE
-                ) {
+                if (String(data.repeatType) != TaskRepetitiveValue.ONCE) {
                   setEventActionType(EventActionType.THIS_EVENT);
                   setOpenEventActionTypeModal({
                     status: true,
                     type: ActionsEvent.DELETE,
                     showThisEventOption: true,
+                    showAllEventsOption: true
                   });
                 } else {
                   setOpenConfirmDeleteEventRepeatModal(true);
@@ -4293,6 +4293,7 @@ const TimeSchedule = memo(
                   status: true,
                   type: ActionsEvent.EDIT,
                   showThisEventOption: !isEditingRepetitiveFields,
+                  showAllEventsOption: isEditingRepetitiveFields
                 });
               } else {
                 setOpenConfirmEditEventModal(true);
@@ -4310,6 +4311,7 @@ const TimeSchedule = memo(
                   status: true,
                   type: ActionsEvent.DELETE,
                   showThisEventOption: true,
+                  showAllEventsOption: true
                 });
               } else {
                 setOpenConfirmDeleteEventModal(true);
@@ -4326,10 +4328,9 @@ const TimeSchedule = memo(
             eventActionType={eventActionType}
             setEventActionType={setEventActionType}
             onCancel={() => {
-              setOpenCreateEventModal(true);
-              setOpenConfirmEditEventModal(false);
-              setDataEventEditLocal(confirmEventDataToEdit);
-              setBackToEditing(true);
+              setOpenCreateEventModal(false);
+              setDataEventEditLocal(undefined);
+              setBackToEditing(false);
               setActionsEventMessage('');
               setEventActionType(EventActionType.THIS_EVENT);
               setOpenEventActionTypeModal({
@@ -4409,7 +4410,7 @@ const TimeSchedule = memo(
             }}
             onBackToEditModal={() => {
               router.push(
-                `${pageRouters.CALENDAR_MANAGEMENT.href}?event=${`${idBackToEvent}`.replace('event', '')}&type=${ItemStartType.SCHEDULE}&action=${ActionsEvent.EDIT}`,
+                `${pageRouters.CALENDAR_MANAGEMENT.href}?event=${`${idBackToEvent}`.replace('event', '')}&type=${ItemStartType.SCHEDULE}&action=${ActionsEvent.EDIT}${dataEventEdit && dataEventEdit.eventSchedule ? `&repeat-schedule=${dataEventEdit.eventSchedule}` : ''}`,
               );
             }}
           />
@@ -4440,7 +4441,7 @@ const TimeSchedule = memo(
             }}
             onBackToEditModal={() => {
               router.push(
-                `${pageRouters.CALENDAR_MANAGEMENT.href}?event=${`${idBackToEvent}`.replace('event', '')}&type=${ItemStartType.SCHEDULE}&action=${ActionsEvent.EDIT}`,
+                `${pageRouters.CALENDAR_MANAGEMENT.href}?event=${`${idBackToEvent}`.replace('event', '')}&type=${ItemStartType.SCHEDULE}&action=${ActionsEvent.EDIT}${dataEventEdit && dataEventEdit.eventSchedule ? `&repeat-schedule=${dataEventEdit.eventSchedule}` : ''}`,
               );
             }}
           />
