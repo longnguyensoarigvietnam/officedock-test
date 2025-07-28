@@ -41,7 +41,6 @@ from stat_data.utils import (
     normalize_percentages,
 )
 from tasks.models import Task, TaskDuration
-from tasks.utils import split_date_range
 from users.models import User
 from users.serializers import DailyReportSerializer, BaseUserSerializer
 from roles.constants import Screens
@@ -57,35 +56,6 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     permission_classes = [ActionPermission]
     filter_backends = [FilterByPermission]
     screen_name = Screens.TEAM_DAILY_REPORT.value
-
-    def _separate_duration(self, duration, end_date, user=None):
-        """
-        Handle update and create duration by intervals
-        """
-        if duration.started_at.date() < timezone.now().date():
-            intervals = split_date_range(duration.started_at, end_date)
-            _, first_end_time = intervals.pop(0)
-            duration.paused_at = first_end_time
-            duration.save()
-            if len(intervals) >= 1:
-                last_date_start, _ = intervals.pop(-1)
-                # Create duration continue running
-                TaskDuration.objects.create(
-                    task_id=duration.task_id,
-                    started_at=last_date_start,
-                    paused_at=None,
-                    user=user,
-                )
-            if intervals is not []:
-                for start, end in intervals:
-                    TaskDuration.objects.create(
-                        task_id=duration.task_id,
-                        started_at=start,
-                        paused_at=end,
-                        user=user,
-                    )
-
-            return True
 
     @extend_schema(
         parameters=[

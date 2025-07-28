@@ -14,7 +14,11 @@ from rest_framework import viewsets, mixins, status, filters
 from rest_framework.decorators import action
 
 from base.apis import BaseAPIViewSet
-from calendars.constants import ScheduleFields, CalendarTypes
+from calendars.constants import (
+    ScheduleFields,
+    CalendarTypes,
+    ScheduleRepeatOption,
+)
 from calendars.models import EventLocation, Schedule, RepeatSchedule
 from calendars.filters import TaskScheduleForCalendarFilter
 from calendars.serializers import (
@@ -127,6 +131,11 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 "month_day": month_day,
                 "month": month,
             }
+            serializer_data["recurring_option"] = (
+                ScheduleRepeatOption.THIS_AND_FOLLOWING_EVENTS.value
+                if repeat_type != FrequencyMap.ONCE.value
+                else ScheduleRepeatOption.THIS_EVENT.value
+            )
         # Set default calendar organization
         serializer_data["organization"] = company.get_calendar_organization()
         schedule = serializer.save(company=company, creator_id=user.id)
@@ -194,6 +203,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         end_date=None,
         month=None,
         old_recurring=None,
+        repeat_schedule=None,
     ):
         """
         Handle loop task and store in task schedule
@@ -205,7 +215,12 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         )
 
         if schedule.repeat_schedules.exists() or not old_recurring:
-            schedule.repeat_schedules.all().delete()
+            if not repeat_schedule:
+                schedule.repeat_schedules.all().delete()
+            else:
+                schedule.repeat_schedules.filter(
+                    id__gte=repeat_schedule.id
+                ).all().delete()
 
         if repeat_type == FrequencyMap.ONCE.value:
             RepeatSchedule.objects.create(
@@ -372,11 +387,79 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         return changes
 
+    def _handle_recurring_event_option(
+        self,
+        recurring_event_option,
+        serializer_data,
+        instance,
+        user,
+        recurring,
+    ):
+        """
+        Handle schedule by recurring event option
+        """
+        parent = instance.parent or instance
+        new_data = dict(serializer_data)
+        new_data["recurring_option"] = recurring_event_option
+        # Copy instance and create new
+        new_data["creator_id"] = instance.creator_id
+        new_data["organization"] = instance.organization
+        new_data["company_id"] = user.company_id
+        new_data["recurring"] = recurring
+        if recurring_event_option == ScheduleRepeatOption.ALL_EVENTS.value:
+            Schedule.objects.filter(id=parent.id).update(**new_data)
+            parent.refresh_from_db()
+            return parent
+        else:
+            # Create new instance
+            return Schedule.objects.create(**new_data)
+
+    def _handle_update_duration_and_remove_repeat_schedules(
+        self, new_schedule, recurring_event_option, repeat_schedule
+    ):
+        """
+        Handle update duration of all schedules behind current schedule and destroy it.
+        """
+        parent_schedule = new_schedule.parent or new_schedule
+        if (
+            recurring_event_option
+            == ScheduleRepeatOption.THIS_AND_FOLLOWING_EVENTS.value
+        ):
+            child_schedules = parent_schedule.child_schedules.values_list(
+                "id", flat=True
+            )
+            schedule_ids = list(child_schedules) + [parent_schedule.id]
+
+            schedules = (
+                RepeatSchedule.objects.filter(
+                    id__gte=repeat_schedule.id, schedule__in=schedule_ids
+                )
+                .exclude(schedule=new_schedule)
+                .values_list("schedule__id", flat=True)
+                .distinct()
+            )
+            remove_schedules = Schedule.objects.filter(id__in=schedules).all()
+            for child in remove_schedules:
+                child.repeat_schedules.filter(
+                    id__gte=repeat_schedule.id
+                ).update(schedule=new_schedule)
+                # Remove child if in repeat range of new schedule
+                if not child.repeat_schedules.filter(
+                    id__lt=repeat_schedule.id
+                ).exists():
+                    child.task_durations.update(schedule=new_schedule)
+                    child.delete()
+        elif recurring_event_option == ScheduleRepeatOption.ALL_EVENTS.value:
+            remove_schedules = parent_schedule.child_schedules.all()
+            for child in remove_schedules:
+                child.repeat_schedules.update(schedule=parent_schedule)
+                child.task_durations.update(schedule=parent_schedule)
+                child.delete()
+
     @transaction.atomic()
     def perform_update(self, serializer):
         instance = serializer.instance
         user = self.request.user
-        screen = self.request.query_params.get("current_screen")
         company = user.company
         serializer_data = serializer.validated_data
         send_to_chat = serializer_data.pop("send_to_chat", None)
@@ -393,9 +476,29 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         week_day = serializer_data.pop("week_day", None)
         month_day = serializer_data.pop("month_day", None)
         month = serializer_data.pop("month", None)
+        recurring_event_option = serializer_data.pop(
+            "recurring_event_option", None
+        )
+        repeat_schedule = serializer_data.pop("repeat_schedule", None)
         old_recurring = instance.recurring
-        recurring = None
-        if repeat_type:
+        recurring = old_recurring
+
+        is_change_recurring = (
+            old_recurring["repeat_type"] != repeat_type
+            or old_recurring["repeat_interval"] != repeat_interval
+        )
+        if recurring_event_option == ScheduleRepeatOption.ALL_EVENTS.value:
+            start_date = (
+                instance.repeat_schedules.first().plan_start_date
+                if instance.repeat_schedules.exists()
+                else start_date
+            )
+            end_date = (
+                (instance.repeat_schedules.first().plan_end_date)
+                if instance.repeat_schedules.exists()
+                else end_date
+            )
+        if repeat_type and is_change_recurring:
             recurring = {
                 "repeat_type": repeat_type,
                 "start_date": start_date.isoformat() if start_date else None,
@@ -405,14 +508,13 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 "month_day": month_day,
                 "month": month,
             }
-
-        if recurring != old_recurring and screen != Screens.STATISTIC.value:
             serializer_data["recurring"] = recurring
         if not instance.organization:
             # Set default calendar organization
             serializer_data[
                 "organization"
             ] = company.get_calendar_organization()
+        data = []
         if participants and send_to_chat:
             data = self._generate_chat_data(
                 recurring,
@@ -429,7 +531,42 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
             if recurring != old_recurring:
                 data["old"] = old_recurring
-        schedule = serializer.save()
+
+        is_have_recurring = (
+            repeat_type != FrequencyMap.ONCE.value and recurring_event_option
+        )
+        is_difference_repeat_date = (
+            repeat_schedule != instance.repeat_schedules.first()
+        )
+        is_difference_repeat_option = (
+            recurring_event_option != instance.recurring_option
+        )
+        if recurring_event_option == ScheduleRepeatOption.ALL_EVENTS.value:
+            serializer_data["recurring_option"] = recurring_event_option
+            # Saving schedule
+            instance = self._handle_recurring_event_option(
+                recurring_event_option,
+                serializer_data,
+                instance,
+                user,
+                recurring,
+            )
+        elif (
+            is_have_recurring
+            and recurring_event_option
+            and (is_difference_repeat_option or is_difference_repeat_date)
+        ):
+            serializer_data["parent"] = instance
+            instance = self._handle_recurring_event_option(
+                recurring_event_option,
+                serializer_data,
+                instance,
+                user,
+                recurring,
+            )
+            serializer.instance = instance
+        else:
+            serializer.save()
 
         if participants is not None:
             old_participants = instance.participants.all()
@@ -439,7 +576,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             # Stop duration of removed user
             TaskDuration.objects.filter(
                 user__in=removed_users,
-                schedule=schedule,
+                schedule=instance,
                 paused_at__isnull=True,
             ).update(paused_at=timezone.now())
             instance.participants.clear()
@@ -481,17 +618,17 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         task_duration = TaskDuration.objects.filter(
             started_at__gte=start_of_today,
             paused_at__isnull=True,
-            schedule=schedule,
+            schedule=instance,
         ).first()
         if task_duration:
             is_send_sk, is_over_estimate = check_task_overtime(
-                schedule, task_duration
+                instance, task_duration
             )
             if is_send_sk:
-                for user in schedule.participants.all():
+                for user in instance.participants.all():
                     send_web_socket_event(
                         {
-                            "id": schedule.id,
+                            "id": instance.id,
                             "task_duration_running_uuid": str(
                                 task_duration.uuid
                             ),
@@ -501,11 +638,26 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         },
                         user=user,
                     )
+        if recurring_event_option in [
+            ScheduleRepeatOption.THIS_AND_FOLLOWING_EVENTS.value,
+            ScheduleRepeatOption.ALL_EVENTS.value,
+        ]:
+            self._handle_update_duration_and_remove_repeat_schedules(
+                instance, recurring_event_option, repeat_schedule
+            )
 
+        if (
+            repeat_type
+            and recurring_event_option == ScheduleRepeatOption.THIS_EVENT.value
+        ):
+            repeat_schedule.schedule = instance
+            repeat_schedule.save()
         # Create repeat schedule base on repeat type
-        if repeat_type and old_recurring != recurring:
+        if repeat_type and is_change_recurring:
+            instance.parent = None
+            instance.save()
             self._generate_repeat_schedules(
-                schedule,
+                instance,
                 start_date,
                 repeat_type,
                 repeat_interval,
@@ -519,29 +671,42 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     @transaction.atomic()
     @extend_schema(
         parameters=[
+            OpenApiParameter("repeat_schedule_id", type=int),
             OpenApiParameter("send_to_chat", type=bool),
             OpenApiParameter("message", type=str),
+            OpenApiParameter(
+                "recurring_event_option",
+                type=str,
+                enum=[
+                    ScheduleRepeatOption.THIS_EVENT.value,
+                    ScheduleRepeatOption.ALL_EVENTS.value,
+                    ScheduleRepeatOption.THIS_AND_FOLLOWING_EVENTS.value,
+                ],
+                required=False,
+            ),
         ]
     )
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         user = request.user
         company = user.company
+        repeat_schedule_id = request.query_params.get("repeat_schedule_id")
         send_to_chat = request.query_params.get("send_to_chat", None)
         schedule_message = request.query_params.get("message", None)
+        recurring_event_option = request.query_params.get(
+            "recurring_event_option", None
+        )
         participants = instance.participants.all()
         client_id = request.data.pop("client_id", None)
 
-        if send_to_chat:
+        if participants is not None and send_to_chat:
             data = self._generate_chat_data(
                 instance.recurring,
                 participants,
                 instance.creator_id if instance.creator_id else user.id,
             )
-
-        if participants is not None:
             for participant in participants:
-                if send_to_chat and user != participant:
+                if user != participant:
                     self._send_chat_message(
                         user,
                         participant,
@@ -552,7 +717,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         client_id,
                         ChatMessageTypes.REMOVE_SCHEDULE.value,
                     )
-                if send_to_chat:
+                else:
                     self._send_to_calendar_room(
                         user,
                         participant,
@@ -562,17 +727,75 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         client_id,
                         ChatMessageTypes.REMOVE_SCHEDULE.value,
                     )
-        if instance.task_durations.exists():
-            instance.task_durations.filter(paused_at__isnull=True).update(
-                paused_at=now()
-            )
-            instance.is_start = False
-            instance.save()
-            instance.soft_delete()
-        else:
-            self.perform_destroy(instance)
+        if recurring_event_option in [
+            ScheduleRepeatOption.THIS_AND_FOLLOWING_EVENTS.value,
+            ScheduleRepeatOption.ALL_EVENTS.value,
+        ]:
+            parent_schedule = instance.parent or instance
+            if (
+                recurring_event_option
+                == ScheduleRepeatOption.THIS_AND_FOLLOWING_EVENTS.value
+            ):
+                child_schedules = parent_schedule.child_schedules.values_list(
+                    "id", flat=True
+                )
+                schedule_ids = list(child_schedules) + [parent_schedule.id]
+
+                schedules = (
+                    RepeatSchedule.objects.filter(
+                        id__gte=repeat_schedule_id, schedule__in=schedule_ids
+                    )
+                    .exclude(schedule=instance)
+                    .values_list("schedule__id", flat=True)
+                    .distinct()
+                )
+                remove_schedules = Schedule.objects.filter(
+                    id__in=schedules
+                ).all()
+                for child in remove_schedules:
+                    child.repeat_schedules.filter(
+                        id__gte=repeat_schedule_id
+                    ).delete()
+                    # Remove child if in repeat range of new schedule
+                    if not child.repeat_schedules.filter(
+                        id__lt=repeat_schedule_id
+                    ).exists():
+                        child.task_durations.update(schedule=instance)
+                        child.delete()
+                instance.repeat_schedules.filter(
+                    id__gte=repeat_schedule_id
+                ).delete()
+                if instance.repeat_schedules.count() == 0:
+                    self._soft_delete_if_needed(instance)
+            elif (
+                recurring_event_option == ScheduleRepeatOption.ALL_EVENTS.value
+            ):
+                remove_schedules = parent_schedule.child_schedules.all()
+                for child in remove_schedules:
+                    self._soft_delete_if_needed(child)
+
+                self._soft_delete_if_needed(instance)
+        elif (
+            repeat_schedule_id
+            and recurring_event_option == ScheduleRepeatOption.THIS_EVENT.value
+        ):
+            if instance.repeat_schedules.count() == 1:
+                self._soft_delete_if_needed(instance)
+            else:
+                instance.repeat_schedules.filter(id=repeat_schedule_id).delete()
 
         return self.response(status_code=status.HTTP_204_NO_CONTENT)
+
+    def _soft_delete_if_needed(self, schedule):
+        if schedule.task_durations.exists():
+            schedule.task_durations.filter(paused_at__isnull=True).update(
+                paused_at=now()
+            )
+            schedule.is_start = False
+            schedule.save()
+            schedule.soft_delete()
+        else:
+            self.perform_destroy(schedule)
 
     def _generate_chat_data(self, recurring, users, creator_id=None):
         """
@@ -807,75 +1030,6 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 },
             ).data
         )
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter("repeat_schedule_id", type=int),
-            OpenApiParameter("send_to_chat", type=int),
-            OpenApiParameter("message", type=int),
-        ],
-    )
-    @action(
-        methods=["DELETE"],
-        detail=True,
-        url_path="delete-repeat-schedule",
-    )
-    def delete_repeat_schedule(self, request, pk, *args, **kwargs):
-        """
-        Handle delete repeat schedule
-        """
-        instance = self.get_object()
-        user = request.user
-        repeat_schedule_id = request.query_params.get("repeat_schedule_id")
-        send_to_chat = self.request.query_params.get("send_to_chat", None)
-        schedule_message = self.request.query_params.get("message", None)
-        participants = instance.participants.all()
-        client_id = self.request.data.pop("client_id", None)
-
-        if send_to_chat:
-            data = self._generate_chat_data(
-                instance.recurring,
-                participants,
-                instance.creator_id if instance.creator_id else user.id,
-            )
-
-        if participants is not None:
-            for participant in participants:
-                if send_to_chat and user != participant:
-                    self._send_chat_message(
-                        user,
-                        participant,
-                        user.company,
-                        instance,
-                        data,
-                        schedule_message,
-                        client_id,
-                        ChatMessageTypes.REMOVE_SCHEDULE.value,
-                    )
-                if send_to_chat:
-                    self._send_to_calendar_room(
-                        user,
-                        participant,
-                        instance,
-                        data,
-                        schedule_message,
-                        client_id,
-                        ChatMessageTypes.REMOVE_SCHEDULE.value,
-                    )
-        if instance.repeat_schedules.count() == 1:
-            if instance.task_durations.exists():
-                instance.task_durations.filter(paused_at__isnull=True).update(
-                    paused_at=now()
-                )
-                instance.is_start = False
-                instance.save()
-                instance.soft_delete()
-            else:
-                self.perform_destroy(instance)
-        elif repeat_schedule_id:
-            instance.repeat_schedules.filter(id=repeat_schedule_id).delete()
-
-        return self.response(status_code=status.HTTP_204_NO_CONTENT)
 
     @action(
         methods=["POST"],
