@@ -70,6 +70,7 @@ class ChatRoomSerializer(serializers.ModelSerializer):
             "participants",
             "participant_ids",
             "type",
+            "select_organizations",
         ]
         read_only_fields = ["id", "code", "type"]
 
