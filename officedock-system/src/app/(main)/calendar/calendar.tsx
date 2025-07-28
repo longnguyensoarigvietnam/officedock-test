@@ -3104,7 +3104,7 @@ const EventCalendar = () => {
             setOpenCreateEventModal(false);
             setOpenEventInfoModal(false);
             if (
-              String((data.repeatType as OptionDropdownType).value) !=
+              String(data.repeatType) !=
               TaskRepetitiveValue.ONCE
             ) {
               setEventActionType(EventActionType.THIS_EVENT);

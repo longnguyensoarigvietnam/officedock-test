@@ -1664,7 +1664,19 @@ const TimeSchedule = memo(
                 setDataEventEditLocal(data);
                 setConfirmEventDataToEdit(data);
                 setOpenCreateEventModal(false);
-                setOpenConfirmDeleteEventRepeatModal(true);
+                if (
+                  String(data.repeatType) !=
+                  TaskRepetitiveValue.ONCE
+                ) {
+                  setEventActionType(EventActionType.THIS_EVENT);
+                  setOpenEventActionTypeModal({
+                    status: true,
+                    type: ActionsEvent.DELETE,
+                    showThisEventOption: true,
+                  });
+                } else {
+                  setOpenConfirmDeleteEventRepeatModal(true);
+                }
                 setIdBackToEvent(data.id as string);
               }}
             />
@@ -3419,9 +3431,9 @@ const TimeSchedule = memo(
         if (dataEventEdit.repeatType === TaskRepetitiveValue.ONCE) {
           deleteEventCalendar({ id: `${dataEventEdit.id}`, sendToChat });
         } else {
-          deleteEventRepeatCalendar({
-            eventId: `${dataEventEdit.eventSchedule}`,
-            repeatScheduleId: dataEventEdit.scheduleId as string,
+          deleteEventCalendar({
+            id: `${dataEventEdit.scheduleId}`,
+            repeatScheduleId: dataEventEdit.eventSchedule as string,
             sendToChat,
           });
         }
@@ -3429,46 +3441,6 @@ const TimeSchedule = memo(
       }
     };
 
-    const handleDeleteEventRepeatCalendar = async (data: {
-      eventId: number | string;
-      repeatScheduleId: number | string;
-      sendToChat: boolean;
-    }) => {
-      return await api.delete(
-        `${apiRouters.DELETE_REPEAT_SCHEDULE(`${data.repeatScheduleId}`)}?message=${encodeURIComponent(actionsEventMessage)}${eventActionType ? `&recurring_event_option=${eventActionType}` : ''}${data.sendToChat ? '&send_to_chat=true' : ''}${data.eventId ? `&repeat_schedule_id=${data.eventId}` : ''}`,
-      );
-    };
-    const { mutate: deleteEventRepeatCalendar } = useMutation(
-      'deleteEventRepeatCalendar',
-      handleDeleteEventRepeatCalendar,
-      {
-        onSuccess: (data, task) => {
-          handleRemoveEventParam();
-          setOpenConfirmDeleteEventRepeatModal(false);
-          setConfirmEventDataToEdit(undefined);
-          setBackToEditing(false);
-          setActionsEventMessage('');
-          const updatedTaskList = taskTimeScheduleList.filter(
-            (item) => item.eventSchedule !== Number(task.eventId),
-          );
-          setTaskTimeScheduleList(updatedTaskList);
-          showToast({
-            description: SUCCESS_DELETE_MESSAGE,
-          });
-          queryClient.refetchQueries(['getDataTaskHeaderList']);
-          queryClient.refetchQueries(['getTaskHeaderStart']);
-          queryClient.refetchQueries(['getTaskDurationDetail']);
-        },
-        onError: (error: AxiosError<any>) => {
-          showErrorToast(error, ERROR_DELETE_MESSAGE);
-        },
-        onSettled: () => {
-          setIsLoading(false);
-          setDataEventEditLocal(undefined);
-          setEventActionType(null);
-        },
-      },
-    );
     // Delete event
     const handleConfirmDeleteEventCalendar = (sendToChat: boolean) => {
       if (dataEventEdit) {
@@ -3479,11 +3451,12 @@ const TimeSchedule = memo(
 
     const handleDeleteEventCalendar = async (data: {
       id: string;
+      repeatScheduleId?: number | string;
       sendToChat: boolean;
     }) => {
       const newId = data.id.replace('event', '');
       return await api.delete(
-        `${apiRouters.SCHEDULE_DETAIL(newId)}?message=${actionsEventMessage}${eventActionType ? `&recurring_event_option=${eventActionType}` : ''}${data.sendToChat ? '&send_to_chat=true' : ''}`,
+        `${apiRouters.SCHEDULE_DETAIL(newId)}?message=${actionsEventMessage}${eventActionType ? `&recurring_event_option=${eventActionType}` : ''}${data.sendToChat ? '&send_to_chat=true' : ''}${data.repeatScheduleId ? `&repeat_schedule_id=${data.repeatScheduleId}` : ''}`,
       );
     };
     const { mutate: deleteEventCalendar } = useMutation(
@@ -3499,37 +3472,17 @@ const TimeSchedule = memo(
           setBackToEditing(false);
           setActionsEventMessage('');
 
-          const updatedTaskList = taskTimeScheduleList.filter(
-            (item) => item.id !== `${task.id.replace('event', '')}event`,
-          );
+          if (calendarRef.current) {
+            const calendarApi = calendarRef.current.getApi();
+            const startDateISOString = formatQueryStartDateForCalendar(
+              calendarApi.view.activeStart,
+            );
+            const endDateISOString = formatQueryEndDateForCalendar(
+              calendarApi.view.activeEnd,
+            );
+            handleCallApiAllData(startDateISOString, endDateISOString);
+          }
 
-          const deleteEventList = updatedTaskList.filter(
-            (item) =>
-              `${item.scheduleId}` !== `${task.id}` ||
-              item.resourceId !== ItemScheduleType.PLANS,
-          );
-
-          const deleteEventListUpdate = deleteEventList.map((item) => {
-            if (
-              `${item.scheduleId}` === `${task.id}` &&
-              item.isCalculation === true
-            ) {
-              return {
-                ...item,
-                planEndDate: `${new Date()}`,
-                end: adjustEndDate(
-                  new Date(`${item.planStartDate}`),
-                  new Date(),
-                  5,
-                ),
-                isCalculation: false,
-                isStart: false,
-              };
-            }
-            return item;
-          });
-
-          setTaskTimeScheduleList(deleteEventListUpdate);
           setIdEventDelete(`${task.id}event`);
           showToast({
             description: SUCCESS_DELETE_MESSAGE,
@@ -3540,7 +3493,6 @@ const TimeSchedule = memo(
           showErrorToast(error, ERROR_DELETE_MESSAGE);
         },
         onSettled: () => {
-          setIsLoading(false);
           setDataEventEditLocal(undefined);
           setEventActionType(null);
         },
@@ -4393,7 +4345,7 @@ const TimeSchedule = memo(
               if (openEventActionTypeModal.type == ActionsEvent.EDIT) {
                 setOpenConfirmEditEventModal(true);
               } else {
-                setOpenConfirmDeleteEventModal(true);
+                setOpenConfirmDeleteEventRepeatModal(true);
               }
             }}
           />
