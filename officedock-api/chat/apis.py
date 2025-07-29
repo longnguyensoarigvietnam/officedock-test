@@ -160,23 +160,6 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 ).exists():
                     data = ChatRoomsParticipantsSerializer(participant).data
                     data["is_existed"] = True
-                    if participant.hidden_at is not None:
-                        participant.hidden_at = None
-                        participant.unread_messages = 0
-                        participant.save()
-                        # Handle websocket for sync data while chat room is hidden
-                        send_web_socket_event(
-                            {
-                                "action": WebSocketEventType.SHOW_ROOM.value,
-                                "chat_room": ChatRoomsParticipantsSerializer(
-                                    participant
-                                ).data,
-                                "chat_message": None,
-                            },
-                            user,
-                        )
-
-                        return self.response_ok(data)
 
                     # Handle case existed chat room
                     send_web_socket_event(
@@ -349,7 +332,6 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             .annotate(
                 participant_count=Count("chat_room__chat_rooms_participants")
             )
-            .filter(hidden_at__isnull=True)
             .exclude(
                 chat_room__type=ChatRoomTypes.PRIVATE.value, participant_count=1
             )
@@ -494,56 +476,6 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         return self.response_ok(
             ChatRoomsParticipantsSerializer(participant).data
         )
-
-    @action(
-        methods=["PUT"],
-        detail=True,
-        url_path="hide",
-        serializer_class=None,
-    )
-    def hide(self, request, code=None):
-        """
-        Hide a chat room
-        """
-        instance = self.get_object()
-        current_user = request.user
-        participant = instance.chat_rooms_participants.filter(
-            user=current_user
-        ).first()
-
-        if instance.type == ChatRoomTypes.GROUP.value:
-            raise ValidationError(
-                {"detail": [ERROR_MESSAGES["cannot_hide_room"]]}
-            )
-
-        if participant is None:
-            raise ValidationError(
-                {
-                    "chat_room_participant": [
-                        ERROR_MESSAGES["participant_does_not_exist"]
-                    ]
-                }
-            )
-
-        if participant.hidden_at:
-            participant.hidden_at = None
-            participant.save()
-        else:
-            participant.hidden_at = timezone.now()
-            participant.save()
-            # Handle case realtime when hide chat
-            send_web_socket_event(
-                {
-                    "action": WebSocketEventType.HIDE_ROOM.value,
-                    "user": current_user.id,
-                    "chat_room": ChatRoomsParticipantsWebSocketSerializer(
-                        participant
-                    ).data,
-                },
-                current_user,
-            )
-
-        return self.response_ok()
 
     @extend_schema(
         methods=["GET"],
@@ -730,12 +662,11 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
             chat_room_participants = chat_room.chat_rooms_participants.all()
             for participant in chat_room_participants:
-                if participant.user_id != user.id:
+                if not participant.is_muted and participant.user_id != user.id:
                     participant.unread_messages = (
                         participant.unread_messages + 1
                     )
-                participant.hidden_at = None
-                participant.save()
+                    participant.save()
                 if participant.user_id != user.id:
                     # Handle case realtime when send chat message
                     send_web_socket_event(
@@ -774,7 +705,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         return self.response_ok()
 
     @action(
-        methods=["PUT"],
+        methods=["POST"],
         detail=True,
         url_path="mute",
         serializer_class=None,
