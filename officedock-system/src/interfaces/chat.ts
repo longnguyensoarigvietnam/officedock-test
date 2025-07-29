@@ -72,6 +72,7 @@ export interface ChatMessageResponse {
     isAllDay: boolean;
   };
   chatFiles: ChatFileResponse[];
+  reply?: ChatMessageResponse;
   isEdited: boolean;
   createdAt: Date | string;
   deletedAt: Date | null;
@@ -210,4 +211,19 @@ export interface DataChatFileMemo {
   chatMessageUuid: string;
   chatMessageId: number;
   uuid: string;
+}
+export interface ChatFileDetailResponse {
+  chatMessageId: number;
+  chatMessageUuid: string;
+  createdAt: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  id: number;
+  originalFile: string;
+  uuid: string;
+  files: {
+    nextFile: ChatFileDetailResponse | null;
+    previousFile: ChatFileDetailResponse | null;
+  };
 }

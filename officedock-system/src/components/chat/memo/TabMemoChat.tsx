@@ -1,5 +1,5 @@
 import { useMutation } from 'react-query';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
@@ -29,6 +29,13 @@ const TabMemoChat = ({
   const { showToast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [dataText, setDataText] = useState<string>('');
+  const [isEdit, setIsEdit] = useState(false);
+
+  useEffect(() => {
+    if (memoDetail) {
+      setDataText(memoDetail);
+    }
+  }, [memoDetail]);
 
   //Function call api create memo
   const handleCreateMemo = async (data: string) => {
@@ -45,6 +52,7 @@ const TabMemoChat = ({
         setChatRoomDetail((prev) =>
           prev ? { ...prev, memo: dataText } : prev,
         );
+        setIsEdit(false);
       },
       onError: () => {
         showToast({
@@ -68,9 +76,12 @@ const TabMemoChat = ({
   };
 
   return (
-    <div>
+    <div className="memo-chat">
       <div className="flex w-full justify-end">
         <ImageRound
+          onClick={() => {
+            setIsEdit(true);
+          }}
           src="/icons/edit-chat.svg"
           name="edit-chat"
           className="!text-transparent h-fit w-fit cursor-pointer"
@@ -78,25 +89,28 @@ const TabMemoChat = ({
       </div>
       <TextAreaLink
         className="rounded-[4px] p-[10px] min-h-[100px] !border-none h-auto whitespace-pre-wrap leading-[22px] tracking-[0] focus:border-none mt-1 max-h-[calc(100vh_-_386px)] overflow-y-auto focus-visible:border-none focus-visible:outline-none text-sm font-normal"
-        initialValue={memoDetail || ''}
+        initialValue={dataText || ''}
+        disabled={!isEdit}
         onChange={(data) => setDataText(data)}
       />
       <div className="w-full border-b border-[#CED8DE] mt-3"></div>
-      <div className="flex gap-[14px] items-center mt-4">
-        <Button
-          onClick={handleCancel}
-          variant="outline"
-          className="w-[123px] h-[34px] !py-1">
-          キャンセル
-        </Button>
-        <Button
-          onClick={handleSave}
-          disabled={isSaving}
-          variant="primary"
-          className="w-[123px] h-[34px] !py-1">
-          保存
-        </Button>
-      </div>
+      {isEdit && (
+        <div className="flex gap-[14px] items-center mt-4">
+          <Button
+            onClick={handleCancel}
+            variant="outline"
+            className="w-[123px] h-[34px] !py-1">
+            キャンセル
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={isSaving}
+            variant="primary"
+            className="w-[123px] h-[34px] !py-1">
+            保存
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

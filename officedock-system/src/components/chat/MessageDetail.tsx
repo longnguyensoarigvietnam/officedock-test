@@ -35,6 +35,7 @@ import { pageRouters } from '@constants/routers';
 
 import {
   ChatDashboardMember,
+  ChatFileResponse,
   ChatMessageResponse,
   ChatParticipant,
   ChatRoomDetail,
@@ -72,6 +73,16 @@ export type MessageDetailProps = {
   dashboardMembers: ChatDashboardMember[];
   editor: Editor | null;
   highlightedMessageId: string | null;
+  handleReplyMsg: ({
+    user,
+    replyUuid,
+  }: {
+    user: {
+      id: number;
+      name: string;
+    };
+    replyUuid: string;
+  }) => void;
   setPreserveFiles: Dispatch<
     SetStateAction<
       {
@@ -90,6 +101,14 @@ export type MessageDetailProps = {
         file: File;
       }[]
     >
+  >;
+  setDataPreviewFile: Dispatch<
+    SetStateAction<{
+      msgId: string;
+      file: ChatFileResponse;
+      user: ChatDashboardMember;
+      createAt: string;
+    } | null>
   >;
   setMessage: Dispatch<SetStateAction<string>>;
   setMentionMembers: Dispatch<SetStateAction<ChatParticipant[]>>;
@@ -115,6 +134,8 @@ export const MessageDetail = ({
   editor,
   chatContainerRef,
   highlightedMessageId,
+  setDataPreviewFile,
+  handleReplyMsg,
   setPreserveFiles,
   setOpenUploadFilesModal,
   setUploadFiles,
@@ -359,6 +380,7 @@ export const MessageDetail = ({
           return (
             <p
               key={index}
+              data-id={messageDetail.uuid}
               className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px]">
               <span dangerouslySetInnerHTML={{ __html: element.innerHTML }} />
             </p>
@@ -583,6 +605,36 @@ export const MessageDetail = ({
                                               </p>
                                             </div>
                                             <Button
+                                              onClick={() => {
+                                                const memberInfo =
+                                                  dashboardMembers.find(
+                                                    (member) =>
+                                                      member.id ===
+                                                      messageDetail.sender.id,
+                                                  );
+                                                setDataPreviewFile({
+                                                  msgId:
+                                                    String(messageDetail.id) ||
+                                                    '',
+                                                  createAt: String(
+                                                    messageDetail.createdAt,
+                                                  ),
+                                                  user: {
+                                                    id: messageDetail.sender
+                                                      ?.id,
+                                                    avatarColor:
+                                                      memberInfo?.avatarColor ||
+                                                      '',
+                                                    avatarUrl:
+                                                      memberInfo?.avatarUrl ||
+                                                      '',
+                                                    fullName:
+                                                      messageDetail.sender
+                                                        ?.fullName,
+                                                  },
+                                                  file: file,
+                                                });
+                                              }}
                                               className="font-medium w-[84px] h-[30px] !rounded-[6px] text-xs !px-0"
                                               variant="outline">
                                               プレビュー
@@ -846,6 +898,7 @@ export const MessageDetail = ({
                             handleRemoveReactionClick={
                               handleRemoveReactionClickDetail
                             }
+                            handleReplyMsg={handleReplyMsg}
                           />
                         )}
                     </>
@@ -986,6 +1039,7 @@ export const MessageDetail = ({
                         <MessageHoverOptions
                           messageDetail={messageDetail}
                           chatRoomDetail={chatRoomDetail}
+                          handleReplyMsg={handleReplyMsg}
                           handleOpenEditForm={handleOpenEditForm}
                           handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
                           handleUpdateBookmark={handleUpdateBookmark}
@@ -1114,6 +1168,7 @@ export const MessageDetail = ({
                         <MessageHoverOptions
                           messageDetail={messageDetail}
                           chatRoomDetail={chatRoomDetail}
+                          handleReplyMsg={handleReplyMsg}
                           handleOpenEditForm={handleOpenEditForm}
                           handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
                           handleUpdateBookmark={handleUpdateBookmark}
@@ -1228,6 +1283,7 @@ export const MessageDetail = ({
                         <MessageHoverOptions
                           messageDetail={messageDetail}
                           chatRoomDetail={chatRoomDetail}
+                          handleReplyMsg={handleReplyMsg}
                           handleOpenEditForm={handleOpenEditForm}
                           handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
                           handleUpdateBookmark={handleUpdateBookmark}

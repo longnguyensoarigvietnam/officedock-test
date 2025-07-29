@@ -23,6 +23,16 @@ interface MessageHoverOptionsProps {
   handleUpdateBookmark: (dataUuid: string) => void;
   handleReactionClick: (icon: string) => void;
   handleRemoveReactionClick: (icon: string) => void;
+  handleReplyMsg: ({
+    user,
+    replyUuid,
+  }: {
+    user: {
+      id: number;
+      name: string;
+    };
+    replyUuid: string;
+  }) => void;
 }
 
 export const MessageHoverOptions = ({
@@ -33,6 +43,7 @@ export const MessageHoverOptions = ({
   handleRemoveReactionClick,
   handleOpenEditForm,
   handleOpenDeleteMsgModal,
+  handleReplyMsg,
 }: MessageHoverOptionsProps) => {
   const optionRef = useRef<HTMLDivElement | null>(null);
   const { data: session } = useSessionCache();
@@ -153,6 +164,15 @@ export const MessageHoverOptions = ({
               name="Reply"
               src={'/icons/reply.svg'}
               className="w-[17px] h-[15px] hover:cursor-pointer"
+              onClick={() => {
+                handleReplyMsg({
+                  user: {
+                    id: messageDetail.sender.id,
+                    name: messageDetail.sender.fullName,
+                  },
+                  replyUuid: messageDetail.uuid,
+                });
+              }}
             />
           </div>
         </DynamicTooltip>
