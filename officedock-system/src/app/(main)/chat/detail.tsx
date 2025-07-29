@@ -4,6 +4,7 @@ import { AxiosError } from 'axios';
 import { useMutation, useQueryClient } from 'react-query';
 import {
   ChangeEvent,
+  Fragment,
   useCallback,
   useContext,
   useEffect,
@@ -132,6 +133,13 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import api from '@base/api';
 import EventActionTypeModal from '@components/modals/EventActionTypeModal';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
+import ActionMuteChatModal from '@components/modals/ActionMuteChatModal';
 
 interface dataProps {
   clientId: string;
@@ -248,7 +256,7 @@ const ChatDetail = ({
     status: false,
     type: ActionsEvent.EDIT,
     showThisEventOption: true,
-    showAllEventsOption: true
+    showAllEventsOption: true,
   });
   const [eventActionType, setEventActionType] =
     useState<EventActionType | null>(null);
@@ -373,6 +381,9 @@ const ChatDetail = ({
     createAt: string;
   } | null>(null);
 
+  // Action group
+  const [showModalMuteChat, setShowModalMuteChat] = useState(false);
+
   // Scroll to selected message
   useEffect(() => {
     if (gotoMessageId) {
@@ -418,6 +429,45 @@ const ChatDetail = ({
       );
       return response;
     }
+  };
+
+  // Delete message
+  const postActionMuteChat = async () => {
+    setIsLoading(true);
+    const { data: response } = await api.post(
+      apiRouters.MUTE_CHAT(`${chatRoomDetail?.code}`),
+    );
+    return response;
+  };
+  const { mutate: actionMuteChat, isLoading: isLoadingMute } = useMutation(
+    postActionMuteChat,
+    {
+      onSuccess: async () => {},
+      onError: () => {},
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+  const handleConfirmMuteChat = (data: boolean) => {
+    setChatRoomDetail((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        isMuted: data,
+      };
+    });
+    setDataChatList((prev) =>
+      prev.map((item) =>
+        item.code === chatRoomDetail?.code ? { ...item, isMuted: data } : item,
+      ),
+    );
+    setFilteredChatList((prev) =>
+      prev.map((item) =>
+        item.code === chatRoomDetail?.code ? { ...item, isMuted: data } : item,
+      ),
+    );
+    actionMuteChat();
   };
 
   const { mutate: getDataListMessages } = useMutation(
@@ -1253,7 +1303,15 @@ const ChatDetail = ({
         uuid: file.uuid,
       };
     });
-    const { filterMsg, replyUuid } = extractAndRemoveMsgQuotes(newMsg);
+    const { filterMsg, replyUuid, allMsgIds } =
+      extractAndRemoveMsgQuotes(newMsg);
+    let matchedMessagesQuote: ChatMessageResponse[] = [];
+
+    if (allMsgIds && allMsgIds.length > 0) {
+      matchedMessagesQuote = dataMessageDetail.filter((item) =>
+        allMsgIds.includes(item.uuid),
+      );
+    }
 
     setDataMessageDetail([
       {
@@ -1281,6 +1339,7 @@ const ChatDetail = ({
         mentions: mentionIds,
         isBookmark: false,
         chatFiles: chatUploadFiles,
+        quote: allMsgIds && allMsgIds.length > 0 ? matchedMessagesQuote : null,
         // TODO: Update sava data msg detail of reply in onsuccess API "reply"
       },
 
@@ -2121,6 +2180,7 @@ const ChatDetail = ({
   const handleQuoteMsgUser = useCallback(
     (data: { id: string; title: string }) => {
       if (!editor) return;
+
       editor
         .chain()
         .focus()
@@ -2698,19 +2758,63 @@ const ChatDetail = ({
                               customOffset={{
                                 left: -40,
                               }}>
-                              <div>
-                                <ImageRound
-                                  className="w-[26px] h-[26px] hover:cursor-pointer"
-                                  src="/icons/setting-chat.svg"
-                                  border="full"
-                                  name="Setting icon"
-                                  onClick={() => {
-                                    setOpenSettingBox(true);
-                                    // Refetch to get the latest room name
-                                    refetchChatRoomDetail();
-                                  }}
-                                />
-                              </div>
+                              <Popover className="relative">
+                                {() => (
+                                  <>
+                                    <PopoverButton
+                                      className={`flex w-full px-3 py-2 items-center rounded-md focus:outline-none`}>
+                                      <div>
+                                        <ImageRound
+                                          className="w-[26px] h-[26px] hover:cursor-pointer"
+                                          src="/icons/setting-chat.svg"
+                                          border="full"
+                                          name="Setting icon"
+                                        />
+                                      </div>
+                                    </PopoverButton>
+                                    <Transition
+                                      as={Fragment}
+                                      enter="transition ease-out duration-200"
+                                      enterFrom="opacity-0 translate-y-1"
+                                      enterTo="opacity-100 translate-y-0"
+                                      leave="transition ease-in duration-150"
+                                      leaveFrom="opacity-100 translate-y-0"
+                                      leaveTo="opacity-0 translate-y-1">
+                                      <PopoverPanel
+                                        style={{
+                                          boxShadow:
+                                            '0px 2px 8px 0px #0000001A',
+                                        }}
+                                        className="absolute bg-[#5B6770] py-[6px] rounded-md text-white text-sm  font-medium  top-10 right-0 z-10  transform">
+                                        <div className="w-[126px]">
+                                          <div
+                                            className="py-[10px] px-[14px] cursor-pointer hover:opacity-70"
+                                            onClick={() => {
+                                              setOpenSettingBox(true);
+                                              // Refetch to get the latest room name
+                                              refetchChatRoomDetail();
+                                            }}>
+                                            編集
+                                          </div>
+                                          <div
+                                            onClick={() =>
+                                              setShowModalMuteChat(true)
+                                            }
+                                            className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
+                                            通知
+                                          </div>
+                                          <div className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
+                                            グループを退会
+                                          </div>
+                                          <div className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
+                                            グループを削除
+                                          </div>
+                                        </div>
+                                      </PopoverPanel>
+                                    </Transition>
+                                  </>
+                                )}
+                              </Popover>
                             </DynamicTooltip>
                           ),
                       )}
@@ -3351,7 +3455,7 @@ const ChatDetail = ({
                 status: true,
                 type: ActionsEvent.EDIT,
                 showThisEventOption: !isEditingRepetitiveFields,
-                showAllEventsOption: isEditingRepetitiveFields
+                showAllEventsOption: isEditingRepetitiveFields,
               });
             } else {
               setOpenConfirmEditEventModal(true);
@@ -3369,7 +3473,7 @@ const ChatDetail = ({
                 status: true,
                 type: ActionsEvent.DELETE,
                 showThisEventOption: true,
-                showAllEventsOption: true
+                showAllEventsOption: true,
               });
             } else {
               setOpenConfirmDeleteEventModal(true);
@@ -3597,6 +3701,15 @@ const ChatDetail = ({
             });
             setDataPreviewFile(null);
           }}
+        />
+      )}
+      {showModalMuteChat && (
+        <ActionMuteChatModal
+          open={showModalMuteChat}
+          isMuteChat={chatRoomDetail?.isMuted || false}
+          isLoadingMute={isLoadingMute}
+          onClose={() => setShowModalMuteChat(false)}
+          onConfirm={handleConfirmMuteChat}
         />
       )}
     </>

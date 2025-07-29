@@ -28,12 +28,14 @@ const TabMemoChat = ({
 }: TabMemoChatProps) => {
   const { showToast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
-  const [dataText, setDataText] = useState<string>('');
+  const [dataText, setDataText] = useState<string>('<p></p>');
   const [isEdit, setIsEdit] = useState(false);
 
   useEffect(() => {
     if (memoDetail) {
       setDataText(memoDetail);
+    } else {
+      setDataText('<p></p>');
     }
   }, [memoDetail]);
 
@@ -72,11 +74,12 @@ const TabMemoChat = ({
     await createMemoChat(dataText);
   };
   const handleCancel = () => {
-    setDataText(memoDetail || '');
+    setDataText(memoDetail || '<p></p>');
+    setIsEdit(false);
   };
 
   return (
-    <div className="memo-chat">
+    <div className="memo-chat px-[10px]">
       <div className="flex w-full justify-end">
         <ImageRound
           onClick={() => {
@@ -88,14 +91,14 @@ const TabMemoChat = ({
         />
       </div>
       <TextAreaLink
-        className="rounded-[4px] p-[10px] min-h-[100px] !border-none h-auto whitespace-pre-wrap leading-[22px] tracking-[0] focus:border-none mt-1 max-h-[calc(100vh_-_386px)] overflow-y-auto focus-visible:border-none focus-visible:outline-none text-sm font-normal"
+        className="rounded-[4px] py-[10px] min-h-[100px] !border-none h-auto whitespace-pre-wrap leading-[22px] tracking-[0] focus:border-none mt-1 max-h-[calc(100vh_-_386px)] overflow-y-auto focus-visible:border-none focus-visible:outline-none text-sm font-normal"
         initialValue={dataText || ''}
         disabled={!isEdit}
         onChange={(data) => setDataText(data)}
       />
       <div className="w-full border-b border-[#CED8DE] mt-3"></div>
       {isEdit && (
-        <div className="flex gap-[14px] items-center mt-4">
+        <div className="flex gap-[14px] items-center justify-between mt-4">
           <Button
             onClick={handleCancel}
             variant="outline"

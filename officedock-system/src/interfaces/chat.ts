@@ -86,6 +86,7 @@ export interface ChatMessageResponse {
     id: number;
     title: string;
   }[];
+  quote: ChatMessageResponse[] | null;
 }
 
 export interface TaskUserListChat {
@@ -137,6 +138,7 @@ export interface ChatRoomDetail {
   type: string;
   memo: string;
   unreadMessages: number;
+  isMuted: boolean;
 }
 
 export interface ChatRoomItem {
@@ -149,6 +151,7 @@ export interface ChatRoomItem {
   lastMessageAt: string | null;
   participants: ChatParticipant[];
   isExisted?: boolean;
+  isMuted: boolean;
 }
 
 export interface WebSocketMessageData extends DataSkillReward {

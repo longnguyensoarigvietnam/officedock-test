@@ -441,11 +441,7 @@ const ListChatUsers = ({
             const unpinnedItems = prevDataChatList.filter(
               (item) => item.pinAt === null,
             );
-            const allRooms = [
-              ...pinnedItems,
-              data.chatRoom,
-              ...unpinnedItems,
-            ];
+            const allRooms = [...pinnedItems, data.chatRoom, ...unpinnedItems];
             // Remove duplicates by id
             const uniqueRooms = Array.from(
               new Map(allRooms.map((room) => [room.code, room])).values(),
@@ -1012,7 +1008,7 @@ const ListChatUsers = ({
                   <div className="!w-8 !h-8">{renderAvatar(item)}</div>
 
                   <p
-                    className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium `}>
+                    className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? 'w-[calc(100%_-_90px)]' : 'w-[calc(100%_-_60px)]'} text-justify font-medium `}>
                     {item.code &&
                     chatRoomNameEditing.find(
                       (room) => room.roomCode === item.code,
@@ -1022,6 +1018,16 @@ const ListChatUsers = ({
                         )?.roomName
                       : item?.name || ''}
                   </p>
+                  {item.isMuted && (
+                    <div
+                      className={`absolute top-1/2 -translate-y-1/2  ${item?.unreadMessages > 0 ? 'right-[38px]' : 'right-2'}`}>
+                      <ImageRound
+                        className={` w-fit h-fit hover:cursor-pointer `}
+                        src="/icons/mute.svg"
+                        name="mute icon"
+                      />
+                    </div>
+                  )}
 
                   {item?.unreadMessages > 0 && (
                     <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full w-[20px] pt-[2px] h-[20px] bg-[#C32E2E] text-[10px] text-center text-white leading-4">
@@ -1082,7 +1088,7 @@ const ListChatUsers = ({
                   </div>
                   <div className="!w-8 !h-8">{renderAvatar(item)}</div>
                   <p
-                    className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium`}>
+                    className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? 'w-[calc(100%_-_90px)]' : 'w-[calc(100%_-_60px)]'} text-justify font-medium`}>
                     {item.code &&
                     chatRoomNameEditing.find(
                       (room) => room.roomCode === item.code,
@@ -1092,6 +1098,16 @@ const ListChatUsers = ({
                         )?.roomName
                       : item?.name || ''}
                   </p>
+                  {item.isMuted && (
+                    <div
+                      className={`absolute top-1/2 -translate-y-1/2  ${item?.unreadMessages > 0 ? 'right-[38px]' : 'right-2'}`}>
+                      <ImageRound
+                        className={` w-fit h-fit hover:cursor-pointer `}
+                        src="/icons/mute.svg"
+                        name="mute icon"
+                      />
+                    </div>
+                  )}
                   {item?.unreadMessages > 0 && (
                     <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full pt-[2px] w-[20px] h-[20px] bg-[#C32E2E] text-[10px] text-center text-white leading-4">
                       {item?.unreadMessages}
