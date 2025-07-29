@@ -60,6 +60,7 @@ class ChatRoomSerializer(serializers.ModelSerializer):
         write_only=True,
         required=True,
     )
+    is_muted = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatRoom
@@ -71,8 +72,21 @@ class ChatRoomSerializer(serializers.ModelSerializer):
             "participant_ids",
             "type",
             "select_organizations",
+            "is_muted",
         ]
         read_only_fields = ["id", "code", "type"]
+
+    def get_is_muted(self, obj):
+        """
+        Get chatroom is muted or not
+        """
+        return (
+            obj.chat_rooms_participants.filter(
+                user=self.context["request"].user
+            )
+            .first()
+            .is_muted
+        )
 
     def validate(self, data):
         """
@@ -104,7 +118,6 @@ class ChatRoomDetailSerializer(ChatRoomSerializer):
 
     name = serializers.SerializerMethodField()
     unread_messages = serializers.SerializerMethodField()
-    is_muted = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatRoom
@@ -119,18 +132,6 @@ class ChatRoomDetailSerializer(ChatRoomSerializer):
             "is_muted",
         ]
         read_only_fields = ["id", "code", "type"]
-
-    def get_is_muted(self, obj):
-        """
-        Get chatroom is muted or not
-        """
-        return (
-            obj.chat_rooms_participants.filter(
-                user=self.context["request"].user
-            )
-            .first()
-            .is_muted
-        )
 
     def get_unread_messages(self, obj):
         """
@@ -588,6 +589,7 @@ class ChatRoomsParticipantsSerializer(serializers.ModelSerializer):
             "pin_at",
             "last_message_at",
             "participants",
+            "is_muted",
         ]
 
     def get_code(self, obj):
