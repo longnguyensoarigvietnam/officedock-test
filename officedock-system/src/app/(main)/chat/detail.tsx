@@ -239,10 +239,12 @@ const ChatDetail = ({
     status: boolean;
     type: ActionsEvent | null;
     showThisEventOption?: boolean;
+    showAllEventsOption?: boolean;
   }>({
     status: false,
     type: ActionsEvent.EDIT,
     showThisEventOption: true,
+    showAllEventsOption: true
   });
   const [eventActionType, setEventActionType] =
     useState<EventActionType | null>(null);
@@ -3164,6 +3166,7 @@ const ChatDetail = ({
                 status: true,
                 type: ActionsEvent.EDIT,
                 showThisEventOption: !isEditingRepetitiveFields,
+                showAllEventsOption: isEditingRepetitiveFields
               });
             } else {
               setOpenConfirmEditEventModal(true);
@@ -3181,6 +3184,7 @@ const ChatDetail = ({
                 status: true,
                 type: ActionsEvent.DELETE,
                 showThisEventOption: true,
+                showAllEventsOption: true
               });
             } else {
               setOpenConfirmDeleteEventModal(true);

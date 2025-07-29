@@ -135,10 +135,12 @@ const EventCalendar = () => {
     status: boolean;
     type: ActionsEvent | null;
     showThisEventOption?: boolean;
+    showAllEventsOption?: boolean;
   }>({
     status: false,
     type: ActionsEvent.EDIT,
     showThisEventOption: true,
+    showAllEventsOption: true
   });
 
   // Event list
@@ -204,6 +206,7 @@ const EventCalendar = () => {
   const eventIdURL = searchParams.get('event');
   const views = searchParams.get('view');
   const eventDetailId = eventIdURL?.replace('event', '');
+  const repeatScheduleIdURL = searchParams.get('repeat-schedule');
 
   // Popup
   const [eventListModalInfo, setEventListModalInfo] =
@@ -1620,6 +1623,13 @@ const EventCalendar = () => {
   useEffect(() => {
     if (eventDetailId && dataEventEdit === undefined && actionType) {
       setActionEventClick(actionType);
+      if (repeatScheduleIdURL) {
+        setSelectedEventInfo({
+          eventId: eventDetailId.replace('event', ''),
+          repeatScheduleId: repeatScheduleIdURL,
+          openType: SelectedEventOpenType.MODAL,
+        });
+      }
 
       getDataDetailEvent({
         eventId: eventDetailId.replace('event', ''),
@@ -1630,7 +1640,7 @@ const EventCalendar = () => {
       setOpenCreateEventModal(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getDataDetailEvent, eventDetailId, actionType]);
+  }, [getDataDetailEvent, eventDetailId, actionType, repeatScheduleIdURL]);
 
   const handleDayCellMount = (info: { date: Date; el: HTMLElement }) => {
     const { date, el } = info;
@@ -2081,7 +2091,7 @@ const EventCalendar = () => {
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
-        setIsLoading(false)
+        setIsLoading(false);
       },
       onSettled: () => {
         setDataEventEdit(undefined);
@@ -2160,7 +2170,7 @@ const EventCalendar = () => {
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_DELETE_MESSAGE);
         setSelectedEventInfo(null);
-        setIsLoading(false)
+        setIsLoading(false);
       },
       onSettled: () => {
         setEventActionType(null);
@@ -2827,6 +2837,7 @@ const EventCalendar = () => {
                 status: true,
                 type: ActionsEvent.EDIT,
                 showThisEventOption: !isEditingRepetitiveFields,
+                showAllEventsOption: isEditingRepetitiveFields
               });
             } else {
               setOpenConfirmEditEventModal(true);
@@ -2844,6 +2855,7 @@ const EventCalendar = () => {
                 status: true,
                 type: ActionsEvent.DELETE,
                 showThisEventOption: true,
+                showAllEventsOption: true
               });
             } else {
               setOpenConfirmDeleteEventModal(true);
@@ -2860,10 +2872,20 @@ const EventCalendar = () => {
           eventActionType={eventActionType}
           setEventActionType={setEventActionType}
           onCancel={() => {
-            setOpenCreateEventModal(true);
-            setOpenConfirmEditEventModal(false);
-            setDataEventEdit(confirmEventDataToEdit);
-            setBackToEditing(true);
+            if (selectedEventInfo?.openType == SelectedEventOpenType.MODAL) {
+              setOpenCreateEventModal(true);
+              setOpenConfirmEditEventModal(false);
+              setDataEventEdit(confirmEventDataToEdit);
+              setBackToEditing(true);
+            } else {
+              setDataEventEdit(undefined);
+              setSelectedEventInfo(null);
+              setOpenCreateEventModal(false);
+              setBackToEditing(false);
+              setDefaultCreateStartDate(undefined);
+              setIsEditingRepetitiveFields(false);
+            }
+
             setActionsEventMessage('');
             setEventActionType(EventActionType.THIS_EVENT);
             setOpenEventActionTypeModal({
@@ -3103,15 +3125,13 @@ const EventCalendar = () => {
             });
             setOpenCreateEventModal(false);
             setOpenEventInfoModal(false);
-            if (
-              String(data.repeatType) !=
-              TaskRepetitiveValue.ONCE
-            ) {
+            if (String(data.repeatType) != TaskRepetitiveValue.ONCE) {
               setEventActionType(EventActionType.THIS_EVENT);
               setOpenEventActionTypeModal({
                 status: true,
                 type: ActionsEvent.DELETE,
                 showThisEventOption: true,
+                showAllEventsOption: true
               });
             } else {
               setOpenConfirmDeleteEventModal(true);
