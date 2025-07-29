@@ -245,8 +245,8 @@ html *::-webkit-scrollbar-track {
   font-size: 14px !important;
 }
 
-@media screen and (-webkit-min-device-pixel-ratio:0) {
-  .custom-password-mask[type="password"] {
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .custom-password-mask[type='password'] {
     -webkit-text-stroke-width: 0.5em;
     letter-spacing: 0.5em;
     padding-left: 14px;
@@ -274,13 +274,17 @@ input[type='checkbox']:focus {
 }
 
 .clip-left {
-  clip-path: polygon(0% 0%, 97% 0%, 100% 50%, 97% 100%, 0 100%)
+  clip-path: polygon(0% 0%, 97% 0%, 100% 50%, 97% 100%, 0 100%);
 }
 
 .clip-middle {
-  clip-path:  polygon(97% 0%, 100% 50%, 97% 100%, 0% 100%, 3% 50%, 0% 0%)
+  clip-path: polygon(97% 0%, 100% 50%, 97% 100%, 0% 100%, 3% 50%, 0% 0%);
 }
 
 .clip-right {
-  clip-path: polygon(100% 0%, 100% 50%, 100% 100%, 0% 100%, 3.2% 50%, 0% 0%)
+  clip-path: polygon(100% 0%, 100% 50%, 100% 100%, 0% 100%, 3.2% 50%, 0% 0%);
+}
+/* Preview file */
+.transform-component-module_wrapper__SPB86 {
+  width: 100% !important;
 }

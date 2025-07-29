@@ -43,7 +43,7 @@ import socketEventEmitter from '@components/socket/socketEventEmitter';
 import Input from '@components/common/Input';
 import ActionDetailDaily from '@components/daily/ActionDetailDaily';
 import SingleSelect from '@components/common/SingleSelect';
-import ResizeTextArea from '@components/custom/resizeTextArea';
+import ResizeTextArea from '@components/custom/ResizeTextArea';
 import Checkbox from '@components/common/Checkbox';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import DetailActualItemDailyModal from '@components/daily/DetailActualItemDailyModal';

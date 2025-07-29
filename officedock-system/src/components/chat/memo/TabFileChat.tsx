@@ -15,9 +15,11 @@ import { apiRouters } from '@constants/routers';
 
 import useChatFileMemoChat from '@hooks/useChatFileMemoChat';
 
-import { getTruncatedFileName } from '@utils';
+import { getTruncatedFileName, handleDownloadFile } from '@utils';
 import { ChatMessageResponse, DataChatFileMemo } from '@interfaces/chat';
 import api from '@base/api';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 
 type Props = {
   chatRoomCode: string;
@@ -36,6 +38,11 @@ const TabFileChat = ({
 
   const [page, setPage] = useState(1);
   const [hasNext, setHasNext] = useState(false);
+  const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
+  const [dataDelete, setDataDelete] = useState<{
+    uuid: string;
+    msgUuid: string;
+  }>();
 
   const [dataFiles, setDataFiles] = useState<DataChatFileMemo[]>([]);
   const { isFetchingFileMemoChat } = useChatFileMemoChat({
@@ -95,117 +102,134 @@ const TabFileChat = ({
     {
       onSuccess: async () => {},
       onError: () => {},
-      onSettled: () => {},
+      onSettled: () => {
+        setOpenConfirmDeleteModal(false);
+      },
     },
   );
-  const handleDeleteFileChart = (id: string, uuid: string, msgUuid: string) => {
-    setDataFiles(dataFiles.filter((file) => file.uuid !== uuid));
+  const handleDeleteFileChart = (uuid: string, msgUuid: string) => {
+    setOpenConfirmDeleteModal(true);
+    setDataDelete({
+      msgUuid,
+      uuid,
+    });
+  };
+  const handleConfirmDeleteFile = () => {
+    setDataFiles(dataFiles.filter((file) => file.uuid !== dataDelete?.uuid));
 
     setDataMessageDetail((prev) => {
       return prev.map((item) => {
-        if (item.uuid === msgUuid) {
+        if (item.uuid === dataDelete?.msgUuid) {
           return {
             ...item,
-            chatFiles: item.chatFiles.filter((file) => file.uuid !== uuid),
+            chatFiles: item.chatFiles.filter(
+              (file) => file.uuid !== dataDelete?.uuid,
+            ),
           };
         }
         return item;
       });
     });
-    deleteFileChat(uuid);
+    deleteFileChat(dataDelete?.uuid || '');
   };
 
-  const handleDownload = (url: string, filename: string) => {
-    fetch(url)
-      .then((res) => res.blob())
-      .then((blob) => {
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl); // cleanup
-      });
-  };
+  return (
+    <>
+      {isFetchingFileMemoChat && dataFiles.length == 0 ? (
+        <div>
+          <RowSkeleton numberOfRows={10} className="!h-[50px]" />
+        </div>
+      ) : (
+        <div className="overflow-y-auto max-h-[calc(100vh_-_286px)] ">
+          {dataFiles.map((file) => {
+            const { id, fileName, originalFile, fileType } = file;
 
-  return isFetchingFileMemoChat && dataFiles.length == 0 ? (
-    <div>
-      <RowSkeleton numberOfRows={10} className="!h-[50px]" />
-    </div>
-  ) : (
-    <div className="overflow-y-auto max-h-[calc(100vh_-_286px)] ">
-      {dataFiles.map((file) => {
-        const { id, fileName, originalFile, fileType } = file;
+            const isImage = fileType.startsWith('image/');
+            const isPDF = fileType === 'application/pdf';
 
-        const isImage = fileType.startsWith('image/');
-        const isPDF = fileType === 'application/pdf';
+            return (
+              <div
+                key={id}
+                className={`flex gap-[10px] w-full relative group items-center border-b py-[10px] border-[#CED8DE]`}>
+                {isImage ? (
+                  <ImageRound
+                    src={originalFile}
+                    className="w-10 h-10 object-cover rounded border"
+                    name={fileName}
+                  />
+                ) : isPDF ? (
+                  <ImageRound
+                    src={'/icons/pdf_default.svg'}
+                    className="w-10 h-10 object-cover rounded border"
+                    name={fileName}
+                  />
+                ) : (
+                  <div className="w-10 h-10 flex items-center justify-center border rounded bg-gray-50 text-gray-400 text-sm">
+                    FILE
+                  </div>
+                )}
+                <div
+                  className="max-w-[210px] text-sm break-all"
+                  title={fileName}>
+                  {getTruncatedFileName(fileName)}
+                </div>
 
-        return (
-          <div
-            key={id}
-            className={`flex gap-[10px] w-full relative group items-center border-b py-[10px] border-[#CED8DE]`}>
-            {isImage ? (
-              <ImageRound
-                src={originalFile}
-                className="w-10 h-10 object-cover rounded border"
-                name={fileName}
-              />
-            ) : isPDF ? (
-              <ImageRound
-                src={'/icons/pdf_default.svg'}
-                className="w-10 h-10 object-cover rounded border"
-                name={fileName}
-              />
-            ) : (
-              <div className="w-10 h-10 flex items-center justify-center border rounded bg-gray-50 text-gray-400 text-sm">
-                FILE
+                <div className="w-20 h-7 hidden group-hover:flex absolute right-0 top-1/2 transform -translate-y-1/2   rounded-[3px] bg-[#5B6770] gap-x-3  items-center justify-center">
+                  <DynamicTooltip content={'メッセージに移動'} placement="top">
+                    <ImageRound
+                      src="/icons/go-file.svg"
+                      className="w-fit h-fit object-cover cursor-pointer hover:opacity-75"
+                      name={fileName}
+                      onClick={() =>
+                        onGotoMessage({
+                          messageId: file.chatMessageId,
+                        })
+                      }
+                    />
+                  </DynamicTooltip>
+                  <DynamicTooltip content={'ダウンロード'} placement="top">
+                    <ImageRound
+                      src="/icons/download.svg"
+                      className="w-fit h-fit object-cover cursor-pointer hover:opacity-75"
+                      name={fileName}
+                      onClick={() =>
+                        handleDownloadFile(file.originalFile, file.fileName)
+                      }
+                    />
+                  </DynamicTooltip>
+                  <DynamicTooltip content={'削除'} placement="top">
+                    <ImageRound
+                      src="/icons/delete-event.svg"
+                      className="w-fit h-fit object-cover cursor-pointer hover:opacity-75"
+                      name={fileName}
+                      onClick={() =>
+                        handleDeleteFileChart(
+                          String(file.uuid),
+                          file.chatMessageUuid,
+                        )
+                      }
+                    />
+                  </DynamicTooltip>
+                </div>
               </div>
-            )}
-            <div className="max-w-[210px] text-sm break-all" title={fileName}>
-              {getTruncatedFileName(fileName)}
+            );
+          })}
+          {hasNext && (
+            <div ref={bottomRef}>
+              <RowSkeleton numberOfRows={2} className="!h-[50px]" />
             </div>
-
-            <div className="w-20 h-7 hidden group-hover:flex absolute right-0 top-1/2 transform -translate-y-1/2   rounded-[3px] bg-[#5B6770] gap-x-3  items-center justify-center">
-              <ImageRound
-                src="/icons/go-file.svg"
-                className="w-fit h-fit object-cover cursor-pointer hover:opacity-75"
-                name={fileName}
-                onClick={() =>
-                  onGotoMessage({
-                    messageId: file.chatMessageId,
-                  })
-                }
-              />
-              <ImageRound
-                src="/icons/download.svg"
-                className="w-fit h-fit object-cover cursor-pointer hover:opacity-75"
-                name={fileName}
-                onClick={() => handleDownload(file.originalFile, file.fileName)}
-              />
-              <ImageRound
-                src="/icons/delete-event.svg"
-                className="w-fit h-fit object-cover cursor-pointer hover:opacity-75"
-                name={fileName}
-                onClick={() =>
-                  handleDeleteFileChart(
-                    String(id),
-                    String(file.uuid),
-                    file.chatMessageUuid,
-                  )
-                }
-              />
-            </div>
-          </div>
-        );
-      })}
-      {hasNext && (
-        <div ref={bottomRef}>
-          <RowSkeleton numberOfRows={2} className="!h-[50px]" />
+          )}
         </div>
       )}
-    </div>
+      {openConfirmDeleteModal && (
+        <ConfirmDeleteModal
+          open={openConfirmDeleteModal}
+          type="ファイル"
+          onConfirm={handleConfirmDeleteFile}
+          onClose={() => setOpenConfirmDeleteModal(false)}
+        />
+      )}
+    </>
   );
 };
 

@@ -2067,3 +2067,94 @@ export const getInitialConditionMap = (): ConditionByMap => {
 
   return map;
 };
+export const extractAndRemoveMsgQuotes = (html: string) => {
+  const result: { dataMsgId: string; dataTitle: string }[] = [];
+  let replyUuid: string | null = null;
+
+  const div = document.createElement('div');
+  div.innerHTML = html;
+
+  const paragraphs = div.querySelectorAll('p');
+
+  paragraphs.forEach((p) => {
+    const spanWithMsgId = p.querySelector('[data-msg-id]');
+    const spanWithReplyId = p.querySelector('[data-msg-reply-id]');
+
+    // If there is data-msg-id → add to result and remove <p>
+    if (spanWithMsgId) {
+      const dataMsgId = spanWithMsgId.getAttribute('data-msg-id');
+      const dataTitle = spanWithMsgId.getAttribute('data-title') || '';
+      if (dataMsgId) {
+        result.push({ dataMsgId, dataTitle });
+        p.remove(); // ❌ Delete <p> containing quote msg-id
+        return; // Stop processing this section, no need to check reply
+      }
+    }
+
+    // If there is data-msg-reply-id → get replyUuid (do not delete <p>)
+    if (spanWithReplyId && !replyUuid) {
+      const dataReplyId = spanWithReplyId.getAttribute('data-msg-reply-id');
+      if (dataReplyId) {
+        replyUuid = dataReplyId;
+      }
+    }
+  });
+
+  return {
+    filterMsg: div.innerHTML,
+    quotes: result,
+    replyUuid,
+  };
+};
+export const handleDownloadFile = (
+  url: string,
+  filename: string,
+  useFetch = false,
+) => {
+  if (!useFetch) {
+    // Safe & optimized way for large files (native download)
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    return;
+  }
+
+  // Use fetch if really needed (small files or special processing)
+  fetch(url)
+    .then((res) => {
+      if (!res.ok) throw new Error(`Failed to download file: ${res.status}`);
+      return res.blob();
+    })
+    .then((blob) => {
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl); // cleanup
+    });
+};
+
+export function formatJapaneseDatetime(input: string): string {
+  const inputDate = new Date(input);
+  const now = new Date();
+
+  const inputYear = inputDate.getFullYear();
+  const currentYear = now.getFullYear();
+
+  const month = inputDate.getMonth() + 1; // JS month: 0-11
+  const day = inputDate.getDate();
+  const hour = inputDate.getHours();
+  const minute = inputDate.getMinutes().toString().padStart(2, '0');
+
+  const datePart = `${month}月${day}日 ${hour}:${minute}`;
+
+  return inputYear === currentYear ? datePart : `${inputYear}年${datePart}`;
+}

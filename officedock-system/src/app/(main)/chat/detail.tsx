@@ -4,7 +4,6 @@ import { AxiosError } from 'axios';
 import { useMutation, useQueryClient } from 'react-query';
 import {
   ChangeEvent,
-  Fragment,
   useCallback,
   useContext,
   useEffect,
@@ -50,6 +49,9 @@ import { CustomReaction } from '@components/chat/CustomIcon';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import ErrorUploadFileValidationModal from '@components/modals/ErrorUploadFileValidationModal';
 import MemoDataChat from '@components/chat/MemoDataChat';
+import { MsgQuote } from '@components/chat/CustomMsgQuote';
+import { MsgReply } from '@components/chat/CustomMsgReply';
+import FilePreview from '@components/custom/FilePreview';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -100,10 +102,12 @@ import {
   getChunkSize,
   hasPermissionInArray,
   trimUnnecessaryLineBreaks,
+  extractAndRemoveMsgQuotes,
 } from '@utils';
 
 import {
   ChatDashboardMember,
+  ChatFileResponse,
   ChatMessageResponse,
   ChatParticipant,
   ChatRoomDetail,
@@ -357,6 +361,17 @@ const ChatDetail = ({
   );
 
   const controllerRef = useRef<AbortController | null>(null);
+  // Quote message
+  const quoteButtonRef = useRef<HTMLButtonElement | null>(null);
+  const lastSelectedMessageIdRef = useRef<string | null>(null);
+
+  // Preview files
+  const [dataPreviewFile, setDataPreviewFile] = useState<{
+    msgId: string;
+    file: ChatFileResponse;
+    user: ChatDashboardMember;
+    createAt: string;
+  } | null>(null);
 
   // Scroll to selected message
   useEffect(() => {
@@ -693,6 +708,8 @@ const ChatDetail = ({
     extensions: [
       Document,
       TaskQuote,
+      MsgQuote,
+      MsgReply,
       Paragraph.extend({
         addAttributes() {
           return {
@@ -1121,12 +1138,14 @@ const ChatDetail = ({
     mentionIds,
     files,
     fileUuids,
+    replyUuid,
   }: {
     data: string;
     uuid: string;
     mentionIds: number[];
     files: File[];
     fileUuids: string[];
+    replyUuid?: string;
   }) => {
     const totalChunks = files.reduce((acc, file) => {
       const chunkSize = getChunkSize(file.size);
@@ -1157,6 +1176,9 @@ const ChatDetail = ({
     formData.append('message', data);
     formData.append('uuid', uuid);
     formData.append('clientId', clientId);
+    if (replyUuid) {
+      formData.append('replyUuid', replyUuid);
+    }
     mentionIds.forEach((id) => formData.append('mentionIds', id.toString()));
     fileUuids.forEach((id) => formData.append('fileUuids', id.toString()));
     try {
@@ -1231,11 +1253,12 @@ const ChatDetail = ({
         uuid: file.uuid,
       };
     });
+    const { filterMsg, replyUuid } = extractAndRemoveMsgQuotes(newMsg);
 
     setDataMessageDetail([
       {
         uuid: uuidMsg,
-        message: newMsg,
+        message: filterMsg,
         createdAt: getCurrentTimeInJapan(),
         deletedAt: null,
         type: MessageType.MESSAGE,
@@ -1258,6 +1281,7 @@ const ChatDetail = ({
         mentions: mentionIds,
         isBookmark: false,
         chatFiles: chatUploadFiles,
+        // TODO: Update sava data msg detail of reply in onsuccess API "reply"
       },
 
       ...dataMessageDetail,
@@ -1276,11 +1300,12 @@ const ChatDetail = ({
       setIsChatFilesUploading(true);
     }
     handleSendMsgChat({
-      data: newMsg,
+      data: filterMsg,
       uuid: uuidMsg,
       mentionIds,
       files: uploadFiles.map((file) => file.file),
       fileUuids: uploadFiles.map((file) => file.uuid),
+      replyUuid: replyUuid ? replyUuid : undefined,
     });
   };
 
@@ -2039,6 +2064,34 @@ const ChatDetail = ({
     },
   );
 
+  // Reply Msg
+  const handleReplyMsg = ({
+    user,
+    replyUuid,
+  }: {
+    user: {
+      id: number;
+      name: string;
+    };
+    replyUuid: string;
+  }) => {
+    if (!editor) return;
+
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: 'msgReply',
+        attrs: {
+          id: replyUuid,
+          title: `@${user.name}`,
+        },
+      })
+      .run();
+
+    editor.chain().focus().insertContent({ type: 'paragraph' }).run();
+  };
+
   // Quote task
   const handleQuoteTaskUser = (data: { id: number; title: string }[]) => {
     if (!editor) return;
@@ -2063,6 +2116,106 @@ const ChatDetail = ({
       editor.chain().focus().insertContent({ type: 'paragraph' }).run();
     });
   };
+
+  // Quote msg
+  const handleQuoteMsgUser = useCallback(
+    (data: { id: string; title: string }) => {
+      if (!editor) return;
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'msgQuote',
+          attrs: {
+            id: data.id.toString(),
+            title: data.title,
+          },
+        })
+        .run();
+
+      editor.chain().focus().insertContent({ type: 'paragraph' }).run();
+    },
+    [editor],
+  );
+
+  useEffect(() => {
+    const handleMouseUp = () => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed) {
+        quoteButtonRef.current?.remove();
+        quoteButtonRef.current = null;
+        lastSelectedMessageIdRef.current = null;
+        return;
+      }
+
+      const text = selection.toString();
+      if (!text.trim()) {
+        quoteButtonRef.current?.remove();
+        quoteButtonRef.current = null;
+        lastSelectedMessageIdRef.current = null;
+        return;
+      }
+
+      // 🔍 Get the ID of the chat containing the highlighted text
+      const anchorNode = selection.anchorNode;
+      const parent = anchorNode?.parentElement?.closest('[data-id]');
+      const id = parent?.getAttribute('data-id');
+      if (!id) return;
+      lastSelectedMessageIdRef.current = id || null;
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+
+      let button = quoteButtonRef.current;
+      if (!button) {
+        button = document.createElement('button');
+        button.innerHTML = `
+        <span style="display: inline-flex; align-items: center; gap: 6px;">
+          <img src="/icons/quotation.svg" width="fit-content" height="fit-content"/>
+          <span>引用</span>
+        </span>
+      `;
+        button.style.position = 'absolute';
+        button.style.zIndex = '9999';
+        button.style.width = '68px';
+        button.style.height = '30px';
+        button.style.justifyContent = 'center';
+        button.style.background = 'white';
+        button.style.color = 'black';
+        button.style.fontSize = '14px';
+        button.style.fontWeight = '400';
+        button.style.borderRadius = '100px';
+        button.style.border = 'none';
+        button.style.cursor = 'pointer';
+        button.style.boxShadow = '0px 4px 8px 0px #0000000F';
+        button.onmousedown = (e) => e.preventDefault();
+        button.onclick = () => {
+          handleQuoteMsgUser({
+            id: lastSelectedMessageIdRef.current || '',
+            title: text,
+          });
+
+          button?.remove();
+          quoteButtonRef.current = null;
+          lastSelectedMessageIdRef.current = null;
+        };
+        document.body.appendChild(button);
+        quoteButtonRef.current = button;
+      }
+
+      button.style.top = `${rect.top + window.scrollY - 45}px`;
+      button.style.left = `${
+        rect.right + window.scrollX - button.offsetWidth
+      }px`;
+    };
+
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mouseup', handleMouseUp);
+      quoteButtonRef.current?.remove();
+      quoteButtonRef.current = null;
+      lastSelectedMessageIdRef.current = null;
+    };
+  }, [handleQuoteMsgUser]);
 
   const handleSetParam = ({
     id,
@@ -2393,7 +2546,15 @@ const ChatDetail = ({
         <>
           <div
             className="flex relative  flex-col flex-grow  !bg-[#F8FAFC] !h-[100vh]"
-            onClick={handleResetChatRoomNotification}>
+            onClick={() => {
+              if (
+                dataMessageDetail?.length > 0 &&
+                chatRoomNotifications &&
+                chatRoomNotifications.notifications > 0
+              ) {
+                handleResetChatRoomNotification();
+              }
+            }}>
             {/* Header */}
             <div
               className="flex justify-between items-center px-4 py-2 min-h-[78px] !w-full border-b-[2px] text-white"
@@ -2566,21 +2727,33 @@ const ChatDetail = ({
                   className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || chatRoomDetail?.type == ChatRoomType.CALENDAR ? 'h-[calc(100vh_-_170px)]' : 'h-[calc(100vh_-_386px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex pr-0 flex-col-reverse scroll-smooth`}>
                   {isLoadingNewer && (
                     <div className="flex  flex-col items-start ml-3">
-                      <RowSkeleton className="!h-[30px] w-[700px] mb-2" />
-                      <RowSkeleton className="!h-[50px] w-[600px] mb-2" />
+                      <RowSkeleton
+                        className={`!h-[30px]  ${isExtendMoreData ? 'w-[380px]' : 'w-[700px]'}  mb-2`}
+                      />
+                      <RowSkeleton
+                        className={`!h-[50px] ${isExtendMoreData ? 'w-[280px]' : 'w-[600px]'} mb-2`}
+                      />
                     </div>
                   )}
                   <div className="h-[calc(100vh)] mt-3 w-full bg-[rgb(229, 231, 235)] relative">
                     <div>
                       {initialLoad ? (
                         <div className="flex flex-col items-start ml-3">
-                          <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
-                          <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
-                          <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
-                          <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
+                          <RowSkeleton
+                            className={`!h-[100px] ${isExtendMoreData ? 'w-[180px]' : 'w-[500px]'} mb-2`}
+                          />
+                          <RowSkeleton
+                            className={`!h-[200px] ${isExtendMoreData ? 'w-[280px]' : 'w-[600px]'} mb-2`}
+                          />
+                          <RowSkeleton
+                            className={`!h-[100px] ${isExtendMoreData ? 'w-[180px]' : 'w-[500px]'} mb-2`}
+                          />
+                          <RowSkeleton
+                            className={`!h-[200px] ${isExtendMoreData ? 'w-[280px]' : 'w-[600px]'} mb-2`}
+                          />
                           <RowSkeleton
                             numberOfRows={4}
-                            className="!h-[50px] w-[700px]"
+                            className={`!h-[50px] ${isExtendMoreData ? 'w-[380px]' : 'w-[700px]'}`}
                           />
                         </div>
                       ) : (
@@ -2619,6 +2792,10 @@ const ChatDetail = ({
                               setOpenConfirmDeleteModal
                             }
                             setMsgIdUpdated={setMsgIdUpdated}
+                            // Preview File
+                            setDataPreviewFile={setDataPreviewFile}
+                            // Reply msg
+                            handleReplyMsg={handleReplyMsg}
                             handleActionEditTask={handleActionEditTask}
                             handleConfirmUpdateMsg={handleConfirmUpdateMsg}
                             handleConfirmGetDataDetailEvent={
@@ -2680,6 +2857,10 @@ const ChatDetail = ({
                               setOpenConfirmDeleteModal
                             }
                             setMsgIdUpdated={setMsgIdUpdated}
+                            // Preview File
+                            setDataPreviewFile={setDataPreviewFile}
+                            // Reply msg
+                            handleReplyMsg={handleReplyMsg}
                             handleActionEditTask={handleActionEditTask}
                             handleConfirmUpdateMsg={handleConfirmUpdateMsg}
                             handleConfirmGetDataDetailEvent={
@@ -2698,8 +2879,12 @@ const ChatDetail = ({
                       ))}
                   {isLoadingOlder && (
                     <div className="flex flex-col items-start ml-3">
-                      <RowSkeleton className="!h-[30px] w-[700px] mb-2" />
-                      <RowSkeleton className="!h-[50px] w-[600px] mb-2" />
+                      <RowSkeleton
+                        className={`!h-[30px] ${isExtendMoreData ? 'w-[380px]' : 'w-[700px]'} mb-2`}
+                      />
+                      <RowSkeleton
+                        className={`!h-[50px] ${isExtendMoreData ? 'w-[280px]' : 'w-[600px]'} mb-2`}
+                      />
                     </div>
                   )}
                 </div>
@@ -3394,6 +3579,23 @@ const ChatDetail = ({
             if (fileInputRef.current) {
               fileInputRef.current.value = '';
             }
+          }}
+        />
+      )}
+      {dataPreviewFile && (
+        <FilePreview
+          open={dataPreviewFile !== null}
+          file={dataPreviewFile.file}
+          user={dataPreviewFile.user}
+          msgId={dataPreviewFile.msgId}
+          createAt={dataPreviewFile.createAt}
+          onClose={() => setDataPreviewFile(null)}
+          onGotoMessage={(data: { messageId: string | number }) => {
+            setOpenSearchMessagesModal(false);
+            gotoSelectedMessage({
+              bookmarkMessageId: Number(data.messageId),
+            });
+            setDataPreviewFile(null);
           }}
         />
       )}

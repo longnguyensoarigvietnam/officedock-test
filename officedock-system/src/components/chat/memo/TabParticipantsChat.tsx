@@ -10,6 +10,9 @@ type Props = {
 const TabParticipantsChat = ({ chatRoomDetail }: Props) => {
   return (
     <div className="overflow-y-auto max-h-[calc(100vh_-_286px)] ">
+      <p className="text-xs text-[#77858F] font-medium mb-2">
+        メンバー{chatRoomDetail?.participants.length}人
+      </p>
       {chatRoomDetail?.participants.map((people) => {
         return (
           <div
@@ -23,7 +26,9 @@ const TabParticipantsChat = ({ chatRoomDetail }: Props) => {
             <div className="ml-[10px] max-w-[100px] truncate">
               {people.fullName}
             </div>
-            <div className="ml-[6px]">{people.organizations?.name}</div>
+            <div className="ml-[6px] mt-[3px] text-xs text-[#77858F] font-medium">
+              {people.organizations?.name}
+            </div>
           </div>
         );
       })}
