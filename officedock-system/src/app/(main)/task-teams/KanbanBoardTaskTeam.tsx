@@ -1235,7 +1235,7 @@ const KanbanBoardTaskTeam = () => {
       isImportant: data.isImportant,
       todoList: todoListData,
       taskSchedules: planList && planList.length ? planList : null,
-      sendToChat: false,
+      sendToChat: true,
       categoryIds: newWorkCategories,
       copyTaskId: actionType === ActionTask.COPY ? taskDetailId : null,
       organizationId: data.organization

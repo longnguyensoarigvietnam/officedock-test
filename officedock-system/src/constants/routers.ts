@@ -468,7 +468,8 @@ export const apiRouters = {
   CHAT_UPLOAD_CHUNK: '/chat/chunk-files/',
   MEMO_CHAT_ACTION: (code: string) => `/chat/${code}/memo/`,
   LIST_CHAT_FILE: '/chat-files/',
-  FILE_DETAIL: (id: string) => `/chat-files/${id}`,
+  FILE_DETAIL: (id: string) => `/chat-files/${id}/`,
+  MUTE_CHAT: (code: string) => `/chat/${code}/mute/`,
 
   // BOOKMARK
   BOOKMARK_LIST: '/messages/',

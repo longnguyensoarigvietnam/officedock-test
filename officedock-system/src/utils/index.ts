@@ -2069,6 +2069,7 @@ export const getInitialConditionMap = (): ConditionByMap => {
 };
 export const extractAndRemoveMsgQuotes = (html: string) => {
   const result: { dataMsgId: string; dataTitle: string }[] = [];
+  const allMsgIds: string[] = [];
   let replyUuid: string | null = null;
 
   const div = document.createElement('div');
@@ -2080,18 +2081,14 @@ export const extractAndRemoveMsgQuotes = (html: string) => {
     const spanWithMsgId = p.querySelector('[data-msg-id]');
     const spanWithReplyId = p.querySelector('[data-msg-reply-id]');
 
-    // If there is data-msg-id → add to result and remove <p>
     if (spanWithMsgId) {
       const dataMsgId = spanWithMsgId.getAttribute('data-msg-id');
       const dataTitle = spanWithMsgId.getAttribute('data-title') || '';
       if (dataMsgId) {
         result.push({ dataMsgId, dataTitle });
-        p.remove(); // ❌ Delete <p> containing quote msg-id
-        return; // Stop processing this section, no need to check reply
       }
     }
 
-    // If there is data-msg-reply-id → get replyUuid (do not delete <p>)
     if (spanWithReplyId && !replyUuid) {
       const dataReplyId = spanWithReplyId.getAttribute('data-msg-reply-id');
       if (dataReplyId) {
@@ -2100,12 +2097,22 @@ export const extractAndRemoveMsgQuotes = (html: string) => {
     }
   });
 
+  const allSpansWithMsgId = div.querySelectorAll('span[data-msg-id]');
+  allSpansWithMsgId.forEach((span) => {
+    const dataMsgId = span.getAttribute('data-msg-id');
+    if (dataMsgId) {
+      allMsgIds.push(dataMsgId);
+    }
+  });
+
   return {
     filterMsg: div.innerHTML,
     quotes: result,
     replyUuid,
+    allMsgIds,
   };
 };
+
 export const handleDownloadFile = (
   url: string,
   filename: string,

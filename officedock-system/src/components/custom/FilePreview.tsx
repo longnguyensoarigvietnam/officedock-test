@@ -10,7 +10,8 @@ import { SkeletonElement } from '@components/common/SkeletonLoading';
 import useFileDetail from '@hooks/useDetailFile';
 
 import { ChatDashboardMember, ChatFileResponse } from '@interfaces/chat';
-import { formatJapaneseDatetime, handleDownloadFile } from '@utils';
+import { formatJapaneseDatetime, getFileURL, handleDownloadFile } from '@utils';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 interface filePreviewProp {
   open: boolean;
@@ -60,7 +61,7 @@ const FilePreview = ({
       open={open}
       className="font-primary bg-white !w-[1000px] !rounded-[20px] !pt-0 !px-0 !pb-10"
       contentClass="!bg-transparent !w-[1000px]"
-      isOutSideAction={false}
+      isOutSideAction
       onClose={onClose}>
       <header className="flex px-4 h-[50px]  rounded-tl-[20px] rounded-tr-[20px]  bg-[#EBF1F7] border-solid border-gray-100 justify-between items-center">
         <Heading
@@ -81,22 +82,26 @@ const FilePreview = ({
       <div className="bg-white pt-5 px-[46px] text-[#77858F] text-[13px] min-h-[500px] font-medium relative">
         {fileDetail && fileDetail.files.previousFile && (
           <div className="absolute top-1/2 left-5 transform -translate-y-1/2">
-            <ImageRound
-              className={` w-fit h-fit hover:cursor-pointer `}
-              src="/icons/chevron-left-pagination.svg"
-              name="Prev icon"
-              onClick={handlePrevFile}
-            />
+            <DynamicTooltip content={'前のファイルへ'} placement="top">
+              <ImageRound
+                className={` w-fit h-fit hover:cursor-pointer `}
+                src="/icons/chevron-left-pagination.svg"
+                name="Prev icon"
+                onClick={handlePrevFile}
+              />
+            </DynamicTooltip>
           </div>
         )}
         {fileDetail && fileDetail.files.nextFile && (
           <div className="absolute top-1/2 right-5 transform -translate-y-1/2">
-            <ImageRound
-              className={` w-fit h-fit hover:cursor-pointer `}
-              src="/icons/chevron-right-pagination.svg"
-              name="Next icon"
-              onClick={handleNextFile}
-            />
+            <DynamicTooltip content={'次のファイルへ'} placement="top">
+              <ImageRound
+                className={` w-fit h-fit hover:cursor-pointer `}
+                src="/icons/chevron-right-pagination.svg"
+                name="Next icon"
+                onClick={handleNextFile}
+              />
+            </DynamicTooltip>
           </div>
         )}
         {!isFetchingFileDetail && previewUrl ? (
@@ -104,7 +109,13 @@ const FilePreview = ({
             {/* Preview Image with Zoom */}
             {file.fileType.startsWith('image/') && (
               <div className="w-full max-w-full mx-auto  ">
-                <TransformWrapper initialScale={1} minScale={0.5} maxScale={4}>
+                <TransformWrapper
+                  wheel={{
+                    disabled: true,
+                  }}
+                  initialScale={1}
+                  minScale={0.5}
+                  maxScale={4}>
                   {({ zoomIn, zoomOut }) => (
                     <>
                       {/* Zoom Buttons */}
@@ -130,39 +141,51 @@ const FilePreview = ({
                           </div>
                         </div>
                         <div className="flex  items-center gap-3">
-                          <ImageRound
-                            className={` w-fit h-fit hover:cursor-pointer `}
-                            src="/icons/zoom-out.svg"
-                            name="zoom out icon"
-                            onClick={() => zoomOut()}
-                          />
-                          <ImageRound
-                            className={` w-fit h-fit hover:cursor-pointer `}
-                            src="/icons/zoom-in.svg"
-                            name="zoom in icon"
-                            onClick={() => zoomIn()}
-                          />
-                          <ImageRound
-                            src="/icons/go-file-gray.svg"
-                            className="w-fit h-fit object-cover cursor-pointer hover:opacity-75 ml-5"
-                            name="go file  icon"
-                            onClick={() =>
-                              onGotoMessage({
-                                messageId: msgId,
-                              })
-                            }
-                          />
-                          <ImageRound
-                            src="/icons/download-gray.svg"
-                            className="w-fit h-fit object-cover cursor-pointer hover:opacity-75 ml-5"
-                            name={'download icon'}
-                            onClick={() =>
-                              handleDownloadFile(
-                                fileDetail?.originalFile || '',
-                                fileDetail?.fileName || '',
-                              )
-                            }
-                          />
+                          <DynamicTooltip content={'縮小'} placement="top">
+                            <ImageRound
+                              className={` w-fit h-fit hover:cursor-pointer `}
+                              src="/icons/zoom-out.svg"
+                              name="zoom out icon"
+                              onClick={() => zoomOut()}
+                            />
+                          </DynamicTooltip>
+                          <DynamicTooltip content={'拡大'} placement="top">
+                            <ImageRound
+                              className={` w-fit h-fit hover:cursor-pointer `}
+                              src="/icons/zoom-in.svg"
+                              name="zoom in icon"
+                              onClick={() => zoomIn()}
+                            />
+                          </DynamicTooltip>
+                          <DynamicTooltip
+                            content={'メッセージに移動'}
+                            placement="top">
+                            <ImageRound
+                              src="/icons/go-file-gray.svg"
+                              className="w-fit h-fit object-cover cursor-pointer hover:opacity-75 ml-5"
+                              name="go file  icon"
+                              onClick={() =>
+                                onGotoMessage({
+                                  messageId: msgId,
+                                })
+                              }
+                            />
+                          </DynamicTooltip>
+                          <DynamicTooltip
+                            content={'ダウンロード'}
+                            placement="top">
+                            <ImageRound
+                              src="/icons/download-gray.svg"
+                              className="w-fit h-fit object-cover cursor-pointer hover:opacity-75 ml-5"
+                              name={'download icon'}
+                              onClick={() =>
+                                handleDownloadFile(
+                                  fileDetail?.originalFile || '',
+                                  fileDetail?.fileName || '',
+                                )
+                              }
+                            />
+                          </DynamicTooltip>
                         </div>
                       </div>
 
@@ -170,7 +193,7 @@ const FilePreview = ({
                       <TransformComponent contentClass="w-full">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={previewUrl}
+                          src={previewUrl ? getFileURL(previewUrl) : ''}
                           alt="preview"
                           className="max-w-full h-auto mx-auto"
                         />
@@ -204,7 +227,7 @@ const FilePreview = ({
                   </div>
                 </div>
                 <iframe
-                  src={previewUrl}
+                  src={previewUrl ? getFileURL(previewUrl) : ''}
                   title="PDF Preview"
                   width="100%"
                   height="600px"
