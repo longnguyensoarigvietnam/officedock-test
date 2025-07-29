@@ -1,0 +1,218 @@
+'use client';
+import {
+  Dispatch,
+  MutableRefObject,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+
+import { useRouter, useSearchParams } from 'next/navigation';
+
+import Button from '@components/common/Button';
+import InputSearch from '@components/common/InputSearch';
+import Modal from '@components/common/Modal';
+
+import { NO_DATA_AVAILABLE } from '@constants';
+
+import { ChatDashboardMember, ChatMessageResponse } from '@interfaces/chat';
+
+import { MessageDetailBookmark } from '@components/chat/MessageDetailBookmark';
+import { Profile } from '@interfaces/user';
+
+interface AllChatRoomSearchMessagesModalProps {
+  open: boolean;
+  isSearchingMessagesRef?: MutableRefObject<boolean>;
+  allRoomChatMsgSearch: string;
+  dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
+  dashboardMembers: ChatDashboardMember[];
+  hasMoreSearchResultDetail: boolean;
+  searchResultsPage: number;
+  searchMessageResults:
+    | {
+        count: number;
+        numPages: number;
+        results: ChatMessageResponse[];
+        hasNext?: boolean;
+      }
+    | undefined;
+  handleConfirmGetDataDetailEvent: (id: string) => void;
+  setAllRoomChatMsgSearch: Dispatch<SetStateAction<string>>;
+  setSearchResultsPage: Dispatch<SetStateAction<number>>;
+  setSearchMessageResults: (
+    value: SetStateAction<
+      | {
+          count: number;
+          numPages: number;
+          results: ChatMessageResponse[];
+          hasNext?: boolean;
+        }
+      | undefined
+    >,
+  ) => void;
+  onSubmit: (searchChatMsg: string, page: number) => void;
+  onClose: () => void;
+  handleBookmark: (data: { uuid: string; isBookmark: boolean }) => void;
+}
+
+export const AllChatRoomSearchMessagesModal = ({
+  open,
+  isSearchingMessagesRef,
+  allRoomChatMsgSearch,
+  searchMessageResults,
+  hasMoreSearchResultDetail,
+  searchResultsPage,
+  dashboardMemberList,
+  dashboardMembers,
+  handleConfirmGetDataDetailEvent,
+  setSearchMessageResults,
+  setSearchResultsPage,
+  setAllRoomChatMsgSearch,
+  onSubmit,
+  onClose,
+  handleBookmark,
+}: AllChatRoomSearchMessagesModalProps) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const resultsContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const [dataSearch, setDataSearch] = useState<ChatMessageResponse[]>([]);
+
+  useEffect(() => {
+    if (searchMessageResults) {
+      setDataSearch(searchMessageResults.results);
+    }
+  }, [searchMessageResults]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const resultsContainer = resultsContainerRef.current;
+      if (
+        resultsContainer &&
+        hasMoreSearchResultDetail &&
+        searchResultsPage + 1 <= Number(searchMessageResults?.numPages) &&
+        Math.round(
+          resultsContainer.clientHeight + Math.abs(resultsContainer.scrollTop),
+        ) >=
+          0.9 * resultsContainer.scrollHeight
+      ) {
+        if (isSearchingMessagesRef && isSearchingMessagesRef.current) return;
+        const updatedSearchResultsPage = searchResultsPage + 1;
+        onSubmit(allRoomChatMsgSearch, updatedSearchResultsPage);
+        setSearchResultsPage((prev) => prev + 1);
+      }
+    };
+
+    const resultsContainer = resultsContainerRef.current;
+
+    if (resultsContainer) {
+      resultsContainer.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (resultsContainer) {
+        resultsContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    hasMoreSearchResultDetail,
+    searchResultsPage,
+    isSearchingMessagesRef,
+    searchMessageResults,
+  ]);
+
+  const handleChangeRoom = (data: { roomCode: string; messageId: string }) => {
+    onClose();
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('room', data.roomCode);
+    params.set('messageId', data.messageId);
+
+    router.push(`/chat?${params.toString()}`, { scroll: false });
+  };
+
+  return (
+    <Modal
+      open={open}
+      isOutSideAction={false}
+      className="font-primary !rounded-xl text-gray-700 !p-0 !w-[800px] !min-w-[800px] h-[790px]"
+      titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
+      headerClassName="bg-[#EBF1F7] !rounded-t-xl !rounded-b-none px-6 py-4"
+      closeIconClassName="!bg-white !rounded-full !p-2 !hover:cursor-pointer !shadow-sm"
+      closeClassName="!mt-0 opacity-70 !w-4 !h-4 !hover:cursor-pointer"
+      contentClass="!w-[800px]"
+      onClose={() => {
+        onClose();
+      }}
+      title="検索">
+      <div className="px-6">
+        <div className="flex justify-between items-center mb-5">
+          <div className="flex items-center gap-2">
+            <InputSearch
+              placeholder="チャットルーム内のキーワードを検索"
+              className="w-[400px]"
+              inputClassName="!py-1 text-[14px] !border-[#77858F]"
+              value={allRoomChatMsgSearch}
+              onChange={(e) => setAllRoomChatMsgSearch(e.target.value)}
+            />
+            <Button
+              className="!w-[60px] rounded-[6px] h-[36px] !px-[12px] font-medium text-sm"
+              disabled={!allRoomChatMsgSearch}
+              onClick={() => {
+                setSearchMessageResults(undefined);
+                setSearchResultsPage(1);
+                onSubmit(allRoomChatMsgSearch, 1);
+              }}>
+              検索
+            </Button>
+          </div>
+          <div className="flex gap-2 items-center font-medium text-sm">
+            <p className="text-[#77858F]">検索結果</p>
+            <p className="text-[#0068B6]">
+              {searchMessageResults?.count || 0}件
+            </p>
+          </div>
+        </div>
+        <div
+          ref={resultsContainerRef}
+          className="overflow-y-auto !max-h-[630px] h-[630px] bg-[#F8FAFC]">
+          {dataSearch.length > 0 ? (
+            dataSearch.map((messageDetail, index) => {
+              return (
+                <div key={messageDetail.id}>
+                  <MessageDetailBookmark
+                    isLastItem={dataSearch.length - 1 === index}
+                    isSearchingMessages={true}
+                    allRoomChatMsgSearch={allRoomChatMsgSearch}
+                    messageDetail={messageDetail}
+                    dashboardMembers={dashboardMembers}
+                    dashboardMemberList={dashboardMemberList}
+                    chatRoomInfo={messageDetail.chatRoom}
+                    handleConfirmGetDataDetailEvent={
+                      handleConfirmGetDataDetailEvent
+                    }
+                    onGotoMessage={() => {
+                      setSearchMessageResults(undefined);
+                      setSearchResultsPage(1);
+                      handleChangeRoom({
+                        roomCode: String(messageDetail.chatRoom?.code),
+                        messageId: String(messageDetail.id),
+                      });
+                    }}
+                    handleBookmark={handleBookmark}
+                  />
+                </div>
+              );
+            })
+          ) : (
+            <p className="text-sm text-center text-[#77858F]">
+              {NO_DATA_AVAILABLE}
+            </p>
+          )}
+        </div>
+      </div>
+    </Modal>
+  );
+};

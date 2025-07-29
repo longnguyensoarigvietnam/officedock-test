@@ -44,6 +44,7 @@ import {
   displayRepetitiveEventTime,
   formatWithParagraphTags,
   getFileURL,
+  highlightTextSafely,
   renderEventDatetimeInChat,
   renderScheduleChangeInCalendarRoom,
 } from '@utils';
@@ -52,9 +53,12 @@ import {
   formatCheckDate,
   getFormattedDateTime,
 } from '@utils/date';
+import { MessageHoverAllRoomsSearch } from './MessageHoverAllRoomsSearch';
 
 export type MessageDetailProps = {
   isLastItem: boolean;
+  isSearchingMessages?: boolean;
+  allRoomChatMsgSearch?: string;
   messageDetail: ChatMessageResponse;
   dashboardMembers: ChatDashboardMember[];
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
@@ -64,17 +68,20 @@ export type MessageDetailProps = {
         name: string;
         code: string;
         type: string;
-        participants: ChatParticipant;
+        participants: ChatParticipant[];
       }
     | undefined;
-  handleActionEditTask: (id: number) => void;
+  handleActionEditTask?: (id: number) => void;
   handleConfirmGetDataDetailEvent: (id: string) => void;
   onGotoMessage: () => void;
-  handleRemoveItemBookmark: (uuid: string) => void;
+  handleRemoveItemBookmark?: (uuid: string) => void;
+  handleBookmark?: (data: { uuid: string; isBookmark: boolean }) => void;
 };
 
 export const MessageDetailBookmark = ({
   isLastItem,
+  isSearchingMessages = false,
+  allRoomChatMsgSearch,
   messageDetail,
   dashboardMembers,
   chatRoomInfo,
@@ -82,6 +89,7 @@ export const MessageDetailBookmark = ({
   handleConfirmGetDataDetailEvent,
   onGotoMessage,
   handleRemoveItemBookmark,
+  handleBookmark,
 }: MessageDetailProps) => {
   const { data: session } = useSessionCache();
   const router = useRouter();
@@ -100,6 +108,25 @@ export const MessageDetailBookmark = ({
           size={36}
         />
       </div>
+    );
+  };
+
+  const highlightTitleBySearchTerm = (text: string, searchTerm: string) => {
+    const safeText = text || '';
+
+    if (!searchTerm) return safeText;
+
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    const parts = safeText.split(regex);
+
+    return parts.map((part, index) =>
+      part.toLowerCase() === searchTerm.toLowerCase() ? (
+        <span key={index} className="bg-[#0068B633]">
+          {part}
+        </span>
+      ) : (
+        part
+      ),
     );
   };
 
@@ -202,7 +229,11 @@ export const MessageDetailBookmark = ({
                   key={`${index}-quote`}
                   id={taskId || undefined}
                   onClick={() => {
-                    if (taskId) {
+                    if (
+                      taskId &&
+                      !isSearchingMessages &&
+                      handleActionEditTask
+                    ) {
                       handleActionEditTask(Number(taskId));
                     }
                   }}
@@ -263,7 +294,9 @@ export const MessageDetailBookmark = ({
         return (
           <div className="flex gap-2">
             <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
-              {skillName}{' '}
+              {isSearchingMessages && allRoomChatMsgSearch
+                ? `${highlightTitleBySearchTerm(skillName, allRoomChatMsgSearch)}`
+                : `${skillName}`}
               <span className="text-black text-sm font-normal">
                 のスキルがレベルアップしました！
               </span>
@@ -274,7 +307,9 @@ export const MessageDetailBookmark = ({
         return (
           <div className="flex gap-2">
             <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
-              {skillName}{' '}
+              {isSearchingMessages && allRoomChatMsgSearch
+                ? `${highlightTitleBySearchTerm(skillName, allRoomChatMsgSearch)}`
+                : `${skillName}`}
               <span className="text-black text-sm font-normal">
                 のレベルアップの申請についてコメントが届いています。
               </span>
@@ -338,11 +373,13 @@ export const MessageDetailBookmark = ({
                       {messageDetail.sender?.organizations?.name}
                     </span>
                   </p>
-                  <ImageRound
-                    name="Save"
-                    src={`/icons/save-active.svg`}
-                    className="w-[10px] h-[12px] hover:cursor-pointer"
-                  />
+                  {messageDetail.bookmarkAt && (
+                    <ImageRound
+                      name="Save"
+                      src={`/icons/save-active.svg`}
+                      className="w-[10px] h-[12px] hover:cursor-pointer"
+                    />
+                  )}
                 </div>
                 <div className={`flex items-start`}>
                   <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
@@ -368,7 +405,13 @@ export const MessageDetailBookmark = ({
                         {messageDetail.type === MessageType.MESSAGE && (
                           <div className="!w-[100%] break-all">
                             {processMessage(
-                              messageDetail.message,
+                              isSearchingMessages && allRoomChatMsgSearch
+                                ? highlightTextSafely(
+                                    messageDetail.message,
+                                    allRoomChatMsgSearch,
+                                    session?.user.profile.fullName || '',
+                                  )
+                                : messageDetail.message,
                               messageDetail.mentions || [],
                             )}
                             {messageDetail?.chatFiles &&
@@ -650,13 +693,20 @@ export const MessageDetailBookmark = ({
                     )}
                   </div>
                   <>
-                    {!messageDetail.deletedAt && (
-                      <MessageHoverBookmark
-                        uuid={messageDetail.uuid}
-                        onGotoMessage={onGotoMessage}
-                        handleRemoveItemBookmark={handleRemoveItemBookmark}
-                      />
-                    )}
+                    {!messageDetail.deletedAt &&
+                      (isSearchingMessages ? (
+                        <MessageHoverAllRoomsSearch
+                          messageDetail={messageDetail}
+                          onGotoMessage={onGotoMessage}
+                          handleBookmark={handleBookmark}
+                        />
+                      ) : (
+                        <MessageHoverBookmark
+                          uuid={messageDetail.uuid}
+                          onGotoMessage={onGotoMessage}
+                          handleRemoveItemBookmark={handleRemoveItemBookmark}
+                        />
+                      ))}
                   </>
                 </div>
               </div>
@@ -690,11 +740,13 @@ export const MessageDetailBookmark = ({
                     </p>
                   )}
 
-                  <ImageRound
-                    name="Save"
-                    src="/icons/save-active.svg"
-                    className="w-[10px] h-[12px] hover:cursor-pointer"
-                  />
+                  {messageDetail.bookmarkAt && (
+                    <ImageRound
+                      name="Save"
+                      src={`/icons/save-active.svg`}
+                      className="w-[10px] h-[12px] hover:cursor-pointer"
+                    />
+                  )}
                 </div>
                 <div className={`flex items-start`}>
                   <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
@@ -775,13 +827,20 @@ export const MessageDetailBookmark = ({
                     )}
                   </div>
                   <>
-                    {!messageDetail.deletedAt && (
-                      <MessageHoverBookmark
-                        uuid={messageDetail.uuid}
-                        onGotoMessage={onGotoMessage}
-                        handleRemoveItemBookmark={handleRemoveItemBookmark}
-                      />
-                    )}
+                    {!messageDetail.deletedAt &&
+                      (isSearchingMessages ? (
+                        <MessageHoverAllRoomsSearch
+                          messageDetail={messageDetail}
+                          onGotoMessage={onGotoMessage}
+                          handleBookmark={handleBookmark}
+                        />
+                      ) : (
+                        <MessageHoverBookmark
+                          uuid={messageDetail.uuid}
+                          onGotoMessage={onGotoMessage}
+                          handleRemoveItemBookmark={handleRemoveItemBookmark}
+                        />
+                      ))}
                   </>
                 </div>
               </div>
@@ -802,11 +861,13 @@ export const MessageDetailBookmark = ({
                     </span>
                   </p>
 
-                  <ImageRound
-                    name="Save"
-                    src="/icons/save-active.svg"
-                    className="w-[10px] h-[12px] hover:cursor-pointer"
-                  />
+                  {messageDetail.bookmarkAt && (
+                    <ImageRound
+                      name="Save"
+                      src={`/icons/save-active.svg`}
+                      className="w-[10px] h-[12px] hover:cursor-pointer"
+                    />
+                  )}
                 </div>
                 <div className={`flex items-start`}>
                   <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
@@ -871,13 +932,20 @@ export const MessageDetailBookmark = ({
                     )}
                   </div>
                   <>
-                    {!messageDetail.deletedAt && (
-                      <MessageHoverBookmark
-                        uuid={messageDetail.uuid}
-                        onGotoMessage={onGotoMessage}
-                        handleRemoveItemBookmark={handleRemoveItemBookmark}
-                      />
-                    )}
+                    {!messageDetail.deletedAt &&
+                      (isSearchingMessages ? (
+                        <MessageHoverAllRoomsSearch
+                          messageDetail={messageDetail}
+                          onGotoMessage={onGotoMessage}
+                          handleBookmark={handleBookmark}
+                        />
+                      ) : (
+                        <MessageHoverBookmark
+                          uuid={messageDetail.uuid}
+                          onGotoMessage={onGotoMessage}
+                          handleRemoveItemBookmark={handleRemoveItemBookmark}
+                        />
+                      ))}
                   </>
                 </div>
               </div>
@@ -898,11 +966,13 @@ export const MessageDetailBookmark = ({
                     </span>
                   </p>
 
-                  <ImageRound
-                    name="Save"
-                    src="/icons/save-active.svg"
-                    className="w-[10px] h-[12px] hover:cursor-pointer"
-                  />
+                  {messageDetail.bookmarkAt && (
+                    <ImageRound
+                      name="Save"
+                      src={`/icons/save-active.svg`}
+                      className="w-[10px] h-[12px] hover:cursor-pointer"
+                    />
+                  )}
                 </div>
                 <div className={`flex items-start`}>
                   <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
@@ -964,13 +1034,20 @@ export const MessageDetailBookmark = ({
                     </p>
                   </div>
                   <>
-                    {!messageDetail.deletedAt && (
-                      <MessageHoverBookmark
-                        uuid={messageDetail.uuid}
-                        onGotoMessage={onGotoMessage}
-                        handleRemoveItemBookmark={handleRemoveItemBookmark}
-                      />
-                    )}
+                    {!messageDetail.deletedAt &&
+                      (isSearchingMessages ? (
+                        <MessageHoverAllRoomsSearch
+                          messageDetail={messageDetail}
+                          onGotoMessage={onGotoMessage}
+                          handleBookmark={handleBookmark}
+                        />
+                      ) : (
+                        <MessageHoverBookmark
+                          uuid={messageDetail.uuid}
+                          onGotoMessage={onGotoMessage}
+                          handleRemoveItemBookmark={handleRemoveItemBookmark}
+                        />
+                      ))}
                   </>
                 </div>
               </div>

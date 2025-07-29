@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 
@@ -29,8 +30,7 @@ import RowSkeleton from '@components/skeleton/RowSkeleton';
 import ChatWarningUploadingFilesModal from '@components/modals/ChatWarningUploadingFilesModal';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
-
-import useDebounceText from '@hooks/useDebounceText';
+import { AllChatRoomSearchMessagesModal } from '@components/modals/AllChatRoomSearchMessagesModal';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -50,6 +50,7 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import {
   ChatDashboardMember,
+  ChatMessageResponse,
   ChatRoomItem,
   WebSocketMessageData,
 } from '@interfaces/chat';
@@ -57,67 +58,86 @@ import { BasePagination } from '@interfaces/common';
 import { Profile } from '@interfaces/user';
 
 import api from '@base/api';
+import { LoadingContext } from '@providers/LoadingProvider';
+import Spinner from '@components/common/Spinner';
 
 interface dataProps {
   dataChatList: ChatRoomItem[];
   hasMore: boolean;
   chatRoomCode: string | null;
-  filteredChatList: ChatRoomItem[];
+  roomNameSearchResults: ChatRoomItem[];
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   dashboardMembers: ChatDashboardMember[];
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   setLastItemId: React.Dispatch<
     React.SetStateAction<number | null | undefined>
   >;
-  setFilteredChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
+  setRoomNameSearchResults: React.Dispatch<
+    React.SetStateAction<ChatRoomItem[]>
+  >;
   setHasMore: React.Dispatch<React.SetStateAction<boolean>>;
   setHasMoreDetailOnScrollDown: Dispatch<SetStateAction<boolean>>;
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
   handleSetChatRoomParam: (code: string) => void;
-  handleRemoveChatRoomParam: () => void;
 }
 const ListChatUsers = ({
   hasMore,
   chatRoomCode,
   dataChatList,
-  filteredChatList,
+  roomNameSearchResults,
   dashboardMemberList,
   dashboardMembers,
   setLastItemId,
   setDataChatList,
-  setFilteredChatList,
+  setRoomNameSearchResults,
   setHasMore,
   setHasMoreDetailOnScrollDown,
   setSearchChatMsg,
   handleSetChatRoomParam,
-  handleRemoveChatRoomParam,
 }: dataProps) => {
+  // Refs
   const { ref: listRoomRef, inView: inViewListRoom } = useInView({
     threshold: 0.2,
   });
-  const { ref: listSearchRoomRef, inView: inViewListSearchRoom } = useInView({
-    threshold: 0.2,
-  });
+  const searchSectionRef = useRef<HTMLDivElement>(null);
+  const searchResultsSectionRef = useRef<HTMLDivElement>(null);
+  const isSearchingMessagesRef = useRef(false);
+  const isSearchingRoomNameRef = useRef(false);
 
   const router = useRouter();
   const searchParams = useSearchParams();
   const room = searchParams.get('room');
 
   const { data: session } = useSessionCache();
+  const { setIsLoading } = useContext(LoadingContext);
 
   // Load items
   const [hasMoreSearch, setHasMoreSearch] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [initialLoad, setInitialLoad] = useState<boolean>(false);
-  const [initialLoadSearch, setInitialLoadSearch] = useState<boolean>(false);
 
   // Search
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [roomNameSearch, setRoomNameSearch] = useState<string>('');
+  const [allRoomChatMsgSearch, setAllRoomChatMsgSearch] = useState<string>('');
   const [searchRoomType, setSearchRoomType] = useState<string>('');
   const [lastPinAt, setLastPinAt] = useState<string | null>();
   const [lastMsgItemRoom, setLastMsItemRoom] = useState<string>('');
   const [lastPinAtSearch, setLastPinAtSearch] = useState<string | null>();
   const [lastMsgItemRoomSearch, setLastMsItemRoomSearch] = useState<string>('');
+  const [openSearchMessagesModal, setOpenSearchMessagesModal] = useState(false);
+  const [searchMessageResults, setSearchMessageResults] = useState<{
+    count: number;
+    numPages: number;
+    results: ChatMessageResponse[];
+    hasNext?: boolean;
+  }>();
+  const [searchResultsPage, setSearchResultsPage] = useState<number>(1);
+  const [hasMoreSearchResultDetail, setHasMoreSearchResultDetail] =
+    useState(false);
+  const [
+    showRoomNameSearchResultsSection,
+    setShowRoomNameSearchResultsSection,
+  ] = useState(false);
 
   const [showWarningChatUploadingModal, setShowWarningChatUploadingModal] =
     useState(false);
@@ -209,14 +229,6 @@ const ListChatUsers = ({
           );
           return [data, ...filteredList];
         });
-        if (searchTerm || searchRoomType) {
-          setFilteredChatList((prevDataChatList) => {
-            const filteredList = prevDataChatList.filter(
-              (item) => item.code !== data.code,
-            );
-            return [data, ...filteredList];
-          });
-        }
       } else {
         setDataChatList((prevDataChatList) => {
           const filteredList = prevDataChatList.filter(
@@ -254,95 +266,9 @@ const ListChatUsers = ({
           });
           return items;
         });
-        if (searchTerm || searchRoomType) {
-          setFilteredChatList((prevDataChatList) => {
-            const filteredList = prevDataChatList.filter(
-              (item) => item.code !== data.code,
-            );
-            const lastItem = filteredList[filteredList.length - 1];
-
-            if (
-              lastItem &&
-              new Date(data.lastMessageAt as string) <
-                new Date(lastItem.lastMessageAt as string)
-            ) {
-              if (hasMoreSearch) {
-                return filteredList;
-              } else {
-                return [...filteredList, data];
-              }
-            }
-            const items = [...filteredList, data];
-            items.sort((currentItem, nextItem) => {
-              if (currentItem.pinAt !== null && nextItem.pinAt !== null) {
-                return 0;
-              } else if (
-                currentItem.pinAt !== null &&
-                nextItem.pinAt === null
-              ) {
-                return -1;
-              } else if (
-                currentItem.pinAt === null &&
-                nextItem.pinAt !== null
-              ) {
-                return 1;
-              } else {
-                const currentItemDate = currentItem.lastMessageAt
-                  ? new Date(currentItem.lastMessageAt)
-                  : new Date(0);
-                const nextItemDate = nextItem.lastMessageAt
-                  ? new Date(nextItem.lastMessageAt)
-                  : new Date(0);
-                return nextItemDate.getTime() - currentItemDate.getTime();
-              }
-            });
-            return items;
-          });
-        }
       }
     },
-    [
-      hasMore,
-      hasMoreSearch,
-      searchTerm,
-      searchRoomType,
-      setDataChatList,
-      setFilteredChatList,
-    ],
-  );
-
-  // Hide chat room
-  const handleUpdateDataHide = useCallback(
-    (data: ChatRoomItem) => {
-      setDataChatList((prevDataChatList) => {
-        const filteredList = prevDataChatList.filter(
-          (item) => item.code !== data.code,
-        );
-        return filteredList;
-      });
-      if (searchTerm) {
-        setFilteredChatList((prevDataChatList) => {
-          const filteredList = prevDataChatList.filter(
-            (item) => item.code !== data.code,
-          );
-          return filteredList;
-        });
-      }
-      if (data.code === chatRoomCode) {
-        setLastItemId(null);
-        if (dataChatList.length <= 1) {
-          handleRemoveChatRoomParam();
-        } else {
-          if (chatRoomCode === dataChatList[0].code) {
-            handleSetChatRoomParam(dataChatList[1].code);
-          } else {
-            handleSetChatRoomParam(dataChatList[0].code);
-          }
-        }
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [setDataChatList, chatRoomCode],
+    [hasMore, setDataChatList],
   );
 
   // Create chat room
@@ -474,21 +400,6 @@ const ListChatUsers = ({
           }
           return newDataChatList;
         });
-        setFilteredChatList((prevFilterChatList) => {
-          const newFilterChatList = [...prevFilterChatList];
-          const chatRoomIndex = newFilterChatList.findIndex(
-            (room) => room.code == data.chatRoom.code,
-          );
-          if (
-            newFilterChatList &&
-            chatRoomIndex != -1 &&
-            newFilterChatList[chatRoomIndex] &&
-            newFilterChatList[chatRoomIndex].unreadMessages
-          ) {
-            newFilterChatList[chatRoomIndex].unreadMessages = 0;
-          }
-          return newFilterChatList;
-        });
       }
       if (data.chatRoom.code) {
         setLastItemId(null);
@@ -545,6 +456,7 @@ const ListChatUsers = ({
     [hasMore, setDataChatList],
   );
 
+  // Get chat room detail
   const handleGetChatRoomDetail = async (params: {
     code: string;
     isRead: boolean;
@@ -569,7 +481,7 @@ const ListChatUsers = ({
   // Reset chat room unread messages
   const handleResetChatRoomUnreadMessages = (chatRoom: ChatRoomItem) => {
     const newDataChatList = [...dataChatList];
-    const newFilterChatList = [...filteredChatList];
+    const newFilterChatList = [...roomNameSearchResults];
     const chatRoomIndex = newDataChatList.findIndex(
       (room) => room.code == chatRoom.code,
     );
@@ -596,7 +508,6 @@ const ListChatUsers = ({
       newFilterChatList[filterChatRoomIndex].unreadMessages = 0;
     }
     setDataChatList(newDataChatList);
-    setFilteredChatList(newFilterChatList);
   };
 
   // Socket
@@ -606,9 +517,6 @@ const ListChatUsers = ({
         case SocketActions.PIN_ROOM:
         case SocketActions.UNPIN_ROOM:
           handleUpdateDatePin(data.chatRoom);
-          break;
-        case SocketActions.HIDE_ROOM:
-          handleUpdateDataHide(data.chatRoom);
           break;
         case SocketActions.CREATE_CHAT_ROOM:
         case SocketActions.SHOW_ROOM:
@@ -631,7 +539,6 @@ const ListChatUsers = ({
   }, [
     handleAddParticipantLocal,
     handleCreateChatRoomLocal,
-    handleUpdateDataHide,
     handleUpdateDatePin,
   ]);
 
@@ -652,8 +559,6 @@ const ListChatUsers = ({
       );
     }
   };
-
-  const searchTermDebounce = useDebounceText(searchTerm, 1000);
 
   // Handle create chat
   const createChat = async (data: {
@@ -680,7 +585,6 @@ const ListChatUsers = ({
     name: string;
     showLastMessageAt?: boolean;
   }) => {
-    setInitialLoadSearch(true);
     const apiUrl = `${apiRouters.CHAT_LIST}?page=${page}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${name ? `&name=${encodeURIComponent(name)}` : ''}${lastMsgItemRoomSearch && showLastMessageAt ? `&last_message_at=${lastMsgItemRoomSearch}` : ''}${lastPinAtSearch ? `&pin_at=${lastPinAtSearch}` : ''}${searchRoomType ? `&type=${searchRoomType}` : ''}`;
     return await api.get<BasePagination<ChatRoomItem[]>>(apiUrl);
   };
@@ -689,8 +593,11 @@ const ListChatUsers = ({
     'getDataSearchRoomChatList',
     handleGetDataSearchRoomChat,
     {
+      onMutate: () => {
+        isSearchingRoomNameRef.current = true;
+      },
       onSuccess: ({ data }) => {
-        setFilteredChatList((prev) => {
+        setRoomNameSearchResults((prev) => {
           if (prev) {
             return [...prev, ...data.results];
           } else {
@@ -720,39 +627,96 @@ const ListChatUsers = ({
         } else {
           setHasMoreSearch(true);
         }
+        isSearchingRoomNameRef.current = false;
       },
-      onError: () => {},
-      onSettled: () => {
-        setInitialLoadSearch(false);
+      onError: () => {
+        isSearchingRoomNameRef.current = false;
       },
     },
   );
-  useEffect(() => {
-    if (searchTermDebounce || searchRoomType) {
-      setFilteredChatList([]);
-      getDataSearchRoomChat({
-        name: searchTermDebounce,
-        page: 1,
-        showLastMessageAt: false,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getDataSearchRoomChat, searchTermDebounce, searchRoomType]);
 
-  useEffect(() => {
-    if (
-      inViewListSearchRoom &&
-      filteredChatList.length > PAGINATION_PAGE_SIZE_MEDIUM - 1 &&
-      hasMoreSearch
-    ) {
-      getDataSearchRoomChat({
-        name: searchTermDebounce,
-        page: 1,
-        showLastMessageAt: true,
-      });
+  // Search messages
+  const handleSearchMessagesInAllRooms = async (data: {
+    searchChatMsg: string;
+    pageNumber: number;
+  }) => {
+    if (chatRoomCode) {
+      if (data.pageNumber == 1) setIsLoading(true);
+      const encodedQuery = encodeURIComponent(data.searchChatMsg);
+      const apiUrl = `${apiRouters.MESSAGE_LIST}?${
+        data.searchChatMsg ? `message=${encodedQuery}` : ''
+      }${data.pageNumber ? `&page=${data.pageNumber}` : ''}`;
+
+      return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inViewListSearchRoom]);
+  };
+
+  const { mutate: searchMessagesInAllRooms } = useMutation(
+    'searchMessagesInAllRooms',
+    handleSearchMessagesInAllRooms,
+    {
+      onMutate: () => {
+        isSearchingMessagesRef.current = true;
+      },
+      onSuccess: (data) => {
+        if (data) {
+          setSearchMessageResults((prev) => {
+            return {
+              count: data.data.count,
+              numPages: data.data.numPages,
+              results: [...(prev?.results || []), ...data.data.results],
+              hasNext: data.data.hasNext,
+            };
+          });
+          setHasMoreSearchResultDetail(data.data.hasNext || false);
+          isSearchingMessagesRef.current = false;
+        }
+      },
+      onError: () => {
+        isSearchingMessagesRef.current = false;
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+
+  // Bookmark message
+  const handleBookMarkMsg = async (data: {
+    uuid: string;
+    isBookmark: boolean;
+  }) => {
+    const { data: response } = await api.post(
+      apiRouters.BOOKMARK_MESSAGE(`${data.uuid}`),
+      {
+        bookmarkAt: data.isBookmark ? new Date() : null,
+      },
+    );
+    return response;
+  };
+
+  const { mutate: bookMarkMsg } = useMutation(
+    'bookMarkMsg',
+    handleBookMarkMsg,
+    {
+      onSuccess: async (data, bookmark) => {
+        setSearchMessageResults((prev) =>
+          prev
+            ? {
+                ...prev,
+                results: prev.results.map((item) =>
+                  item.uuid === bookmark.uuid
+                    ? { ...item, isBookmark: bookmark.isBookmark }
+                    : item,
+                ),
+              }
+            : prev,
+        );
+      },
+      onError: () => {},
+      onSettled: () => {},
+    },
+  );
 
   // Render avatar based on chat room type
   const renderAvatar = (item: ChatRoomItem) => {
@@ -853,20 +817,150 @@ const ListChatUsers = ({
     setPendingRoomChange(null);
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchSectionRef.current &&
+        !searchSectionRef.current.contains(event.target as Node)
+      ) {
+        // User clicked outside
+        setShowRoomNameSearchResultsSection(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const resultsContainer = searchResultsSectionRef.current;
+
+      if (
+        resultsContainer &&
+        hasMoreSearch &&
+        Math.round(
+          resultsContainer.clientHeight + Math.abs(resultsContainer.scrollTop),
+        ) >=
+          0.9 * resultsContainer.scrollHeight
+      ) {
+        if (isSearchingRoomNameRef && isSearchingRoomNameRef.current) return;
+        getDataSearchRoomChat({
+          name: roomNameSearch,
+          page: 1,
+          showLastMessageAt: true,
+        });
+      }
+    };
+
+    const resultsContainer = searchResultsSectionRef.current;
+
+    if (resultsContainer) {
+      resultsContainer.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (resultsContainer) {
+        resultsContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    hasMoreSearch,
+    searchResultsPage,
+    isSearchingRoomNameRef,
+    showRoomNameSearchResultsSection,
+  ]);
+
   return (
     <aside className="w-[270px] max-w-[270px] min-w-[270px] border-r-[2px] pl-4 pt-5">
-      <div className="flex items-center justify-between mb-5 pr-4">
+      <div className="relative mb-5 pr-4" ref={searchSectionRef}>
         <InputSearch
           placeholder="全体のキーワードを検索"
           className="w-full"
           inputClassName="!py-2 !border-[#77858F]"
+          value={roomNameSearch}
           onChange={(e) => {
             setHasMoreSearch(true);
             setLastPinAtSearch(null);
             setLastMsItemRoomSearch('');
-            setSearchTerm(e.target.value);
+            setRoomNameSearch(e.target.value);
+            setShowRoomNameSearchResultsSection(true);
+          }}
+          onKeyDown={(e: any) => {
+            if (e.keyCode == 13 && e.target.value !== '') {
+              setRoomNameSearchResults([]);
+              !showRoomNameSearchResultsSection &&
+                setShowRoomNameSearchResultsSection(true);
+              isSearchingRoomNameRef.current = true;
+              getDataSearchRoomChat({
+                name: roomNameSearch,
+                page: 1,
+                showLastMessageAt: false,
+              });
+            }
           }}
         />
+
+        {showRoomNameSearchResultsSection ? (
+          <div
+            ref={searchResultsSectionRef}
+            className={`absolute z-50 mt-2 bg-white !border-[1px] p-[5px] !border-[#77858F] rounded-[6px] w-[calc(100%_-_16px)] h-fit max-h-[200px] overflow-y-auto`}>
+            <div
+              key="search-by-message"
+              className={`flex relative w-full group items-center hover:cursor-pointer py-2 px-2 hover:bg-[#EBF1F7]`}
+              onClick={() => {
+                setOpenSearchMessagesModal(true);
+                setShowRoomNameSearchResultsSection(false);
+                setRoomNameSearch('');
+                setRoomNameSearchResults([])
+              }}>
+              <ImageRound
+                src="/icons/search.svg"
+                name="Search input icon"
+                className={`w-4 h-4`}
+              />
+              <div className="ml-3 flex-grow">
+                <p className="text-[14px] font-medium text-[#1E293B] break-all">
+                  <span className="text-primary">
+                    {roomNameSearch || '安藤'}
+                  </span>
+                  <span className="text-[#77858F]">でメッセージを検索</span>
+                </p>
+              </div>
+            </div>
+            {roomNameSearchResults.map((item) => (
+              <div
+                key={item.code}
+                className={`flex relative w-full group items-center hover:cursor-pointer py-2 px-2 hover:bg-[#EBF1F7] ${
+                  chatRoomCode === item.code && 'bg-[#FFFFFF]'
+                }`}
+                onClick={() => {
+                  setShowRoomNameSearchResultsSection(false);
+                  setRoomNameSearch('');
+                  setRoomNameSearchResults([])
+                  handleRoomChange(item);
+                }}>
+                <div className="!w-8 !h-8 scale-90">{renderAvatar(item)}</div>
+                <div className="ml-3 flex-grow">
+                  <p className="text-[14px] font-medium text-[#1E293B] break-all">
+                    {item.name}
+                  </p>
+                </div>
+              </div>
+            ))}
+            {isSearchingRoomNameRef.current ? (
+              <Spinner className="!h-fit py-3" iconClassName="h-6 w-6" />
+            ) : (
+              <></>
+            )}
+          </div>
+        ) : (
+          <></>
+        )}
       </div>
       <div className="flex items-center mb-5 pr-6 pl-1">
         <div
@@ -971,107 +1065,20 @@ const ListChatUsers = ({
             )}
         </div>
       </div>
-      {!searchTerm && !searchRoomType && (
-        <>
-          {' '}
-          <div
-            className={`flex-grow w-full pr-4 mt-3 h-[calc(100vh_-_210px)] ${dataChatList.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden !h-[calc(100vh_-_200px)]'} overflow-x-hidden scrollbar-gutter-stable`}>
-            {dataChatList && dataChatList.length > 0 ? (
-              dataChatList.map((item) => (
-                <div
-                  key={item?.code}
-                  className={`flex relative w-full group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
-                  onClick={() => handleRoomChange(item)}>
-                  <div className="absolute top-1 left-0.5">
-                    <DynamicTooltip
-                      content={item.pinAt ? 'ピンを外す' : 'ピン留め'}
-                      placement="top">
-                      <div
-                        className={`group-hover:block group-hover:opacity-60 ${item?.pinAt ? 'visible' : 'hidden'}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePinClick({
-                            code: item.code,
-                            isPin: item.pinAt !== null,
-                          });
-                        }}>
-                        <ImageRound
-                          className="w-[14px] h-[16px] hover:cursor-pointer"
-                          src="/icons/pin-chat.svg"
-                          border="full"
-                          name="Pin chat"
-                        />
-                      </div>
-                    </DynamicTooltip>
-                  </div>
-
-                  <div className="!w-8 !h-8">{renderAvatar(item)}</div>
-
-                  <p
-                    className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? 'w-[calc(100%_-_90px)]' : 'w-[calc(100%_-_60px)]'} text-justify font-medium `}>
-                    {item.code &&
-                    chatRoomNameEditing.find(
-                      (room) => room.roomCode === item.code,
-                    )
-                      ? chatRoomNameEditing.find(
-                          (room) => room.roomCode === item.code,
-                        )?.roomName
-                      : item?.name || ''}
-                  </p>
-                  {item.isMuted && (
-                    <div
-                      className={`absolute top-1/2 -translate-y-1/2  ${item?.unreadMessages > 0 ? 'right-[38px]' : 'right-2'}`}>
-                      <ImageRound
-                        className={` w-fit h-fit hover:cursor-pointer `}
-                        src="/icons/mute.svg"
-                        name="mute icon"
-                      />
-                    </div>
-                  )}
-
-                  {item?.unreadMessages > 0 && (
-                    <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full w-[20px] pt-[2px] h-[20px] bg-[#C32E2E] text-[10px] text-center text-white leading-4">
-                      {item?.unreadMessages}
-                    </p>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p className="text-center text-gray-500 mt-4">
-                {!initialLoad && 'チャットがありません'}
-              </p>
-            )}
-            <div ref={listRoomRef} className="h-7">
-              <div>
-                {initialLoad ? (
-                  <RowSkeleton numberOfRows={20} className="!h-[50px]" />
-                ) : (
-                  <div className="w-full h-6"></div>
-                )}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-      {((searchTerm && searchTermDebounce === searchTerm) ||
-        searchRoomType) && (
-        <>
-          <div
-            className={`flex-grow w-full pr-4 mt-3 h-[calc(100vh_-_210px)]  ${filteredChatList.length > 0 && !initialLoadSearch ? 'overflow-y-auto' : 'overflow-y-hidden'} overflow-x-hidden scrollbar-gutter-stable`}>
-            {filteredChatList && filteredChatList.length > 0 ? (
-              filteredChatList.map((item) => (
-                <div
-                  key={item?.code}
-                  className={`flex relative w-full group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
-                  onClick={() => {
-                    setLastItemId(null);
-                    handleSetChatRoomParam(item.code);
-                    handleResetChatRoomUnreadMessages(item);
-                    setSearchChatMsg('');
-                    setIsReload(false);
-                  }}>
+      <div
+        className={`flex-grow w-full pr-4 mt-3 h-[calc(100vh_-_210px)] ${dataChatList.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden !h-[calc(100vh_-_200px)]'} overflow-x-hidden scrollbar-gutter-stable`}>
+        {dataChatList && dataChatList.length > 0 ? (
+          dataChatList.map((item) => (
+            <div
+              key={item?.code}
+              className={`flex relative w-full group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
+              onClick={() => handleRoomChange(item)}>
+              <div className="absolute top-1 left-0.5">
+                <DynamicTooltip
+                  content={item.pinAt ? 'ピンを外す' : 'ピン留め'}
+                  placement="top">
                   <div
-                    className={`absolute group-hover:block group-hover:opacity-60 top-1 left-0.5 ${item?.pinAt ? 'visible' : 'hidden'}`}
+                    className={`group-hover:block group-hover:opacity-60 ${item?.pinAt ? 'visible' : 'hidden'}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       handlePinClick({
@@ -1086,56 +1093,54 @@ const ListChatUsers = ({
                       name="Pin chat"
                     />
                   </div>
-                  <div className="!w-8 !h-8">{renderAvatar(item)}</div>
-                  <p
-                    className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? 'w-[calc(100%_-_90px)]' : 'w-[calc(100%_-_60px)]'} text-justify font-medium`}>
-                    {item.code &&
-                    chatRoomNameEditing.find(
-                      (room) => room.roomCode === item.code,
-                    )
-                      ? chatRoomNameEditing.find(
-                          (room) => room.roomCode === item.code,
-                        )?.roomName
-                      : item?.name || ''}
-                  </p>
-                  {item.isMuted && (
-                    <div
-                      className={`absolute top-1/2 -translate-y-1/2  ${item?.unreadMessages > 0 ? 'right-[38px]' : 'right-2'}`}>
-                      <ImageRound
-                        className={` w-fit h-fit hover:cursor-pointer `}
-                        src="/icons/mute.svg"
-                        name="mute icon"
-                      />
-                    </div>
-                  )}
-                  {item?.unreadMessages > 0 && (
-                    <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full pt-[2px] w-[20px] h-[20px] bg-[#C32E2E] text-[10px] text-center text-white leading-4">
-                      {item?.unreadMessages}
-                    </p>
-                  )}
-                </div>
-              ))
-            ) : (
-              <>
-                {!initialLoadSearch && (
-                  <p className="text-center text-gray-500 mt-4">
-                    {!initialLoadSearch && 'チャットがありません'}
-                  </p>
-                )}
-              </>
-            )}
-            <div ref={listSearchRoomRef} className="h-7">
-              <div>
-                {initialLoadSearch ? (
-                  <RowSkeleton numberOfRows={20} className="!h-[50px]" />
-                ) : (
-                  <div className="w-full h-6"></div>
-                )}
+                </DynamicTooltip>
               </div>
+
+              <div className="!w-8 !h-8">{renderAvatar(item)}</div>
+
+              <p
+                className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium `}>
+                {item.code &&
+                chatRoomNameEditing.find((room) => room.roomCode === item.code)
+                  ? chatRoomNameEditing.find(
+                      (room) => room.roomCode === item.code,
+                    )?.roomName
+                  : item?.name || ''}
+              </p>
+
+              {item.isMuted && (
+                <div
+                  className={`absolute top-1/2 -translate-y-1/2  ${item?.unreadMessages > 0 ? 'right-[38px]' : 'right-2'}`}>
+                  <ImageRound
+                    className={` w-fit h-fit hover:cursor-pointer `}
+                    src="/icons/mute.svg"
+                    name="mute icon"
+                  />
+                </div>
+              )}
+
+              {item?.unreadMessages > 0 && (
+                <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full w-[20px] pt-[2px] h-[20px] bg-[#C32E2E] text-[10px] text-center text-white leading-4">
+                  {item?.unreadMessages}
+                </p>
+              )}
             </div>
+          ))
+        ) : (
+          <p className="text-center text-gray-500 mt-4">
+            {!initialLoad && 'チャットがありません'}
+          </p>
+        )}
+        <div ref={listRoomRef} className="h-7">
+          <div>
+            {initialLoad ? (
+              <RowSkeleton numberOfRows={20} className="!h-[50px]" />
+            ) : (
+              <div className="w-full h-6"></div>
+            )}
           </div>
-        </>
-      )}
+        </div>
+      </div>
 
       {isModalOpen && (
         <ActionsAddMembersModal
@@ -1144,6 +1149,38 @@ const ListChatUsers = ({
           dashboardMembers={dashboardMembers}
           onClose={() => setIsModalOpen(false)}
           createChatMutation={createChatMutation}
+        />
+      )}
+
+      {openSearchMessagesModal && (
+        <AllChatRoomSearchMessagesModal
+          open={true}
+          isSearchingMessagesRef={isSearchingMessagesRef}
+          dashboardMemberList={dashboardMemberList}
+          dashboardMembers={dashboardMembers}
+          searchMessageResults={searchMessageResults}
+          allRoomChatMsgSearch={allRoomChatMsgSearch}
+          setAllRoomChatMsgSearch={setAllRoomChatMsgSearch}
+          searchResultsPage={searchResultsPage}
+          setSearchMessageResults={setSearchMessageResults}
+          setSearchResultsPage={setSearchResultsPage}
+          handleConfirmGetDataDetailEvent={() => {}}
+          hasMoreSearchResultDetail={hasMoreSearchResultDetail}
+          onSubmit={(searchChatMsg: string, page: number) => {
+            searchMessagesInAllRooms({
+              searchChatMsg,
+              pageNumber: page,
+            });
+          }}
+          onClose={() => {
+            setAllRoomChatMsgSearch('');
+            setOpenSearchMessagesModal(false);
+            setSearchResultsPage(1);
+            setSearchMessageResults(undefined);
+          }}
+          handleBookmark={(data: { uuid: string; isBookmark: boolean }) => {
+            bookMarkMsg(data);
+          }}
         />
       )}
 

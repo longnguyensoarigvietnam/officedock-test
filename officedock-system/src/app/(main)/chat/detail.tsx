@@ -142,6 +142,9 @@ import {
 import ActionMuteChatModal from '@components/modals/ActionMuteChatModal';
 
 interface dataProps {
+  chatRoomCode: string;
+  dataChatList: ChatRoomItem[];
+  searchChatMsg: string;
   clientId: string;
   lastItemId: number | null | undefined;
   hasMoreDetail: boolean;
@@ -155,12 +158,9 @@ interface dataProps {
   setHasMoreDetail: React.Dispatch<React.SetStateAction<boolean>>;
   setHasMoreDetailOnScrollDown: React.Dispatch<React.SetStateAction<boolean>>;
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
-  handleRemoveChatRoomParam: () => void;
-  chatRoomCode: string;
-  dataChatList: ChatRoomItem[];
-  searchChatMsg: string;
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
-  setFilteredChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
+  handleRemoveChatRoomParam: () => void;
+  setRoomNameSearchResults: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
 }
 const ChatDetail = ({
   clientId,
@@ -174,7 +174,7 @@ const ChatDetail = ({
   searchChatMsg,
   hasMoreDetailOnScrollDown,
   setHasMoreDetailOnScrollDown,
-  setFilteredChatList,
+  setRoomNameSearchResults,
   setHasMoreDetail,
   setLastItemId,
   setDataChatList,
@@ -458,11 +458,6 @@ const ChatDetail = ({
       };
     });
     setDataChatList((prev) =>
-      prev.map((item) =>
-        item.code === chatRoomDetail?.code ? { ...item, isMuted: data } : item,
-      ),
-    );
-    setFilteredChatList((prev) =>
       prev.map((item) =>
         item.code === chatRoomDetail?.code ? { ...item, isMuted: data } : item,
       ),
@@ -1319,6 +1314,7 @@ const ChatDetail = ({
         message: filterMsg,
         createdAt: getCurrentTimeInJapan(),
         deletedAt: null,
+        bookmarkAt: null,
         type: MessageType.MESSAGE,
         isEdited: false,
         task: null,
@@ -2544,7 +2540,7 @@ const ChatDetail = ({
       }
       return newDataChatList;
     });
-    setFilteredChatList((prevFilterChatList) => {
+    setRoomNameSearchResults((prevFilterChatList) => {
       const newFilterChatList = [...prevFilterChatList];
       const chatRoomIndex = newFilterChatList.findIndex(
         (room) => room.code == chatRoomCode,

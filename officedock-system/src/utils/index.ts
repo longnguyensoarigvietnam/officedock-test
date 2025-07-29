@@ -19,12 +19,17 @@ import {
   DATE_FORMAT,
   DEFAULT_TIME_TEXT,
   MAX_HEX_COLOR_VALUE,
+  MENTION_ALL_MEMBERS,
   SKILL_MAP_LEVEL_COUNT,
   SKILL_MAP_STEP_COUNT,
   SKILL_MAP_STEPS,
   SUB_TEAMS,
 } from '@constants';
-import { PASSWORD_REGEX, URL_REGEX } from '@constants/regex';
+import {
+  HIGHLIGHT_SEARCH_TERM_REGEX,
+  PASSWORD_REGEX,
+  URL_REGEX,
+} from '@constants/regex';
 
 import { JwtDecode } from '@interfaces/auth';
 import { Organizations } from '@interfaces/organization';
@@ -2165,3 +2170,52 @@ export function formatJapaneseDatetime(input: string): string {
 
   return inputYear === currentYear ? datePart : `${inputYear}年${datePart}`;
 }
+
+export const highlightTextSafely = (
+  htmlString: string,
+  term: string,
+  userFullName: string,
+) => {
+  const escapedTerm = term.replace(HIGHLIGHT_SEARCH_TERM_REGEX, '\\$&');
+  const regex = new RegExp(escapedTerm, 'gi');
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlString, 'text/html');
+
+  const processNode = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      if (node.textContent) {
+        node.textContent = node.textContent?.replace(
+          regex,
+          (match) => `[[HIGHLIGHT]]${match}[[/HIGHLIGHT]]`,
+        );
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const element = node as HTMLElement;
+
+      if (element.classList.contains('mention')) {
+        const mentionName = element.textContent?.trim() || '';
+
+        if (
+          mentionName == `@${userFullName}` ||
+          mentionName == `@${MENTION_ALL_MEMBERS}`
+        ) {
+          element.classList.remove('text-[#0068B6]');
+          element.classList.add('text-[#0068B7]');
+        } else {
+          element.classList.remove('text-[#0068B6]');
+          element.classList.add('text-[#77858F]');
+        }
+      }
+      node.childNodes.forEach(processNode);
+    }
+  };
+
+  doc.body.childNodes.forEach(processNode);
+
+  const processedHTML = doc.body.innerHTML.replace(
+    /\[\[HIGHLIGHT\]\](.*?)\[\[\/HIGHLIGHT\]\]/g,
+    `<mark class="bg-[#0068B633]">$1</mark>`,
+  );
+  return processedHTML;
+};
