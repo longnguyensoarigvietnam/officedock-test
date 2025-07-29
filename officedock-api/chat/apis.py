@@ -870,12 +870,11 @@ class ChatMessageViewSet(
         serializer.is_valid(raise_exception=True)
         serializer_data = serializer.validated_data
         icon = serializer_data.pop("icon")
-        if instance.reactions.filter(user=user, icon=icon).exists():
-            instance.reactions.filter(user=user, icon=icon).delete()
-        else:
-            instance.reactions.create(
-                company_id=user.company_id, user=user, icon=icon
-            )
+        if instance.reactions.filter(user=user).count() > 1:
+            instance.reactions.filter(user=user).delete()
+        instance.reactions.update_or_create(
+            company_id=user.company_id, user=user, defaults={"icon": icon}
+        )
         participants = instance.chat_room.chat_rooms_participants.all()
         for participant in participants:
             if participant.user.id != user.id:
