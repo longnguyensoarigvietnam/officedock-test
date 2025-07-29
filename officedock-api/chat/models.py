@@ -224,7 +224,11 @@ class ChatFile(BaseModel):
         ChatRoom, on_delete=models.CASCADE, related_name="chat_files"
     )
     chat_message = models.ForeignKey(
-        ChatMessage, on_delete=models.CASCADE, related_name="chat_files"
+        ChatMessage,
+        on_delete=models.CASCADE,
+        related_name="chat_files",
+        null=True,
+        blank=True,
     )
     file_name = models.CharField(max_length=255)
     original_file = models.FileField(upload_to=chat_file_upload_path)

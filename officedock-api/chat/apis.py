@@ -55,7 +55,6 @@ from chat.serializers import (
     SendMessageSerializer,
     ReactionSerializer,
 )
-from chat.utils import remove_chat_files
 from common.utils import (
     StripTags,
     generate_file_name,
@@ -920,8 +919,11 @@ class ChatMessageViewSet(
                 uuids_to_create.append(uuid)
 
         # Delete chat files
-        chat_files = instance.chat_files.exclude(uuid__in=file_uuids).all()
-        remove_chat_files(chat_files)
+        chat_files = instance.chat_files.exclude(uuid__in=file_uuids).update(
+            chat_message=None
+        )
+        # TODO: Not delete file to use for quote and reply
+        # remove_chat_files(chat_files)
 
         # Perform the update operation
         instance = serializer.save()
@@ -954,8 +956,9 @@ class ChatMessageViewSet(
         message = self.get_object()
         message.soft_delete()
 
+        # TODO: Not delete file to use preview for quote and reply
         # Delete chat files
-        remove_chat_files(message.chat_files.all())
+        # remove_chat_files(message.chat_files.all())
 
         # Handle case realtime when delete chat message
         chat_room = message.chat_room
@@ -996,7 +999,11 @@ class ChatFileViewSet(
         )
 
         if chat_room_code := self.request.query_params.get("chat_room_code"):
-            queryset = queryset.filter(chat_room__code=chat_room_code)
+            queryset = queryset.filter(
+                chat_room__code=chat_room_code,
+                chat_message__isnull=False,
+                chat_message__deleted_at__isnull=True,
+            )
 
         return queryset
 
