@@ -290,6 +290,8 @@ class ChatFileDetailSerializer(BaseChatFileDetailSerializer):
         chat_files = ChatFile.objects.filter(
             Q(file_type__icontains="image") | Q(file_type__icontains="pdf"),
             chat_room=obj.chat_room,
+            chat_message__isnull=False,
+            chat_message__deleted_at__isnull=True,
         ).order_by("id")
         next_file = chat_files.filter(id__gt=obj.id).first()
         previous_file = chat_files.filter(id__lt=obj.id).last()
@@ -317,7 +319,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     submit_level = SubmitLevelForChatMessageSerializer()
     tasks = serializers.SerializerMethodField(read_only=True)
     reactions = serializers.SerializerMethodField(read_only=True)
-    chat_files = ChatFileSerializer(many=True, read_only=True)
+    chat_files = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ChatMessage
@@ -348,17 +350,22 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         """To representation field"""
         representation = super().to_representation(instance)
 
-        if instance.quote:
-            message = ChatMessage.objects.filter(
-                uuid=instance.quote["message_uuid"]
-            ).first()
-            representation["quote"]["message_content"] = instance.quote[
-                "message"
-            ]
-            representation["quote"]["message"] = ChatMessageSerializer(
-                message
-            ).data
-            representation["quote"].pop("message_uuid")
+        if quote_list := instance.quote:
+            data_quote = []
+            quote_list = (
+                quote_list if isinstance(quote_list, list) else [quote_list]
+            )
+            for quote in quote_list:
+                message = ChatMessage.objects.filter(
+                    uuid=quote.get("message_uuid")
+                ).first()
+                if message:
+                    data_quote.append(
+                        ChatMessageSerializer(
+                            message, context={"is_quote": True}
+                        ).data
+                    )
+            representation["quote"] = data_quote
         if instance.reply:
             representation["reply"] = ChatMessageSerializer(instance.reply).data
         if instance.task and instance.task.deleted_at is not None:
@@ -366,6 +373,18 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         if instance.schedule and instance.schedule.deleted_at is not None:
             representation["schedule"] = None
         return representation
+
+    def get_chat_files(self, obj):
+        """
+        Handle get list chat_files of message
+        """
+        if self.context.get("is_quote", False):
+            return ChatFileSerializer(obj.chat_files.all(), many=True).data
+
+        if obj.deleted_at is not None:
+            return []
+
+        return ChatFileSerializer(obj.chat_files.all(), many=True).data
 
     def get_tasks(self, obj):
         """
@@ -381,7 +400,10 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         """
         Returns none message when deleted.
         """
-        return obj.message if obj.deleted_at is None else None
+        if self.context.get("is_quote", False):
+            return obj.message
+
+        return obj.message if not obj.deleted_at else None
 
     def get_schedule(self, obj):
         """
@@ -485,7 +507,7 @@ class QuoteMessageSerializer(serializers.Serializer):
     message_uuid = serializers.UUIDField(
         required=True,
     )
-    message = serializers.CharField(required=True)
+    message = serializers.CharField(required=False, allow_null=True)
 
     def validate(self, attrs):
         """Validate quote"""
@@ -533,7 +555,7 @@ class SendMessageSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=False,
     )
-    quote = QuoteMessageSerializer(required=False, allow_null=True)
+    quote = QuoteMessageSerializer(many=True, required=False, allow_null=True)
     reply_uuid = serializers.UUIDField(required=False, allow_null=True)
 
     class Meta:
