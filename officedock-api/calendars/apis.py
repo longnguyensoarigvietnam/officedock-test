@@ -465,6 +465,23 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 )
                 child.delete()
 
+    def _update_time_recurring(self, instance, start_date, end_date):
+        """
+        Handle update repeat schedules time
+        """
+        start_time = start_date.timetz()
+        end_time = end_date.timetz()
+        for repeat_schedule in instance.repeat_schedules.all():
+            original_start_date = repeat_schedule.plan_start_date.date()
+            original_end_date = repeat_schedule.plan_end_date.date()
+            repeat_schedule.plan_start_date = datetime.combine(
+                original_start_date, start_time
+            )
+            repeat_schedule.plan_end_date = datetime.combine(
+                original_end_date, end_time
+            )
+            repeat_schedule.save()
+
     @transaction.atomic()
     def perform_update(self, serializer):
         instance = serializer.instance
@@ -495,6 +512,10 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         is_change_recurring = (
             old_recurring["repeat_type"] != repeat_type
             or old_recurring["repeat_interval"] != repeat_interval
+        )
+        is_change_time_recurring = (
+            old_recurring["start_date"] != start_date
+            or old_recurring["end_date"] != end_date
         )
         if recurring_event_option == ScheduleRepeatOption.ALL_EVENTS.value:
             start_date = (
@@ -661,10 +682,16 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         ):
             repeat_schedule.schedule = instance
             repeat_schedule.save()
+        # Update recurring time
+        if not is_change_recurring and is_change_time_recurring:
+            self._update_time_recurring(instance, start_date, end_date)
+
         # Create repeat schedule base on repeat type
         if repeat_type and is_change_recurring:
-            instance.parent = None
-            instance.save()
+            if is_change_recurring:
+                instance.parent = None
+                instance.save()
+
             self._generate_repeat_schedules(
                 instance,
                 start_date,
@@ -787,10 +814,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     self._soft_delete_if_needed(child)
 
                 self._soft_delete_if_needed(instance)
-        elif (
-            repeat_schedule_id
-            and recurring_event_option == ScheduleRepeatOption.THIS_EVENT.value
-        ):
+        elif repeat_schedule_id:
             if instance.repeat_schedules.count() == 1:
                 self._soft_delete_if_needed(instance)
             else:
@@ -848,8 +872,9 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if not calendar_room_participant:
             return
         chat_room = calendar_room_participant.chat_room
-        calendar_room_participant.unread_messages += 1
-        calendar_room_participant.save(update_fields=["unread_messages"])
+        if not calendar_room_participant.is_muted:
+            calendar_room_participant.unread_messages += 1
+            calendar_room_participant.save(update_fields=["unread_messages"])
 
         action = WebSocketEventType.MESSAGE.value
 
@@ -903,8 +928,6 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         action = WebSocketEventType.MESSAGE.value
         if chat_room_participant:
             chat_room = chat_room_participant.chat_room
-            if chat_room_participant.hidden_at is not None:
-                chat_room_participant.hidden_at = None
         else:
             chat_room = ChatRoom.objects.create(
                 company=company, type=ChatRoomTypes.PRIVATE.value
@@ -917,11 +940,9 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             chat_room_participant = chat_room.chat_rooms_participants.filter(
                 user=participant
             ).first()
-
-        chat_room_participant.unread_messages += 1
-        chat_room_participant.save(
-            update_fields=["unread_messages", "hidden_at"]
-        )
+        if not chat_room_participant.is_muted:
+            chat_room_participant.unread_messages += 1
+            chat_room_participant.save(update_fields=["unread_messages"])
 
         message_data = {
             "sender": user,
@@ -938,8 +959,9 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         user_participant = chat_room.chat_rooms_participants.filter(
             user=user
         ).first()
-        user_participant.unread_messages += 1
-        user_participant.save(update_fields=["unread_messages"])
+        if not user_participant.is_muted:
+            user_participant.unread_messages += 1
+            user_participant.save(update_fields=["unread_messages"])
 
         # Serializer data
         chat_room_participant_serializer_data = (
@@ -971,18 +993,6 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 },
                 user,
             )
-            # Check if user logged hide chat room, send websocket show it
-            if user_participant.hidden_at is not None:
-                user_participant.hidden_at = None
-                user_participant.save(update_fields=["hidden_at"])
-                send_web_socket_event(
-                    {
-                        "action": WebSocketEventType.SHOW_ROOM.value,
-                        "chat_room": chat_room_user_serializer_data,
-                        "chat_message": chat_message_serializer_data,
-                    },
-                    user,
-                )
 
     @extend_schema(
         parameters=[

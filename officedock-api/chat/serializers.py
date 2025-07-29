@@ -571,7 +571,6 @@ class ChatRoomsParticipantsSerializer(serializers.ModelSerializer):
             "name",
             "type",
             "unread_messages",
-            "hidden_at",
             "pin_at",
             "last_message_at",
             "participants",

@@ -496,10 +496,11 @@ class TaskViewSet(
         chat_room_participant = task_room.chat_rooms_participants.filter(
             user_id=user.id
         ).first()
-        chat_room_participant.unread_messages = (
-            chat_room_participant.unread_messages + 1
-        )
-        chat_room_participant.save()
+        if not chat_room_participant.is_muted:
+            chat_room_participant.unread_messages = (
+                chat_room_participant.unread_messages + 1
+            )
+            chat_room_participant.save()
         self._send_websocket(
             WebSocketEventType.MESSAGE.value,
             chat_room_participant,
@@ -569,18 +570,20 @@ class TaskViewSet(
         else:
             chat_room = chat_room_participant.chat_room
         message = chat_room.chat_messages.create(**message_data)
-        chat_room_participant.unread_messages = (
-            chat_room_participant.unread_messages + 1
-        )
-        chat_room_participant.hidden_at = None
-        chat_room_participant.save()
+        if not chat_room_participant.is_muted:
+            chat_room_participant.unread_messages = (
+                chat_room_participant.unread_messages + 1
+            )
+            chat_room_participant.save()
         # Update unread message of user logged
         user_participant = chat_room.chat_rooms_participants.filter(
             user_id=user.id
         ).first()
-        user_participant.unread_messages = user_participant.unread_messages + 1
-        user_participant.hidden_at = None
-        user_participant.save()
+        if not user_participant.is_muted:
+            user_participant.unread_messages = (
+                user_participant.unread_messages + 1
+            )
+            user_participant.save()
         self._send_websocket(
             socketEventType,
             chat_room_participant,
@@ -613,11 +616,11 @@ class TaskViewSet(
                 user_participant = chat_room.chat_rooms_participants.filter(
                     user_id=user.id
                 ).first()
-                user_participant.unread_messages = (
-                    user_participant.unread_messages + 1
-                )
-                user_participant.hidden_at = None
-                user_participant.save()
+                if not user_participant.is_muted:
+                    user_participant.unread_messages = (
+                        user_participant.unread_messages + 1
+                    )
+                    user_participant.save()
                 # Send chat message to logged user
                 send_web_socket_event(
                     {
@@ -634,9 +637,11 @@ class TaskViewSet(
             for participant in chat_room.chat_rooms_participants.exclude(
                 user=user
             ).all():
-                participant.unread_messages = participant.unread_messages + 1
-                participant.hidden_at = None
-                participant.save()
+                if not participant.is_muted:
+                    participant.unread_messages = (
+                        participant.unread_messages + 1
+                    )
+                    participant.save()
                 # Send chat message realtime to participant
                 self._send_websocket(
                     ChatMessageTypes.CREATION_TASK.value,

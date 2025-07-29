@@ -67,17 +67,12 @@ class ChatRoomsParticipants(BaseModel):
         related_name="chat_rooms_participants",
     )
     unread_messages = models.IntegerField(default=0)
-    hidden_at = models.DateTimeField(null=True, blank=True)
     pin_at = models.DateTimeField(null=True, blank=True)
     is_muted = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         # Set default company when creating
         self.company_id = self.user.company_id
-
-        # Romove pin if hide chat room
-        if self.hidden_at:
-            self.pin_at = None
 
         super().save(*args, **kwargs)
 

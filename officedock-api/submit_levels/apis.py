@@ -105,10 +105,11 @@ class SubmitLevelViewSet(
         chat_room_participant = skill_room.chat_rooms_participants.filter(
             user_id=user.id
         ).first()
-        chat_room_participant.unread_messages = (
-            chat_room_participant.unread_messages + 1
-        )
-        chat_room_participant.save()
+        if not chat_room_participant.is_muted:
+            chat_room_participant.unread_messages = (
+                chat_room_participant.unread_messages + 1
+            )
+            chat_room_participant.save()
 
         # Send web socket to user role admin
         send_web_socket_event(
