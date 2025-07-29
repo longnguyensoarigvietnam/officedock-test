@@ -458,6 +458,7 @@ export const apiRouters = {
 
   // CHAT
   CHAT_MESSAGES: (code: string) => `/chat/${code}/messages/`,
+  MESSAGE_LIST: '/messages/',
   CHAT_MESSAGES_DETAIL: (id: string) => `/messages/${id}/`,
   CHAT_DETAIL: (code: string) => `/chat/${code}/`,
   CHAT_LIST: '/chat/',

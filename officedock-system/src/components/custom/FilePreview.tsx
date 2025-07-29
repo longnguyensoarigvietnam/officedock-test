@@ -67,7 +67,7 @@ const FilePreview = ({
         <Heading
           className="leading-10  text-sm font-medium !text-[#5B6770]"
           as="h1">
-          {file.fileName}
+          {fileDetail?.fileName}
         </Heading>
         <div
           className={` w-[30px] h-[30px] flex items-center justify-center rounded-full bg-white`}>
@@ -107,7 +107,7 @@ const FilePreview = ({
         {!isFetchingFileDetail && previewUrl ? (
           <div className="preview-container">
             {/* Preview Image with Zoom */}
-            {file.fileType.startsWith('image/') && (
+            {fileDetail?.fileType.startsWith('image/') && (
               <div className="w-full max-w-full mx-auto  ">
                 <TransformWrapper
                   wheel={{
@@ -205,7 +205,7 @@ const FilePreview = ({
             )}
 
             {/* PDF preview */}
-            {file.fileType === 'application/pdf' && (
+            {fileDetail?.fileType === 'application/pdf' && (
               <div>
                 {/* Zoom Buttons */}
                 <div className="flex items-center w-full justify-between">

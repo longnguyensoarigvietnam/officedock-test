@@ -10,11 +10,13 @@ export interface ChatMessageResponse {
     name: string;
     code: string;
     type: string;
-    participants: ChatParticipant;
+    participants: ChatParticipant[];
   };
   sender: {
     id: number;
     fullName: string;
+    avatar?: string | null;
+    avatarColor?: string;
     organizations?: {
       id: number;
       name: string;
@@ -76,6 +78,7 @@ export interface ChatMessageResponse {
   isEdited: boolean;
   createdAt: Date | string;
   deletedAt: Date | null;
+  bookmarkAt: Date | null;
   type: MessageType;
   mentions?: number[];
   reactions?: {
