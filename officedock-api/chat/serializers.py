@@ -104,6 +104,7 @@ class ChatRoomDetailSerializer(ChatRoomSerializer):
 
     name = serializers.SerializerMethodField()
     unread_messages = serializers.SerializerMethodField()
+    is_muted = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatRoom
@@ -115,8 +116,21 @@ class ChatRoomDetailSerializer(ChatRoomSerializer):
             "memo",
             "type",
             "unread_messages",
+            "is_muted",
         ]
         read_only_fields = ["id", "code", "type"]
+
+    def get_is_muted(self, obj):
+        """
+        Get chatroom is muted or not
+        """
+        return (
+            obj.chat_rooms_participants.filter(
+                user=self.context["request"].user
+            )
+            .first()
+            .is_muted
+        )
 
     def get_unread_messages(self, obj):
         """
