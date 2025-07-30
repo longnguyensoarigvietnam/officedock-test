@@ -55,6 +55,8 @@ from chat.serializers import (
     SendMessageSerializer,
     ReactionSerializer,
 )
+from chat.utils import build_chat_participant_payload
+from common.serializers import CreationDataUserWithMainOrganizationSerializer
 from common.utils import (
     StripTags,
     generate_file_name,
@@ -211,13 +213,14 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         instance = self.get_object()
         current_participant = instance.participants.all()
 
-        if (
-            instance.type == ChatRoomTypes.SELF.value
-            or instance.type == ChatRoomTypes.PRIVATE.value
-        ):
+        if instance.type in [
+            ChatRoomTypes.SELF.value,
+            ChatRoomTypes.PRIVATE.value,
+        ]:
             raise ValidationError(
                 {"detail": [ERROR_MESSAGES["cannot_updated"]]}
             )
+
         serializer = self.get_serializer(
             instance, data=request.data, partial=True
         )
@@ -225,7 +228,6 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         company_id = request.user.company_id
         validated_data = serializer.validated_data
         participants = validated_data.pop("participant_ids", None)
-
         name = validated_data.get("name")
 
         if "name" in validated_data and (name is None or name == ""):
@@ -234,7 +236,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
 
         chat_room = serializer.save(company_id=company_id)
-
+        add_participants = []
         if participants is not None:
             # Unique element in list participants
             unique_participants = list(set(participants))
@@ -270,17 +272,42 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     },
                     user,
                 )
-
+        # Get all participants
+        participants = chat_room.chat_rooms_participants.all()
+        # Map participant by user_id
+        participant_map = {p.user_id: p for p in participants}
+        filtered_users = chat_room.participants.all()
+        participant_data = CreationDataUserWithMainOrganizationSerializer(
+            filtered_users, many=True
+        ).data
+        # Convert the list of user dicts into a dict keyed by user ID
+        participant_data_by_id = {user["id"]: user for user in participant_data}
+        # Get latest message
+        latest_message = (
+            chat_room.chat_messages.latest("created_at")
+            if hasattr(chat_room, "chat_messages")
+            else None
+        )
+        last_message_at = (
+            latest_message.created_at
+            if latest_message
+            else chat_room.created_at
+        )
+        if add_participants:
             # Handle websocket to add participants
             for user in add_participants:
+                participant = participant_map.get(user.id)
+                user_serializer = participant_data_by_id.get(user.id)
                 send_web_socket_event(
                     {
                         "action": WebSocketEventType.ADD_PARTICIPANT.value,
-                        "chat_room": ChatRoomsParticipantsSerializer(
-                            user.chat_rooms_participants.filter(
-                                chat_room=chat_room
-                            ).first()
-                        ).data,
+                        "chat_room": build_chat_participant_payload(
+                            chat_room,
+                            user_serializer,
+                            participant_data,
+                            participant,
+                            last_message_at,
+                        ),
                         "chat_message": None,
                     },
                     user,
@@ -288,20 +315,26 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         # Handle websocket to update chat room
         for user in current_participant:
+            participant = participant_map.get(user.id)
+            user_serializer = participant_data_by_id.get(user.id)
             send_web_socket_event(
                 {
                     "action": WebSocketEventType.UPDATE_CHAT_ROOM.value,
-                    "chat_room": ChatRoomsParticipantsSerializer(
-                        user.chat_rooms_participants.filter(
-                            chat_room=chat_room
-                        ).first()
-                    ).data,
+                    "chat_room": build_chat_participant_payload(
+                        chat_room,
+                        user_serializer,
+                        participant_data,
+                        participant,
+                        last_message_at,
+                    ),
                     "chat_message": None,
                 },
                 user,
             )
 
-        return self.response_ok(self.serializer_class(chat_room).data)
+        return self.response_ok(
+            self.serializer_class(chat_room, context={"request": request}).data
+        )
 
     @extend_schema(
         parameters=[
@@ -506,7 +539,6 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 },
                 user,
             )
-
         return self.response_ok(
             ChatRoomDetailSerializer(
                 instance, context={"request": self.request}
@@ -658,7 +690,9 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     message=message,
                     uuids=file_uuids,
                 )
-
+            chat_room = ChatRoom.objects.prefetch_related("participants").get(
+                pk=chat_room.pk
+            )
             chat_room_participants = chat_room.chat_rooms_participants.all()
             for participant in chat_room_participants:
                 if not participant.is_muted and participant.user_id != user.id:
@@ -666,21 +700,50 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         participant.unread_messages + 1
                     )
                     participant.save()
-                if participant.user_id != user.id:
-                    # Handle case realtime when send chat message
-                    send_web_socket_event(
-                        {
-                            "client_id": client_id,
-                            "action": WebSocketEventType.MESSAGE.value,
-                            "chat_room": ChatRoomsParticipantsWebSocketSerializer(
-                                participant
-                            ).data,
-                            "chat_message": ChatMessageSerializer(message).data,
-                        },
-                        participant,
-                    )
+            # Map participant by user_id
+            participant_map = {p.user_id: p for p in chat_room_participants}
+            # Load user serializer
+            filtered_users = chat_room.participants.all()
+            participant_data = CreationDataUserWithMainOrganizationSerializer(
+                filtered_users, many=True
+            ).data
+            # Convert the list of user dicts into a dict keyed by user ID
+            participant_data_by_id = {
+                user["id"]: user for user in participant_data
+            }
+            # Load chat message serializer
+            chat_message_serializer = ChatMessageSerializer(message).data
+            # Get latest message
+            latest_message = (
+                chat_room.chat_messages.latest("created_at")
+                if hasattr(chat_room, "chat_messages")
+                else None
+            )
+            last_message_at = (
+                latest_message.created_at
+                if latest_message
+                else chat_room.created_at
+            )
+            for user in filtered_users:
+                participant = participant_map.get(user.id)
+                user_serializer = participant_data_by_id.get(user.id)
+                send_web_socket_event(
+                    {
+                        "client_id": client_id,
+                        "action": WebSocketEventType.MESSAGE.value,
+                        "chat_room": build_chat_participant_payload(
+                            chat_room,
+                            user_serializer,
+                            participant_data,
+                            participant,
+                            last_message_at,
+                        ),
+                        "chat_message": chat_message_serializer,
+                    },
+                    user,
+                )
 
-            return self.response_created(ChatMessageSerializer(message).data)
+            return self.response_created(chat_message_serializer)
 
         return self.response(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
 
@@ -874,20 +937,50 @@ class ChatMessageViewSet(
         instance.reactions.update_or_create(
             company_id=user.company_id, user=user, defaults={"icon": icon}
         )
-        participants = instance.chat_room.chat_rooms_participants.all()
-        for participant in participants:
-            if participant.user.id != user.id:
-                send_web_socket_event(
-                    {
-                        "action": WebSocketEventType.EDIT_MESSAGE.value,
-                        "chat_room": ChatRoomsParticipantsWebSocketSerializer(
-                            participant
-                        ).data,
-                        "chat_message": ChatMessageSerializer(instance).data,
-                    },
-                    participant.user,
-                )
-
+        chat_room = ChatRoom.objects.prefetch_related("participants").get(
+            pk=instance.chat_room.pk
+        )
+        # Get all participants
+        participants = chat_room.chat_rooms_participants.all()
+        # Map participant by user_id
+        participant_map = {p.user_id: p for p in participants}
+        # Load user serializer
+        filtered_users = chat_room.participants.all()
+        participant_data = CreationDataUserWithMainOrganizationSerializer(
+            filtered_users, many=True
+        ).data
+        # Convert the list of user dicts into a dict keyed by user ID
+        participant_data_by_id = {user["id"]: user for user in participant_data}
+        # Load chat message serializer
+        chat_message_serializer = ChatMessageSerializer(instance).data
+        # Get latest message
+        latest_message = (
+            chat_room.chat_messages.latest("created_at")
+            if hasattr(chat_room, "chat_messages")
+            else None
+        )
+        last_message_at = (
+            latest_message.created_at
+            if latest_message
+            else chat_room.created_at
+        )
+        for user in filtered_users:
+            participant = participant_map.get(user.id)
+            user_serializer = participant_data_by_id.get(user.id)
+            send_web_socket_event(
+                {
+                    "action": WebSocketEventType.EDIT_MESSAGE.value,
+                    "chat_room": build_chat_participant_payload(
+                        chat_room,
+                        user_serializer,
+                        participant_data,
+                        participant,
+                        last_message_at,
+                    ),
+                    "chat_message": chat_message_serializer,
+                },
+                user,
+            )
         return self.response_ok()
 
     @transaction.atomic

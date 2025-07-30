@@ -463,16 +463,18 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             OpenApiParameter("organization_id", type=int, required=False),
             OpenApiParameter("is_statistic", type=bool, required=False),
             OpenApiParameter("is_calendar_page", type=bool, required=False),
+            OpenApiParameter("is_chat_page", type=bool, required=False),
         ],
     )
     @action(methods=["GET"], detail=False, url_path="statistics")
     def statistics(self, request):
         """
-        Return creation data for statistics
+        Returns organization creation data and necessary metadata for initializing Task, Calendar, Statistics, and Chat modules
         """
         organization_id = request.query_params.get("organization_id")
         is_statistic = request.query_params.get("is_statistic")
         is_calendar_page = request.query_params.get("is_calendar_page")
+        is_chat_page = request.query_params.get("is_chat_page")
         user = request.user
         company = user.company
         organizations = []
@@ -594,7 +596,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     data = _handle_get_data_organization_my_statistic(data)
                     return self.response_ok(data)
 
-        if is_calendar_page and not organization_id:
+        if (is_calendar_page or is_chat_page) and not organization_id:
             list_org = []
             for organization in organizations:
                 list_org.append(
@@ -603,14 +605,15 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     ).data
                 )
             data["organizations"] = list_org
-            data[
-                "calendar_organization"
-            ] = CreationDataOrganizationWithStructCategorySerializer(
-                calendar_org, context={"user": user}
-            ).data
-            data["locations"] = EventLocationSerializer(
-                company.event_locations.all(), many=True
-            ).data
+            if is_calendar_page:
+                data[
+                    "calendar_organization"
+                ] = CreationDataOrganizationWithStructCategorySerializer(
+                    calendar_org, context={"user": user}
+                ).data
+                data["locations"] = EventLocationSerializer(
+                    company.event_locations.all(), many=True
+                ).data
         return self.response_ok(data)
 
 

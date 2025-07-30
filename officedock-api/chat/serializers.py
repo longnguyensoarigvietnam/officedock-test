@@ -61,7 +61,7 @@ class ChatRoomSerializer(serializers.ModelSerializer):
         write_only=True,
         required=True,
     )
-    is_muted = serializers.SerializerMethodField()
+    is_muted = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ChatRoom
@@ -81,13 +81,10 @@ class ChatRoomSerializer(serializers.ModelSerializer):
         """
         Get chatroom is muted or not
         """
-        return (
-            obj.chat_rooms_participants.filter(
-                user=self.context["request"].user
-            )
-            .first()
-            .is_muted
-        )
+        participant = obj.chat_rooms_participants.filter(
+            user=self.context["request"].user
+        ).first()
+        return participant.is_muted if participant else False
 
     def validate(self, data):
         """
@@ -472,7 +469,7 @@ class ChatMessageBookMarkSerializer(ChatMessageSerializer):
     Chat message bookmark serializer
     """
 
-    chat_room = ChatRoomSerializer(read_only=True)
+    chat_room = serializers.SerializerMethodField()
     bookmark_at = serializers.SerializerMethodField()
 
     class Meta:
@@ -499,6 +496,17 @@ class ChatMessageBookMarkSerializer(ChatMessageSerializer):
             "reactions",
             "chat_files",
         ]
+
+    def get_chat_room(self, obj):
+        """
+        Get chat room of chat message
+        """
+        chat_room = obj.chat_room
+        return {
+            "id": chat_room.id,
+            "name": chat_room.name,
+            "code": chat_room.code,
+        }
 
     def get_bookmark_at(self, obj):
         """Get bookmark_at"""
@@ -608,15 +616,16 @@ class ChatRoomsParticipantsSerializer(serializers.ModelSerializer):
     Serializer for Chat rooms participants
     """
 
-    code = serializers.SerializerMethodField(read_only=True)
+    code = serializers.CharField(source="chat_room.code", read_only=True)
+    type = serializers.CharField(source="chat_room.type", read_only=True)
     name = serializers.SerializerMethodField(read_only=True)
-    type = serializers.SerializerMethodField(read_only=True)
     last_message_at = serializers.SerializerMethodField(read_only=True)
     participants = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ChatRoomsParticipants
         fields = [
+            "user",
             "code",
             "name",
             "type",
@@ -626,12 +635,6 @@ class ChatRoomsParticipantsSerializer(serializers.ModelSerializer):
             "participants",
             "is_muted",
         ]
-
-    def get_code(self, obj):
-        """
-        Get code of chat room for given chat room
-        """
-        return obj.chat_room.code
 
     def get_name(self, obj):
         """
@@ -653,12 +656,6 @@ class ChatRoomsParticipantsSerializer(serializers.ModelSerializer):
                 room_name = chat_room.name
 
         return room_name
-
-    def get_type(self, obj):
-        """
-        Get type of chat room for given chat room
-        """
-        return obj.chat_room.type
 
     def get_last_message_at(self, obj):
         """
