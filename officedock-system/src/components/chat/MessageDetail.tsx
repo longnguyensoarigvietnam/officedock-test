@@ -642,41 +642,44 @@ export const MessageDetail = ({
                                                 {file.fileName}
                                               </p>
                                             </div>
-                                            <Button
-                                              onClick={() => {
-                                                const memberInfo =
-                                                  dashboardMembers.find(
-                                                    (member) =>
-                                                      member.id ===
-                                                      messageDetail.sender.id,
-                                                  );
-                                                setDataPreviewFile({
-                                                  msgId:
-                                                    String(messageDetail.id) ||
-                                                    '',
-                                                  createAt: String(
-                                                    messageDetail.createdAt,
-                                                  ),
-                                                  user: {
-                                                    id: messageDetail.sender
-                                                      ?.id,
-                                                    avatarColor:
-                                                      memberInfo?.avatarColor ||
-                                                      '',
-                                                    avatarUrl:
-                                                      memberInfo?.avatarUrl ||
-                                                      '',
-                                                    fullName:
-                                                      messageDetail.sender
-                                                        ?.fullName,
-                                                  },
-                                                  file: file,
-                                                });
-                                              }}
-                                              className="font-medium w-[84px] h-[30px] !rounded-[6px] text-xs !px-0"
-                                              variant="outline">
-                                              プレビュー
-                                            </Button>
+                                            {(file.fileType.includes('image') || file.fileType.includes('pdf')) && (
+                                              <Button
+                                                onClick={() => {
+                                                  const memberInfo =
+                                                    dashboardMembers.find(
+                                                      (member) =>
+                                                        member.id ===
+                                                        messageDetail.sender.id,
+                                                    );
+                                                  setDataPreviewFile({
+                                                    msgId:
+                                                      String(
+                                                        messageDetail.id,
+                                                      ) || '',
+                                                    createAt: String(
+                                                      messageDetail.createdAt,
+                                                    ),
+                                                    user: {
+                                                      id: messageDetail.sender
+                                                        ?.id,
+                                                      avatarColor:
+                                                        memberInfo?.avatarColor ||
+                                                        '',
+                                                      avatarUrl:
+                                                        memberInfo?.avatarUrl ||
+                                                        '',
+                                                      fullName:
+                                                        messageDetail.sender
+                                                          ?.fullName,
+                                                    },
+                                                    file: file,
+                                                  });
+                                                }}
+                                                className="font-medium w-[84px] h-[30px] !rounded-[6px] text-xs !px-0"
+                                                variant="outline">
+                                                プレビュー
+                                              </Button>
+                                            )}
                                           </div>
                                         );
                                       },

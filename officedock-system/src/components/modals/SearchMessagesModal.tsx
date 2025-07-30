@@ -599,11 +599,18 @@ export const SearchMessagesModal = ({
                                                   {file.fileName}
                                                 </p>
                                               </div>
-                                              <Button
-                                                className="font-medium w-[84px] h-[30px] !rounded-[6px] text-xs !px-0"
-                                                variant="outline">
-                                                プレビュー
-                                              </Button>
+                                              {(file.fileType.includes(
+                                                'image',
+                                              ) ||
+                                                file.fileType.includes(
+                                                  'pdf',
+                                                )) && (
+                                                <Button
+                                                  className="font-medium w-[84px] h-[30px] !rounded-[6px] text-xs !px-0"
+                                                  variant="outline">
+                                                  プレビュー
+                                                </Button>
+                                              )}
                                             </div>
                                           );
                                         },
