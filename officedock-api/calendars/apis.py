@@ -447,23 +447,15 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 if not child.repeat_schedules.filter(
                     id__lt=repeat_schedule.id
                 ).exists():
-                    child.task_durations.update(schedule=new_schedule)
-                    child.task_durations.filter(paused_at__isnull=True).update(
-                        paused_at=now()
-                    )
+                    self._soft_delete_if_needed(child)
                     if child == parent_schedule:
                         new_schedule.parent = None
                         new_schedule.save()
-                    child.delete()
         elif recurring_event_option == ScheduleRepeatOption.ALL_EVENTS.value:
             remove_schedules = parent_schedule.child_schedules.all()
             for child in remove_schedules:
                 child.repeat_schedules.update(schedule=parent_schedule)
-                child.task_durations.update(schedule=parent_schedule)
-                child.task_durations.filter(paused_at__isnull=True).update(
-                    paused_at=now()
-                )
-                child.delete()
+                self._soft_delete_if_needed(child)
 
     def _update_time_recurring(self, instance, start_date, end_date):
         """
@@ -798,11 +790,8 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     if not child.repeat_schedules.filter(
                         id__lt=repeat_schedule_id
                     ).exists():
-                        child.task_durations.update(schedule=instance)
-                        child.task_durations.filter(
-                            paused_at__isnull=True
-                        ).update(paused_at=now())
-                        child.delete()
+                        self._soft_delete_if_needed(child)
+
                 instance.repeat_schedules.filter(
                     id__gte=repeat_schedule_id
                 ).delete()
