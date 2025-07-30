@@ -524,7 +524,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 else start_date
             )
             end_date = (
-                (instance.repeat_schedules.first().plan_end_date)
+                instance.repeat_schedules.first().plan_end_date
                 if instance.repeat_schedules.exists()
                 else end_date
             )
@@ -587,16 +587,19 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             and (is_difference_repeat_option or is_difference_repeat_date)
         ):
             serializer_data["parent"] = instance.parent or instance
-            instance = self._handle_recurring_event_option(
-                recurring_event_option,
-                serializer_data,
-                instance,
-                user,
-                recurring,
-            )
-            serializer.instance = instance
+            if not is_difference_repeat_date:
+                instance = serializer.save()
+            else:
+                instance = self._handle_recurring_event_option(
+                    recurring_event_option,
+                    serializer_data,
+                    instance,
+                    user,
+                    recurring,
+                )
+                serializer.instance = instance
         else:
-            serializer.save()
+            instance = serializer.save()
 
         if participants is not None:
             old_participants = instance.participants.all()
@@ -688,9 +691,8 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         # Create repeat schedule base on repeat type
         if repeat_type and is_change_recurring:
-            if is_change_recurring:
-                instance.parent = None
-                instance.save()
+            instance.parent = None
+            instance.save()
 
             self._generate_repeat_schedules(
                 instance,
