@@ -31,7 +31,7 @@ export const MessageHoverAllRoomsSearch = ({
           />
         </div>
       </DynamicTooltip>
-      <DynamicTooltip content={'ブックマークを外す'} placement="top">
+      <DynamicTooltip content={messageDetail.isBookmark ? 'ブックマークを外す' : 'ブックマーク'} placement="top">
         <div
           onClick={() => {
             handleBookmark &&

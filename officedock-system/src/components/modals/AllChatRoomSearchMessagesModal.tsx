@@ -188,7 +188,7 @@ export const AllChatRoomSearchMessagesModal = ({
           {dataSearch.length > 0 ? (
             dataSearch.map((messageDetail, index) => {
               return (
-                <div key={messageDetail.id}>
+                <div key={messageDetail.uuid}>
                   <MessageDetailBookmark
                     isLastItem={dataSearch.length - 1 === index}
                     isSearchingMessages={true}
