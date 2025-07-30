@@ -91,6 +91,8 @@ const PercentageTeamTagsCompare = ({
     type: string;
   } | null>(null);
 
+  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
+
   // Data value
   const [dataChartLarge, setDataChartLarge] = useState<
     DataPercentCompareType[]
@@ -408,7 +410,10 @@ const PercentageTeamTagsCompare = ({
               <div>
                 <div className="flex justify-between w-full">
                   {/* Filter tag */}
-                  <FilterTagTeam />
+                  <FilterTagTeam
+                    open={isOpenModalFilter}
+                    onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
+                  />
                 </div>
                 <div className="flex items-center mt-8  gap-1 mb-[30px]">
                   <ImageRound

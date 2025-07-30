@@ -3,10 +3,10 @@ import { useForm } from 'react-hook-form';
 
 import ImageRound from '@components/common/ImageRound';
 import MultiSelectUserDropdown from '@components/common/MultiSelectDropdown/MultiSelectUserDropdown';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Button from '@components/common/Button';
 
 import { OptionDropdownType } from '@interfaces/common';
-
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 
 type ActionTaskFilterProp = {
@@ -16,25 +16,42 @@ type ActionTaskFilterProp = {
     color: string;
     avatarUrl: string;
   }[];
+  tagsOptions: OptionDropdownType[];
   handleClose: () => void;
 };
 
-const ActionFilterTeamTagStatistic = ({
+const ActionFilterTagTeam = ({
   listMemberTeam,
   handleClose,
+  tagsOptions,
 }: ActionTaskFilterProp) => {
   const boxListRef = useRef<HTMLDivElement | null>(null);
 
-  const { orderingOptions, isHasLoading, setOrderingOptions } = useContext(
-    StatisticTeamTagsStateContext,
-  );
+  const {
+    orderingOptions,
+    isCheckCompare,
+    isHasLoading,
+    setOrderingOptions,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingSmall,
+    setIsLoadingSmallCompare,
+    setIsLoadingOrganization,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganizationCompare,
+  } = useContext(StatisticTeamTagsStateContext);
   const [_isOpen, setIsOpen] = useState(false);
 
+  const [dataOptionsTagIds, setDataOptionsTagIds] = useState<
+    OptionDropdownType[]
+  >([]);
   const [dataOptionsUserIds, setDataOptionsUserIds] = useState<
     OptionDropdownType[]
   >([]);
 
   const { getValues, watch, setValue, reset } = useForm<{
+    tagIds: OptionDropdownType[];
     userIds: OptionDropdownType[];
   }>({
     mode: 'onSubmit',
@@ -42,22 +59,33 @@ const ActionFilterTeamTagStatistic = ({
   });
 
   const defaultValues = useMemo<{
+    tagIds: OptionDropdownType[];
     userIds: OptionDropdownType[];
   }>(() => {
     const value: {
+      tagIds: OptionDropdownType[];
       userIds: OptionDropdownType[];
     } = {
+      tagIds: [],
       userIds: [],
     };
 
     if (orderingOptions) {
-      if (orderingOptions.user_ids) {
-        value.userIds = orderingOptions.user_ids.map((user) => {
+      if (orderingOptions.tag_ids) {
+        value.tagIds = orderingOptions.tag_ids.map((tag) => {
           return {
-            value: user.value,
-            label: user.label,
-            avatarUrl: user?.avatarUrl || '',
-            color: user?.color || '',
+            value: tag.value,
+            label: tag.label,
+          };
+        });
+      }
+      if (orderingOptions.user_ids) {
+        value.userIds = orderingOptions.user_ids.map((tag) => {
+          return {
+            value: tag.value,
+            label: tag.label,
+            avatarUrl: tag?.avatarUrl || '',
+            color: tag?.color || '',
           };
         });
       }
@@ -68,6 +96,11 @@ const ActionFilterTeamTagStatistic = ({
   useEffect(() => {
     reset(defaultValues);
   }, [defaultValues, reset]);
+  useEffect(() => {
+    if (tagsOptions) {
+      setDataOptionsTagIds(tagsOptions);
+    }
+  }, [tagsOptions]);
 
   useEffect(() => {
     if (listMemberTeam) {
@@ -98,7 +131,18 @@ const ActionFilterTeamTagStatistic = ({
   }, []);
 
   const handleSearch = () => {
+    setIsLoadingLarge(true);
+    setIsLoadingMedium(true);
+    setIsLoadingOrganization(true);
+    setIsLoadingSmall(true);
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingOrganizationCompare(true);
+      setIsLoadingSmallCompare(true);
+    }
     setOrderingOptions({
+      tag_ids: getValues('tagIds'),
       user_ids: getValues('userIds'),
     });
     handleClose();
@@ -106,6 +150,7 @@ const ActionFilterTeamTagStatistic = ({
 
   const handleReset = () => {
     setOrderingOptions({
+      tag_ids: [],
       user_ids: [],
     });
   };
@@ -162,12 +207,43 @@ const ActionFilterTeamTagStatistic = ({
               }}
             />
           </div>
+          {/* TagIds */}
+          <div>
+            <MultiSelectDropdown
+              className="!h-[34px] !rounded-md"
+              labelClass="!min-h-0 !text-sm font-medium"
+              valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center !rounded-md"
+              optionClassName="!border-[1px] !border-[#77858F] w-full"
+              labelOptionClass="break-words max-w-[300px] line-clamp-2 !text-sm"
+              options={dataOptionsTagIds}
+              selectedOptions={watch('tagIds') ?? []}
+              customLabel="タグ"
+              onChange={(selected) => {
+                let updatedTagIds = [];
+                const currentTagIds = getValues('tagIds') || [];
+                const foundItemIndex = currentTagIds.findIndex(
+                  (tag) => tag.value == selected.value,
+                );
+                if (foundItemIndex == -1) {
+                  updatedTagIds = [...currentTagIds, selected];
+                } else {
+                  updatedTagIds = currentTagIds.filter(
+                    (tag) => tag.value != selected.value,
+                  );
+                }
+                setValue('tagIds', updatedTagIds);
+              }}
+            />
+          </div>
         </div>
         <div className="flex justify-center gap-[10px] mt-4 ">
           <Button variant="outline" onClick={handleClose} className="h-9">
             キャンセル
           </Button>
-          <Button onClick={handleSearch} className="h-9" disabled={isHasLoading}>
+          <Button
+            onClick={handleSearch}
+            className="h-9"
+            disabled={isHasLoading}>
             絞り込む
           </Button>
         </div>
@@ -176,4 +252,4 @@ const ActionFilterTeamTagStatistic = ({
   );
 };
 
-export default ActionFilterTeamTagStatistic;
+export default ActionFilterTagTeam;

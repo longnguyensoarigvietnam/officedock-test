@@ -965,7 +965,9 @@ const ListChatUsers = ({
                   setRoomNameSearchResults([]);
                   handleRoomChange(item);
                 }}>
-                <div className="!w-8 !h-8 scale-90 flex-shrink-0">{renderAvatar(item)}</div>
+                <div className="!w-8 !h-8 scale-90 flex-shrink-0">
+                  {renderAvatar(item)}
+                </div>
                 <p className="ml-2 text-[14px] font-medium text-[#1E293B] break-all">
                   {item.name}
                 </p>
@@ -1118,7 +1120,7 @@ const ListChatUsers = ({
               <div className="!w-8 !h-8">{renderAvatar(item)}</div>
 
               <p
-                className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium `}>
+                className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? 'w-[calc(100%_-_70px)]' : item.isMuted ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium `}>
                 {item.code &&
                 chatRoomNameEditing.find((room) => room.roomCode === item.code)
                   ? chatRoomNameEditing.find(

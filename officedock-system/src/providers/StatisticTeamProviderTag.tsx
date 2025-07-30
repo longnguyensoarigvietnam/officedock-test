@@ -54,12 +54,14 @@ interface ContextValue {
     avatarUrl: string;
   }[];
   tagsOptions: OptionDropdownType[];
-  selectedTags: OptionDropdownType[];
+  remainingCountTag: number;
   orderingOptions: {
+    tag_ids: OptionDropdownType[];
     user_ids: OptionDropdownType[];
   } | null;
   setOrderingOptions: Dispatch<
     SetStateAction<{
+      tag_ids: OptionDropdownType[];
       user_ids: OptionDropdownType[];
     } | null>
   >;
@@ -67,7 +69,6 @@ interface ContextValue {
   setTotalDurationCategory: Dispatch<SetStateAction<string>>;
   setTotalDurationCategoryCompare: Dispatch<SetStateAction<string>>;
 
-  setSelectedTags: Dispatch<SetStateAction<OptionDropdownType[]>>;
   setTagsOptions: Dispatch<SetStateAction<OptionDropdownType[]>>;
   setSmallOptions: Dispatch<SetStateAction<OptionDropdownType[]>>;
   setMediumOptions: Dispatch<SetStateAction<OptionDropdownType[]>>;
@@ -144,8 +145,12 @@ interface ContextValue {
   setMergedTableData: Dispatch<SetStateAction<TeamDockMergedTable[]>>;
 
   handleResetTableData: () => void;
+  allLabelTag: OptionDropdownType[];
+  firstThreeTag: OptionDropdownType[];
 
   removeTag: (selected: OptionDropdownType) => void;
+  removeUser: (selected: OptionDropdownType) => void;
+
   dataMediumCalendar: OptionDropdownType | undefined;
   setDataMediumCalendar: Dispatch<
     SetStateAction<OptionDropdownType | undefined>
@@ -157,6 +162,9 @@ interface ContextValue {
 }
 
 const defaultValue: ContextValue = {
+  firstThreeTag: [],
+  allLabelTag: [],
+  remainingCountTag: 0,
   isDisableCalendar: false,
   isHasLoading: false,
   smallOptions: [],
@@ -207,8 +215,6 @@ const defaultValue: ContextValue = {
   listMemberTeam: [],
   setListMemberTeam: () => {},
   tagsOptions: [],
-  selectedTags: [],
-  setSelectedTags: () => {},
   setTagsOptions: () => {},
   isSkeletonTagTeamTask: false,
   setIsSkeletonTagTeamTask: () => {},
@@ -251,6 +257,8 @@ const defaultValue: ContextValue = {
   setMergedTableData: () => {},
   handleResetTableData: () => {},
   removeTag: () => {},
+  removeUser: () => {},
+
   dataMediumCalendar: undefined,
   setDataMediumCalendar: () => {},
   totalDurationTask: '',
@@ -361,8 +369,8 @@ export const StatisticTeamTagsStateProvider = ({
 
   // Tag
   const [tagsOptions, setTagsOptions] = useState<OptionDropdownType[]>([]);
-  const [selectedTags, setSelectedTags] = useState<OptionDropdownType[]>([]);
   const [orderingOptions, setOrderingOptions] = useState<{
+    tag_ids: OptionDropdownType[];
     user_ids: OptionDropdownType[];
   } | null>(null);
 
@@ -391,6 +399,13 @@ export const StatisticTeamTagsStateProvider = ({
 
   const remainingCountUser = allLabelUser.length - firstThreeUser.length;
 
+  const allLabelTag =
+    orderingOptions && orderingOptions.tag_ids ? orderingOptions.tag_ids : [];
+
+  const firstThreeTag = allLabelTag.slice(0, 3);
+
+  const remainingCountTag = allLabelTag.length - firstThreeTag.length;
+
   // Reset table data
   const handleResetTableData = () => {
     setMergedTableData([]);
@@ -400,10 +415,11 @@ export const StatisticTeamTagsStateProvider = ({
 
   // Remove tags
   const removeTag = (selected: OptionDropdownType) => {
-    const currentTagIds = selectedTags || [];
+    const currentTagIds = orderingOptions?.tag_ids || [];
     const updatedTagIds = currentTagIds.filter(
       (tag) => tag.value !== selected.value,
     );
+    setCurrentPage(1);
     setIsLoadingLarge(true);
     setIsLoadingMedium(true);
     setIsLoadingSmall(true);
@@ -413,10 +429,37 @@ export const StatisticTeamTagsStateProvider = ({
       setIsLoadingLargeCompare(true);
       setIsLoadingMediumCompare(true);
       setIsLoadingSmallCompare(true);
+
       setIsLoadingOrganizationCompare(true);
     }
+    setOrderingOptions((prev) => ({
+      tag_ids: updatedTagIds,
+      user_ids: prev?.user_ids || [],
+    }));
+  };
+  // Remove user
+  const removeUser = (selected: OptionDropdownType) => {
+    const currentUserIds = orderingOptions?.user_ids || [];
+    const updatedUserIds = currentUserIds.filter(
+      (tag) => tag.value !== selected.value,
+    );
     setCurrentPage(1);
-    setSelectedTags(updatedTagIds);
+    setIsLoadingLarge(true);
+    setIsLoadingMedium(true);
+    setIsLoadingSmall(true);
+
+    setIsLoadingOrganization(true);
+    handleResetTableData();
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingSmallCompare(true);
+      setIsLoadingOrganizationCompare(true);
+    }
+    setOrderingOptions((prev) => ({
+      tag_ids: prev?.tag_ids || [],
+      user_ids: updatedUserIds,
+    }));
   };
 
   const isHasLoading =
@@ -492,8 +535,7 @@ export const StatisticTeamTagsStateProvider = ({
     listMemberTeam,
     setListMemberTeam,
     tagsOptions,
-    selectedTags,
-    setSelectedTags,
+
     setTagsOptions,
 
     orderingOptions,
@@ -528,6 +570,8 @@ export const StatisticTeamTagsStateProvider = ({
     remainingCountUser,
     firstThreeUser,
     allLabelUser,
+    allLabelTag,
+    firstThreeTag,
 
     lineChartViewBy,
     setLineChartViewBy,
@@ -538,8 +582,10 @@ export const StatisticTeamTagsStateProvider = ({
     setLineChartTableData,
     mergedTableData,
     setMergedTableData,
+    remainingCountTag,
 
     removeTag,
+    removeUser,
     handleResetTableData,
 
     isHasLoading,

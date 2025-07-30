@@ -41,7 +41,7 @@ const ActionMuteChatModal = memo(
         <div className="px-10 py-[30px]">
           <div>
             <Checkbox
-              label="このグループチャットをミュートする"
+              label="この個人チャットをミュートする"
               isChecked={isMuteChat}
               disable={isLoadingMute}
               onChange={(data) => {
@@ -50,7 +50,7 @@ const ActionMuteChatModal = memo(
             />
           </div>
           <p className="text-[13px] font-normal text-[#77858F] mt-[14px]">
-            ミュートにするとこのグループに届いたメッセージを通知しません。
+            ミュートにすると相手から届いたメッセージを通知しません。
           </p>
         </div>
       </Modal>
