@@ -373,7 +373,7 @@ export const MessageDetailBookmark = ({
                       {messageDetail.sender?.organizations?.name}
                     </span>
                   </p>
-                  {messageDetail.bookmarkAt && (
+                  {messageDetail.isBookmark && (
                     <ImageRound
                       name="Save"
                       src={`/icons/save-active.svg`}
@@ -425,7 +425,8 @@ export const MessageDetailBookmark = ({
                                           <div
                                             key={index}
                                             className="flex justify-between items-center !w-[100%]">
-                                            <div className="bg-white border-[#D2DBE1] border-[1px] rounded-[6px] p-[14px] flex gap-2 items-center !w-[calc(100%_-_100px)]">
+                                            <div
+                                              className={`bg-white border-[#D2DBE1] border-[1px] rounded-[6px] p-[14px] flex gap-2 items-center ${!isSearchingMessages ? '!w-[calc(100%_-_100px)]' : 'w-full'}`}>
                                               {file.fileType.includes(
                                                 'image',
                                               ) && (
@@ -453,7 +454,10 @@ export const MessageDetailBookmark = ({
                                                 {file.fileName}
                                               </p>
                                             </div>
-                                            {(file.fileType.includes('image') ||
+                                            {((!isSearchingMessages &&
+                                              file.fileType.includes(
+                                                'image',
+                                              )) ||
                                               file.fileType.includes(
                                                 'pdf',
                                               )) && (
@@ -745,7 +749,7 @@ export const MessageDetailBookmark = ({
                     </p>
                   )}
 
-                  {messageDetail.bookmarkAt && (
+                  {messageDetail.isBookmark && (
                     <ImageRound
                       name="Save"
                       src={`/icons/save-active.svg`}
@@ -866,7 +870,7 @@ export const MessageDetailBookmark = ({
                     </span>
                   </p>
 
-                  {messageDetail.bookmarkAt && (
+                  {messageDetail.isBookmark && (
                     <ImageRound
                       name="Save"
                       src={`/icons/save-active.svg`}
@@ -971,7 +975,7 @@ export const MessageDetailBookmark = ({
                     </span>
                   </p>
 
-                  {messageDetail.bookmarkAt && (
+                  {messageDetail.isBookmark && (
                     <ImageRound
                       name="Save"
                       src={`/icons/save-active.svg`}
