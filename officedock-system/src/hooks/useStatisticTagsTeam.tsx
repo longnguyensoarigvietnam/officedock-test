@@ -20,8 +20,10 @@ interface FilterProps {
   smallCategoryId?: number;
   organizationIds?: string;
   organizationMemberId?: string;
-
-  tagIds?: OptionDropdownType[];
+  orderingOptions: {
+    tag_ids: OptionDropdownType[];
+    user_ids: OptionDropdownType[];
+  } | null;
 }
 
 const useStatisticTagsTeam = ({
@@ -75,9 +77,20 @@ const useStatisticTagsTeam = ({
     if (filter.smallCategoryId)
       params.append('small_category_id', filter.smallCategoryId.toString());
 
-    if (filter.tagIds) {
-      const tagIds = filter.tagIds.map((item) => item.value).join(',');
-      params.append('tag_ids', tagIds);
+    const tagIds = filter.orderingOptions?.tag_ids
+      ?.map((item) => String(item.value).trim())
+      .filter((val) => val !== '' && val !== undefined && val !== null)
+      .join(',');
+    if (tagIds && tagIds.length > 0) {
+      params.set('tag_ids', tagIds);
+    }
+
+    const userIds = filter.orderingOptions?.user_ids
+      ?.map((item) => String(item.value).trim())
+      .filter((val) => val !== '' && val !== undefined && val !== null)
+      .join(',');
+    if (userIds && userIds.length > 0) {
+      params.set('user_ids', userIds);
     }
 
     const apiUrl = `${apiRouters.STATISTICS_TAGS_TEAM}?${params.toString()}`;

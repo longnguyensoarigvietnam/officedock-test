@@ -72,6 +72,7 @@ const PercentageTeamTags = ({
     id: number | null;
     type: string;
   } | null>(null);
+  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
 
   const [dataChartLarge, setDataChartLarge] = useState<DataChartType>({
     actualValue: [],
@@ -476,7 +477,10 @@ const PercentageTeamTags = ({
               <div>
                 <div className="flex justify-between w-full mb-[30px] px-[30px]">
                   {/* Filter tag */}
-                  <FilterTagTeam />
+                  <FilterTagTeam
+                    open={isOpenModalFilter}
+                    onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
+                  />
                 </div>
               </div>
               <div className="flex justify-between px-[30px] text-sm font-medium">

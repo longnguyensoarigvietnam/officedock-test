@@ -234,6 +234,7 @@ const AllocationTagTeamCompare = memo(
     handleSelectMedium,
     handleSelectSmall,
   }: Props) => {
+    const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
     const [isExtendData, setIsExtendData] = useState(true);
     const [isShowModal, setIsShowModal] = useState(false);
     const [detailCategory, setDetailCategory] = useState<{
@@ -511,7 +512,10 @@ const AllocationTagTeamCompare = memo(
                 <div>
                   <div className="flex justify-between w-full my-8 px-[30px]">
                     {/* Filter tag */}
-                    <FilterTagTeam />
+                    <FilterTagTeam
+                      open={isOpenModalFilter}
+                      onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
+                    />
                   </div>
                 </div>
                 <div className="flex  justify-between px-[30px] text-sm font-medium">

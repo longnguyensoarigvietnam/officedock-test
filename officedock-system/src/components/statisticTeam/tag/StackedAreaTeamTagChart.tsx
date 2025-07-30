@@ -171,7 +171,6 @@ const StackedAreaTeamTagChart = ({
     listMemberTeam,
     lineChartViewBy,
     orderingOptions,
-    selectedTags,
     setLineChartViewBy,
     areaTableData,
     setAreaTableData,
@@ -194,6 +193,8 @@ const StackedAreaTeamTagChart = ({
     }
     return DEFAULT_TIME_TEXT;
   };
+
+  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
 
   const [
     selectedOptionOrganizationInTable,
@@ -315,12 +316,9 @@ const StackedAreaTeamTagChart = ({
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
-      tagIds: selectedTags,
+      tagIds: orderingOptions?.tag_ids,
       statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
-      userIds: listMemberTeam.map((user) => ({
-        label: user.fullName,
-        value: user.id,
-      })),
+      userIds: orderingOptions?.user_ids,
       mainOrganizationId: selectedOrganizationSideBar?.value as number,
       option: selectedOptionOrganizationInTable,
       isTagPage: true,
@@ -1239,7 +1237,10 @@ const StackedAreaTeamTagChart = ({
           <div>
             <div className="flex justify-between w-full my-8 px-[30px]">
               {/* Filter tag */}
-              <FilterTagTeam />
+              <FilterTagTeam
+                open={isOpenModalFilter}
+                onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
+              />
             </div>
           </div>
           <div className="flex justify-between items-end px-[30px] text-sm font-medium">
