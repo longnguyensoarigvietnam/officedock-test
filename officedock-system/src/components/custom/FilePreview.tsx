@@ -6,12 +6,12 @@ import Modal from '@components/common/Modal';
 import ImageRound from '@components/common/ImageRound';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import useFileDetail from '@hooks/useDetailFile';
 
 import { ChatDashboardMember, ChatFileResponse } from '@interfaces/chat';
 import { formatJapaneseDatetime, getFileURL, handleDownloadFile } from '@utils';
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 interface filePreviewProp {
   open: boolean;
@@ -127,7 +127,7 @@ const FilePreview = ({
                               avatarColor={user?.avatarColor || ''}
                               size={36}
                             />
-                            <p className="max-w-20 line-clamp-2">
+                            <p className="max-w-20 break-all line-clamp-2">
                               {user.fullName}
                             </p>
                           </div>
@@ -216,7 +216,9 @@ const FilePreview = ({
                         avatarColor={user?.avatarColor || ''}
                         size={36}
                       />
-                      <p className="max-w-20 line-clamp-2">{user.fullName}</p>
+                      <p className="max-w-20 break-all line-clamp-2">
+                        {user.fullName}
+                      </p>
                     </div>
                     <div className="h-full  border-r border-l px-[14px] border-[#D2DBE1]">
                       アップロード日 ：{' '}

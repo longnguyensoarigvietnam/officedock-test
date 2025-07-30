@@ -140,6 +140,7 @@ import {
   Transition,
 } from '@headlessui/react';
 import ActionMuteChatModal from '@components/modals/ActionMuteChatModal';
+import { MsgQuoteText } from '@components/chat/CustomMsgQuoteText';
 
 interface dataProps {
   chatRoomCode: string;
@@ -754,6 +755,7 @@ const ChatDetail = ({
       Document,
       TaskQuote,
       MsgQuote,
+      MsgQuoteText,
       MsgReply,
       Paragraph.extend({
         addAttributes() {
@@ -1020,6 +1022,25 @@ const ChatDetail = ({
     },
     [setDataChatList, handleRemoveChatRoomParam, chatRoomCode],
   );
+  useEffect(() => {
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    document.addEventListener('dragover', handleDragOver);
+    document.addEventListener('drop', handleDrop);
+
+    return () => {
+      document.removeEventListener('dragover', handleDragOver);
+      document.removeEventListener('drop', handleDrop);
+    };
+  }, []);
 
   // Socket
   useEffect(() => {
@@ -1181,6 +1202,7 @@ const ChatDetail = ({
     data,
     uuid,
     mentionIds,
+    quote,
     files,
     fileUuids,
     replyUuid,
@@ -1188,6 +1210,7 @@ const ChatDetail = ({
     data: string;
     uuid: string;
     mentionIds: number[];
+    quote: string[];
     files: File[];
     fileUuids: string[];
     replyUuid?: string;
@@ -1221,11 +1244,16 @@ const ChatDetail = ({
     formData.append('message', data);
     formData.append('uuid', uuid);
     formData.append('clientId', clientId);
+
     if (replyUuid) {
       formData.append('replyUuid', replyUuid);
     }
+    if (quote.length > 0) {
+      quote.forEach((id) => formData.append('quote', id.toString()));
+    }
     mentionIds.forEach((id) => formData.append('mentionIds', id.toString()));
     fileUuids.forEach((id) => formData.append('fileUuids', id.toString()));
+
     try {
       const { data: response } = await api.post(
         apiRouters.CHAT_MESSAGES(`${chatRoomCode}`),
@@ -1354,6 +1382,7 @@ const ChatDetail = ({
     if (uploadFiles.length > 0) {
       setIsChatFilesUploading(true);
     }
+    const quote = matchedMessagesQuote.map((msg) => msg.uuid);
     handleSendMsgChat({
       data: filterMsg,
       uuid: uuidMsg,
@@ -1361,6 +1390,7 @@ const ChatDetail = ({
       files: uploadFiles.map((file) => file.file),
       fileUuids: uploadFiles.map((file) => file.uuid),
       replyUuid: replyUuid ? replyUuid : undefined,
+      quote: quote,
     });
   };
 
@@ -2173,17 +2203,17 @@ const ChatDetail = ({
   };
 
   // Quote msg
-  const handleQuoteMsgUser = useCallback(
-    (data: { id: string; title: string }) => {
+  const handleQuoteMsgUserText = useCallback(
+    (data: { uuid: string; title: string }) => {
       if (!editor) return;
 
       editor
         .chain()
         .focus()
         .insertContent({
-          type: 'msgQuote',
+          type: 'msgQuoteText',
           attrs: {
-            id: data.id.toString(),
+            id: data.uuid.toString(),
             title: data.title,
           },
         })
@@ -2193,6 +2223,22 @@ const ChatDetail = ({
     },
     [editor],
   );
+  const handleQuoteMsgIcon = (data: { uuid: string; title: string }) => {
+    if (!editor) return;
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: 'msgQuote',
+        attrs: {
+          id: data.uuid.toString(),
+          title: data.title,
+        },
+      })
+      .run();
+
+    editor.chain().focus().insertContent({ type: 'paragraph' }).run();
+  };
 
   useEffect(() => {
     const handleMouseUp = () => {
@@ -2245,8 +2291,8 @@ const ChatDetail = ({
         button.style.boxShadow = '0px 4px 8px 0px #0000000F';
         button.onmousedown = (e) => e.preventDefault();
         button.onclick = () => {
-          handleQuoteMsgUser({
-            id: lastSelectedMessageIdRef.current || '',
+          handleQuoteMsgUserText({
+            uuid: lastSelectedMessageIdRef.current || '',
             title: text,
           });
 
@@ -2271,7 +2317,7 @@ const ChatDetail = ({
       quoteButtonRef.current = null;
       lastSelectedMessageIdRef.current = null;
     };
-  }, [handleQuoteMsgUser]);
+  }, [handleQuoteMsgUserText]);
 
   const handleSetParam = ({
     id,
@@ -2617,7 +2663,7 @@ const ChatDetail = ({
               style={{
                 background: 'linear-gradient(to right, #0E8DC5, #0D6FBA)',
               }}>
-              <div className={`flex items-center w-[60%] gap-2`}>
+              <div className={`flex items-center w-[62%] gap-2`}>
                 {chatRoomDetail && (
                   <>
                     <div className="!min-w-[48px]">
@@ -2627,7 +2673,7 @@ const ChatDetail = ({
                       )}
                     </div>
                     <p
-                      className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-[100%]' : 'max-w-[calc(100%_-_370px)]'}   ml-3`}
+                      className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-[100%]' : 'max-w-[calc(100%_-_360px)]'}   ml-3`}
                       style={{
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
@@ -2704,6 +2750,15 @@ const ChatDetail = ({
                             </Button>
                           </div>
                         </DynamicTooltip>
+                        {chatRoomDetail?.isMuted && (
+                          <div className={``}>
+                            <ImageRound
+                              className={` w-fit h-fit hover:cursor-pointer`}
+                              src="/icons/mute-white.svg"
+                              name="mute icon"
+                            />
+                          </div>
+                        )}
                       </div>
                     )}
                 </div>
@@ -2747,71 +2802,69 @@ const ChatDetail = ({
                         (type) =>
                           chatRoomDetail?.code == chatRoomCode &&
                           chatRoomDetail?.type == type && (
-                            <DynamicTooltip
-                              content={'設定'}
-                              key={type}
-                              placement="left"
-                              customOffset={{
-                                left: -40,
-                              }}>
-                              <Popover className="relative">
-                                {() => (
-                                  <>
-                                    <PopoverButton
-                                      className={`flex w-full px-3 py-2 items-center rounded-md focus:outline-none`}>
-                                      <div>
+                            <Popover key={type} className="relative">
+                              {() => (
+                                <>
+                                  <PopoverButton
+                                    className={`flex w-full px-3 py-2 items-center rounded-md focus:outline-none`}>
+                                    <div>
+                                      <DynamicTooltip
+                                        content={'設定'}
+                                        placement="left"
+                                        customOffset={{
+                                          left: -40,
+                                        }}>
                                         <ImageRound
                                           className="w-[26px] h-[26px] hover:cursor-pointer"
                                           src="/icons/setting-chat.svg"
                                           border="full"
                                           name="Setting icon"
                                         />
-                                      </div>
-                                    </PopoverButton>
-                                    <Transition
-                                      as={Fragment}
-                                      enter="transition ease-out duration-200"
-                                      enterFrom="opacity-0 translate-y-1"
-                                      enterTo="opacity-100 translate-y-0"
-                                      leave="transition ease-in duration-150"
-                                      leaveFrom="opacity-100 translate-y-0"
-                                      leaveTo="opacity-0 translate-y-1">
-                                      <PopoverPanel
-                                        style={{
-                                          boxShadow:
-                                            '0px 2px 8px 0px #0000001A',
-                                        }}
-                                        className="absolute bg-[#5B6770] py-[6px] rounded-md text-white text-sm  font-medium  top-10 right-0 z-10  transform">
-                                        <div className="w-[126px]">
-                                          <div
-                                            className="py-[10px] px-[14px] cursor-pointer hover:opacity-70"
-                                            onClick={() => {
-                                              setOpenSettingBox(true);
-                                              // Refetch to get the latest room name
-                                              refetchChatRoomDetail();
-                                            }}>
-                                            編集
-                                          </div>
-                                          <div
-                                            onClick={() =>
-                                              setShowModalMuteChat(true)
-                                            }
-                                            className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
-                                            通知
-                                          </div>
-                                          <div className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
-                                            グループを退会
-                                          </div>
-                                          <div className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
-                                            グループを削除
-                                          </div>
+                                      </DynamicTooltip>
+                                    </div>
+                                  </PopoverButton>
+                                  <Transition
+                                    as={Fragment}
+                                    enter="transition ease-out duration-200"
+                                    enterFrom="opacity-0 translate-y-1"
+                                    enterTo="opacity-100 translate-y-0"
+                                    leave="transition ease-in duration-150"
+                                    leaveFrom="opacity-100 translate-y-0"
+                                    leaveTo="opacity-0 translate-y-1">
+                                    <PopoverPanel
+                                      style={{
+                                        boxShadow: '0px 2px 8px 0px #0000001A',
+                                      }}
+                                      className="absolute bg-[#5B6770] py-[6px] rounded-md text-white text-sm  font-medium  top-10 right-0 z-10  transform">
+                                      <div className="w-[126px]">
+                                        <div
+                                          className="py-[10px] px-[14px] cursor-pointer hover:opacity-70"
+                                          onClick={() => {
+                                            setOpenSettingBox(true);
+                                            // Refetch to get the latest room name
+                                            refetchChatRoomDetail();
+                                          }}>
+                                          編集
                                         </div>
-                                      </PopoverPanel>
-                                    </Transition>
-                                  </>
-                                )}
-                              </Popover>
-                            </DynamicTooltip>
+                                        <div
+                                          onClick={() =>
+                                            setShowModalMuteChat(true)
+                                          }
+                                          className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
+                                          通知
+                                        </div>
+                                        <div className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
+                                          グループを退会
+                                        </div>
+                                        <div className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
+                                          グループを削除
+                                        </div>
+                                      </div>
+                                    </PopoverPanel>
+                                  </Transition>
+                                </>
+                              )}
+                            </Popover>
                           ),
                       )}
                     </>
@@ -2891,6 +2944,8 @@ const ChatDetail = ({
                             setOpenConfirmDeleteModal={
                               setOpenConfirmDeleteModal
                             }
+                            // Quote msg
+                            handleQuoteMsgIcon={handleQuoteMsgIcon}
                             setMsgIdUpdated={setMsgIdUpdated}
                             // Preview File
                             setDataPreviewFile={setDataPreviewFile}
@@ -2956,6 +3011,8 @@ const ChatDetail = ({
                             setOpenConfirmDeleteModal={
                               setOpenConfirmDeleteModal
                             }
+                            // Quote msg
+                            handleQuoteMsgIcon={handleQuoteMsgIcon}
                             setMsgIdUpdated={setMsgIdUpdated}
                             // Preview File
                             setDataPreviewFile={setDataPreviewFile}
