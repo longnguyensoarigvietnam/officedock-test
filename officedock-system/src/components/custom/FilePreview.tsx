@@ -208,6 +208,7 @@ const FilePreview = ({
             {fileDetail?.fileType === 'application/pdf' && (
               <div>
                 {/* Zoom Buttons */}
+                {/* Zoom Buttons */}
                 <div className="flex items-center w-full justify-between">
                   <div className="flex items-center gap-[14px] mb-5">
                     <div className="flex items-center gap-2 h-6">
@@ -226,6 +227,35 @@ const FilePreview = ({
                         formatJapaneseDatetime(fileDetail.createdAt)}
                     </div>
                     <div>サイズ： {fileDetail?.fileSize.toFixed(2)}MB</div>
+                  </div>
+                  <div className="flex  items-center gap-3">
+                    <DynamicTooltip
+                      content={'メッセージに移動'}
+                      placement="top">
+                      <ImageRound
+                        src="/icons/go-file-gray.svg"
+                        className="w-fit h-fit object-cover cursor-pointer hover:opacity-75 ml-5"
+                        name="go file  icon"
+                        onClick={() =>
+                          onGotoMessage({
+                            messageId: msgId,
+                          })
+                        }
+                      />
+                    </DynamicTooltip>
+                    <DynamicTooltip content={'ダウンロード'} placement="top">
+                      <ImageRound
+                        src="/icons/download-gray.svg"
+                        className="w-fit h-fit object-cover cursor-pointer hover:opacity-75 ml-5"
+                        name={'download icon'}
+                        onClick={() =>
+                          handleDownloadFile(
+                            fileDetail?.originalFile || '',
+                            fileDetail?.fileName || '',
+                          )
+                        }
+                      />
+                    </DynamicTooltip>
                   </div>
                 </div>
                 <iframe

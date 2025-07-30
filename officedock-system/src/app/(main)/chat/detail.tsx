@@ -2675,7 +2675,7 @@ const ChatDetail = ({
                       )}
                     </div>
                     <p
-                      className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-[100%]' : 'max-w-[calc(100%_-_360px)]'}   ml-3`}
+                      className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-fit max-w-[100%]' : 'max-w-[calc(100%_-_380px)]'}   ml-3`}
                       style={{
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
@@ -2753,7 +2753,7 @@ const ChatDetail = ({
                           </div>
                         </DynamicTooltip>
                         {chatRoomDetail?.isMuted && (
-                          <div className={``}>
+                          <div className={`flex-shrink-0`}>
                             <ImageRound
                               className={` w-fit h-fit hover:cursor-pointer`}
                               src="/icons/mute-white.svg"
@@ -2761,6 +2761,17 @@ const ChatDetail = ({
                             />
                           </div>
                         )}
+                      </div>
+                    )}
+                  {chatRoomDetail?.isMuted &&
+                    chatRoomDetail &&
+                    chatRoomDetail.type !== ChatRoomType.GROUP && (
+                      <div className={`flex-shrink-0`}>
+                        <ImageRound
+                          className={` w-fit h-fit hover:cursor-pointer`}
+                          src="/icons/mute-white.svg"
+                          name="mute icon"
+                        />
                       </div>
                     )}
                 </div>
