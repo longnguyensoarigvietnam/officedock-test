@@ -128,6 +128,7 @@ class ChatRoomDetailSerializer(ChatRoomSerializer):
             "type",
             "unread_messages",
             "is_muted",
+            "select_organizations",
         ]
         read_only_fields = ["id", "code", "type"]
 

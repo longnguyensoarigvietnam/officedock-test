@@ -13,7 +13,10 @@ def seed_recurring_option(apps, schema_editor):
     """
     Schedule = apps.get_model("calendars", "Schedule")
     for schedule in Schedule.objects.all():
-        if schedule.recurring["repeat_type"] != FrequencyMap.ONCE.value:
+        if (
+            schedule.recurring
+            and schedule.recurring["repeat_type"] != FrequencyMap.ONCE.value
+        ):
             schedule.recurring_option = (
                 ScheduleRepeatOption.THIS_AND_FOLLOWING_EVENTS.value
             )
