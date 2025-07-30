@@ -506,6 +506,7 @@ class ChatMessageBookMarkSerializer(ChatMessageSerializer):
             "id": chat_room.id,
             "name": chat_room.name,
             "code": chat_room.code,
+            "type": chat_room.type,
         }
 
     def get_bookmark_at(self, obj):

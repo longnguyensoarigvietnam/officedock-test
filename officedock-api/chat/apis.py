@@ -285,7 +285,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         # Get latest message
         latest_message = (
             chat_room.chat_messages.latest("created_at")
-            if hasattr(chat_room, "chat_messages")
+            if chat_room.chat_messages.exists()
             else None
         )
         last_message_at = (
@@ -716,7 +716,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             # Get latest message
             latest_message = (
                 chat_room.chat_messages.latest("created_at")
-                if hasattr(chat_room, "chat_messages")
+                if chat_room.chat_messages.exists()
                 else None
             )
             last_message_at = (
@@ -956,7 +956,7 @@ class ChatMessageViewSet(
         # Get latest message
         latest_message = (
             chat_room.chat_messages.latest("created_at")
-            if hasattr(chat_room, "chat_messages")
+            if chat_room.chat_messages.exists()
             else None
         )
         last_message_at = (
