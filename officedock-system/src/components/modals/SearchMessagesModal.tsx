@@ -572,7 +572,7 @@ export const SearchMessagesModal = ({
                                             <div
                                               key={index}
                                               className="flex justify-between items-center !w-[100%]">
-                                              <div className="bg-white border-[#D2DBE1] border-[1px] rounded-[6px] p-[14px] flex gap-2 items-center !w-[calc(100%_-_100px)]">
+                                              <div className="bg-white border-[#D2DBE1] border-[1px] rounded-[6px] p-[14px] flex gap-2 items-center !w-[calc(100%)]">
                                                 {file.fileType.includes(
                                                   'image',
                                                 ) && (
@@ -599,18 +599,6 @@ export const SearchMessagesModal = ({
                                                   {file.fileName}
                                                 </p>
                                               </div>
-                                              {(file.fileType.includes(
-                                                'image',
-                                              ) ||
-                                                file.fileType.includes(
-                                                  'pdf',
-                                                )) && (
-                                                <Button
-                                                  className="font-medium w-[84px] h-[30px] !rounded-[6px] text-xs !px-0"
-                                                  variant="outline">
-                                                  プレビュー
-                                                </Button>
-                                              )}
                                             </div>
                                           );
                                         },

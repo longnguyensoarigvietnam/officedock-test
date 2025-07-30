@@ -938,6 +938,11 @@ const ListChatUsers = ({
                 setOpenSearchMessagesModal(true);
                 setShowRoomNameSearchResultsSection(false);
                 setRoomNameSearchResults([]);
+                setAllRoomChatMsgSearch(roomNameSearch);
+                searchMessagesInAllRooms({
+                  searchChatMsg: roomNameSearch,
+                  pageNumber: 1,
+                });
               }}>
               <ImageRound
                 src="/icons/search.svg"
