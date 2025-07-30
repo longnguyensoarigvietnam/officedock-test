@@ -2,7 +2,7 @@ import uuid
 
 from django.db import models
 from base.models import BaseModel
-from calendars.constants import ScheduleTypes
+from calendars.constants import ScheduleTypes, ScheduleRepeatOption
 from companies.models import Company
 from tags.models import Tag
 from users.models import User
@@ -50,6 +50,19 @@ class Schedule(BaseModel):
     is_start = models.BooleanField(default=False)
     creator_id = models.IntegerField(null=True, blank=True)
     recurring = models.JSONField(null=True, blank=True)
+    parent = models.ForeignKey(
+        "calendars.Schedule",
+        related_name="child_schedules",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    recurring_option = models.CharField(
+        max_length=30,
+        choices=ScheduleRepeatOption.choices(),
+        null=True,
+        blank=True,
+    )
 
 
 class TagsSchedules(BaseModel):
@@ -107,7 +120,7 @@ class RepeatSchedule(BaseModel):
         """
         Set default company
         """
-        self.company = self.schedule.company
+        self.company_id = self.schedule.company_id
         super().save(*args, **kwargs)
 
 

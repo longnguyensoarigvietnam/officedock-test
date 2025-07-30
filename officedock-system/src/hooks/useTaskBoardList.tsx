@@ -108,6 +108,7 @@ const useTaskBoardList = (
     data: taskBoardList,
     refetch: refetchTaskBoardList,
     isFetched: isFetchedTaskBoards,
+    isFetching: isFetchingTaskBoards,
   } = useQuery({
     queryKey: isReadyToFetch
       ? ['getTaskBoardList', filter, ordering, statusList, orderingOptions]
@@ -135,6 +136,7 @@ const useTaskBoardList = (
     numberPages,
     refetchTaskBoardList,
     isFetchedTaskBoards,
+    isFetchingTaskBoards,
   };
 };
 

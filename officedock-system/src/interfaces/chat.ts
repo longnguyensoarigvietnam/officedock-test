@@ -10,11 +10,13 @@ export interface ChatMessageResponse {
     name: string;
     code: string;
     type: string;
-    participants: ChatParticipant;
+    participants: ChatParticipant[];
   };
   sender: {
     id: number;
     fullName: string;
+    avatar?: string | null;
+    avatarColor?: string;
     organizations?: {
       id: number;
       name: string;
@@ -72,9 +74,11 @@ export interface ChatMessageResponse {
     isAllDay: boolean;
   };
   chatFiles: ChatFileResponse[];
+  reply?: ChatMessageResponse;
   isEdited: boolean;
   createdAt: Date | string;
   deletedAt: Date | null;
+  bookmarkAt: Date | null;
   type: MessageType;
   mentions?: number[];
   reactions?: {
@@ -85,6 +89,7 @@ export interface ChatMessageResponse {
     id: number;
     title: string;
   }[];
+  quote: ChatMessageResponse[] | null;
 }
 
 export interface TaskUserListChat {
@@ -119,6 +124,8 @@ export interface OrganizationDetail {
 
 export interface ChatParticipant {
   id: number | null;
+  avatar?: string | null;
+  avatarColor?: string;
   fullName: string;
   organizations?: {
     id: number;
@@ -134,6 +141,7 @@ export interface ChatRoomDetail {
   type: string;
   memo: string;
   unreadMessages: number;
+  isMuted: boolean;
 }
 
 export interface ChatRoomItem {
@@ -146,6 +154,7 @@ export interface ChatRoomItem {
   lastMessageAt: string | null;
   participants: ChatParticipant[];
   isExisted?: boolean;
+  isMuted: boolean;
 }
 
 export interface WebSocketMessageData extends DataSkillReward {
@@ -196,4 +205,31 @@ export interface WebSocketMessageSortKanban {
 export interface DataChatRoomSocket {
   code: string;
   lastMessageAt: string | null;
+}
+
+export interface DataChatFileMemo {
+  id: number;
+  createdAt: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  originalFile: string;
+  chatMessageUuid: string;
+  chatMessageId: number;
+  uuid: string;
+}
+export interface ChatFileDetailResponse {
+  chatMessageId: number;
+  chatMessageUuid: string;
+  createdAt: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  id: number;
+  originalFile: string;
+  uuid: string;
+  files: {
+    nextFile: ChatFileDetailResponse | null;
+    previousFile: ChatFileDetailResponse | null;
+  };
 }

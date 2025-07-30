@@ -144,7 +144,7 @@ class SystemCompanyViewSet(BaseAPIViewSet, mixins.RetrieveModelMixin):
         """
         Override the default queryset to only return the company associated with the authenticated user.
         """
-        return super().get_queryset().filter(id=self.request.user.company.id)
+        return super().get_queryset().filter(id=self.request.user.company_id)
 
     @action(
         methods=["POST"],

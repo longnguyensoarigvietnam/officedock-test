@@ -79,8 +79,8 @@ class StatisticCategoryViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         Filtering skill by company
         """
-        company = self.request.user.company
-        queryset = super().get_queryset().filter(company=company)
+        company_id = self.request.user.company_id
+        queryset = super().get_queryset().filter(company_id=company_id)
 
         if self.action == "list":
             return queryset.filter(team__isnull=True).order_by("-id")
@@ -102,12 +102,12 @@ class StatisticCategoryViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer_data = serializer.validated_data
         uuid = serializer_data.get("uuid", None)
-        company = self.request.user.company
+        company_id = self.request.user.company_id
 
         # Check if a category with the same uuid already exists for the company
         if uuid and (
             existing_category := StatisticCategory.objects.filter(
-                uuid=uuid, company=company
+                uuid=uuid, company_id=company_id
             ).first()
         ):
             # Update the existing category (you can also update other fields if needed)
@@ -117,7 +117,7 @@ class StatisticCategoryViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             existing_category.save()
         else:
             # Create a new category if none exists
-            existing_category = serializer.save(company=company)
+            existing_category = serializer.save(company_id=company_id)
 
         return self.response_created(
             self.get_serializer(existing_category).data
@@ -182,8 +182,8 @@ class ManageSkillMapViewSet(
         """
         Filtering skill by company
         """
-        company = self.request.user.company
-        return super().get_queryset().filter(company=company)
+        company_id = self.request.user.company_id
+        return super().get_queryset().filter(company_id=company_id)
 
     def get_serializer(self, *args, **kwargs):
         """
@@ -277,7 +277,7 @@ class ManageSkillMapViewSet(
         user = request.user
         # FIXME: Check role permissions for get list organizations
         organizations = Organization.objects.filter(
-            company=user.company,
+            company_id=user.company_id,
         ).order_by("-created_at")
         if organization_id:
             organizations = organizations.filter(id=organization_id).all()
@@ -724,8 +724,10 @@ class SkillViewSet(
         """
         Filtering skill by company
         """
-        company = self.request.user.company
-        return super().get_queryset().filter(company=company).order_by("id")
+        company_id = self.request.user.company_id
+        return (
+            super().get_queryset().filter(company_id=company_id).order_by("id")
+        )
 
     def get_serializer_class(self, *args, **kwargs):
         """
@@ -1009,7 +1011,7 @@ class SkillViewSet(
         user = request.user
         # FIXME: Check role permissions for get list organizations
         organizations = Organization.objects.filter(
-            company=user.company,
+            company_id=user.company_id,
         ).order_by("-created_at")
         if organization_id:
             organizations = organizations.filter(id=organization_id).all()

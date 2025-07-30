@@ -8,6 +8,8 @@ import {
   useContext,
   useCallback,
 } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+
 import { AxiosError } from 'axios';
 import { debounce } from 'lodash';
 import { isSameDay } from 'date-fns';
@@ -19,14 +21,10 @@ import { EventClickArg } from '@fullcalendar/core';
 import multiMonthPlugin from '@fullcalendar/multimonth';
 import { Controller, useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from 'react-query';
-import { useSessionCache } from '@providers/SessionCacheProvider';
-
-import { useRouter, useSearchParams } from 'next/navigation';
 import resourceTimeGridPlugin from '@fullcalendar/resource-timegrid';
 import resourcePlugin from '@fullcalendar/resource';
 import scrollgridPlugin from '@fullcalendar/scrollgrid';
 import { getHolidaysOf } from 'japanese-holidays';
-import './styles/calendar.css';
 
 import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
@@ -43,6 +41,7 @@ import { EventListModal } from '@components/modals/EventListModal';
 import RangeSlider from '@components/common/RangeSlider';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import EventActionTypeModal from '@components/modals/EventActionTypeModal';
 
 import useDebounceText from '@hooks/useDebounceText';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
@@ -80,6 +79,7 @@ import { Profile } from '@interfaces/user';
 
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { TaskContext } from '@providers/TaskProvider';
 
@@ -96,17 +96,21 @@ import { apiRouters } from '@constants/routers';
 import {
   ActionsEvent,
   CalendarViewOptions,
+  EventActionType,
   EventCalendarType,
   EventParticipantType,
   EventWorkCategory,
   PermissionsSystem,
   SelectedEventOpenType,
   ServerStatusCode,
+  TaskRepetitiveValue,
   ViewOptions,
 } from '@constants/enums';
 import { DEFAULT_END_TIME, DEFAULT_START_TIME, NO_SETTING } from '@constants';
 
 import api from '@base/api';
+
+import './styles/calendar.css';
 
 const EventCalendar = () => {
   // Refs
@@ -127,6 +131,17 @@ const EventCalendar = () => {
   const [openConfirmEditEventModal, setOpenConfirmEditEventModal] =
     useState(false);
   const [openEventInfoModal, setOpenEventInfoModal] = useState<boolean>(false);
+  const [openEventActionTypeModal, setOpenEventActionTypeModal] = useState<{
+    status: boolean;
+    type: ActionsEvent | null;
+    showThisEventOption?: boolean;
+    showAllEventsOption?: boolean;
+  }>({
+    status: false,
+    type: ActionsEvent.EDIT,
+    showThisEventOption: true,
+    showAllEventsOption: true
+  });
 
   // Event list
   const [events, setEvents] = useState<EventCalendarDetail[]>([]);
@@ -154,6 +169,10 @@ const EventCalendar = () => {
     repeatScheduleId: number | string;
     openType: SelectedEventOpenType;
   } | null>(null);
+  const [eventActionType, setEventActionType] =
+    useState<EventActionType | null>(null);
+  const [isEditingRepetitiveFields, setIsEditingRepetitiveFields] =
+    useState<boolean>(false);
 
   // Display title
   const [displayYear, setDisplayYear] = useState<number>();
@@ -187,6 +206,7 @@ const EventCalendar = () => {
   const eventIdURL = searchParams.get('event');
   const views = searchParams.get('view');
   const eventDetailId = eventIdURL?.replace('event', '');
+  const repeatScheduleIdURL = searchParams.get('repeat-schedule');
 
   // Popup
   const [eventListModalInfo, setEventListModalInfo] =
@@ -1603,6 +1623,13 @@ const EventCalendar = () => {
   useEffect(() => {
     if (eventDetailId && dataEventEdit === undefined && actionType) {
       setActionEventClick(actionType);
+      if (repeatScheduleIdURL) {
+        setSelectedEventInfo({
+          eventId: eventDetailId.replace('event', ''),
+          repeatScheduleId: repeatScheduleIdURL,
+          openType: SelectedEventOpenType.MODAL,
+        });
+      }
 
       getDataDetailEvent({
         eventId: eventDetailId.replace('event', ''),
@@ -1613,7 +1640,7 @@ const EventCalendar = () => {
       setOpenCreateEventModal(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getDataDetailEvent, eventDetailId, actionType]);
+  }, [getDataDetailEvent, eventDetailId, actionType, repeatScheduleIdURL]);
 
   const handleDayCellMount = (info: { date: Date; el: HTMLElement }) => {
     const { date, el } = info;
@@ -2016,6 +2043,8 @@ const EventCalendar = () => {
         data.month && (data.month as OptionDropdownType).value != ''
           ? Number((data.month as OptionDropdownType).value)
           : null,
+      recurringEventOption: eventActionType || EventActionType.THIS_EVENT,
+      repeatScheduleId: Number(selectedEventInfo?.repeatScheduleId),
     });
   };
 
@@ -2027,104 +2056,47 @@ const EventCalendar = () => {
     'editEventCalendar',
     handleEditEventCalendar,
     {
-      onSuccess: async ({ data }) => {
+      onSuccess: async () => {
         handleRemoveEventParam();
         setOpenConfirmEditEventModal(false);
         setBackToEditing(false);
         setConfirmEventDataToEdit(undefined);
         setActionsEventMessage('');
-        queryClient.refetchQueries(['getTaskDurationDetail']);
+        setIsEditingRepetitiveFields(false);
         showToast({
           description: SUCCESS_UPDATE_MESSAGE,
         });
-        const isMyEvent = data.participants.find(
-          (participant: EventParticipant) => participant.id == session?.user.id,
-        )
-          ? true
-          : false;
-        const isSelectedUserEvent = data.participants.find(
-          (participant: EventParticipant) =>
-            selectedScheduleUserIds.includes(`${participant.id}`),
-        )
-          ? true
-          : false;
-        if (isMyEvent || isSelectedUserEvent) {
-          const checkShowMyEventResource =
-            data.participants?.find(
-              (participant: EventParticipant) =>
-                participant.id == session?.user.id,
-            ) && selectedScheduleUserIds.includes(String(session?.user.id));
-          setEvents((prevEvents) => {
-            const updatedEvents = [...prevEvents];
-            const exceptUpdatedEventList = updatedEvents.filter(
-              (event) => String(event.eventId) != String(data.id),
-            );
-            const newEventData =
-              data.repeatSchedules &&
-              data.repeatSchedules.map(
-                (schedule: {
-                  id: number;
-                  planEndDate: Date | null;
-                  planStartDate: Date | null;
-                  schedule: number;
-                  uuid: string;
-                }) => {
-                  const dataEndDate =
-                    schedule.planStartDate &&
-                    schedule.planEndDate &&
-                    ((new Date(schedule.planStartDate).toDateString() !==
-                      new Date(schedule.planEndDate).toDateString() &&
-                      data.isAllDay) ||
-                      isMidnight(new Date(schedule.planEndDate)))
-                      ? new Date(schedule.planEndDate).setDate(
-                          new Date(schedule.planEndDate).getDate() + 1,
-                        )
-                      : schedule.planEndDate;
-                  return {
-                    id: `${schedule.id}`,
-                    eventId: data.id,
-                    title: data.title,
-                    start: schedule.planStartDate,
-                    end: dataEndDate,
-                    allDay: data.isAllDay,
-                    type: EventCalendarType.SCHEDULE,
-                    isMyEvent: true,
-                    location: data.location,
-                    participants: data.participants,
-                    resourceIds: [
-                      ...(data.participants
-                        ?.filter(
-                          (participant: EventParticipant) =>
-                            participant.id !== session?.user.id,
-                        )
-                        ?.map(
-                          (participant: EventParticipant) => participant.id,
-                        ) ?? []),
-                      ...(checkShowMyEventResource
-                        ? [Number(session?.user.id)]
-                        : []),
-                    ],
-                  };
-                },
-              );
-            return [...exceptUpdatedEventList, ...newEventData];
-          });
-        } else {
-          setEvents((prevEvents) => {
-            const updatedEvents = [...prevEvents];
-            const filteredEvents = updatedEvents.filter(
-              (event) => String(event.eventId) !== String(data.id),
-            );
-            return filteredEvents;
+        queryClient.refetchQueries(['getTaskDurationDetail']);
+
+        const updatedUserIds: string[] = selectedScheduleUserIds
+          ? selectedScheduleUserIds.split(',').filter(Boolean)
+          : [];
+
+        if (calendarRef.current) {
+          const calendarApi = calendarRef.current.getApi();
+          const startDateISOString = formatQueryStartDateForCalendar(
+            calendarApi.view.activeStart,
+          );
+          const endDateISOString = formatQueryEndDateForCalendar(
+            calendarApi.view.activeEnd,
+          );
+
+          getEventCalendarByUsers({
+            userId: updatedUserIds.join(','),
+            startDate: startDateISOString,
+            endDate: endDateISOString,
+            keySearch,
           });
         }
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
+        setIsLoading(false);
       },
       onSettled: () => {
-        setIsLoading(false);
         setDataEventEdit(undefined);
+        setEventActionType(null);
+        setSelectedEventInfo(null);
       },
     },
   );
@@ -2132,18 +2104,11 @@ const EventCalendar = () => {
   // Delete specific event in popup
   const handleConfirmDeleteEventCalendar = (sendToChat: boolean) => {
     if (selectedEventInfo?.eventId && selectedEventInfo.repeatScheduleId) {
-      if (selectedEventInfo.openType == SelectedEventOpenType.MODAL) {
-        deleteEventInModal({
-          eventId: String(selectedEventInfo?.eventId),
-          sendToChat,
-        });
-      } else {
-        deleteSpecificEventInPopup({
-          eventId: String(selectedEventInfo?.eventId),
-          repeatScheduleId: selectedEventInfo.repeatScheduleId,
-          sendToChat,
-        });
-      }
+      deleteEventInModal({
+        eventId: String(selectedEventInfo?.eventId),
+        repeatScheduleId: selectedEventInfo.repeatScheduleId,
+        sendToChat,
+      });
     } else {
       deleteEventInModal({
         eventId: String(eventIdURL),
@@ -2152,59 +2117,13 @@ const EventCalendar = () => {
     }
   };
 
-  const handleDeleteSpecificEventInPopup = async (data: {
-    eventId: number | string;
-    repeatScheduleId: number | string;
-    sendToChat: boolean;
-  }) => {
-    return await api.delete(
-      `${apiRouters.DELETE_REPEAT_SCHEDULE(`${data.eventId}`)}?message=${encodeURIComponent(actionsEventMessage)}${data.sendToChat ? '&send_to_chat=true' : ''}${data.repeatScheduleId ? `&repeat_schedule_id=${data.repeatScheduleId}` : ''}`,
-    );
-  };
-
-  const { mutate: deleteSpecificEventInPopup } = useMutation(
-    'deleteSpecificEventInPopup',
-    handleDeleteSpecificEventInPopup,
-    {
-      onSuccess: (_data, variables) => {
-        setIdEventDelete(`${variables.eventId}event`);
-        handleRemoveEventParam();
-        setOpenConfirmDeleteEventModal(false);
-        setConfirmEventDataToEdit(undefined);
-        setBackToEditing(false);
-        setOpenEventInfoModal(false);
-        setActionsEventMessage('');
-        showToast({
-          description: SUCCESS_DELETE_MESSAGE,
-        });
-        setEvents((prevEvents) => {
-          const updatedEvents = [...prevEvents];
-          const filteredEvents = updatedEvents.filter(
-            (event) =>
-              String(event.id) !== String(selectedEventInfo?.repeatScheduleId),
-          );
-          return filteredEvents;
-        });
-        setSelectedEventInfo(null);
-        queryClient.refetchQueries(['getDataTaskHeaderList']);
-        queryClient.refetchQueries(['getTaskHeaderStart']);
-      },
-      onError: (error: AxiosError<any>) => {
-        showErrorToast(error, ERROR_DELETE_MESSAGE);
-        setSelectedEventInfo(null);
-      },
-      onSettled: () => {
-        setIsLoading(false);
-      },
-    },
-  );
-
   const handleDeleteEventInModal = async (data: {
     eventId: string;
+    repeatScheduleId?: number | string;
     sendToChat: boolean;
   }) => {
     return await api.delete(
-      `${apiRouters.SCHEDULE_DETAIL(data.eventId)}?message=${encodeURIComponent(actionsEventMessage)}${data.sendToChat ? '&send_to_chat=true' : ''}`,
+      `${apiRouters.SCHEDULE_DETAIL(data.eventId)}?message=${encodeURIComponent(actionsEventMessage)}${eventActionType ? `&recurring_event_option=${eventActionType}` : ''}${data.sendToChat ? '&send_to_chat=true' : ''}${data.repeatScheduleId ? `&repeat_schedule_id=${data.repeatScheduleId}` : ''}`,
     );
   };
 
@@ -2214,6 +2133,7 @@ const EventCalendar = () => {
     {
       onSuccess: (_data, variables) => {
         setIdEventDelete(`${variables.eventId}event`);
+        handleRemoveEventParam();
         setOpenConfirmDeleteEventModal(false);
         setConfirmEventDataToEdit(undefined);
         setBackToEditing(false);
@@ -2222,15 +2142,27 @@ const EventCalendar = () => {
         showToast({
           description: SUCCESS_DELETE_MESSAGE,
         });
-        setEvents((prevEvents) => {
-          const updatedEvents = [...prevEvents];
-          const filteredEvents = updatedEvents.filter(
-            (event) => String(event.eventId) !== String(eventIdURL),
+        const updatedUserIds: string[] = selectedScheduleUserIds
+          ? selectedScheduleUserIds.split(',').filter(Boolean)
+          : [];
+
+        if (calendarRef.current) {
+          const calendarApi = calendarRef.current.getApi();
+          const startDateISOString = formatQueryStartDateForCalendar(
+            calendarApi.view.activeStart,
           );
-          return filteredEvents;
-        });
+          const endDateISOString = formatQueryEndDateForCalendar(
+            calendarApi.view.activeEnd,
+          );
+
+          getEventCalendarByUsers({
+            userId: updatedUserIds.join(','),
+            startDate: startDateISOString,
+            endDate: endDateISOString,
+            keySearch,
+          });
+        }
         setSelectedEventInfo(null);
-        handleRemoveEventParam();
         queryClient.refetchQueries(['getDataTaskHeaderList']);
         queryClient.refetchQueries(['getTaskHeaderStart']);
         queryClient.refetchQueries(['getTaskDurationDetail']);
@@ -2238,9 +2170,10 @@ const EventCalendar = () => {
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_DELETE_MESSAGE);
         setSelectedEventInfo(null);
+        setIsLoading(false);
       },
       onSettled: () => {
-        setIsLoading(false);
+        setEventActionType(null);
       },
     },
   );
@@ -2397,11 +2330,6 @@ const EventCalendar = () => {
       const calendarApi = calendarRef.current.getApi();
       if (calendarApi) {
         calendarApi.updateSize();
-        const newDataTimeList = events.map((event) => {
-          return { ...event };
-        });
-        // Set data schedule
-        setEvents(newDataTimeList);
       }
     }
   }, [slotHeight, searchParams]);
@@ -2451,7 +2379,6 @@ const EventCalendar = () => {
     // Call the function after FullCalendar renders
     setTimeout(updateSlotLineColors, 100);
   }, [views]);
-
   return (
     <Fragment>
       <div className="flex mb-3 overflow-y-hidden pt-5" ref={containerRef}>
@@ -2876,6 +2803,7 @@ const EventCalendar = () => {
           calendarView={searchParams.get('view')}
           action={actionEventClick}
           authenticatedUser={authenticatedUser}
+          setIsEditingRepetitiveFields={setIsEditingRepetitiveFields}
           onClose={() => {
             handleRemoveEventParam();
             setDataEventEdit(undefined);
@@ -2883,6 +2811,11 @@ const EventCalendar = () => {
             setOpenCreateEventModal(false);
             setBackToEditing(false);
             setDefaultCreateStartDate(undefined);
+            setOpenEventActionTypeModal({
+              status: false,
+              type: null,
+            });
+            setIsEditingRepetitiveFields(false);
           }}
           onSubmit={(data) => {
             setConfirmEventDataToCreate(data);
@@ -2893,15 +2826,84 @@ const EventCalendar = () => {
           onEdit={(data) => {
             setConfirmEventDataToEdit(data);
             setOpenCreateEventModal(false);
-            setOpenConfirmEditEventModal(true);
+            if (
+              String((data.repeatType as OptionDropdownType).value) !=
+              TaskRepetitiveValue.ONCE
+            ) {
+              isEditingRepetitiveFields
+                ? setEventActionType(EventActionType.THIS_AND_FOLLOWING_EVENTS)
+                : setEventActionType(EventActionType.THIS_EVENT);
+              setOpenEventActionTypeModal({
+                status: true,
+                type: ActionsEvent.EDIT,
+                showThisEventOption: !isEditingRepetitiveFields,
+                showAllEventsOption: isEditingRepetitiveFields
+              });
+            } else {
+              setOpenConfirmEditEventModal(true);
+            }
           }}
           onDelete={(data) => {
             setConfirmEventDataToEdit(data);
             setOpenCreateEventModal(false);
-            setOpenConfirmDeleteEventModal(true);
+            if (
+              String((data.repeatType as OptionDropdownType).value) !=
+              TaskRepetitiveValue.ONCE
+            ) {
+              setEventActionType(EventActionType.THIS_EVENT);
+              setOpenEventActionTypeModal({
+                status: true,
+                type: ActionsEvent.DELETE,
+                showThisEventOption: true,
+                showAllEventsOption: true
+              });
+            } else {
+              setOpenConfirmDeleteEventModal(true);
+            }
           }}
           creationDataEventCalendar={creationDataEventCalendar}
           backToEditing={backToEditing}
+        />
+      )}
+      {openEventActionTypeModal.status && openEventActionTypeModal.type && (
+        <EventActionTypeModal
+          open={openEventActionTypeModal.status}
+          openEventActionTypeModal={openEventActionTypeModal}
+          eventActionType={eventActionType}
+          setEventActionType={setEventActionType}
+          onCancel={() => {
+            if (selectedEventInfo?.openType == SelectedEventOpenType.MODAL) {
+              setOpenCreateEventModal(true);
+              setOpenConfirmEditEventModal(false);
+              setDataEventEdit(confirmEventDataToEdit);
+              setBackToEditing(true);
+            } else {
+              setDataEventEdit(undefined);
+              setSelectedEventInfo(null);
+              setOpenCreateEventModal(false);
+              setBackToEditing(false);
+              setDefaultCreateStartDate(undefined);
+              setIsEditingRepetitiveFields(false);
+            }
+
+            setActionsEventMessage('');
+            setEventActionType(EventActionType.THIS_EVENT);
+            setOpenEventActionTypeModal({
+              status: false,
+              type: null,
+            });
+          }}
+          onConfirm={() => {
+            setOpenEventActionTypeModal({
+              status: false,
+              type: null,
+            });
+            if (openEventActionTypeModal.type == ActionsEvent.EDIT) {
+              setOpenConfirmEditEventModal(true);
+            } else {
+              setOpenConfirmDeleteEventModal(true);
+            }
+          }}
         />
       )}
       {openConfirmCreateEventModal && (
@@ -3122,8 +3124,18 @@ const EventCalendar = () => {
               startTime: convertToTimeString(`${data.startDate}`),
             });
             setOpenCreateEventModal(false);
-            setOpenConfirmDeleteEventModal(true);
             setOpenEventInfoModal(false);
+            if (String(data.repeatType) != TaskRepetitiveValue.ONCE) {
+              setEventActionType(EventActionType.THIS_EVENT);
+              setOpenEventActionTypeModal({
+                status: true,
+                type: ActionsEvent.DELETE,
+                showThisEventOption: true,
+                showAllEventsOption: true
+              });
+            } else {
+              setOpenConfirmDeleteEventModal(true);
+            }
           }}
         />
       )}

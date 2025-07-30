@@ -60,12 +60,12 @@ const TaskListStatisticTeamTags = ({
     selectedMedium,
     selectedOrganization,
     selectedSmall,
-    selectedTags,
     listMemberTeam,
     isSkeletonTagTeamTask,
     isSkeletonTagTeamTaskCompare,
     currentPage,
     dataMediumCalendar,
+    orderingOptions,
     setDataMediumCalendar,
     setCurrentPage,
   } = useContext(StatisticTeamTagsStateContext);
@@ -74,6 +74,7 @@ const TaskListStatisticTeamTags = ({
     useContext(GlobalStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
+  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
 
   // Value
   const [totalPages, setTotalPages] = useState<number>(1);
@@ -120,12 +121,9 @@ const TaskListStatisticTeamTags = ({
       page: currentPage,
       ordering: ordering,
       pageSize: pageSize,
-      tagIds: selectedTags,
+      tagIds: orderingOptions?.tag_ids,
       user_id: selectedMember as number,
-      user_ids: listMemberTeam.map((item) => ({
-        label: item.fullName,
-        value: item.id,
-      })),
+      user_ids: orderingOptions?.user_ids,
     },
     conditions: [listMemberTeam.length !== 0],
     onSuccess: (data) => {
@@ -158,13 +156,10 @@ const TaskListStatisticTeamTags = ({
       page: currentPage,
       ordering: ordering,
       pageSize: pageSize,
-      tagIds: selectedTags,
+      tagIds: orderingOptions?.tag_ids,
       isCompare: isCheckCompare && isShowCompare,
       user_id: selectedMember as number,
-      user_ids: listMemberTeam.map((item) => ({
-        label: item.fullName,
-        value: item.id,
-      })),
+      user_ids: orderingOptions?.user_ids,
     },
     conditions: [listMemberTeam.length !== 0],
 
@@ -235,7 +230,10 @@ const TaskListStatisticTeamTags = ({
             <div>
               <div className="flex justify-between w-full mb-[30px] px-[30px]">
                 {/* Filter tag */}
-                <FilterTagTeam />
+                <FilterTagTeam
+                  open={isOpenModalFilter}
+                  onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
+                />
               </div>
             </div>
             <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">

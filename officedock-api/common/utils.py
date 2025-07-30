@@ -180,9 +180,9 @@ def get_total_unread_messages(user):
         return 0
     if hasattr(user, "user_id"):
         user = User.objects.filter(id=user.user_id).first()
-    total_unread_messages = user.chat_rooms_participants.filter(
-        hidden_at=None
-    ).aggregate(Sum("unread_messages"))["unread_messages__sum"]
+    total_unread_messages = user.chat_rooms_participants.aggregate(
+        Sum("unread_messages")
+    )["unread_messages__sum"]
 
     return total_unread_messages or 0
 

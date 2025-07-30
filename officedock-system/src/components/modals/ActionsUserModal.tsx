@@ -7,7 +7,6 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import {
   Controller,
@@ -23,6 +22,8 @@ import Drawer from '@components/common/Drawers';
 import Checkbox from '@components/common/Checkbox';
 import Dropdown from '@components/common/Dropdown';
 import ErrorMessage from '@components/common/ErrorMessage';
+
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { CreateUserFormData, User } from '@interfaces/user';
@@ -116,7 +117,7 @@ const ActionsUserModal = ({
     handleSubmit,
     getValues,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<CreateUserFormData>({
     mode: 'onSubmit',
     defaultValues: {
@@ -125,7 +126,7 @@ const ActionsUserModal = ({
       isTwoFactorAuth: true,
     },
   });
-
+  // console.log(dirtyFields)
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'organizations',
@@ -265,11 +266,11 @@ const ActionsUserModal = ({
 
   // If have option selected or remove option selected, update option for unselected options
   useEffect(() => {
-    const selectedValues = selectedOrganizationOptions.map(
-      (element) => element.value,
-    );
+    const selectedValues = selectedOrganizationOptions
+      .filter((element) => element?.value)
+      .map((element) => element.value);
     const unSelectedOptions = originalOrganizationOptions.filter(
-      (option) => !selectedValues.includes(option.value),
+      (option) => !selectedValues.includes(option?.value),
     );
     setUnSelectedOrganizationOptions(unSelectedOptions);
   }, [originalOrganizationOptions, selectedOrganizationOptions]);
@@ -347,7 +348,9 @@ const ActionsUserModal = ({
       onCreate && onCreate(data as CreateUserFormData, isOptionEmail);
     }
     if (action === ActionsEvent.EDIT) {
-      onEdit && onEdit(data as CreateUserFormData, isOptionEmail);
+      !isDirty
+        ? onClose()
+        : onEdit && onEdit(data as CreateUserFormData, isOptionEmail);
     }
   };
 
@@ -710,7 +713,9 @@ const ActionsUserModal = ({
                                 item.value != watch('mainOrganization')?.value,
                             ),
                           );
-                          setValue('mainOrganization', undefined);
+                          setValue('mainOrganization', undefined, {
+                            shouldDirty: true,
+                          });
                         }}>
                         削除
                       </Button>

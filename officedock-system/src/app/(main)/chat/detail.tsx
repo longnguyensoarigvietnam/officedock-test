@@ -50,6 +50,9 @@ import { CustomReaction } from '@components/chat/CustomIcon';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import ErrorUploadFileValidationModal from '@components/modals/ErrorUploadFileValidationModal';
 import MemoDataChat from '@components/chat/MemoDataChat';
+import { MsgQuote } from '@components/chat/CustomMsgQuote';
+import { MsgReply } from '@components/chat/CustomMsgReply';
+import FilePreview from '@components/custom/FilePreview';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -74,6 +77,8 @@ import {
   PermissionsSystem,
   ReactionIconValue,
   ItemStartType,
+  TaskRepetitiveValue,
+  EventActionType,
 } from '@constants/enums';
 import {
   ERROR_DELETE_MESSAGE,
@@ -98,13 +103,17 @@ import {
   getChunkSize,
   hasPermissionInArray,
   trimUnnecessaryLineBreaks,
+  extractAndRemoveMsgQuotes,
 } from '@utils';
 
 import {
   ChatDashboardMember,
+  ChatFileResponse,
   ChatMessageResponse,
   ChatParticipant,
+  ChatRoomDetail,
   ChatRoomItem,
+  DataChatFileMemo,
   WebSocketMessageData,
 } from '@interfaces/chat';
 import { BasePagination, OptionDropdownType } from '@interfaces/common';
@@ -123,8 +132,20 @@ import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import api from '@base/api';
+import EventActionTypeModal from '@components/modals/EventActionTypeModal';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
+import ActionMuteChatModal from '@components/modals/ActionMuteChatModal';
+import { MsgQuoteText } from '@components/chat/CustomMsgQuoteText';
 
 interface dataProps {
+  chatRoomCode: string;
+  dataChatList: ChatRoomItem[];
+  searchChatMsg: string;
   clientId: string;
   lastItemId: number | null | undefined;
   hasMoreDetail: boolean;
@@ -138,12 +159,11 @@ interface dataProps {
   setHasMoreDetail: React.Dispatch<React.SetStateAction<boolean>>;
   setHasMoreDetailOnScrollDown: React.Dispatch<React.SetStateAction<boolean>>;
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
-  handleRemoveChatRoomParam: () => void;
-  chatRoomCode: string;
-  dataChatList: ChatRoomItem[];
-  searchChatMsg: string;
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
-  setFilteredChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
+  handleRemoveChatRoomParam: () => void;
+  setRoomNameSearchResults: React.Dispatch<
+    React.SetStateAction<ChatRoomItem[]>
+  >;
 }
 const ChatDetail = ({
   clientId,
@@ -157,7 +177,7 @@ const ChatDetail = ({
   searchChatMsg,
   hasMoreDetailOnScrollDown,
   setHasMoreDetailOnScrollDown,
-  setFilteredChatList,
+  setRoomNameSearchResults,
   setHasMoreDetail,
   setLastItemId,
   setDataChatList,
@@ -230,13 +250,36 @@ const ChatDetail = ({
   const { creationDataEventCalendar } = useCreationDataEventCalendar({});
   const [confirmEventDataToEdit, setConfirmEventDataToEdit] =
     useState<EventEditFormData>();
+  const [openEventActionTypeModal, setOpenEventActionTypeModal] = useState<{
+    status: boolean;
+    type: ActionsEvent | null;
+    showThisEventOption?: boolean;
+    showAllEventsOption?: boolean;
+  }>({
+    status: false,
+    type: ActionsEvent.EDIT,
+    showThisEventOption: true,
+    showAllEventsOption: true,
+  });
+  const [eventActionType, setEventActionType] =
+    useState<EventActionType | null>(null);
+  const [isEditingRepetitiveFields, setIsEditingRepetitiveFields] =
+    useState<boolean>(false);
 
   // Delete / update messages
   const [msgIdDeleted, setMsgIdDeleted] = useState<string>();
   const [msgIdUpdated, setMsgIdUpdated] = useState<string>();
   const [msgEditing, setMsgEditing] = useState<string | undefined>();
-  const { refetchChatRoomDetail, chatRoomDetail } = useChatRoomDetail({
+  const [chatRoomDetail, setChatRoomDetail] = useState<ChatRoomDetail>();
+  const { refetchChatRoomDetail } = useChatRoomDetail({
     code: `${chatRoomCode}`,
+    onSuccess: (data) => {
+      if (data) {
+        setChatRoomDetail(data);
+      } else {
+        setChatRoomDetail(undefined);
+      }
+    },
   });
 
   // User info
@@ -324,7 +367,25 @@ const ChatDetail = ({
   const typeDetail = searchParams.get('type');
   const taskDetailId = searchParams.get('task');
 
+  const [dataFileAddList, setDataFileAddList] = useState<DataChatFileMemo[]>(
+    [],
+  );
+
   const controllerRef = useRef<AbortController | null>(null);
+  // Quote message
+  const quoteButtonRef = useRef<HTMLButtonElement | null>(null);
+  const lastSelectedMessageIdRef = useRef<string | null>(null);
+
+  // Preview files
+  const [dataPreviewFile, setDataPreviewFile] = useState<{
+    msgId: string;
+    file: ChatFileResponse;
+    user: ChatDashboardMember;
+    createAt: string;
+  } | null>(null);
+
+  // Action group
+  const [showModalMuteChat, setShowModalMuteChat] = useState(false);
 
   // Scroll to selected message
   useEffect(() => {
@@ -371,6 +432,40 @@ const ChatDetail = ({
       );
       return response;
     }
+  };
+
+  // Delete message
+  const postActionMuteChat = async () => {
+    setIsLoading(true);
+    const { data: response } = await api.post(
+      apiRouters.MUTE_CHAT(`${chatRoomDetail?.code}`),
+    );
+    return response;
+  };
+  const { mutate: actionMuteChat, isLoading: isLoadingMute } = useMutation(
+    postActionMuteChat,
+    {
+      onSuccess: async () => {},
+      onError: () => {},
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+  const handleConfirmMuteChat = (data: boolean) => {
+    setChatRoomDetail((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        isMuted: data,
+      };
+    });
+    setDataChatList((prev) =>
+      prev.map((item) =>
+        item.code === chatRoomDetail?.code ? { ...item, isMuted: data } : item,
+      ),
+    );
+    actionMuteChat();
   };
 
   const { mutate: getDataListMessages } = useMutation(
@@ -661,6 +756,9 @@ const ChatDetail = ({
     extensions: [
       Document,
       TaskQuote,
+      MsgQuote,
+      MsgQuoteText,
+      MsgReply,
       Paragraph.extend({
         addAttributes() {
           return {
@@ -926,6 +1024,25 @@ const ChatDetail = ({
     },
     [setDataChatList, handleRemoveChatRoomParam, chatRoomCode],
   );
+  useEffect(() => {
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    document.addEventListener('dragover', handleDragOver);
+    document.addEventListener('drop', handleDrop);
+
+    return () => {
+      document.removeEventListener('dragover', handleDragOver);
+      document.removeEventListener('drop', handleDrop);
+    };
+  }, []);
 
   // Socket
   useEffect(() => {
@@ -1087,14 +1204,18 @@ const ChatDetail = ({
     data,
     uuid,
     mentionIds,
+    quote,
     files,
     fileUuids,
+    replyUuid,
   }: {
     data: string;
     uuid: string;
     mentionIds: number[];
+    quote: string[];
     files: File[];
     fileUuids: string[];
+    replyUuid?: string;
   }) => {
     const totalChunks = files.reduce((acc, file) => {
       const chunkSize = getChunkSize(file.size);
@@ -1125,8 +1246,16 @@ const ChatDetail = ({
     formData.append('message', data);
     formData.append('uuid', uuid);
     formData.append('clientId', clientId);
+
+    if (replyUuid) {
+      formData.append('replyUuid', replyUuid);
+    }
+    if (quote.length > 0) {
+      quote.forEach((id) => formData.append('quote', id.toString()));
+    }
     mentionIds.forEach((id) => formData.append('mentionIds', id.toString()));
     fileUuids.forEach((id) => formData.append('fileUuids', id.toString()));
+
     try {
       const { data: response } = await api.post(
         apiRouters.CHAT_MESSAGES(`${chatRoomCode}`),
@@ -1145,11 +1274,19 @@ const ChatDetail = ({
   };
 
   const { mutate: handleSendMsgChat } = useMutation(postSendMsg, {
-    onSuccess: async (_data, variables) => {
+    onSuccess: async (data, variables) => {
       setUploadFileStatus((prev) => ({
         ...prev,
         [variables.uuid]: { progress: 100 },
       }));
+      setDataFileAddList(
+        data.chatFiles.map((item: any) => ({
+          ...item,
+          chatMessageUuid: data.uuid,
+          chatMessageId: data.id,
+          originalFile: item.compressedFile,
+        })),
+      );
     },
     onError: (error: AxiosError<any>) => {
       setUploadFileStatus({});
@@ -1191,12 +1328,23 @@ const ChatDetail = ({
         uuid: file.uuid,
       };
     });
+    const { filterMsg, replyUuid, allMsgIds } =
+      extractAndRemoveMsgQuotes(newMsg);
+    let matchedMessagesQuote: ChatMessageResponse[] = [];
+
+    if (allMsgIds && allMsgIds.length > 0) {
+      matchedMessagesQuote = dataMessageDetail.filter((item) =>
+        allMsgIds.includes(item.uuid),
+      );
+    }
+
     setDataMessageDetail([
       {
         uuid: uuidMsg,
-        message: newMsg,
+        message: filterMsg,
         createdAt: getCurrentTimeInJapan(),
         deletedAt: null,
+        bookmarkAt: null,
         type: MessageType.MESSAGE,
         isEdited: false,
         task: null,
@@ -1217,6 +1365,8 @@ const ChatDetail = ({
         mentions: mentionIds,
         isBookmark: false,
         chatFiles: chatUploadFiles,
+        quote: allMsgIds && allMsgIds.length > 0 ? matchedMessagesQuote : null,
+        // TODO: Update sava data msg detail of reply in onsuccess API "reply"
       },
 
       ...dataMessageDetail,
@@ -1234,12 +1384,15 @@ const ChatDetail = ({
     if (uploadFiles.length > 0) {
       setIsChatFilesUploading(true);
     }
+    const quote = matchedMessagesQuote.map((msg) => msg.uuid);
     handleSendMsgChat({
-      data: newMsg,
+      data: filterMsg,
       uuid: uuidMsg,
       mentionIds,
       files: uploadFiles.map((file) => file.file),
       fileUuids: uploadFiles.map((file) => file.uuid),
+      replyUuid: replyUuid ? replyUuid : undefined,
+      quote: quote,
     });
   };
 
@@ -1605,6 +1758,7 @@ const ChatDetail = ({
         data.month && (data.month as OptionDropdownType).value != ''
           ? Number((data.month as OptionDropdownType).value)
           : null,
+      recurringEventOption: eventActionType || EventActionType.THIS_EVENT,
     });
   };
 
@@ -1630,6 +1784,7 @@ const ChatDetail = ({
       },
       onSettled: () => {
         setIsLoading(false);
+        setEventActionType(null);
       },
     },
   );
@@ -1680,7 +1835,7 @@ const ChatDetail = ({
     sendToChat: boolean;
   }) => {
     return await api.delete(
-      `${apiRouters.SCHEDULE_DETAIL(data.id)}?message=${encodeURIComponent(actionsEventMessage)}${data.sendToChat ? '&send_to_chat=true' : ''}`,
+      `${apiRouters.SCHEDULE_DETAIL(data.id)}?message=${encodeURIComponent(actionsEventMessage)}${eventActionType ? `&recurring_event_option=${eventActionType}` : ''}${data.sendToChat ? '&send_to_chat=true' : ''}`,
     );
   };
 
@@ -1702,6 +1857,7 @@ const ChatDetail = ({
       },
       onSettled: () => {
         setIsLoading(false);
+        setEventActionType(null);
       },
     },
   );
@@ -1995,6 +2151,34 @@ const ChatDetail = ({
     },
   );
 
+  // Reply Msg
+  const handleReplyMsg = ({
+    user,
+    replyUuid,
+  }: {
+    user: {
+      id: number;
+      name: string;
+    };
+    replyUuid: string;
+  }) => {
+    if (!editor) return;
+
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: 'msgReply',
+        attrs: {
+          id: replyUuid,
+          title: `@${user.name}`,
+        },
+      })
+      .run();
+
+    editor.chain().focus().insertContent({ type: 'paragraph' }).run();
+  };
+
   // Quote task
   const handleQuoteTaskUser = (data: { id: number; title: string }[]) => {
     if (!editor) return;
@@ -2019,6 +2203,123 @@ const ChatDetail = ({
       editor.chain().focus().insertContent({ type: 'paragraph' }).run();
     });
   };
+
+  // Quote msg
+  const handleQuoteMsgUserText = useCallback(
+    (data: { uuid: string; title: string }) => {
+      if (!editor) return;
+
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'msgQuoteText',
+          attrs: {
+            id: data.uuid.toString(),
+            title: data.title,
+          },
+        })
+        .run();
+
+      editor.chain().focus().insertContent({ type: 'paragraph' }).run();
+    },
+    [editor],
+  );
+  const handleQuoteMsgIcon = (data: { uuid: string; title: string }) => {
+    if (!editor) return;
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: 'msgQuote',
+        attrs: {
+          id: data.uuid.toString(),
+          title: data.title,
+        },
+      })
+      .run();
+
+    editor.chain().focus().insertContent({ type: 'paragraph' }).run();
+  };
+
+  useEffect(() => {
+    const handleMouseUp = () => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed) {
+        quoteButtonRef.current?.remove();
+        quoteButtonRef.current = null;
+        lastSelectedMessageIdRef.current = null;
+        return;
+      }
+
+      const text = selection.toString();
+      if (!text.trim()) {
+        quoteButtonRef.current?.remove();
+        quoteButtonRef.current = null;
+        lastSelectedMessageIdRef.current = null;
+        return;
+      }
+
+      // 🔍 Get the ID of the chat containing the highlighted text
+      const anchorNode = selection.anchorNode;
+      const parent = anchorNode?.parentElement?.closest('[data-id]');
+      const id = parent?.getAttribute('data-id');
+      if (!id) return;
+      lastSelectedMessageIdRef.current = id || null;
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+
+      let button = quoteButtonRef.current;
+      if (!button) {
+        button = document.createElement('button');
+        button.innerHTML = `
+        <span style="display: inline-flex; align-items: center; gap: 6px;">
+          <img src="/icons/quotation.svg" width="fit-content" height="fit-content"/>
+          <span>引用</span>
+        </span>
+      `;
+        button.style.position = 'absolute';
+        button.style.zIndex = '9999';
+        button.style.width = '68px';
+        button.style.height = '30px';
+        button.style.justifyContent = 'center';
+        button.style.background = 'white';
+        button.style.color = 'black';
+        button.style.fontSize = '14px';
+        button.style.fontWeight = '400';
+        button.style.borderRadius = '100px';
+        button.style.border = 'none';
+        button.style.cursor = 'pointer';
+        button.style.boxShadow = '0px 4px 8px 0px #0000000F';
+        button.onmousedown = (e) => e.preventDefault();
+        button.onclick = () => {
+          handleQuoteMsgUserText({
+            uuid: lastSelectedMessageIdRef.current || '',
+            title: text,
+          });
+
+          button?.remove();
+          quoteButtonRef.current = null;
+          lastSelectedMessageIdRef.current = null;
+        };
+        document.body.appendChild(button);
+        quoteButtonRef.current = button;
+      }
+
+      button.style.top = `${rect.top + window.scrollY - 45}px`;
+      button.style.left = `${
+        rect.right + window.scrollX - button.offsetWidth
+      }px`;
+    };
+
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mouseup', handleMouseUp);
+      quoteButtonRef.current?.remove();
+      quoteButtonRef.current = null;
+      lastSelectedMessageIdRef.current = null;
+    };
+  }, [handleQuoteMsgUserText]);
 
   const handleSetParam = ({
     id,
@@ -2287,7 +2588,7 @@ const ChatDetail = ({
       }
       return newDataChatList;
     });
-    setFilteredChatList((prevFilterChatList) => {
+    setRoomNameSearchResults((prevFilterChatList) => {
       const newFilterChatList = [...prevFilterChatList];
       const chatRoomIndex = newFilterChatList.findIndex(
         (room) => room.code == chatRoomCode,
@@ -2349,14 +2650,22 @@ const ChatDetail = ({
         <>
           <div
             className="flex relative  flex-col flex-grow  !bg-[#F8FAFC] !h-[100vh]"
-            onClick={handleResetChatRoomNotification}>
+            onClick={() => {
+              if (
+                dataMessageDetail?.length > 0 &&
+                chatRoomNotifications &&
+                chatRoomNotifications.notifications > 0
+              ) {
+                handleResetChatRoomNotification();
+              }
+            }}>
             {/* Header */}
             <div
               className="flex justify-between items-center px-4 py-2 min-h-[78px] !w-full border-b-[2px] text-white"
               style={{
                 background: 'linear-gradient(to right, #0E8DC5, #0D6FBA)',
               }}>
-              <div className={`flex items-center w-[60%] gap-2`}>
+              <div className={`flex items-center w-[62%] gap-2`}>
                 {chatRoomDetail && (
                   <>
                     <div className="!min-w-[48px]">
@@ -2366,7 +2675,7 @@ const ChatDetail = ({
                       )}
                     </div>
                     <p
-                      className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-[100%]' : 'max-w-[calc(100%_-_370px)]'}   ml-3`}
+                      className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-[100%]' : 'max-w-[calc(100%_-_360px)]'}   ml-3`}
                       style={{
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
@@ -2443,6 +2752,15 @@ const ChatDetail = ({
                             </Button>
                           </div>
                         </DynamicTooltip>
+                        {chatRoomDetail?.isMuted && (
+                          <div className={``}>
+                            <ImageRound
+                              className={` w-fit h-fit hover:cursor-pointer`}
+                              src="/icons/mute-white.svg"
+                              name="mute icon"
+                            />
+                          </div>
+                        )}
                       </div>
                     )}
                 </div>
@@ -2482,31 +2800,91 @@ const ChatDetail = ({
                         ChatRoomType.TASK,
                         ChatRoomType.SKILL,
                         ChatRoomType.CALENDAR,
+                        ChatRoomType.PRIVATE,
                       ].map(
                         (type) =>
                           chatRoomDetail?.code == chatRoomCode &&
                           chatRoomDetail?.type == type && (
-                            <DynamicTooltip
-                              content={'設定'}
-                              key={type}
-                              placement="left"
-                              customOffset={{
-                                left: -40,
-                              }}>
-                              <div>
-                                <ImageRound
-                                  className="w-[26px] h-[26px] hover:cursor-pointer"
-                                  src="/icons/setting-chat.svg"
-                                  border="full"
-                                  name="Setting icon"
-                                  onClick={() => {
-                                    setOpenSettingBox(true);
-                                    // Refetch to get the latest room name
-                                    refetchChatRoomDetail()
-                                  }}
-                                />
-                              </div>
-                            </DynamicTooltip>
+                            <Popover key={type} className="relative">
+                              {() => (
+                                <>
+                                  <PopoverButton
+                                    className={`flex w-full px-3 py-2 items-center rounded-md focus:outline-none`}>
+                                    <div>
+                                      <DynamicTooltip
+                                        content={'設定'}
+                                        placement="left"
+                                        customOffset={{
+                                          left: -40,
+                                        }}>
+                                        <ImageRound
+                                          className="w-[26px] h-[26px] hover:cursor-pointer"
+                                          src="/icons/setting-chat.svg"
+                                          border="full"
+                                          name="Setting icon"
+                                        />
+                                      </DynamicTooltip>
+                                    </div>
+                                  </PopoverButton>
+                                  <Transition
+                                    as={Fragment}
+                                    enter="transition ease-out duration-200"
+                                    enterFrom="opacity-0 translate-y-1"
+                                    enterTo="opacity-100 translate-y-0"
+                                    leave="transition ease-in duration-150"
+                                    leaveFrom="opacity-100 translate-y-0"
+                                    leaveTo="opacity-0 translate-y-1">
+                                    <PopoverPanel
+                                      style={{
+                                        boxShadow: '0px 2px 8px 0px #0000001A',
+                                      }}
+                                      className="absolute bg-[#5B6770] py-[6px] rounded-md text-white text-sm  font-medium  top-10 right-0 z-10  transform">
+                                      <div
+                                        className={`${
+                                          chatRoomDetail?.type ==
+                                          ChatRoomType.PRIVATE
+                                            ? 'w-[160px]'
+                                            : 'w-[126px]'
+                                        }`}>
+                                        {chatRoomDetail?.type !=
+                                          ChatRoomType.PRIVATE && (
+                                          <div
+                                            className="py-[10px] px-[14px] cursor-pointer hover:opacity-70"
+                                            onClick={() => {
+                                              setOpenSettingBox(true);
+                                              // Refetch to get the latest room name
+                                              refetchChatRoomDetail();
+                                            }}>
+                                            編集
+                                          </div>
+                                        )}
+
+                                        <div
+                                          onClick={() =>
+                                            setShowModalMuteChat(true)
+                                          }
+                                          className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
+                                          通知
+                                        </div>
+                                        {chatRoomDetail?.type !=
+                                          ChatRoomType.PRIVATE && (
+                                          <div className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
+                                            グループを退会
+                                          </div>
+                                        )}
+                                        <div className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
+                                          {chatRoomDetail?.type !=
+                                          ChatRoomType.PRIVATE
+                                            ? 'グループ'
+                                            : '個人チャット'}
+                                          を削除
+                                        </div>
+                                      </div>
+                                    </PopoverPanel>
+                                  </Transition>
+                                </>
+                              )}
+                            </Popover>
                           ),
                       )}
                     </>
@@ -2522,21 +2900,33 @@ const ChatDetail = ({
                   className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || chatRoomDetail?.type == ChatRoomType.CALENDAR ? 'h-[calc(100vh_-_170px)]' : 'h-[calc(100vh_-_386px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex pr-0 flex-col-reverse scroll-smooth`}>
                   {isLoadingNewer && (
                     <div className="flex  flex-col items-start ml-3">
-                      <RowSkeleton className="!h-[30px] w-[700px] mb-2" />
-                      <RowSkeleton className="!h-[50px] w-[600px] mb-2" />
+                      <RowSkeleton
+                        className={`!h-[30px]  ${isExtendMoreData ? 'w-[380px]' : 'w-[700px]'}  mb-2`}
+                      />
+                      <RowSkeleton
+                        className={`!h-[50px] ${isExtendMoreData ? 'w-[280px]' : 'w-[600px]'} mb-2`}
+                      />
                     </div>
                   )}
                   <div className="h-[calc(100vh)] mt-3 w-full bg-[rgb(229, 231, 235)] relative">
                     <div>
                       {initialLoad ? (
                         <div className="flex flex-col items-start ml-3">
-                          <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
-                          <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
-                          <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
-                          <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
+                          <RowSkeleton
+                            className={`!h-[100px] ${isExtendMoreData ? 'w-[180px]' : 'w-[500px]'} mb-2`}
+                          />
+                          <RowSkeleton
+                            className={`!h-[200px] ${isExtendMoreData ? 'w-[280px]' : 'w-[600px]'} mb-2`}
+                          />
+                          <RowSkeleton
+                            className={`!h-[100px] ${isExtendMoreData ? 'w-[180px]' : 'w-[500px]'} mb-2`}
+                          />
+                          <RowSkeleton
+                            className={`!h-[200px] ${isExtendMoreData ? 'w-[280px]' : 'w-[600px]'} mb-2`}
+                          />
                           <RowSkeleton
                             numberOfRows={4}
-                            className="!h-[50px] w-[700px]"
+                            className={`!h-[50px] ${isExtendMoreData ? 'w-[380px]' : 'w-[700px]'}`}
                           />
                         </div>
                       ) : (
@@ -2574,7 +2964,13 @@ const ChatDetail = ({
                             setOpenConfirmDeleteModal={
                               setOpenConfirmDeleteModal
                             }
+                            // Quote msg
+                            handleQuoteMsgIcon={handleQuoteMsgIcon}
                             setMsgIdUpdated={setMsgIdUpdated}
+                            // Preview File
+                            setDataPreviewFile={setDataPreviewFile}
+                            // Reply msg
+                            handleReplyMsg={handleReplyMsg}
                             handleActionEditTask={handleActionEditTask}
                             handleConfirmUpdateMsg={handleConfirmUpdateMsg}
                             handleConfirmGetDataDetailEvent={
@@ -2635,7 +3031,13 @@ const ChatDetail = ({
                             setOpenConfirmDeleteModal={
                               setOpenConfirmDeleteModal
                             }
+                            // Quote msg
+                            handleQuoteMsgIcon={handleQuoteMsgIcon}
                             setMsgIdUpdated={setMsgIdUpdated}
+                            // Preview File
+                            setDataPreviewFile={setDataPreviewFile}
+                            // Reply msg
+                            handleReplyMsg={handleReplyMsg}
                             handleActionEditTask={handleActionEditTask}
                             handleConfirmUpdateMsg={handleConfirmUpdateMsg}
                             handleConfirmGetDataDetailEvent={
@@ -2654,8 +3056,12 @@ const ChatDetail = ({
                       ))}
                   {isLoadingOlder && (
                     <div className="flex flex-col items-start ml-3">
-                      <RowSkeleton className="!h-[30px] w-[700px] mb-2" />
-                      <RowSkeleton className="!h-[50px] w-[600px] mb-2" />
+                      <RowSkeleton
+                        className={`!h-[30px] ${isExtendMoreData ? 'w-[380px]' : 'w-[700px]'} mb-2`}
+                      />
+                      <RowSkeleton
+                        className={`!h-[50px] ${isExtendMoreData ? 'w-[280px]' : 'w-[600px]'} mb-2`}
+                      />
                     </div>
                   )}
                 </div>
@@ -2931,6 +3337,15 @@ const ChatDetail = ({
                   <MemoDataChat
                     chatRoomCode={chatRoomCode}
                     chatRoomDetail={chatRoomDetail}
+                    dataFileAddList={dataFileAddList}
+                    setChatRoomDetail={setChatRoomDetail}
+                    setDataMessageDetail={setDataMessageDetail}
+                    onGotoMessage={(data: { messageId: string | number }) => {
+                      setOpenSearchMessagesModal(false);
+                      gotoSelectedMessage({
+                        bookmarkMessageId: Number(data.messageId),
+                      });
+                    }}
                     onClose={() => setExtendMoreData(false)}
                   />
                 )}
@@ -3093,6 +3508,7 @@ const ChatDetail = ({
           open={openEditEventModal}
           dataEvent={dataEventEdit}
           action={ActionsEvent.EDIT}
+          setIsEditingRepetitiveFields={setIsEditingRepetitiveFields}
           onClose={() => {
             setDataEventEdit(undefined);
             setOpenEditEventModal(false);
@@ -3101,15 +3517,74 @@ const ChatDetail = ({
           onEdit={(data) => {
             setConfirmEventDataToEdit(data);
             setOpenEditEventModal(false);
-            setOpenConfirmEditEventModal(true);
+            if (
+              String((data.repeatType as OptionDropdownType).value) !=
+              TaskRepetitiveValue.ONCE
+            ) {
+              isEditingRepetitiveFields
+                ? setEventActionType(EventActionType.THIS_AND_FOLLOWING_EVENTS)
+                : setEventActionType(EventActionType.THIS_EVENT);
+              setOpenEventActionTypeModal({
+                status: true,
+                type: ActionsEvent.EDIT,
+                showThisEventOption: !isEditingRepetitiveFields,
+                showAllEventsOption: isEditingRepetitiveFields,
+              });
+            } else {
+              setOpenConfirmEditEventModal(true);
+            }
           }}
           onDelete={(data) => {
             setConfirmEventDataToEdit(data);
             setOpenEditEventModal(false);
-            setOpenConfirmDeleteEventModal(true);
+            if (
+              String((data.repeatType as OptionDropdownType).value) !=
+              TaskRepetitiveValue.ONCE
+            ) {
+              setEventActionType(EventActionType.THIS_EVENT);
+              setOpenEventActionTypeModal({
+                status: true,
+                type: ActionsEvent.DELETE,
+                showThisEventOption: true,
+                showAllEventsOption: true,
+              });
+            } else {
+              setOpenConfirmDeleteEventModal(true);
+            }
           }}
           creationDataEventCalendar={creationDataEventCalendar}
           backToEditing={backToEditing}
+        />
+      )}
+      {openEventActionTypeModal.status && openEventActionTypeModal.type && (
+        <EventActionTypeModal
+          open={openEventActionTypeModal.status}
+          openEventActionTypeModal={openEventActionTypeModal}
+          eventActionType={eventActionType}
+          setEventActionType={setEventActionType}
+          onCancel={() => {
+            setOpenEditEventModal(true);
+            setOpenConfirmEditEventModal(false);
+            setDataEventEdit(confirmEventDataToEdit);
+            setBackToEditing(true);
+            setActionsEventMessage('');
+            setEventActionType(EventActionType.THIS_EVENT);
+            setOpenEventActionTypeModal({
+              status: false,
+              type: null,
+            });
+          }}
+          onConfirm={() => {
+            setOpenEventActionTypeModal({
+              status: false,
+              type: null,
+            });
+            if (openEventActionTypeModal.type == ActionsEvent.EDIT) {
+              setOpenConfirmEditEventModal(true);
+            } else {
+              setOpenConfirmDeleteEventModal(true);
+            }
+          }}
         />
       )}
       {openConfirmEditEventModal && (
@@ -3282,6 +3757,32 @@ const ChatDetail = ({
               fileInputRef.current.value = '';
             }
           }}
+        />
+      )}
+      {dataPreviewFile && (
+        <FilePreview
+          open={dataPreviewFile !== null}
+          file={dataPreviewFile.file}
+          user={dataPreviewFile.user}
+          msgId={dataPreviewFile.msgId}
+          createAt={dataPreviewFile.createAt}
+          onClose={() => setDataPreviewFile(null)}
+          onGotoMessage={(data: { messageId: string | number }) => {
+            setOpenSearchMessagesModal(false);
+            gotoSelectedMessage({
+              bookmarkMessageId: Number(data.messageId),
+            });
+            setDataPreviewFile(null);
+          }}
+        />
+      )}
+      {showModalMuteChat && (
+        <ActionMuteChatModal
+          open={showModalMuteChat}
+          isMuteChat={chatRoomDetail?.isMuted || false}
+          isLoadingMute={isLoadingMute}
+          onClose={() => setShowModalMuteChat(false)}
+          onConfirm={handleConfirmMuteChat}
         />
       )}
     </>

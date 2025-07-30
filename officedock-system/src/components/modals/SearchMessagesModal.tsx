@@ -7,7 +7,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -35,7 +34,6 @@ import {
   REMOVE_MEMBER_TASK_MESSAGE,
   TASK_DELETED,
 } from '@constants';
-import { HIGHLIGHT_SEARCH_TERM_REGEX } from '@constants/regex';
 import {
   ChatRoomType,
   MessageType,
@@ -46,6 +44,8 @@ import { pageRouters } from '@constants/routers';
 
 import { ChatDashboardMember, ChatMessageResponse } from '@interfaces/chat';
 
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import {
   convertToCurrentTimezone,
   formatCheckDate,
@@ -55,6 +55,7 @@ import {
   displayRepetitiveEventTime,
   formatWithParagraphTags,
   getFileURL,
+  highlightTextSafely,
   renderEventDatetimeInChat,
   renderScheduleChangeInCalendarRoom,
 } from '@utils';
@@ -106,11 +107,11 @@ export const SearchMessagesModal = ({
   hasMoreSearchResultDetail,
   searchResultsPage,
   chatRoomType,
+  dashboardMembers,
   handleConfirmGetDataDetailEvent,
   setSearchMessageResults,
   setSearchResultsPage,
   setSearchChatMsg,
-  dashboardMembers,
   onGotoMessage,
   onSubmit,
   onClose,
@@ -227,52 +228,6 @@ export const SearchMessagesModal = ({
     searchMessageResults,
   ]);
 
-  const highlightTextSafely = (htmlString: string, term: string) => {
-    const escapedTerm = term.replace(HIGHLIGHT_SEARCH_TERM_REGEX, '\\$&');
-    const regex = new RegExp(escapedTerm, 'gi');
-
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlString, 'text/html');
-
-    const processNode = (node: Node) => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        if (node.textContent) {
-          node.textContent = node.textContent?.replace(
-            regex,
-            (match) => `[[HIGHLIGHT]]${match}[[/HIGHLIGHT]]`,
-          );
-        }
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
-        const element = node as HTMLElement;
-
-        if (element.classList.contains('mention')) {
-          const mentionName = element.textContent?.trim() || '';
-
-          if (
-            mentionName == `@${session?.user.profile.fullName}` ||
-            mentionName == `@${MENTION_ALL_MEMBERS}`
-          ) {
-            element.classList.remove('text-[#0068B6]');
-            element.classList.add('text-[#0068B7]');
-          } else {
-            element.classList.remove('text-[#0068B6]');
-            element.classList.add('text-[#77858F]');
-          }
-        }
-        node.childNodes.forEach(processNode);
-      }
-    };
-
-    doc.body.childNodes.forEach(processNode);
-
-    const processedHTML = doc.body.innerHTML.replace(
-      /\[\[HIGHLIGHT\]\](.*?)\[\[\/HIGHLIGHT\]\]/g,
-      `<mark class="bg-[#0068B633]">$1</mark>`,
-    );
-
-    return processedHTML;
-  };
-
   const highlightTitleBySearchTerm = (text: string, searchTerm: string) => {
     const safeText = text || '';
 
@@ -327,6 +282,146 @@ export const SearchMessagesModal = ({
     );
   };
 
+  // Convert icon to image content
+  const parseReactionsToImages = (message: string): string => {
+    const div = document.createElement('div');
+    div.innerHTML = message;
+
+    div.querySelectorAll('span[data-custom-reaction]').forEach((span) => {
+      const src = span.getAttribute('src');
+      const name = span.getAttribute('name');
+
+      if (src) {
+        const img = document.createElement('img');
+        img.setAttribute('src', src);
+        img.setAttribute('alt', name || 'reaction');
+        img.setAttribute('title', name || 'reaction');
+
+        img.style.width = '20px';
+        img.style.height = '20px';
+        img.style.display = 'inline-block';
+        img.style.verticalAlign = 'middle';
+        img.style.margin = '0 4px';
+        img.style.verticalAlign = 'text-bottom';
+
+        span.replaceWith(img);
+      }
+    });
+
+    return div.innerHTML;
+  };
+
+  // Highlight mentions
+  const highlightMentions = (message: string, mentions: number[]) => {
+    if (!mentions || mentions.length === 0)
+      return parseReactionsToImages(message);
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(message, 'text/html');
+
+    doc.querySelectorAll('.mention').forEach((mention) => {
+      let mentionName = mention.textContent?.trim() || '';
+
+      if (mentionName.startsWith('@')) {
+        mentionName = mentionName.slice(1);
+      }
+
+      const matchedUser = dashboardMembers.find(
+        (member) => member.fullName === mentionName,
+      );
+
+      const color =
+        matchedUser?.id === session?.user.id ||
+        mentionName === MENTION_ALL_MEMBERS
+          ? '#0068B7'
+          : '#77858F';
+      mention.setAttribute('style', `color: ${color};`);
+    });
+
+    return parseReactionsToImages(doc.body.innerHTML);
+  };
+
+  const processMessage = (message: string, mentions: number[]) => {
+    const highlightedMessage = highlightMentions(message, mentions);
+
+    const dom = new DOMParser().parseFromString(
+      highlightedMessage,
+      'text/html',
+    );
+
+    const nodes = Array.from(dom.body.childNodes);
+
+    const processNode = (node: ChildNode, index: number) => {
+      if (node.nodeType === 1) {
+        const element = node as HTMLElement;
+
+        if (element.tagName === 'P') {
+          const taskQuote = element.querySelector('span[data-task-id]');
+
+          if (taskQuote) {
+            const taskId = taskQuote.getAttribute('data-task-id');
+            const restOfContent = element.innerHTML.replace(
+              taskQuote.outerHTML,
+              '',
+            );
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(
+              taskQuote.innerHTML,
+              'text/html',
+            );
+
+            const spans = doc.querySelectorAll('span');
+
+            const targetSpan = spans[1]?.outerHTML || '';
+
+            return (
+              <>
+                <div
+                  key={`${index}-quote`}
+                  id={taskId || undefined}
+                  className="flex mb-2 items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer">
+                  <ImageRound
+                    className="w-[14px] h-[14px]"
+                    name="Task icon"
+                    src="/icons/gray-checkbox.svg"
+                  />
+                  <span
+                    className="text-sm font-medium"
+                    dangerouslySetInnerHTML={{ __html: targetSpan }}
+                  />
+                </div>
+
+                {restOfContent.trim() && (
+                  <p
+                    key={`${index}-rest`}
+                    className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px]"
+                    dangerouslySetInnerHTML={{ __html: restOfContent }}
+                  />
+                )}
+              </>
+            );
+          }
+
+          return (
+            <p
+              key={index}
+              className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px]">
+              <span dangerouslySetInnerHTML={{ __html: element.innerHTML }} />
+            </p>
+          );
+        }
+      } else if (node.nodeType === 3) {
+        return node.textContent?.trim() ? (
+          <span key={index}>{node.textContent}</span>
+        ) : null;
+      }
+      return null;
+    };
+
+    return nodes.map((node, index) => processNode(node, index));
+  };
+
   return (
     <Modal
       open={open}
@@ -345,7 +440,7 @@ export const SearchMessagesModal = ({
         <div className="flex justify-between items-center mb-5">
           <div className="flex items-center gap-2">
             <InputSearch
-              placeholder="名前を検索"
+              placeholder="チャットルーム内のキーワードを検索"
               className="w-[400px]"
               inputClassName="!py-1 text-[14px] !border-[#77858F]"
               value={searchChatMsg}
@@ -434,7 +529,7 @@ export const SearchMessagesModal = ({
                         {messageDetail.isBookmark && (
                           <ImageRound
                             name="Book mark"
-                            src={`/icons/${messageDetail.isBookmark ? 'save-active.svg' : 'save-chat.svg'}`}
+                            src={`/icons/save-active.svg`}
                             className="w-[10px] h-[12px] hover:cursor-pointer"
                           />
                         )}
@@ -460,14 +555,14 @@ export const SearchMessagesModal = ({
                             <div>
                               {messageDetail.type === MessageType.MESSAGE && (
                                 <div className="break-words">
-                                  <p
-                                    className="text-chat-box font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px]"
-                                    dangerouslySetInnerHTML={{
-                                      __html: highlightTextSafely(
-                                        messageDetail.message,
-                                        searchChatMsg,
-                                      ),
-                                    }}></p>
+                                  {processMessage(
+                                    highlightTextSafely(
+                                      messageDetail.message,
+                                      searchChatMsg,
+                                      session?.user.profile.fullName || '',
+                                    ),
+                                    messageDetail.mentions || [],
+                                  )}
                                   <div className="flex flex-col gap-2 !w-[100%]">
                                     {messageDetail?.chatFiles &&
                                       messageDetail?.chatFiles.length > 0 &&
@@ -504,11 +599,18 @@ export const SearchMessagesModal = ({
                                                   {file.fileName}
                                                 </p>
                                               </div>
-                                              <Button
-                                                className="font-medium w-[84px] h-[30px] !rounded-[6px] text-xs !px-0"
-                                                variant="outline">
-                                                プレビュー
-                                              </Button>
+                                              {(file.fileType.includes(
+                                                'image',
+                                              ) ||
+                                                file.fileType.includes(
+                                                  'pdf',
+                                                )) && (
+                                                <Button
+                                                  className="font-medium w-[84px] h-[30px] !rounded-[6px] text-xs !px-0"
+                                                  variant="outline">
+                                                  プレビュー
+                                                </Button>
+                                              )}
                                             </div>
                                           );
                                         },
@@ -786,13 +888,15 @@ export const SearchMessagesModal = ({
                             </p>
                           ) : (
                             <div>
-                              {messageDetail.type === MessageType.MESSAGE && (
-                                <p
-                                  className={`text-chat-box font-normal text-sm hover:cursor-pointer max-w-[700px] -ml-1 p-1 rounded-[5px]  `}
-                                  dangerouslySetInnerHTML={{
-                                    __html: messageDetail.message,
-                                  }}></p>
-                              )}
+                              {messageDetail.type === MessageType.MESSAGE &&
+                                processMessage(
+                                  highlightTextSafely(
+                                    messageDetail.message,
+                                    searchChatMsg,
+                                    session?.user.profile.fullName || '',
+                                  ),
+                                  messageDetail.mentions || [],
+                                )}
                               {messageDetail.type !== MessageType.MESSAGE &&
                                 (messageDetail.task ? (
                                   <div className={`w-full flex justify-start`}>
@@ -866,16 +970,15 @@ export const SearchMessagesModal = ({
                             </p>
                           ) : (
                             <div>
-                              {messageDetail.type === MessageType.MESSAGE && (
-                                <p
-                                  className="text-chat-box font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px]"
-                                  dangerouslySetInnerHTML={{
-                                    __html: highlightTextSafely(
-                                      messageDetail.message,
-                                      searchChatMsg,
-                                    ),
-                                  }}></p>
-                              )}
+                              {messageDetail.type === MessageType.MESSAGE &&
+                                processMessage(
+                                  highlightTextSafely(
+                                    messageDetail.message,
+                                    searchChatMsg,
+                                    session?.user.profile.fullName || '',
+                                  ),
+                                  messageDetail.mentions || [],
+                                )}
                               {messageDetail.type !== MessageType.MESSAGE && (
                                 <div className="w-full flex justify-start">
                                   <div
@@ -963,14 +1066,14 @@ export const SearchMessagesModal = ({
                                     ))}
                             </p>
                           </div>
-                          <p
-                            className="text-chat-box font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px]"
-                            dangerouslySetInnerHTML={{
-                              __html: highlightTextSafely(
-                                messageDetail.message || '',
-                                searchChatMsg,
-                              ),
-                            }}></p>
+                          {processMessage(
+                            highlightTextSafely(
+                              messageDetail.message,
+                              searchChatMsg,
+                              session?.user.profile.fullName || '',
+                            ),
+                            messageDetail.mentions || [],
+                          )}
                         </div>
                       )}
                     </div>

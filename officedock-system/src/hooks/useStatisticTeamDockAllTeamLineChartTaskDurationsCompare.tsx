@@ -43,6 +43,7 @@ const useStatisticTeamDockAllTeamLineChartTaskDurationsCompare = ({
   }: {
     signal?: AbortSignal;
   }) => {
+    if(!filter?.option) return []
     const params = new URLSearchParams();
     if (filter?.fromDate) {
       params.append('from_date', String(filter?.fromDate));

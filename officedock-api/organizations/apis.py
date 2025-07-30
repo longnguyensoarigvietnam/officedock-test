@@ -99,16 +99,16 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
 
         user = self.request.user
-        company = user.company
+        company_id = user.company_id
         if self.action in ["members", "list"]:
             return (
-                Organization.objects.filter(company=company)
+                Organization.objects.filter(company_id=company_id)
                 .annotate(user_count=Count("users"))
                 .order_by("-created_at")
                 .all()
             )
 
-        return super().get_queryset().filter(company=company)
+        return super().get_queryset().filter(company_id=company_id)
 
     def get_serializer_context(self):
         """
@@ -150,7 +150,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             icon.name = generate_file_name(file_name)
 
         # Get the company from the logged in user and assign it to the organization
-        serializer.save(company=self.request.user.company)
+        serializer.save(company_id=self.request.user.company_id)
 
     @extend_schema(
         parameters=[
@@ -253,7 +253,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     org_instance = Organization.objects.create(
                         **org_data,
                         superior=parent,
-                        company=request.user.company,
+                        company_id=request.user.company_id,
                     )
 
                 created_map[uuid] = org_instance
@@ -399,9 +399,7 @@ class OrganizationByIDViewSet(BaseAPIViewSet):
         """
 
         user = self.request.user
-        company = user.company
-
-        return super().get_queryset().filter(company=company)
+        return super().get_queryset().filter(company_id=user.company_id)
 
     def _check_category_exists(self, category_uuid):
         """Check category exists"""
@@ -682,7 +680,6 @@ class OrganizationCategoryHierarchyViewSet(
         """
 
         user = self.request.user
-        company = user.company
         queryset = super().get_queryset()
 
         if (
@@ -693,7 +690,7 @@ class OrganizationCategoryHierarchyViewSet(
         else:
             queryset = queryset.exclude(type=OrganizationTypes.CALENDAR.value)
 
-        return queryset.filter(company=company).order_by("-id")
+        return queryset.filter(company_id=user.company_id).order_by("-id")
 
     def get_serializer_class(self):
         """Custom serializer class"""
@@ -1120,9 +1117,7 @@ class TeamViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         """
 
         user = self.request.user
-        company = user.company
-
-        return super().get_queryset().filter(company=company)
+        return super().get_queryset().filter(company_id=user.company_id)
 
     def get_serializer_context(self):
         """

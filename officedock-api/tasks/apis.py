@@ -135,11 +135,16 @@ class TaskViewSet(
                 super()
                 .get_queryset()
                 .filter(
-                    company=self.request.user.company, deleted_at__isnull=True
+                    company_id=self.request.user.company_id,
+                    deleted_at__isnull=True,
                 )
             )
 
-        return super().get_queryset().filter(company=self.request.user.company)
+        return (
+            super()
+            .get_queryset()
+            .filter(company_id=self.request.user.company_id)
+        )
 
     @transaction.atomic()
     def create(self, request, *args, **kwargs):
@@ -485,16 +490,17 @@ class TaskViewSet(
         task_room = ChatRoom.objects.filter(
             type=ChatRoomTypes.TASK.value,
             chat_rooms_participants__user=user,
-            company=user.company,
+            company_id=user.company_id,
         ).first()
         task_message = task_room.chat_messages.create(**message)
         chat_room_participant = task_room.chat_rooms_participants.filter(
             user_id=user.id
         ).first()
-        chat_room_participant.unread_messages = (
-            chat_room_participant.unread_messages + 1
-        )
-        chat_room_participant.save()
+        if not chat_room_participant.is_muted:
+            chat_room_participant.unread_messages = (
+                chat_room_participant.unread_messages + 1
+            )
+            chat_room_participant.save()
         self._send_websocket(
             WebSocketEventType.MESSAGE.value,
             chat_room_participant,
@@ -551,11 +557,11 @@ class TaskViewSet(
 
         if not chat_room_participant:
             chat_room = ChatRoom.objects.create(
-                company=user.company, type=ChatRoomTypes.PRIVATE.value
+                company_id=user.company_id, type=ChatRoomTypes.PRIVATE.value
             )
             chat_room.participants.set(
                 [user, participant],
-                through_defaults={"company": user.company},
+                through_defaults={"company_id": user.company_id},
             )
             chat_room_participant = chat_room.chat_rooms_participants.filter(
                 user_id=participant.id
@@ -564,18 +570,20 @@ class TaskViewSet(
         else:
             chat_room = chat_room_participant.chat_room
         message = chat_room.chat_messages.create(**message_data)
-        chat_room_participant.unread_messages = (
-            chat_room_participant.unread_messages + 1
-        )
-        chat_room_participant.hidden_at = None
-        chat_room_participant.save()
+        if not chat_room_participant.is_muted:
+            chat_room_participant.unread_messages = (
+                chat_room_participant.unread_messages + 1
+            )
+            chat_room_participant.save()
         # Update unread message of user logged
         user_participant = chat_room.chat_rooms_participants.filter(
             user_id=user.id
         ).first()
-        user_participant.unread_messages = user_participant.unread_messages + 1
-        user_participant.hidden_at = None
-        user_participant.save()
+        if not user_participant.is_muted:
+            user_participant.unread_messages = (
+                user_participant.unread_messages + 1
+            )
+            user_participant.save()
         self._send_websocket(
             socketEventType,
             chat_room_participant,
@@ -608,11 +616,11 @@ class TaskViewSet(
                 user_participant = chat_room.chat_rooms_participants.filter(
                     user_id=user.id
                 ).first()
-                user_participant.unread_messages = (
-                    user_participant.unread_messages + 1
-                )
-                user_participant.hidden_at = None
-                user_participant.save()
+                if not user_participant.is_muted:
+                    user_participant.unread_messages = (
+                        user_participant.unread_messages + 1
+                    )
+                    user_participant.save()
                 # Send chat message to logged user
                 send_web_socket_event(
                     {
@@ -629,9 +637,11 @@ class TaskViewSet(
             for participant in chat_room.chat_rooms_participants.exclude(
                 user=user
             ).all():
-                participant.unread_messages = participant.unread_messages + 1
-                participant.hidden_at = None
-                participant.save()
+                if not participant.is_muted:
+                    participant.unread_messages = (
+                        participant.unread_messages + 1
+                    )
+                    participant.save()
                 # Send chat message realtime to participant
                 self._send_websocket(
                     ChatMessageTypes.CREATION_TASK.value,
@@ -727,7 +737,7 @@ class TaskViewSet(
         )
         # Retrieve or create TaskFrequent and set the default company
         task_frequent, created = TaskFrequent.objects.get_or_create(
-            user=user, task=task, defaults={"company": task.company}
+            user=user, task=task, defaults={"company_id": task.company_id}
         )
 
         # Increment the count if it's not a newly created instance
@@ -753,6 +763,7 @@ class TaskViewSet(
         """
         user = self.request.user
         current_task = self.get_object()
+        old_task_updated = current_task.updated_at
         current_task_status = current_task.status
         current_org = current_task.organization
         serializer = self.get_serializer(
@@ -1060,7 +1071,9 @@ class TaskViewSet(
                 # Add new users in charge.
                 task.people_in_charge.add(
                     user,
-                    through_defaults={"company": self.request.user.company},
+                    through_defaults={
+                        "company_id": self.request.user.company_id
+                    },
                 )
 
                 # Update last index if add new user
@@ -1110,7 +1123,9 @@ class TaskViewSet(
             for item in tag_ids:
                 task.tags.add(
                     item["tag"],
-                    through_defaults={"company": self.request.user.company},
+                    through_defaults={
+                        "company_id": self.request.user.company_id
+                    },
                 )
         elif tag_ids == []:
             task.tags.clear()
@@ -1187,12 +1202,13 @@ class TaskViewSet(
                     case=case,
                     organization=current_org,
                 )
-
             # Update new categories
             create_categories_by_model(task, categories)
             for user in task.people_in_charge.all():
                 # Plus skill map process have new categories of updated task
-                calculate_progress_skill_map(task, user, case=case)
+                calculate_progress_skill_map(
+                    task, user, case=case, old_task_updated=old_task_updated
+                )
         elif (
             previous != completed
             and current == completed
@@ -1272,7 +1288,7 @@ class TaskViewSet(
         frequent_tasks = (
             TaskFrequent.objects.filter(
                 user=user,
-                company=user.company,
+                company_id=user.company_id,
                 task__people_in_charge__id=user.id,
             )
             .order_by("-count")
@@ -1604,7 +1620,7 @@ class TaskCalendarViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 task_schedules__plan_start_date__lte=end_date,
             ).distinct()
 
-        return queryset.filter(company=user.company)
+        return queryset.filter(company_id=user.company_id)
 
 
 @extend_schema(tags=["System > Task"])
@@ -1791,7 +1807,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = super().get_queryset().filter(company=user.company)
+        queryset = super().get_queryset().filter(company_id=user.company_id)
         query_params = self.request.query_params
         user_id = query_params.get("user_id")
         ordering = query_params.get("ordering")
@@ -1803,7 +1819,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         if is_team_task:
             validate_company_organization(
-                user.company, organization_id, required_field=True
+                user.company_id, organization_id, required_field=True
             )
             # Filter only in organization
             if not is_cross_team_task:
@@ -1889,7 +1905,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             if ids := split_id_from_string(organization_ids):
                 queryset = queryset.filter(Q(organization__in=ids))
 
-        return queryset
+        return queryset.distinct()
 
     @extend_schema(
         parameters=[
@@ -1974,7 +1990,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             if "deadline" in ordering:
                 Setting.objects.update_or_create(
                     user=user,
-                    company=user.company,
+                    company_id=user.company_id,
                     defaults={
                         "is_sorting_task_by_deadline": True,
                         "is_sorting_task_by_important": False,
@@ -1983,7 +1999,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             if "is_important" in ordering:
                 Setting.objects.update_or_create(
                     user=user,
-                    company=user.company,
+                    company_id=user.company_id,
                     defaults={
                         "is_sorting_task_by_deadline": False,
                         "is_sorting_task_by_important": True,
@@ -2028,7 +2044,9 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     def get_queryset(self):
         """Filter queryset"""
         user_logged = self.request.user
-        queryset = super().get_queryset().filter(company=user_logged.company)
+        queryset = (
+            super().get_queryset().filter(company_id=user_logged.company_id)
+        )
 
         # Filter by organization id
         if organization_id := self.request.query_params.get("organization_id"):
@@ -2096,7 +2114,7 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             Task.objects.filter(
                 organization_id=organization_id,
                 people_in_charge__isnull=True,
-                company=user.company,
+                company_id=user.company_id,
             )
             .exclude(type=TaskTypes.MY_TEMPLATE.value)
             .all()
@@ -2238,5 +2256,5 @@ class TodoListViewSet(
 
     def get_queryset(self):
         user = self.request.user
-        queryset = super().get_queryset().filter(company=user.company)
+        queryset = super().get_queryset().filter(company_id=user.company_id)
         return queryset

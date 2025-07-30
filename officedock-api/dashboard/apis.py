@@ -45,6 +45,7 @@ from dashboard.serializers import (
 )
 from dashboard.utils import (
     separate_duration,
+    separate_duration_while_keep_running,
 )
 from roles.constants import Screens
 from stat_data.utils import get_total_durations
@@ -290,7 +291,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         Filtering duration by company.
         """
         user = self.request.user
-        queryset = super().get_queryset().filter(company=user.company)
+        queryset = super().get_queryset().filter(company_id=user.company_id)
 
         return queryset.order_by("started_at")
 
@@ -381,7 +382,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         Handle delete actual duration
         """
         model = instance.task or instance.schedule
-        if model and model.is_start:
+        if model and model.is_start and instance.paused_at is None:
             model.is_start = False
             model.save()
         if instance.task:
@@ -427,6 +428,11 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             task=task, schedule=schedule
         )
         if duration_started.exists():
+            obj_type = (
+                CalendarTypes.TASK.value
+                if duration_started.first().task
+                else CalendarTypes.SCHEDULE.value
+            )
             data = {
                 "is_another_task_started": duration_started.exists(),
                 "id": (
@@ -517,7 +523,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             and last_task_duration.schedule == schedule
         ):
             # Check if last task/event running is current task/event, stop it and return early
-            self._stopDuration(user)
+            self._stop_duration(user)
             last_task_duration.refresh_from_db()
 
             return self.response_ok(
@@ -527,16 +533,16 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             )
         else:
             # Stop currently running duration
-            self._stopDuration(user)
+            self._stop_duration(user)
 
-        task_duration = self._startDuration(user, schedule=schedule, task=task)
+        task_duration = self._start_duration(user, schedule=schedule, task=task)
         data = DurationSerializer(
             task_duration, context={"request": request}
         ).data
         data["is_another_task_started"] = False
         return self.response_ok(data)
 
-    def _stopDuration(self, user):
+    def _stop_duration(self, user):
         """
         Handle stop duration is running of user
         """
@@ -573,7 +579,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                         duration_created_at=duration.created_at,
                     )
 
-    def _startDuration(self, user, task=None, schedule=None):
+    def _start_duration(self, user, task=None, schedule=None):
         """
         Handle start duration
         """
@@ -629,6 +635,13 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         task_id = object_id if CalendarTypes.TASK.value == obj_type else None
 
         start_of_today = datetime.combine(timezone.now().date(), time.min)
+        durations = TaskDuration.objects.filter(
+            Q(Q(user=user) & Q(paused_at__isnull=True))
+        )
+
+        for duration in durations:
+            separate_duration_while_keep_running(duration, timezone.now(), user)
+
         if task_id or schedule_id:
             # Get current task running
             task_running = user.task_durations.filter(
@@ -755,7 +768,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     def get_queryset(self):
         """Get queryset"""
         user = self.request.user
-        queryset = super().get_queryset().filter(company=user.company)
+        queryset = super().get_queryset().filter(company_id=user.company_id)
 
         return queryset.order_by("-created_at")
 
@@ -887,7 +900,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             for item in tags:
                 model.tags.add(
                     item,
-                    through_defaults={"company": user.company},
+                    through_defaults={"company_id": user.company_id},
                 )
         elif tags == []:
             model.tags.clear()
@@ -947,7 +960,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         Handle delete actual duration
         """
         model = instance.task or instance.schedule
-        if model and model.is_start:
+        if model and model.is_start and instance.paused_at is None:
             model.is_start = False
             model.save()
         if instance.task:
@@ -987,7 +1000,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             for item in tags:
                 model.tags.add(
                     item,
-                    through_defaults={"company": user.company},
+                    through_defaults={"company_id": user.company_id},
                 )
         elif tags == []:
             model.tags.clear()
@@ -1018,7 +1031,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     schedule=model if isinstance(model, Schedule) else None,
                     started_at=start,
                     paused_at=end,
-                    company=user.company,
+                    company_id=user.company_id,
                     user=user,
                     uuid=uuid,
                 )
@@ -1029,7 +1042,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 schedule=model if isinstance(model, Schedule) else None,
                 started_at=started_at,
                 paused_at=paused_at,
-                company=user.company,
+                company_id=user.company_id,
                 user=user,
                 uuid=uuid,
             )
@@ -1044,6 +1057,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     user,
                     duration_time=total_duration,
                     case=CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value,
+                    duration_created_at=task_duration.created_at,
                 )
         return durations
 

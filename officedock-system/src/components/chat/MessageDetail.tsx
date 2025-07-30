@@ -35,6 +35,7 @@ import { pageRouters } from '@constants/routers';
 
 import {
   ChatDashboardMember,
+  ChatFileResponse,
   ChatMessageResponse,
   ChatParticipant,
   ChatRoomDetail,
@@ -57,6 +58,8 @@ import {
 
 import { MessageHoverOptions } from './MessageHoverOptions';
 import DetailReactionChat from './DetailReactionChat';
+import { MessageDetailQuote } from './quote/MessageDetailQuote';
+import MessageDetailQuoteText from './quote/MessageDetailQuoteText';
 
 export type MessageDetailProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
@@ -72,6 +75,16 @@ export type MessageDetailProps = {
   dashboardMembers: ChatDashboardMember[];
   editor: Editor | null;
   highlightedMessageId: string | null;
+  handleReplyMsg: ({
+    user,
+    replyUuid,
+  }: {
+    user: {
+      id: number;
+      name: string;
+    };
+    replyUuid: string;
+  }) => void;
   setPreserveFiles: Dispatch<
     SetStateAction<
       {
@@ -91,6 +104,14 @@ export type MessageDetailProps = {
       }[]
     >
   >;
+  setDataPreviewFile: Dispatch<
+    SetStateAction<{
+      msgId: string;
+      file: ChatFileResponse;
+      user: ChatDashboardMember;
+      createAt: string;
+    } | null>
+  >;
   setMessage: Dispatch<SetStateAction<string>>;
   setMentionMembers: Dispatch<SetStateAction<ChatParticipant[]>>;
   setMsgIdUpdated?: Dispatch<SetStateAction<string | undefined>>;
@@ -104,6 +125,7 @@ export type MessageDetailProps = {
   handleReactionClick: (msgUuid: string, icon: string) => void;
   handleRemoveReactionClick: (msgUuid: string, icon: string) => void;
   handleResetChatRoomNotification: () => void;
+  handleQuoteMsgIcon: (data: { uuid: string; title: string }) => void;
   chatContainerRef: MutableRefObject<HTMLDivElement | null>;
 };
 
@@ -115,6 +137,9 @@ export const MessageDetail = ({
   editor,
   chatContainerRef,
   highlightedMessageId,
+  handleQuoteMsgIcon,
+  setDataPreviewFile,
+  handleReplyMsg,
   setPreserveFiles,
   setOpenUploadFilesModal,
   setUploadFiles,
@@ -224,7 +249,7 @@ export const MessageDetail = ({
         <CustomUserAvatar
           avatarUrl={memberInfo?.avatarUrl || ''}
           avatarColor={memberInfo?.avatarColor || ''}
-          size={36}
+          size={30}
         />
       </div>
     );
@@ -296,78 +321,113 @@ export const MessageDetail = ({
       highlightedMessage,
       'text/html',
     );
-
     const nodes = Array.from(dom.body.childNodes);
 
-    const processNode = (node: ChildNode, index: number) => {
-      if (node.nodeType === 1) {
-        const element = node as HTMLElement;
+    const processPElement = (element: HTMLElement, index: number) => {
+      const children: React.ReactNode[] = [];
 
-        if (element.tagName === 'P') {
-          const taskQuote = element.querySelector('span[data-task-id]');
-
-          if (taskQuote) {
-            const taskId = taskQuote.getAttribute('data-task-id');
-            const restOfContent = element.innerHTML.replace(
-              taskQuote.outerHTML,
-              '',
+      element.childNodes.forEach((child, i) => {
+        if (child.nodeType === Node.TEXT_NODE) {
+          const text = child.textContent?.trim();
+          if (text) {
+            children.push(
+              <span key={`${index}-${i}-text`} className="whitespace-pre-wrap">
+                {text}
+              </span>,
             );
+          }
+        }
 
+        if (child.nodeType === Node.ELEMENT_NODE) {
+          const el = child as HTMLElement;
+
+          if (el.dataset.taskId) {
+            const taskId = el.dataset.taskId;
             const parser = new DOMParser();
-            const doc = parser.parseFromString(
-              taskQuote.innerHTML,
-              'text/html',
-            );
-
+            const doc = parser.parseFromString(el.innerHTML, 'text/html');
             const spans = doc.querySelectorAll('span');
-
             const targetSpan = spans[1]?.outerHTML || '';
 
-            return (
-              <>
-                <div
-                  key={`${index}-quote`}
-                  id={taskId || undefined}
-                  onClick={() => {
-                    if (taskId) {
-                      handleActionEditTask(Number(taskId));
-                    }
-                  }}
-                  className="flex mb-2 items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer">
-                  <ImageRound
-                    className="w-[14px] h-[14px]"
-                    name="Task icon"
-                    src="/icons/gray-checkbox.svg"
-                  />
-                  <span
-                    className="text-sm font-medium"
-                    dangerouslySetInnerHTML={{ __html: targetSpan }}
-                  />
-                </div>
-
-                {restOfContent.trim() && (
-                  <p
-                    key={`${index}-rest`}
-                    className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px]"
-                    dangerouslySetInnerHTML={{ __html: restOfContent }}
-                  />
-                )}
-              </>
+            children.push(
+              <div
+                key={`${index}-${i}-task`}
+                id={taskId}
+                onClick={() => {
+                  if (taskId) handleActionEditTask(Number(taskId));
+                }}
+                className="flex mb-2 items-center w-full rounded-[6px] h-[42px] border border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer">
+                <ImageRound
+                  className="w-[14px] h-[14px]"
+                  name="Task icon"
+                  src="/icons/gray-checkbox.svg"
+                />
+                <span
+                  className="text-sm font-medium"
+                  dangerouslySetInnerHTML={{ __html: targetSpan }}
+                />
+              </div>,
             );
           }
 
-          return (
-            <p
-              key={index}
-              className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px]">
-              <span dangerouslySetInnerHTML={{ __html: element.innerHTML }} />
-            </p>
-          );
+          if (el.dataset.quoteMsg) {
+            const msgId = el.dataset.msgId;
+            const foundQuote = messageDetail.quote?.find(
+              (q) => q.uuid === msgId,
+            );
+            if (foundQuote) {
+              children.push(
+                <MessageDetailQuote
+                  key={`${index}-${i}-msg`}
+                  chatRoomDetail={chatRoomDetail}
+                  messageDetail={foundQuote}
+                  dashboardMembers={dashboardMembers}
+                  highlightedMessageId={highlightedMessageId}
+                  setDataPreviewFile={setDataPreviewFile}
+                  handleActionEditTask={handleActionEditTask}
+                />,
+              );
+            }
+          }
+
+          if (el.dataset.quoteText) {
+            const msgId = el.dataset.msgId;
+            const dataTitle = el.dataset.title || '';
+            const foundQuote = messageDetail.quote?.find(
+              (q) => q.uuid === msgId,
+            );
+            if (foundQuote) {
+              children.push(
+                <MessageDetailQuoteText
+                  key={`${index}-${i}-textquote`}
+                  messageDetail={foundQuote}
+                  dashboardMembers={dashboardMembers}
+                  title={dataTitle}
+                />,
+              );
+            }
+          }
         }
-      } else if (node.nodeType === 3) {
-        return node.textContent?.trim() ? (
-          <span key={index}>{node.textContent}</span>
-        ) : null;
+      });
+
+      return (
+        <div
+          key={`p-${index}`}
+          data-id={messageDetail.uuid}
+          className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px] flex flex-col gap-5">
+          {children}
+        </div>
+      );
+    };
+
+    const processNode = (node: ChildNode, index: number) => {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const element = node as HTMLElement;
+        if (element.tagName === 'P') {
+          return processPElement(element, index);
+        }
+      } else if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent?.trim();
+        return text ? <span key={`text-${index}`}>{text}</span> : null;
       }
       return null;
     };
@@ -582,11 +642,44 @@ export const MessageDetail = ({
                                                 {file.fileName}
                                               </p>
                                             </div>
-                                            <Button
-                                              className="font-medium w-[84px] h-[30px] !rounded-[6px] text-xs !px-0"
-                                              variant="outline">
-                                              プレビュー
-                                            </Button>
+                                            {(file.fileType.includes('image') || file.fileType.includes('pdf')) && (
+                                              <Button
+                                                onClick={() => {
+                                                  const memberInfo =
+                                                    dashboardMembers.find(
+                                                      (member) =>
+                                                        member.id ===
+                                                        messageDetail.sender.id,
+                                                    );
+                                                  setDataPreviewFile({
+                                                    msgId:
+                                                      String(
+                                                        messageDetail.id,
+                                                      ) || '',
+                                                    createAt: String(
+                                                      messageDetail.createdAt,
+                                                    ),
+                                                    user: {
+                                                      id: messageDetail.sender
+                                                        ?.id,
+                                                      avatarColor:
+                                                        memberInfo?.avatarColor ||
+                                                        '',
+                                                      avatarUrl:
+                                                        memberInfo?.avatarUrl ||
+                                                        '',
+                                                      fullName:
+                                                        messageDetail.sender
+                                                          ?.fullName,
+                                                    },
+                                                    file: file,
+                                                  });
+                                                }}
+                                                className="font-medium w-[84px] h-[30px] !rounded-[6px] text-xs !px-0"
+                                                variant="outline">
+                                                プレビュー
+                                              </Button>
+                                            )}
                                           </div>
                                         );
                                       },
@@ -846,6 +939,8 @@ export const MessageDetail = ({
                             handleRemoveReactionClick={
                               handleRemoveReactionClickDetail
                             }
+                            handleQuoteMsgIcon={handleQuoteMsgIcon}
+                            handleReplyMsg={handleReplyMsg}
                           />
                         )}
                     </>
@@ -986,6 +1081,7 @@ export const MessageDetail = ({
                         <MessageHoverOptions
                           messageDetail={messageDetail}
                           chatRoomDetail={chatRoomDetail}
+                          handleReplyMsg={handleReplyMsg}
                           handleOpenEditForm={handleOpenEditForm}
                           handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
                           handleUpdateBookmark={handleUpdateBookmark}
@@ -993,6 +1089,7 @@ export const MessageDetail = ({
                           handleRemoveReactionClick={
                             handleRemoveReactionClickDetail
                           }
+                          handleQuoteMsgIcon={handleQuoteMsgIcon}
                         />
                       )}
                     </>
@@ -1114,6 +1211,7 @@ export const MessageDetail = ({
                         <MessageHoverOptions
                           messageDetail={messageDetail}
                           chatRoomDetail={chatRoomDetail}
+                          handleReplyMsg={handleReplyMsg}
                           handleOpenEditForm={handleOpenEditForm}
                           handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
                           handleUpdateBookmark={handleUpdateBookmark}
@@ -1121,6 +1219,7 @@ export const MessageDetail = ({
                           handleRemoveReactionClick={
                             handleRemoveReactionClickDetail
                           }
+                          handleQuoteMsgIcon={handleQuoteMsgIcon}
                         />
                       )}
                     </>
@@ -1228,6 +1327,7 @@ export const MessageDetail = ({
                         <MessageHoverOptions
                           messageDetail={messageDetail}
                           chatRoomDetail={chatRoomDetail}
+                          handleReplyMsg={handleReplyMsg}
                           handleOpenEditForm={handleOpenEditForm}
                           handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
                           handleUpdateBookmark={handleUpdateBookmark}
@@ -1235,6 +1335,7 @@ export const MessageDetail = ({
                           handleRemoveReactionClick={
                             handleRemoveReactionClickDetail
                           }
+                          handleQuoteMsgIcon={handleQuoteMsgIcon}
                         />
                       )}
                     </>

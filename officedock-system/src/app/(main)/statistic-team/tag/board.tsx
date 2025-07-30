@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import Button from '@components/common/Button';
@@ -47,13 +47,11 @@ const StatisticTeamTagBoard = () => {
     selectedLarge,
     selectedMedium,
     selectedOrganization,
-    selectedTags,
     selectedSmall,
     orderingOptions,
     isHasLoading,
     setOrderingOptions,
     setTagsOptions,
-    setSelectedTags,
     setSelectedLarge,
     setSelectedMedium,
     setSelectedOrganization,
@@ -102,6 +100,8 @@ const StatisticTeamTagBoard = () => {
     router.push(`?${params.toString()}`);
   };
 
+  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
+
   const organizationId = searchParams.get('organization');
   const { creationDataStatisticData } = useCreationDataStatisticTeam({
     organization_id: selectedOrganizationSideBar
@@ -127,7 +127,6 @@ const StatisticTeamTagBoard = () => {
         }));
 
         setTagsOptions(optionsTagList);
-        setSelectedTags(optionsTagList);
 
         setListMemberTeam(
           mainItem.members.map((member) => ({
@@ -138,6 +137,7 @@ const StatisticTeamTagBoard = () => {
           })),
         );
         setOrderingOptions({
+          tag_ids: optionsTagList,
           user_ids: mainItem.members.map((member) => ({
             value: member.id,
             label: member.fullName,
@@ -170,7 +170,7 @@ const StatisticTeamTagBoard = () => {
       largeCategoryId: selectedLarge?.value as number,
       mediumCategoryId: selectedMedium?.value as number,
       smallCategoryId: selectedSmall?.value as number,
-      tagIds: selectedTags,
+      orderingOptions: orderingOptions,
       organizationMemberId:
         selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
@@ -261,7 +261,7 @@ const StatisticTeamTagBoard = () => {
       largeCategoryId: selectedLarge?.value as number,
       mediumCategoryId: selectedMedium?.value as number,
       smallCategoryId: selectedSmall?.value as number,
-      tagIds: selectedTags,
+      orderingOptions: orderingOptions,
       isCompare: isCheckCompare,
       organizationMemberId:
         selectedOrganization?.type === OrganizationStatisticType.CALENDAR
@@ -322,7 +322,7 @@ const StatisticTeamTagBoard = () => {
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
-      tagIds: selectedTags,
+      tagIds: orderingOptions?.tag_ids,
       mainOrganizationId: selectedOrganizationSideBar?.value as number,
       isTagPage: true,
       userIds: listMemberTeam.map((user) => ({
@@ -349,7 +349,7 @@ const StatisticTeamTagBoard = () => {
       filter: {
         fromDate: formatDateToYMD(startDateCompare) || '',
         endDate: formatDateToYMD(`${endDateCompare}`) || '',
-        tagIds: selectedTags,
+        tagIds: orderingOptions?.tag_ids,
         mainOrganizationId: selectedOrganizationSideBar?.value as number,
         isCompare: isCheckCompare,
         isTagPage: true,
@@ -406,7 +406,6 @@ const StatisticTeamTagBoard = () => {
         value: item.id,
       }));
       setTagsOptions(optionsTagList);
-      setSelectedTags(optionsTagList);
       setListMemberTeam(
         organization.members.map((member) => ({
           id: member.id,
@@ -416,6 +415,7 @@ const StatisticTeamTagBoard = () => {
         })),
       );
       setOrderingOptions({
+        tag_ids: optionsTagList,
         user_ids: organization.members.map((member) => ({
           value: member.id,
           label: member.fullName,
@@ -564,20 +564,6 @@ const StatisticTeamTagBoard = () => {
     );
   };
 
-  // Remove user
-  const removeUser = (selected: OptionDropdownType) => {
-    const currentUserIds = orderingOptions?.user_ids || [];
-    const updatedUserIds = currentUserIds.filter(
-      (tag) => tag.value !== selected.value,
-    );
-
-    setCurrentPage(1);
-    setOrderingOptions({
-      user_ids: updatedUserIds,
-    });
-    handleResetTableData();
-  };
-
   return (
     <div className="pt-[30px] pr-10  font-medium ">
       <div className="mb-[33px] flex items-start justify-between">
@@ -623,8 +609,13 @@ const StatisticTeamTagBoard = () => {
       <div>
         <div className="flex justify-between w-full mb-[30px]">
           {/* Filter tag */}
-          <FilterTagTeam />
           <div>
+            <FilterTagTeam
+              open={isOpenModalFilter}
+              onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
+            />
+          </div>
+          <div className="flex-shrink-0">
             <StatisticTeamCalendar />
           </div>
         </div>
@@ -672,7 +663,6 @@ const StatisticTeamTagBoard = () => {
             endDate={endDate}
             startDateCompare={startDateCompare}
             endDateCompare={endDateCompare}
-            removeUser={removeUser}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -707,7 +697,6 @@ const StatisticTeamTagBoard = () => {
           <LineChartByTeamTags
             startDate={startDate}
             endDate={endDate}
-            removeUser={removeUser}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}

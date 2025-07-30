@@ -42,6 +42,7 @@ import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import {
   ActionsEvent,
   ActionTask,
+  EventActionType,
   EventWorkCategory,
   ItemStartType,
   PermissionsSystem,
@@ -49,6 +50,7 @@ import {
   ServerStatusCode,
   SocketActions,
   StatusValueTask,
+  TaskRepetitiveValue,
   TimeType,
 } from '@constants/enums';
 import { SETTING_MENU, SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
@@ -82,6 +84,7 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import TaskPageDataHeader from './TaskPageDataHeader';
 import { addTimeToDate } from '@utils/date';
 import api from '@base/api';
+import EventActionTypeModal from '@components/modals/EventActionTypeModal';
 
 type HeaderProps = {
   className?: string;
@@ -142,7 +145,6 @@ const Header = ({ className }: HeaderProps) => {
 
   const typeDetail = searchParams.get('type');
   const [dataTaskEdit, setDataTaskEdit] = useState<Task | null>(null);
-  const [dataEventEdit, setDataEventEditLocal] = useState<EventEditFormData>();
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
   const [openWarningDeadlineModal, setOpenWarningDeadlineModal] =
     useState(false);
@@ -153,6 +155,8 @@ const Header = ({ className }: HeaderProps) => {
     title: string;
   }>();
 
+  // Event
+  const [dataEventEdit, setDataEventEditLocal] = useState<EventEditFormData>();
   const [backToEditing, setBackToEditing] = useState(false);
   const [confirmEventDataToEdit, setConfirmEventDataToEdit] =
     useState<EventEditFormData>();
@@ -160,6 +164,21 @@ const Header = ({ className }: HeaderProps) => {
     useState(false);
   const [openConfirmDeleteEventModal, setOpenConfirmDeleteEventModal] =
     useState(false);
+  const [openEventActionTypeModal, setOpenEventActionTypeModal] = useState<{
+    status: boolean;
+    type: ActionsEvent | null;
+    showThisEventOption?: boolean;
+    showAllEventsOption?: boolean;
+  }>({
+    status: false,
+    type: ActionsEvent.EDIT,
+    showThisEventOption: true,
+    showAllEventsOption: true
+  });
+  const [eventActionType, setEventActionType] =
+    useState<EventActionType | null>(null);
+  const [isEditingRepetitiveFields, setIsEditingRepetitiveFields] =
+    useState<boolean>(false);
 
   const router = useRouter();
   const { data: session } = useSessionCache();
@@ -814,6 +833,7 @@ const Header = ({ className }: HeaderProps) => {
         data.month && (data.month as OptionDropdownType).value != ''
           ? Number((data.month as OptionDropdownType).value)
           : null,
+      recurringEventOption: eventActionType || EventActionType.THIS_EVENT,
     });
   };
   const handleEditEventCalendar = async (data: EventRequest) => {
@@ -859,6 +879,7 @@ const Header = ({ className }: HeaderProps) => {
       onSettled: () => {
         setIsLoading(false);
         setDataEventEditLocal(undefined);
+        setEventActionType(null);
       },
     },
   );
@@ -876,7 +897,7 @@ const Header = ({ className }: HeaderProps) => {
   }) => {
     const newId = data.id.replace('event', '');
     return await api.delete(
-      `${apiRouters.SCHEDULE_DETAIL(newId)}?message=${actionsEventMessage}${data.sendToChat ? '&send_to_chat=true' : ''}`,
+      `${apiRouters.SCHEDULE_DETAIL(newId)}?message=${actionsEventMessage}${eventActionType ? `&recurring_event_option=${eventActionType}` : ''}${data.sendToChat ? '&send_to_chat=true' : ''}`,
     );
   };
   const { mutate: deleteEventCalendar } = useMutation(
@@ -917,6 +938,7 @@ const Header = ({ className }: HeaderProps) => {
       onSettled: () => {
         setIsLoading(false);
         setDataEventEditLocal(undefined);
+        setEventActionType(null);
       },
     },
   );
@@ -1307,6 +1329,7 @@ const Header = ({ className }: HeaderProps) => {
           open={openCreateEventModal}
           dataEvent={dataEventEdit}
           action={ActionsEvent.EDIT}
+          setIsEditingRepetitiveFields={setIsEditingRepetitiveFields}
           onClose={() => {
             handleRemoveEventParam();
             setDataEventEditLocal(undefined);
@@ -1316,15 +1339,74 @@ const Header = ({ className }: HeaderProps) => {
           onEdit={(data) => {
             setConfirmEventDataToEdit(data);
             setOpenCreateEventModal(false);
-            setOpenConfirmEditEventModal(true);
+            if (
+              String((data.repeatType as OptionDropdownType).value) !=
+              TaskRepetitiveValue.ONCE
+            ) {
+              isEditingRepetitiveFields
+                ? setEventActionType(EventActionType.THIS_AND_FOLLOWING_EVENTS)
+                : setEventActionType(EventActionType.THIS_EVENT);
+              setOpenEventActionTypeModal({
+                status: true,
+                type: ActionsEvent.EDIT,
+                showThisEventOption: !isEditingRepetitiveFields,
+                showAllEventsOption: isEditingRepetitiveFields
+              });
+            } else {
+              setOpenConfirmEditEventModal(true);
+            }
           }}
           onDelete={(data) => {
             setConfirmEventDataToEdit(data);
             setOpenCreateEventModal(false);
-            setOpenConfirmDeleteEventModal(true);
+            if (
+              String((data.repeatType as OptionDropdownType).value) !=
+              TaskRepetitiveValue.ONCE
+            ) {
+              setEventActionType(EventActionType.THIS_EVENT);
+              setOpenEventActionTypeModal({
+                status: true,
+                type: ActionsEvent.DELETE,
+                showThisEventOption: true,
+                showAllEventsOption: true
+              });
+            } else {
+              setOpenConfirmDeleteEventModal(true);
+            }
           }}
           creationDataEventCalendar={creationDataEventCalendar}
           backToEditing={backToEditing}
+        />
+      )}
+      {openEventActionTypeModal.status && openEventActionTypeModal.type && (
+        <EventActionTypeModal
+          open={openEventActionTypeModal.status}
+          openEventActionTypeModal={openEventActionTypeModal}
+          eventActionType={eventActionType}
+          setEventActionType={setEventActionType}
+          onCancel={() => {
+            setOpenCreateEventModal(true);
+            setOpenConfirmEditEventModal(false);
+            setDataEventEditLocal(confirmEventDataToEdit);
+            setBackToEditing(true);
+            setActionsEventMessage('');
+            setEventActionType(EventActionType.THIS_EVENT);
+            setOpenEventActionTypeModal({
+              status: false,
+              type: null,
+            });
+          }}
+          onConfirm={() => {
+            setOpenEventActionTypeModal({
+              status: false,
+              type: null,
+            });
+            if (openEventActionTypeModal.type == ActionsEvent.EDIT) {
+              setOpenConfirmEditEventModal(true);
+            } else {
+              setOpenConfirmDeleteEventModal(true);
+            }
+          }}
         />
       )}
       {openConfirmEditEventModal && (

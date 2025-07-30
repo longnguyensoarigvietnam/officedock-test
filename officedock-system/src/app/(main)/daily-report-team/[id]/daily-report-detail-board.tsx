@@ -15,7 +15,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import Image from 'next/image';
 import jaLocale from '@fullcalendar/core/locales/ja';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
 import Link from 'next/link';
 
 import {
@@ -43,7 +43,7 @@ import socketEventEmitter from '@components/socket/socketEventEmitter';
 import Input from '@components/common/Input';
 import ActionDetailDaily from '@components/daily/ActionDetailDaily';
 import SingleSelect from '@components/common/SingleSelect';
-import ResizeTextArea from '@components/custom/resizeTextArea';
+import ResizeTextArea from '@components/custom/ResizeTextArea';
 import Checkbox from '@components/common/Checkbox';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import DetailActualItemDailyModal from '@components/daily/DetailActualItemDailyModal';
@@ -1686,13 +1686,19 @@ const DailyReportDetailBoard = () => {
   const handleDownloadPDF = async () => {
     if (!divRef.current) return;
 
-    // Display div to render
+    // Display div to render PDF
     divRef.current.style.visibility = 'visible';
     divRef.current.style.position = 'absolute';
     divRef.current.style.left = '-9999px';
     divRef.current.style.top = '0';
 
-    // ===== 1. Capture separate PieChart =====
+    // Make sure layout is done before html2canvas starts (fix Safari)
+    await new Promise((resolve) => {
+      requestAnimationFrame(() => {
+        setTimeout(resolve, 50); // 50ms delay ensures DOM stability
+      });
+    });
+
     const chartElem = document.getElementById('chart-to-pdf');
     let chartImgData = '';
     if (chartElem) {
@@ -1703,31 +1709,27 @@ const DailyReportDetailBoard = () => {
       chartImgData = chartCanvas.toDataURL('image/png');
     }
 
-    // ===== 2. Prepare PDF =====
     const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
+    const pdfHeight = pdf.internal.pageSize.getHeight();
     const marginTop = 10;
     const marginBottom = 10;
     const usableHeightMm = pdfHeight - marginTop - marginBottom;
-    const usableHeightPx = usableHeightMm / 0.264583; // mm to px
+    const usableHeightPx = usableHeightMm / 0.264583;
 
     const headerElem = divRef.current.querySelector(
       '.pdf-header',
     ) as HTMLElement;
     const headerHeightPx = headerElem?.getBoundingClientRect().height || 0;
     const theadHeightPx = 50;
-
     const headerHeight = headerHeightPx + theadHeightPx;
 
     let currentHeight = headerHeight;
     const currentRows: number[][] = [[]];
     let page = 0;
 
-    /// ===== 3. Paginate table rows =====
     for (let i = 0; i < rowRefs.current.length; i++) {
       const row = rowRefs.current[i];
       if (!row) continue;
-
       const rowHeight = row.getBoundingClientRect().height;
 
       if (currentHeight + rowHeight > usableHeightPx) {
@@ -1740,28 +1742,23 @@ const DailyReportDetailBoard = () => {
       }
     }
 
-    // ===== 4. Render each PDF page =====
     for (let i = 0; i < currentRows.length; i++) {
       const clone = divRef.current.cloneNode(true) as HTMLElement;
       clone.style.position = 'static';
       clone.style.left = '0';
 
-      // Hide lines not on the current page
       const allTrs = clone.querySelectorAll('tr.custom-tr');
       allTrs.forEach((tr, index) => {
         if (!currentRows[i].includes(index)) {
           tr.remove();
         }
       });
-      // ⚠️ Remove header on following pages
+
       if (i > 0) {
         const headerElem = clone.querySelector('.pdf-header');
-        if (headerElem) {
-          headerElem.remove();
-        }
+        if (headerElem) headerElem.remove();
       }
 
-      // ===== 5. Re-insert the chart image into the clone =====
       if (chartImgData) {
         const chartContainer = clone.querySelector('#chart-to-pdf');
         if (chartContainer) {
@@ -1769,13 +1766,19 @@ const DailyReportDetailBoard = () => {
           img.src = chartImgData;
           img.style.width = '180px';
           img.style.height = '180px';
-          chartContainer.innerHTML = ''; // clear original content (canvas/svg)
+          chartContainer.innerHTML = '';
           chartContainer.appendChild(img);
         }
       }
 
-      // ===== 6. Add clone to DOM temporarily for html2canvas to work =====
       document.body.appendChild(clone);
+
+      // 🛠️ A little delay for Safari to finish rendering the DOM clone
+      await new Promise((resolve) => {
+        requestAnimationFrame(() => {
+          setTimeout(resolve, 50);
+        });
+      });
 
       const canvas = await html2canvas(clone, {
         scale: 2,
@@ -1794,7 +1797,7 @@ const DailyReportDetailBoard = () => {
 
     pdf.save('集計.pdf');
 
-    // ===== 7. Reset the original div =====
+    // Reset initial state
     divRef.current.style.visibility = 'hidden';
     divRef.current.style.position = 'absolute';
     divRef.current.style.left = '-9999px';
@@ -2362,7 +2365,7 @@ const DailyReportDetailBoard = () => {
                                   style={{
                                     backgroundColor: item.color,
                                   }}
-                                  className={`w-3 h-3 border border-black  relative top-[5px] `}></div>
+                                  className={`w-3 h-3 border border-black  relative top-[-1px] `}></div>
                                 <p className=" break-all h-5 max-w-[150px] w-fit line-clamp-3">
                                   {item.categoryName}
                                 </p>
@@ -2384,12 +2387,12 @@ const DailyReportDetailBoard = () => {
                             return (
                               <div
                                 key={index}
-                                className="flex items-center gap-[2px] w-full text-xs">
+                                className="flex items-center gap-[2px] w-full mt-1 text-xs">
                                 <div
                                   style={{
                                     backgroundColor: '#D1D7DC',
                                   }}
-                                  className={`w-3 h-3 border border-black relative top-[5px] `}></div>
+                                  className={`w-3 h-3 border border-black relative top-[-1px] `}></div>
                                 <p className=" break-all h-5 max-w-[150px] w-fit line-clamp-3">
                                   {item.categoryName}
                                 </p>
@@ -2428,7 +2431,7 @@ const DailyReportDetailBoard = () => {
                     <th
                       className="!py-2 !px-2 border-r border-b border-b-black border-r-black"
                       colSpan={2}>
-                      <div className="flex -translate-y-[30%]  text-xs items-center justify-center gap-2 ">
+                      <div className="flex -translate-y-[10%]  text-xs items-center justify-center gap-2 ">
                         <span>実</span>
                         <span>施</span>
                         <span>時</span>
@@ -2438,7 +2441,7 @@ const DailyReportDetailBoard = () => {
                     <th
                       className="!py-2 text-xs  !px-2 border-r border-b border-b-black border-r-black"
                       colSpan={1}>
-                      <div className="flex -translate-y-[30%]  text-xs items-center justify-center gap-2 ">
+                      <div className="flex -translate-y-[10%]  text-xs items-center justify-center gap-2 ">
                         <span>時</span>
                         <span>間</span>
                       </div>
@@ -2446,7 +2449,7 @@ const DailyReportDetailBoard = () => {
                     <th
                       className="!py-2 !px-2 border-b border-b-black"
                       colSpan={7}>
-                      <div className="flex text-xs -translate-y-[30%] items-center justify-center gap-2">
+                      <div className="flex text-xs -translate-y-[10%] items-center justify-center gap-2">
                         <span>タ</span>
                         <span>ス</span>
                         <span>ク</span>
@@ -2469,7 +2472,7 @@ const DailyReportDetailBoard = () => {
                       <td
                         colSpan={2}
                         className="border-r border-black text-center text-xs py-2">
-                        <div className="-translate-y-[25%] flex gap-2 justify-center">
+                        <div className="-translate-y-[10%] flex gap-2 justify-center">
                           <span>
                             {' '}
                             {item.startedAt &&
@@ -2485,7 +2488,7 @@ const DailyReportDetailBoard = () => {
                       </td>
 
                       <td className="border-r border-black text-center text-xs">
-                        <div className="-translate-y-[25%]">
+                        <div className="-translate-y-[10%]">
                           {item.startedAt &&
                             calculateTotalMinutes(
                               item.startedAt,

@@ -11,6 +11,11 @@ from django.db.models import (
     When,
     F,
     DurationField,
+    Value,
+    DateTimeField,
+    Prefetch,
+    Count,
+    IntegerField,
 )
 from django.db.models.functions import Now, Coalesce
 from django.utils import timezone
@@ -25,6 +30,7 @@ from common.constants import (
     BASE_DATE_FORMAT,
     AVATAR_GCS_EXPIRATION_SECONDS,
 )
+from common.models import Category
 from common.utils import (
     format_duration,
     time_str_to_timedelta,
@@ -163,7 +169,6 @@ def aggregate_durations(
     large_category_id=None,
     medium_category_id=None,
     durations=None,
-    organization_ids_param=None,
     is_daily_report=False,
 ):
     """
@@ -178,37 +183,15 @@ def aggregate_durations(
             large_id=large_category_id,
             medium_id=medium_category_id,
         )
-        if organization_ids_param != ALL_TEAM
+        if large_category_id or medium_category_id
         else durations
     )
 
-    # 2. Fetch related fields in one go
-    durations_list = list(
-        filter_durations.select_related(
-            "task__organization", "schedule__organization"
-        ).prefetch_related(
-            "task__categories__large_statistic_category",
-            "task__categories__medium_statistic_category",
-            "task__categories__small_statistic_category",
-            "schedule__categories__large_statistic_category",
-            "schedule__categories__medium_statistic_category",
-            "schedule__categories__small_statistic_category",
-        )
-    )
-
     # 3. Group duration totals
-    task_duration_map = defaultdict(timedelta)
-    schedule_duration_map = defaultdict(timedelta)
-
-    for d in durations_list:
-        started = d.started_at
-        paused = d.paused_at or now()
-        duration = paused - started if started else timedelta()
-
-        if d.task:
-            task_duration_map[d.task.id] += duration
-        elif d.schedule:
-            schedule_duration_map[d.schedule.id] += duration
+    task_duration_map = get_list_task_with_total_duration(filter_durations)
+    schedule_duration_map = get_list_task_with_total_duration(
+        filter_durations, get_by_task=False
+    )
 
     # 4. Fetch tasks and schedules
     task_ids = list(task_duration_map.keys())
@@ -218,18 +201,32 @@ def aggregate_durations(
         Task.objects.filter(id__in=task_ids)
         .select_related("organization")
         .prefetch_related(
-            "categories__large_statistic_category",
-            "categories__medium_statistic_category",
-            "categories__small_statistic_category",
+            Prefetch("tags", to_attr="prefetched_tags"),
+            Prefetch(
+                "categories",
+                to_attr="prefetched_categories",
+                queryset=Category.objects.select_related(
+                    "large_statistic_category",
+                    "medium_statistic_category",
+                    "small_statistic_category",
+                ),
+            ),
         )
     )
     schedules = (
         Schedule.objects.filter(id__in=schedule_ids)
         .select_related("organization")
         .prefetch_related(
-            "categories__large_statistic_category",
-            "categories__medium_statistic_category",
-            "categories__small_statistic_category",
+            Prefetch("tags", to_attr="prefetched_tags"),
+            Prefetch(
+                "categories",
+                to_attr="prefetched_categories",
+                queryset=Category.objects.select_related(
+                    "large_statistic_category",
+                    "medium_statistic_category",
+                    "small_statistic_category",
+                ),
+            ),
         )
     )
 
@@ -250,9 +247,9 @@ def aggregate_durations(
     # Collect all large category IDs from the first category of each task/schedule
     all_category_ids = set()
     for t in chain(tasks, schedules):
-        if t.categories.exists():
+        if t.prefetched_categories:
             all_category_ids.add(
-                t.categories.first().large_statistic_category_id
+                t.prefetched_categories[0].large_statistic_category_id
             )
 
     # Fetch organization-category metadata (e.g. color) in a single query
@@ -273,14 +270,16 @@ def aggregate_durations(
         task = tasks_map[task_id]
         combined.append((task, duration))
         first_categories[task.id] = (
-            task.categories.all()[0] if task.categories.exists() else None
+            task.prefetched_categories[0]
+            if task.prefetched_categories
+            else None
         )
     for schedule_id, duration in schedule_duration_map.items():
         schedule = schedules_map[schedule_id]
         combined.append((schedule, duration))
         first_categories[schedule.id] = (
-            schedule.categories.all()[0]
-            if schedule.categories.exists()
+            schedule.prefetched_categories[0]
+            if schedule.prefetched_categories
             else None
         )
 
@@ -359,7 +358,6 @@ def process_categories(
     durations=None,
 ):
     """Processes category durations, calculates percentages, and returns structured data."""
-    percent = 0
     categories_data = []
     filter_duration_by_type_category = {
         TaskCategoryTypes.LARGE.value: "large_id",
@@ -368,8 +366,7 @@ def process_categories(
     }
     if not durations.exists() or category_list is None:
         return []
-    for index, cat in enumerate(category_list):
-        is_last_element = index == len(category_list) - 1
+    for cat in category_list:
         org_id = cat["organization_id"]
         category_id = cat["category_id"]
         category_name = cat["category_name"]
@@ -429,18 +426,12 @@ def process_categories(
                     filtered_durations,
                 )
         # Calculate the percentage of the total duration
-        (
-            percent_per_total_duration,
-            percent,
-        ) = percentage_calculation_of_duration(
+        data["percent"] = percentage_calculation_of_duration(
             total_duration.total_seconds(),
             time_str_to_timedelta(category_duration).total_seconds(),
-            percent,
-            is_last_element,
         )
-        data["percent"] = percent_per_total_duration
         categories_data.append(data)
-    return categories_data
+    return normalize_percentages(categories_data, id_field="category_id")
 
 
 def get_list_basic_task_or_event_of_durations(durations):
@@ -467,7 +458,6 @@ def get_list_basic_task_or_event_of_durations(durations):
 def process_users(total_duration, durations):
     """Processes users durations, calculates percentages, and returns structured data."""
     user_data = []
-    percent = 0
 
     if not durations:
         return []
@@ -525,8 +515,7 @@ def process_users(total_duration, durations):
         },
     }
     sorted_users = list(user_durations.items())
-    for index, (uid, duration) in enumerate(sorted_users):
-        is_last = index == len(sorted_users) - 1
+    for (uid, duration) in sorted_users:
         serialized_user = user_serialized_map.get(uid)
         combined_ids = list(user_tasks[uid]) + list(user_schedules[uid])
         tasks = [
@@ -535,18 +524,13 @@ def process_users(total_duration, durations):
             if tid in combined_task_map
         ]
 
-        (
-            percent_per_total_duration,
-            percent,
-        ) = percentage_calculation_of_duration(
-            total_duration.total_seconds(),
-            duration.total_seconds(),
-            percent,
-            is_last,
+        percent_per_total_duration = percentage_calculation_of_duration(
+            total_duration.total_seconds(), duration.total_seconds()
         )
 
         user_data.append(
             {
+                "id": uid,
                 "user": serialized_user,
                 "duration": format_duration(duration),
                 "percent": percent_per_total_duration,
@@ -565,12 +549,10 @@ def process_tags(
     durations=None,
 ):
     """Processes category durations, calculates percentages, and returns structured data."""
-    percent = 0
     tags_data = []
     if durations and not durations.exists() or tag_list is None:
         return []
-    for index, tag in enumerate(tag_list):
-        is_last_element = index == len(tag_list) - 1
+    for tag in tag_list:
         tag_duration = format_duration(tag["duration"]) or timedelta(0)
         data = {
             "organization_id": tag["organization_id"],
@@ -597,14 +579,9 @@ def process_tags(
                 )
 
         # Calculate the percentage of the total duration
-        (
-            percent_per_total_duration,
-            percent,
-        ) = percentage_calculation_of_duration(
+        percent_per_total_duration = percentage_calculation_of_duration(
             total_duration.total_seconds(),
             time_str_to_timedelta(tag_duration).total_seconds(),
-            percent,
-            is_last_element,
         )
 
         data["percent"] = percent_per_total_duration
@@ -612,7 +589,7 @@ def process_tags(
         # Append category data
         tags_data.append(data)
 
-    return tags_data
+    return normalize_percentages(tags_data, id_field="tag_id")
 
 
 def process_merge_card_per_tag(
@@ -624,7 +601,10 @@ def process_merge_card_per_tag(
     total_duration = timedelta(0)
     if durations is None or not durations.exists() or not organization_ids:
         return total_duration, []
-
+    durations = durations.prefetch_related(
+        Prefetch("task__tags", to_attr="prefetched_tags"),
+        Prefetch("schedule__tags", to_attr="prefetched_tags"),
+    )
     tags = Tag.objects.filter(id__in=tag_ids).only("id", "name")
     organizations = Organization.all_objects.filter(
         id__in=organization_ids
@@ -637,10 +617,15 @@ def process_merge_card_per_tag(
     ).prefetch_related("task__tags", "schedule__tags"):
         related_tags = set()
 
-        if d.task_id and d.task and hasattr(d.task, "tags"):
-            related_tags.update(d.task.tags.values_list("id", flat=True))
-        if d.schedule_id and d.schedule and hasattr(d.schedule, "tags"):
-            related_tags.update(d.schedule.tags.values_list("id", flat=True))
+        if d.task_id and d.task and hasattr(d.task, "prefetched_tags"):
+            related_tags.update([tag.id for tag in d.task.prefetched_tags])
+
+        if (
+            d.schedule_id
+            and d.schedule
+            and hasattr(d.schedule, "prefetched_tags")
+        ):
+            related_tags.update([tag.id for tag in d.schedule.prefetched_tags])
 
         # Check tag have in tag_ids
         common_tag_ids = related_tags.intersection(tag_ids)
@@ -775,19 +760,62 @@ def get_total_durations(durations, is_tag_page=False, tag_ids=[]):
     """
     Handle get total durations
     """
-    total_duration = timedelta()
-    for duration in durations:
-        paused_at = duration.paused_at if duration.paused_at else timezone.now()
-        if is_tag_page:
-            obj = duration.task or duration.schedule
-            related_tag_count = obj.tags.filter(id__in=tag_ids).count()
-            total_duration += (
-                paused_at - duration.started_at
-            ) * related_tag_count
-        else:
-            total_duration += paused_at - duration.started_at
+    if is_tag_page and tag_ids:
+        durations = durations.annotate(
+            related_tag_count=Case(
+                When(
+                    task__isnull=False,
+                    then=Count(
+                        "task__tags",
+                        filter=Q(task__tags__in=tag_ids),
+                        distinct=True,
+                    ),
+                ),
+                When(
+                    schedule__isnull=False,
+                    then=Count(
+                        "schedule__tags",
+                        filter=Q(schedule__tags__in=tag_ids),
+                        distinct=True,
+                    ),
+                ),
+                default=0,
+                output_field=IntegerField(),
+            ),
+            effective_paused=Case(
+                When(paused_at__isnull=True, then=Value(now())),
+                default=F("paused_at"),
+                output_field=DateTimeField(),
+            ),
+        )
+        total_duration = durations.aggregate(
+            total=Sum(
+                ExpressionWrapper(
+                    (F("effective_paused") - F("started_at"))
+                    * F("related_tag_count"),
+                    output_field=DurationField(),
+                )
+            )
+        )["total"]
+    else:
+        total_duration = durations.annotate(
+            effective_paused=Case(
+                When(paused_at__isnull=True, then=Value(now())),
+                default=F("paused_at"),
+                output_field=DateTimeField(),
+            ),
+        ).aggregate(
+            total=Sum(
+                ExpressionWrapper(
+                    F("effective_paused") - F("started_at"),
+                    output_field=DurationField(),
+                )
+            )
+        )[
+            "total"
+        ]
 
-    return time_str_to_timedelta(format_duration(total_duration))
+    return total_duration or timedelta(0)
 
 
 def get_duration_of_none_category(durations, large_id=None, medium_id=None):
@@ -843,23 +871,15 @@ def validate_date_by_regex_and_reformat(date):
     return datetime.strptime(date, BASE_DATE_FORMAT).date()
 
 
-def percentage_calculation_of_duration(
-    total_sec, duration_sec, start_percent=0, is_last_element=False
-):
+def percentage_calculation_of_duration(total_sec, duration_sec):
     if not total_sec or not duration_sec:
-        return 0, start_percent
+        return 0
     percent_per_total_duration = (duration_sec / total_sec) * 100
-    remaining_percentage = 100 - start_percent
-    # Limit the amount we can add to keep percent <= 100
-    percent_per_total_duration = min(
-        round(percent_per_total_duration), remaining_percentage
+    return (
+        round(percent_per_total_duration)
+        if percent_per_total_duration > 1
+        else 0
     )
-    if (
-        is_last_element and percent_per_total_duration < remaining_percentage
-    ) or (percent_per_total_duration <= 0 < remaining_percentage < 2):
-        percent_per_total_duration = remaining_percentage
-    start_percent += percent_per_total_duration
-    return percent_per_total_duration, start_percent
 
 
 def process_team_categories(
@@ -871,11 +891,10 @@ def process_team_categories(
 ):
     """Processes team durations, calculates percentages, and returns structured data."""
     team_data = {}
-    percent = 0
     if not durations.exists() or category_list is None:
         return []
     # Group categories by organization
-    for index, cat in enumerate(category_list):
+    for cat in category_list:
         org_id = cat["organization_id"]
         org_name = cat["organization_name"]
         category_duration = cat["duration"] or timedelta(0)
@@ -886,13 +905,8 @@ def process_team_categories(
             "duration": format_duration(category_duration),
         }
         # Calculate the percentage of the total duration
-        (
-            percent_per_total_duration,
-            percent,
-        ) = percentage_calculation_of_duration(
-            total_duration.total_seconds(),
-            category_duration.total_seconds(),
-            percent,
+        percent_per_total_duration = percentage_calculation_of_duration(
+            total_duration.total_seconds(), category_duration.total_seconds()
         )
 
         if org_id in team_data:
@@ -921,11 +935,10 @@ def process_team_tags(
 ):
     """Processes team durations, calculates percentages, and returns structured data."""
     team_data = {}
-    percent = 0
     if not durations.exists() or tag_list is None:
         return []
     # Group categories by organization
-    for index, tag in enumerate(tag_list):
+    for tag in tag_list:
         org_id = tag["organization_id"]
         org_name = tag["organization_name"]
         duration = tag["duration"] or timedelta(0)
@@ -935,13 +948,8 @@ def process_team_tags(
             "duration": format_duration(duration),
         }
         # Calculate the percentage of the total duration
-        (
-            percent_per_total_duration,
-            percent,
-        ) = percentage_calculation_of_duration(
-            total_duration.total_seconds(),
-            duration.total_seconds(),
-            percent,
+        percent_per_total_duration = percentage_calculation_of_duration(
+            total_duration.total_seconds(), duration.total_seconds()
         )
 
         if org_id in team_data:
@@ -970,7 +978,7 @@ def _handle_structure_data_for_team(
     """
     response_data = {}
     # Restructure data
-    for index, data in enumerate(team_data):
+    for data in team_data:
         org_id = data["organization_id"]
         org_name = data["organization_name"]
         duration = data["duration"]
@@ -1034,3 +1042,121 @@ def _handle_structure_data_for_team(
                 for sub in data["sub_teams"]
             ]
     return list(response_data.values())
+
+
+def normalize_percentages(items, percent_field="percent", id_field="id"):
+    """
+    Normalize percentage values in a list of dictionaries so that their sum equals exactly 100.
+    Each item must have a float-like value in the `percent_field`.
+    The function rounds down all values and distributes the remaining percentage points
+    to the items with the largest remainders.
+    """
+    if not items:
+        return []
+
+    # Step 1: Sort items in descending order of percent
+    active_items = [item for item in items if item[percent_field] > 0]
+    if not active_items:
+        return items
+
+    sorted_items = sorted(
+        active_items, key=lambda x: x[percent_field], reverse=True
+    )
+
+    # Step 2: Floor and collect remainders
+    percent_map = {}  # id -> floored percent
+    remainder_map = {}  # id -> decimal remainder
+    total_floored = 0
+
+    for item in sorted_items:
+        original = item[percent_field]
+        floored = int(original)
+        remainder = original - floored
+        item_id = item[id_field]
+        percent_map[item_id] = floored
+        remainder_map[item_id] = remainder
+        if original == 0:
+            continue
+        total_floored += floored
+    if total_floored == 0:
+        return items
+    # Step 3: Distribute remaining points to items with largest remainder
+    remaining = 100 - total_floored
+
+    if remaining > 0:
+        # Add +1 to items with highest remainder, only if < 100%
+        sorted_by_remainder = sorted(
+            remainder_map.items(), key=lambda x: x[1], reverse=True
+        )
+        count = 0
+        i = 0
+        while count < remaining:
+            item_id = sorted_by_remainder[i % len(sorted_by_remainder)][0]
+            if percent_map[item_id] < 100:
+                percent_map[item_id] += 1
+                count += 1
+            i += 1
+    elif remaining < 0:
+        # Subtract -1 from items with lowest remainder, only if > 0%
+        sorted_by_remainder = sorted(remainder_map.items(), key=lambda x: x[1])
+        count = 0
+        i = 0
+        while count < abs(remaining):
+            item_id = sorted_by_remainder[i % len(sorted_by_remainder)][0]
+            if percent_map[item_id] > 0:
+                percent_map[item_id] -= 1
+                count += 1
+            i += 1
+
+    # Step 4: Update the original list
+    for item in items:
+        item_id = item[id_field]
+        if item_id in percent_map:
+            item[percent_field] = percent_map[item_id]
+        else:
+            item[percent_field] = 0  # keep 0% unchanged
+
+    return items
+
+
+def get_list_task_with_total_duration(durations, get_by_task=True):
+    """
+    Handle return list tasks map with total duration
+    """
+    if get_by_task:
+        task_durations = (
+            durations.filter(task__isnull=False)
+            .annotate(
+                effective_paused=Case(
+                    When(paused_at__isnull=True, then=Value(now())),
+                    default=F("paused_at"),
+                    output_field=DateTimeField(),
+                ),
+                actual_duration=ExpressionWrapper(
+                    F("effective_paused") - F("started_at"),
+                    output_field=DurationField(),
+                ),
+            )
+            .values("task_id")
+            .annotate(total_duration=Sum("actual_duration"))
+        )
+        return {d["task_id"]: d["total_duration"] for d in task_durations}
+    else:
+        durations = durations.filter(schedule__isnull=False)
+        task_durations = (
+            durations.annotate(
+                effective_paused=Case(
+                    When(paused_at__isnull=True, then=Value(now())),
+                    default=F("paused_at"),
+                    output_field=DateTimeField(),
+                ),
+                actual_duration=ExpressionWrapper(
+                    F("effective_paused") - F("started_at"),
+                    output_field=DurationField(),
+                ),
+            )
+            .values("schedule_id")
+            .annotate(total_duration=Sum("actual_duration"))
+        )
+
+        return {d["schedule_id"]: d["total_duration"] for d in task_durations}

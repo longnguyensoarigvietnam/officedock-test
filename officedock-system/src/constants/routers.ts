@@ -458,6 +458,7 @@ export const apiRouters = {
 
   // CHAT
   CHAT_MESSAGES: (code: string) => `/chat/${code}/messages/`,
+  MESSAGE_LIST: '/messages/',
   CHAT_MESSAGES_DETAIL: (id: string) => `/messages/${id}/`,
   CHAT_DETAIL: (code: string) => `/chat/${code}/`,
   CHAT_LIST: '/chat/',
@@ -467,6 +468,9 @@ export const apiRouters = {
   CHAT_SETTING: '/users/chat-setting/',
   CHAT_UPLOAD_CHUNK: '/chat/chunk-files/',
   MEMO_CHAT_ACTION: (code: string) => `/chat/${code}/memo/`,
+  LIST_CHAT_FILE: '/chat-files/',
+  FILE_DETAIL: (id: string) => `/chat-files/${id}/`,
+  MUTE_CHAT: (code: string) => `/chat/${code}/mute/`,
 
   // BOOKMARK
   BOOKMARK_LIST: '/messages/',

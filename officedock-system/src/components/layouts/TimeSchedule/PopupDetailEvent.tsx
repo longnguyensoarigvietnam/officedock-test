@@ -113,7 +113,7 @@ const PopupDetailEvent = ({ dataEvent, onDelete }: Props) => {
                     const newId = dataEvent.scheduleId;
 
                     router.push(
-                      `${pageRouters.CALENDAR_MANAGEMENT.href}?event=${newId}&type=${ItemStartType.SCHEDULE}&action=${ActionsEvent.EDIT}`,
+                      `${pageRouters.CALENDAR_MANAGEMENT.href}?event=${newId}&type=${ItemStartType.SCHEDULE}&action=${ActionsEvent.EDIT}${dataEvent && dataEvent.eventSchedule ? `&repeat-schedule=${dataEvent.eventSchedule}` : ''}`,
                     );
                   }}>
                   <ImageRound

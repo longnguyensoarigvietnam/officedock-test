@@ -185,7 +185,7 @@ class PeopleInChargeTasks(BaseModel):
         """
         Set default company
         """
-        self.company = self.user.company
+        self.company_id = self.user.company_id
         super().save(*args, **kwargs)
 
 

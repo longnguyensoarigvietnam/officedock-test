@@ -230,13 +230,6 @@ const TaskPageDataHeader = () => {
             : `${dataTaskHeaderStart.id}event`,
         type: dataTaskHeaderStart.type,
       });
-      setDataRunning({
-        id:
-          dataTaskHeaderStart.type === ItemStartType.TASK
-            ? `${dataTaskHeaderStart.id}`
-            : `${dataTaskHeaderStart.id}event`,
-        type: dataTaskHeaderStart.type,
-      });
 
       if (dataTaskHeaderStart.id) {
         setStatusTaskSelected({
@@ -248,8 +241,7 @@ const TaskPageDataHeader = () => {
     } else {
       setTaskSelected(OPTION_DEFAULT_TASK);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataTaskHeaderStart, setStatusTaskSelected, setDataRunning]);
+  }, [dataTaskHeaderStart, setStatusTaskSelected, setTaskSelected]);
 
   useEffect(() => {
     if (idEventDelete) {
@@ -266,6 +258,7 @@ const TaskPageDataHeader = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idEventDelete, optionsTaskMe, setIdEventDelete, setTaskSelected]);
+
   useEffect(() => {
     if (idTaskDelete) {
       const newOptions = optionsTaskMe.filter(

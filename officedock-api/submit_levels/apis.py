@@ -61,8 +61,10 @@ class SubmitLevelViewSet(
 
     def get_queryset(self):
         """Filtering by company"""
-        company = self.request.user.company
-        return super().get_queryset().filter(company=company).order_by("id")
+        company_id = self.request.user.company_id
+        return (
+            super().get_queryset().filter(company_id=company_id).order_by("id")
+        )
 
     def get_serializer(self, *args, **kwargs):
         """Get serializer by action"""
@@ -80,7 +82,7 @@ class SubmitLevelViewSet(
         """
         message_data = {
             "sender": self.request.user,
-            "company": user.company,
+            "company_id": user.company_id,
             "submit_level": submit_level,
             "type": ChatMessageTypes.CREATE_SUBMIT_LEVEL_SKILL.value
             if is_create
@@ -91,22 +93,23 @@ class SubmitLevelViewSet(
             type=ChatRoomTypes.SKILL.value,
             chat_rooms_participants__user=user,
             defaults={
-                "company": user.company,
+                "company_id": user.company_id,
                 "name": ChatRoomNames.SKILL_UP.value,
             },
         )
         if created:
             skill_room.participants.set(
-                {user}, through_defaults={"company": user.company}
+                {user}, through_defaults={"company_id": user.company_id}
             )
         skill_msg = skill_room.chat_messages.create(**message_data)
         chat_room_participant = skill_room.chat_rooms_participants.filter(
             user_id=user.id
         ).first()
-        chat_room_participant.unread_messages = (
-            chat_room_participant.unread_messages + 1
-        )
-        chat_room_participant.save()
+        if not chat_room_participant.is_muted:
+            chat_room_participant.unread_messages = (
+                chat_room_participant.unread_messages + 1
+            )
+            chat_room_participant.save()
 
         # Send web socket to user role admin
         send_web_socket_event(
@@ -360,7 +363,7 @@ class SubmitLevelViewSet(
         organization_id = request.query_params.get("organization_id")
         # FIXME: Check role permissions for get list organizations
         organizations = Organization.objects.filter(
-            company=user.company,
+            company_id=user.company_id,
         ).order_by("-created_at")
         if organization_id:
             organizations = organizations.filter(id=organization_id)

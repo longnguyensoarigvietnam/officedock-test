@@ -6,6 +6,7 @@ import {
   AllTeamStatisticOption,
   CalendarViewOptions,
   EventWorkCategory,
+  LevelUpConditionBy,
   PermissionsSystem,
   PermissionType,
   ScreenName,
@@ -18,10 +19,17 @@ import {
   DATE_FORMAT,
   DEFAULT_TIME_TEXT,
   MAX_HEX_COLOR_VALUE,
+  MENTION_ALL_MEMBERS,
+  SKILL_MAP_LEVEL_COUNT,
+  SKILL_MAP_STEP_COUNT,
   SKILL_MAP_STEPS,
   SUB_TEAMS,
 } from '@constants';
-import { PASSWORD_REGEX, URL_REGEX } from '@constants/regex';
+import {
+  HIGHLIGHT_SEARCH_TERM_REGEX,
+  PASSWORD_REGEX,
+  URL_REGEX,
+} from '@constants/regex';
 
 import { JwtDecode } from '@interfaces/auth';
 import { Organizations } from '@interfaces/organization';
@@ -51,6 +59,7 @@ import {
 import { ChangeTextAreaProps, OptionDropdownType } from '@interfaces/common';
 import { UserRoleType } from '@interfaces/user';
 import { ChatMessageResponse } from '@interfaces/chat';
+import { ConditionByMap } from '@interfaces/skill-map';
 
 import {
   convertTimeToDecimal,
@@ -1510,7 +1519,7 @@ export const getLineChartDataFromStatisticTaskDurations = ({
           endDate: durationDetail.endDate,
           color:
             category.categoryColor ||
-            (color && lightenColor(color,  category?.percent || 0)) ||
+            (color && lightenColor(color, category?.percent || 0)) ||
             getRandomColor(),
           label: category.categoryName,
         };
@@ -1799,7 +1808,7 @@ export const normalizeDurationUsersWithTeamDockStatisticAllTeam = (
   // Normalize durations
   const normalizedDurations = durations.map((duration) => {
     const foundOrg = duration.data.find((org) =>
-      matchesSelectedOrganization(org.organizationId),
+      matchesSelectedOrganization(org?.organizationId),
     );
 
     if (!foundOrg)
@@ -2004,7 +2013,9 @@ export const mergeTeamDockLineChartTableItems = (
     // Merge userList
     item.userList.forEach((user) => {
       const existingUser = grouped[organizationId].userList.find(
-        (member) => `${member.userId}${member.userName}` === `${user.userId}${user.userName}`,
+        (member) =>
+          `${member.userId}${member.userName}` ===
+          `${user.userId}${user.userName}`,
       );
 
       const userInfo = {
@@ -2033,4 +2044,178 @@ export const mergeTeamDockLineChartTableItems = (
   });
 
   return Object.values(grouped);
+};
+export function getTruncatedFileName(
+  fileName: string,
+  maxLength: number = 20,
+): string {
+  const dotIndex = fileName.lastIndexOf('.');
+  if (dotIndex === -1) return fileName;
+
+  const name = fileName.slice(0, dotIndex);
+  const extension = fileName.slice(dotIndex); // include the dot
+
+  const availableLength = maxLength - extension.length - 3; // 3 for "..."
+  if (name.length <= availableLength) return fileName;
+
+  return name.slice(0, availableLength) + '...' + extension;
+}
+
+export const getInitialConditionMap = (): ConditionByMap => {
+  const map: ConditionByMap = {};
+  for (let step = 1; step <= SKILL_MAP_STEP_COUNT; step++) {
+    map[step] = {};
+    for (let level = 0; level < SKILL_MAP_LEVEL_COUNT; level++) {
+      map[step][level] = LevelUpConditionBy.NUMBER_OF_TIMES;
+    }
+  }
+
+  return map;
+};
+export const extractAndRemoveMsgQuotes = (html: string) => {
+  const result: { dataMsgId: string; dataTitle: string }[] = [];
+  const allMsgIds: string[] = [];
+  let replyUuid: string | null = null;
+
+  const div = document.createElement('div');
+  div.innerHTML = html;
+
+  const paragraphs = div.querySelectorAll('p');
+
+  paragraphs.forEach((p) => {
+    const spanWithMsgId = p.querySelector('[data-msg-id]');
+    const spanWithReplyId = p.querySelector('[data-msg-reply-id]');
+
+    if (spanWithMsgId) {
+      const dataMsgId = spanWithMsgId.getAttribute('data-msg-id');
+      const dataTitle = spanWithMsgId.getAttribute('data-title') || '';
+      if (dataMsgId) {
+        result.push({ dataMsgId, dataTitle });
+      }
+    }
+
+    if (spanWithReplyId && !replyUuid) {
+      const dataReplyId = spanWithReplyId.getAttribute('data-msg-reply-id');
+      if (dataReplyId) {
+        replyUuid = dataReplyId;
+      }
+    }
+  });
+
+  const allSpansWithMsgId = div.querySelectorAll('span[data-msg-id]');
+  allSpansWithMsgId.forEach((span) => {
+    const dataMsgId = span.getAttribute('data-msg-id');
+    if (dataMsgId) {
+      allMsgIds.push(dataMsgId);
+    }
+  });
+
+  return {
+    filterMsg: div.innerHTML,
+    quotes: result,
+    replyUuid,
+    allMsgIds,
+  };
+};
+
+export const handleDownloadFile = (
+  url: string,
+  filename: string,
+  useFetch = false,
+) => {
+  if (!useFetch) {
+    // Safe & optimized way for large files (native download)
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    return;
+  }
+
+  // Use fetch if really needed (small files or special processing)
+  fetch(url)
+    .then((res) => {
+      if (!res.ok) throw new Error(`Failed to download file: ${res.status}`);
+      return res.blob();
+    })
+    .then((blob) => {
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl); // cleanup
+    });
+};
+
+export function formatJapaneseDatetime(input: string): string {
+  const inputDate = new Date(input);
+  const now = new Date();
+
+  const inputYear = inputDate.getFullYear();
+  const currentYear = now.getFullYear();
+
+  const month = inputDate.getMonth() + 1; // JS month: 0-11
+  const day = inputDate.getDate();
+  const hour = inputDate.getHours();
+  const minute = inputDate.getMinutes().toString().padStart(2, '0');
+
+  const datePart = `${month}月${day}日 ${hour}:${minute}`;
+
+  return inputYear === currentYear ? datePart : `${inputYear}年${datePart}`;
+}
+
+export const highlightTextSafely = (
+  htmlString: string,
+  term: string,
+  userFullName: string,
+) => {
+  const escapedTerm = term.replace(HIGHLIGHT_SEARCH_TERM_REGEX, '\\$&');
+  const regex = new RegExp(escapedTerm, 'gi');
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlString, 'text/html');
+
+  const processNode = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      if (node.textContent) {
+        node.textContent = node.textContent?.replace(
+          regex,
+          (match) => `[[HIGHLIGHT]]${match}[[/HIGHLIGHT]]`,
+        );
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const element = node as HTMLElement;
+
+      if (element.classList.contains('mention')) {
+        const mentionName = element.textContent?.trim() || '';
+
+        if (
+          mentionName == `@${userFullName}` ||
+          mentionName == `@${MENTION_ALL_MEMBERS}`
+        ) {
+          element.classList.remove('text-[#0068B6]');
+          element.classList.add('text-[#0068B7]');
+        } else {
+          element.classList.remove('text-[#0068B6]');
+          element.classList.add('text-[#77858F]');
+        }
+      }
+      node.childNodes.forEach(processNode);
+    }
+  };
+
+  doc.body.childNodes.forEach(processNode);
+
+  const processedHTML = doc.body.innerHTML.replace(
+    /\[\[HIGHLIGHT\]\](.*?)\[\[\/HIGHLIGHT\]\]/g,
+    `<mark class="bg-[#0068B633]">$1</mark>`,
+  );
+  return processedHTML;
 };

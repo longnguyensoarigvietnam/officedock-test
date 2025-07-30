@@ -604,4 +604,8 @@ export enum OptionOrganizationStatisticType {
   OTHER = 'サブチーム',
   CALENDAR = 'カレンダー',
 }
-
+export enum EventActionType {
+  THIS_EVENT = 'THIS_EVENT',
+  THIS_AND_FOLLOWING_EVENTS = 'THIS_AND_FOLLOWING_EVENTS',
+  ALL_EVENTS = 'ALL_EVENTS'
+}

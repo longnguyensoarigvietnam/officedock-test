@@ -311,6 +311,7 @@ const StatisticBoard = () => {
       endDate: formatDateToYMD(`${endDateCompare}`) || '',
       tagIds: selectedTags,
       statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
+      isCompare: isCheckCompare,
     },
     condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
   });
@@ -545,6 +546,7 @@ const StatisticBoard = () => {
               router.push(pageRouters.STATISTIC_TAG_MANAGEMENT.href);
             }}
             variant={!isMyTask ? 'primary' : 'outline'}
+            disabled={isHasLoading}
             className={`${!isMyTask ? '' : '!text-[#77858F] !bg-transparent !border-[#77858F]'} !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
             タグ
           </Button>

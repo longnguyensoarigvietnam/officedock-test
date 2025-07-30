@@ -56,7 +56,7 @@ const BoardChat = () => {
   const [hasMoreDetailOnScrollDown, setHasMoreDetailOnScrollDown] =
     useState(false);
   const [dataChatList, setDataChatList] = useState<ChatRoomItem[]>([]);
-  const [filteredChatList, setFilteredChatList] = useState<ChatRoomItem[]>([]);
+  const [roomNameSearchResults, setRoomNameSearchResults] = useState<ChatRoomItem[]>([]);
   const [searchChatMsg, setSearchChatMsg] = useState('');
   const { data: session } = useSessionCache();
   const [dashboardMembers, setDashboardMembers] = useState<
@@ -228,7 +228,7 @@ const BoardChat = () => {
       return [...pinnedItems, ...unpinnedItems];
     });
 
-    setFilteredChatList((prevDataChatList) => {
+    setRoomNameSearchResults((prevDataChatList) => {
       const pinnedItems = prevDataChatList.filter(
         (item) => item.pinAt !== null,
       );
@@ -360,7 +360,7 @@ const BoardChat = () => {
       }
       return [...pinnedItems, ...unpinnedItems];
     });
-    setFilteredChatList((prevData) => {
+    setRoomNameSearchResults((prevData) => {
       return prevData.map((item) =>
         item.code === data.code
           ? {
@@ -381,18 +381,17 @@ const BoardChat = () => {
       <ListChatUsers
         hasMore={hasMore}
         dataChatList={dataChatList}
-        filteredChatList={filteredChatList}
+        roomNameSearchResults={roomNameSearchResults}
         chatRoomCode={chatRoomCode}
         dashboardMemberList={dashboardMemberList}
         dashboardMembers={dashboardMembers}
         setLastItemId={setLastItemId}
         setDataChatList={setDataChatList}
-        setFilteredChatList={setFilteredChatList}
+        setRoomNameSearchResults={setRoomNameSearchResults}
         setHasMore={setHasMore}
         setHasMoreDetailOnScrollDown={setHasMoreDetailOnScrollDown}
         setSearchChatMsg={setSearchChatMsg}
         handleSetChatRoomParam={handleSetChatRoomParam}
-        handleRemoveChatRoomParam={handleRemoveChatRoomParam}
       />
       {chatRoomCode && chatRoomCode !== BOOKMARK_ROUTER_NAME && (
         <ChatDetail
@@ -408,7 +407,7 @@ const BoardChat = () => {
           hasMoreDetailOnScrollDown={hasMoreDetailOnScrollDown}
           setHasMoreDetailOnScrollDown={setHasMoreDetailOnScrollDown}
           setSearchChatMsg={setSearchChatMsg}
-          setFilteredChatList={setFilteredChatList}
+          setRoomNameSearchResults={setRoomNameSearchResults}
           setLastItemId={setLastItemId}
           setHasMoreDetail={setHasMoreDetail}
           setDataChatList={setDataChatList}

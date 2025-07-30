@@ -28,7 +28,6 @@ from common.utils import (
 )
 from organizations.models import Organization
 from organizations.serializers import OrganizationDetailSerializer
-from stat_data.constants import ALL_TEAM
 from stat_data.serializers import (
     DailyEventSerializer,
     DailyTaskSerializer,
@@ -39,9 +38,9 @@ from stat_data.utils import (
     validate_date_by_regex_and_reformat,
     percentage_calculation_of_duration,
     aggregate_durations,
+    normalize_percentages,
 )
 from tasks.models import Task, TaskDuration
-from tasks.utils import split_date_range
 from users.models import User
 from users.serializers import DailyReportSerializer, BaseUserSerializer
 from roles.constants import Screens
@@ -57,35 +56,6 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     permission_classes = [ActionPermission]
     filter_backends = [FilterByPermission]
     screen_name = Screens.TEAM_DAILY_REPORT.value
-
-    def _separate_duration(self, duration, end_date, user=None):
-        """
-        Handle update and create duration by intervals
-        """
-        if duration.started_at.date() < timezone.now().date():
-            intervals = split_date_range(duration.started_at, end_date)
-            _, first_end_time = intervals.pop(0)
-            duration.paused_at = first_end_time
-            duration.save()
-            if len(intervals) >= 1:
-                last_date_start, _ = intervals.pop(-1)
-                # Create duration continue running
-                TaskDuration.objects.create(
-                    task_id=duration.task_id,
-                    started_at=last_date_start,
-                    paused_at=None,
-                    user=user,
-                )
-            if intervals is not []:
-                for start, end in intervals:
-                    TaskDuration.objects.create(
-                        task_id=duration.task_id,
-                        started_at=start,
-                        paused_at=end,
-                        user=user,
-                    )
-
-            return True
 
     @extend_schema(
         parameters=[
@@ -113,7 +83,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         # Find previous and next user in organization by current user
         if organization_id:
             organization = validate_company_organization(
-                user.company, organization_id
+                user.company_id, organization_id
             )
             users = list(organization.users.all().order_by("created_at"))
             # Find the user's position in the list
@@ -212,22 +182,15 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         category_list = aggregate_durations(
             durations=durations, is_daily_report=True
         )
-        percent = 0
-        for index, cat in enumerate(category_list):
-            is_last_element = index == len(category_list) - 1
+        for cat in category_list:
             category_duration = format_duration(cat["duration"]) or timedelta(0)
             category_name = cat["category_name"]
             category_color = cat["category_color"]
             category_id = cat["category_id"]
             # Calculate the percentage of the total duration
-            (
-                percent_per_total_duration,
-                percent,
-            ) = percentage_calculation_of_duration(
+            percent_per_total_duration = percentage_calculation_of_duration(
                 total_duration.total_seconds(),
                 time_str_to_timedelta(category_duration).total_seconds(),
-                percent,
-                is_last_element,
             )
             data["categories"].append(
                 {
@@ -238,7 +201,9 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     "percent": percent_per_total_duration,
                 }
             )
-
+        data["categories"] = normalize_percentages(
+            data["categories"], id_field="category_id"
+        )
         date = (
             request.query_params.get("date")
             if request.query_params.get("date")
@@ -375,7 +340,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         user_id = request.query_params.get("user_id", None)
         param_organization_id = request.query_params.get("organization_id")
         organization = validate_company_organization(
-            request.user.company, param_organization_id
+            request.user.company_id, param_organization_id
         )
         date = (
             validate_date_by_regex_and_reformat(
@@ -445,14 +410,11 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         )
         category_list = aggregate_durations(
             durations=durations,
-            organization_ids_param=ALL_TEAM,
             is_daily_report=True,
         )
         sub_duration = timedelta(0)
         total_duration = time_str_to_timedelta(format_duration(total_duration))
-        percent = 0
-        for index, cat in enumerate(category_list):
-            is_last_element = index == len(category_list) - 1
+        for cat in category_list:
             category_duration = format_duration(cat["duration"]) or timedelta(0)
             category_name = cat["category_name"]
             category_color = cat["category_color"]
@@ -462,14 +424,9 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             if cate_organization_id != main_organization["id"]:
                 sub_duration += time_str_to_timedelta(category_duration)
 
-            (
-                percent_per_total_duration,
-                percent,
-            ) = percentage_calculation_of_duration(
+            percent_per_total_duration = percentage_calculation_of_duration(
                 total_duration.total_seconds(),
                 time_str_to_timedelta(category_duration).total_seconds(),
-                percent,
-                is_last_element,
             )
 
             data["categories"].append(
@@ -485,7 +442,10 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     else False,
                 }
             )
-        sub_percent, _ = percentage_calculation_of_duration(
+        data["categories"] = normalize_percentages(
+            data["categories"], id_field="category_id"
+        )
+        sub_percent = percentage_calculation_of_duration(
             total_duration.total_seconds(), sub_duration.total_seconds()
         )
         data["sub_organization"] = {

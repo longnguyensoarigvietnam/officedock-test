@@ -82,7 +82,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
 
         roles = (
             Role.objects.filter(
-                Q(system_role=True) | Q(company=request.user.company)
+                Q(system_role=True) | Q(company_id=request.user.company_id)
             )
             .order_by("id")
             .all()
@@ -350,13 +350,12 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         """
         Get creation data for Schedule
         """
-        users = request.user.company.users.order_by("created_at").all()
-        calendar_org = request.user.company.get_calendar_organization()
-        event_locations = request.user.company.event_locations.order_by(
-            "created_at"
-        ).all()
+        company = request.user.company
+        users = company.users.order_by("created_at").all()
+        calendar_org = company.get_calendar_organization()
+        event_locations = company.event_locations.order_by("created_at").all()
         tags = (
-            request.user.company.tags.filter(
+            company.tags.filter(
                 is_hidden=False,
                 organizations=calendar_org,
             )
@@ -398,7 +397,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         Get all statistic categories
         """
         objs = StatisticCategory.objects.filter(
-            company=request.user.company
+            company_id=request.user.company_id
         ).order_by("created_at")
 
         return self.response_ok(self.get_serializer(objs, many=True).data)
@@ -419,15 +418,15 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         Get all organization skills
         """
         organization_id = request.query_params.get("organization_id", None)
-        company = request.user.company
-        orgs = Organization.objects.filter(company=company)
+        company_id = request.user.company_id
+        orgs = Organization.objects.filter(company_id=company_id)
 
         if organization_id:
             orgs = orgs.filter(id=organization_id)
         results = []
         for org in orgs:
             skills = Skill.objects.filter(
-                company=company, organization_id=org.id
+                company_id=company_id, organization_id=org.id
             ).order_by("id")
 
             results.append(
@@ -464,16 +463,18 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             OpenApiParameter("organization_id", type=int, required=False),
             OpenApiParameter("is_statistic", type=bool, required=False),
             OpenApiParameter("is_calendar_page", type=bool, required=False),
+            OpenApiParameter("is_chat_page", type=bool, required=False),
         ],
     )
     @action(methods=["GET"], detail=False, url_path="statistics")
     def statistics(self, request):
         """
-        Return creation data for statistics
+        Returns organization creation data and necessary metadata for initializing Task, Calendar, Statistics, and Chat modules
         """
         organization_id = request.query_params.get("organization_id")
         is_statistic = request.query_params.get("is_statistic")
         is_calendar_page = request.query_params.get("is_calendar_page")
+        is_chat_page = request.query_params.get("is_chat_page")
         user = request.user
         company = user.company
         organizations = []
@@ -595,7 +596,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     data = _handle_get_data_organization_my_statistic(data)
                     return self.response_ok(data)
 
-        if is_calendar_page and not organization_id:
+        if (is_calendar_page or is_chat_page) and not organization_id:
             list_org = []
             for organization in organizations:
                 list_org.append(
@@ -604,14 +605,15 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     ).data
                 )
             data["organizations"] = list_org
-            data[
-                "calendar_organization"
-            ] = CreationDataOrganizationWithStructCategorySerializer(
-                calendar_org, context={"user": user}
-            ).data
-            data["locations"] = EventLocationSerializer(
-                company.event_locations.all(), many=True
-            ).data
+            if is_calendar_page:
+                data[
+                    "calendar_organization"
+                ] = CreationDataOrganizationWithStructCategorySerializer(
+                    calendar_org, context={"user": user}
+                ).data
+                data["locations"] = EventLocationSerializer(
+                    company.event_locations.all(), many=True
+                ).data
         return self.response_ok(data)
 
 

@@ -46,6 +46,7 @@ const StatisticTagBoard = () => {
     selectedTags,
     selectedSmall,
     lineChartViewBy,
+    isHasLoading,
     setSelectedTags,
     setTagsOptions,
     setTotalDurationSmall,
@@ -481,6 +482,7 @@ const StatisticTagBoard = () => {
               router.push(pageRouters.STATISTIC_MANAGEMENT.href);
             }}
             variant={'outline'}
+            disabled={isHasLoading}
             className={`!py-0 !px-0 font-bold w-[80px] h-7 
               !rounded-[20px] text-xs !text-[#77858F] !bg-transparent !border-[#77858F]`}>
             カテゴリー

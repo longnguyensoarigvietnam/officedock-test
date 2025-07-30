@@ -183,13 +183,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
             participant = chat_room_participants.filter(user=self.user).first()
             for item in chat_room_participants:
                 if item.user.id == self.user.id:
-                    item.hidden_at = None
-                    item.save()
                     participant = item
                 else:
-                    item.unread_messages = item.unread_messages + 1
-                    item.hidden_at = None
-                    item.save()
+                    if not item.is_muted:
+                        item.unread_messages = item.unread_messages + 1
+                        item.save()
                     # Handle case realtime when send chat message
                     send_web_socket_event(
                         {
@@ -270,29 +268,5 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 "action": action,
                 "user": self.user.id,
                 "chat_room": ChatRoomsParticipantsSerializer(participant).data,
-            }
-        return False
-
-    @database_sync_to_async
-    def hide_chat_room(self, code):
-        """Hide or unhide a chat room for the user."""
-        participant = ChatRoomsParticipants.objects.filter(
-            chat_room__code=code, user=self.user
-        ).first()
-        action = WebSocketEventType.HIDE_ROOM.value
-        if participant:
-            if participant.hidden_at:
-                action = WebSocketEventType.SHOW_ROOM.value
-                participant.hidden_at = None
-            else:
-                participant.hidden_at = timezone.now()
-            participant.save()
-
-            return {
-                "action": action,
-                "user": self.user.id,
-                "chat_room": ChatRoomsParticipantsWebSocketSerializer(
-                    participant
-                ).data,
             }
         return False

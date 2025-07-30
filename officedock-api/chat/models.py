@@ -37,6 +37,7 @@ class ChatRoom(BaseModel):
         max_length=15, null=True, blank=True, choices=ChatRoomTypes.choices()
     )
     memo = models.TextField(null=True, blank=True)
+    select_organizations = models.JSONField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # Generate unique code when creating
@@ -66,16 +67,12 @@ class ChatRoomsParticipants(BaseModel):
         related_name="chat_rooms_participants",
     )
     unread_messages = models.IntegerField(default=0)
-    hidden_at = models.DateTimeField(null=True, blank=True)
     pin_at = models.DateTimeField(null=True, blank=True)
+    is_muted = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         # Set default company when creating
-        self.company = self.user.company
-
-        # Romove pin if hide chat room
-        if self.hidden_at:
-            self.pin_at = None
+        self.company_id = self.user.company_id
 
         super().save(*args, **kwargs)
 
@@ -227,7 +224,11 @@ class ChatFile(BaseModel):
         ChatRoom, on_delete=models.CASCADE, related_name="chat_files"
     )
     chat_message = models.ForeignKey(
-        ChatMessage, on_delete=models.CASCADE, related_name="chat_files"
+        ChatMessage,
+        on_delete=models.CASCADE,
+        related_name="chat_files",
+        null=True,
+        blank=True,
     )
     file_name = models.CharField(max_length=255)
     original_file = models.FileField(upload_to=chat_file_upload_path)
@@ -238,7 +239,7 @@ class ChatFile(BaseModel):
     file_size = models.FloatField()
 
     @classmethod
-    def create_files(cls, company, room, message, uuids=[]):
+    def create_files(cls, company_id, room, message, uuids=[]):
         """
         Custom create method to handle file upload logic
         """
@@ -289,7 +290,7 @@ class ChatFile(BaseModel):
                 with transaction.atomic():
                     ChatFile.objects.create(
                         uuid=uuid,
-                        company=company,
+                        company_id=company_id,
                         chat_room=room,
                         chat_message=message,
                         file_name=file_name,

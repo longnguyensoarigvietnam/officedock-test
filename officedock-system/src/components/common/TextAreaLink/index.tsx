@@ -29,6 +29,7 @@ const TextAreaLink: React.FC<TextAreaLinkProps> = ({
       }),
     ],
     content: initialValue,
+    editable: !disabled,
     onUpdate({ editor }) {
       const { state, view } = editor;
       const { schema } = state;
@@ -91,10 +92,14 @@ const TextAreaLink: React.FC<TextAreaLinkProps> = ({
 
   // Optional: Update content when `initialValue` changes
   useEffect(() => {
-    if (editor && initialValue !== editor.getHTML()) {
+    if (!editor) return;
+
+    editor.setOptions({ editable: !disabled });
+
+    if (initialValue && initialValue !== editor.getHTML()) {
       editor.commands.setContent(initialValue, false);
     }
-  }, [editor, initialValue]);
+  }, [editor, initialValue, disabled]);
 
   return (
     <div className={className}>
