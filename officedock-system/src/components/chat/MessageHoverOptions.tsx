@@ -163,7 +163,7 @@ export const MessageHoverOptions = ({
             <ImageRound
               name="Reply"
               src={'/icons/reply.svg'}
-              className="w-[17px] h-[15px] hover:cursor-pointer"
+              className="w-[18px] h-[15px] hover:cursor-pointer"
               onClick={() => {
                 handleReplyMsg({
                   user: {

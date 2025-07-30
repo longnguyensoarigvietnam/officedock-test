@@ -31,6 +31,7 @@ import ChatWarningUploadingFilesModal from '@components/modals/ChatWarningUpload
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import { AllChatRoomSearchMessagesModal } from '@components/modals/AllChatRoomSearchMessagesModal';
+import Spinner from '@components/common/Spinner';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -47,6 +48,7 @@ import { hasPermissionInArray } from '@utils';
 import { ChatContext } from '@providers/ChatProvider';
 import { useWebSocket } from '@providers/WebSocketProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { LoadingContext } from '@providers/LoadingProvider';
 
 import {
   ChatDashboardMember,
@@ -57,9 +59,9 @@ import {
 import { BasePagination } from '@interfaces/common';
 import { Profile } from '@interfaces/user';
 
+import useDebounceText from '@hooks/useDebounceText';
+
 import api from '@base/api';
-import { LoadingContext } from '@providers/LoadingProvider';
-import Spinner from '@components/common/Spinner';
 
 interface dataProps {
   dataChatList: ChatRoomItem[];
@@ -138,6 +140,7 @@ const ListChatUsers = ({
     showRoomNameSearchResultsSection,
     setShowRoomNameSearchResultsSection,
   ] = useState(false);
+  const debouncedRoomNameSearch = useDebounceText(roomNameSearch, 800);
 
   const [showWarningChatUploadingModal, setShowWarningChatUploadingModal] =
     useState(false);
@@ -596,9 +599,9 @@ const ListChatUsers = ({
       onMutate: () => {
         isSearchingRoomNameRef.current = true;
       },
-      onSuccess: ({ data }) => {
+      onSuccess: ({ data }, variables) => {
         setRoomNameSearchResults((prev) => {
-          if (prev) {
+          if (prev.length && variables.showLastMessageAt) {
             return [...prev, ...data.results];
           } else {
             return [...data.results];
@@ -836,6 +839,22 @@ const ListChatUsers = ({
   }, []);
 
   useEffect(() => {
+    if (!debouncedRoomNameSearch) {
+      setRoomNameSearchResults([]);
+      return;
+    }
+
+    setRoomNameSearchResults([]); // Clear immediately
+    isSearchingRoomNameRef.current = true;
+
+    getDataSearchRoomChat({
+      name: debouncedRoomNameSearch,
+      page: 1,
+      showLastMessageAt: false,
+    });
+  }, [debouncedRoomNameSearch]);
+
+  useEffect(() => {
     const handleScroll = () => {
       const resultsContainer = searchResultsSectionRef.current;
 
@@ -849,7 +868,7 @@ const ListChatUsers = ({
       ) {
         if (isSearchingRoomNameRef && isSearchingRoomNameRef.current) return;
         getDataSearchRoomChat({
-          name: roomNameSearch,
+          name: debouncedRoomNameSearch,
           page: 1,
           showLastMessageAt: true,
         });
@@ -872,6 +891,7 @@ const ListChatUsers = ({
     hasMoreSearch,
     searchResultsPage,
     isSearchingRoomNameRef,
+    debouncedRoomNameSearch,
     showRoomNameSearchResultsSection,
   ]);
 
@@ -888,18 +908,20 @@ const ListChatUsers = ({
             setLastPinAtSearch(null);
             setLastMsItemRoomSearch('');
             setRoomNameSearch(e.target.value);
-            setShowRoomNameSearchResultsSection(true);
+            if (e.target.value) {
+              setShowRoomNameSearchResultsSection(true);
+            } else {
+              setShowRoomNameSearchResultsSection(false);
+            }
           }}
           onKeyDown={(e: any) => {
             if (e.keyCode == 13 && e.target.value !== '') {
-              setRoomNameSearchResults([]);
-              !showRoomNameSearchResultsSection &&
-                setShowRoomNameSearchResultsSection(true);
-              isSearchingRoomNameRef.current = true;
-              getDataSearchRoomChat({
-                name: roomNameSearch,
-                page: 1,
-                showLastMessageAt: false,
+              setOpenSearchMessagesModal(true);
+              setShowRoomNameSearchResultsSection(false);
+              setAllRoomChatMsgSearch(roomNameSearch);
+              searchMessagesInAllRooms({
+                searchChatMsg: roomNameSearch,
+                pageNumber: 1,
               });
             }
           }}
@@ -915,8 +937,7 @@ const ListChatUsers = ({
               onClick={() => {
                 setOpenSearchMessagesModal(true);
                 setShowRoomNameSearchResultsSection(false);
-                setRoomNameSearch('');
-                setRoomNameSearchResults([])
+                setRoomNameSearchResults([]);
               }}>
               <ImageRound
                 src="/icons/search.svg"
@@ -935,21 +956,19 @@ const ListChatUsers = ({
             {roomNameSearchResults.map((item) => (
               <div
                 key={item.code}
-                className={`flex relative w-full group items-center hover:cursor-pointer py-2 px-2 hover:bg-[#EBF1F7] ${
+                className={`flex relative w-full items-center hover:cursor-pointer py-2 px-2 hover:bg-[#EBF1F7] ${
                   chatRoomCode === item.code && 'bg-[#FFFFFF]'
                 }`}
                 onClick={() => {
                   setShowRoomNameSearchResultsSection(false);
                   setRoomNameSearch('');
-                  setRoomNameSearchResults([])
+                  setRoomNameSearchResults([]);
                   handleRoomChange(item);
                 }}>
-                <div className="!w-8 !h-8 scale-90">{renderAvatar(item)}</div>
-                <div className="ml-3 flex-grow">
-                  <p className="text-[14px] font-medium text-[#1E293B] break-all">
-                    {item.name}
-                  </p>
-                </div>
+                <div className="!w-8 !h-8 scale-90 flex-shrink-0">{renderAvatar(item)}</div>
+                <p className="ml-2 text-[14px] font-medium text-[#1E293B] break-all">
+                  {item.name}
+                </p>
               </div>
             ))}
             {isSearchingRoomNameRef.current ? (
@@ -1161,6 +1180,7 @@ const ListChatUsers = ({
           searchMessageResults={searchMessageResults}
           allRoomChatMsgSearch={allRoomChatMsgSearch}
           setAllRoomChatMsgSearch={setAllRoomChatMsgSearch}
+          setRoomNameSearch={setRoomNameSearch}
           searchResultsPage={searchResultsPage}
           setSearchMessageResults={setSearchMessageResults}
           setSearchResultsPage={setSearchResultsPage}

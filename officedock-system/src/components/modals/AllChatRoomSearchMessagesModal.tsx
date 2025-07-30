@@ -3,6 +3,7 @@ import {
   Dispatch,
   MutableRefObject,
   SetStateAction,
+  useContext,
   useEffect,
   useRef,
   useState,
@@ -13,13 +14,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Button from '@components/common/Button';
 import InputSearch from '@components/common/InputSearch';
 import Modal from '@components/common/Modal';
+import Spinner from '@components/common/Spinner';
+import { MessageDetailBookmark } from '@components/chat/MessageDetailBookmark';
 
 import { NO_DATA_AVAILABLE } from '@constants';
 
 import { ChatDashboardMember, ChatMessageResponse } from '@interfaces/chat';
-
-import { MessageDetailBookmark } from '@components/chat/MessageDetailBookmark';
 import { Profile } from '@interfaces/user';
+
+import { LoadingContext } from '@providers/LoadingProvider';
 
 interface AllChatRoomSearchMessagesModalProps {
   open: boolean;
@@ -37,6 +40,7 @@ interface AllChatRoomSearchMessagesModalProps {
         hasNext?: boolean;
       }
     | undefined;
+  setRoomNameSearch: Dispatch<SetStateAction<string>>;
   handleConfirmGetDataDetailEvent: (id: string) => void;
   setAllRoomChatMsgSearch: Dispatch<SetStateAction<string>>;
   setSearchResultsPage: Dispatch<SetStateAction<number>>;
@@ -65,6 +69,7 @@ export const AllChatRoomSearchMessagesModal = ({
   searchResultsPage,
   dashboardMemberList,
   dashboardMembers,
+  setRoomNameSearch,
   handleConfirmGetDataDetailEvent,
   setSearchMessageResults,
   setSearchResultsPage,
@@ -75,6 +80,7 @@ export const AllChatRoomSearchMessagesModal = ({
 }: AllChatRoomSearchMessagesModalProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isLoading } = useContext(LoadingContext);
 
   const resultsContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -161,6 +167,7 @@ export const AllChatRoomSearchMessagesModal = ({
               className="!w-[60px] rounded-[6px] h-[36px] !px-[12px] font-medium text-sm"
               disabled={!allRoomChatMsgSearch}
               onClick={() => {
+                setRoomNameSearch(allRoomChatMsgSearch);
                 setSearchMessageResults(undefined);
                 setSearchResultsPage(1);
                 onSubmit(allRoomChatMsgSearch, 1);
@@ -210,6 +217,13 @@ export const AllChatRoomSearchMessagesModal = ({
             <p className="text-sm text-center text-[#77858F]">
               {NO_DATA_AVAILABLE}
             </p>
+          )}
+          {!isLoading &&
+          isSearchingMessagesRef &&
+          isSearchingMessagesRef.current ? (
+            <Spinner className="!h-fit py-3" iconClassName="h-6 w-6" />
+          ) : (
+            <></>
           )}
         </div>
       </div>
