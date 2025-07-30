@@ -161,7 +161,9 @@ interface dataProps {
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
   handleRemoveChatRoomParam: () => void;
-  setRoomNameSearchResults: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
+  setRoomNameSearchResults: React.Dispatch<
+    React.SetStateAction<ChatRoomItem[]>
+  >;
 }
 const ChatDetail = ({
   clientId,
@@ -2798,6 +2800,7 @@ const ChatDetail = ({
                         ChatRoomType.TASK,
                         ChatRoomType.SKILL,
                         ChatRoomType.CALENDAR,
+                        ChatRoomType.PRIVATE,
                       ].map(
                         (type) =>
                           chatRoomDetail?.code == chatRoomCode &&
@@ -2836,16 +2839,26 @@ const ChatDetail = ({
                                         boxShadow: '0px 2px 8px 0px #0000001A',
                                       }}
                                       className="absolute bg-[#5B6770] py-[6px] rounded-md text-white text-sm  font-medium  top-10 right-0 z-10  transform">
-                                      <div className="w-[126px]">
-                                        <div
-                                          className="py-[10px] px-[14px] cursor-pointer hover:opacity-70"
-                                          onClick={() => {
-                                            setOpenSettingBox(true);
-                                            // Refetch to get the latest room name
-                                            refetchChatRoomDetail();
-                                          }}>
-                                          編集
-                                        </div>
+                                      <div
+                                        className={`${
+                                          chatRoomDetail?.type ==
+                                          ChatRoomType.PRIVATE
+                                            ? 'w-[160px]'
+                                            : 'w-[126px]'
+                                        }`}>
+                                        {chatRoomDetail?.type !=
+                                          ChatRoomType.PRIVATE && (
+                                          <div
+                                            className="py-[10px] px-[14px] cursor-pointer hover:opacity-70"
+                                            onClick={() => {
+                                              setOpenSettingBox(true);
+                                              // Refetch to get the latest room name
+                                              refetchChatRoomDetail();
+                                            }}>
+                                            編集
+                                          </div>
+                                        )}
+
                                         <div
                                           onClick={() =>
                                             setShowModalMuteChat(true)
@@ -2853,11 +2866,18 @@ const ChatDetail = ({
                                           className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
                                           通知
                                         </div>
+                                        {chatRoomDetail?.type !=
+                                          ChatRoomType.PRIVATE && (
+                                          <div className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
+                                            グループを退会
+                                          </div>
+                                        )}
                                         <div className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
-                                          グループを退会
-                                        </div>
-                                        <div className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
-                                          グループを削除
+                                          {chatRoomDetail?.type !=
+                                          ChatRoomType.PRIVATE
+                                            ? 'グループ'
+                                            : '個人チャット'}
+                                          を削除
                                         </div>
                                       </div>
                                     </PopoverPanel>
