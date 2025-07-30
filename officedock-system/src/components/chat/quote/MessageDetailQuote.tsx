@@ -1,13 +1,11 @@
-import { Dispatch, Fragment, MutableRefObject, SetStateAction } from 'react';
+import { Dispatch, Fragment, SetStateAction } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 import { format } from 'date-fns';
-import { Editor } from '@tiptap/react';
 
 import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
-import { ProgressBar } from '@components/common/ProgressBar';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import {
@@ -37,7 +35,6 @@ import {
   ChatDashboardMember,
   ChatFileResponse,
   ChatMessageResponse,
-  ChatParticipant,
   ChatRoomDetail,
 } from '@interfaces/chat';
 
@@ -55,55 +52,16 @@ import {
   formatCheckDate,
   getFormattedDateTime,
 } from '@utils/date';
-
-import { MessageHoverOptions } from './MessageHoverOptions';
-import DetailReactionChat from './DetailReactionChat';
-import { MessageDetailQuote } from './quote/MessageDetailQuote';
-import MessageDetailQuoteText from './quote/MessageDetailQuoteText';
+import { MessageDetailQuoteChild } from './MessageDetailQuoteChild';
+import MessageDetailQuoteText from './MessageDetailQuoteText';
 
 export type MessageDetailProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
-  uploadFileStatus: Record<
-    string,
-    {
-      progress: number;
-      errorMsg?: string;
-    }
-  >;
   messageDetail: ChatMessageResponse;
   msgEditing?: string;
   dashboardMembers: ChatDashboardMember[];
-  editor: Editor | null;
   highlightedMessageId: string | null;
-  handleReplyMsg: ({
-    user,
-    replyUuid,
-  }: {
-    user: {
-      id: number;
-      name: string;
-    };
-    replyUuid: string;
-  }) => void;
-  setPreserveFiles: Dispatch<
-    SetStateAction<
-      {
-        uuid: string;
-        file: {
-          name: string;
-        };
-      }[]
-    >
-  >;
-  setOpenUploadFilesModal: Dispatch<SetStateAction<boolean>>;
-  setUploadFiles: Dispatch<
-    SetStateAction<
-      {
-        uuid: string;
-        file: File;
-      }[]
-    >
-  >;
+
   setDataPreviewFile: Dispatch<
     SetStateAction<{
       msgId: string;
@@ -112,131 +70,20 @@ export type MessageDetailProps = {
       createAt: string;
     } | null>
   >;
-  setMessage: Dispatch<SetStateAction<string>>;
-  setMentionMembers: Dispatch<SetStateAction<ChatParticipant[]>>;
-  setMsgIdUpdated?: Dispatch<SetStateAction<string | undefined>>;
-  setOpenConfirmDeleteModal: Dispatch<SetStateAction<boolean>>;
-  setMsgIdDeleted?: Dispatch<SetStateAction<string | undefined>>;
-  setMsgEditing?: Dispatch<SetStateAction<string | undefined>>;
+
   handleActionEditTask: (id: number) => void;
-  handleConfirmUpdateMsg: (uuid: string) => void;
-  handleConfirmGetDataDetailEvent: (id: string) => void;
-  handleUpdateBookmark: (dataUuid: string) => void;
-  handleReactionClick: (msgUuid: string, icon: string) => void;
-  handleRemoveReactionClick: (msgUuid: string, icon: string) => void;
-  handleResetChatRoomNotification: () => void;
-  handleQuoteMsgIcon: (data: { uuid: string; title: string }) => void;
-  chatContainerRef: MutableRefObject<HTMLDivElement | null>;
 };
 
-export const MessageDetail = ({
+export const MessageDetailQuote = ({
   chatRoomDetail,
-  uploadFileStatus,
   messageDetail,
   dashboardMembers,
-  editor,
-  chatContainerRef,
   highlightedMessageId,
-  handleQuoteMsgIcon,
   setDataPreviewFile,
-  handleReplyMsg,
-  setPreserveFiles,
-  setOpenUploadFilesModal,
-  setUploadFiles,
-  setMessage,
-  setMentionMembers,
-  setMsgIdUpdated,
-  setOpenConfirmDeleteModal,
-  setMsgIdDeleted,
-  handleUpdateBookmark,
   handleActionEditTask,
-  handleConfirmGetDataDetailEvent,
-  handleReactionClick,
-  handleRemoveReactionClick,
-  handleResetChatRoomNotification,
 }: MessageDetailProps) => {
   const { data: session } = useSessionCache();
   const router = useRouter();
-
-  // Delete message
-  const handleOpenDeleteMsgModal = (id: string) => {
-    setOpenConfirmDeleteModal(true);
-    if (setMsgIdDeleted) {
-      setMsgIdDeleted(id);
-    }
-  };
-
-  // Edit message
-  const handleOpenEditForm = async (id: string) => {
-    if (setMsgIdUpdated) {
-      setMsgIdUpdated(id);
-    }
-    if (setMessage) {
-      setMessage(messageDetail.message);
-    }
-    if (setMentionMembers) {
-      const mentionIds = messageDetail.mentions || [];
-      const mentionMembers = mentionIds.map((mentionId) => {
-        return {
-          id: Number(mentionId),
-          fullName:
-            dashboardMembers.find((member) => member.id == mentionId)
-              ?.fullName || '',
-        };
-      });
-      if (messageDetail.message.includes(`@${MENTION_ALL_MEMBERS}`)) {
-        setMentionMembers([
-          {
-            id: null,
-            fullName: MENTION_ALL_MEMBERS,
-          },
-          ...mentionMembers,
-        ]);
-      } else {
-        setMentionMembers(mentionMembers || []);
-      }
-    }
-    if (messageDetail.chatFiles.length > 0) {
-      const preserveFiles = messageDetail.chatFiles.map((file) => {
-        return {
-          uuid: file.uuid,
-          file: {
-            name: file.fileName,
-          },
-        };
-      });
-      setPreserveFiles(preserveFiles);
-      setUploadFiles([]);
-      setOpenUploadFilesModal(true);
-    } else {
-      const cleanedMessage = cleanTaskQuoteHTML(messageDetail.message);
-      editor && editor.commands.setContent(cleanedMessage);
-    }
-  };
-
-  function cleanTaskQuoteHTML(html: string): string {
-    const container = document.createElement('div');
-    container.innerHTML = html;
-
-    container.querySelectorAll('.inline-task-quote').forEach((el) => {
-      const outer = el as HTMLElement;
-
-      const id = outer.getAttribute('data-task-id');
-      const title = outer.getAttribute('data-title');
-
-      const contentText = `[タスク] ${title}`;
-
-      const cleanedSpan = document.createElement('span');
-      cleanedSpan.className = 'inline-task-quote';
-      cleanedSpan.setAttribute('data-task-id', id || '');
-      cleanedSpan.setAttribute('data-title', title || '');
-      cleanedSpan.textContent = contentText;
-
-      outer.replaceWith(cleanedSpan);
-    });
-
-    return container.innerHTML;
-  }
 
   // Render avatar
   const renderAvatar = (senderId: number) => {
@@ -245,11 +92,16 @@ export const MessageDetail = ({
     );
 
     return (
-      <div className="h-6">
+      <div className="h-6 flex items-center gap-2">
+        <ImageRound
+          className="w-fit h-fit"
+          name="Quote icon"
+          src="/icons/quotation.svg"
+        />
         <CustomUserAvatar
           avatarUrl={memberInfo?.avatarUrl || ''}
           avatarColor={memberInfo?.avatarColor || ''}
-          size={30}
+          size={22}
         />
       </div>
     );
@@ -376,7 +228,7 @@ export const MessageDetail = ({
             );
             if (foundQuote) {
               children.push(
-                <MessageDetailQuote
+                <MessageDetailQuoteChild
                   key={`${index}-${i}-msg`}
                   chatRoomDetail={chatRoomDetail}
                   messageDetail={foundQuote}
@@ -472,22 +324,6 @@ export const MessageDetail = ({
     }
   };
 
-  // React message
-  const handleReactionClickDetail = (icon: string) => {
-    if (messageDetail) {
-      handleReactionClick(messageDetail?.uuid, icon);
-      handleResetChatRoomNotification();
-    }
-  };
-
-  // Remove reactions
-  const handleRemoveReactionClickDetail = (icon: string) => {
-    if (messageDetail) {
-      handleRemoveReactionClick(messageDetail?.uuid, icon);
-      handleResetChatRoomNotification();
-    }
-  };
-
   // Render participants content
   const renderParticipantsContent = (messageDetail: ChatMessageResponse) => {
     return (
@@ -527,7 +363,7 @@ export const MessageDetail = ({
   return (
     <Fragment>
       {messageDetail && (
-        <div className="group my-2">
+        <div className="group my-2 bg-white border border-[#D2DBE1] rounded-md">
           {(chatRoomDetail?.type === ChatRoomType.PRIVATE ||
             chatRoomDetail?.type === ChatRoomType.GROUP ||
             chatRoomDetail?.type === ChatRoomType.SELF) && (
@@ -535,9 +371,9 @@ export const MessageDetail = ({
               className={`flex !box-border group-hover:bg-[#FFFFFF] ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} py-3 ml-5 mr-3 group-hover:rounded-md`}>
               {renderAvatar(messageDetail.sender.id)}
               <div className={`ml-3 !w-full`}>
-                <div className="flex w-full justify-between items-baseline pb-2">
-                  <div className="flex flex-grow  gap-2 items-baseline font-semibold text-[15px] pr-2">
-                    <div className="flex-grow min-w-0 break-all whitespace-normal line-clamp-3">
+                <div className="flex w-full gap-2 items-baseline pb-2">
+                  <div className="flex w-fit  gap-2 items-baseline font-semibold text-[15px] pr-2">
+                    <div className="w-fit min-w-0 break-all text-[13px] text-[#77858F] whitespace-normal line-clamp-3">
                       {messageDetail.sender.fullName}
                       <span className="font-medium text-xs text-[#77858F]">
                         {' '}
@@ -592,97 +428,78 @@ export const MessageDetail = ({
                                 messageDetail.message,
                                 messageDetail.mentions || [],
                               )}
-                              {messageDetail?.chatFiles &&
-                              messageDetail?.chatFiles.length > 0 &&
-                              uploadFileStatus[messageDetail.uuid]?.progress >=
-                                0 &&
-                              uploadFileStatus[messageDetail.uuid]?.progress <
-                                100 ? (
-                                <ProgressBar
-                                  value={
-                                    uploadFileStatus[messageDetail.uuid]
-                                      .progress
-                                  }
-                                />
-                              ) : (
-                                <div className="flex flex-col gap-2 !w-[100%]">
-                                  {messageDetail?.chatFiles &&
-                                    messageDetail?.chatFiles.length > 0 &&
-                                    messageDetail?.chatFiles.map(
-                                      (file, index) => {
-                                        return (
-                                          <div
-                                            key={index}
-                                            className="flex justify-between items-center !w-[100%]">
-                                            <div className="bg-white border-[#D2DBE1] border-[1px] rounded-[6px] p-[14px] flex gap-2 items-center !w-[calc(100%_-_100px)]">
-                                              {file.fileType.includes(
-                                                'image',
-                                              ) && (
-                                                <div>
-                                                  <Image
-                                                    src={getFileURL(
-                                                      file?.compressedFile ||
-                                                        '',
-                                                    )}
-                                                    alt="Image"
-                                                    unoptimized={true}
-                                                    width={150}
-                                                    height={100}
-                                                  />
-                                                </div>
-                                              )}
-                                              <p
-                                                className={`text-[#0068B6] font-medium text-[14px] break-all max-w-full ${
-                                                  file.fileType.includes(
-                                                    'image',
-                                                  )
-                                                    ? 'max-w-[calc(100%_-_200px)]'
-                                                    : 'max-w-[calc(100%)]'
-                                                }`}>
-                                                {file.fileName}
-                                              </p>
-                                            </div>
-                                            <Button
-                                              onClick={() => {
-                                                const memberInfo =
-                                                  dashboardMembers.find(
-                                                    (member) =>
-                                                      member.id ===
-                                                      messageDetail.sender.id,
-                                                  );
-                                                setDataPreviewFile({
-                                                  msgId:
-                                                    String(messageDetail.id) ||
-                                                    '',
-                                                  createAt: String(
-                                                    messageDetail.createdAt,
-                                                  ),
-                                                  user: {
-                                                    id: messageDetail.sender
-                                                      ?.id,
-                                                    avatarColor:
-                                                      memberInfo?.avatarColor ||
-                                                      '',
-                                                    avatarUrl:
-                                                      memberInfo?.avatarUrl ||
-                                                      '',
-                                                    fullName:
-                                                      messageDetail.sender
-                                                        ?.fullName,
-                                                  },
-                                                  file: file,
-                                                });
-                                              }}
-                                              className="font-medium w-[84px] h-[30px] !rounded-[6px] text-xs !px-0"
-                                              variant="outline">
-                                              プレビュー
-                                            </Button>
+                              <div className="flex flex-col gap-2 !w-[100%]">
+                                {messageDetail?.chatFiles &&
+                                  messageDetail?.chatFiles.length > 0 &&
+                                  messageDetail?.chatFiles.map(
+                                    (file, index) => {
+                                      return (
+                                        <div
+                                          key={index}
+                                          className="flex justify-between items-center !w-[100%]">
+                                          <div className="bg-white border-[#D2DBE1] border-[1px] rounded-[6px] p-[14px] flex gap-2 items-center !w-[calc(100%_-_100px)]">
+                                            {file.fileType.includes(
+                                              'image',
+                                            ) && (
+                                              <div>
+                                                <Image
+                                                  src={getFileURL(
+                                                    file?.compressedFile || '',
+                                                  )}
+                                                  alt="Image"
+                                                  unoptimized={true}
+                                                  width={150}
+                                                  height={100}
+                                                />
+                                              </div>
+                                            )}
+                                            <p
+                                              className={`text-[#0068B6] font-medium text-[14px] break-all max-w-full ${
+                                                file.fileType.includes('image')
+                                                  ? 'max-w-[calc(100%_-_200px)]'
+                                                  : 'max-w-[calc(100%)]'
+                                              }`}>
+                                              {file.fileName}
+                                            </p>
                                           </div>
-                                        );
-                                      },
-                                    )}
-                                </div>
-                              )}
+                                          <Button
+                                            onClick={() => {
+                                              const memberInfo =
+                                                dashboardMembers.find(
+                                                  (member) =>
+                                                    member.id ===
+                                                    messageDetail.sender.id,
+                                                );
+                                              setDataPreviewFile({
+                                                msgId:
+                                                  String(messageDetail.id) ||
+                                                  '',
+                                                createAt: String(
+                                                  messageDetail.createdAt,
+                                                ),
+                                                user: {
+                                                  id: messageDetail.sender?.id,
+                                                  avatarColor:
+                                                    memberInfo?.avatarColor ||
+                                                    '',
+                                                  avatarUrl:
+                                                    memberInfo?.avatarUrl || '',
+                                                  fullName:
+                                                    messageDetail.sender
+                                                      ?.fullName,
+                                                },
+                                                file: file,
+                                              });
+                                            }}
+                                            className="font-medium w-[84px] h-[30px] !rounded-[6px] text-xs !px-0"
+                                            variant="outline">
+                                            プレビュー
+                                          </Button>
+                                        </div>
+                                      );
+                                    },
+                                  )}
+                              </div>
                             </div>
                           )}
                           {messageDetail.type ===
@@ -795,13 +612,7 @@ export const MessageDetail = ({
                                   <p className="font-semibold mt-2">参加者</p>
                                   {renderParticipantsContent(messageDetail)}
                                   {messageDetail.schedule?.id ? (
-                                    <p
-                                      className="hover:cursor-pointer mt-2"
-                                      onClick={() =>
-                                        handleConfirmGetDataDetailEvent(
-                                          `${messageDetail.schedule?.id}`,
-                                        )
-                                      }>
+                                    <p className="hover:cursor-pointer mt-2">
                                       予定を確認する
                                     </p>
                                   ) : (
@@ -847,13 +658,7 @@ export const MessageDetail = ({
                                   <p className="font-semibold mt-2">参加者</p>
                                   {renderParticipantsContent(messageDetail)}
                                   {messageDetail.schedule?.id ? (
-                                    <p
-                                      className="hover:cursor-pointer mt-2"
-                                      onClick={() =>
-                                        handleConfirmGetDataDetailEvent(
-                                          `${messageDetail.schedule?.id}`,
-                                        )
-                                      }>
+                                    <p className="hover:cursor-pointer mt-2">
                                       予定を確認する
                                     </p>
                                   ) : (
@@ -920,42 +725,9 @@ export const MessageDetail = ({
                         </div>
                       )}
                     </div>
-                    <>
-                      {!messageDetail.deletedAt &&
-                        !(
-                          uploadFileStatus[messageDetail.uuid]?.progress >= 0 &&
-                          uploadFileStatus[messageDetail.uuid]?.progress < 100
-                        ) && (
-                          <MessageHoverOptions
-                            messageDetail={messageDetail}
-                            chatRoomDetail={chatRoomDetail}
-                            handleOpenEditForm={handleOpenEditForm}
-                            handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
-                            handleUpdateBookmark={handleUpdateBookmark}
-                            handleReactionClick={handleReactionClickDetail}
-                            handleRemoveReactionClick={
-                              handleRemoveReactionClickDetail
-                            }
-                            handleQuoteMsgIcon={handleQuoteMsgIcon}
-                            handleReplyMsg={handleReplyMsg}
-                          />
-                        )}
-                    </>
                   </div>
                 </div>
                 {/* Data reaction */}
-                {!messageDetail.deletedAt && (
-                  <div>
-                    <DetailReactionChat
-                      dataMsgDetail={messageDetail}
-                      handleReactionClick={handleReactionClickDetail}
-                      handleRemoveReactionClick={
-                        handleRemoveReactionClickDetail
-                      }
-                      chatContainerRef={chatContainerRef}
-                    />
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -1073,38 +845,8 @@ export const MessageDetail = ({
                         </div>
                       )}
                     </div>
-                    <>
-                      {!messageDetail.deletedAt && (
-                        <MessageHoverOptions
-                          messageDetail={messageDetail}
-                          chatRoomDetail={chatRoomDetail}
-                          handleReplyMsg={handleReplyMsg}
-                          handleOpenEditForm={handleOpenEditForm}
-                          handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
-                          handleUpdateBookmark={handleUpdateBookmark}
-                          handleReactionClick={handleReactionClickDetail}
-                          handleRemoveReactionClick={
-                            handleRemoveReactionClickDetail
-                          }
-                          handleQuoteMsgIcon={handleQuoteMsgIcon}
-                        />
-                      )}
-                    </>
                   </div>
                 </div>
-                {/* Data reaction */}
-                {!messageDetail.deletedAt && (
-                  <div>
-                    <DetailReactionChat
-                      dataMsgDetail={messageDetail}
-                      handleReactionClick={handleReactionClickDetail}
-                      handleRemoveReactionClick={
-                        handleRemoveReactionClickDetail
-                      }
-                      chatContainerRef={chatContainerRef}
-                    />
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -1113,9 +855,9 @@ export const MessageDetail = ({
               className={`flex !box-border  ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
               <div>{renderAvatar(messageDetail.sender.id)}</div>
               <div className={`ml-3 w-full`}>
-                <div className="flex justify-between items-baseline pb-2">
+                <div className="flex gap-2 items-baseline pb-2">
                   <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
-                    <p className="max-w-full break-all">
+                    <p className="max-w-full break-all text-[13px] text-[#77858F]">
                       {messageDetail.sender.fullName}{' '}
                       <span className="font-medium text-xs text-[#77858F]">
                         {messageDetail.sender?.organizations?.name}
@@ -1203,39 +945,8 @@ export const MessageDetail = ({
                         </div>
                       )}
                     </div>
-                    <>
-                      {!messageDetail.deletedAt && (
-                        <MessageHoverOptions
-                          messageDetail={messageDetail}
-                          chatRoomDetail={chatRoomDetail}
-                          handleReplyMsg={handleReplyMsg}
-                          handleOpenEditForm={handleOpenEditForm}
-                          handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
-                          handleUpdateBookmark={handleUpdateBookmark}
-                          handleReactionClick={handleReactionClickDetail}
-                          handleRemoveReactionClick={
-                            handleRemoveReactionClickDetail
-                          }
-                          handleQuoteMsgIcon={handleQuoteMsgIcon}
-                        />
-                      )}
-                    </>
                   </div>
                 </div>
-                {/* Data reaction */}
-
-                {!messageDetail.deletedAt && (
-                  <div>
-                    <DetailReactionChat
-                      dataMsgDetail={messageDetail}
-                      handleReactionClick={handleReactionClickDetail}
-                      handleRemoveReactionClick={
-                        handleRemoveReactionClickDetail
-                      }
-                      chatContainerRef={chatContainerRef}
-                    />
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -1244,9 +955,9 @@ export const MessageDetail = ({
               className={`flex !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
               <div>{renderAvatar(messageDetail.sender.id)}</div>
               <div className={`ml-3 w-full`}>
-                <div className="flex justify-between items-baseline pb-2">
+                <div className="flex gap-2 items-baseline pb-2">
                   <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
-                    <p className="max-w-full break-all">
+                    <p className="max-w-full break-all text-[13px] text-[#77858F]">
                       {messageDetail.sender.fullName}{' '}
                       <span className="font-medium text-xs text-[#77858F]">
                         {messageDetail.sender?.organizations?.name}
@@ -1274,13 +985,7 @@ export const MessageDetail = ({
                 <div className="relative">
                   <div className={`!w-[100%]`}>
                     <div className="flex flex-col gap-3">
-                      <div
-                        className="flex items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer"
-                        onClick={() => {
-                          handleConfirmGetDataDetailEvent(
-                            `${messageDetail.schedule?.id}`,
-                          );
-                        }}>
+                      <div className="flex items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer">
                         <ImageRound
                           className={`w-[15px] h-[14px]`}
                           name="Calendar icon"
@@ -1319,38 +1024,8 @@ export const MessageDetail = ({
                         {messageDetail.message}
                       </p>
                     </div>
-                    <>
-                      {!messageDetail.deletedAt && (
-                        <MessageHoverOptions
-                          messageDetail={messageDetail}
-                          chatRoomDetail={chatRoomDetail}
-                          handleReplyMsg={handleReplyMsg}
-                          handleOpenEditForm={handleOpenEditForm}
-                          handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
-                          handleUpdateBookmark={handleUpdateBookmark}
-                          handleReactionClick={handleReactionClickDetail}
-                          handleRemoveReactionClick={
-                            handleRemoveReactionClickDetail
-                          }
-                          handleQuoteMsgIcon={handleQuoteMsgIcon}
-                        />
-                      )}
-                    </>
                   </div>
                 </div>
-                {/* Data reaction */}
-                {!messageDetail.deletedAt && (
-                  <div>
-                    <DetailReactionChat
-                      dataMsgDetail={messageDetail}
-                      handleReactionClick={handleReactionClickDetail}
-                      handleRemoveReactionClick={
-                        handleRemoveReactionClickDetail
-                      }
-                      chatContainerRef={chatContainerRef}
-                    />
-                  </div>
-                )}
               </div>
             </div>
           )}

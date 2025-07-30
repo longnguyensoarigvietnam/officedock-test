@@ -33,7 +33,7 @@ export const MsgQuoteText = Node.create({
       mergeAttributes(HTMLAttributes, {
         'data-msg-id': HTMLAttributes.id,
         'data-title': HTMLAttributes.title,
-        // 'data-quote-text': 'true',
+        'data-quote-text': 'true',
         class: 'inline-msg-quote',
       }),
       ['span', { style: 'color: #77858F;' }, '[引用]'],

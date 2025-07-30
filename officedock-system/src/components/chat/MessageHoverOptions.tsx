@@ -33,6 +33,7 @@ interface MessageHoverOptionsProps {
     };
     replyUuid: string;
   }) => void;
+  handleQuoteMsgIcon: (data: { uuid: string; title: string }) => void;
 }
 
 export const MessageHoverOptions = ({
@@ -44,6 +45,7 @@ export const MessageHoverOptions = ({
   handleOpenEditForm,
   handleOpenDeleteMsgModal,
   handleReplyMsg,
+  handleQuoteMsgIcon,
 }: MessageHoverOptionsProps) => {
   const optionRef = useRef<HTMLDivElement | null>(null);
   const { data: session } = useSessionCache();
@@ -237,6 +239,12 @@ export const MessageHoverOptions = ({
             name="Quotation"
             src={'/icons/quotation.svg'}
             className="w-[15px] h-[10px] hover:cursor-pointer"
+            onClick={() => {
+              handleQuoteMsgIcon({
+                uuid: messageDetail.uuid,
+                title: '',
+              });
+            }}
           />
         </div>
       </DynamicTooltip>
