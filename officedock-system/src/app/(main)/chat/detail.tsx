@@ -2763,15 +2763,17 @@ const ChatDetail = ({
                         )}
                       </div>
                     )}
-                  {chatRoomDetail?.isMuted && (
-                    <div className={`flex-shrink-0`}>
-                      <ImageRound
-                        className={` w-fit h-fit hover:cursor-pointer`}
-                        src="/icons/mute-white.svg"
-                        name="mute icon"
-                      />
-                    </div>
-                  )}
+                  {chatRoomDetail?.isMuted &&
+                    chatRoomDetail &&
+                    chatRoomDetail.type !== ChatRoomType.GROUP && (
+                      <div className={`flex-shrink-0`}>
+                        <ImageRound
+                          className={` w-fit h-fit hover:cursor-pointer`}
+                          src="/icons/mute-white.svg"
+                          name="mute icon"
+                        />
+                      </div>
+                    )}
                 </div>
               </div>
 
