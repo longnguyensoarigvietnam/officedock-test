@@ -1,3 +1,4 @@
+import uuid
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Count, Q
 from rest_framework import serializers
@@ -351,22 +352,9 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         """To representation field"""
         representation = super().to_representation(instance)
 
-        if quote_list := instance.quote:
-            data_quote = []
-            quote_list = (
-                quote_list if isinstance(quote_list, list) else [quote_list]
-            )
-            for quote in quote_list:
-                message = ChatMessage.objects.filter(
-                    uuid=quote.get("message_uuid")
-                ).first()
-                if message:
-                    data_quote.append(
-                        ChatMessageSerializer(
-                            message, context={"is_quote": True}
-                        ).data
-                    )
-            representation["quote"] = data_quote
+        # Handle quote messages
+        representation["quote"] = self._get_quote_messages(instance)
+
         if instance.reply:
             representation["reply"] = ChatMessageSerializer(instance.reply).data
         if instance.task and instance.task.deleted_at is not None:
@@ -374,6 +362,36 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         if instance.schedule and instance.schedule.deleted_at is not None:
             representation["schedule"] = None
         return representation
+
+    def _get_quote_messages(self, instance):
+        """Helper to fetch and serialize quote messages."""
+        quote_list = instance.quote
+        if not quote_list:
+            return []
+        data_quote = []
+        quote_list = (
+            quote_list if isinstance(quote_list, list) else [quote_list]
+        )
+        for message_uuid in quote_list:
+            try:
+                if isinstance(message_uuid, str):
+                    message_uuid_obj = uuid.UUID(message_uuid)
+                elif isinstance(message_uuid, uuid.UUID):
+                    message_uuid_obj = message_uuid
+                else:
+                    continue
+                message = ChatMessage.objects.filter(
+                    uuid=message_uuid_obj
+                ).first()
+                if message:
+                    data_quote.append(
+                        ChatMessageSerializer(
+                            message, context={"is_quote": True}
+                        ).data
+                    )
+            except (ValueError, TypeError):
+                continue
+        return data_quote
 
     def get_chat_files(self, obj):
         """
@@ -500,26 +518,6 @@ class BookMarkSerializer(serializers.Serializer):
     bookmark_at = serializers.DateTimeField(allow_null=True, required=False)
 
 
-class QuoteMessageSerializer(serializers.Serializer):
-    """
-    Quote message serializer
-    """
-
-    message_uuid = serializers.UUIDField(
-        required=True,
-    )
-    message = serializers.CharField(required=False, allow_null=True)
-
-    def validate(self, attrs):
-        """Validate quote"""
-        message_uuid = attrs.get("message_uuid")
-        if not ChatMessage.objects.filter(uuid=message_uuid).exists():
-            raise NotFound({"detail": ERROR_MESSAGES["message_not_exists"]})
-        attrs["message_uuid"] = str(message_uuid)
-
-        return attrs
-
-
 class ReactionSerializer(serializers.Serializer):
     """
     Reaction serializer
@@ -556,7 +554,9 @@ class SendMessageSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=False,
     )
-    quote = QuoteMessageSerializer(many=True, required=False, allow_null=True)
+    quote = serializers.ListField(
+        required=False, allow_null=True, child=serializers.UUIDField()
+    )
     reply_uuid = serializers.UUIDField(required=False, allow_null=True)
 
     class Meta:
@@ -582,6 +582,19 @@ class SendMessageSerializer(serializers.ModelSerializer):
                 attrs["reply"] = message
             else:
                 raise NotFound({"detail": ERROR_MESSAGES["message_not_exists"]})
+
+        quote = attrs.get("quote")
+        if quote:
+            quote_list = []
+            for uuid in quote:
+                if uuid:
+                    if message := ChatMessage.objects.filter(uuid=uuid).first():
+                        quote_list.append(str(uuid))
+                    else:
+                        raise NotFound(
+                            {"detail": ERROR_MESSAGES["message_not_exists"]}
+                        )
+            attrs["quote"] = quote_list
 
         return attrs
 
