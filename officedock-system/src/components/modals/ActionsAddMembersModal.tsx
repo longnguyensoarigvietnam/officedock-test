@@ -3,7 +3,6 @@
 import { memo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { UseMutationResult } from 'react-query';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import Modal from '../common/Modal';
 import InputSearch from '@components/common/InputSearch';
@@ -12,7 +11,11 @@ import Button from '@components/common/Button';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Checkbox from '@components/common/Checkbox';
 import Input from '@components/common/Input';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
+import { ChatParticipantType } from '@constants/enums';
 import { NO_OPTIONS } from '@constants';
 
 import { Profile } from '@interfaces/user';
@@ -21,8 +24,8 @@ import {
   ChatParticipant,
   ChatRoomItem,
 } from '@interfaces/chat';
-import { ChatParticipantType } from '@constants/enums';
-import GroupIconWithDynamicColor from '@components/common/GroupIcon';
+
+import { checkIsParticipantSelected, sortChatParticipants } from '@utils';
 
 export type ActionsAddMembersModalProps = {
   open: boolean;
@@ -137,18 +140,6 @@ const ActionsAddMembersModal = memo(
           />
         </div>
       );
-    };
-
-    // Check is participant selected
-    const checkIsParticipantSelected = (member: ChatParticipant) => {
-      const memberId = Number(String(member.id).split('-')[1]);
-
-      const userIds = watch('members').filter(Boolean) ?? [];
-      const orgIds = watch('organizations').filter(Boolean) ?? [];
-
-      return member.type === ChatParticipantType.USER
-        ? userIds.includes(memberId)
-        : orgIds.includes(memberId);
     };
 
     // Handle select chat participant
@@ -395,6 +386,15 @@ const ActionsAddMembersModal = memo(
                   .toLowerCase()
                   .includes(searchName.toLowerCase()),
               )
+              .sort((prev: ChatParticipant, next: ChatParticipant) => {
+                return sortChatParticipants(
+                  prev,
+                  next,
+                  Number(session?.user.id),
+                  watch('members').filter(Boolean) ?? [],
+                  watch('organizations').filter(Boolean) ?? [],
+                );
+              })
               .map((member) => {
                 return (
                   <div
@@ -412,7 +412,11 @@ const ActionsAddMembersModal = memo(
                         name="members"
                         render={() => (
                           <Checkbox
-                            isChecked={checkIsParticipantSelected(member)}
+                            isChecked={checkIsParticipantSelected(
+                              member,
+                              watch('members').filter(Boolean) ?? [],
+                              watch('organizations').filter(Boolean) ?? [],
+                            )}
                             onChange={() =>
                               handleSelectChatParticipant(
                                 member,

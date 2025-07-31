@@ -96,6 +96,7 @@ export type ActionsEventModalProps = {
   defaultStartDate?: Date | undefined;
   calendarView?: string | null;
   backToEditing?: boolean;
+  isEditDisabled?: boolean;
   setIsEditingRepetitiveFields: Dispatch<SetStateAction<boolean>>;
   onDelete?: (values: EventEditFormData) => void;
   onClose: () => void;
@@ -112,6 +113,7 @@ const ActionsEventModal = ({
   defaultStartDate,
   calendarView,
   backToEditing,
+  isEditDisabled = false,
   setIsEditingRepetitiveFields,
   onClose,
   onEdit,
@@ -820,6 +822,7 @@ const ActionsEventModal = ({
             name="Three dots white"
           />
           {action === ActionsEvent.EDIT &&
+            !isEditDisabled &&
             session?.user.permissions &&
             hasPermissionInArray(
               session?.user.permissions,
@@ -859,6 +862,7 @@ const ActionsEventModal = ({
           </div>
           <div className="flex gap-2 items-center">
             {session?.user.permissions &&
+              !isEditDisabled &&
               action === ActionsEvent.EDIT &&
               hasPermissionInArray(
                 session?.user.permissions,

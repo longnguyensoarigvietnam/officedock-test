@@ -845,7 +845,7 @@ const DailyReportBoard = () => {
                       ? info.row.original.LARGE.id
                       : NO_SETTING),
                 )}
-                isDisabled={!isPermissionAction}
+                isDisabled={!isPermissionAction || info.row.original.type !== EventCalendarType.TASK}
                 placeholder=""
                 showArrow
                 options={removeDuplicateOptions(optionData)}
@@ -984,7 +984,7 @@ const DailyReportBoard = () => {
                         : NO_SETTING),
                   )}
                   showArrow
-                  isDisabled={!isPermissionAction}
+                  isDisabled={!isPermissionAction || info.row.original.type !== EventCalendarType.TASK}
                   placeholder=""
                   options={removeDuplicateOptions(optionMedium)}
                   forceMenuPlacementBottom

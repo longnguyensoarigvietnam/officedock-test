@@ -31,7 +31,11 @@ import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
-import { hasPermissionInArray } from '@utils';
+import {
+  checkIsParticipantSelected,
+  hasPermissionInArray,
+  sortChatParticipants,
+} from '@utils';
 
 import {
   ChatDashboardMember,
@@ -143,18 +147,6 @@ const ActionsChatMembersModal = memo(
           />
         </div>
       );
-    };
-
-    // Check is participant selected
-    const checkIsParticipantSelected = (member: ChatParticipant) => {
-      const memberId = Number(String(member.id).split('-')[1]);
-
-      const userIds = watch('members').filter(Boolean) ?? [];
-      const orgIds = watch('organizations').filter(Boolean) ?? [];
-
-      return member.type === ChatParticipantType.USER
-        ? userIds.includes(memberId)
-        : orgIds.includes(memberId);
     };
 
     // Handle select chat participant
@@ -418,6 +410,15 @@ const ActionsChatMembersModal = memo(
                         .toLowerCase()
                         .includes(searchName.toLowerCase()),
                     )
+                    .sort((prev: ChatParticipant, next: ChatParticipant) => {
+                      return sortChatParticipants(
+                        prev,
+                        next,
+                        Number(session?.user.id),
+                        watch('members').filter(Boolean) ?? [],
+                        watch('organizations').filter(Boolean) ?? [],
+                      );
+                    })
                     .map((member) => {
                       return (
                         <div
@@ -435,7 +436,12 @@ const ActionsChatMembersModal = memo(
                               name="members"
                               render={() => (
                                 <Checkbox
-                                  isChecked={checkIsParticipantSelected(member)}
+                                  isChecked={checkIsParticipantSelected(
+                                    member,
+                                    watch('members').filter(Boolean) ?? [],
+                                    watch('organizations').filter(Boolean) ??
+                                      [],
+                                  )}
                                   onChange={() =>
                                     handleSelectChatParticipant(
                                       member,

@@ -557,7 +557,8 @@ const TableChart = ({
                 placeholder=""
                 showArrow={
                   rowData.organizationType !==
-                  OrganizationStatisticType.CALENDAR
+                    OrganizationStatisticType.CALENDAR &&
+                  info.row.original.type === EventCalendarType.TASK
                 }
                 options={
                   selectedOrganization?.label === ALL_TEAM_STATISTIC
@@ -579,7 +580,8 @@ const TableChart = ({
                 }
                 isDisabled={
                   rowData.organizationType ===
-                  OrganizationStatisticType.CALENDAR
+                    OrganizationStatisticType.CALENDAR ||
+                  info.row.original.type !== EventCalendarType.TASK
                 }
                 onChange={(e) => {
                   if (e?.value === rowData.organization) return;
@@ -638,7 +640,7 @@ const TableChart = ({
             {/* LARGE */}
             <div className="flex w-[24%] justify-between h-full relative rounded-md gap-2">
               <SingleSelect
-                showArrow
+                showArrow={info.row.original.type === EventCalendarType.TASK}
                 className="border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
                   largeCategories &&
@@ -648,6 +650,7 @@ const TableChart = ({
                 }
                 placeholder=""
                 options={largeCategories}
+                isDisabled={info.row.original.type !== EventCalendarType.TASK}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
@@ -713,7 +716,8 @@ const TableChart = ({
                   )
                 }
                 placeholder=""
-                showArrow
+                showArrow={info.row.original.type === EventCalendarType.TASK}
+                isDisabled={info.row.original.type !== EventCalendarType.TASK}
                 options={mediumCategories}
                 onChange={(e) => {
                   if (info.row.original.type === EventCalendarType.TASK) {

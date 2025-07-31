@@ -5,6 +5,7 @@ import { format, isSameDay } from 'date-fns';
 import {
   AllTeamStatisticOption,
   CalendarViewOptions,
+  ChatParticipantType,
   EventWorkCategory,
   LevelUpConditionBy,
   PermissionsSystem,
@@ -58,7 +59,7 @@ import {
 } from '@interfaces/task';
 import { ChangeTextAreaProps, OptionDropdownType } from '@interfaces/common';
 import { UserRoleType } from '@interfaces/user';
-import { ChatMessageResponse } from '@interfaces/chat';
+import { ChatMessageResponse, ChatParticipant } from '@interfaces/chat';
 import { ConditionByMap } from '@interfaces/skill-map';
 
 import {
@@ -2207,4 +2208,51 @@ export const highlightTextSafely = (
     `<mark class="bg-[#0068B633]">$1</mark>`,
   );
   return processedHTML;
+};
+
+export const checkIsParticipantSelected = (
+  member: ChatParticipant,
+  userIds: number[],
+  orgIds: number[],
+) => {
+  const memberId = Number(String(member.id).split('-')[1]);
+
+  return member.type === ChatParticipantType.USER
+    ? userIds.includes(memberId)
+    : orgIds.includes(memberId);
+};
+
+export const sortChatParticipants = (
+  prev: ChatParticipant,
+  next: ChatParticipant,
+  userId: number,
+  userIds: number[],
+  orgIds: number[],
+) => {
+  const prevSelected = checkIsParticipantSelected(prev, userIds, orgIds);
+  const nextSelected = checkIsParticipantSelected(next, userIds, orgIds);
+
+  // 1. Checked participants first
+  if (prevSelected !== nextSelected) {
+    return prevSelected ? -1 : 1;
+  }
+
+  // 2. Current user (only if user, not org)
+  if (prev.id == userId && prev.type == ChatParticipantType.USER) return -1;
+  if (next.id == userId && next.type == ChatParticipantType.USER) return 1;
+
+  // 3. Organizations before users
+  if (
+    prev.type == ChatParticipantType.ORGANIZATION &&
+    next.type == ChatParticipantType.USER
+  )
+    return -1;
+  if (
+    prev.type == ChatParticipantType.USER &&
+    next.type == ChatParticipantType.ORGANIZATION
+  )
+    return 1;
+
+  // 4. Alphabetical
+  return prev.fullName.localeCompare(next.fullName);
 };

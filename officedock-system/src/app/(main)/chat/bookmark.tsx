@@ -875,6 +875,7 @@ const BookmarkList = ({
           open={openEditEventModal}
           dataEvent={dataEventEdit}
           action={ActionsEvent.EDIT}
+          isEditDisabled={true}
           setIsEditingRepetitiveFields={setIsEditingRepetitiveFields}
           onClose={() => {
             setDataEventEdit(undefined);

@@ -1026,25 +1026,6 @@ const ChatDetail = ({
     },
     [setDataChatList, handleRemoveChatRoomParam, chatRoomCode],
   );
-  useEffect(() => {
-    const handleDragOver = (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    const handleDrop = (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    document.addEventListener('dragover', handleDragOver);
-    document.addEventListener('drop', handleDrop);
-
-    return () => {
-      document.removeEventListener('dragover', handleDragOver);
-      document.removeEventListener('drop', handleDrop);
-    };
-  }, []);
 
   // Socket
   useEffect(() => {
@@ -3530,6 +3511,7 @@ const ChatDetail = ({
           open={openEditEventModal}
           dataEvent={dataEventEdit}
           action={ActionsEvent.EDIT}
+          isEditDisabled={true}
           setIsEditingRepetitiveFields={setIsEditingRepetitiveFields}
           onClose={() => {
             setDataEventEdit(undefined);
