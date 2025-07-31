@@ -4,7 +4,9 @@ import { AxiosError } from 'axios';
 import { useMutation, useQueryClient } from 'react-query';
 import {
   ChangeEvent,
+  Dispatch,
   Fragment,
+  SetStateAction,
   useCallback,
   useContext,
   useEffect,
@@ -162,9 +164,7 @@ interface dataProps {
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
   handleRemoveChatRoomParam: () => void;
-  setRoomNameSearchResults: React.Dispatch<
-    React.SetStateAction<ChatRoomItem[]>
-  >;
+  setFilteredChatList: Dispatch<SetStateAction<ChatRoomItem[]>>
 }
 const ChatDetail = ({
   clientId,
@@ -179,12 +179,12 @@ const ChatDetail = ({
   hasMoreDetailOnScrollDown,
   dataOptionsParticipants,
   setHasMoreDetailOnScrollDown,
-  setRoomNameSearchResults,
   setHasMoreDetail,
   setLastItemId,
   setDataChatList,
   handleRemoveChatRoomParam,
   setSearchChatMsg,
+  setFilteredChatList
 }: dataProps) => {
   const { data: session } = useSessionCache();
 
@@ -2602,7 +2602,7 @@ const ChatDetail = ({
       }
       return newDataChatList;
     });
-    setRoomNameSearchResults((prevFilterChatList) => {
+    setFilteredChatList((prevFilterChatList) => {
       const newFilterChatList = [...prevFilterChatList];
       const chatRoomIndex = newFilterChatList.findIndex(
         (room) => room.code == chatRoomCode,

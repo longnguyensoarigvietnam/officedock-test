@@ -63,6 +63,7 @@ const BoardChat = () => {
   const [hasMoreDetailOnScrollDown, setHasMoreDetailOnScrollDown] =
     useState(false);
   const [dataChatList, setDataChatList] = useState<ChatRoomItem[]>([]);
+  const [filteredChatList, setFilteredChatList] = useState<ChatRoomItem[]>([]);
   const [roomNameSearchResults, setRoomNameSearchResults] = useState<
     ChatRoomItem[]
   >([]);
@@ -292,7 +293,7 @@ const BoardChat = () => {
       return [...pinnedItems, ...unpinnedItems];
     });
 
-    setRoomNameSearchResults((prevDataChatList) => {
+    setFilteredChatList((prevDataChatList) => {
       const pinnedItems = prevDataChatList.filter(
         (item) => item.pinAt !== null,
       );
@@ -424,7 +425,7 @@ const BoardChat = () => {
       }
       return [...pinnedItems, ...unpinnedItems];
     });
-    setRoomNameSearchResults((prevData) => {
+    setFilteredChatList((prevData) => {
       return prevData.map((item) =>
         item.code === data.code
           ? {
@@ -445,6 +446,7 @@ const BoardChat = () => {
       <ListChatUsers
         hasMore={hasMore}
         dataChatList={dataChatList}
+        filteredChatList={filteredChatList}
         roomNameSearchResults={roomNameSearchResults}
         chatRoomCode={chatRoomCode}
         dashboardMemberList={dashboardMemberList}
@@ -452,6 +454,7 @@ const BoardChat = () => {
         dataOptionsParticipants={dataOptionsParticipants}
         setLastItemId={setLastItemId}
         setDataChatList={setDataChatList}
+        setFilteredChatList={setFilteredChatList}
         setRoomNameSearchResults={setRoomNameSearchResults}
         setHasMore={setHasMore}
         setHasMoreDetailOnScrollDown={setHasMoreDetailOnScrollDown}
@@ -473,10 +476,10 @@ const BoardChat = () => {
           hasMoreDetailOnScrollDown={hasMoreDetailOnScrollDown}
           setHasMoreDetailOnScrollDown={setHasMoreDetailOnScrollDown}
           setSearchChatMsg={setSearchChatMsg}
-          setRoomNameSearchResults={setRoomNameSearchResults}
           setLastItemId={setLastItemId}
           setHasMoreDetail={setHasMoreDetail}
           setDataChatList={setDataChatList}
+          setFilteredChatList={setFilteredChatList}
           handleRemoveChatRoomParam={handleRemoveChatRoomParam}
         />
       )}
