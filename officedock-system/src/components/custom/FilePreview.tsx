@@ -27,7 +27,6 @@ const FilePreview = ({
   open,
   file,
   user,
-  msgId,
   onClose,
   onGotoMessage,
 }: filePreviewProp) => {
@@ -166,7 +165,7 @@ const FilePreview = ({
                               name="go file  icon"
                               onClick={() =>
                                 onGotoMessage({
-                                  messageId: msgId,
+                                  messageId: fileDetail.chatMessageUuid,
                                 })
                               }
                             />
@@ -208,7 +207,6 @@ const FilePreview = ({
             {fileDetail?.fileType === 'application/pdf' && (
               <div>
                 {/* Zoom Buttons */}
-                {/* Zoom Buttons */}
                 <div className="flex items-center w-full justify-between">
                   <div className="flex items-center gap-[14px] mb-5">
                     <div className="flex items-center gap-2 h-6">
@@ -238,7 +236,7 @@ const FilePreview = ({
                         name="go file  icon"
                         onClick={() =>
                           onGotoMessage({
-                            messageId: msgId,
+                            messageId: fileDetail.chatMessageUuid,
                           })
                         }
                       />
