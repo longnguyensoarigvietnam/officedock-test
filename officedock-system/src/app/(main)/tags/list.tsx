@@ -108,24 +108,17 @@ const ListTags = () => {
 
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
-  useTeamList({
-    screenName: ScreenName.TAG,
-    onSuccess: (data) => {
-      setDataOrganizationList(
-        data.map((org) => ({
-          label: org.name,
-          value: org.id as number,
-        })),
-      );
-    },
-  });
+
   const [dataOrganizationList, setDataOrganizationList] = useState<
     OptionDropdownType[]
   >([]);
   const [organizationLabels, setOrganizationLabels] = useState<
     OptionDropdownType[]
   >([]);
-  const [debouncedParams, setDebouncedParams] = useState({
+  const [debouncedParams, setDebouncedParams] = useState<{
+    search: string;
+    page: number;
+  }>({
     search: '',
     page: 1,
   });
@@ -171,7 +164,24 @@ const ListTags = () => {
   const { register, watch, getValues, setValue } = useForm<{
     name: string;
     organizationIds: OptionDropdownType[];
-  }>();
+  }>({
+    defaultValues: {
+      name: '',
+      organizationIds: [],
+    },
+  });
+
+  useTeamList({
+    screenName: ScreenName.TAG,
+    onSuccess: (data) => {
+      setDataOrganizationList(
+        data.map((org) => ({
+          label: org.name,
+          value: org.id as number,
+        })),
+      );
+    },
+  });
 
   const { refetchTagList } = useTagList({
     pagination: { page: debouncedParams.page, pageSize },
@@ -197,6 +207,7 @@ const ListTags = () => {
           action: ActionsModal.EDIT,
         });
       }
+      setIsLoading(false);
     },
     onError: (error: AxiosError) => {
       if (error.response?.status === ServerStatusCode.NOT_FOUND) {
@@ -206,8 +217,6 @@ const ListTags = () => {
         });
         handleRemoveParam();
       }
-    },
-    onSettled: () => {
       setIsLoading(false);
     },
   });

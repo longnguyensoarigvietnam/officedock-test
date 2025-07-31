@@ -1,12 +1,16 @@
 'use client';
 import { useQuery } from 'react-query';
-import { useSessionCache } from '@providers/SessionCacheProvider';
-
+import { useContext } from 'react';
 import { AxiosError } from 'axios';
 
-import api from '@base/api';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+import { LoadingContext } from '@providers/LoadingProvider';
+
 import { apiRouters } from '@constants/routers';
+
 import { Tags } from '@interfaces/tag';
+
+import api from '@base/api';
 
 interface UseTagDetailHooksProps {
   tagId: number;
@@ -23,10 +27,12 @@ const useTagDetail = ({
 }: UseTagDetailHooksProps) => {
   const { data: session } = useSessionCache();
   const token = session?.accessToken;
+  const { setIsLoading } = useContext(LoadingContext);
 
   // Handle call API get tag detail
   const getTagDetail = async () => {
     if (!tagId) return;
+    setIsLoading(true);
     const apiUrl = apiRouters.TAG_DETAIL(String(tagId));
 
     const { data } = await api.get<Tags>(apiUrl);
@@ -42,7 +48,7 @@ const useTagDetail = ({
     queryKey: ['getTagDetail', tagId],
     queryFn: getTagDetail,
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && !!tagId,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (response: Tags) => {
