@@ -18,6 +18,7 @@ from tasks.models import Task
 from chat.models import ChatFile, ChunkFile
 from skills.serializers import SkillSerializer
 from common.utils import get_signed_url
+from common.constants import AVATAR_GCS_EXPIRATION_SECONDS
 from users.serializers import BaseUserSerializer
 
 
@@ -215,7 +216,7 @@ class ChatFileSerializer(serializers.ModelSerializer):
 
         if instance.compressed_file:
             representation["compressed_file"] = get_signed_url(
-                instance.compressed_file
+                instance.compressed_file, AVATAR_GCS_EXPIRATION_SECONDS
             )
 
         return representation
@@ -251,7 +252,7 @@ class BaseChatFileDetailSerializer(serializers.ModelSerializer):
 
         if instance.original_file:
             representation["original_file"] = get_signed_url(
-                instance.original_file
+                instance.original_file, AVATAR_GCS_EXPIRATION_SECONDS
             )
 
         return representation
