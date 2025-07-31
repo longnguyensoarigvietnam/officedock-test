@@ -1,4 +1,6 @@
-import { MessageType, SubmitLevelStatus } from '@constants/enums';
+import { ChatParticipantType, MessageType, SubmitLevelStatus } from '@constants/enums';
+
+import { Organizations } from './organization';
 
 export interface ChatMessageResponse {
   id?: number;
@@ -123,14 +125,15 @@ export interface OrganizationDetail {
 }
 
 export interface ChatParticipant {
-  id: number | null;
+  id: number | string | null;
   avatar?: string | null;
-  avatarColor?: string;
+  color?: string;
   fullName: string;
-  organizations?: {
-    id: number;
-    name: string;
-  } | null;
+  organizations?: Organizations | null;
+  type?: ChatParticipantType;
+  userIds?: number[];
+  mainOrganization?: string;
+  avatarColor?: string;
 }
 
 export interface ChatRoomDetail {
@@ -138,6 +141,7 @@ export interface ChatRoomDetail {
   name: string;
   code: string;
   participants: ChatParticipant[];
+  selectOrganizations: string;
   type: string;
   memo: string;
   unreadMessages: number;

@@ -609,3 +609,7 @@ export enum EventActionType {
   THIS_AND_FOLLOWING_EVENTS = 'THIS_AND_FOLLOWING_EVENTS',
   ALL_EVENTS = 'ALL_EVENTS'
 }
+export enum ChatParticipantType {
+  USER = 'USER',
+  ORGANIZATION = 'ORGANIZATION',
+}

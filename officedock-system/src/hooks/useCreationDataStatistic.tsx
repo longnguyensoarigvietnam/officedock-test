@@ -17,6 +17,7 @@ interface useCreationDataStatisticHooksProps {
   condition?: boolean[];
   is_statistic?: boolean;
   is_calendar_page?: boolean;
+  is_chat_page?: boolean;
   organization_id?: number;
   onSuccess?: (success: DataResponseStatisticCreationType) => void;
   onError?: (error: AxiosError) => void;
@@ -27,6 +28,7 @@ const useCreationDataStatistic = ({
   condition,
   is_statistic,
   is_calendar_page,
+  is_chat_page,
   organization_id,
   onSuccess,
   onError,
@@ -41,7 +43,7 @@ const useCreationDataStatistic = ({
   }: {
     signal?: AbortSignal;
   }) => {
-    const apiUrl = `${apiRouters.STATISTIC_CREATION}${is_statistic ? `?is_statistic=true` : ''}${is_calendar_page ? `?is_calendar_page=true` : ''}${organization_id ? `?organization_id=${organization_id}` : ''}`;
+    const apiUrl = `${apiRouters.STATISTIC_CREATION}${is_statistic ? `?is_statistic=true` : ''}${is_calendar_page ? `?is_calendar_page=true` : ''}${is_chat_page ? `?is_chat_page=true` : ''}${organization_id ? `?organization_id=${organization_id}` : ''}`;
 
     const { data } = await api.get<DataResponseStatisticCreationType>(apiUrl, {
       signal,
@@ -57,7 +59,7 @@ const useCreationDataStatistic = ({
   } = useQuery({
     queryKey: [
       'getCreationDataStatistic',
-      { is_statistic, is_calendar_page, organization_id },
+      { is_statistic, is_calendar_page, is_chat_page, organization_id },
     ],
     queryFn: ({ signal }) => getCreationDataStatistic({ signal }),
     select: (response: DataResponseStatisticCreationType) => {
@@ -151,9 +153,9 @@ const useCreationDataStatistic = ({
       const updatedOrganizations = response.organizations.map(
         (organization) => ({
           ...organization,
-          statisticCategories: normalizeCategories(
-            organization.statisticCategories,
-          ),
+          statisticCategories: organization.statisticCategories
+            ? normalizeCategories(organization.statisticCategories)
+            : [],
         }),
       );
 

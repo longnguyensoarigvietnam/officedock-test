@@ -16,19 +16,27 @@ import Input from '@components/common/Input';
 import { NO_OPTIONS } from '@constants';
 
 import { Profile } from '@interfaces/user';
-import { ChatDashboardMember, ChatRoomItem } from '@interfaces/chat';
+import {
+  ChatDashboardMember,
+  ChatParticipant,
+  ChatRoomItem,
+} from '@interfaces/chat';
+import { ChatParticipantType } from '@constants/enums';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 export type ActionsAddMembersModalProps = {
   open: boolean;
-  onClose: () => void;
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   dashboardMembers: ChatDashboardMember[];
+  dataOptionsParticipants: ChatParticipant[];
+  onClose: () => void;
   createChatMutation: UseMutationResult<
     ChatRoomItem,
     unknown,
     {
       name: string;
       participantIds: number[];
+      selectOrganizations: string;
     },
     unknown
   >;
@@ -37,9 +45,10 @@ export type ActionsAddMembersModalProps = {
 const ActionsAddMembersModal = memo(
   ({
     open,
-    onClose,
     dashboardMemberList,
     dashboardMembers,
+    dataOptionsParticipants,
+    onClose,
     createChatMutation,
   }: ActionsAddMembersModalProps) => {
     const { data: session } = useSessionCache();
@@ -47,50 +56,61 @@ const ActionsAddMembersModal = memo(
     const [searchName, setSearchName] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { register, setValue, watch, control } = useForm<{
-      groupParticipant: number[];
+      members: number[];
       groupName: string;
+      organizations: number[];
     }>({
       defaultValues: {
-        groupParticipant: [],
+        members: [],
+        organizations: [],
       },
     });
 
     // Handle save
     const handleSave = async () => {
       if (isSubmitting) return;
+
       setIsSubmitting(true);
+
+      const groupName = watch('groupName')?.trim();
+      const memberList = watch('members') || [];
+      const organizationList = watch('organizations') || [];
+      const participantIds = memberList;
+      const selectOrganizations = organizationList.join(',');
+
       try {
-        if (
-          watch('groupParticipant').length === 1 &&
-          watch('groupParticipant')[0] === session?.user.id
-        ) {
-          const participantId = watch('groupParticipant')[0];
+        const isGroupChat =
+          organizationList.length > 0 || memberList.length >= 2;
+        const isSelfChat =
+          memberList.length === 1 && memberList[0] === session?.user.id;
+        const isSingleOther = memberList.length === 1 && !isSelfChat;
+
+        if (isGroupChat) {
+          if (!groupName) return;
+
+          await createChatMutation.mutateAsync({
+            name: groupName,
+            participantIds,
+            selectOrganizations,
+          });
+        } else if (isSelfChat) {
+          await createChatMutation.mutateAsync({
+            name: session?.user.profile.fullName,
+            participantIds: [session?.user.id],
+            selectOrganizations,
+          });
+        } else if (isSingleOther) {
+          const participantId = memberList[0];
           const participant = dashboardMemberList.find(
-            (user) => user.id === participantId,
+            (u) => u.id === participantId,
           );
-          const participantName = participant ? participant.fullName : '';
+          const participantName = participant?.fullName || '';
+
           await createChatMutation.mutateAsync({
             name: participantName,
             participantIds: [participantId],
+            selectOrganizations,
           });
-        } else {
-          if (watch('groupParticipant').length >= 2) {
-            if (!watch('groupName').trim()) return;
-            await createChatMutation.mutateAsync({
-              name: watch('groupName'),
-              participantIds: watch('groupParticipant'),
-            });
-          } else if (watch('groupParticipant').length === 1) {
-            const participantId = watch('groupParticipant')[0];
-            const participant = dashboardMemberList.find(
-              (user) => user.id === participantId,
-            );
-            const participantName = participant ? participant.fullName : '';
-            await createChatMutation.mutateAsync({
-              name: participantName,
-              participantIds: [participantId],
-            });
-          }
         }
       } finally {
         setIsSubmitting(false);
@@ -98,14 +118,15 @@ const ActionsAddMembersModal = memo(
     };
 
     const isSaveButtonDisabled =
-      watch('groupParticipant').length >= 2 &&
+      watch('members').length >= 2 &&
       ((watch('groupName') && !watch('groupName').trim()) ||
         !watch('groupName'));
 
-    const renderAvatar = (memberId: number) => {
-      const memberInfo = dashboardMembers.find((member) => {
-        return member.id == memberId;
-      });
+    const renderAvatar = (memberId: string) => {
+      const actualMemberId = Number(memberId.split('-')[1]);
+      const memberInfo = dashboardMembers.find(
+        (memberWithAvatar) => memberWithAvatar.id == actualMemberId,
+      );
 
       return (
         <div>
@@ -116,6 +137,171 @@ const ActionsAddMembersModal = memo(
           />
         </div>
       );
+    };
+
+    // Check is participant selected
+    const checkIsParticipantSelected = (member: ChatParticipant) => {
+      const memberId = Number(String(member.id).split('-')[1]);
+
+      const userIds = watch('members').filter(Boolean) ?? [];
+      const orgIds = watch('organizations').filter(Boolean) ?? [];
+
+      return member.type === ChatParticipantType.USER
+        ? userIds.includes(memberId)
+        : orgIds.includes(memberId);
+    };
+
+    // Handle select chat participant
+    const handleSelectChatParticipant = (
+      member: ChatParticipant,
+      dataOptionsParticipants: ChatParticipant[],
+    ) => {
+      const isUser = member.type === ChatParticipantType.USER;
+      const isOrganization = member.type === ChatParticipantType.ORGANIZATION;
+      const currentParticipantList = watch('members') || [];
+      const currentOrganizationList = watch('organizations') || [];
+      const memberId = Number(String(member.id).split('-')[1]);
+
+      let updatedParticipantList = [...currentParticipantList];
+      let updatedOrganizationList = [...currentOrganizationList];
+
+      if (isUser) {
+        const isAlreadySelected = currentParticipantList.includes(memberId);
+
+        if (isAlreadySelected) {
+          // Remove the user
+          updatedParticipantList = updatedParticipantList.filter(
+            (id) => id !== memberId,
+          );
+
+          // Remove any org that includes the removed user
+          const belongedOrganizations = dataOptionsParticipants
+            .filter(
+              (participant) =>
+                participant.type == ChatParticipantType.ORGANIZATION &&
+                participant.userIds?.includes(memberId),
+            )
+            .map((org) => Number(String(org.id).split('-')[1]));
+
+          updatedOrganizationList = updatedOrganizationList.filter(
+            (org) => !belongedOrganizations.includes(org),
+          );
+        } else {
+          updatedParticipantList.push(memberId);
+        }
+
+        setValue('members', updatedParticipantList);
+        setValue('organizations', updatedOrganizationList);
+      } else if (isOrganization) {
+        const isAlreadySelected = currentOrganizationList.includes(memberId);
+        const organizationMembers = member.userIds || [];
+
+        if (isAlreadySelected) {
+          updatedOrganizationList = updatedOrganizationList.filter(
+            (id) => id !== memberId,
+          );
+          // Collect member IDs that should be removed (if not in any other selected org)
+          const removeMemberIds = organizationMembers.filter((memberId) => {
+            return !updatedOrganizationList.some((orgId) => {
+              const org = dataOptionsParticipants.find(
+                (item) =>
+                  Number(item.id) === orgId &&
+                  item.type === ChatParticipantType.ORGANIZATION,
+              );
+              return org?.userIds?.includes(memberId);
+            });
+          });
+
+          // Remove the filtered member IDs from selected users
+          updatedParticipantList = updatedParticipantList.filter(
+            (id) => !removeMemberIds.includes(id),
+          );
+        } else {
+          updatedOrganizationList.push(memberId);
+          updatedParticipantList = Array.from(
+            new Set([...updatedParticipantList, ...organizationMembers]),
+          );
+        }
+
+        setValue('organizations', updatedOrganizationList);
+        setValue('members', updatedParticipantList);
+      }
+    };
+
+    // Handle select all chat participants
+    const handleSelectAllChatParticipants = (
+      dataOptionsParticipants: ChatParticipant[],
+    ) => {
+      const updatedParticipantList = dataOptionsParticipants?.filter((member) =>
+        member.fullName.toLowerCase().includes(searchName.toLowerCase()),
+      );
+      setValue(
+        'members',
+        Array.from(
+          new Set([
+            ...(watch('members') || []),
+            ...updatedParticipantList
+              .filter(
+                (participant) => participant.type === ChatParticipantType.USER,
+              )
+              .map((participant) =>
+                Number(String(participant.id).split('-')[1]),
+              ),
+          ]),
+        ),
+      );
+
+      setValue(
+        'organizations',
+        Array.from(
+          new Set([
+            ...(watch('organizations') || []),
+            ...updatedParticipantList
+              .filter(
+                (participant) =>
+                  participant.type == ChatParticipantType.ORGANIZATION,
+              )
+              .map((participant) =>
+                Number(String(participant.id).split('-')[1]),
+              ),
+          ]),
+        ),
+      );
+    };
+
+    // Handle remove all chat participants
+    const handleRemoveAllChatParticipants = (
+      dataOptionsParticipants: ChatParticipant[],
+    ) => {
+      const matchingParticipantList = dataOptionsParticipants?.filter(
+        (member) =>
+          member.fullName.toLowerCase().includes(searchName.toLowerCase()),
+      );
+      const currentParticipantIds = watch('members') || [];
+      const currentOrganizationIds = watch('organizations') || [];
+
+      const filteredParticipantIds = currentParticipantIds.filter(
+        (participantId) =>
+          !matchingParticipantList.find(
+            (matchingParticipant) =>
+              String(matchingParticipant.id).split('-')[1] ===
+                String(participantId) &&
+              matchingParticipant.type == ChatParticipantType.USER,
+          ),
+      );
+      const filteredOrganizationIds = currentOrganizationIds.filter(
+        (participantId) =>
+          !matchingParticipantList.find(
+            (matchingParticipant) =>
+              String(matchingParticipant.id).split('-')[1] ===
+                String(participantId) &&
+              matchingParticipant.type == ChatParticipantType.ORGANIZATION,
+          ),
+      );
+
+      setValue('members', filteredParticipantIds);
+
+      setValue('organizations', filteredOrganizationIds);
     };
 
     return (
@@ -132,7 +318,7 @@ const ActionsAddMembersModal = memo(
         }}
         title="グループチャットを新規作成">
         <div className="mt-2 px-6">
-          {watch('groupParticipant').length >= 2 && (
+          {watch('members').length >= 2 || watch('organizations').length ? (
             <div className="text-sm text-gray-700">
               <div className="flex gap-4 items-center pb-3">
                 <ImageRound
@@ -159,6 +345,8 @@ const ActionsAddMembersModal = memo(
                 </div>
               </div>
             </div>
+          ) : (
+            <></>
           )}
         </div>
         <div className="px-6">
@@ -177,43 +365,31 @@ const ActionsAddMembersModal = memo(
             <p
               className="text-[#77858F] font-medium text-[12px] hover:cursor-pointer"
               onClick={() => {
-                const updatedParticipantList = dashboardMemberList?.filter(
-                  (member) =>
-                    member.fullName
-                      .toLowerCase()
-                      .includes(searchName.toLowerCase()),
-                );
-                let newParticipantList: number[] = [];
-                if (updatedParticipantList) {
-                  newParticipantList = updatedParticipantList.map(
-                    (participant) => participant.id,
-                  );
-                }
-                setValue('groupParticipant', newParticipantList);
+                handleSelectAllChatParticipants(dataOptionsParticipants || []);
               }}>
               全てをチェック
             </p>
             <p
               className="text-[#77858F] font-medium text-[12px] hover:cursor-pointer"
               onClick={() => {
-                setValue('groupParticipant', []);
+                handleRemoveAllChatParticipants(dataOptionsParticipants || []);
               }}>
               全てのチェックをクリア
             </p>
             <p className="ml-auto text-[#0068B6] font-medium text-[12px]">
-              {watch('groupParticipant') && watch('groupParticipant').length
-                ? watch('groupParticipant').length
+              {watch('members') && watch('members').length
+                ? watch('members').length
                 : 0}
               人を選択中
             </p>
           </div>
           <div className="pt-3 max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
-            {dashboardMemberList?.filter((member) =>
+            {dataOptionsParticipants?.filter((member) =>
               member.fullName.toLowerCase().includes(searchName.toLowerCase()),
             ).length === 0 && (
               <p className="text-gray-500 text-center text-sm">{NO_OPTIONS}</p>
             )}
-            {dashboardMemberList
+            {dataOptionsParticipants
               ?.filter((member) =>
                 member.fullName
                   .toLowerCase()
@@ -223,8 +399,8 @@ const ActionsAddMembersModal = memo(
                 return (
                   <div
                     className={`flex gap-2 items-center p-1.5 hover:cursor-pointer ${
-                      watch('groupParticipant') &&
-                      watch('groupParticipant').find(
+                      watch('members') &&
+                      watch('members').find(
                         (participant) => participant == member.id,
                       ) &&
                       'bg-[#EBF1F7]'
@@ -233,49 +409,31 @@ const ActionsAddMembersModal = memo(
                     <div>
                       <Controller
                         control={control}
-                        name="groupParticipant"
+                        name="members"
                         render={() => (
                           <Checkbox
-                            isChecked={
-                              watch('groupParticipant') &&
-                              watch('groupParticipant').find(
-                                (participant) => participant == member.id,
+                            isChecked={checkIsParticipantSelected(member)}
+                            onChange={() =>
+                              handleSelectChatParticipant(
+                                member,
+                                dataOptionsParticipants,
                               )
-                                ? true
-                                : false
                             }
-                            onChange={() => {
-                              const currentParticipantList =
-                                watch('groupParticipant') || [];
-                              const foundParticipantIndex =
-                                currentParticipantList.findIndex(
-                                  (participant) => participant == member.id,
-                                );
-                              let updatedParticipantList = [];
-                              if (foundParticipantIndex == -1) {
-                                updatedParticipantList = [
-                                  ...currentParticipantList,
-                                  member.id,
-                                ];
-                              } else {
-                                updatedParticipantList = [
-                                  ...currentParticipantList,
-                                ].filter(
-                                  (participant) => participant != member.id,
-                                );
-                              }
-
-                              setValue(
-                                'groupParticipant',
-                                updatedParticipantList,
-                              );
-                            }}
                           />
                         )}
                       />
                     </div>
 
-                    {renderAvatar(member.id)}
+                    {member.type == ChatParticipantType.USER && (
+                      <>{renderAvatar(member.id as string)}</>
+                    )}
+                    {member.type == ChatParticipantType.ORGANIZATION && (
+                      <div className="scale-110 min-w-[33px]">
+                        <GroupIconWithDynamicColor
+                          color={member.color || '#0068B6'}
+                        />
+                      </div>
+                    )}
                     <p
                       className={`truncate font-medium text-[15px] max-w-[430px] text-black`}>
                       <span className="font-normal text-sm text-black">
