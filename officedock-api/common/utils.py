@@ -88,7 +88,7 @@ def generate_signed_url(blob_name: str, expiration_seconds=None) -> str:
     )
 
     # Return the signed URL, optionally disabling the toolbar in the viewer
-    return f"{signed_url}#toolbar=0"
+    return f"{signed_url}"
 
 
 def generate_unique_code(model, field, length=10):
