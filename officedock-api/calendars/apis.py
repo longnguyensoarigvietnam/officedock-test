@@ -863,9 +863,8 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if not calendar_room_participant:
             return
         chat_room = calendar_room_participant.chat_room
-        if not calendar_room_participant.is_muted:
-            calendar_room_participant.unread_messages += 1
-            calendar_room_participant.save(update_fields=["unread_messages"])
+        calendar_room_participant.unread_messages += 1
+        calendar_room_participant.save(update_fields=["unread_messages"])
 
         action = WebSocketEventType.MESSAGE.value
 
@@ -931,7 +930,6 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             chat_room_participant = chat_room.chat_rooms_participants.filter(
                 user=participant
             ).first()
-        if not chat_room_participant.is_muted:
             chat_room_participant.unread_messages += 1
             chat_room_participant.save(update_fields=["unread_messages"])
 
@@ -950,9 +948,8 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         user_participant = chat_room.chat_rooms_participants.filter(
             user=user
         ).first()
-        if not user_participant.is_muted:
-            user_participant.unread_messages += 1
-            user_participant.save(update_fields=["unread_messages"])
+        user_participant.unread_messages += 1
+        user_participant.save(update_fields=["unread_messages"])
 
         # Serializer data
         chat_room_participant_serializer_data = (

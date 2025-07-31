@@ -16,6 +16,7 @@ class ChatMessageTypes(EnumChoices):
     CREATION_SCHEDULE = "CREATION_SCHEDULE"
     EDIT_SCHEDULE = "EDIT_SCHEDULE"
     REMOVE_SCHEDULE = "REMOVE_SCHEDULE"
+    REMOVE_TASK = "REMOVE_TASK"
 
 
 class ChatRoomTypes(EnumChoices):

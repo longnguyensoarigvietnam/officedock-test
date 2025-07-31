@@ -11,6 +11,7 @@ from common.serializers import (
     CreationDataOrganizationSerializer,
     CreationDataUserWithMainOrganizationSerializer,
 )
+from organizations.serializers import BaseOrganizationSerializer
 from submit_levels.models import SubmitLevelHistory
 from tags.serializers import BaseTagSerializer
 from users.models import User
@@ -170,10 +171,11 @@ class TaskForChatMessageSerializer(serializers.ModelSerializer):
     """
 
     tags = BaseTagSerializer(many=True, read_only=True)
+    organization = BaseOrganizationSerializer(read_only=True)
 
     class Meta:
         model = Task
-        fields = ["id", "title", "deadline", "tags"]
+        fields = ["id", "title", "deadline", "tags", "organization"]
 
 
 class SubmitLevelForChatMessageSerializer(serializers.ModelSerializer):
