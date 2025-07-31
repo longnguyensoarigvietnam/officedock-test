@@ -4270,6 +4270,7 @@ const TimeSchedule = memo(
             open={openCreateEventModal}
             dataEvent={dataEventEdit}
             action={ActionsEvent.EDIT}
+            isEditDisabled={true}
             setIsEditingRepetitiveFields={setIsEditingRepetitiveFields}
             onClose={() => {
               handleRemoveEventParam();

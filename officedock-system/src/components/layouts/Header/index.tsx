@@ -1330,6 +1330,7 @@ const Header = ({ className }: HeaderProps) => {
           dataEvent={dataEventEdit}
           action={ActionsEvent.EDIT}
           setIsEditingRepetitiveFields={setIsEditingRepetitiveFields}
+          isEditDisabled={true}
           onClose={() => {
             handleRemoveEventParam();
             setDataEventEditLocal(undefined);

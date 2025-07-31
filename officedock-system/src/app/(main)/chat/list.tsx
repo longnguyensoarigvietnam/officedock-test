@@ -939,7 +939,7 @@ const ListChatUsers = ({
             className={`absolute z-50 mt-2 bg-white !border-[1px] p-[5px] !border-[#77858F] rounded-[6px] w-[calc(100%_-_16px)] h-fit max-h-[200px] overflow-y-auto`}>
             <div
               key="search-by-message"
-              className={`flex relative w-full group items-center hover:cursor-pointer py-2 px-2 hover:bg-[#EBF1F7]`}
+              className={`flex relative w-full group items-center hover:cursor-pointer py-2 px-2 border-b-[1px] border-b-[#EBF1F7] hover:bg-[#EBF1F7]`}
               onClick={() => {
                 setOpenSearchMessagesModal(true);
                 setShowRoomNameSearchResultsSection(false);
@@ -967,7 +967,7 @@ const ListChatUsers = ({
             {roomNameSearchResults.map((item) => (
               <div
                 key={item.code}
-                className={`flex relative w-full items-center hover:cursor-pointer py-2 px-2 hover:bg-[#EBF1F7] ${
+                className={`flex relative w-full items-center hover:cursor-pointer py-2 px-2 border-b-[1px] border-b-[#EBF1F7] hover:bg-[#EBF1F7] ${
                   chatRoomCode === item.code && 'bg-[#FFFFFF]'
                 }`}
                 onClick={() => {
