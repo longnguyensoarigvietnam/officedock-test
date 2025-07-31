@@ -153,6 +153,7 @@ interface dataProps {
   dashboardMembers: ChatDashboardMember[];
   creationDataTaskData: CreationDataTask | undefined;
   hasMoreDetailOnScrollDown: boolean;
+  dataOptionsParticipants: ChatParticipant[];
   setLastItemId: React.Dispatch<
     React.SetStateAction<number | null | undefined>
   >;
@@ -176,6 +177,7 @@ const ChatDetail = ({
   creationDataTaskData,
   searchChatMsg,
   hasMoreDetailOnScrollDown,
+  dataOptionsParticipants,
   setHasMoreDetailOnScrollDown,
   setRoomNameSearchResults,
   setHasMoreDetail,
@@ -3490,6 +3492,7 @@ const ChatDetail = ({
             }
           }}
           dashboardMembers={dashboardMembers}
+          dataOptionsParticipants={dataOptionsParticipants}
           participantsList={
             chatRoomCode &&
             chatRoomParticipantsEditing.find(
@@ -3501,6 +3504,14 @@ const ChatDetail = ({
               : getChatParticipantIds(
                   chatRoomDetail ? chatRoomDetail.participants : [],
                 )
+          }
+          selectedOrganizations={
+            chatRoomDetail?.selectOrganizations
+              ? chatRoomDetail?.selectOrganizations
+                  .split(',')
+                  .filter(Boolean)
+                  .map((orgId) => Number(orgId))
+              : []
           }
           code={`${chatRoomCode}`}
           refetchChatRoomDetail={refetchChatRoomDetail}

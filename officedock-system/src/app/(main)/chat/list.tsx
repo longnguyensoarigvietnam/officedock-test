@@ -53,6 +53,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import {
   ChatDashboardMember,
   ChatMessageResponse,
+  ChatParticipant,
   ChatRoomItem,
   WebSocketMessageData,
 } from '@interfaces/chat';
@@ -70,6 +71,7 @@ interface dataProps {
   roomNameSearchResults: ChatRoomItem[];
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   dashboardMembers: ChatDashboardMember[];
+  dataOptionsParticipants: ChatParticipant[]
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   setLastItemId: React.Dispatch<
     React.SetStateAction<number | null | undefined>
@@ -89,6 +91,7 @@ const ListChatUsers = ({
   roomNameSearchResults,
   dashboardMemberList,
   dashboardMembers,
+  dataOptionsParticipants,
   setLastItemId,
   setDataChatList,
   setRoomNameSearchResults,
@@ -154,8 +157,10 @@ const ListChatUsers = ({
     setIsReload,
     setChatRoomNotifications,
   } = useContext(ChatContext);
-  const { isChatFilesUploading, cancelUploadChatFiles } =
-    useContext(GlobalStateContext);
+  const {
+    isChatFilesUploading,
+    cancelUploadChatFiles,
+  } = useContext(GlobalStateContext);
 
   const socket = useWebSocket();
 
@@ -567,6 +572,7 @@ const ListChatUsers = ({
   const createChat = async (data: {
     name: string;
     participantIds: number[];
+    selectOrganizations: string
   }): Promise<ChatRoomItem> => {
     const response = await api.post(apiRouters.CHAT_LIST, data);
     return response.data;
@@ -1173,6 +1179,7 @@ const ListChatUsers = ({
           open={isModalOpen}
           dashboardMemberList={dashboardMemberList}
           dashboardMembers={dashboardMembers}
+          dataOptionsParticipants={dataOptionsParticipants}
           onClose={() => setIsModalOpen(false)}
           createChatMutation={createChatMutation}
         />
