@@ -58,6 +58,18 @@ export interface ChatMessageResponse {
       isCreator?: boolean;
     }[];
     fieldChanges?: string[];
+    newMember?: {
+      id: number;
+      fullName: string;
+      avatar: null | string;
+      avatarColor: string;
+    };
+    oldMember?: {
+      id: number;
+      fullName: string;
+      avatar: null | string;
+      avatarColor: string;
+    };
   };
   submitLevel?: {
     comment: string | null;

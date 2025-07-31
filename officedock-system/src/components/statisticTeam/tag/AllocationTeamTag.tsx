@@ -6,6 +6,8 @@ import { SkeletonElement } from '@components/common/SkeletonLoading';
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 // Currently using for ALL TEAM taken from my dock
 import ProgressBarStatistic from '@components/statistic/category/ProgressBarStatistic';
+import FilterTagTeam from './filter/FilterTagTeam';
+import FilterTagUserTeam from './filter/FilterTagUserTeam';
 
 import {
   ProgressDataType,
@@ -26,7 +28,6 @@ import { EventWorkCategory } from '@constants/enums';
 
 import ProgressBarTeamTagStatistic from './ProgressBarTeamTagStatistic';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
-import FilterTagTeam from './filter/FilterTagTeam';
 import { ALL_TEAM_STATISTIC } from '@constants';
 
 type Props = {
@@ -279,6 +280,12 @@ const AllocationTeamTag = memo(
                   カテゴリーごとのタグの時間配分
                 </span>
               </div>
+              <div>
+                <FilterTagUserTeam
+                  open={isOpenModalFilter}
+                  onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
+                />
+              </div>
             </div>
             <ImageRound
               src="/icons/extend-calendar.svg"
@@ -300,10 +307,7 @@ const AllocationTeamTag = memo(
                 <div>
                   <div className="flex justify-between w-full my-8 px-[30px]">
                     {/* Filter tag */}
-                    <FilterTagTeam
-                      open={isOpenModalFilter}
-                      onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-                    />
+                    <FilterTagTeam />
                   </div>
                 </div>
                 <div className="flex  justify-between px-[30px] text-sm font-medium">

@@ -60,6 +60,7 @@ import { MessageHoverOptions } from './MessageHoverOptions';
 import DetailReactionChat from './DetailReactionChat';
 import { MessageDetailQuote } from './quote/MessageDetailQuote';
 import MessageDetailQuoteText from './quote/MessageDetailQuoteText';
+import React from 'react';
 
 export type MessageDetailProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
@@ -376,15 +377,17 @@ export const MessageDetail = ({
             );
             if (foundQuote) {
               children.push(
-                <MessageDetailQuote
-                  key={`${index}-${i}-msg`}
-                  chatRoomDetail={chatRoomDetail}
-                  messageDetail={foundQuote}
-                  dashboardMembers={dashboardMembers}
-                  highlightedMessageId={highlightedMessageId}
-                  setDataPreviewFile={setDataPreviewFile}
-                  handleActionEditTask={handleActionEditTask}
-                />,
+                <div className={``}>
+                  <MessageDetailQuote
+                    key={`${index}-${i}-msg`}
+                    chatRoomDetail={chatRoomDetail}
+                    messageDetail={foundQuote}
+                    dashboardMembers={dashboardMembers}
+                    highlightedMessageId={highlightedMessageId}
+                    setDataPreviewFile={setDataPreviewFile}
+                    handleActionEditTask={handleActionEditTask}
+                  />
+                </div>,
               );
             }
           }
@@ -397,12 +400,43 @@ export const MessageDetail = ({
             );
             if (foundQuote) {
               children.push(
-                <MessageDetailQuoteText
-                  key={`${index}-${i}-textquote`}
-                  messageDetail={foundQuote}
-                  dashboardMembers={dashboardMembers}
-                  title={dataTitle}
-                />,
+                <div className={`${index !== 0 && 'mt-5'}`}>
+                  <MessageDetailQuoteText
+                    key={`${index}-${i}-textquote`}
+                    messageDetail={foundQuote}
+                    dashboardMembers={dashboardMembers}
+                    title={dataTitle}
+                  />
+                </div>,
+              );
+            }
+          }
+          if (el.dataset.msgReplyId) {
+            const title = el.dataset.title || '';
+
+            children.push(
+              <p key={`${index}-msg-reply`}>
+                <span className="inline-msg-quote" contentEditable={false}>
+                  <span style={{ color: '#77858F' }}>[返信]</span>{' '}
+                  <span style={{ color: '#0068B7' }}>{title}</span>
+                </span>
+              </p>,
+            );
+          }
+          if (
+            el.classList.contains('mention') ||
+            el.dataset.type === 'mention'
+          ) {
+            const mentionText = el.textContent?.trim() || el.innerText || '';
+            if (mentionText) {
+              children.push(
+                <span
+                  key={`${index}-${i}-mention`}
+                  className="mention text-[#0068B6]"
+                  data-type="mention"
+                  data-id={el.dataset.id}>
+                  {mentionText}
+                </span>,
               );
             }
           }
@@ -413,7 +447,7 @@ export const MessageDetail = ({
         <div
           key={`p-${index}`}
           data-id={messageDetail.uuid}
-          className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px] flex flex-col gap-5">
+          className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px] ">
           {children}
         </div>
       );
@@ -642,7 +676,10 @@ export const MessageDetail = ({
                                                 {file.fileName}
                                               </p>
                                             </div>
-                                            {(file.fileType.includes('image') || file.fileType.includes('pdf')) && (
+                                            {(file.fileType.includes('image') ||
+                                              file.fileType.includes(
+                                                'pdf',
+                                              )) && (
                                               <Button
                                                 onClick={() => {
                                                   const memberInfo =
@@ -1034,12 +1071,17 @@ export const MessageDetail = ({
                                   <div className={`flex flex-col items-start`}>
                                     <h4 className="text-sm w-fit font-medium text-black h-5 max-w-full break-all">
                                       {messageDetail.type ==
-                                      MessageType.CREATION_TASK
-                                        ? CREATION_TASK_MESSAGE
-                                        : messageDetail.type ==
-                                            MessageType.REMOVE_MEMBER_TASK
-                                          ? REMOVE_MEMBER_TASK_MESSAGE
-                                          : ADD_MEMBER_TASK_MESSAGE}
+                                        MessageType.REMOVE_MEMBER_TASK &&
+                                        `${messageDetail.sender.fullName}があなたのタスクカードを${messageDetail.scheduleChanges?.newMember?.fullName}に移動しました。`}
+                                      {messageDetail.type ==
+                                        MessageType.CREATION_TASK &&
+                                        `${messageDetail.sender.fullName}があなたに割り当てました`}
+                                      {messageDetail.type ==
+                                        MessageType.EDIT_TASK &&
+                                        `${messageDetail.sender.fullName}があなたのタスクカードを編集しました。`}
+                                      {messageDetail.type ==
+                                        MessageType.ADD_MEMBER_TASK &&
+                                        `${messageDetail.sender.fullName}があなたに割り当てました`}
                                     </h4>
                                     <h4 className="text-sm w-fit text-black h-5 truncate max-w-[500px]">
                                       タスクのタイトル:{' '}
@@ -1063,11 +1105,14 @@ export const MessageDetail = ({
                             ) : (
                               <div className={`w-full flex justify-start `}>
                                 <div
-                                  className={`text-sm font-normal bg-[#eaf8ff] p-1`}>
+                                  className={`text-sm font-normal bg-[#eaf8ff] p-4`}>
                                   <div className={`flex flex-col items-end`}>
                                     <p
                                       className={`font-normal w-[500px]  text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
-                                      {TASK_DELETED}
+                                      {messageDetail.type ==
+                                      MessageType.REMOVE_TASK
+                                        ? `${messageDetail.sender.fullName}があなたのタスクカードを削除しました。`
+                                        : TASK_DELETED}
                                     </p>
                                   </div>
                                 </div>
