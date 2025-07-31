@@ -50,7 +50,6 @@ import {
 } from '@utils/date';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-
 import FilterTagTeam from './filter/FilterTagTeam';
 
 type Props = {
@@ -193,8 +192,6 @@ const StackedAreaTeamTagChart = ({
     }
     return DEFAULT_TIME_TEXT;
   };
-
-  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
 
   const [
     selectedOptionOrganizationInTable,
@@ -1237,10 +1234,7 @@ const StackedAreaTeamTagChart = ({
           <div>
             <div className="flex justify-between w-full my-8 px-[30px]">
               {/* Filter tag */}
-              <FilterTagTeam
-                open={isOpenModalFilter}
-                onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-              />
+              <FilterTagTeam />
             </div>
           </div>
           <div className="flex justify-between items-end px-[30px] text-sm font-medium">

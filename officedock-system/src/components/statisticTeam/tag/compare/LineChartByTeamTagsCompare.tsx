@@ -91,9 +91,9 @@ import useStatisticUserTaskDurationsCompare from '@hooks/useStatisticUserTaskDur
 import useStatisticTableInTeamTagLineChartCompare from '@hooks/useStatisticTableInTeamTagLineChartCompare';
 import useStatisticTableInTeamTagLineChart from '@hooks/useStatisticTableInTeamTagLineChart';
 
-import FilterTagTeam from '../filter/FilterTagTeam';
 import useStatisticTeamDockAllTeamLineChartTaskDurationsCompare from '@hooks/useStatisticTeamDockAllTeamLineChartTaskDurationsCompare';
 import useStatisticTeamDockAllTeamLineChartTaskDurations from '@hooks/useStatisticTeamDockAllTeamLineChartTaskDurations';
+import FilterTagTeam from '../filter/FilterTagTeam';
 
 ChartJS.register(
   CategoryScale,
@@ -163,7 +163,6 @@ const LineChartByTeamTagsCompare = ({
     setSelectedOrganizationOptionInTable,
   ] = useState(AllTeamStatisticOption.MAIN_TEAM);
 
-  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const [memberOptions, setMemberOptions] = useState<
     {
       id: number;
@@ -2052,10 +2051,7 @@ const LineChartByTeamTagsCompare = ({
             <div>
               <div className="flex justify-between w-full mb-[30px] px-[30px]">
                 {/* Filter tag */}
-                <FilterTagTeam
-                  open={isOpenModalFilter}
-                  onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-                />
+                <FilterTagTeam />
               </div>
             </div>
             <div className="flex justify-between items-end px-[30px] text-sm font-medium">

@@ -16,8 +16,9 @@ import {
 } from '@interfaces/statistic';
 import { getRandomColor, lightenColor } from '@utils';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
-import FilterTagTeam from '../filter/FilterTagTeam';
 import { ALL_TEAM_STATISTIC, SUB_TEAMS } from '@constants';
+import FilterTagTeam from '../filter/FilterTagTeam';
+import FilterTagUserTeam from '../filter/FilterTagUserTeam';
 
 type Props = {
   startDate: Date;
@@ -380,14 +381,10 @@ const PercentageTeamTagsCompare = ({
               </span>
             </div>
             <div className="flex items-center gap-1 ">
-              <ImageRound
-                className={`w-[14px] h-[14px]  hover:cursor-pointer relative top-[2px]`}
-                name="Sort icon"
-                src={`/icons/sort.svg`}
+              <FilterTagUserTeam
+                open={isOpenModalFilter}
+                onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
               />
-              <span className="text-xs text-[#77858F] relative top-[2px]">
-                タグの絞り込み
-              </span>
             </div>
           </div>
           <ImageRound
@@ -410,10 +407,7 @@ const PercentageTeamTagsCompare = ({
               <div>
                 <div className="flex justify-between w-full">
                   {/* Filter tag */}
-                  <FilterTagTeam
-                    open={isOpenModalFilter}
-                    onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-                  />
+                  <FilterTagTeam />
                 </div>
                 <div className="flex items-center mt-8  gap-1 mb-[30px]">
                   <ImageRound

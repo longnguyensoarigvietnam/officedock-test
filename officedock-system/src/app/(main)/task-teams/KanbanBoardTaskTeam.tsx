@@ -5,7 +5,13 @@ import {
   PopoverPanel,
   Transition,
 } from '@headlessui/react';
-import React, { Fragment, useContext, useEffect, useState } from 'react';
+import React, {
+  Fragment,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -74,6 +80,7 @@ import {
   getRandomDateTimeBetween,
 } from '@utils/date';
 import {
+  KanbanDataTeamResponse,
   NoSettingTotalType,
   Task,
   TaskErrorPerson,
@@ -136,6 +143,7 @@ const KanbanBoardTaskTeam = () => {
   const actionType = searchParams.get('action');
   const taskDetailId = searchParams.get('task');
   const typeDetail = searchParams.get('type');
+  const listContainerRef = useRef<HTMLDivElement | null>(null);
 
   // State
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
@@ -158,6 +166,9 @@ const KanbanBoardTaskTeam = () => {
   const [pendingTaskData, setPendingTaskData] = useState<TaskFormData | null>();
   const [closeAction, setCloseAction] = useState<ActionTask | null>();
   const [totalNoSetting, setTotalNoSetting] = useState<NoSettingTotalType>();
+  const [isHasNext, setIsHasNext] = useState(false);
+  const [page, setPage] = useState(1);
+  const [initialLoad, setInitialLoad] = useState<boolean>(false);
 
   // State
   // Member
@@ -228,6 +239,7 @@ const KanbanBoardTaskTeam = () => {
         const newTotalStatus = transformDataTotalStatus(data.results);
 
         setDataTotalStatus(newTotalStatus);
+        setIsHasNext(data.hasNext);
       }
     },
     onError: () => {
@@ -236,6 +248,84 @@ const KanbanBoardTaskTeam = () => {
       }
     },
   });
+  // Handle get list and more data task
+  const getTaskBoardListTeamMore = async (pageNumber: number) => {
+    setInitialLoad(true);
+
+    const params = new URLSearchParams({
+      organization_id: String(
+        selectedOrganizationSideBar
+          ? (selectedOrganizationSideBar?.value as string)
+          : organizationId || '',
+      ),
+      page: String(pageNumber),
+      page_size: '10',
+      ...(dataOrderRing && { dataOrderRing }),
+      ...(orderingOptions?.user_ids && {
+        user_ids: orderingOptions?.user_ids.map((item) => item.value).join(','),
+      }),
+      ...(isConcurrently && {
+        is_cross_team_task: String(isConcurrently),
+      }),
+      ...{ current_screen: 'teamdock' },
+    });
+
+    const apiUrl = `${apiRouters.TASK_TEAM_LIST}?${params.toString()}`;
+
+    const { data } = await api.get<KanbanDataTeamResponse>(apiUrl);
+    return data;
+  };
+  const { mutate: getDataListTaskTeamMore } = useMutation(
+    'getDataListTaskTeamMore',
+    getTaskBoardListTeamMore,
+    {
+      onSuccess: (data) => {
+        if (data.results) {
+          const newData = transformDataTeamTask(data.results);
+
+          setListDataKanbanTeam((prev) => [...prev, ...newData]);
+
+          const newTotalStatus = transformDataTotalStatus(data.results);
+
+          setDataTotalStatus((prev) => [...prev, ...newTotalStatus]);
+          setIsHasNext(data.hasNext);
+          setIsHasNext(data.hasNext);
+        }
+        setPage(page + 1);
+      },
+      onError: () => {},
+      onSettled: () => {
+        setInitialLoad(false);
+      },
+    },
+  );
+  useEffect(() => {
+    const handleScroll = () => {
+      const chatContainer = listContainerRef.current;
+      if (
+        chatContainer &&
+        isHasNext &&
+        chatContainer.clientWidth + Math.abs(chatContainer.scrollLeft) >=
+          chatContainer.scrollWidth - 10 &&
+        !initialLoad
+      ) {
+        getDataListTaskTeamMore(page + 1);
+      }
+    };
+
+    const chatContainer = listContainerRef.current;
+
+    if (chatContainer) {
+      chatContainer.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (chatContainer) {
+        chatContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHasNext]);
 
   useEffect(() => {
     if (!isReadyToFetch) {
@@ -2552,7 +2642,9 @@ const KanbanBoardTaskTeam = () => {
                 setDragging(true);
               }}
               onDragEnd={onDragEnd}>
-              <div className="flex gap-4 h-fit overflow-x-auto items-stretch w-[calc(100vw_-_270px)]">
+              <div
+                ref={listContainerRef}
+                className="flex gap-4 h-fit overflow-x-auto items-stretch w-[calc(100vw_-_270px)]">
                 <NoSettingColumn
                   totalNoSetting={totalNoSetting}
                   setTotalNoSetting={setTotalNoSetting}
@@ -2585,6 +2677,11 @@ const KanbanBoardTaskTeam = () => {
                     }}
                   />
                 ))}
+                {isHasNext && (
+                  <div>
+                    <ColumnsSkeleton numberOfColumns={2} />.
+                  </div>
+                )}
               </div>
             </DragDropContext>
           ) : (

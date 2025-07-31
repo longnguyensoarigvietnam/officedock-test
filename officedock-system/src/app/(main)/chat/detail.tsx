@@ -2494,33 +2494,62 @@ const ChatDetail = ({
   // Reaction message
   const handleReactionClick = (msgUuid: string, icon: string) => {
     setDataMessageDetail((prev) =>
-      prev.map((message) =>
-        message.uuid === msgUuid
-          ? {
-              ...message,
-              reactions: message.reactions?.some(
-                (reaction) => reaction.icon === icon,
-              )
-                ? message.reactions.map((reaction) =>
-                    reaction.icon === icon
-                      ? {
-                          ...reaction,
-                          users: reaction.users.includes(
-                            session?.user.id as number,
-                          )
-                            ? reaction.users
-                            : [...reaction.users, session?.user.id as number],
-                        }
-                      : reaction,
-                  )
-                : [
-                    ...(message.reactions || []),
-                    { icon, users: [session?.user.id as number] },
-                  ],
-            }
-          : message,
-      ),
+      prev.map((message) => {
+        if (message.uuid !== msgUuid) return message;
+
+        const userId = session?.user.id as number;
+
+        const updatedReactions = (message.reactions || [])
+          // Remove user from all other reactions (only keep if never selected or is new reaction)
+          .map((reaction) => ({
+            ...reaction,
+            users: reaction.users.filter((id) => id !== userId),
+          }))
+          // After filtering out the user from all reactions, check if this reaction exists
+          .filter((reaction) => reaction.users.length > 0);
+
+        const existingReaction = message.reactions?.find(
+          (r) => r.icon === icon,
+        );
+
+        const userReacted = existingReaction?.users.includes(userId);
+
+        // If it already exists and the user has clicked => remove completely (toggle off)
+        if (existingReaction && userReacted) {
+          return {
+            ...message,
+            reactions: updatedReactions,
+          };
+        }
+
+        // If it already exists but the user hasn't selected it => add it
+        if (existingReaction && !userReacted) {
+          return {
+            ...message,
+            reactions: [
+              ...updatedReactions,
+              {
+                ...existingReaction,
+                users: [...(existingReaction.users || []), userId],
+              },
+            ],
+          };
+        }
+
+        // If that reaction doesn't exist => create a new one
+        return {
+          ...message,
+          reactions: [
+            ...updatedReactions,
+            {
+              icon,
+              users: [userId],
+            },
+          ],
+        };
+      }),
     );
+
     setChatRoomNotifications({
       notifications: 0,
       roomCode: chatRoomCode,
@@ -2530,25 +2559,27 @@ const ChatDetail = ({
   // Remove reactions
   const handleRemoveReactionClick = (msgUuid: string, icon: string) => {
     setDataMessageDetail((prev) =>
-      prev.map((message) =>
-        message.uuid === msgUuid
-          ? {
-              ...message,
-              reactions: message.reactions
-                ?.map((reaction) =>
-                  reaction.icon === icon
-                    ? {
-                        ...reaction,
-                        users: reaction.users.filter(
-                          (id) => id !== (session?.user.id as number),
-                        ),
-                      }
-                    : reaction,
-                )
-                .filter((reaction) => reaction.users.length > 0),
-            }
-          : message,
-      ),
+      prev.map((message) => {
+        if (message.uuid !== msgUuid) return message;
+
+        const userId = session?.user.id as number;
+
+        const updatedReactions = (message.reactions || [])
+          .map((reaction) => {
+            if (reaction.icon !== icon) return reaction;
+
+            return {
+              ...reaction,
+              users: reaction.users.filter((id) => id !== userId),
+            };
+          })
+          .filter((reaction) => reaction.users.length > 0);
+
+        return {
+          ...message,
+          reactions: updatedReactions,
+        };
+      }),
     );
   };
 
