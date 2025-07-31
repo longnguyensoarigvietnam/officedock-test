@@ -2118,39 +2118,29 @@ export const extractAndRemoveMsgQuotes = (html: string) => {
   };
 };
 
-export const handleDownloadFile = (
-  url: string,
-  filename: string,
-  useFetch = false,
-) => {
-  if (!useFetch) {
-    // Safe & optimized way for large files (native download)
+export const handleDownloadFile = async (url: string, filename: string) => {
+  try {
+    const cleanUrl = url.split('#')[0];
+    const res = await fetch(cleanUrl);
+
+    if (!res.ok) {
+      return;
+    }
+
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+
     const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.rel = 'noopener noreferrer';
+    a.href = blobUrl;
+    a.download = filename || 'download';
+    a.rel = 'noopener';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
+  } catch (error) {
     return;
   }
-
-  // Use fetch if really needed (small files or special processing)
-  fetch(url)
-    .then((res) => {
-      if (!res.ok) throw new Error(`Failed to download file: ${res.status}`);
-      return res.blob();
-    })
-    .then((blob) => {
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl); // cleanup
-    });
 };
 
 export function formatJapaneseDatetime(input: string): string {
