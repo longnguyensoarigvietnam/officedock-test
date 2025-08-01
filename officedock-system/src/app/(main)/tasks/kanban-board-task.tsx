@@ -2286,7 +2286,7 @@ const KanbanBoardTask = () => {
       todoList: todoListData,
       taskSchedules: planList && planList.length ? planList : null,
       oldIdStatus: data.oldIdStatus,
-      sendToChat: true,
+      sendToChat: false,
       peopleInChargeIds: peopleInChargeIds,
       organizationId: data.organization
         ? Number(data.organization.value)
