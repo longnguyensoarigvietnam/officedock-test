@@ -13,7 +13,6 @@ from common.serializers import (
 )
 from organizations.serializers import BaseOrganizationSerializer
 from submit_levels.models import SubmitLevelHistory
-from tags.serializers import BaseTagSerializer
 from users.models import User
 from tasks.models import Task
 from chat.models import ChatFile, ChunkFile
@@ -170,12 +169,9 @@ class TaskForChatMessageSerializer(serializers.ModelSerializer):
     Task serializer for chat message.
     """
 
-    tags = BaseTagSerializer(many=True, read_only=True)
-    organization = BaseOrganizationSerializer(read_only=True)
-
     class Meta:
         model = Task
-        fields = ["id", "title", "deadline", "tags", "organization"]
+        fields = ["id", "title"]
 
 
 class SubmitLevelForChatMessageSerializer(serializers.ModelSerializer):
@@ -323,6 +319,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     tasks = serializers.SerializerMethodField(read_only=True)
     reactions = serializers.SerializerMethodField(read_only=True)
     chat_files = serializers.SerializerMethodField(read_only=True)
+    organization = BaseOrganizationSerializer(read_only=True)
 
     class Meta:
         model = ChatMessage
@@ -346,6 +343,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "reply",
             "reactions",
             "chat_files",
+            "organization",
         ]
         read_only_fields = ["id", "uuid"]
 

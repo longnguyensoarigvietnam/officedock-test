@@ -55,7 +55,6 @@ from common.utils import (
     compare_list_categories,
     validate_company_organization,
 )
-from organizations.serializers import BaseOrganizationSerializer
 from stat_data.utils import validate_date_by_regex_and_reformat
 from tasks.constants import (
     DEFAULT_PAGE_SIZE,
@@ -551,11 +550,15 @@ class TaskViewSet(
             "company": user.company,
             "task": task,
             "type": ChatMessageTypes.CREATION_TASK.value,
+            "organization": task.organization,
         }
         current_people = [
             people_in_charge.user
             for people_in_charge in task.people_in_charge_tasks.all()
         ]
+        message_data["schedule_changes"] = {
+            "task": {"id": task.id, "title": task.title},
+        }
         # Edit or create from kanban
         if task_action == ChatMessageTypes.EDIT_TASK.value:
             # Unique element in list people
@@ -563,14 +566,16 @@ class TaskViewSet(
             delete_peoples = list(set(current_people) - set(unique_people))
             add_peoples = list(set(unique_people) - set(current_people))
             if delete_peoples and add_peoples:
-                message_data["schedule_changes"] = {
-                    "old_member": CreationDataUserSerializer(
-                        delete_peoples[0]
-                    ).data,
-                    "new_member": CreationDataUserSerializer(
-                        add_peoples[0]
-                    ).data,
-                }
+                message_data["schedule_changes"].update(
+                    {
+                        "old_member": CreationDataUserSerializer(
+                            delete_peoples[0]
+                        ).data,
+                        "new_member": CreationDataUserSerializer(
+                            add_peoples[0]
+                        ).data,
+                    }
+                )
             # Handle websocket to removed people
             if delete_peoples:
                 message_data["type"] = ChatMessageTypes.REMOVE_MEMBER_TASK.value
@@ -597,11 +602,6 @@ class TaskViewSet(
                 )
         elif task_action == ChatMessageTypes.REMOVE_TASK.value:
             message_data["type"] = task_action
-            message_data["schedule_changes"] = {
-                "organization": BaseOrganizationSerializer(
-                    message_data["task"].organization
-                ).data,
-            }
             self._send_chat_message(
                 participants=current_people,
                 user=user,

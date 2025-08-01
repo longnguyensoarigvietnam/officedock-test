@@ -8,7 +8,8 @@ from chat.models import ChatRoom, ChatMessage, Bookmark, Reaction
 from chat.serializers import ChatFileSerializer
 from common.constants import AVATAR_GCS_EXPIRATION_SECONDS
 from common.utils import get_signed_url
-from organizations.models import UsersOrganizations, Organization
+from organizations.models import UsersOrganizations
+from organizations.serializers import BaseOrganizationSerializer
 from submit_levels.models import SubmitLevelHistory
 from tasks.models import Task
 from users.models import User
@@ -188,44 +189,13 @@ def build_chat_message_payload(chat_messages, request_user=None):
     fk_task_ids = [msg.task_id for msg in full_messages if msg.task_id]
     # Merge both and deduplicate
     all_task_ids = list(set(m2m_task_ids).union(fk_task_ids))
-    main_org_map = {
-        org["id"]: {
-            "id": org["id"],
-            "name": org["name"],
-            "uuid": org["uuid"],
-            "icon": org["icon"],
-            "icon_color": org["icon_color"],
-            "type": org["type"],
-        }
-        for org in Organization.objects.filter(
-            tasks__id__in=all_task_ids
-        ).values(
-            "id",
-            "icon",
-            "name",
-            "uuid",
-            "icon_color",
-            "type",
-        )
-    }
-    raw_tasks = (
-        Task.objects.filter(id__in=all_task_ids)
-        .prefetch_related("tags")
-        .only("id", "title", "deadline")
-    )
+    raw_tasks = Task.objects.filter(id__in=all_task_ids).only("id", "title")
     task_map = {}
     for task in raw_tasks:
         if task.id not in task_map:
             task_map[task.id] = {
                 "id": task.id,
                 "title": task.title,
-                "deadline": task.deadline,
-                "tags": [
-                    {"id": tag.id, "name": tag.name} for tag in task.tags.all()
-                ],
-                "organization": main_org_map[task.organization_id]
-                if task.organization_id
-                else None,
             }
     results = []
     for obj in full_messages:
@@ -282,6 +252,9 @@ def build_message_payload(
         "quote": [],
         "reply": None,
         "task": None,
+        "organization": BaseOrganizationSerializer(obj.organization).data
+        if obj.organization
+        else None,
         "submit_level": submit_level_map.get(obj.submit_level_id)
         if obj.submit_level_id
         else None,
