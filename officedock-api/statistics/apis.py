@@ -10,7 +10,6 @@ from django.db.models import (
     Prefetch,
     Case,
     When,
-    Count,
     IntegerField,
     Value,
     DateTimeField,
@@ -1733,10 +1732,12 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         """
         Take duration once for all users
         """
-        # Preload related objects to avoid additional DB hits
+        # Preload related objects
         durations = durations.select_related(
             "user", "task__organization", "schedule__organization"
-        ).annotate(
+        )
+        # Annotate filtered relations so counting tags does not create nested aggregates
+        durations = durations.annotate(
             # Determine organization_id from either task or schedule
             organization_id=Case(
                 When(task__isnull=False, then=F("task__organization_id")),
@@ -1746,57 +1747,22 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                 default=Value(None),
                 output_field=IntegerField(),
             ),
-            # Count how many related tags (either via task or schedule)
-            related_tag_count=Case(
-                When(
-                    task__isnull=False,
-                    then=Count(
-                        "task__tags",
-                        filter=Q(task__tags__in=tag_ids),
-                        distinct=True,
-                    ),
-                ),
-                When(
-                    schedule__isnull=False,
-                    then=Count(
-                        "schedule__tags",
-                        filter=Q(schedule__tags__in=tag_ids),
-                        distinct=True,
-                    ),
-                ),
-                default=1,  # Default tag count if none found
-                output_field=IntegerField(),
-            ),
-            # Determine the effective paused time: use now() if paused_at is null
+            # Effective paused time
             effective_paused=Case(
                 When(paused_at__isnull=True, then=Value(now())),
                 default=F("paused_at"),
                 output_field=DateTimeField(),
             ),
-            # Calculate the actual duration: effective_paused - started_at
+            # Actual duration
             actual_duration=ExpressionWrapper(
                 F("effective_paused") - F("started_at"),
                 output_field=DurationField(),
             ),
         )
 
-        # If viewing a tag-specific page, multiply actual duration by tag count
-        if is_tag_page:
-            durations = durations.annotate(
-                weighted_duration=ExpressionWrapper(
-                    F("actual_duration") * F("related_tag_count"),
-                    output_field=DurationField(),
-                )
-            )
-            # Group by organization and user, summing the weighted durations
-            grouped_durations = durations.values(
-                "organization_id", "user_id"
-            ).annotate(total_duration=Sum("weighted_duration"))
-        else:
-            # Group by organization and user, summing the weighted durations
-            grouped_durations = durations.values(
-                "organization_id", "user_id"
-            ).annotate(total_duration=Sum("actual_duration"))
+        grouped_durations = durations.values(
+            "organization_id", "user_id"
+        ).annotate(total_duration=Sum("actual_duration"))
         durations_by_user = defaultdict(timedelta)
         for row in grouped_durations:
             durations_by_user[row["organization_id"], row["user_id"]] += row[

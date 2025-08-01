@@ -185,9 +185,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 if item.user.id == self.user.id:
                     participant = item
                 else:
-                    if not item.is_muted:
-                        item.unread_messages = item.unread_messages + 1
-                        item.save()
+                    item.unread_messages = item.unread_messages + 1
+                    item.save()
                     # Handle case realtime when send chat message
                     send_web_socket_event(
                         {

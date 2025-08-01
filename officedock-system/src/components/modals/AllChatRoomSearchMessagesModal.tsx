@@ -162,6 +162,14 @@ export const AllChatRoomSearchMessagesModal = ({
               inputClassName="!py-1 text-[14px] !border-[#77858F]"
               value={allRoomChatMsgSearch}
               onChange={(e) => setAllRoomChatMsgSearch(e.target.value)}
+              onKeyDown={(e: any) => {
+                if (e.keyCode == 13 && e.target.value !== '') {
+                  setRoomNameSearch(allRoomChatMsgSearch);
+                  setSearchMessageResults(undefined);
+                  setSearchResultsPage(1);
+                  onSubmit(allRoomChatMsgSearch, 1);
+                }
+              }}
             />
             <Button
               className="!w-[60px] rounded-[6px] h-[36px] !px-[12px] font-medium text-sm"

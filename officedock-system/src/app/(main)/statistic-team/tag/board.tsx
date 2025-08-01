@@ -14,7 +14,6 @@ import LineChartByTeamTagsCompare from '@components/statisticTeam/tag/compare/Li
 import AllocationTagTeamCompare from '@components/statisticTeam/tag/compare/AllocationTagTeamCompare';
 import AllocationTeamTag from '@components/statisticTeam/tag/AllocationTeamTag';
 import StackedAreaTeamTagChart from '@components/statisticTeam/tag/StackedAreaTeamTagChart';
-import FilterTagTeam from '@components/statisticTeam/tag/filter/FilterTagTeam';
 
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
@@ -35,6 +34,8 @@ import { OptionDropdownType } from '@interfaces/common';
 
 import { formatDateToYMD, sumDurations } from '@utils/date';
 import { removeDuplicateOptions } from '@utils';
+import FilterTagTeam from '@components/statisticTeam/tag/filter/FilterTagTeam';
+import FilterTagUserTeam from '@components/statisticTeam/tag/filter/FilterTagUserTeam';
 
 const StatisticTeamTagBoard = () => {
   const {
@@ -527,6 +528,7 @@ const StatisticTeamTagBoard = () => {
 
     setSelectedSmall(data);
   };
+
   const getParticipantAvatars = (
     participants: {
       id: number;
@@ -610,14 +612,17 @@ const StatisticTeamTagBoard = () => {
         <div className="flex justify-between w-full mb-[30px]">
           {/* Filter tag */}
           <div>
-            <FilterTagTeam
-              open={isOpenModalFilter}
-              onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-            />
+            <FilterTagTeam />
           </div>
           <div className="flex-shrink-0">
             <StatisticTeamCalendar />
           </div>
+        </div>
+        <div className="mb-[30px]">
+          <FilterTagUserTeam
+            open={isOpenModalFilter}
+            onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
+          />
         </div>
       </div>
 

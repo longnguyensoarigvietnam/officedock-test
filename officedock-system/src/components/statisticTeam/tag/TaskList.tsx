@@ -21,8 +21,8 @@ import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import FilterTagTeam from './filter/FilterTagTeam';
 import { removeDuplicateOptions } from '@utils';
+import FilterTagTeam from './filter/FilterTagTeam';
 
 type Props = {
   isCheckCompare: boolean;
@@ -74,7 +74,6 @@ const TaskListStatisticTeamTags = ({
     useContext(GlobalStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
-  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
 
   // Value
   const [totalPages, setTotalPages] = useState<number>(1);
@@ -230,10 +229,7 @@ const TaskListStatisticTeamTags = ({
             <div>
               <div className="flex justify-between w-full mb-[30px] px-[30px]">
                 {/* Filter tag */}
-                <FilterTagTeam
-                  open={isOpenModalFilter}
-                  onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-                />
+                <FilterTagTeam />
               </div>
             </div>
             <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">

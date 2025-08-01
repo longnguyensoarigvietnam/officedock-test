@@ -20,8 +20,9 @@ import {
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
-import FilterTagTeam from './filter/FilterTagTeam';
 import { ALL_TEAM_STATISTIC, SUB_TEAMS } from '@constants';
+import FilterTagTeam from './filter/FilterTagTeam';
+import FilterTagUserTeam from './filter/FilterTagUserTeam';
 
 type Props = {
   startDate: Date;
@@ -456,6 +457,12 @@ const PercentageTeamTags = ({
                 カテゴリーごとのタグの割合
               </span>
             </div>
+            <div>
+              <FilterTagUserTeam
+                open={isOpenModalFilter}
+                onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
+              />
+            </div>
           </div>
           <ImageRound
             src="/icons/extend-calendar.svg"
@@ -477,10 +484,7 @@ const PercentageTeamTags = ({
               <div>
                 <div className="flex justify-between w-full mb-[30px] px-[30px]">
                   {/* Filter tag */}
-                  <FilterTagTeam
-                    open={isOpenModalFilter}
-                    onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-                  />
+                  <FilterTagTeam />
                 </div>
               </div>
               <div className="flex justify-between px-[30px] text-sm font-medium">

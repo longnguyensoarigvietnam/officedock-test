@@ -916,7 +916,7 @@ const DailyReportDetailBoard = () => {
                       ? info.row.original.LARGE.id
                       : NO_SETTING),
                 )}
-                isDisabled={!isPermissionAction}
+                isDisabled={!isPermissionAction || info.row.original.type !== EventCalendarType.TASK}
                 placeholder=""
                 showArrow
                 forceMenuPlacementBottom
@@ -1055,7 +1055,7 @@ const DailyReportDetailBoard = () => {
                   )}
                   showArrow
                   forceMenuPlacementBottom
-                  isDisabled={!isPermissionAction}
+                  isDisabled={!isPermissionAction || info.row.original.type !== EventCalendarType.TASK}
                   placeholder=""
                   options={removeDuplicateOptions(optionMedium)}
                   onChange={(e) => {
@@ -1212,7 +1212,7 @@ const DailyReportDetailBoard = () => {
                     ? info.row.original.SMALL.id
                     : NO_SETTING),
               )}
-              isDisabled={!isPermissionAction}
+              isDisabled={!isPermissionAction || info.row.original.type !== EventCalendarType.TASK}
               placeholder=""
               showArrow
               forceMenuPlacementBottom

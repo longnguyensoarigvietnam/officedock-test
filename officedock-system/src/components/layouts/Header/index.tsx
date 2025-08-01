@@ -137,6 +137,7 @@ const Header = ({ className }: HeaderProps) => {
   const isDailyReportTeamPage = pathname.startsWith('/daily-report-team');
 
   const isTaskPage = pathname.startsWith('/task');
+
   const isTaskTeamPage = pathname.startsWith('/task-teams');
   const isScheduleTeamPage =
     pathname === pageRouters.SCHEDULE_TEAM_MANAGEMENT.href;
@@ -173,7 +174,7 @@ const Header = ({ className }: HeaderProps) => {
     status: false,
     type: ActionsEvent.EDIT,
     showThisEventOption: true,
-    showAllEventsOption: true
+    showAllEventsOption: true,
   });
   const [eventActionType, setEventActionType] =
     useState<EventActionType | null>(null);
@@ -566,7 +567,7 @@ const Header = ({ className }: HeaderProps) => {
       todoList: todoListData,
       taskSchedules: planList && planList.length ? planList : null,
       oldIdStatus: data.oldIdStatus,
-      sendToChat: true,
+      sendToChat: false,
       peopleInChargeIds: peopleInChargeIds,
       organizationId: data.organization
         ? Number(data.organization.value)
@@ -1330,6 +1331,7 @@ const Header = ({ className }: HeaderProps) => {
           dataEvent={dataEventEdit}
           action={ActionsEvent.EDIT}
           setIsEditingRepetitiveFields={setIsEditingRepetitiveFields}
+          isEditDisabled={true}
           onClose={() => {
             handleRemoveEventParam();
             setDataEventEditLocal(undefined);
@@ -1350,7 +1352,7 @@ const Header = ({ className }: HeaderProps) => {
                 status: true,
                 type: ActionsEvent.EDIT,
                 showThisEventOption: !isEditingRepetitiveFields,
-                showAllEventsOption: isEditingRepetitiveFields
+                showAllEventsOption: isEditingRepetitiveFields,
               });
             } else {
               setOpenConfirmEditEventModal(true);
@@ -1368,7 +1370,7 @@ const Header = ({ className }: HeaderProps) => {
                 status: true,
                 type: ActionsEvent.DELETE,
                 showThisEventOption: true,
-                showAllEventsOption: true
+                showAllEventsOption: true,
               });
             } else {
               setOpenConfirmDeleteEventModal(true);

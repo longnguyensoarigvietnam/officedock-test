@@ -31,10 +31,11 @@ import {
   SubmitLevelStatus,
   TaskRepetitiveValue,
 } from '@constants/enums';
-import { pageRouters } from '@constants/routers';
+import { apiRouters, pageRouters } from '@constants/routers';
 
 import {
   ChatDashboardMember,
+  ChatFileDetailResponse,
   ChatFileResponse,
   ChatMessageResponse,
   ChatParticipant,
@@ -47,6 +48,7 @@ import {
   displayRepetitiveEventTime,
   formatWithParagraphTags,
   getFileURL,
+  handleDownloadFile,
   renderEventDatetimeInChat,
   renderScheduleChangeInCalendarRoom,
 } from '@utils';
@@ -60,6 +62,10 @@ import { MessageHoverOptions } from './MessageHoverOptions';
 import DetailReactionChat from './DetailReactionChat';
 import { MessageDetailQuote } from './quote/MessageDetailQuote';
 import MessageDetailQuoteText from './quote/MessageDetailQuoteText';
+import React from 'react';
+import api from '@base/api';
+import { useMutation } from 'react-query';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 export type MessageDetailProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
@@ -340,7 +346,6 @@ export const MessageDetail = ({
 
         if (child.nodeType === Node.ELEMENT_NODE) {
           const el = child as HTMLElement;
-
           if (el.dataset.taskId) {
             const taskId = el.dataset.taskId;
             const parser = new DOMParser();
@@ -376,15 +381,17 @@ export const MessageDetail = ({
             );
             if (foundQuote) {
               children.push(
-                <MessageDetailQuote
-                  key={`${index}-${i}-msg`}
-                  chatRoomDetail={chatRoomDetail}
-                  messageDetail={foundQuote}
-                  dashboardMembers={dashboardMembers}
-                  highlightedMessageId={highlightedMessageId}
-                  setDataPreviewFile={setDataPreviewFile}
-                  handleActionEditTask={handleActionEditTask}
-                />,
+                <div className={``}>
+                  <MessageDetailQuote
+                    key={`${index}-${i}-msg`}
+                    chatRoomDetail={chatRoomDetail}
+                    messageDetail={foundQuote}
+                    dashboardMembers={dashboardMembers}
+                    highlightedMessageId={highlightedMessageId}
+                    setDataPreviewFile={setDataPreviewFile}
+                    handleActionEditTask={handleActionEditTask}
+                  />
+                </div>,
               );
             }
           }
@@ -397,14 +404,65 @@ export const MessageDetail = ({
             );
             if (foundQuote) {
               children.push(
-                <MessageDetailQuoteText
-                  key={`${index}-${i}-textquote`}
-                  messageDetail={foundQuote}
-                  dashboardMembers={dashboardMembers}
-                  title={dataTitle}
-                />,
+                <div className={`${index !== 0 && 'mt-5'}`}>
+                  <MessageDetailQuoteText
+                    key={`${index}-${i}-textquote`}
+                    messageDetail={foundQuote}
+                    dashboardMembers={dashboardMembers}
+                    title={dataTitle}
+                  />
+                </div>,
               );
             }
+          }
+          if (el.dataset.msgReplyId) {
+            const title = el.dataset.title || '';
+
+            children.push(
+              <p key={`${index}-msg-reply`}>
+                <span className="inline-msg-quote" contentEditable={false}>
+                  <span style={{ color: '#77858F' }}>[返信]</span>{' '}
+                  <span style={{ color: '#0068B7' }}>{title}</span>
+                </span>
+              </p>,
+            );
+          }
+          if (
+            el.classList.contains('mention') ||
+            el.dataset.type === 'mention'
+          ) {
+            const mentionText = el.textContent?.trim() || el.innerText || '';
+            if (mentionText) {
+              children.push(
+                <span
+                  key={`${index}-${i}-mention`}
+                  className="mention text-[#0068B6]"
+                  data-type="mention"
+                  data-id={el.dataset.id}>
+                  {mentionText}
+                </span>,
+              );
+            }
+          }
+          if (
+            el.tagName === 'IMG' &&
+            el.getAttribute('src')?.includes('/icons/') &&
+            el.getAttribute('alt') &&
+            el.getAttribute('title')
+          ) {
+            const src = el.getAttribute('src');
+            const name = el.getAttribute('alt') ?? '';
+            children.push(
+              <Image
+                key={`${index}-${i}-reaction`}
+                src={src!}
+                alt={name}
+                title={name}
+                width={20}
+                height={20}
+                className="inline-block align-middle mx-[2px] w-[20px] h-[20px]"
+              />,
+            );
           }
         }
       });
@@ -413,7 +471,7 @@ export const MessageDetail = ({
         <div
           key={`p-${index}`}
           data-id={messageDetail.uuid}
-          className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px] flex flex-col gap-5">
+          className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px] ">
           {children}
         </div>
       );
@@ -524,6 +582,27 @@ export const MessageDetail = ({
     );
   };
 
+  const handleDownloadFileName = async (fileUuid: string) => {
+    const apiUrl = apiRouters.FILE_DETAIL(`${fileUuid}`);
+
+    const { data } = await api.get<ChatFileDetailResponse>(apiUrl);
+    return data;
+  };
+
+  const { mutate: downloadFileName } = useMutation(
+    'downloadFileName',
+    handleDownloadFileName,
+    {
+      onSuccess: (data) => {
+        if (data.originalFile) {
+          handleDownloadFile(data?.originalFile || '', data?.fileName || '');
+        }
+      },
+      onError: () => {},
+      onSettled: () => {},
+    },
+  );
+
   return (
     <Fragment>
       {messageDetail && (
@@ -632,7 +711,10 @@ export const MessageDetail = ({
                                                 </div>
                                               )}
                                               <p
-                                                className={`text-[#0068B6] font-medium text-[14px] break-all max-w-full ${
+                                                onClick={() =>
+                                                  downloadFileName(file.uuid)
+                                                }
+                                                className={`text-[#0068B6] cursor-pointer font-medium text-[14px] break-all max-w-full ${
                                                   file.fileType.includes(
                                                     'image',
                                                   )
@@ -642,7 +724,10 @@ export const MessageDetail = ({
                                                 {file.fileName}
                                               </p>
                                             </div>
-                                            {(file.fileType.includes('image') || file.fileType.includes('pdf')) && (
+                                            {(file.fileType.includes('image') ||
+                                              file.fileType.includes(
+                                                'pdf',
+                                              )) && (
                                               <Button
                                                 onClick={() => {
                                                   const memberInfo =
@@ -964,30 +1049,23 @@ export const MessageDetail = ({
           )}
           {chatRoomDetail?.type === ChatRoomType.TASK && (
             <div
-              className={`flex !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
-              {messageDetail.type !== MessageType.MESSAGE ? (
-                <ImageRound
-                  className="w-10 h-10"
-                  src="/icons/document.svg"
-                  border="full"
-                  name="Task"
+              className={`flex  !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
+              <div>
+                <GroupIconWithDynamicColor
+                  color={
+                    messageDetail?.task?.organization?.iconColor ||
+                    messageDetail?.scheduleChanges?.organization?.iconColor ||
+                    ''
+                  }
                 />
-              ) : (
-                <div>{renderAvatar(messageDetail.sender.id)}</div>
-              )}
-              <div className={`ml-3 !w-full`}>
+              </div>
+              <div className={`ml-3 mt-[6px] !w-full`}>
                 <div className="flex justify-between items-baseline pb-2">
                   <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
-                    {messageDetail.type !== MessageType.MESSAGE ? (
-                      <p className="font-semibold text-sm">タスクカード</p>
-                    ) : (
-                      <p className="max-w-full break-all">
-                        {messageDetail.sender.fullName}{' '}
-                        <span className="font-medium text-xs text-[#77858F]">
-                          {messageDetail.sender?.organizations?.name}
-                        </span>
-                      </p>
-                    )}
+                    <p className="max-w-full font-medium break-all">
+                      {messageDetail?.task?.organization?.name ||
+                        messageDetail.scheduleChanges?.organization?.name}{' '}
+                    </p>
 
                     {messageDetail.isBookmark && (
                       <ImageRound
@@ -1028,46 +1106,76 @@ export const MessageDetail = ({
                           )}
                           {messageDetail.type !== MessageType.MESSAGE &&
                             (messageDetail.task ? (
-                              <div className={`w-full flex justify-start`}>
+                              <div className={`w-full  flex flex-col gap-5`}>
                                 <div
-                                  className={`text-xs font-normal bg-[#eaf8ff] w-full p-4 `}>
+                                  onClick={() => {
+                                    if (messageDetail.task?.id) {
+                                      handleActionEditTask(
+                                        Number(messageDetail.task?.id),
+                                      );
+                                    }
+                                  }}
+                                  className={`text-xs font-normal bg-white border border-[#D2DBE1] rounded-lg w-full p-4 `}>
                                   <div className={`flex flex-col items-start`}>
-                                    <h4 className="text-sm w-fit font-medium text-black h-5 max-w-full break-all">
-                                      {messageDetail.type ==
-                                      MessageType.CREATION_TASK
-                                        ? CREATION_TASK_MESSAGE
-                                        : messageDetail.type ==
-                                            MessageType.REMOVE_MEMBER_TASK
-                                          ? REMOVE_MEMBER_TASK_MESSAGE
-                                          : ADD_MEMBER_TASK_MESSAGE}
-                                    </h4>
-                                    <h4 className="text-sm w-fit text-black h-5 truncate max-w-[500px]">
-                                      タスクのタイトル:{' '}
-                                      {messageDetail.task.title || NO_SETTING}
-                                    </h4>
-                                    {messageDetail.type !==
-                                      MessageType.REMOVE_MEMBER_TASK && (
-                                      <p className="w-fit mt-2">
-                                        締切 :{' '}
-                                        {(messageDetail.task.deadline &&
-                                          format(
-                                            messageDetail.task.deadline,
-                                            DATE_FORMAT,
-                                          )) ||
-                                          NO_SETTING}
-                                      </p>
-                                    )}
+                                    <div className="flex items-start gap-[10px]">
+                                      <ImageRound
+                                        name="Save"
+                                        src="/icons/gray-checkbox.svg"
+                                        className="w-fit h-fit relative top-[3px] "
+                                      />
+                                      <h4 className="text-sm w-fit font-medium text-[#228CDB] h-5 truncate max-w-[500px]">
+                                        {messageDetail.task.title || NO_SETTING}
+                                      </h4>
+                                    </div>
                                   </div>
                                 </div>
+                                <h4 className="text-sm w-fit font-medium text-black h-5 max-w-full break-all">
+                                  {messageDetail.type ==
+                                    MessageType.REMOVE_MEMBER_TASK && (
+                                    <p>
+                                      <span className="text-[#228CDB]">
+                                        {messageDetail.sender.fullName}
+                                      </span>
+                                      があなたのタスクカードを
+                                      <span className="text-[#228CDB]">
+                                        {
+                                          messageDetail.scheduleChanges
+                                            ?.newMember?.fullName
+                                        }
+                                      </span>
+                                      に移動しました。
+                                    </p>
+                                  )}
+                                  {messageDetail.type ==
+                                    MessageType.CREATION_TASK &&
+                                    `${messageDetail.sender.fullName}があなたに割り当てました`}
+                                  {messageDetail.type ==
+                                    MessageType.EDIT_TASK &&
+                                    `${messageDetail.sender.fullName}があなたのタスクカードを編集しました。`}
+                                  {messageDetail.type ==
+                                    MessageType.ADD_MEMBER_TASK &&
+                                    `${messageDetail.sender.fullName}があなたに割り当てました`}
+                                </h4>
                               </div>
                             ) : (
                               <div className={`w-full flex justify-start `}>
                                 <div
-                                  className={`text-sm font-normal bg-[#eaf8ff] p-1`}>
+                                  className={`text-sm font-normal bg-transparent p-4 !pt-1 !px-0`}>
                                   <div className={`flex flex-col items-end`}>
                                     <p
-                                      className={`font-normal w-[500px]  text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
-                                      {TASK_DELETED}
+                                      className={`font-normal w-[500px]  text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-black italic`}>
+                                      {messageDetail.type ==
+                                      MessageType.REMOVE_TASK ? (
+                                        <p>
+                                          <span className="text-[#228CDB]">
+                                            {' '}
+                                            {messageDetail.sender.fullName}
+                                          </span>
+                                          があなたのタスクカードを削除しました。
+                                        </p>
+                                      ) : (
+                                        TASK_DELETED
+                                      )}
                                     </p>
                                   </div>
                                 </div>

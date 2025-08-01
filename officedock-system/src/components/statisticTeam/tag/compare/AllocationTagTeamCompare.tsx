@@ -4,7 +4,6 @@ import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
-import FilterTagTeam from '../filter/FilterTagTeam';
 // Currently using for ALL TEAM taken from my dock
 import ProgressBarStatistic from '@components/statistic/category/ProgressBarStatistic';
 
@@ -30,6 +29,8 @@ import { EventWorkCategory } from '@constants/enums';
 import ProgressBarTeamTagCompare from './ProgressBarTeamTag';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT, SUB_TEAMS } from '@constants';
+import FilterTagUserTeam from '../filter/FilterTagUserTeam';
+import FilterTagTeam from '../filter/FilterTagTeam';
 
 type Props = {
   startDate: Date;
@@ -491,6 +492,13 @@ const AllocationTagTeamCompare = memo(
                   カテゴリーごとのタグの時間配分
                 </span>
               </div>
+              <div>
+                {' '}
+                <FilterTagUserTeam
+                  open={isOpenModalFilter}
+                  onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
+                />
+              </div>
             </div>
             <ImageRound
               src="/icons/extend-calendar.svg"
@@ -512,10 +520,7 @@ const AllocationTagTeamCompare = memo(
                 <div>
                   <div className="flex justify-between w-full my-8 px-[30px]">
                     {/* Filter tag */}
-                    <FilterTagTeam
-                      open={isOpenModalFilter}
-                      onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-                    />
+                    <FilterTagTeam />
                   </div>
                 </div>
                 <div className="flex  justify-between px-[30px] text-sm font-medium">

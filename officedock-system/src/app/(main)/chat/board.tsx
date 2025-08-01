@@ -6,12 +6,17 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import Metadata from '@components/common/Metadata';
 
-import { ChatRoomType, SocketActions } from '@constants/enums';
+import {
+  ChatParticipantType,
+  ChatRoomType,
+  SocketActions,
+} from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 import { BOOKMARK_ROUTER_NAME, DEFAULT_TIME_TEXT } from '@constants';
 
 import {
   ChatDashboardMember,
+  ChatParticipant,
   ChatRoomItem,
   WebSocketMessageData,
 } from '@interfaces/chat';
@@ -20,6 +25,7 @@ import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useTaskDurationDetail from '@hooks/useTaskDurationDetail';
 import useContinueCounterTime from '@hooks/useContinueCounterTime';
+import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 
 import { generateUniqueId } from '@utils';
 
@@ -43,7 +49,8 @@ const BoardChat = () => {
 
   // Context
   const { setChatRoomNotifications } = useContext(ChatContext);
-  const { totalNotifications } = useContext(GlobalStateContext);
+  const { totalNotifications, dashboardMembersWithAvatars } =
+    useContext(GlobalStateContext);
   const { dataRunning } = useContext(TaskContext);
 
   // Custom hooks
@@ -56,13 +63,71 @@ const BoardChat = () => {
   const [hasMoreDetailOnScrollDown, setHasMoreDetailOnScrollDown] =
     useState(false);
   const [dataChatList, setDataChatList] = useState<ChatRoomItem[]>([]);
-  const [roomNameSearchResults, setRoomNameSearchResults] = useState<ChatRoomItem[]>([]);
+  const [filteredChatList, setFilteredChatList] = useState<ChatRoomItem[]>([]);
+  const [roomNameSearchResults, setRoomNameSearchResults] = useState<
+    ChatRoomItem[]
+  >([]);
   const [searchChatMsg, setSearchChatMsg] = useState('');
   const { data: session } = useSessionCache();
   const [dashboardMembers, setDashboardMembers] = useState<
     ChatDashboardMember[]
   >([]);
   const [clientId] = useState(() => generateUniqueId());
+
+  // Chat member options
+  const [dataOptionsParticipants, setDataOptionsParticipants] = useState<
+    ChatParticipant[]
+  >([]);
+  const [dataOptionsOrganizations, setDataOptionsOrganizations] = useState<
+    {
+      id: string | number;
+      fullName: string;
+      color: string;
+      userIds: number[];
+    }[]
+  >([]);
+  const { isFetchedCreationDataStatistic } = useCreationDataStatistic({
+    is_chat_page: true,
+
+    onSuccess: (data) => {
+      setDataOptionsOrganizations([
+        ...data.organizations.map((org) => ({
+          id: org.id || '',
+          fullName: org.name,
+          userIds: org.users ? org.users.map((user) => user.id) : [],
+          color: org.iconColor || '#0068B6',
+        })),
+      ]);
+    },
+  });
+
+  useEffect(() => {
+    if (dashboardMembersWithAvatars && isFetchedCreationDataStatistic) {
+      const eventMembers = dashboardMembersWithAvatars.map((member) => ({
+        id: `${ChatParticipantType.USER}-${member.id}`,
+        fullName: member.fullName,
+        type: ChatParticipantType.USER,
+        mainOrganization: member.mainOrganization || '',
+        color: member?.avatarColor || '',
+        avatarUrl: member?.avatar || '',
+      }));
+      const eventOrganizations = dataOptionsOrganizations
+        ? dataOptionsOrganizations.map((org) => ({
+            id: `${ChatParticipantType.ORGANIZATION}-${org.id}`,
+            fullName: org.fullName,
+            type: ChatParticipantType.ORGANIZATION,
+            userIds: org.userIds,
+            color: org.color,
+          }))
+        : [];
+      setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    dashboardMembersWithAvatars,
+    dataOptionsOrganizations,
+    isFetchedCreationDataStatistic,
+  ]);
 
   // Running task info
   const { taskDurationDetail } = useTaskDurationDetail({
@@ -228,7 +293,7 @@ const BoardChat = () => {
       return [...pinnedItems, ...unpinnedItems];
     });
 
-    setRoomNameSearchResults((prevDataChatList) => {
+    setFilteredChatList((prevDataChatList) => {
       const pinnedItems = prevDataChatList.filter(
         (item) => item.pinAt !== null,
       );
@@ -360,7 +425,7 @@ const BoardChat = () => {
       }
       return [...pinnedItems, ...unpinnedItems];
     });
-    setRoomNameSearchResults((prevData) => {
+    setFilteredChatList((prevData) => {
       return prevData.map((item) =>
         item.code === data.code
           ? {
@@ -381,12 +446,15 @@ const BoardChat = () => {
       <ListChatUsers
         hasMore={hasMore}
         dataChatList={dataChatList}
+        filteredChatList={filteredChatList}
         roomNameSearchResults={roomNameSearchResults}
         chatRoomCode={chatRoomCode}
         dashboardMemberList={dashboardMemberList}
         dashboardMembers={dashboardMembers}
+        dataOptionsParticipants={dataOptionsParticipants}
         setLastItemId={setLastItemId}
         setDataChatList={setDataChatList}
+        setFilteredChatList={setFilteredChatList}
         setRoomNameSearchResults={setRoomNameSearchResults}
         setHasMore={setHasMore}
         setHasMoreDetailOnScrollDown={setHasMoreDetailOnScrollDown}
@@ -402,15 +470,16 @@ const BoardChat = () => {
           chatRoomCode={chatRoomCode}
           dashboardMemberList={dashboardMemberList}
           dashboardMembers={dashboardMembers}
+          dataOptionsParticipants={dataOptionsParticipants}
           creationDataTaskData={creationDataTaskData}
           searchChatMsg={searchChatMsg}
           hasMoreDetailOnScrollDown={hasMoreDetailOnScrollDown}
           setHasMoreDetailOnScrollDown={setHasMoreDetailOnScrollDown}
           setSearchChatMsg={setSearchChatMsg}
-          setRoomNameSearchResults={setRoomNameSearchResults}
           setLastItemId={setLastItemId}
           setHasMoreDetail={setHasMoreDetail}
           setDataChatList={setDataChatList}
+          setFilteredChatList={setFilteredChatList}
           handleRemoveChatRoomParam={handleRemoveChatRoomParam}
         />
       )}

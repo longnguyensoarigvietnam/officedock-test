@@ -4,7 +4,9 @@ import { AxiosError } from 'axios';
 import { useMutation, useQueryClient } from 'react-query';
 import {
   ChangeEvent,
+  Dispatch,
   Fragment,
+  SetStateAction,
   useCallback,
   useContext,
   useEffect,
@@ -153,6 +155,7 @@ interface dataProps {
   dashboardMembers: ChatDashboardMember[];
   creationDataTaskData: CreationDataTask | undefined;
   hasMoreDetailOnScrollDown: boolean;
+  dataOptionsParticipants: ChatParticipant[];
   setLastItemId: React.Dispatch<
     React.SetStateAction<number | null | undefined>
   >;
@@ -161,9 +164,7 @@ interface dataProps {
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
   handleRemoveChatRoomParam: () => void;
-  setRoomNameSearchResults: React.Dispatch<
-    React.SetStateAction<ChatRoomItem[]>
-  >;
+  setFilteredChatList: Dispatch<SetStateAction<ChatRoomItem[]>>
 }
 const ChatDetail = ({
   clientId,
@@ -176,13 +177,14 @@ const ChatDetail = ({
   creationDataTaskData,
   searchChatMsg,
   hasMoreDetailOnScrollDown,
+  dataOptionsParticipants,
   setHasMoreDetailOnScrollDown,
-  setRoomNameSearchResults,
   setHasMoreDetail,
   setLastItemId,
   setDataChatList,
   handleRemoveChatRoomParam,
   setSearchChatMsg,
+  setFilteredChatList
 }: dataProps) => {
   const { data: session } = useSessionCache();
 
@@ -386,6 +388,10 @@ const ChatDetail = ({
 
   // Action group
   const [showModalMuteChat, setShowModalMuteChat] = useState(false);
+
+  useEffect(() => {
+    setExtendMoreData(false);
+  }, [chatRoomCode]);
 
   // Scroll to selected message
   useEffect(() => {
@@ -1024,25 +1030,6 @@ const ChatDetail = ({
     },
     [setDataChatList, handleRemoveChatRoomParam, chatRoomCode],
   );
-  useEffect(() => {
-    const handleDragOver = (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    const handleDrop = (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    document.addEventListener('dragover', handleDragOver);
-    document.addEventListener('drop', handleDrop);
-
-    return () => {
-      document.removeEventListener('dragover', handleDragOver);
-      document.removeEventListener('drop', handleDrop);
-    };
-  }, []);
 
   // Socket
   useEffect(() => {
@@ -2494,33 +2481,62 @@ const ChatDetail = ({
   // Reaction message
   const handleReactionClick = (msgUuid: string, icon: string) => {
     setDataMessageDetail((prev) =>
-      prev.map((message) =>
-        message.uuid === msgUuid
-          ? {
-              ...message,
-              reactions: message.reactions?.some(
-                (reaction) => reaction.icon === icon,
-              )
-                ? message.reactions.map((reaction) =>
-                    reaction.icon === icon
-                      ? {
-                          ...reaction,
-                          users: reaction.users.includes(
-                            session?.user.id as number,
-                          )
-                            ? reaction.users
-                            : [...reaction.users, session?.user.id as number],
-                        }
-                      : reaction,
-                  )
-                : [
-                    ...(message.reactions || []),
-                    { icon, users: [session?.user.id as number] },
-                  ],
-            }
-          : message,
-      ),
+      prev.map((message) => {
+        if (message.uuid !== msgUuid) return message;
+
+        const userId = session?.user.id as number;
+
+        const updatedReactions = (message.reactions || [])
+          // Remove user from all other reactions (only keep if never selected or is new reaction)
+          .map((reaction) => ({
+            ...reaction,
+            users: reaction.users.filter((id) => id !== userId),
+          }))
+          // After filtering out the user from all reactions, check if this reaction exists
+          .filter((reaction) => reaction.users.length > 0);
+
+        const existingReaction = message.reactions?.find(
+          (r) => r.icon === icon,
+        );
+
+        const userReacted = existingReaction?.users.includes(userId);
+
+        // If it already exists and the user has clicked => remove completely (toggle off)
+        if (existingReaction && userReacted) {
+          return {
+            ...message,
+            reactions: updatedReactions,
+          };
+        }
+
+        // If it already exists but the user hasn't selected it => add it
+        if (existingReaction && !userReacted) {
+          return {
+            ...message,
+            reactions: [
+              ...updatedReactions,
+              {
+                ...existingReaction,
+                users: [...(existingReaction.users || []), userId],
+              },
+            ],
+          };
+        }
+
+        // If that reaction doesn't exist => create a new one
+        return {
+          ...message,
+          reactions: [
+            ...updatedReactions,
+            {
+              icon,
+              users: [userId],
+            },
+          ],
+        };
+      }),
     );
+
     setChatRoomNotifications({
       notifications: 0,
       roomCode: chatRoomCode,
@@ -2530,25 +2546,27 @@ const ChatDetail = ({
   // Remove reactions
   const handleRemoveReactionClick = (msgUuid: string, icon: string) => {
     setDataMessageDetail((prev) =>
-      prev.map((message) =>
-        message.uuid === msgUuid
-          ? {
-              ...message,
-              reactions: message.reactions
-                ?.map((reaction) =>
-                  reaction.icon === icon
-                    ? {
-                        ...reaction,
-                        users: reaction.users.filter(
-                          (id) => id !== (session?.user.id as number),
-                        ),
-                      }
-                    : reaction,
-                )
-                .filter((reaction) => reaction.users.length > 0),
-            }
-          : message,
-      ),
+      prev.map((message) => {
+        if (message.uuid !== msgUuid) return message;
+
+        const userId = session?.user.id as number;
+
+        const updatedReactions = (message.reactions || [])
+          .map((reaction) => {
+            if (reaction.icon !== icon) return reaction;
+
+            return {
+              ...reaction,
+              users: reaction.users.filter((id) => id !== userId),
+            };
+          })
+          .filter((reaction) => reaction.users.length > 0);
+
+        return {
+          ...message,
+          reactions: updatedReactions,
+        };
+      }),
     );
   };
 
@@ -2588,7 +2606,7 @@ const ChatDetail = ({
       }
       return newDataChatList;
     });
-    setRoomNameSearchResults((prevFilterChatList) => {
+    setFilteredChatList((prevFilterChatList) => {
       const newFilterChatList = [...prevFilterChatList];
       const chatRoomIndex = newFilterChatList.findIndex(
         (room) => room.code == chatRoomCode,
@@ -3349,6 +3367,7 @@ const ChatDetail = ({
                     chatRoomCode={chatRoomCode}
                     chatRoomDetail={chatRoomDetail}
                     dataFileAddList={dataFileAddList}
+                    setDataFileAddList={setDataFileAddList}
                     setChatRoomDetail={setChatRoomDetail}
                     setDataMessageDetail={setDataMessageDetail}
                     onGotoMessage={(data: { messageId: string | number }) => {
@@ -3490,6 +3509,7 @@ const ChatDetail = ({
             }
           }}
           dashboardMembers={dashboardMembers}
+          dataOptionsParticipants={dataOptionsParticipants}
           participantsList={
             chatRoomCode &&
             chatRoomParticipantsEditing.find(
@@ -3501,6 +3521,14 @@ const ChatDetail = ({
               : getChatParticipantIds(
                   chatRoomDetail ? chatRoomDetail.participants : [],
                 )
+          }
+          selectedOrganizations={
+            chatRoomDetail?.selectOrganizations
+              ? chatRoomDetail?.selectOrganizations
+                  .split(',')
+                  .filter(Boolean)
+                  .map((orgId) => Number(orgId))
+              : []
           }
           code={`${chatRoomCode}`}
           refetchChatRoomDetail={refetchChatRoomDetail}
@@ -3519,6 +3547,7 @@ const ChatDetail = ({
           open={openEditEventModal}
           dataEvent={dataEventEdit}
           action={ActionsEvent.EDIT}
+          isEditDisabled={true}
           setIsEditingRepetitiveFields={setIsEditingRepetitiveFields}
           onClose={() => {
             setDataEventEdit(undefined);
