@@ -221,8 +221,8 @@ const LineChartByTeamTags = ({
       tagDuration: tag.duration,
       organizationId: tag.organizationId ?? 0,
       userList:
-        allLabelUser.length > 0
-          ? allLabelUser.map((userInfo) => {
+        orderingOptions?.user_ids && orderingOptions?.user_ids?.length > 0
+          ? orderingOptions?.user_ids?.map((userInfo) => {
               const foundUser = tag.users?.find(
                 (user) => user.user.id == userInfo.value,
               );
@@ -245,7 +245,29 @@ const LineChartByTeamTags = ({
                 userPercent: 0,
               };
             })
-          : [],
+          : (listMemberTeam ?? [])?.map((userInfo) => {
+              const foundUser = tag.users?.find(
+                (user) => user.user.id == userInfo.id,
+              );
+              if (foundUser) {
+                return {
+                  userId: foundUser.user.id,
+                  userName: foundUser.user.fullName,
+                  userAvatar: foundUser.user.avatar,
+                  userAvatarColor: foundUser.user.avatarColor,
+                  userDuration: foundUser.duration,
+                  userPercent: foundUser.percent,
+                };
+              }
+              return {
+                userId: Number(userInfo.id),
+                userName: userInfo?.fullName,
+                userAvatar: userInfo?.avatarUrl || '',
+                userAvatarColor: userInfo?.color || '',
+                userDuration: DEFAULT_TIME_TEXT,
+                userPercent: 0,
+              };
+            }),
     }));
 
   const buildTableDetailWithAllTeamOption = (
@@ -1127,7 +1149,12 @@ const LineChartByTeamTags = ({
                 className={`flex justify-between items-center w-full ${
                   collapseStatus &&
                   info.row.original?.userList?.filter((user) =>
-                    selectedMembers.includes(user.userId),
+                    orderingOptions?.user_ids &&
+                    orderingOptions?.user_ids?.length > 0
+                      ? selectedMembers.includes(user.userId)
+                      : (listMemberTeam ?? [])
+                          .map((user) => Number(user.id))
+                          .includes(user.userId),
                   ).length > 0 &&
                   'mb-3'
                 }`}>
@@ -1170,7 +1197,14 @@ const LineChartByTeamTags = ({
                 info.row.original?.userList.length > 0 && (
                   <div className="flex flex-col">
                     {info.row.original?.userList
-                      ?.filter((user) => selectedMembers.includes(user.userId))
+                      ?.filter((user) =>
+                        orderingOptions?.user_ids &&
+                        orderingOptions?.user_ids?.length > 0
+                          ? selectedMembers.includes(user.userId)
+                          : (listMemberTeam ?? [])
+                              .map((user) => Number(user.id))
+                              .includes(user.userId),
+                      )
                       .map((user) => {
                         return (
                           <div
@@ -1246,7 +1280,12 @@ const LineChartByTeamTags = ({
               className={`flex justify-center ${
                 collapseStatus &&
                 info.row.original?.userList?.filter((user) =>
-                  selectedMembers.includes(user.userId),
+                  orderingOptions?.user_ids &&
+                  orderingOptions?.user_ids?.length > 0
+                    ? selectedMembers.includes(user.userId)
+                    : (listMemberTeam ?? [])
+                        .map((user) => Number(user.id))
+                        .includes(user.userId),
                 ).length > 0 &&
                 'mb-3'
               }`}>
@@ -1258,7 +1297,14 @@ const LineChartByTeamTags = ({
               info.row.original?.userList.length > 0 && (
                 <div className="flex flex-col">
                   {info.row.original?.userList
-                    ?.filter((user) => selectedMembers.includes(user.userId))
+                    ?.filter((user) =>
+                      orderingOptions?.user_ids &&
+                      orderingOptions?.user_ids?.length > 0
+                        ? selectedMembers.includes(user.userId)
+                        : (listMemberTeam ?? [])
+                            .map((user) => Number(user.id))
+                            .includes(user.userId),
+                    )
                     .map((user) => {
                       return (
                         <div
@@ -1327,7 +1373,12 @@ const LineChartByTeamTags = ({
               className={`flex justify-center ${
                 collapseStatus &&
                 info.row.original?.userList?.filter((user) =>
-                  selectedMembers.includes(user.userId),
+                  orderingOptions?.user_ids &&
+                  orderingOptions?.user_ids?.length > 0
+                    ? selectedMembers.includes(user.userId)
+                    : (listMemberTeam ?? [])
+                        .map((user) => Number(user.id))
+                        .includes(user.userId),
                 ).length > 0 &&
                 'mb-3'
               }`}>
@@ -1338,7 +1389,14 @@ const LineChartByTeamTags = ({
               info.row.original?.userList.length > 0 && (
                 <div className="flex flex-col">
                   {info.row.original?.userList
-                    ?.filter((user) => selectedMembers.includes(user.userId))
+                    ?.filter((user) =>
+                      orderingOptions?.user_ids &&
+                      orderingOptions?.user_ids?.length > 0
+                        ? selectedMembers.includes(user.userId)
+                        : (listMemberTeam ?? [])
+                            .map((user) => Number(user.id))
+                            .includes(user.userId),
+                    )
                     .map((user) => {
                       return (
                         <div

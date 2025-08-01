@@ -84,10 +84,10 @@ import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations'
 import useStatisticUserTaskDurationsCompare from '@hooks/useStatisticUserTaskDurationsCompare';
 import useStatisticTableInTeamLineChart from '@hooks/useStatisticTableInTeamLineChart';
 import useStatisticTableInTeamLineChartCompare from '@hooks/useStatisticTableInTeamLineChartCompare';
-
-import FilterTeamStatistic from '../filter/FilterTeamStatistic';
 import useStatisticTeamDockAllTeamLineChartTaskDurations from '@hooks/useStatisticTeamDockAllTeamLineChartTaskDurations';
 import useStatisticTeamDockAllTeamLineChartTaskDurationsCompare from '@hooks/useStatisticTeamDockAllTeamLineChartTaskDurationsCompare';
+
+import FilterTeamStatistic from '../filter/FilterTeamStatistic';
 
 ChartJS.register(
   CategoryScale,
@@ -250,8 +250,8 @@ const LineChartByTeamCompare = ({
       organizationId: category.organizationId ?? 0,
       type,
       userList:
-        allLabelUser.length > 0
-          ? allLabelUser.map((userInfo) => {
+        orderingOptions?.user_ids && orderingOptions?.user_ids?.length > 0
+          ? orderingOptions?.user_ids?.map((userInfo) => {
               const foundUser = category.users?.find(
                 (user) => user.user.id == userInfo.value,
               );
@@ -274,7 +274,29 @@ const LineChartByTeamCompare = ({
                 userPercent: 0,
               };
             })
-          : [],
+          : (listMemberTeam ?? [])?.map((userInfo) => {
+              const foundUser = category.users?.find(
+                (user) => user.user.id == userInfo.id,
+              );
+              if (foundUser) {
+                return {
+                  userId: foundUser.user.id,
+                  userName: foundUser.user.fullName,
+                  userAvatar: foundUser.user.avatar,
+                  userAvatarColor: foundUser.user.avatarColor,
+                  userDuration: foundUser.duration,
+                  userPercent: foundUser.percent,
+                };
+              }
+              return {
+                userId: Number(userInfo.id),
+                userName: userInfo?.fullName,
+                userAvatar: userInfo?.avatarUrl || '',
+                userAvatarColor: userInfo?.color || '',
+                userDuration: DEFAULT_TIME_TEXT,
+                userPercent: 0,
+              };
+            }),
     }));
 
   const handleCategorySelection = (
@@ -1539,7 +1561,12 @@ const LineChartByTeamCompare = ({
                 className={`flex flex-col items-start gap-2 ${
                   collapseStatus &&
                   info.row.original?.userList?.filter((user) =>
-                    selectedMembers.includes(user.userId),
+                    orderingOptions?.user_ids &&
+                    orderingOptions?.user_ids?.length > 0
+                      ? selectedMembers.includes(user.userId)
+                      : (listMemberTeam ?? [])
+                          .map((user) => Number(user.id))
+                          .includes(user.userId),
                   ).length > 0 &&
                   'mb-8'
                 }`}>
@@ -1599,7 +1626,14 @@ const LineChartByTeamCompare = ({
                 info.row.original?.userList.length > 0 && (
                   <div className="flex flex-col gap-8">
                     {info.row.original?.userList
-                      ?.filter((user) => selectedMembers.includes(user.userId))
+                      ?.filter((user) =>
+                        orderingOptions?.user_ids &&
+                        orderingOptions?.user_ids?.length > 0
+                          ? selectedMembers.includes(user.userId)
+                          : (listMemberTeam ?? [])
+                              .map((user) => Number(user.id))
+                              .includes(user.userId),
+                      )
                       .map((user) => {
                         return (
                           <div
@@ -1701,7 +1735,12 @@ const LineChartByTeamCompare = ({
               className={`flex flex-col gap-2 ${
                 collapseStatus &&
                 info.row.original?.userList?.filter((user) =>
-                  selectedMembers.includes(user.userId),
+                  orderingOptions?.user_ids &&
+                  orderingOptions?.user_ids?.length > 0
+                    ? selectedMembers.includes(user.userId)
+                    : (listMemberTeam ?? [])
+                        .map((user) => Number(user.id))
+                        .includes(user.userId),
                 ).length > 0 &&
                 'mb-8'
               }`}>
@@ -1747,7 +1786,14 @@ const LineChartByTeamCompare = ({
               info.row.original?.userList.length > 0 && (
                 <div className="flex flex-col gap-8">
                   {info.row.original?.userList
-                    ?.filter((user) => selectedMembers.includes(user.userId))
+                    ?.filter((user) =>
+                      orderingOptions?.user_ids &&
+                      orderingOptions?.user_ids?.length > 0
+                        ? selectedMembers.includes(user.userId)
+                        : (listMemberTeam ?? [])
+                            .map((user) => Number(user.id))
+                            .includes(user.userId),
+                    )
                     .map((user) => {
                       return (
                         <div key={user.userId} className="flex flex-col gap-2">
@@ -1850,7 +1896,12 @@ const LineChartByTeamCompare = ({
               className={`flex flex-col gap-2 ${
                 collapseStatus &&
                 info.row.original?.userList?.filter((user) =>
-                  selectedMembers.includes(user.userId),
+                  orderingOptions?.user_ids &&
+                  orderingOptions?.user_ids?.length > 0
+                    ? selectedMembers.includes(user.userId)
+                    : (listMemberTeam ?? [])
+                        .map((user) => Number(user.id))
+                        .includes(user.userId),
                 ).length > 0 &&
                 'mb-8'
               }`}>
@@ -1870,7 +1921,14 @@ const LineChartByTeamCompare = ({
               info.row.original?.userList.length > 0 && (
                 <div className="flex flex-col gap-8">
                   {info.row.original?.userList
-                    ?.filter((user) => selectedMembers.includes(user.userId))
+                    ?.filter((user) =>
+                      orderingOptions?.user_ids &&
+                      orderingOptions?.user_ids?.length > 0
+                        ? selectedMembers.includes(user.userId)
+                        : (listMemberTeam ?? [])
+                            .map((user) => Number(user.id))
+                            .includes(user.userId),
+                    )
                     .map((user) => {
                       const standardPercent =
                         Number(user?.standardInfo?.userPercent) || 0;
