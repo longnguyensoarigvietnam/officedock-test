@@ -164,7 +164,7 @@ interface dataProps {
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
   handleRemoveChatRoomParam: () => void;
-  setFilteredChatList: Dispatch<SetStateAction<ChatRoomItem[]>>
+  setFilteredChatList: Dispatch<SetStateAction<ChatRoomItem[]>>;
 }
 const ChatDetail = ({
   clientId,
@@ -184,7 +184,7 @@ const ChatDetail = ({
   setDataChatList,
   handleRemoveChatRoomParam,
   setSearchChatMsg,
-  setFilteredChatList
+  setFilteredChatList,
 }: dataProps) => {
   const { data: session } = useSessionCache();
 
@@ -897,6 +897,7 @@ const ChatDetail = ({
           compressedFile: getFileURL(file.compressedFile || ''),
         };
       });
+
       setDataMessageDetail((prevDataMessageDetail) => {
         const updatedDataMessageDetail = [...prevDataMessageDetail];
         const updatedMessageItemIndex = updatedDataMessageDetail.findIndex(
@@ -912,6 +913,7 @@ const ChatDetail = ({
               `${data.chatMessage.message}`,
             ) as string,
             mentions: data.chatMessage.mentions,
+            task: data.chatMessage.task,
           };
           return updatedDataMessageDetail;
         }
@@ -3364,6 +3366,7 @@ const ChatDetail = ({
                 } bg-[#F5F8FB] rounded-tl-xl  rounded-bl-xl`}>
                 {isExtendMoreData && (
                   <MemoDataChat
+                    initialLoad={initialLoad}
                     chatRoomCode={chatRoomCode}
                     chatRoomDetail={chatRoomDetail}
                     dataFileAddList={dataFileAddList}

@@ -1,4 +1,8 @@
-import { ChatParticipantType, MessageType, SubmitLevelStatus } from '@constants/enums';
+import {
+  ChatParticipantType,
+  MessageType,
+  SubmitLevelStatus,
+} from '@constants/enums';
 
 import { Organizations } from './organization';
 
@@ -77,12 +81,9 @@ export interface ChatMessageResponse {
       avatar: null | string;
       avatarColor: string;
     };
-    organization?: {
-      icon: string;
-      iconColor: string;
+    task?: {
       id: number;
-      name: string;
-      uuid: string;
+      title: string;
     };
   };
   submitLevel?: {
@@ -118,6 +119,13 @@ export interface ChatMessageResponse {
     title: string;
   }[];
   quote: ChatMessageResponse[] | null;
+  organization?: {
+    icon: string;
+    iconColor: string;
+    id: number;
+    name: string;
+    uuid: string;
+  };
 }
 
 export interface TaskUserListChat {
@@ -195,13 +203,26 @@ export interface WebSocketMessageData extends DataSkillReward {
   chatMessage: ChatMessageResponse;
   total?: number;
   isChangeRole?: boolean;
-  task?: {
+  task: {
     id: number;
+    deadline: string;
+    title: string;
+    organization?: {
+      icon: string;
+      iconColor: string;
+      id: number;
+      name: string;
+      uuid: string;
+    };
+    tags: {
+      id: number;
+      name: string;
+    }[];
     status: {
       id: number;
       name: string;
     };
-  };
+  } | null;
   remindCountdown?: number;
   remindType?: string;
   title?: string;

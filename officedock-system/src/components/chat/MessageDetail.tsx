@@ -1,3 +1,4 @@
+import { useMutation } from 'react-query';
 import { Dispatch, Fragment, MutableRefObject, SetStateAction } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -9,6 +10,11 @@ import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
 import { ProgressBar } from '@components/common/ProgressBar';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
+import { MessageHoverOptions } from './MessageHoverOptions';
+import DetailReactionChat from './DetailReactionChat';
+import { MessageDetailQuote } from './quote/MessageDetailQuote';
+import MessageDetailQuoteText from './quote/MessageDetailQuoteText';
 
 import {
   ADD_MEMBER_TASK_MESSAGE,
@@ -58,14 +64,7 @@ import {
   getFormattedDateTime,
 } from '@utils/date';
 
-import { MessageHoverOptions } from './MessageHoverOptions';
-import DetailReactionChat from './DetailReactionChat';
-import { MessageDetailQuote } from './quote/MessageDetailQuote';
-import MessageDetailQuoteText from './quote/MessageDetailQuoteText';
-import React from 'react';
 import api from '@base/api';
-import { useMutation } from 'react-query';
-import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 export type MessageDetailProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
@@ -1052,19 +1051,14 @@ export const MessageDetail = ({
               className={`flex  !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
               <div>
                 <GroupIconWithDynamicColor
-                  color={
-                    messageDetail?.task?.organization?.iconColor ||
-                    messageDetail?.scheduleChanges?.organization?.iconColor ||
-                    ''
-                  }
+                  color={messageDetail?.organization?.iconColor || ''}
                 />
               </div>
               <div className={`ml-3 mt-[6px] !w-full`}>
                 <div className="flex justify-between items-baseline pb-2">
                   <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <p className="max-w-full font-medium break-all">
-                      {messageDetail?.task?.organization?.name ||
-                        messageDetail.scheduleChanges?.organization?.name}{' '}
+                      {messageDetail?.organization?.name}
                     </p>
 
                     {messageDetail.isBookmark && (
@@ -1105,13 +1099,18 @@ export const MessageDetail = ({
                               }}></p>
                           )}
                           {messageDetail.type !== MessageType.MESSAGE &&
-                            (messageDetail.task ? (
+                            (messageDetail.type !== MessageType.REMOVE_TASK ? (
                               <div className={`w-full  flex flex-col gap-5`}>
                                 <div
                                   onClick={() => {
-                                    if (messageDetail.task?.id) {
+                                    if (
+                                      messageDetail.scheduleChanges?.task?.id
+                                    ) {
                                       handleActionEditTask(
-                                        Number(messageDetail.task?.id),
+                                        Number(
+                                          messageDetail.scheduleChanges.task
+                                            ?.id,
+                                        ),
                                       );
                                     }
                                   }}
@@ -1124,7 +1123,14 @@ export const MessageDetail = ({
                                         className="w-fit h-fit relative top-[3px] "
                                       />
                                       <h4 className="text-sm w-fit font-medium text-[#228CDB] h-5 truncate max-w-[500px]">
-                                        {messageDetail.task.title || NO_SETTING}
+                                        {messageDetail.task ? (
+                                          messageDetail.scheduleChanges?.task
+                                            ?.title
+                                        ) : (
+                                          <span className="text-gray-300">
+                                            {TASK_DELETED}
+                                          </span>
+                                        )}
                                       </h4>
                                     </div>
                                   </div>
@@ -1147,27 +1153,52 @@ export const MessageDetail = ({
                                     </p>
                                   )}
                                   {messageDetail.type ==
-                                    MessageType.CREATION_TASK &&
-                                    `${messageDetail.sender.fullName}があなたに割り当てました`}
+                                    MessageType.CREATION_TASK && (
+                                    <p>
+                                      <span className="text-[#228CDB]">
+                                        {messageDetail.sender?.fullName}
+                                      </span>
+                                      があなたに割り当てました
+                                    </p>
+                                  )}
                                   {messageDetail.type ==
-                                    MessageType.EDIT_TASK &&
-                                    `${messageDetail.sender.fullName}があなたのタスクカードを編集しました。`}
+                                    MessageType.EDIT_TASK && (
+                                    <p>
+                                      <span className="text-[#228CDB]">
+                                        {messageDetail.sender?.fullName}
+                                      </span>
+                                      があなたのタスクカードを編集しました
+                                    </p>
+                                  )}
                                   {messageDetail.type ==
-                                    MessageType.ADD_MEMBER_TASK &&
-                                    `${messageDetail.sender.fullName}があなたに割り当てました`}
+                                    MessageType.ADD_MEMBER_TASK && (
+                                    <p>
+                                      <span className="text-[#228CDB]">
+                                        {messageDetail.sender.fullName}
+                                      </span>
+                                      が{' '}
+                                      <span className="text-[#228CDB]">
+                                        {
+                                          messageDetail.scheduleChanges
+                                            ?.oldMember?.fullName
+                                        }
+                                      </span>
+                                      のタスクカードをあなたに移動しました。
+                                    </p>
+                                  )}
                                 </h4>
                               </div>
                             ) : (
                               <div className={`w-full flex justify-start `}>
                                 <div
-                                  className={`text-sm font-normal bg-transparent p-4 !pt-1 !px-0`}>
-                                  <div className={`flex flex-col items-end`}>
+                                  className={`text-sm w-full font-normal bg-transparent p-4 !pt-1 !px-0`}>
+                                  <div className={``}>
                                     <p
-                                      className={`font-normal w-[500px]  text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-black italic`}>
+                                      className={`font-normal w-full text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-black italic`}>
                                       {messageDetail.type ==
                                       MessageType.REMOVE_TASK ? (
-                                        <p>
-                                          <span className="text-[#228CDB]">
+                                        <p className="w-full">
+                                          <span className="text-[#228CDB] w-fit">
                                             {' '}
                                             {messageDetail.sender.fullName}
                                           </span>
