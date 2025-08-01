@@ -22,6 +22,7 @@ import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 
 type Props = {
+  initialLoad: boolean;
   chatRoomCode: string;
   dataFileAddList: DataChatFileMemo[];
   onGotoMessage: (data: { messageId: string | number }) => void;
@@ -30,6 +31,7 @@ type Props = {
 };
 
 const TabFileChat = ({
+  initialLoad,
   chatRoomCode,
   dataFileAddList,
   setDataMessageDetail,
@@ -183,11 +185,12 @@ const TabFileChat = ({
                       src="/icons/go-file.svg"
                       className="w-fit h-fit object-cover cursor-pointer hover:opacity-75"
                       name={fileName}
-                      onClick={() =>
+                      onClick={() => {
+                        if (initialLoad) return;
                         onGotoMessage({
                           messageId: file.chatMessageId,
-                        })
-                      }
+                        });
+                      }}
                     />
                   </DynamicTooltip>
                   <DynamicTooltip content={'ダウンロード'} placement="top">

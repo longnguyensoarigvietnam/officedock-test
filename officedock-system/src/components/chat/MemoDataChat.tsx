@@ -14,6 +14,7 @@ import TabFileChat from './memo/TabFileChat';
 import TabParticipantsChat from './memo/TabParticipantsChat';
 
 interface MemoDataProps {
+  initialLoad: boolean;
   chatRoomCode: string;
   chatRoomDetail: ChatRoomDetail | undefined;
   dataFileAddList: DataChatFileMemo[];
@@ -28,6 +29,7 @@ const MemoDataChat = ({
   chatRoomCode,
   chatRoomDetail,
   dataFileAddList,
+  initialLoad,
   setDataFileAddList,
   setChatRoomDetail,
   setDataMessageDetail,
@@ -51,6 +53,7 @@ const MemoDataChat = ({
           <TabFileChat
             chatRoomCode={chatRoomCode}
             dataFileAddList={dataFileAddList}
+            initialLoad={initialLoad}
             setDataMessageDetail={setDataMessageDetail}
             onGotoMessage={onGotoMessage}
             setDataFileAddList={setDataFileAddList}

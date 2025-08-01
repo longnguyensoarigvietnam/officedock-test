@@ -337,6 +337,10 @@ const ListViewItem = ({
               end: formatISO(addMinutesToDate(`${now}`)),
               startEditable: true,
               itemKanban: true,
+              deadline:
+                content.status?.id == StatusValueTask.MY_ROUTINE
+                  ? ''
+                  : content.deadline,
             })}
             {...provided.draggableProps}
             {...provided.dragHandleProps}
