@@ -779,7 +779,7 @@ def get_total_durations(durations, is_tag_page=False, tag_ids=[]):
                         distinct=True,
                     ),
                 ),
-                default=0,
+                default=1,
                 output_field=IntegerField(),
             ),
             effective_paused=Case(

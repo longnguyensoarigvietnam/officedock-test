@@ -37,13 +37,13 @@ from chat.constants import (
     ChatMessageTypes,
     ChatRoomTypes,
 )
-from chat.models import ChatRoom
 from chat.serializers import (
     ChatMessageSerializer,
     ChatRoomsParticipantsWebSocketSerializer,
 )
 from common.constants import BASE_DATETIME_FORMAT
 from common.filters import CustomOrderFilter
+from common.serializers import CreationDataUserSerializer
 from common.utils import (
     filter_task_index_team,
     parse_search_date,
@@ -55,6 +55,7 @@ from common.utils import (
     compare_list_categories,
     validate_company_organization,
 )
+from organizations.serializers import BaseOrganizationSerializer
 from stat_data.utils import validate_date_by_regex_and_reformat
 from tasks.constants import (
     DEFAULT_PAGE_SIZE,
@@ -160,7 +161,7 @@ class TaskViewSet(
         todo_list = serializer_data.pop("todo_list", None)
         task_schedules = serializer_data.pop("task_schedules", None)
         send_to_chat = serializer_data.pop("send_to_chat", None)
-        chat_room_code = serializer_data.pop("chat_room_code", None)
+        serializer_data.pop("chat_room_code", None)
         copy_task = serializer_data.pop("copy_task", None)
         organization = serializer_data.get("organization", None)
         is_team_task = serializer_data.pop("is_team_task", None)
@@ -240,23 +241,23 @@ class TaskViewSet(
         # Create people in charge task
         if people_in_charge_ids is not None:
             for item in people_in_charge_ids:
-                user = item["people_in_charge"]
+                user_in_charge = item["people_in_charge"]
                 task.people_in_charge.add(
-                    user,
+                    user_in_charge,
                     through_defaults={"company": company},
                 )
-                reset_sort_task(user)
+                reset_sort_task(user_in_charge)
                 if copy_task:
                     # Handle index for my task
                     current_task_index = copy_task.task_index.filter(
-                        user=user
+                        user=user_in_charge
                     ).first()
 
                     if current_task_index and current_task_index.pin_at is None:
                         task_index_bellow_current_task = (
                             TaskIndex.objects.filter(
                                 task__status=task.status,
-                                user=user,
+                                user=user_in_charge,
                                 index__lt=current_task_index.index,
                                 pin_at__isnull=True,
                             )
@@ -274,28 +275,28 @@ class TaskViewSet(
                             )
                         # Add index of new user of new task
                         TaskIndex.update_index_for_user(
-                            user=user,
+                            user=user_in_charge,
                             task=task,
                             is_update=False,
                             index=new_index,
                         )
                     else:
                         TaskIndex.update_max_index_for_user(
-                            user=user, task=task, is_update=False
+                            user=user_in_charge, task=task, is_update=False
                         )
 
                 else:
                     # Create new index for task created with user
-                    TaskIndex.objects.create(task=task, user=user)
+                    TaskIndex.objects.create(task=task, user=user_in_charge)
 
         if organization:
-            for user in company.users.all():
+            for user_company in company.users.all():
                 if TeamTaskIndex.objects.filter(
-                    team=organization, user=user
+                    team=organization, user=user_company
                 ).exists():
                     # Create new index for team task created with user
                     TeamTaskIndex.objects.create(
-                        task=task, user=user, team=organization
+                        task=task, user=user_company, team=organization
                     )
 
         # Handle send to chat
@@ -303,7 +304,6 @@ class TaskViewSet(
             self._send_to_chat(
                 user,
                 task,
-                chat_room_code,
                 people_in_charge_ids,
                 ChatMessageTypes.CREATION_TASK.value,
             )
@@ -483,117 +483,65 @@ class TaskViewSet(
 
         TaskSchedule.objects.bulk_create(schedules)
 
-    def _send_to_task_space(self, user, message):
-        """
-        Handle send to task space
-        """
-        task_room = ChatRoom.objects.filter(
-            type=ChatRoomTypes.TASK.value,
-            chat_rooms_participants__user=user,
-            company_id=user.company_id,
-        ).first()
-        task_message = task_room.chat_messages.create(**message)
-        chat_room_participant = task_room.chat_rooms_participants.filter(
-            user_id=user.id
-        ).first()
-        if not chat_room_participant.is_muted:
-            chat_room_participant.unread_messages = (
-                chat_room_participant.unread_messages + 1
-            )
-            chat_room_participant.save()
-        self._send_websocket(
-            WebSocketEventType.MESSAGE.value,
-            chat_room_participant,
-            user,
-            task_message,
-        )
-
-    def _send_websocket(
+    def _send_chat_message(
         self,
-        socketEventType,
-        chat_room_participant,
+        participants,
         user,
-        message,
-        user_participant=None,  # logged user
+        message_data,
+        can_send_to_self_room=False,
+        send_to_chat=True,
     ):
         """
-        Handle send websocket
+        Handle send chat message to participant
         """
-        # Handle case realtime when send chat message
-        send_web_socket_event(
-            {
-                "client_id": None,
-                "action": socketEventType,
-                "chat_room": ChatRoomsParticipantsWebSocketSerializer(
-                    chat_room_participant
-                ).data,
-                "chat_message": ChatMessageSerializer(message).data,
-            },
-            chat_room_participant,
+        socketEventType = (
+            WebSocketEventType.MESSAGE.value
+            if send_to_chat
+            else WebSocketEventType.EDIT_MESSAGE.value
         )
-        if user_participant:
-            # Handle case realtime when send chat message to logged user
+        can_send_to_self_room = can_send_to_self_room if send_to_chat else True
+        for participant in participants:
+            print(
+                can_send_to_self_room,
+                participant == user,
+            )
+            if participant == user and not can_send_to_self_room:
+                continue
+            print("hej ehj ")
+            chat_room_participant = participant.chat_rooms_participants.filter(
+                chat_room__type=ChatRoomTypes.TASK.value,
+                company_id=participant.company_id,
+            ).first()
+
+            if not chat_room_participant:
+                return
+            else:
+                chat_room = chat_room_participant.chat_room
+            if send_to_chat:
+                message = chat_room.chat_messages.create(**message_data)
+                chat_room_participant.unread_messages = (
+                    chat_room_participant.unread_messages + 1
+                )
+                chat_room_participant.save()
+            else:
+                message = chat_room.chat_messages.filter(
+                    task=message_data["task"]
+                ).first()
+
             send_web_socket_event(
                 {
                     "client_id": None,
                     "action": socketEventType,
                     "chat_room": ChatRoomsParticipantsWebSocketSerializer(
-                        user_participant
+                        chat_room_participant
                     ).data,
                     "chat_message": ChatMessageSerializer(message).data,
                 },
-                user,
+                chat_room_participant,
             )
-
-    def _send_chat_message(self, participant, user, message_data):
-        """
-        Handle send chat message to participant
-        """
-        chat_room_participant = participant.chat_rooms_participants.filter(
-            chat_room__type=ChatRoomTypes.PRIVATE.value,
-            chat_room__participants=user,
-        ).first()
-        socketEventType = WebSocketEventType.MESSAGE.value
-
-        if not chat_room_participant:
-            chat_room = ChatRoom.objects.create(
-                company_id=user.company_id, type=ChatRoomTypes.PRIVATE.value
-            )
-            chat_room.participants.set(
-                [user, participant],
-                through_defaults={"company_id": user.company_id},
-            )
-            chat_room_participant = chat_room.chat_rooms_participants.filter(
-                user_id=participant.id
-            ).first()
-            socketEventType = WebSocketEventType.CREATE_CHAT_ROOM.value
-        else:
-            chat_room = chat_room_participant.chat_room
-        message = chat_room.chat_messages.create(**message_data)
-        if not chat_room_participant.is_muted:
-            chat_room_participant.unread_messages = (
-                chat_room_participant.unread_messages + 1
-            )
-            chat_room_participant.save()
-        # Update unread message of user logged
-        user_participant = chat_room.chat_rooms_participants.filter(
-            user_id=user.id
-        ).first()
-        if not user_participant.is_muted:
-            user_participant.unread_messages = (
-                user_participant.unread_messages + 1
-            )
-            user_participant.save()
-        self._send_websocket(
-            socketEventType,
-            chat_room_participant,
-            user,
-            message,
-            user_participant=user_participant,
-        )
 
     def _send_to_chat(
-        self, user, task, chat_room_code, people_in_charge_ids, task_action=None
+        self, user, task, people_in_charges, task_action=None, send_to_chat=True
     ):
         """
         Handle send to chat of user
@@ -604,108 +552,67 @@ class TaskViewSet(
             "task": task,
             "type": ChatMessageTypes.CREATION_TASK.value,
         }
-        another_participant_id = None
-        # Create task from chat
-        if chat_room_code:
-            chat_room = ChatRoom.objects.filter(code=chat_room_code).first()
-            message = chat_room.chat_messages.create(**message_data)
-            if chat_room.type not in [
-                ChatRoomTypes.TASK.value,
-                ChatRoomTypes.SKILL.value,
-            ]:
-                user_participant = chat_room.chat_rooms_participants.filter(
-                    user_id=user.id
-                ).first()
-                if not user_participant.is_muted:
-                    user_participant.unread_messages = (
-                        user_participant.unread_messages + 1
-                    )
-                    user_participant.save()
-                # Send chat message to logged user
-                send_web_socket_event(
-                    {
-                        "client_id": None,
-                        "action": ChatMessageTypes.CREATION_TASK.value,
-                        "chat_room": ChatRoomsParticipantsWebSocketSerializer(
-                            user_participant
-                        ).data,
-                        "chat_message": ChatMessageSerializer(message).data,
-                    },
-                    user,
-                )
-
-            for participant in chat_room.chat_rooms_participants.exclude(
-                user=user
-            ).all():
-                if not participant.is_muted:
-                    participant.unread_messages = (
-                        participant.unread_messages + 1
-                    )
-                    participant.save()
-                # Send chat message realtime to participant
-                self._send_websocket(
-                    ChatMessageTypes.CREATION_TASK.value,
-                    participant,
-                    user,
-                    message,
-                    user_participant=None,
-                )
-                if chat_room.type == ChatRoomTypes.PRIVATE.value:
-                    another_participant_id = participant.user.id
-
+        current_people = [
+            people_in_charge.user
+            for people_in_charge in task.people_in_charge_tasks.all()
+        ]
         # Edit or create from kanban
         if task_action == ChatMessageTypes.EDIT_TASK.value:
-            people_in_charges = [
-                item["people_in_charge"] for item in people_in_charge_ids
-            ]
             # Unique element in list people
             unique_people = list(set(people_in_charges))
-            current_people = [
-                people_in_charge.user
-                for people_in_charge in task.people_in_charge_tasks.all()
-            ]
+            delete_peoples = list(set(current_people) - set(unique_people))
+            add_peoples = list(set(unique_people) - set(current_people))
+            if delete_peoples and add_peoples:
+                message_data["schedule_changes"] = {
+                    "old_member": CreationDataUserSerializer(
+                        delete_peoples[0]
+                    ).data,
+                    "new_member": CreationDataUserSerializer(
+                        add_peoples[0]
+                    ).data,
+                }
             # Handle websocket to removed people
-            if delete_peoples := list(set(current_people) - set(unique_people)):
+            if delete_peoples:
                 message_data["type"] = ChatMessageTypes.REMOVE_MEMBER_TASK.value
-                for delete_user in delete_peoples:
-                    if delete_user != user:
-                        # Send message to deleted people
-                        self._send_chat_message(
-                            participant=delete_user,
-                            user=user,
-                            message_data=message_data,
-                        )
-                    self._send_to_task_space(delete_user, message_data)
-            if add_peoples := list(set(unique_people) - set(current_people)):
+                self._send_chat_message(
+                    participants=delete_peoples,
+                    user=user,
+                    message_data=message_data,
+                )
+            if add_peoples:
                 message_data["type"] = ChatMessageTypes.ADD_MEMBER_TASK.value
-                # Send message to added people
-                for add_people in add_peoples:
-                    if add_people != user:
-                        self._send_chat_message(
-                            participant=add_people,
-                            user=user,
-                            message_data=message_data,
-                        )
-                    self._send_to_task_space(add_people, message_data)
+                self._send_chat_message(
+                    participants=add_peoples,
+                    user=user,
+                    message_data=message_data,
+                    can_send_to_self_room=True,
+                )
+            if not delete_peoples and not add_peoples:
+                message_data["type"] = task_action
+                self._send_chat_message(
+                    participants=current_people,
+                    user=user,
+                    message_data=message_data,
+                    send_to_chat=send_to_chat,
+                )
+        elif task_action == ChatMessageTypes.REMOVE_TASK.value:
+            message_data["type"] = task_action
+            message_data["schedule_changes"] = {
+                "organization": BaseOrganizationSerializer(
+                    message_data["task"].organization
+                ).data,
+            }
+            self._send_chat_message(
+                participants=current_people,
+                user=user,
+                message_data=message_data,
+            )
         else:
-            for data in people_in_charge_ids:
-                people_in_charge = data["people_in_charge"]
-
-                # Send message to chat when create from chat
-                if (
-                    people_in_charge != user
-                    and people_in_charge.id != another_participant_id
-                ):
-                    self._send_chat_message(
-                        participant=people_in_charge,
-                        user=user,
-                        message_data=message_data,
-                    )
-                if people_in_charge != user:
-                    self._send_to_task_space(people_in_charge, message_data)
-
-            # Send message to task card of user logged
-            self._send_to_task_space(user, message_data)
+            self._send_chat_message(
+                participants=current_people,
+                user=user,
+                message_data=message_data,
+            )
 
     @extend_schema(
         parameters=[
@@ -785,7 +692,7 @@ class TaskViewSet(
         is_team_task = serializer_data.pop("is_team_task", None)
         # Get data for send to chat
         send_to_chat = serializer_data.pop("send_to_chat", None)
-        chat_room_code = serializer_data.pop("chat_room_code", None)
+        serializer_data.pop("chat_room_code", None)
         serializer_data.get("type", None)
         remind_countdown = serializer_data.pop("remind_countdown", None)
         remind_type = serializer_data.pop("remind_type", None)
@@ -890,13 +797,24 @@ class TaskViewSet(
         task = serializer.save()
 
         # Handle send to chat
+        people_in_charges = [
+            item["people_in_charge"] for item in people_in_charge_ids
+        ]
         if send_to_chat:
             self._send_to_chat(
                 user,
                 current_task,
-                chat_room_code,
-                people_in_charge_ids,
+                people_in_charges,
                 ChatMessageTypes.EDIT_TASK.value,
+            )
+        else:
+            print("ere")
+            self._send_to_chat(
+                user,
+                current_task,
+                people_in_charges,
+                ChatMessageTypes.EDIT_TASK.value,
+                False,
             )
 
         if (
@@ -1241,7 +1159,14 @@ class TaskViewSet(
         Handle destroying the task
         """
         instance = self.get_object()
-
+        current_screen = request.query_params.get("current_screen")
+        if current_screen == Screens.TEAMDOCK.value:
+            self._send_to_chat(
+                request.user,
+                instance,
+                instance.people_in_charge,
+                ChatMessageTypes.REMOVE_TASK.value,
+            )
         if instance.task_durations.exists():
             instance.task_durations.filter(paused_at__isnull=True).update(
                 paused_at=now()
@@ -1341,7 +1266,7 @@ class TaskViewSet(
         serializer = TaskIndexForCreationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)  # Validate the data
         validated_data = serializer.validated_data
-
+        current_screen = request.query_params.get("current_screen")
         # Extract tasks from validated data
         tasks_data = validated_data.get("tasks", [])
 
@@ -1395,10 +1320,27 @@ class TaskViewSet(
                 return self.response(status_code=status.HTTP_400_BAD_REQUEST)
 
             if people_in_charge is None:
+                # Handle send to chat when in teamdock
+                if current_screen == Screens.TEAMDOCK.value:
+                    self._send_to_chat(
+                        request.user,
+                        task,
+                        task.people_in_charge,
+                        ChatMessageTypes.REMOVE_TASK.value,
+                    )
                 task.people_in_charge.clear()
                 # Delete index for task if change people in charge
                 TaskIndex.objects.filter(task=task).delete()
             elif people_in_charge:
+                # Handle send to chat when in teamdock
+                if current_screen == Screens.TEAMDOCK.value:
+                    self._send_to_chat(
+                        request.user,
+                        task,
+                        [people_in_charge],
+                        ChatMessageTypes.EDIT_TASK.value,
+                    )
+
                 task.people_in_charge.set(
                     [people_in_charge],
                     through_defaults={"company": task.company},

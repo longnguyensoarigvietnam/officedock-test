@@ -55,7 +55,10 @@ from chat.serializers import (
     SendMessageSerializer,
     ReactionSerializer,
 )
-from chat.utils import build_chat_participant_payload
+from chat.payloads import (
+    build_chat_participant_payload,
+    build_chat_message_payload,
+)
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
 from common.utils import (
     StripTags,
@@ -668,9 +671,13 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 chat_messages = chat_messages.filter(
                     deleted_at__isnull=True
                 ).order_by("-created_at")
-            return self.response_pagination(
-                request, chat_messages, ChatMessageSerializer
-            )
+
+            # Config pagination
+            paginator = self.pagination_class()
+            serializer = build_chat_message_payload(chat_messages, request.user)
+            paginated_data = paginator.paginate_queryset(serializer, request)
+
+            return paginator.get_paginated_response(paginated_data)
 
         elif request.method == "POST":
             client_id = request.data.pop("client_id", None)
@@ -695,7 +702,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
             chat_room_participants = chat_room.chat_rooms_participants.all()
             for participant in chat_room_participants:
-                if not participant.is_muted and participant.user_id != user.id:
+                if participant.user_id != user.id:
                     participant.unread_messages = (
                         participant.unread_messages + 1
                     )
@@ -934,9 +941,12 @@ class ChatMessageViewSet(
         icon = serializer_data.pop("icon")
         if instance.reactions.filter(user=user).count() > 1:
             instance.reactions.filter(user=user).delete()
-        instance.reactions.update_or_create(
-            company_id=user.company_id, user=user, defaults={"icon": icon}
-        )
+        if instance.reactions.filter(user=user, icon=icon).exists():
+            instance.reactions.filter(user=user, icon=icon).delete()
+        else:
+            instance.reactions.update_or_create(
+                company_id=user.company_id, user=user, defaults={"icon": icon}
+            )
         chat_room = ChatRoom.objects.prefetch_related("participants").get(
             pk=instance.chat_room.pk
         )
