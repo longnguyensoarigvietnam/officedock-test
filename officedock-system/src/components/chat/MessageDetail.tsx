@@ -1,3 +1,4 @@
+import { useMutation } from 'react-query';
 import { Dispatch, Fragment, MutableRefObject, SetStateAction } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -9,6 +10,11 @@ import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
 import { ProgressBar } from '@components/common/ProgressBar';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
+import { MessageHoverOptions } from './MessageHoverOptions';
+import DetailReactionChat from './DetailReactionChat';
+import { MessageDetailQuote } from './quote/MessageDetailQuote';
+import MessageDetailQuoteText from './quote/MessageDetailQuoteText';
 
 import {
   ADD_MEMBER_TASK_MESSAGE,
@@ -58,14 +64,7 @@ import {
   getFormattedDateTime,
 } from '@utils/date';
 
-import { MessageHoverOptions } from './MessageHoverOptions';
-import DetailReactionChat from './DetailReactionChat';
-import { MessageDetailQuote } from './quote/MessageDetailQuote';
-import MessageDetailQuoteText from './quote/MessageDetailQuoteText';
-import React from 'react';
 import api from '@base/api';
-import { useMutation } from 'react-query';
-import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 export type MessageDetailProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
@@ -1052,19 +1051,14 @@ export const MessageDetail = ({
               className={`flex  !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
               <div>
                 <GroupIconWithDynamicColor
-                  color={
-                    messageDetail?.task?.organization?.iconColor ||
-                    messageDetail?.scheduleChanges?.organization?.iconColor ||
-                    ''
-                  }
+                  color={messageDetail?.organization?.iconColor || ''}
                 />
               </div>
               <div className={`ml-3 mt-[6px] !w-full`}>
                 <div className="flex justify-between items-baseline pb-2">
                   <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <p className="max-w-full font-medium break-all">
-                      {messageDetail?.task?.organization?.name ||
-                        messageDetail.scheduleChanges?.organization?.name}{' '}
+                      {messageDetail?.organization?.name}
                     </p>
 
                     {messageDetail.isBookmark && (
