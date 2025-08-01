@@ -418,6 +418,7 @@ const KanbanBoardTaskTeam = () => {
       `${apiRouters.UPDATE_TASK_INDEX}?current_screen=teamdock`,
       {
         ...data,
+        sendToChat: true,
       },
     );
   };

@@ -28,6 +28,13 @@ export interface ChatMessageResponse {
     id: number;
     deadline: string;
     title: string;
+    organization?: {
+      icon: string;
+      iconColor: string;
+      id: number;
+      name: string;
+      uuid: string;
+    };
     tags: {
       id: number;
       name: string;
@@ -69,6 +76,13 @@ export interface ChatMessageResponse {
       fullName: string;
       avatar: null | string;
       avatarColor: string;
+    };
+    organization?: {
+      icon: string;
+      iconColor: string;
+      id: number;
+      name: string;
+      uuid: string;
     };
   };
   submitLevel?: {
