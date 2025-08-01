@@ -1286,7 +1286,7 @@ const ListChatUsers = ({
                 <div className="!w-8 !h-8">{renderAvatar(item)}</div>
 
                 <p
-                  className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? 'w-[calc(100%_-_70px)]' : item.isMuted ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium `}>
+                  className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? (item.isMuted ? 'w-[calc(100%_-_100px)]' : 'w-[calc(100%_-_70px)]') : item.isMuted ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium `}>
                   {item.code &&
                   chatRoomNameEditing.find(
                     (room) => room.roomCode === item.code,
@@ -1366,7 +1366,7 @@ const ListChatUsers = ({
                   </div>
                   <div className="!w-8 !h-8">{renderAvatar(item)}</div>
                   <p
-                    className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? 'w-[calc(100%_-_70px)]' : item.isMuted ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium `}>
+                    className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? (item.isMuted ? 'w-[calc(100%_-_100px)]' : 'w-[calc(100%_-_70px)]') : item.isMuted ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium `}>
                     {item.code &&
                     chatRoomNameEditing.find(
                       (room) => room.roomCode === item.code,
