@@ -17,6 +17,7 @@ interface MemoDataProps {
   chatRoomCode: string;
   chatRoomDetail: ChatRoomDetail | undefined;
   dataFileAddList: DataChatFileMemo[];
+  setDataFileAddList: Dispatch<SetStateAction<DataChatFileMemo[]>>;
   setChatRoomDetail: Dispatch<SetStateAction<ChatRoomDetail | undefined>>;
   setDataMessageDetail: Dispatch<SetStateAction<ChatMessageResponse[]>>;
   onGotoMessage: (data: { messageId: string | number }) => void;
@@ -27,6 +28,7 @@ const MemoDataChat = ({
   chatRoomCode,
   chatRoomDetail,
   dataFileAddList,
+  setDataFileAddList,
   setChatRoomDetail,
   setDataMessageDetail,
   onGotoMessage,
@@ -51,6 +53,7 @@ const MemoDataChat = ({
             dataFileAddList={dataFileAddList}
             setDataMessageDetail={setDataMessageDetail}
             onGotoMessage={onGotoMessage}
+            setDataFileAddList={setDataFileAddList}
           />
         );
       case ChatMemoType.MEMBER:

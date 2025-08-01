@@ -192,7 +192,6 @@ export const MessageDetailQuote = ({
 
         if (child.nodeType === Node.ELEMENT_NODE) {
           const el = child as HTMLElement;
-
           if (el.dataset.taskId) {
             const taskId = el.dataset.taskId;
             const parser = new DOMParser();
@@ -228,19 +227,20 @@ export const MessageDetailQuote = ({
             );
             if (foundQuote) {
               children.push(
-                <MessageDetailQuoteChild
-                  key={`${index}-${i}-msg`}
-                  chatRoomDetail={chatRoomDetail}
-                  messageDetail={foundQuote}
-                  dashboardMembers={dashboardMembers}
-                  highlightedMessageId={highlightedMessageId}
-                  setDataPreviewFile={setDataPreviewFile}
-                  handleActionEditTask={handleActionEditTask}
-                />,
+                <div className={``}>
+                  <MessageDetailQuoteChild
+                    key={`${index}-${i}-msg`}
+                    chatRoomDetail={chatRoomDetail}
+                    messageDetail={foundQuote}
+                    dashboardMembers={dashboardMembers}
+                    highlightedMessageId={highlightedMessageId}
+                    setDataPreviewFile={setDataPreviewFile}
+                    handleActionEditTask={handleActionEditTask}
+                  />
+                </div>,
               );
             }
           }
-
           if (el.dataset.quoteText) {
             const msgId = el.dataset.msgId;
             const dataTitle = el.dataset.title || '';
@@ -249,14 +249,65 @@ export const MessageDetailQuote = ({
             );
             if (foundQuote) {
               children.push(
-                <MessageDetailQuoteText
-                  key={`${index}-${i}-textquote`}
-                  messageDetail={foundQuote}
-                  dashboardMembers={dashboardMembers}
-                  title={dataTitle}
-                />,
+                <div className={`${index !== 0 && 'mt-5'}`}>
+                  <MessageDetailQuoteText
+                    key={`${index}-${i}-textquote`}
+                    messageDetail={foundQuote}
+                    dashboardMembers={dashboardMembers}
+                    title={dataTitle}
+                  />
+                </div>,
               );
             }
+          }
+          if (el.dataset.msgReplyId) {
+            const title = el.dataset.title || '';
+
+            children.push(
+              <p key={`${index}-msg-reply`}>
+                <span className="inline-msg-quote" contentEditable={false}>
+                  <span style={{ color: '#77858F' }}>[返信]</span>{' '}
+                  <span style={{ color: '#0068B7' }}>{title}</span>
+                </span>
+              </p>,
+            );
+          }
+          if (
+            el.classList.contains('mention') ||
+            el.dataset.type === 'mention'
+          ) {
+            const mentionText = el.textContent?.trim() || el.innerText || '';
+            if (mentionText) {
+              children.push(
+                <span
+                  key={`${index}-${i}-mention`}
+                  className="mention text-[#0068B6]"
+                  data-type="mention"
+                  data-id={el.dataset.id}>
+                  {mentionText}
+                </span>,
+              );
+            }
+          }
+          if (
+            el.tagName === 'IMG' &&
+            el.getAttribute('src')?.includes('/icons/') &&
+            el.getAttribute('alt') &&
+            el.getAttribute('title')
+          ) {
+            const src = el.getAttribute('src');
+            const name = el.getAttribute('alt') ?? '';
+            children.push(
+              <Image
+                key={`${index}-${i}-reaction`}
+                src={src!}
+                alt={name}
+                title={name}
+                width={20}
+                height={20}
+                className="inline-block align-middle mx-[2px] w-[20px] h-[20px]"
+              />,
+            );
           }
         }
       });
@@ -265,7 +316,7 @@ export const MessageDetailQuote = ({
         <div
           key={`p-${index}`}
           data-id={messageDetail.uuid}
-          className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px] flex flex-col gap-5">
+          className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px] ">
           {children}
         </div>
       );

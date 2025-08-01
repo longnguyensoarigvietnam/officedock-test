@@ -26,6 +26,7 @@ type Props = {
   dataFileAddList: DataChatFileMemo[];
   onGotoMessage: (data: { messageId: string | number }) => void;
   setDataMessageDetail: Dispatch<SetStateAction<ChatMessageResponse[]>>;
+  setDataFileAddList: React.Dispatch<React.SetStateAction<DataChatFileMemo[]>>;
 };
 
 const TabFileChat = ({
@@ -33,6 +34,7 @@ const TabFileChat = ({
   dataFileAddList,
   setDataMessageDetail,
   onGotoMessage,
+  setDataFileAddList,
 }: Props) => {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -85,10 +87,11 @@ const TabFileChat = ({
   }, [hasNext]);
 
   useEffect(() => {
-    if (dataFileAddList) {
+    if (dataFileAddList && dataFileAddList.length > 0) {
       setDataFiles((prev) => [...dataFileAddList, ...prev]);
+      setDataFileAddList([]);
     }
-  }, [dataFileAddList]);
+  }, [dataFileAddList, setDataFileAddList]);
 
   // Handle delete task
   const handleDeleteFileChat = async (id: string) => {

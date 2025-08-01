@@ -387,6 +387,10 @@ const ChatDetail = ({
   // Action group
   const [showModalMuteChat, setShowModalMuteChat] = useState(false);
 
+  useEffect(() => {
+    setExtendMoreData(false);
+  }, [chatRoomCode]);
+
   // Scroll to selected message
   useEffect(() => {
     if (gotoMessageId) {
@@ -3380,6 +3384,7 @@ const ChatDetail = ({
                     chatRoomCode={chatRoomCode}
                     chatRoomDetail={chatRoomDetail}
                     dataFileAddList={dataFileAddList}
+                    setDataFileAddList={setDataFileAddList}
                     setChatRoomDetail={setChatRoomDetail}
                     setDataMessageDetail={setDataMessageDetail}
                     onGotoMessage={(data: { messageId: string | number }) => {
