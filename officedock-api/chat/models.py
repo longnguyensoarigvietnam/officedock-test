@@ -134,6 +134,13 @@ class ChatMessage(BaseModel):
         blank=True,
         related_name="reply_message",
     )
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="messages",
+    )
     tasks = models.ManyToManyField("tasks.Task", related_name="link_messages")
     bookmark_users = models.ManyToManyField(
         "users.User",
