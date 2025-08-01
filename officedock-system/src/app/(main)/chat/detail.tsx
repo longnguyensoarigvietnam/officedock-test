@@ -897,6 +897,7 @@ const ChatDetail = ({
           compressedFile: getFileURL(file.compressedFile || ''),
         };
       });
+
       setDataMessageDetail((prevDataMessageDetail) => {
         const updatedDataMessageDetail = [...prevDataMessageDetail];
         const updatedMessageItemIndex = updatedDataMessageDetail.findIndex(
@@ -912,6 +913,7 @@ const ChatDetail = ({
               `${data.chatMessage.message}`,
             ) as string,
             mentions: data.chatMessage.mentions,
+            task: data.chatMessage.task,
           };
           return updatedDataMessageDetail;
         }

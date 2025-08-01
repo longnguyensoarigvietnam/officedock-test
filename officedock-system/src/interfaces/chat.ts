@@ -84,6 +84,10 @@ export interface ChatMessageResponse {
       name: string;
       uuid: string;
     };
+    task?: {
+      id: number;
+      title: string;
+    };
   };
   submitLevel?: {
     comment: string | null;
@@ -195,13 +199,22 @@ export interface WebSocketMessageData extends DataSkillReward {
   chatMessage: ChatMessageResponse;
   total?: number;
   isChangeRole?: boolean;
-  task?: {
+  task: {
     id: number;
-    status: {
+    deadline: string;
+    title: string;
+    organization?: {
+      icon: string;
+      iconColor: string;
       id: number;
       name: string;
+      uuid: string;
     };
-  };
+    tags: {
+      id: number;
+      name: string;
+    }[];
+  } | null;
   remindCountdown?: number;
   remindType?: string;
   title?: string;
