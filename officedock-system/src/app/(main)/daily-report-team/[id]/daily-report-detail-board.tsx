@@ -639,14 +639,18 @@ const DailyReportDetailBoard = () => {
     },
     [dataTaskDailyList],
   );
-
   // Socket
   useEffect(() => {
     // Create WebSocket
     const handleSocketMessage = (data: WebSocketMessageData) => {
       switch (data.action) {
         case SocketActions.CHANGE_TASK_STATUS:
-          handleUpdateStatus(data.task);
+          if (data.task) {
+            handleUpdateStatus({
+              id: data.task?.id as number,
+              status: data.task?.status,
+            });
+          }
           break;
 
         default:
@@ -916,7 +920,10 @@ const DailyReportDetailBoard = () => {
                       ? info.row.original.LARGE.id
                       : NO_SETTING),
                 )}
-                isDisabled={!isPermissionAction || info.row.original.type !== EventCalendarType.TASK}
+                isDisabled={
+                  !isPermissionAction ||
+                  info.row.original.type !== EventCalendarType.TASK
+                }
                 placeholder=""
                 showArrow
                 forceMenuPlacementBottom
@@ -1055,7 +1062,10 @@ const DailyReportDetailBoard = () => {
                   )}
                   showArrow
                   forceMenuPlacementBottom
-                  isDisabled={!isPermissionAction || info.row.original.type !== EventCalendarType.TASK}
+                  isDisabled={
+                    !isPermissionAction ||
+                    info.row.original.type !== EventCalendarType.TASK
+                  }
                   placeholder=""
                   options={removeDuplicateOptions(optionMedium)}
                   onChange={(e) => {
@@ -1212,7 +1222,10 @@ const DailyReportDetailBoard = () => {
                     ? info.row.original.SMALL.id
                     : NO_SETTING),
               )}
-              isDisabled={!isPermissionAction || info.row.original.type !== EventCalendarType.TASK}
+              isDisabled={
+                !isPermissionAction ||
+                info.row.original.type !== EventCalendarType.TASK
+              }
               placeholder=""
               showArrow
               forceMenuPlacementBottom
