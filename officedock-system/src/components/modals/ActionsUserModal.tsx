@@ -621,6 +621,8 @@ const ActionsUserModal = ({
                       <Input
                         type={isTypePassword === '' ? 'text' : 'password'}
                         placeholder="パスワードを入力"
+                        autoCompleteInput={false}
+                        autoComplete="off"
                         register={register('password', {
                           ...passwordRegisterRules(false),
                           onChange: () => {
@@ -632,10 +634,10 @@ const ActionsUserModal = ({
                             });
                           },
                         })}
-                        className={`h-[34px] w-full leading-[34px] !text-sm ${!errorMessages?.password ? '!border-[#77858F]' : '!border-error'} rounded-md px-2 custom-password-mask`}
+                        className={`h-[34px] w-full leading-[34px] !text-sm ${(!errorMessages?.password && !errors?.password?.message) ? '!border-[#77858F]' : '!border-error'} rounded-md px-2 custom-password-mask`}
                       />
                       <ErrorMessage
-                        error={errorMessages.password}
+                        error={errors?.password?.message || errorMessages.password}
                         className="mt-[5px] mb-[5px] text-xs"
                       />
                     </div>

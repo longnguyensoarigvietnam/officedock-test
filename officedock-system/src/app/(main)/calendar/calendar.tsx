@@ -135,12 +135,10 @@ const EventCalendar = () => {
     status: boolean;
     type: ActionsEvent | null;
     showThisEventOption?: boolean;
-    showAllEventsOption?: boolean;
   }>({
     status: false,
     type: ActionsEvent.EDIT,
     showThisEventOption: true,
-    showAllEventsOption: true
   });
 
   // Event list
@@ -2837,7 +2835,6 @@ const EventCalendar = () => {
                 status: true,
                 type: ActionsEvent.EDIT,
                 showThisEventOption: !isEditingRepetitiveFields,
-                showAllEventsOption: isEditingRepetitiveFields
               });
             } else {
               setOpenConfirmEditEventModal(true);
@@ -2855,7 +2852,6 @@ const EventCalendar = () => {
                 status: true,
                 type: ActionsEvent.DELETE,
                 showThisEventOption: true,
-                showAllEventsOption: true
               });
             } else {
               setOpenConfirmDeleteEventModal(true);
@@ -3131,7 +3127,6 @@ const EventCalendar = () => {
                 status: true,
                 type: ActionsEvent.DELETE,
                 showThisEventOption: true,
-                showAllEventsOption: true
               });
             } else {
               setOpenConfirmDeleteEventModal(true);
