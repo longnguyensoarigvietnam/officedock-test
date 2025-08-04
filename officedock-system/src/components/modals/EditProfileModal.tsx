@@ -51,7 +51,7 @@ const EditProfileModal = memo(
     setOpenErrorUploadFileModal,
   }: EditProfileModalProps) => {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const { reset, handleSubmit, register, getValues } =
+    const { reset, handleSubmit, register, getValues, formState: {errors} } =
       useForm<UserProfileFormData>();
     const [previewAvatarUrl, setPreviewAvatarUrl] = useState<string | null>(
       null,
@@ -187,7 +187,7 @@ const EditProfileModal = memo(
               </p>
               <div className="flex flex-col !w-full">
                 <Input
-                  className={`shadow-none text-sm leading-[56px] font-normal !pl-3 flex items-center !py-0 h-[34px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md ${editProfileErrorMessages.password && '!border-error'}`}
+                  className={`shadow-none text-sm leading-[56px] font-normal !pl-3 flex items-center !py-0 h-[34px] focus:!shadow-none focus:border !border-[1px] rounded-md ${errors?.password?.message || editProfileErrorMessages.password ? '!border-error' : '!border-[#77858F]'}`}
                   register={register('password', {
                     ...passwordRegisterRules(false),
                     onChange: () => {
@@ -200,12 +200,10 @@ const EditProfileModal = memo(
                     },
                   })}
                 />
-                {editProfileErrorMessages.password && (
-                  <ErrorMessage
-                    error={editProfileErrorMessages.password}
-                    className="mt-[5px] mb-[5px] text-xs"
+                <ErrorMessage
+                    error={errors?.password?.message || editProfileErrorMessages.password}
+                    className="mt-[5px] mb-[5px] !text-xs"
                   />
-                )}
               </div>
             </div>
             <div className="flex justify-center gap-3 my-7 items-center">
