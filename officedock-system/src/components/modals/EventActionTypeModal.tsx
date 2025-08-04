@@ -14,7 +14,6 @@ export type EventActionTypeModalProps = {
     status: boolean;
     type: ActionsEvent | null;
     showThisEventOption?: boolean;
-    showAllEventsOption?: boolean;
   };
   setEventActionType: Dispatch<SetStateAction<EventActionType | null>>;
   onCancel: () => void;
@@ -58,15 +57,13 @@ const EventActionTypeModal = memo(
               eventActionType == EventActionType.THIS_AND_FOLLOWING_EVENTS
             }
           />
-          {openEventActionTypeModal.showAllEventsOption && (
-            <RadioButton
-              name="type"
-              label="すべての予定"
-              classLabel="font-normal"
-              onChange={() => setEventActionType(EventActionType.ALL_EVENTS)}
-              isChecked={eventActionType == EventActionType.ALL_EVENTS}
-            />
-          )}
+          <RadioButton
+            name="type"
+            label="すべての予定"
+            classLabel="font-normal"
+            onChange={() => setEventActionType(EventActionType.ALL_EVENTS)}
+            isChecked={eventActionType == EventActionType.ALL_EVENTS}
+          />
         </div>
         <div className="border-t mt-4 pt-2  border-solid border-gray-100 gap-4 flex justify-end">
           <Button

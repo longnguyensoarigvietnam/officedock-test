@@ -169,12 +169,10 @@ const Header = ({ className }: HeaderProps) => {
     status: boolean;
     type: ActionsEvent | null;
     showThisEventOption?: boolean;
-    showAllEventsOption?: boolean;
   }>({
     status: false,
     type: ActionsEvent.EDIT,
     showThisEventOption: true,
-    showAllEventsOption: true,
   });
   const [eventActionType, setEventActionType] =
     useState<EventActionType | null>(null);
@@ -1352,7 +1350,6 @@ const Header = ({ className }: HeaderProps) => {
                 status: true,
                 type: ActionsEvent.EDIT,
                 showThisEventOption: !isEditingRepetitiveFields,
-                showAllEventsOption: isEditingRepetitiveFields,
               });
             } else {
               setOpenConfirmEditEventModal(true);
@@ -1370,7 +1367,6 @@ const Header = ({ className }: HeaderProps) => {
                 status: true,
                 type: ActionsEvent.DELETE,
                 showThisEventOption: true,
-                showAllEventsOption: true,
               });
             } else {
               setOpenConfirmDeleteEventModal(true);
