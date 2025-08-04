@@ -23,6 +23,7 @@ import {
 } from '@utils/date';
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 import { NO_SETTING } from '@constants';
+import ClockIconColor from '@components/custom/ClockIconColor';
 
 interface ItemProps {
   id: string;
@@ -241,10 +242,7 @@ const ItemTeam = ({
       {selectedOptionZoom.value !== 25 ? (
         <div>
           <div
-            className={`relative ${content.status?.id === StatusValueTask.MY_ROUTINE && 'min-h-[81px]'} ${selectedOptionZoom.value !== 50 && 'gap-2'} ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid    bg-white shadow-common rounded-md text-xs flex flex-col  mb-2 `}>
-            <div
-              className={`absolute left-[-1px] h-[98.5%] top-1/2 -translate-y-1/2 w-[2.5px] overflow-hidden rounded-l-md`}
-              style={{ backgroundColor: largeColor || 'white' }}></div>
+            className={`relative ${content.status?.id === StatusValueTask.MY_ROUTINE && 'min-h-[81px]'} ${selectedOptionZoom.value !== 50 && 'gap-2'} ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid    bg-white shadow-common rounded-[20px] text-xs flex flex-col  mb-2 `}>
             <div className="relative w-[100%] h-full">
               <>
                 <div
@@ -305,29 +303,11 @@ const ItemTeam = ({
               }}>
               <div className="flex gap-1 items-start">
                 {isShowSchedule ? (
-                  <div
-                    style={{
-                      width: `${(columnWidth / 247) * 20}px`,
-                    }}
-                    className="h-full flex items-start mt-[3px]">
-                    <ImageRound
-                      src="/icons/clock.svg"
-                      name="Clock icon"
-                      style={{
-                        width:
-                          (selectedOptionZoom.value as number) > 75
-                            ? `14px`
-                            : '10px',
-                        height:
-                          (selectedOptionZoom.value as number) > 75
-                            ? `14px`
-                            : '10px',
-                      }}
-                      className="text-gray-400"
-                    />
-                  </div>
+                  <ClockIconColor color={largeColor} />
                 ) : (
-                  ''
+                  <div
+                    style={{ backgroundColor: largeColor || 'white' }}
+                    className="w-2 h-2 rounded-full mt-[5px]"></div>
                 )}
                 <p
                   style={{

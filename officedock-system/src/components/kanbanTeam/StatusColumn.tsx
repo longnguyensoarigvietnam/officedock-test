@@ -265,7 +265,7 @@ const StatusColumn = ({
           }}
           className="flex items-center text-sm break-all font-medium  ">
           <span
-            className={`w-[10px] h-[10px] rounded-full ${status && getStatusColor(status)}`}></span>
+            className={`w-[2px] h-[20px]  ${status && getStatusColor(status)}`}></span>
           <span>{status && StatusTask[status as keyof typeof StatusTask]}</span>
           <span className="font-medium text-sm text-[#77858F]">
             {result && result.total}

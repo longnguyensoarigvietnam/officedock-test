@@ -241,7 +241,7 @@ const NoSettingColumn = ({
                       marginRight: `${(columnWidth / 247) * 9}px`,
                       minHeight: '700px',
                     }}
-                    className={`flex flex-col overflow-x-hidden  h-full pt-[14px] bg-[#DAE2EB] rounded-lg`}>
+                    className={`flex flex-col overflow-x-hidden  h-full pt-[14px] bg-[#DAE8F1] rounded-lg`}>
                     {listTaskNoSetting.map((item, index) => (
                       <>
                         <ItemNoSetting
