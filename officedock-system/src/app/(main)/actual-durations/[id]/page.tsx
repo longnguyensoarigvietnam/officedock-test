@@ -8,7 +8,8 @@ const DetailActualDurationsPage = () => {
   return (
     <MainLayout
       title={pageRouters.DETAIL_ACTUAL_DURATIONS.name}
-      permission={PermissionsSystem.ACTUAL_DURATION_VIEW}>
+      permission={PermissionsSystem.ACTUAL_DURATION_VIEW}
+      showFooter={false}>
       <div className="flex flex-col gap-6 h-full">
         <ActualDurationsDetail />
       </div>

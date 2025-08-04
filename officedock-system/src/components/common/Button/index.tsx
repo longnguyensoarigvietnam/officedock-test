@@ -17,10 +17,13 @@ const Button = ({
 }: ButtonProps) => {
   let variantClassNames = '';
   let sizeClassNames = '';
+  let backgroundStyle = '';
 
   switch (variant) {
     case 'primary':
-      variantClassNames = 'border text-white bg-primary hover:bg-opacity-90';
+      variantClassNames = 'border text-white hover:bg-opacity-90';
+      backgroundStyle =
+        'linear-gradient(113.86deg, #289BF2 15.33%, #73CCDF 84.67%)';
       break;
     case 'secondary':
       variantClassNames =
@@ -52,6 +55,9 @@ const Button = ({
 
   return (
     <button
+      style={{
+        background: backgroundStyle,
+      }}
       className={`inline-flex rounded-lg justify-center font-medium items-center disabled:cursor-not-allowed disabled:opacity-50 hover:cursor-pointer transition-all duration-300 ${variantClassNames} ${sizeClassNames} ${className}`}
       {...props}>
       {children}

@@ -10,7 +10,7 @@ const CalendarCategoryPage = () => {
     <MainLayout
       title={pageRouters.CALENDAR_CATEGORY_MANAGEMENT.name}
       permission={PermissionsSystem.CATEGORY_HIERARCHY_VIEW}
-      className="px-0 !pt-0 !overflow-x-auto !bg-[#EBF1F7]"
+      className="px-0 !pt-0 !overflow-x-auto"
       showFooter={false}>
       <ListHierarchy />
     </MainLayout>

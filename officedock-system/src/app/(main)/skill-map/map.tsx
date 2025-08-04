@@ -72,11 +72,11 @@ const SkillMap = () => {
 
   return (
     <div className="w-full">
-      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#EBF1F7]">
+      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#E6F3FB]">
         <div className="flex gap-2 items-center mb-7">
           <Button
             variant="primary"
-            className={`w-[90px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
+            className={`w-[90px] !p-0 text-xs h-[28px] text-white !rounded-[20px]`}>
             スキルマップ
           </Button>
           <Link href={`${pageRouters.SKILL_MAP_SKILL.href}?tabId=${tabId || 0}`}>

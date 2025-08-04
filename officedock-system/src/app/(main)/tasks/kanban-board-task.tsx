@@ -3237,14 +3237,8 @@ const KanbanBoardTask = () => {
               className={`h-full overflow-x-auto flex flex-col gap-2 py-7 pr-7 pl-1 ${isListView ? 'overflow-y-auto' : 'overflow-y-hidden'}`}
               id="kanbanContainer">
               <FrequentlyTask
-                setShowModalTask={() => {
-                  handleSetParam({
-                    id: null,
-                    action: ActionTask.CREATE,
-                  });
-                  setShowEditTaskModal(true);
-                  setColumnId(`${StatusValueTask.NOT_STARTED}`);
-                }}
+                templates={templates}
+                showFrequentlyTasks={showFrequentlyTasks}
                 setShowTemplateModal={() => {
                   handleSetTemplateParam({
                     id: null,
@@ -3253,23 +3247,14 @@ const KanbanBoardTask = () => {
                   });
                   setShowTemplateModal(true);
                 }}
-                templates={templates}
                 setShowFrequentlyTasks={(value: boolean) => {
                   setShowFrequentlyTasks(value);
                   saveZoomKanban({
                     isShowMyTemplate: value,
                   });
                 }}
-                showFrequentlyTasks={showFrequentlyTasks}
-                creationDataTaskData={creationDataTaskData}
-                editTask={editTaskInline}
                 handleActionEditTemplate={handleActionEditTemplate}
                 handleCreateTaskFromTemplate={handleCreateTaskFromTemplate}
-                handleActionEditTask={handleActionEditTask}
-                handleConfirmCopyTask={handleActionCopyTask}
-                handleUpdateItemInline={handleUpdateItemInline}
-                frequentlyTasks={frequentlyTasks}
-                pinItemToTop={pinItemToTop}
               />
               <div className="flex-grow flex flex-col gap-2 mt-[30px] mb-6">
                 <div className={`flex gap-7 mb-6 w-fit min-w-[300px]`}>

@@ -1,6 +1,5 @@
 'use client';
 import React, { Fragment, useContext, useEffect, useState } from 'react';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { useMutation } from 'react-query';
 import Link from 'next/link';
@@ -22,7 +21,10 @@ import {
 } from '@interfaces/hierarchy';
 
 import useCreationOrganization from '@hooks/useCreationOrganization';
+
 import { LoadingContext } from '@providers/LoadingProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import HierarchyTable from './table';
 
 import api from '@base/api';
@@ -195,7 +197,7 @@ const ListHierarchy = () => {
 
   return (
     <Fragment>
-      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#EBF1F7]">
+      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#E6F3FB]">
         <div className="flex gap-4 items-center mb-5">
           <p className="text-black font-medium text-[26px]">
             業務カテゴリー設定
