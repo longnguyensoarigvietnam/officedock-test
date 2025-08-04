@@ -29,6 +29,7 @@ from tasks.apis import (
     TodoListViewSet,
 )
 from terms.apis import SystemTermViewSet
+from tweets.apis import TweetsView
 from users.apis import (
     SystemAuthViewSet,
     SystemUserMemoViewSet,
@@ -138,7 +139,11 @@ api_router.register(
     basename="teams",
 )
 api_router.register("surveys", SurveyViewSet, basename="surveys")
-
+api_router.register(
+    "tweets",
+    TweetsView,
+    basename="tweets",
+)
 # Add api router urls
 urlpatterns = []
 urlpatterns += api_router.urls
