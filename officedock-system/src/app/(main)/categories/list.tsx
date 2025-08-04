@@ -7,7 +7,6 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { AxiosError } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
@@ -42,9 +41,11 @@ import { useErrorToast } from '@hooks/useErrorToast';
 import useDebounceText from '@hooks/useDebounceText';
 
 import { LoadingContext } from '@providers/LoadingProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import { Category } from '@interfaces/category';
+
 import api from '@base/api';
 
 const ListCategory = () => {
@@ -363,9 +364,9 @@ const ListCategory = () => {
           )}
       </div>
       <div
-        className="w-full p-5 bg-[#F8FAFC] rounded-[14px]"
+        className="w-full p-5 bg-[#F8FAFC] rounded-[30px]"
         style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
-        <Table className="bg-white !rounded-lg relative">
+        <Table className="bg-white !rounded-[10px] relative">
           <TableHeader className="!bg-[#F8FAFC]">
             <th className="text-left w-[calc((100%_-_680px))] max-w-[calc(100%_-_680px)] border-r-[1px] border-r-[#D2DBE1]">
               <span className="text-[#77858F] text-[12px] font-medium">

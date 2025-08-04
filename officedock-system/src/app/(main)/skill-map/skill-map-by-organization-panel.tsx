@@ -342,7 +342,7 @@ export const SkillMapByOrganizationPanel = ({
 
   return (
     <div
-      className="w-full py-5 px-10 bg-[#F8FAFC] rounded-[14px] mb-6"
+      className="w-full py-5 px-10 bg-[#F8FAFC] rounded-[30px] mb-6"
       style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
       <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
         {skillMapDetail.organizationName}
@@ -355,7 +355,7 @@ export const SkillMapByOrganizationPanel = ({
             placement="top"
             currentStep={1}
             stepDefinition={skillMapDetail.steps.step1}>
-            <div className="w-[calc(33.33333%_+_16px)] rounded-l-[6px] bg-[#36ACDE] relative clip-left  text-center flex items-center justify-center">
+            <div className="w-[calc(33.33333%_+_16px)] rounded-l-[6px] bg-[#3DC1E2] relative clip-left  text-center flex items-center justify-center">
               STEP 1
             </div>
           </StepInfoTooltip>
@@ -364,7 +364,7 @@ export const SkillMapByOrganizationPanel = ({
             placement="top"
             currentStep={2}
             stepDefinition={skillMapDetail.steps.step2}>
-            <div className="w-[calc(33.33333%_+_34px)] ml-[-8.5px] bg-[#0068B6] relative clip-middle text-center flex items-center justify-center">
+            <div className="w-[calc(33.33333%_+_34px)] ml-[-8.5px] bg-primary relative clip-middle text-center flex items-center justify-center">
               STEP 2
             </div>
           </StepInfoTooltip>
@@ -373,7 +373,7 @@ export const SkillMapByOrganizationPanel = ({
             placement="top"
             currentStep={3}
             stepDefinition={skillMapDetail.steps.step3}>
-            <div className="w-[calc(33.33333%_+_16px)] rounded-r-[6px] ml-[-9px] bg-[#424EC1] relative clip-right text-center flex items-center justify-center">
+            <div className="w-[calc(33.33333%_+_16px)] rounded-r-[6px] ml-[-9px] bg-[#355AC9] relative clip-right text-center flex items-center justify-center">
               STEP 3
             </div>
           </StepInfoTooltip>
@@ -382,7 +382,9 @@ export const SkillMapByOrganizationPanel = ({
         {normalizeSkillMaps(skillMapDetail.skillMaps).map(
           (skillMap: SkillMapByOrganizationInfo[], index) => {
             return (
-              <div key={index} className="flex w-full mb-5">
+              <div
+                key={index}
+                className="flex w-full mb-5 bg-[#E9EEF3] rounded-[20px] p-[10px]">
                 {skillMap.map((skill, idx) => {
                   const isLast = idx === skillMap.length - 1;
                   const isLocked = skill.isLocked;
@@ -429,12 +431,23 @@ export const SkillMapByOrganizationPanel = ({
                         <div className="px-5 h-[90px] bg-white w-full rounded-[6px]"></div>
                       ) : (
                         <div
-                          className="px-5 h-[90px] flex gap-3 items-center w-full rounded-[6px] relative"
+                          className="px-5 h-[90px] flex gap-3 bg-white items-center w-full rounded-[14px] relative"
                           style={{
                             boxShadow: showTwinklingStars
                               ? '0px 0px 20px 0px #36ACDE80'
                               : '0px 2px 8px 0px #0000001A',
                           }}>
+                          {showTwinklingStars && (
+                            <>
+                              <div className="absolute -top-[20px] left-[20px] bg-primary rounded-[20px] w-[140px] h-[28px] flex items-center justify-center">
+                                <p className="text-white text-xs font-bold">
+                                  レベルアップ申請可能
+                                </p>
+                              </div>
+                              <div className="bg-primary absolute clip-diagonal-left h-3 w-3 top-[3px] left-[38px]"></div>
+                            </>
+                          )}
+
                           {showTwinklingStars && (
                             <div>
                               <TwinklingStar

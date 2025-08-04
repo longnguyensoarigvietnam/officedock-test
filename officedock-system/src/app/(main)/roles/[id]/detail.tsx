@@ -3,9 +3,7 @@ import React, { useContext, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
 import Link from 'next/link';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 
-import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
 
 import { SCREEN_LIST } from '@constants';
@@ -13,11 +11,13 @@ import { PermissionsSystem, ServerStatusCode } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
+import { useSessionCache } from '@providers/SessionCacheProvider';
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { RoleStateContext } from '@providers/RoleProvider';
 
 import useRoleDetail from '@hooks/useRoleDetail';
+
 import { hasPermissionInArray } from '@utils';
 
 const DetailRoleTable = () => {
@@ -61,16 +61,6 @@ const DetailRoleTable = () => {
       <div className="flex items-center justify-between w-full mb-5">
         <div className="flex items-center gap-5 w-full">
           <p className="text-black font-medium text-[26px]">権限管理</p>
-          <div
-            className="flex gap-2 items-center hover:cursor-pointer"
-            onClick={() => router.push(pageRouters.ROLES_MANAGEMENT.href)}>
-            <ImageRound
-              name="Back"
-              src={'/icons/back-to-list.svg'}
-              className="w-[15px] h-[15px] hover:cursor-pointer"
-            />
-            <p className="text-sm font-medium text-[#77858F]">権限一覧に戻る</p>
-          </div>
         </div>
         {!dataRoleDetail?.systemRole &&
           session?.user.permissions &&
@@ -86,7 +76,7 @@ const DetailRoleTable = () => {
           )}
       </div>
       <div
-        className="bg-[#F8FAFC] rounded-[14px] p-5"
+        className="bg-[#F8FAFC] rounded-[30px] p-5"
         style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
         <p className="text-[#77858F] font-medium text-[16px] mb-5 break-all max-w-[100%]">
           {dataRoleDetail?.name}

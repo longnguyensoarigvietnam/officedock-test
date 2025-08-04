@@ -191,7 +191,7 @@ export const CalendarSidebar = ({
         <div className="flex items-center">
           <ImageRound
             className="w-10 h-10"
-            src="/icons/multi-users.svg"
+            src="/icons/calendar-multi-users.svg"
             border="full"
             name="Avatar user"
           />

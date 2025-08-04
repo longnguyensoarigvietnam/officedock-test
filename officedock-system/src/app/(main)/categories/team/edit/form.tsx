@@ -25,9 +25,9 @@ import {
 } from '@constants/enums';
 
 import { OptionDropdownType } from '@interfaces/common';
+import { OrganizationCategoryRow } from '@interfaces/hierarchy';
 
 import api from '@base/api';
-import { OrganizationCategoryRow } from '@interfaces/hierarchy';
 
 interface HierarchyDetail {
   id: number | string;
@@ -1529,12 +1529,12 @@ const TableComponent = ({
 
   return (
     <div
-      className="w-full p-5 bg-[#F8FAFC] rounded-[14px]"
+      className="w-full p-5 bg-[#F8FAFC] rounded-[30px]"
       style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
       <p className="text-[#77858F] text-[16px] font-medium my-2 max-w-[100%] break-all">
         {organizationName}
       </p>
-      <Table className="w-full h-full bg-white !rounded-[6px]">
+      <Table className="w-full h-full bg-white !rounded-[10px]">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>

@@ -519,10 +519,10 @@ export const OrganizationSkillDetail = ({
                 <td
                   className={`w-[20%] break-all h-full border-r-[1px] border-r-[#D2DBE1]`}>
                   <div className="flex justify-between">
-                    <p className="text-sm flex justify-left items-center font-medium py-4 px-5 max-w-[calc(100%_-_40px)] break-all">
+                    <p className="text-sm flex justify-left items-center font-medium py-4 px-5 max-w-[calc(100%_-_50px)] break-all">
                       {row.original.name}
                     </p>
-                    <div className="flex gap-2 items-center w-[40px]">
+                    <div className="flex gap-2 items-center w-[50px]">
                       <ImageRound
                         name="Edit"
                         src={'/icons/edit-gray.svg'}
@@ -538,9 +538,9 @@ export const OrganizationSkillDetail = ({
                         }}
                       />
                       <ImageRound
-                        name="Delete"
-                        src={'/icons/delete-gray.svg'}
-                        className="w-[13px] h-[15px] hover:cursor-pointer"
+                        name="Hide"
+                        src={'/icons/close-eye-gray.svg'}
+                        className="w-[17px] h-[14px] hover:cursor-pointer"
                       />
                     </div>
                   </div>

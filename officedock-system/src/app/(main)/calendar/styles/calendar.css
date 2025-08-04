@@ -2,6 +2,9 @@
   height: 150px !important;
   border-bottom: 1.5px solid #d2dbe1;
 }
+.calendar-custom .fc-scroller {
+  border-radius: 30px !important;
+}
 .calendar-custom.week .fc-daygrid-day-frame,
 .calendar-custom.day .fc-daygrid-day-frame {
   height: 100px !important;
@@ -54,13 +57,13 @@
 }
 .calendar-custom .fc .fc-daygrid-day-frame,
 .calendar-custom .fc .fc-scrollgrid-sync-inner .fc-daygrid-day-events {
-  background-color: #f6f9fa;
+  background-color: #F8FAFC;
 }
 .calendar-custom.week .fc .fc-daygrid-day-frame,
 .calendar-custom.day .fc .fc-daygrid-day-frame,
 .calendar-custom.week .fc .fc-scrollgrid-sync-inner .fc-daygrid-day-events,
 .calendar-custom.day .fc .fc-scrollgrid-sync-inner .fc-daygrid-day-events {
-  background-color: #ebf1f4;
+  background-color: #E6F3FB;
 }
 .calendar-custom.week .fc-scrollgrid-sync-table .fc-daygrid-day,
 .calendar-custom.day .fc-scrollgrid-sync-table .fc-daygrid-day {
@@ -70,7 +73,7 @@
   display: flex;
   justify-content: center;
   font-size: 12px;
-  background-color: #f6f9fa;
+  background-color: #F8FAFC;
   padding: 2px;
   height: 29px;
 }
@@ -81,7 +84,7 @@
   align-items: center !important;
   width: 27px;
   height: 27px;
-  background-color: #0068b7;
+  background-color: theme('colors.primary') !important;
   color: white !important;
   margin-top: -2px;
 }
@@ -297,8 +300,18 @@
 }
 .calendar-custom.week .fc-event-main, .calendar-custom.day .fc-event-main {
   width: 100% !important;
-  border-radius: 6px !important;
+  border-radius: 14px !important;
   overflow: hidden;
+}
+.calendar-custom.week .fc-event-main .selected-event, .calendar-custom.day .fc-event-main .selected-event{
+  height: 100%;
+  border-radius: 14px !important;
+  border: 1px solid #A7B7C2 !important
+}
+.calendar-custom.month .fc-event-main .selected-all-day-event, .calendar-custom.week .fc-event-main .selected-all-day-event, .calendar-custom.day .fc-event-main .selected-all-day-event{
+  height: 100%;
+  border-radius: 8px !important;
+  border: 1px solid #A7B7C2 !important
 }
 /* Month */
 .calendar-custom .fc-daygrid-event {
@@ -331,14 +344,14 @@
   margin-bottom: 7px;
   color: white;
   padding: 2px 5px 2px 5px;
-  background-color: theme('colors.primary');
-  border-radius: 0.375rem;
+  background-color: #3CABF3;
+  border-radius: 20px;
   font-size: 12px;
 }
 .calendar-custom .fc-v-event {
   background-color: #fff;
   height: 100%;
-  border-radius: 6px;
+  border-radius: 14px;
 }
 .calendar-custom.day .fc-v-event {
   margin-top: 4px;
@@ -369,12 +382,12 @@
   height: 20px !important;
 }
 .calendar-custom .fc-multimonth-title {
-  color: #0068b7 !important;
+  color: theme('colors.primary') !important;
   text-align: left;
   margin-left: 10px;
 }
 .calendar-custom .fc-multimonth-month {
-  background-color: #f6f9fa !important;
+  background-color: #F8FAFC !important;
   padding-top: 1.5rem !important;
   padding-bottom: 1.5rem !important;
   padding-left: 2rem !important;
@@ -434,7 +447,7 @@
   outline: none;
   background-color: transparent !important;
   z-index: 0 !important;
-  box-shadow: #f6f9fa 0.5px 0.5px 0.5px 0.5px !important;
+  box-shadow: #F8FAFC 0.5px 0.5px 0.5px 0.5px !important;
   outline: none !important;
   border: none !important;
   border-radius: 0 !important;
@@ -449,7 +462,7 @@
 .calendar-custom .fc .fc-timegrid-now-indicator-arrow {
   border-top: 5px solid transparent;
   border-bottom: 5px solid transparent;
-  border-left: 8px solid #c32e2e;
+  border-left: 8px solid #64BBF3;
   width: 0;
   height: 0;
   position: relative;
@@ -463,11 +476,11 @@
   transform: translateY(-50%);
   width: 67px;
   height: 2px;
-  background-color: #c32e2e;
+  background-color: #64BBF3;
   margin-left: -3px;
 }
 .calendar-custom .fc-timegrid-now-indicator-line {
-  border: 1px solid #c32e2e !important;
+  border: 1px solid #64BBF3 !important;
 }
 .calendar-custom .fc-timegrid-now-indicator-line {
   margin-top: -1px;
@@ -492,9 +505,9 @@
   top: -9px;
 }
 .calendar-custom.week .event-has-now-indicator, .calendar-custom.day .event-has-now-indicator {
-  border: 1px solid #0068B6 !important;
+  border: 1px solid #3CABF3 !important;
   height: 100% !important;
-  border-radius: 6px;
+  border-radius: 14px;
 }
 /* RESOURCE */
 .calendar-custom

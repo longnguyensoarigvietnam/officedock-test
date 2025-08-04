@@ -79,7 +79,7 @@ export const StepInfoTooltip = ({
       ? createPortal(
           <div
             className={clsx(
-              'fixed p-5 bg-white rounded-[6px] z-50 text-sm pointer-events-none transform',
+              'fixed p-5 bg-white rounded-[14px] z-50 text-sm pointer-events-none transform',
               {
                 '-translate-x-1/2 -translate-y-full': placement === 'top',
                 '-translate-x-1/2 translate-y-0': placement === 'bottom',
