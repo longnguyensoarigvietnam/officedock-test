@@ -614,3 +614,7 @@ export enum ChatParticipantType {
   USER = 'USER',
   ORGANIZATION = 'ORGANIZATION',
 }
+export enum TemplateVariant {
+  EMPTY = 'EMPTY',
+  DATA = 'DATA'
+}

@@ -126,7 +126,7 @@ const Pagination = ({
   }
 
   const styleTag =
-    'flex justify-center items-center relative rounded inline-flex font-medium hover: cursor-pointer';
+    'flex justify-center items-center relative rounded-[50%] inline-flex font-medium hover: cursor-pointer';
   if (totalPages <= 0) {
     return;
   }

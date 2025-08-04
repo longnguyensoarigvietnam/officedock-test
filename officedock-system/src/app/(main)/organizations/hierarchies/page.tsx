@@ -18,7 +18,7 @@ const OrganizationPage = () => {
     <MainLayout
       title={pageRouters.ORGANIZATION_HIERARCHY.name}
       permission={PermissionsSystem.ORGANIZATION_HIERARCHY_VIEW}
-      className="px-10 pt-8 !overflow-x-auto !bg-[#EBF1F7]"
+      className="px-10 pt-8 !overflow-x-auto"
       showFooter={false}>
       <div className="flex justify-between items-start">
         <div className="flex gap-5 items-center mb-5 w-fit">

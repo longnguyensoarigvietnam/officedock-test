@@ -19,7 +19,7 @@ const OrganizationPage = () => {
     <MainLayout
       title={pageRouters.ORGANIZATION_MANAGEMENT.name}
       permission={PermissionsSystem.ORGANIZATION_VIEW}
-      className="px-10 !overflow-x-auto !bg-[#EBF1F7]"
+      className="px-10 !overflow-x-auto"
       showFooter={false}>
       <div className="flex gap-5 items-center mb-5">
         <p className="text-black font-medium text-[26px]">チーム管理</p>

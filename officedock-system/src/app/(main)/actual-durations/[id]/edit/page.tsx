@@ -8,7 +8,8 @@ const EditActualDurationsPage = () => {
   return (
     <MainLayout
       title={pageRouters.EDIT_ACTUAL_DURATIONS.name}
-      permission={PermissionsSystem.ACTUAL_DURATION_UPDATE}>
+      permission={PermissionsSystem.ACTUAL_DURATION_UPDATE}
+      showFooter={false}>
       <div className="flex flex-col gap-6 h-full">
         <EditActualDurationsForm />
       </div>

@@ -646,14 +646,14 @@ const ActionsTemplateModal = ({
   return (
     <Drawer
       open={open}
-      className="font-primary  bg-white h-screen w-[700px] !rounded-tl-xl !p-0"
+      className="font-primary bg-white w-[700px] !rounded-l-[30px] !p-0"
       onClose={() => {
         resetDataCategoryOptions();
         reset();
         onClose();
       }}>
       <header
-        className="px-8 rounded-tl-xl h-[50px] flex items-center justify-between"
+        className="px-8 rounded-tl-[30px] h-[50px] flex items-center justify-between"
         style={{
           background: showModalHeaderBackgroundColorByTime(),
         }}>
@@ -701,7 +701,7 @@ const ActionsTemplateModal = ({
       <form
         ref={modalRef}
         onSubmit={handleSubmit(onSubmitData)}
-        className="px-8 pb-8 h-[calc(100%_-_150px)] overflow-y-auto">
+        className="px-8 pb-8 !h-[calc(100vh_-_150px)] overflow-y-auto">
         <header className="flex sticky z-[100] top-[0px] pb-5 pt-[30px] items-center gap-2 justify-between bg-white">
           {/* Prevent default focus with fake input */}
           <input

@@ -105,7 +105,7 @@ const MainLayout = ({
         taskDurationText={`${taskDurationDetail?.taskDuration && taskDurationDetail.isStart ? `${elapsedTime} - ${taskDurationDetail.title}` : ''}`}
       />
       <div
-        className={`overflow-x-hidden overflow-y-auto h-full flex-grow flex flex-col gap-10 bg-transparent custom-scrollbar p-4 ${className}`}>
+        className={`overflow-x-hidden overflow-y-auto h-full flex-grow flex flex-col gap-10 bg-[#E6F3FB] custom-scrollbar p-4 ${className}`}>
         <main className="flex-grow flex flex-col">
           <div className="flex-grow">{isShow && children}</div>
           {showFooter && <Footer className="!mb-0" />}

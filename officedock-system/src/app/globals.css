@@ -267,6 +267,7 @@ input::-webkit-inner-spin-button {
 input[type='checkbox']:checked {
   background-color: none;
   background-image: url('/icons/radio.svg');
+  color: #228CDB
 }
 
 input[type='checkbox']:focus {

@@ -571,16 +571,16 @@ export const showModalHeaderBackgroundColorByTime = () => {
 
   switch (true) {
     case hour >= 6 && hour < 11:
-      colorClassName = '#95c8e9';
+      colorClassName = '#63C2E4';
       break;
     case hour >= 11 && hour < 15:
-      colorClassName = '#68b6dc';
+      colorClassName = '#64BBF3';
       break;
     case hour >= 15 && hour < 18:
-      colorClassName = '#ccc1d7';
+      colorClassName = '#75A5DC';
       break;
     default:
-      colorClassName = '#7988ae';
+      colorClassName = '#5C89D0';
   }
   return colorClassName;
 };
