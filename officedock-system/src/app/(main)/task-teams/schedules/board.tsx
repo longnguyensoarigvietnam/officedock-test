@@ -318,10 +318,6 @@ const ScheduleTeamBoard = () => {
         <>
           <div
             style={{
-              borderLeftColor:
-                selectedOptionShow === ItemScheduleTitleType.PLANS
-                  ? largeColor || 'white'
-                  : '',
               backgroundColor:
                 selectedOptionShow === ItemScheduleTitleType.PLANS
                   ? 'white'
@@ -330,9 +326,13 @@ const ScheduleTeamBoard = () => {
                     : '#A7B9C2',
               boxShadow: '0px 2px 8px 0px #0000001A',
             }}
-            className={`h-full mx-1 ${eventContent.event.extendedProps.isStart && selectedOptionShow === ItemScheduleTitleType.ACTUAL && '!bg-custom-gradient'} px-[10px]   ${selectedOptionShow === ItemScheduleTitleType.PLANS ? 'border-l-2 text-black' : 'text-white'} rounded-tr-md rounded-br-md rounded-tl-md rounded-bl-md `}>
+            className={`h-full mx-1 ${eventContent.event.extendedProps.isStart && selectedOptionShow === ItemScheduleTitleType.ACTUAL && '!bg-custom-gradient'} px-[10px]   ${selectedOptionShow === ItemScheduleTitleType.PLANS ? 'border-l-2 text-black' : 'text-white'} rounded-tr-[14px] rounded-br-[14px] rounded-tl-[14px] rounded-bl-[14px] `}>
             <div className="overflow-hidden">
-              <div className={`  font-medium px-1 pt-1 text-[14px]`}>
+              <div
+                className={`  font-medium px-1 pt-1 text-[14px] flex gap-[6px]`}>
+                <div
+                  style={{ backgroundColor: largeColor || 'white' }}
+                  className="w-2 h-2 rounded-full mt-[7px] flex-shrink-0"></div>
                 <p
                   className={`truncate max-w-[calc(100%)] font-semibold min-h-5 ${eventContent.event.extendedProps.type !== ItemStartType.TASK && '!text-[#0068B6]'}`}>
                   {eventContent.event.extendedProps.isCrossTeamTask
@@ -950,7 +950,7 @@ const ScheduleTeamBoard = () => {
                 {selectedOrganization?.label}
               </p>
             </div>
-            <div className="flex justify-center items-center gap-2 ">
+            <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ">
               <Button
                 variant={'outline'}
                 className={`!text-[#77858F] !bg-transparent !border-[#77858F] !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}
@@ -1030,7 +1030,7 @@ const ScheduleTeamBoard = () => {
             <>
               {isDateLessThanToday(currentDate) ? (
                 <Button
-                  variant="primary"
+                  variant="option"
                   className={`${selectedOptionShow === ItemScheduleTitleType.ACTUAL && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
                   実績
                 </Button>
@@ -1041,7 +1041,7 @@ const ScheduleTeamBoard = () => {
                       isLoadingDataTask
                         ? 'outline'
                         : selectedOptionShow === ItemScheduleTitleType.PLANS
-                          ? 'primary'
+                          ? 'option'
                           : 'outline'
                     }
                     onClick={() => {
@@ -1070,7 +1070,7 @@ const ScheduleTeamBoard = () => {
                         }
                       }
                     }}
-                    className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}  h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px] `}>
+                    className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '!bg-[#3CABF3]' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}   h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px] `}>
                     予定
                   </Button>
                   <Button
@@ -1114,9 +1114,9 @@ const ScheduleTeamBoard = () => {
               ) : (
                 <>
                   <Button
-                    variant="primary"
-                    className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}  h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
-                    予定
+                    variant="option"
+                    className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '} !bg-[#3CABF3]  h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
+                    予定111
                   </Button>
                 </>
               )}
@@ -1349,7 +1349,10 @@ const ScheduleTeamBoard = () => {
 
       {/* Option select value zoom */}
       <div
-        className={`w-[180px] px-3 z-20 h-[38px] absolute  rounded-md right-[70px] bottom-[35px] bg-white flex items-center `}>
+        style={{
+          boxShadow: '0px 2px 8px 0px #0000001A',
+        }}
+        className={`w-[180px] px-3 z-20 h-[38px] absolute  rounded-full right-[70px] bottom-[35px] bg-white flex items-center `}>
         <RangeSlider
           min={18}
           max={100}

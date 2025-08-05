@@ -362,7 +362,7 @@ const Sidebar = ({ className }: Props) => {
 
   return (
     <aside
-      className={`overflow-x-hidden overflow-y-hidden relative transition-all duration-300 ${expanded ? 'w-52 min-w-[208px]' : 'w-20 min-w-[70px]'} flex flex-col ${className}`}
+      className={`overflow-x-hidden  overflow-y-hidden relative transition-all duration-300 ${expanded ? 'w-52 min-w-[208px] rounded-tr-[60px]  rounded-br-[60px]' : 'w-20 min-w-[70px] rounded-tr-[30px]  rounded-br-[30px]'} flex flex-col ${className}`}
       style={{
         background:
           today &&
@@ -489,7 +489,7 @@ const Sidebar = ({ className }: Props) => {
           </nav>
           {memberOption && (
             <div
-              className={`absolute ${expanded ? 'bottom-[135px]' : 'bottom-[165px]'}  left-0 w-full`}>
+              className={`absolute ${expanded ? 'bottom-[135px]' : 'bottom-[185px]'}  left-0 w-full`}>
               <ul
                 role="list"
                 className="flex max-h-20 flex-col gap-y-6 list-none">
@@ -551,7 +551,7 @@ const Sidebar = ({ className }: Props) => {
               <li className="flex-1">
                 <ul role="list" className="list-none pl-2">
                   {expanded ? (
-                    <div className="flex justify-center pr-2 mb-2">
+                    <div className="flex justify-center pr-2 mb-6">
                       <Dropdown
                         options={organizationList}
                         className="!bg-[#182A4B33] !border-none !rounded-[6px] !w-full mb-1 !text-white !font-medium !text-sm !pr-0"
@@ -705,7 +705,7 @@ const Sidebar = ({ className }: Props) => {
           </nav>
           {memberOption && (
             <div
-              className={`absolute ${expanded ? 'bottom-[60px]' : 'bottom-[60px]'}  left-0 w-full`}>
+              className={`absolute ${expanded ? 'bottom-[35px]' : 'bottom-[60px]'}  left-0 w-full`}>
               <ul
                 role="list"
                 className="flex max-h-20 flex-col gap-y-6 list-none">

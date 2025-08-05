@@ -246,12 +246,7 @@ const ItemNoSetting = ({
                     : `${(columnWidth / 247) * 220}px`,
                 ...provided.draggableProps.style,
               }}
-              className={`relative ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
-              {!content.isStart && (
-                <div
-                  className={`absolute left-[-1px] h-[98.5%] top-1/2 -translate-y-1/2 w-[2.5px] overflow-hidden rounded-l-md`}
-                  style={{ backgroundColor: largeColor }}></div>
-              )}
+              className={`relative ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-[20px] text-xs flex flex-col gap-2 mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
               <div className="relative w-[100%]   h-full">
                 <>
                   <Tippy
@@ -333,11 +328,13 @@ const ItemNoSetting = ({
                       />
                     </div>
                   ) : (
-                    ''
+                    <div
+                      style={{ backgroundColor: largeColor || 'white' }}
+                      className="w-2 h-2 rounded-full mt-[6px]"></div>
                   )}
                   <p
                     style={{
-                      width: `${(columnWidth / 247) * 186}px`,
+                      width: `${(columnWidth / 247) * 156}px`,
                       fontSize:
                         (selectedOptionZoom.value as number) > 75
                           ? '16px'

@@ -1,6 +1,6 @@
 import { ButtonHTMLAttributes } from 'react';
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'text';
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'text' | 'option';
 type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -32,6 +32,10 @@ const Button = ({
     case 'outline':
       variantClassNames =
         'border text-primary border-primary bg-white hover:bg-gray-50';
+      break;
+    case 'option':
+      variantClassNames = 'border bg-[#3CABF3] text-white hover:bg-opacity-90';
+
       break;
     case 'text':
       variantClassNames = 'text-primary hover:text-opacity-70';

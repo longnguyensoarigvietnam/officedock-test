@@ -632,7 +632,7 @@ const TaskPageDataHeader = () => {
                   styleClass={{
                     borderColor:
                       statusTaskSelected?.isStart && taskSelected.value
-                        ? '#0068B6'
+                        ? '#64B6EE'
                         : '#D2DBE1',
                   }}
                   disabled={!isTaskPage || isTaskTeamPage}
@@ -677,7 +677,7 @@ const TaskPageDataHeader = () => {
                         <ImageRound
                           src={`/icons/${statusTaskSelected?.isStart && taskSelected.value ? 'pause' : 'play'}.svg`}
                           name="Start task day"
-                          className={`!w-9 !h-9 hover:cursor-pointer`}
+                          className={` !w-9 !h-9 hover:cursor-pointer`}
                           onClick={() => {
                             const selectedTask = taskSelected.value;
 
