@@ -95,7 +95,7 @@ const ProgressBarStatistic = ({
                 <div className="px-5">
                   {startDate && endDate && (
                     <div className="flex items-center mb-3">
-                      <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                      <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                         基準期間
                       </p>
                       <div className="text-black text-xs font-normal flex items-center gap-[1px]">
@@ -113,7 +113,7 @@ const ProgressBarStatistic = ({
                   )}
                   {startDateCompare && endDateCompare && (
                     <div className="flex items-center mb-3">
-                      <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                      <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                         比較期間
                       </p>
                       <div className="text-black text-xs font-normal flex items-center gap-[1px]">
@@ -180,7 +180,7 @@ const ProgressBarStatistic = ({
                   </p>
                   {startDate && endDate && (
                     <div className="flex items-center mb-3 px-5">
-                      <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                      <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                         基準期間
                       </p>
                       <div className="text-black text-xs font-normal flex items-center gap-[1px]">
@@ -198,7 +198,7 @@ const ProgressBarStatistic = ({
                   )}
                   {startDateCompare && endDateCompare && (
                     <div className="flex items-center mb-3 px-5">
-                      <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                      <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                         比較期間
                       </p>
                       <div className="text-black text-xs font-normal flex items-center gap-[1px]">

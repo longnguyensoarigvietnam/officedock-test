@@ -8,7 +8,6 @@ import ImageRound from '@components/common/ImageRound';
 import PercentageTeamTags from '@components/statisticTeam/tag/PercentageTeamTags';
 import PercentageTeamTagsCompare from '@components/statisticTeam/tag/compare/PercentageTeamTagsCompare';
 import TaskListStatisticTeamTags from '@components/statisticTeam/tag/TaskList';
-import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import LineChartByTeamTags from '@components/statisticTeam/tag/LineChartByTeamTags';
 import LineChartByTeamTagsCompare from '@components/statisticTeam/tag/compare/LineChartByTeamTagsCompare';
 import AllocationTagTeamCompare from '@components/statisticTeam/tag/compare/AllocationTagTeamCompare';
@@ -529,46 +528,9 @@ const StatisticTeamTagBoard = () => {
     setSelectedSmall(data);
   };
 
-  const getParticipantAvatars = (
-    participants: {
-      id: number;
-      fullName: string;
-      color: string;
-      avatarUrl: string;
-    }[],
-  ) => {
-    const slicedParticipants = participants.slice(0, 6);
-    const remainingCount =
-      participants.length > 3 ? participants.length - 6 : 0;
-
-    return (
-      <div className="flex items-center">
-        {slicedParticipants.map((item) => {
-          return (
-            <div
-              className="ml-[-10px] relative border-[1px] border-white rounded-full h-[32px] w-[32px]"
-              key={item.id}>
-              <CustomUserAvatar
-                avatarUrl={item?.avatarUrl || ''}
-                avatarColor={item?.color || ''}
-                size={32}
-                customClassName={`${!item?.avatarUrl && '!mt-0'}`}
-              />
-            </div>
-          );
-        })}
-        {remainingCount > 0 && (
-          <div className="ml-[-10px] relative flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[32px] h-[32px]">
-            +{remainingCount}
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div className="pt-[30px] pr-10  font-medium ">
-      <div className="mb-[33px] flex items-start justify-between">
+      <div className="flex items-start justify-between">
         <div className="flex items-start gap-5 ">
           <div className="rounded-full w-[34px] h-[34px]  flex items-center justify-center overflow-hidden">
             <ImageRound
@@ -584,7 +546,7 @@ const StatisticTeamTagBoard = () => {
           <span className="text-[26px] font-medium relative top-[-2px]">
             チーム集計
           </span>
-          <div className="flex justify-center items-center gap-2 mt-[6px]">
+          <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ">
             <Button
               variant={'outline'}
               onClick={() => {
@@ -593,32 +555,31 @@ const StatisticTeamTagBoard = () => {
                 );
               }}
               disabled={isHasLoading}
-              className={`!py-0 !px-0 font-bold w-[80px] h-7 
-              !rounded-[20px] text-xs !text-[#77858F] !bg-transparent !border-[#77858F]`}>
+              className={`!py-0 !px-0 font-bold w-[90px] h-7 
+              !rounded-[20px] text-xs !text-[#77858F] !bg-[#EBF1F7] !border-none`}>
               カテゴリー
             </Button>
             <Button
               variant={'primary'}
-              className={`!py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
+              className={`!py-0 !px-0 font-bold w-[90px] h-7 !rounded-[20px] text-xs`}>
               タグ
             </Button>
           </div>{' '}
         </div>
-        <div className="flex items-center mt-[6px]">
-          {listMemberTeam.length > 0 && getParticipantAvatars(listMemberTeam)}
+        <div className="flex-shrink-0">
+          <StatisticTeamCalendar />
         </div>
       </div>
+      <div className="w-full my-[30px] border-t border-[#D2DBE1]"></div>
+
       <div>
         <div className="flex justify-between w-full mb-[30px]">
           {/* Filter tag */}
           <div>
             <FilterTagTeam />
           </div>
-          <div className="flex-shrink-0">
-            <StatisticTeamCalendar />
-          </div>
         </div>
-        <div className="mb-[30px]">
+        <div className="my-[30px]">
           <FilterTagUserTeam
             open={isOpenModalFilter}
             onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}

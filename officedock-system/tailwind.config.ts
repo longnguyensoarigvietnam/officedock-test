@@ -20,7 +20,7 @@ const config: Config = {
         success: '#ECFDF5',
         warning: '#FEF3C7',
         danger: '#FCA5A5',
-        error: '#C32E2E',
+        error: '#E95062',
       },
       backgroundImage: {
         'custom-gradient': 'linear-gradient(180deg, #0068B6 0%, #0088C3 100%)',

@@ -356,7 +356,7 @@ const ItemNoSetting = ({
                     className="flex gap-2 font-normal items-center">
                     締切
                     <span
-                      className={`hover:cursor-pointer ${checkDeadline && 'text-[#0068B6]'}`}>
+                      className={`hover:cursor-pointer ${checkDeadline && 'text-primary'}`}>
                       {content.deadline &&
                         formatShowDeadlineTask(content.deadline)}
                     </span>

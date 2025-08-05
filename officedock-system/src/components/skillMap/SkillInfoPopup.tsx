@@ -82,7 +82,7 @@ export const SkillInfoPopup = ({
             );
           })}
         </div>
-        <p className="text-[#0068B6] font-medium text-[16px] max-w-[100%] break-all">
+        <p className="text-primary font-medium text-[16px] max-w-[100%] break-all">
           {currentStepInfo?.name}
         </p>
         <p className="text-black text-sm font-normal max-w-[100%] break-all max-h-[100%] overflow-y-auto">

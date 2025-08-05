@@ -293,7 +293,7 @@ export const MessageDetailBookmark = ({
       if (status == SubmitLevelStatus.APPROVAL) {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+            <p className="text-primary font-medium text-sm max-w-full break-all">
               {isSearchingMessages && allRoomChatMsgSearch
                 ? `${highlightTitleBySearchTerm(skillName, allRoomChatMsgSearch)}`
                 : `${skillName}`}
@@ -306,7 +306,7 @@ export const MessageDetailBookmark = ({
       } else {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+            <p className="text-primary font-medium text-sm max-w-full break-all">
               {isSearchingMessages && allRoomChatMsgSearch
                 ? `${highlightTitleBySearchTerm(skillName, allRoomChatMsgSearch)}`
                 : `${skillName}`}
@@ -444,7 +444,7 @@ export const MessageDetailBookmark = ({
                                                 </div>
                                               )}
                                               <p
-                                                className={`text-[#0068B6] font-medium text-[14px] break-all max-w-full ${
+                                                className={`text-primary font-medium text-[14px] break-all max-w-full ${
                                                   file.fileType.includes(
                                                     'image',
                                                   )
@@ -1009,13 +1009,13 @@ export const MessageDetailBookmark = ({
                         name="Calendar icon"
                         src="/icons/calendar-time.svg"
                       />
-                      <p className="text-[#0068B6] text-sm font-medium">
+                      <p className="text-primary text-sm font-medium">
                         {messageDetail.schedule?.title}
                       </p>
                     </div>
                     <div className="flex gap-3 w-full">
                       <div className="flex flex-row  gap-3 text-sm font-medium">
-                        <p className="text-[#0068B6] max-w-full break-all">
+                        <p className="text-primary max-w-full break-all">
                           {messageDetail.sender.fullName}
                           <span className="text-black">
                             {messageDetail.type === MessageType.REMOVE_SCHEDULE

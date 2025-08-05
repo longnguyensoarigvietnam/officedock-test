@@ -2217,10 +2217,10 @@ export const highlightTextSafely = (
           mentionName == `@${userFullName}` ||
           mentionName == `@${MENTION_ALL_MEMBERS}`
         ) {
-          element.classList.remove('text-[#0068B6]');
+          element.classList.remove('text-primary');
           element.classList.add('text-[#0068B7]');
         } else {
-          element.classList.remove('text-[#0068B6]');
+          element.classList.remove('text-primary');
           element.classList.add('text-[#77858F]');
         }
       }
@@ -2283,3 +2283,36 @@ export const sortChatParticipants = (
   // 4. Alphabetical
   return prev.fullName.localeCompare(next.fullName);
 };
+export function generateVerticalGradient(hexColor: string): string {
+  const hexToRgb = (hex: string) => {
+    const cleanHex = hex.replace('#', '');
+    const bigint = parseInt(cleanHex, 16);
+    return {
+      r: (bigint >> 16) & 255,
+      g: (bigint >> 8) & 255,
+      b: bigint & 255,
+    };
+  };
+
+  const rgbToHex = ({ r, g, b }: { r: number; g: number; b: number }) => {
+    const toHex = (n: number) => n.toString(16).padStart(2, '0');
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  };
+
+  const adjustColor = (
+    color: { r: number; g: number; b: number },
+    amount: number,
+  ) => {
+    return {
+      r: Math.min(255, Math.max(0, color.r + amount)),
+      g: Math.min(255, Math.max(0, color.g + amount)),
+      b: Math.min(255, Math.max(0, color.b + amount)),
+    };
+  };
+
+  const rgb = hexToRgb(hexColor);
+  const dark = rgbToHex(adjustColor(rgb, -20));
+  const light = rgbToHex(adjustColor(rgb, 30));
+
+  return `linear-gradient(to bottom, ${dark} 0%, ${hexColor} 50%, ${light} 100%)`;
+}

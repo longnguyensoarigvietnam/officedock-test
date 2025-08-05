@@ -268,7 +268,7 @@ const CensorLevelUpModal = memo(
               </p>
             </div>
           ) : currentStep == 3 ? (
-            <p className="text-[#0068B6] font-medium text-sm">
+            <p className="text-primary font-medium text-sm">
               {selectRejectOption
                 ? 'この内容で差し戻しますか？'
                 : 'この内容で承認しますか？'}
@@ -287,7 +287,7 @@ const CensorLevelUpModal = memo(
                 <div className="flex items-center justify-center w-full gap-2">
                   <div className="bg-[#EBF1F7] rounded-[6px] w-[62px] h-[62px] flex flex-col items-center justify-center">
                     <p
-                      className="text-white text-xs font-medium bg-[#0068B6] rounded-[10px] w-[51px] h-[21px] flex justify-center items-center"
+                      className="text-white text-xs font-medium bg-primary rounded-[10px] w-[51px] h-[21px] flex justify-center items-center"
                       style={{
                         background:
                           SKILL_MAP_STEPS.find((step) =>
@@ -355,7 +355,7 @@ const CensorLevelUpModal = memo(
           {(currentStep == 1 || (currentStep < 4 && selectRejectOption)) && (
             <>
               <div className="bg-[#EBF1F7] py-[24px] px-[30px] rounded-[6px] !w-full">
-                <p className="text-[#0068B6] font-medium text-[16px] text-center mb-3">
+                <p className="text-primary font-medium text-[16px] text-center mb-3">
                   {currentStep == 1
                     ? 'チェックリストを確認する'
                     : '再設定後のチェックリスト'}
@@ -403,7 +403,7 @@ const CensorLevelUpModal = memo(
                 <div className="flex gap-2 justify-center mt-5">
                   <Button
                     variant="outline"
-                    className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-[#0068B6] bg-white"
+                    className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-primary bg-white"
                     onClick={() => {
                       setCurrentStep(2);
                       setSelectRejectOption(true);
@@ -523,7 +523,7 @@ const CensorLevelUpModal = memo(
               {selectRejectOption ? (
                 <Button
                   variant="outline"
-                  className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-[#0068B6] bg-white"
+                  className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-primary bg-white"
                   onClick={() => {
                     if (lookBackInterval && !lookBackType) {
                       setShowLookBackTypeErr(true);
@@ -581,7 +581,7 @@ const CensorLevelUpModal = memo(
 
           {/* Close button */}
           <p
-            className="text-[#0068B6] text-[13px] font-medium flex justify-center hover:cursor-pointer"
+            className="text-primary text-[13px] font-medium flex justify-center hover:cursor-pointer"
             onClick={onClose}>
             キャンセル
           </p>

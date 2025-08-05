@@ -802,7 +802,7 @@ const ActionsSkillMapModal = ({
 
     return (
       <div>
-        <p className="text-[#0068B6] text-md font-medium mt-3">{levelTitle}</p>
+        <p className="text-primary text-md font-medium mt-3">{levelTitle}</p>
         <p className="text-sm font-medium mt-3">レベルアップ条件</p>
         <div className="flex gap-3 items-center mt-3">
           {' '}

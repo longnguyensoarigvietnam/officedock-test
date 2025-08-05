@@ -997,7 +997,7 @@ const ActionsTemplateModal = ({
                     src="/icons/collapse-description.svg"
                     name="Collapse description icon"
                   />
-                  <p className="text-[#0068B6]">タスクについての詳細</p>
+                  <p className="text-primary">タスクについての詳細</p>
                 </div>
                 <TextAreaLink
                   disabled={isCheckActionPermission}
@@ -1017,7 +1017,7 @@ const ActionsTemplateModal = ({
                   src="/icons/open-description.svg"
                   name="Open description icon"
                 />
-                <p className="text-[#0068B6]">タスクについての詳細</p>
+                <p className="text-primary">タスクについての詳細</p>
               </div>
             )}
           </div>
@@ -1033,7 +1033,7 @@ const ActionsTemplateModal = ({
                     src="/icons/collapse-description.svg"
                     name="Collapse description icon"
                   />
-                  <p className="text-[#0068B6]">To Do リストを作成</p>
+                  <p className="text-primary">To Do リストを作成</p>
                 </div>
                 <div>
                   <div className="mb-4">
@@ -1180,7 +1180,7 @@ const ActionsTemplateModal = ({
                   src="/icons/open-description.svg"
                   name="Open description icon"
                 />
-                <p className="text-[#0068B6]">To Do リストを作成</p>
+                <p className="text-primary">To Do リストを作成</p>
               </div>
             )}
           </div>

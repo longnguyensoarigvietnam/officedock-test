@@ -443,7 +443,7 @@ const PercentageTeamTags = ({
         style={{
           boxShadow: '0px 4px 10px 0px #0000000D',
         }}
-        className="p-[30px] bg-[#F8FAFC] rounded-[14px]">
+        className="p-[30px] bg-[#F8FAFC] rounded-[30px]">
         {/* Header & sort */}
         <div className="flex justify-between">
           <div className="flex items-center gap-x-5">

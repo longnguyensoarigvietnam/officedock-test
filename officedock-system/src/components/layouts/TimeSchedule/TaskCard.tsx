@@ -505,7 +505,7 @@ const TaskCard = ({
             }
           }
         }}
-        className={`h-full event-bottom  ${isSelect && '!opacity-30'} ${largeColor && resourcePlan && 'border border-l-2'} flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-[#0068B6]'}    text-black rounded-md   justify-between   px-2 border`}>
+        className={`h-full event-bottom  ${isSelect && '!opacity-30'} ${largeColor && resourcePlan && 'border border-l-2'} flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-primary'}    text-black rounded-md   justify-between   px-2 border`}>
         <div className="flex w-full relative  h-full justify-between ">
           <div
             onMouseEnter={(e) => {

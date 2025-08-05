@@ -75,7 +75,7 @@ export const MyDockCompareLineChartTooltip = ({ data }: { data: any[] }) => {
 
             <div>
               <div className="flex justify-between items-center mb-2">
-                <p className="bg-[#EBF1F7] text-[#0068B6] h-[18px] w-[57px] rounded-[3px] text-xs font-medium flex items-center justify-center">
+                <p className="bg-[#EBF1F7] text-primary h-[18px] w-[57px] rounded-[3px] text-xs font-medium flex items-center justify-center">
                   基準期間
                 </p>
                 <div className="text-[#77858F] font-normal text-xs">
@@ -110,7 +110,7 @@ export const MyDockCompareLineChartTooltip = ({ data }: { data: any[] }) => {
               </div>
 
               <div className="flex justify-between items-center mb-2">
-                <p className="bg-[#F9EAEA] text-[#C32E2E] h-[18px] w-[57px] rounded-[3px] text-xs font-medium flex items-center justify-center">
+                <p className="bg-[#F9EAEA] text-[#E95062] h-[18px] w-[57px] rounded-[3px] text-xs font-medium flex items-center justify-center">
                   比較期間
                 </p>
                 <div className="text-[#77858F] font-normal text-xs">

@@ -23,7 +23,7 @@
 .sunday,
 .react-datepicker__day--keyboard-selected.holiday,
 .react-datepicker__day--keyboard-selected.sunday {
-  color: #c32e2e !important;
+  color: #e95062 !important;
 }
 
 .multi-date .saturday,
@@ -124,13 +124,13 @@
 .multi-date .react-datepicker__day--selected,
 .multi-date .react-datepicker__day--in-range,
 .multi-date .react-datepicker__day--today {
-  background-color: #0068b6 !important;
+  background-color: theme('colors.primary') !important;
   color: white !important;
 }
 .multi-date-compare .multi-date .react-datepicker__day--selected,
 .multi-date-compare .multi-date .react-datepicker__day--in-range,
 .multi-date-compare .multi-date .react-datepicker__day--today {
-  background-color: #c32e2e !important;
+  background-color: rgba(233, 80, 98, 1) !important;
   color: white !important;
 }
 .multi-date .react-datepicker__month-option--selected,
@@ -156,10 +156,10 @@
 
 .multi-date .react-datepicker__day--today {
   border-radius: 9999px;
-  background-color: #0068b6 !important;
+  background-color: theme('colors.primary') !important;
 }
 .multi-date .react-datepicker__day--today:hover {
-  background-color: #0068b6 !important;
+  background-color: theme('colors.primary') !important;
 }
 .multi-date .react-datepicker__navigation {
   top: 30px !important;
@@ -329,21 +329,21 @@
   background: theme('colors.gray.500');
 }
 .multi-date .highlighted-date {
-  background-color: rgba(0, 104, 182, 0.3) !important;
+  background-color: rgba(60, 171, 243, 0.3) !important;
   z-index: 1;
   border-radius: 0 !important;
   color: black !important;
 }
 .multi-date-compare .multi-date .highlighted-compare {
-  background-color: rgba(195, 46, 46, 0.3) !important;
+  background-color: rgba(233, 80, 98, 0.3) !important;
   z-index: 1;
   border-radius: 0 !important;
   color: black !important;
 }
 /* Compare */
 .multi-date-compare .react-datepicker__day--today {
-  background-color: #c32e2e !important;
+  background-color: rgba(233, 80, 98, 1) !important;
 }
 .multi-date-compare .react-datepicker__day--selected {
-  background-color: #c32e2e !important;
+  background-color: rgba(233, 80, 98, 1) !important;
 }

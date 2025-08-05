@@ -185,9 +185,7 @@ export const AllChatRoomSearchMessagesModal = ({
           </div>
           <div className="flex gap-2 items-center font-medium text-sm">
             <p className="text-[#77858F]">検索結果</p>
-            <p className="text-[#0068B6]">
-              {searchMessageResults?.count || 0}件
-            </p>
+            <p className="text-primary">{searchMessageResults?.count || 0}件</p>
           </div>
         </div>
         <div

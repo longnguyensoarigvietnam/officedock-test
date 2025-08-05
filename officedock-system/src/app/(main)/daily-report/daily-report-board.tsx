@@ -2072,7 +2072,7 @@ const DailyReportBoard = () => {
                               <div className=" w-full break-all text-base font-medium text-black flex items-start gap-[6px]">
                                 {row.getCanExpand() && row.depth === 0 && (
                                   <button
-                                    className="bg-[#EBF1F7] rounded-full w-6 h-6 text-sm text-[#0068B6] font-normal"
+                                    className="bg-[#EBF1F7] rounded-full w-6 h-6 text-sm text-primary font-normal"
                                     onClick={() => {
                                       row.getToggleExpandedHandler(); // Toggle row expanded state
                                       handleExpandChange(row); // Update expanded state
@@ -2083,7 +2083,7 @@ const DailyReportBoard = () => {
                                   </button>
                                 )}{' '}
                                 {row.depth > 0 && (
-                                  <div className=" rounded-full w-6 h-6 text-sm text-[#0068B6] font-normal"></div>
+                                  <div className=" rounded-full w-6 h-6 text-sm text-primary font-normal"></div>
                                 )}
                                 <p
                                   className={`flex-1 ${row.depth > 0 && 'bg-transparent pt-2'} line-clamp-2`}>

@@ -895,7 +895,7 @@ const LineChartCompare = ({
         return (
           <div className="font-medium px-3 text-[16px] break-all line-clamp-3 text-left text-black flex gap-2 items-center">
             <div
-              style={{ backgroundColor: '#0068B6' }}
+              style={{ backgroundColor: '#228CDB' }}
               className={`w-4 h-4 rounded-[3px] flex items-center justify-center`}>
               <ImageRound
                 name="Check task"
@@ -1119,7 +1119,7 @@ const LineChartCompare = ({
       style={{
         boxShadow: '0px 4px 10px 0px #0000000D',
       }}
-      className="p-[30px] bg-[#F8FAFC] mt-5 rounded-[14px]">
+      className="p-[30px] bg-[#F8FAFC] mt-5 rounded-[30px]">
       {/* Header & sort */}
       <div className="flex justify-between">
         <div className="flex items-center gap-x-5">
@@ -1156,7 +1156,7 @@ const LineChartCompare = ({
               {/* Column Chart 1 */}
               <div className="w-[300px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && !selectedLarge && !selectedMedium ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && !selectedLarge && !selectedMedium ? 'text-white bg-primary' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   大カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -1177,7 +1177,7 @@ const LineChartCompare = ({
               {/* Column Chart 2 */}
               <div className="w-[300px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && !selectedMedium ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && selectedLarge && !selectedMedium ? 'text-white bg-primary' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   中カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -1198,7 +1198,7 @@ const LineChartCompare = ({
               {/* Column Chart 3 */}
               <div className="w-[300px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && selectedMedium ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && selectedLarge && selectedMedium ? 'text-white bg-primary' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   小カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -1225,7 +1225,7 @@ const LineChartCompare = ({
               <div>
                 {startDate && endDate && (
                   <div className="flex items-center mb-3 gap-2">
-                    <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                    <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                       基準期間
                     </p>
                     <div className="text-black text-xs font-normal flex items-center gap-[1px]">
@@ -1247,7 +1247,7 @@ const LineChartCompare = ({
                 )}
                 {startDateCompare && endDateCompare && (
                   <div className="flex items-center mb-3 gap-2">
-                    <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                    <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                       比較期間
                     </p>
                     <div className="text-black text-xs font-normal flex items-center gap-[1px]">
@@ -1332,7 +1332,7 @@ const LineChartCompare = ({
               !isFetchingStatisticAllTeamTaskDurationsCompareList) ? (
               <>
                 <div className="flex gap-8 items-center justify-end flex-wrap mb-3">
-                  <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                  <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                     基準
                   </p>
                   {standardLabelsInfo.map((label, index) => {
@@ -1349,7 +1349,7 @@ const LineChartCompare = ({
                   })}
                 </div>
                 <div className="flex gap-8 items-center justify-end flex-wrap">
-                  <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                  <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                     比較
                   </p>
                   {comparedLabelsInfo.map((label, index) => {

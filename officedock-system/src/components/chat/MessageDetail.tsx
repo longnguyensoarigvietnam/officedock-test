@@ -435,7 +435,7 @@ export const MessageDetail = ({
               children.push(
                 <span
                   key={`${index}-${i}-mention`}
-                  className="mention text-[#0068B6]"
+                  className="mention text-primary"
                   data-type="mention"
                   data-id={el.dataset.id}>
                   {mentionText}
@@ -506,7 +506,7 @@ export const MessageDetail = ({
       if (status == SubmitLevelStatus.APPROVAL) {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+            <p className="text-primary font-medium text-sm max-w-full break-all">
               {skillName}{' '}
               <span className="text-black text-sm font-normal">
                 のスキルがレベルアップしました！
@@ -517,7 +517,7 @@ export const MessageDetail = ({
       } else {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+            <p className="text-primary font-medium text-sm max-w-full break-all">
               {skillName}{' '}
               <span className="text-black text-sm font-normal">
                 のレベルアップの申請についてコメントが届いています。
@@ -713,7 +713,7 @@ export const MessageDetail = ({
                                                 onClick={() =>
                                                   downloadFileName(file.uuid)
                                                 }
-                                                className={`text-[#0068B6] cursor-pointer font-medium text-[14px] break-all max-w-full ${
+                                                className={`text-primary cursor-pointer font-medium text-[14px] break-all max-w-full ${
                                                   file.fileType.includes(
                                                     'image',
                                                   )
@@ -1428,12 +1428,12 @@ export const MessageDetail = ({
                           name="Calendar icon"
                           src="/icons/calendar-time.svg"
                         />
-                        <p className="text-[#0068B6] text-sm font-medium">
+                        <p className="text-primary text-sm font-medium">
                           {messageDetail.schedule?.title}
                         </p>
                       </div>
                       <div className="flex gap-1 text-sm font-medium">
-                        <p className="text-[#0068B6] break-all max-w-full">
+                        <p className="text-primary break-all max-w-full">
                           {messageDetail.sender.fullName}
                           <span className="text-black">
                             {messageDetail.type === MessageType.REMOVE_SCHEDULE

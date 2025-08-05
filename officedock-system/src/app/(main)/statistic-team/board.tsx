@@ -9,7 +9,6 @@ import StatisticTeamCalendar from '@components/statisticTeam/category/StatisticT
 import PercentageTeamCategory from '@components/statisticTeam/category/PercentageTeamCategory';
 import PercentageTeamCategoryCompare from '@components/statisticTeam/category/compare/PercentageCategoryCompare';
 import TaskListTeamStatistic from '@components/statisticTeam/category/TaskList';
-import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import LineChartByTeam from '@components/statisticTeam/category/LineChartByTeam';
 import LineChartByTeamCompare from '@components/statisticTeam/category/compare/LineChartByTeamCompare';
 import AllocationTeamCategoryCompare from '@components/statisticTeam/category/compare/AllocationTeamCategoryCompare';
@@ -43,7 +42,6 @@ const StatisticTeamBoard = () => {
     isHasLoading,
     startDate,
     endDate,
-    listMemberTeam,
     isCheckCompare,
     startDateCompare,
     endDateCompare,
@@ -583,85 +581,51 @@ const StatisticTeamBoard = () => {
     setSelectedSmall(data);
   };
 
-  const getParticipantAvatars = (
-    participants: {
-      id: number;
-      fullName: string;
-      color: string;
-      avatarUrl: string;
-    }[],
-  ) => {
-    const slicedParticipants = participants.slice(0, 6);
-    const remainingCount =
-      participants.length > 3 ? participants.length - 6 : 0;
-
-    return (
-      <div className="flex items-center">
-        {slicedParticipants.map((item) => {
-          return (
-            <div
-              className="ml-[-10px] relative border-[1px] border-white rounded-full h-[32px] w-[32px]"
-              key={item.id}>
-              <CustomUserAvatar
-                avatarUrl={item?.avatarUrl || ''}
-                avatarColor={item?.color || ''}
-                size={32}
-                customClassName={`${!item?.avatarUrl && '!mt-0'}`}
-              />
-            </div>
-          );
-        })}
-        {remainingCount > 0 && (
-          <div className="ml-[-10px] relative flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[32px] h-[32px]">
-            +{remainingCount}
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div className="pt-[30px] pr-10  font-medium ">
-      <div className="mb-[33px] flex items-start justify-between">
-        <div className="flex items-start gap-5 ">
-          <div className="rounded-full w-[34px] h-[34px]  flex items-center justify-center overflow-hidden">
-            <ImageRound
-              className="w-[34px] h-[34px] rounded-full"
-              src="/icons/statistic-team.svg"
-              border="full"
-              name="Multi users"
-            />
-          </div>
-          <span className="text-[26px] font-medium relative top-[-2px] max-w-[450px] line-clamp-3 break-all">
-            {selectedOrganization?.label}
-          </span>
-          <span className="text-[26px] font-medium relative top-[-2px]">
-            チーム集計
-          </span>
-          <div className="flex justify-center items-center gap-2 mt-[6px] ">
-            <Button
-              variant={'primary'}
-              className={`!py-0 !px-0 font-bold w-[80px] h-7 
+      <div className=" flex items-start justify-between">
+        <div className="flex items-center justify-between">
+          <div className="flex items-start gap-5 ">
+            <div className="rounded-full w-[34px] h-[34px]  flex items-center justify-center overflow-hidden">
+              <ImageRound
+                className="w-[34px] h-[34px] rounded-full"
+                src="/icons/statistic-team.svg"
+                border="full"
+                name="Multi users"
+              />
+            </div>
+            <span className="text-[26px] font-medium relative top-[-2px] max-w-[450px] line-clamp-3 break-all">
+              {selectedOrganization?.label}
+            </span>
+            <span className="text-[26px] font-medium relative top-[-2px]">
+              チーム集計
+            </span>
+            <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ">
+              <Button
+                variant={'primary'}
+                className={`!py-0 !px-0 font-bold w-[90px] h-7 
               !rounded-[20px] text-xs  `}>
-              カテゴリー
-            </Button>
-            <Button
-              onClick={() => {
-                router.push(
-                  `${pageRouters.STATISTIC_TEAM_TAG_MANAGEMENT.href}?organization=${(selectedOrganizationSideBar?.value as string) || organizationId}&tabId=1`,
-                );
-              }}
-              variant={'outline'}
-              disabled={isHasLoading}
-              className={`!text-[#77858F] !bg-transparent !border-[#77858F] !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
-              タグ
-            </Button>
-          </div>{' '}
+                カテゴリー
+              </Button>
+              <Button
+                onClick={() => {
+                  router.push(
+                    `${pageRouters.STATISTIC_TEAM_TAG_MANAGEMENT.href}?organization=${(selectedOrganizationSideBar?.value as string) || organizationId}&tabId=1`,
+                  );
+                }}
+                variant={'outline'}
+                disabled={isHasLoading}
+                className={`!text-[#77858F] !bg-[#EBF1F7] !border-none !py-0 !px-0 font-bold w-[90px] h-7 !rounded-[20px] text-xs`}>
+                タグ
+              </Button>
+            </div>{' '}
+          </div>
         </div>
-        <div className="flex items-center mt-[6px]">
-          {listMemberTeam?.length > 0 && getParticipantAvatars(listMemberTeam)}
+        <div>
+          <StatisticTeamCalendar />
         </div>
       </div>
+      <div className="w-full my-[30px] border-t border-[#D2DBE1]"></div>
       <div>
         <div className="flex justify-between w-full">
           <div className="flex items-center gap-2">
@@ -721,18 +685,16 @@ const StatisticTeamBoard = () => {
               />
             </div>
           </div>
-          <div>
-            <StatisticTeamCalendar />
-          </div>
         </div>
-
-        {/* Filter modal */}
-        <FilterTeamStatistic
-          open={isOpenModalFilter}
-          className="mb-[14px] mt-6"
-          classNameData=" w-[80%]"
-          onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-        />
+        <div>
+          {/* Filter modal */}
+          <FilterTeamStatistic
+            open={isOpenModalFilter}
+            className="my-[30px]"
+            classNameData=" w-[80%]"
+            onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
+          />
+        </div>
       </div>
 
       {isCheckCompare ? (

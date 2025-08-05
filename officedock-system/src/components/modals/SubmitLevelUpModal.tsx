@@ -145,7 +145,7 @@ const SubmitLevelUpModal = memo(
                 レベルアップの申請を行いました
               </p>
               <p
-                className="text-[#0068B6] font-medium text-[13px] hover:cursor-pointer"
+                className="text-primary font-medium text-[13px] hover:cursor-pointer"
                 onClick={onClose}>
                 閉じる
               </p>
@@ -154,7 +154,7 @@ const SubmitLevelUpModal = memo(
             <>
               <p className="text-sm font-medium">レベルアップが目の前です！</p>
               <div className="bg-[#EBF1F7] py-[24px] px-[30px] rounded-[6px] !w-full">
-                <p className="text-[#0068B6] font-medium text-[16px] text-center mb-3">
+                <p className="text-primary font-medium text-[16px] text-center mb-3">
                   振り返ってみましょう
                 </p>
                 <div className="flex flex-col gap-2 justify-start">
@@ -220,7 +220,7 @@ const SubmitLevelUpModal = memo(
               <div className="flex gap-2 justify-center mt-5">
                 <Button
                   variant="outline"
-                  className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-[#0068B6] bg-white"
+                  className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-primary bg-white"
                   onClick={() => {
                     onCloseAndSave({
                       staffId: submitLevelUpDetail.staffId,

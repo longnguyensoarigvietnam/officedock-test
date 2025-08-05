@@ -478,7 +478,7 @@ const AllocationTagTeamCompare = memo(
           style={{
             boxShadow: '0px 4px 10px 0px #0000000D',
           }}
-          className="p-[30px] bg-[#F8FAFC] mt-5 rounded-[14px]">
+          className="p-[30px] bg-[#F8FAFC] mt-5 rounded-[30px]">
           {/* Header & sort */}
           <div className="flex justify-between">
             <div className="flex items-center gap-x-5">
@@ -541,7 +541,7 @@ const AllocationTagTeamCompare = memo(
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">
-                          <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                          <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                             基準
                           </p>
                           <div className="text-black text-xs font-normal flex items-center gap-[2px]">
@@ -570,7 +570,7 @@ const AllocationTagTeamCompare = memo(
 
                       <div className={`mt-[10px]`}>
                         <div className="flex items-center">
-                          <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                          <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                             比較
                           </p>
                           <div className="text-black text-xs font-normal flex items-center gap-[2px]">
@@ -784,7 +784,7 @@ const AllocationTagTeamCompare = memo(
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">
-                          <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                          <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                             基準
                           </p>
                           <div className="text-black text-xs font-normal flex items-center gap-[2px]">
@@ -810,7 +810,7 @@ const AllocationTagTeamCompare = memo(
 
                       <div className={`mt-[10px]`}>
                         <div className="flex items-center">
-                          <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                          <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                             比較
                           </p>
                           <div className="text-black text-xs font-normal flex items-center gap-[2px]">
@@ -909,7 +909,7 @@ const AllocationTagTeamCompare = memo(
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">
-                          <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                          <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                             基準
                           </p>
                           <div className="text-black text-xs font-normal flex items-center gap-[2px]">
@@ -935,7 +935,7 @@ const AllocationTagTeamCompare = memo(
 
                       <div className={`mt-[10px]`}>
                         <div className="flex items-center">
-                          <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                          <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                             比較
                           </p>
                           <div className="text-black text-xs font-normal flex items-center gap-[2px]">
@@ -1048,7 +1048,7 @@ const AllocationTagTeamCompare = memo(
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">
-                          <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                          <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                             基準
                           </p>
                           <div className="text-black text-xs font-normal flex items-center gap-[2px]">
@@ -1074,7 +1074,7 @@ const AllocationTagTeamCompare = memo(
 
                       <div className={`mt-[10px]`}>
                         <div className="flex items-center">
-                          <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                          <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                             比較
                           </p>
                           <div className="text-black text-xs font-normal flex items-center gap-[2px]">

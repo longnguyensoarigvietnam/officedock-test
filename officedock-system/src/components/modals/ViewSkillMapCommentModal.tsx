@@ -141,7 +141,7 @@ const ViewSkillMapCommentModal = memo(
               <div className="w-5 h-5"></div>
             )}
           </div>
-          <p className="text-[#0068B6] text-[18px] font-medium">
+          <p className="text-primary text-[18px] font-medium">
             レベルアップしました！
           </p>
           <div className="bg-[#EBF1F7] py-[24px] px-[30px] rounded-[6px] !w-full">
@@ -163,7 +163,7 @@ const ViewSkillMapCommentModal = memo(
             </p>
           </div>
           <p
-            className="text-[#0068B6] font-medium text-[13px] hover:cursor-pointer"
+            className="text-primary font-medium text-[13px] hover:cursor-pointer"
             onClick={onClose}>
             閉じる
           </p>
