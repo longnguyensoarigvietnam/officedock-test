@@ -23,7 +23,8 @@ const ActionMuteChatModal = memo(
     return (
       <Modal
         open={open}
-        className="font-primary bg-white w-[500px] !rounded-lg !px-0 !py-0 overflow-hidden"
+        className="font-primary bg-white w-[500px] !rounded-[20px] !px-0 !py-0 overflow-hidden"
+        contentClass='!rounded-[20px]'
         isOutSideAction={false}
         onClose={onClose}>
         <header className="bg-[#EBF1F7] h-[50px] text-[#5B6770] text-sm font-medium px-5 flex items-center justify-between">

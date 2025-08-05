@@ -474,6 +474,10 @@ export const SUB_TEAMS = 'サブチーム';
 
 export const COLOR_BY_TASK_STATUS = [
   {
+    name: StatusTask.MY_ROUTINE,
+    color: '#DAE2EB',
+  },
+  {
     name: StatusTask.NOT_STARTED,
     color: '#A3EBF0',
   },

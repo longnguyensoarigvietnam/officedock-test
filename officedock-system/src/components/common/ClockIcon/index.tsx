@@ -1,0 +1,42 @@
+import { useMemo } from 'react';
+
+export type ClockIconProps = {
+  color: string;
+  size: number;
+  customClassName?: string;
+};
+const ClockIconWithDynamicColor = ({
+  color,
+  size,
+  customClassName,
+}: ClockIconProps) => {
+  const clipId = useMemo(() => `clip-${Math.random()}`, []);
+
+  return (
+    <div className={`${customClassName}`}>
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg">
+        <g clip-path={`url(#${clipId})`}>
+          <path
+            d="M7 14C10.866 14 14 10.866 14 7C14 3.13401 10.866 0 7 0C3.13401 0 0 3.13401 0 7C0 10.866 3.13401 14 7 14Z"
+            fill={color}
+          />
+          <path
+            d="M11.173 7.47579H7C6.73746 7.47579 6.52439 7.26272 6.52439 7.00018V2.82815C6.52439 2.56561 6.73746 2.35254 7 2.35254C7.26254 2.35254 7.47561 2.56561 7.47561 2.82815V6.52552H11.173C11.4355 6.52552 11.6486 6.7386 11.6486 7.00113C11.6486 7.26367 11.4355 7.47674 11.173 7.47674V7.47579Z"
+            fill="white"
+          />
+        </g>
+        <defs>
+          <clipPath id={clipId}>
+            <rect width={size} height={size} fill="white" />
+          </clipPath>
+        </defs>
+      </svg>
+    </div>
+  );
+};
+export default ClockIconWithDynamicColor;

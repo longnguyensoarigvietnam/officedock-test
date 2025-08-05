@@ -26,7 +26,7 @@ const MainRootLayout = async ({ children }: { children: React.ReactNode }) => {
       style={{
         background: 'linear-gradient(168.55deg, #289BF2 0.21%, #73CCDF 99.79%)',
       }}>
-      <div className="w-1/3 flex flex-col min-h-screen items-center justify-center pb-5">
+      <div className="w-[37.5%] flex flex-col min-h-screen items-center justify-center pb-5">
         <div className="flex flex-grow flex-col justify-center items-center ">
           <Image
             width={200}
@@ -42,7 +42,7 @@ const MainRootLayout = async ({ children }: { children: React.ReactNode }) => {
           <p className="font-normal text-xs">@OFFICEDOCK</p>
         </div>
       </div>
-      <div className="w-2/3 rounded-l-[60px] bg-white">{children}</div>
+      <div className="w-[62.5%] rounded-l-[60px] bg-white">{children}</div>
     </main>
   );
 };

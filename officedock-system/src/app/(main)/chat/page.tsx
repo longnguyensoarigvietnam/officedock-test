@@ -6,7 +6,7 @@ const ChatPage = () => {
   return (
     <MainLayout
       showFooter={false}
-      className="!overflow-y-hidden !overflow-x-auto !pt-0 !px-0 !bg-[#EBF1F7]"
+      className="!overflow-y-hidden !overflow-x-auto !pt-0 !px-0 !bg-[#F8FAFC]"
       permission={PermissionsSystem.CHAT_VIEW}>
       <div className="flex flex-row ">
         <BoardChat />

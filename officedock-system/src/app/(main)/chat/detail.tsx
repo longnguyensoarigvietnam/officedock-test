@@ -2622,9 +2622,9 @@ const ChatDetail = ({
             }}>
             {/* Header */}
             <div
-              className="flex justify-between items-center px-4 py-2 min-h-[78px] !w-full border-b-[2px] text-white"
+              className="flex justify-between items-center px-4 py-2 min-h-[78px] !w-[calc(100%_-_20px)] ml-auto border-b-[2px] rounded-bl-[24px] text-white"
               style={{
-                background: 'linear-gradient(to right, #0E8DC5, #0D6FBA)',
+                background: 'linear-gradient(to right, #289BF2, #73CCDF)',
               }}>
               <div className={`flex items-center w-[62%] gap-2`}>
                 {chatRoomDetail && (
@@ -2706,7 +2706,8 @@ const ChatDetail = ({
                           <div>
                             <Button
                               sz="sm"
-                              className="w-fit text-xs min-w-[80px] !px-[10px] !py-[8px] !bg-[#FFFFFF4D] !border-none"
+                              variant='secondary'
+                              className="w-fit text-xs min-w-[80px] text-white !px-[10px] !py-[8px] !bg-[#FFFFFF4D] !border-none"
                               onClick={() => setOpenAddMembersBox(true)}
                               type="button">
                               招待する
@@ -3180,7 +3181,7 @@ const ChatDetail = ({
                                   ) &&
                                   msgIdUpdated && (
                                     <Button
-                                      className="w-[120px]"
+                                      className="w-[120px] h-9"
                                       variant="outline"
                                       onClick={() => {
                                         setMsgIdUpdated &&

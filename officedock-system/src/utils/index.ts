@@ -212,19 +212,28 @@ export const generatePassword = (): string => {
 export const trimUnnecessaryLineBreaks = (
   content: string | undefined | null,
 ) => {
-  if (!content) {
-    return '';
-  }
+  if (!content) return '';
 
-  const withoutLineBreaks = content
-    .replace(/<p><br><\/p>/g, '')
-    .replace(/<p>\s*<\/p>/g, '')
-    .trim();
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(content, 'text/html');
 
-  const withoutExtraSpaces = withoutLineBreaks.replace(/\s\s+/g, ' ');
+  // Remove empty elements like <p> with only <br>, or with only whitespace
+  const clean = Array.from(doc.body.childNodes).filter((node) => {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
 
-  return withoutExtraSpaces;
+      // If it only contains <br> or is completely empty, ignore
+      return el.textContent?.trim() !== '';
+    } else if (node.nodeType === Node.TEXT_NODE) {
+      return node.textContent?.trim() !== '';
+    }
+
+    return false;
+  });
+
+  return clean.length > 0 ? content : '';
 };
+
 // Utility function for throttling
 export const throttle = (func: (...args: any[]) => void, limit: number) => {
   let lastCall = 0;
