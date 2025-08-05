@@ -57,13 +57,13 @@
 }
 .calendar-custom .fc .fc-daygrid-day-frame,
 .calendar-custom .fc .fc-scrollgrid-sync-inner .fc-daygrid-day-events {
-  background-color: #F8FAFC;
+  background-color: #f8fafc;
 }
 .calendar-custom.week .fc .fc-daygrid-day-frame,
 .calendar-custom.day .fc .fc-daygrid-day-frame,
 .calendar-custom.week .fc .fc-scrollgrid-sync-inner .fc-daygrid-day-events,
 .calendar-custom.day .fc .fc-scrollgrid-sync-inner .fc-daygrid-day-events {
-  background-color: #E6F3FB;
+  background-color: #e6f3fb;
 }
 .calendar-custom.week .fc-scrollgrid-sync-table .fc-daygrid-day,
 .calendar-custom.day .fc-scrollgrid-sync-table .fc-daygrid-day {
@@ -73,7 +73,7 @@
   display: flex;
   justify-content: center;
   font-size: 12px;
-  background-color: #F8FAFC;
+  background-color: #f8fafc;
   padding: 2px;
   height: 29px;
 }
@@ -155,7 +155,7 @@
   max-width: 150px !important;
 }
 .calendar-custom .fc-event {
-  border: none !important
+  border: none !important;
 }
 .calendar-custom .fc-timegrid-axis-cushion {
   font-size: 12px;
@@ -298,20 +298,24 @@
 .calendar-custom .custom-day-view.fc-event {
   min-height: 20px;
 }
-.calendar-custom.week .fc-event-main, .calendar-custom.day .fc-event-main {
+.calendar-custom.week .fc-event-main,
+.calendar-custom.day .fc-event-main {
   width: 100% !important;
   border-radius: 14px !important;
   overflow: hidden;
 }
-.calendar-custom.week .fc-event-main .selected-event, .calendar-custom.day .fc-event-main .selected-event{
+.calendar-custom.week .fc-event-main .selected-event,
+.calendar-custom.day .fc-event-main .selected-event {
   height: 100%;
   border-radius: 14px !important;
-  border: 1px solid #A7B7C2 !important
+  border: 1px solid #a7b7c2 !important;
 }
-.calendar-custom.month .fc-event-main .selected-all-day-event, .calendar-custom.week .fc-event-main .selected-all-day-event, .calendar-custom.day .fc-event-main .selected-all-day-event{
+.calendar-custom.month .fc-event-main .selected-all-day-event,
+.calendar-custom.week .fc-event-main .selected-all-day-event,
+.calendar-custom.day .fc-event-main .selected-all-day-event {
   height: 100%;
   border-radius: 8px !important;
-  border: 1px solid #A7B7C2 !important
+  border: 1px solid #a7b7c2 !important;
 }
 /* Month */
 .calendar-custom .fc-daygrid-event {
@@ -344,7 +348,7 @@
   margin-bottom: 7px;
   color: white;
   padding: 2px 5px 2px 5px;
-  background-color: #3CABF3;
+  background-color: #3cabf3;
   border-radius: 20px;
   font-size: 12px;
 }
@@ -387,7 +391,7 @@
   margin-left: 10px;
 }
 .calendar-custom .fc-multimonth-month {
-  background-color: #F8FAFC !important;
+  background-color: #f8fafc !important;
   padding-top: 1.5rem !important;
   padding-bottom: 1.5rem !important;
   padding-left: 2rem !important;
@@ -447,7 +451,7 @@
   outline: none;
   background-color: transparent !important;
   z-index: 0 !important;
-  box-shadow: #F8FAFC 0.5px 0.5px 0.5px 0.5px !important;
+  box-shadow: #f8fafc 0.5px 0.5px 0.5px 0.5px !important;
   outline: none !important;
   border: none !important;
   border-radius: 0 !important;
@@ -462,7 +466,7 @@
 .calendar-custom .fc .fc-timegrid-now-indicator-arrow {
   border-top: 5px solid transparent;
   border-bottom: 5px solid transparent;
-  border-left: 8px solid #64BBF3;
+  border-left: 8px solid #64bbf3;
   width: 0;
   height: 0;
   position: relative;
@@ -476,11 +480,11 @@
   transform: translateY(-50%);
   width: 67px;
   height: 2px;
-  background-color: #64BBF3;
+  background-color: #64bbf3;
   margin-left: -3px;
 }
 .calendar-custom .fc-timegrid-now-indicator-line {
-  border: 1px solid #64BBF3 !important;
+  border: 1px solid #64bbf3 !important;
 }
 .calendar-custom .fc-timegrid-now-indicator-line {
   margin-top: -1px;
@@ -504,8 +508,9 @@
   position: relative;
   top: -9px;
 }
-.calendar-custom.week .event-has-now-indicator, .calendar-custom.day .event-has-now-indicator {
-  border: 1px solid #3CABF3 !important;
+.calendar-custom.week .event-has-now-indicator,
+.calendar-custom.day .event-has-now-indicator {
+  border: 1px solid #3cabf3 !important;
   height: 100% !important;
   border-radius: 14px;
 }

@@ -1259,7 +1259,11 @@ const ListChatUsers = ({
               <div
                 key={item?.code}
                 className={`flex relative w-full group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
-                onClick={() => handleRoomChange(item)}>
+                onClick={() => {
+                  if (item.code !== chatRoomCode) {
+                    handleRoomChange(item);
+                  }
+                }}>
                 <div className="absolute top-1 left-0.5">
                   <DynamicTooltip
                     content={item.pinAt ? 'ピンを外す' : 'ピン留め'}
@@ -1309,7 +1313,7 @@ const ListChatUsers = ({
                 )}
 
                 {item?.unreadMessages > 0 && (
-                  <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full w-[20px] pt-[2px] h-[20px] bg-[#C32E2E] text-[10px] text-center text-white leading-4">
+                  <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full w-[20px] pt-[2px] h-[20px] bg-[#E95062] text-[10px] text-center text-white leading-4">
                     {item?.unreadMessages}
                   </p>
                 )}
@@ -1387,7 +1391,7 @@ const ListChatUsers = ({
                     </div>
                   )}
                   {item?.unreadMessages > 0 && (
-                    <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full w-[20px] pt-[2px] h-[20px] bg-[#C32E2E] text-[10px] text-center text-white leading-4">
+                    <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full w-[20px] pt-[2px] h-[20px] bg-[#E95062] text-[10px] text-center text-white leading-4">
                       {item?.unreadMessages}
                     </p>
                   )}

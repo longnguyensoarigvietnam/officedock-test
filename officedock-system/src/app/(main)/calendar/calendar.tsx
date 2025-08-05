@@ -753,7 +753,8 @@ const EventCalendar = () => {
           }
 
           return (
-            <div className={`my-1 hover:cursor-pointer ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-all-day-event'}`}>
+            <div
+              className={`my-1 hover:cursor-pointer ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-all-day-event'}`}>
               <div
                 className={` text-black bg-white overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
                 style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
@@ -820,7 +821,8 @@ const EventCalendar = () => {
                     ~{' '}
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                   </p>
-                  <p className={` text-black text-[12px] font-normal break-all`}>
+                  <p
+                    className={` text-black text-[12px] font-normal break-all`}>
                     {eventContent.event.extendedProps?.location?.name}
                   </p>
                 </>
@@ -829,7 +831,8 @@ const EventCalendar = () => {
                   {isMoreThanThirtyMinutes(eventContent.timeText) && (
                     <>
                       <p>{eventContent.timeText}</p>
-                      <p className={`text-black text-[12px] font-normal break-all`}>
+                      <p
+                        className={`text-black text-[12px] font-normal break-all`}>
                         {eventContent.event.extendedProps?.location?.name}
                       </p>
                     </>
@@ -862,7 +865,8 @@ const EventCalendar = () => {
             end.setDate(end.getDate() - 1);
           }
           return (
-            <div className={`my-1 hover:cursor-pointer ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-all-day-event'}`}>
+            <div
+              className={`my-1 hover:cursor-pointer ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-all-day-event'}`}>
               <div
                 className={`text-black bg-white flex gap-2 items-center overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
                 style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
@@ -903,7 +907,9 @@ const EventCalendar = () => {
                     ~{' '}
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                   </p>
-                  <p className='text-black text-[12px] font-normal break-all'>{eventContent.event.extendedProps?.location?.name}</p>
+                  <p className="text-black text-[12px] font-normal break-all">
+                    {eventContent.event.extendedProps?.location?.name}
+                  </p>
                 </>
               ) : (
                 <>
@@ -979,7 +985,8 @@ const EventCalendar = () => {
           );
         }
         return (
-          <div className={`  rounded-sm hover:cursor-pointer mb-1 overflow-hidden`}>
+          <div
+            className={`  rounded-sm hover:cursor-pointer mb-1 overflow-hidden`}>
             <div className="flex items-center gap-1">
               <div
                 className={`text-black py-0.5 flex items-center gap-1 font-normal text-[12px]`}>
@@ -2451,7 +2458,7 @@ const EventCalendar = () => {
                 <div>
                   <Button
                     type="button"
-                    variant='secondary'
+                    variant="secondary"
                     className="!self-center !text-primary !bg-white !w-[48px] !h-[34px] !rounded-[6px] !text-[14px] !font-medium !p-[8px] !border-none"
                     onClick={handleNavigateToTodayView}>
                     {showCurrentViewButtonContent()}

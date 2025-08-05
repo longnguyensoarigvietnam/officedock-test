@@ -123,7 +123,7 @@ const ChatUploadingFilesModal = memo(
         Text,
         Mention.configure({
           HTMLAttributes: {
-            class: 'mention text-[#0068B6]',
+            class: 'mention text-primary',
           },
         }),
         Placeholder.configure({

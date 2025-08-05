@@ -225,7 +225,7 @@ const DraggableLayout = () => {
                   className={`font-primary bg-[#EAF8FF] flex flex-col justify-between h-full w-full  cursor-pointer rounded-sm rounded-br-[15px] shadow-common z-[9999]  pt-2`}>
                   <div className="px-2 w-full h-full">
                     <div className="flex justify-between items-center">
-                      <p className="text-[#0068B6] text-[10px] font-normal">
+                      <p className="text-primary text-[10px] font-normal">
                         memo
                       </p>
                       <Image

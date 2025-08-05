@@ -53,7 +53,7 @@ const PercentageBarCompareTeam = ({
         <>
           <div className={`mt-[14px] ${!isTag && 'flex justify-between'}`}>
             <div className="flex items-center ">
-              <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+              <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                 基準
               </p>
               <div className="text-black text-xs font-normal flex items-center gap-[2px]">
@@ -175,7 +175,7 @@ const PercentageBarCompareTeam = ({
                     ) : (
                       <>
                         <div className="flex items-center gap-1 px-5">
-                          <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                          <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                             基準期間
                           </p>
                           <div className="text-[#77858F] text-sm font-normal flex items-center gap-[1px]">
@@ -394,7 +394,7 @@ const PercentageBarCompareTeam = ({
                     ) : (
                       <>
                         <div className="flex items-center gap-1 px-5">
-                          <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                          <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                             比較期間
                           </p>
                           <div className="text-[#77858F] text-sm  font-normal flex items-center gap-[1px]">
@@ -475,7 +475,7 @@ const PercentageBarCompareTeam = ({
           </div>
           <div className={`mt-[14px] ${!isTag && 'flex justify-between'}`}>
             <div className="flex items-center gap-1">
-              <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+              <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                 比較
               </p>
               <div className="text-[#77858F] text-sm  font-normal flex items-center gap-[2px]">

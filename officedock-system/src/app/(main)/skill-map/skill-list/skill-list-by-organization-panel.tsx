@@ -109,7 +109,7 @@ export const SkillListByOrganizationPanel = ({
               placement="top"
               currentStep={2}
               stepDefinition={skillMapDetail.steps.step2}>
-              <div className="w-[641px] h-[32px] ml-[-16px] bg-[#0068B6] relative clip-middle text-center flex items-center justify-center">
+              <div className="w-[641px] h-[32px] ml-[-16px] bg-primary relative clip-middle text-center flex items-center justify-center">
                 STEP 2
               </div>
             </StepInfoTooltip>

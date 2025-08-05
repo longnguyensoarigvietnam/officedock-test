@@ -1457,7 +1457,7 @@ const LineChartByTeam = ({
       style={{
         boxShadow: '0px 4px 10px 0px #0000000D',
       }}
-      className="p-[30px] bg-[#F8FAFC] mt-5 rounded-[14px]">
+      className="p-[30px] bg-[#F8FAFC] mt-5 rounded-[30px]">
       {/* Header & sort */}
       <div className="flex justify-between">
         <div className="flex items-center gap-x-5">
@@ -1497,7 +1497,7 @@ const LineChartByTeam = ({
               {/* Column Chart 1 */}
               <div className="w-[300px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && !selectedLarge && !selectedMedium ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && !selectedLarge && !selectedMedium ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   大カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -1527,7 +1527,7 @@ const LineChartByTeam = ({
               {/* Column Chart 2 */}
               <div className="w-[300px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && !selectedMedium ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && selectedLarge && !selectedMedium ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   中カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -1557,7 +1557,7 @@ const LineChartByTeam = ({
               {/* Column Chart 3 */}
               <div className="w-[300px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && selectedMedium ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && selectedLarge && selectedMedium ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   小カテゴリー
                 </div>
                 <div className="mt-4 w-full">

@@ -363,7 +363,7 @@ const ItemTeam = ({
                               ? '12px'
                               : '9px',
                         }}
-                        className="flex items-center justify-center font-medium text-[#0068B6] bg-[#DFE6EA] rounded">
+                        className="flex items-center justify-center font-medium text-primary bg-[#DFE6EA] rounded">
                         重要
                       </div>
                     ) : null}
@@ -377,7 +377,7 @@ const ItemTeam = ({
                       className="flex gap-2 font-normal items-center">
                       締切
                       <span
-                        className={`hover:cursor-pointer ${checkDeadline && 'text-[#0068B6]'}`}>
+                        className={`hover:cursor-pointer ${checkDeadline && 'text-primary'}`}>
                         {content.deadline &&
                           formatShowDeadlineTask(content.deadline)}
                       </span>

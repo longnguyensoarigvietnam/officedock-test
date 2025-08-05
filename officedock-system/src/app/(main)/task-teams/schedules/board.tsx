@@ -74,6 +74,7 @@ import {
 } from '@utils/date';
 import { OptionDropdownType } from '@interfaces/common';
 import { NO_SETTING } from '@constants';
+import { generateVerticalGradient } from '@utils';
 
 const ScheduleTeamBoard = () => {
   // Context
@@ -297,7 +298,7 @@ const ScheduleTeamBoard = () => {
               <div
                 className={` flex gap-2 items-center overflow-hidden !w-[calc(100%_-_1px)] py-0.5 text-[12px] font-normal px-1`}>
                 <p
-                  className={`truncate max-w-[calc(100%)] font-semibold mt-0.5 pt-0.5 h-[25px] ${eventContent.event.extendedProps.type !== ItemStartType.TASK && '!text-[#0068B6]'}`}>
+                  className={`truncate max-w-[calc(100%)] font-semibold mt-0.5 pt-0.5 h-[25px] ${eventContent.event.extendedProps.type !== ItemStartType.TASK && '!text-primary'}`}>
                   {eventContent.event.extendedProps.isCrossTeamTask
                     ? `${eventContent.event.extendedProps.largeCategory}タスク`
                     : eventContent.event.title !== 'null'
@@ -318,11 +319,11 @@ const ScheduleTeamBoard = () => {
         <>
           <div
             style={{
-              backgroundColor:
+              background:
                 selectedOptionShow === ItemScheduleTitleType.PLANS
                   ? 'white'
                   : largeColor
-                    ? largeColor
+                    ? generateVerticalGradient(largeColor)
                     : '#A7B9C2',
               boxShadow: '0px 2px 8px 0px #0000001A',
             }}
@@ -330,11 +331,13 @@ const ScheduleTeamBoard = () => {
             <div className="overflow-hidden">
               <div
                 className={`  font-medium px-1 pt-1 text-[14px] flex gap-[6px]`}>
-                <div
-                  style={{ backgroundColor: largeColor || 'white' }}
-                  className="w-2 h-2 rounded-full mt-[7px] flex-shrink-0"></div>
+                {selectedOptionShow !== ItemScheduleTitleType.ACTUAL && (
+                  <div
+                    style={{ backgroundColor: largeColor || 'white' }}
+                    className="w-2 h-2 rounded-full mt-[7px] flex-shrink-0"></div>
+                )}
                 <p
-                  className={`truncate max-w-[calc(100%)] font-semibold min-h-5 ${eventContent.event.extendedProps.type !== ItemStartType.TASK && '!text-[#0068B6]'}`}>
+                  className={`truncate max-w-[calc(100%)] font-semibold min-h-5 ${eventContent.event.extendedProps.type !== ItemStartType.TASK && '!text-primary'}`}>
                   {eventContent.event.extendedProps.isCrossTeamTask
                     ? `${eventContent.event.extendedProps.largeCategory}タスク`
                     : eventContent.event.title != 'null'
@@ -1078,7 +1081,7 @@ const ScheduleTeamBoard = () => {
                       isLoadingDataTask
                         ? 'outline'
                         : selectedOptionShow === ItemScheduleTitleType.ACTUAL
-                          ? 'primary'
+                          ? 'option'
                           : 'outline'
                     }
                     onClick={() => {

@@ -189,6 +189,14 @@ export const MessageHoverOptions = ({
               const exists =
                 dataReactionMsg &&
                 dataReactionMsg.some((item) => item.icon === `${icon.value}`);
+              const existsForMe =
+                dataReactionMsg &&
+                session?.user.id &&
+                dataReactionMsg.some(
+                  (item) =>
+                    item.icon === `${icon.value}` &&
+                    item.users.includes(session?.user.id as number),
+                );
               return (
                 <div
                   onClick={(e) => {
@@ -206,7 +214,7 @@ export const MessageHoverOptions = ({
                     }
                   }}
                   key={icon.name}
-                  className={`p-[6px] rounded-full ${exists && 'bg-gray-200'}`}>
+                  className={`p-[6px] rounded-full ${existsForMe && 'bg-gray-200'}`}>
                   <ImageRound
                     name={icon.name}
                     src={icon.src}

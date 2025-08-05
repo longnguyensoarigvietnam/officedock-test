@@ -367,7 +367,7 @@ const ActionsAddMembersModal = memo(
               }}>
               全てのチェックをクリア
             </p>
-            <p className="ml-auto text-[#0068B6] font-medium text-[12px]">
+            <p className="ml-auto text-primary font-medium text-[12px]">
               {watch('members') && watch('members').length
                 ? watch('members').length
                 : 0}

@@ -444,13 +444,13 @@ const ListViewItem = ({
                 {content.status?.id !== StatusValueTask.MY_ROUTINE ? (
                   <>
                     <p
-                      className={`hover:cursor-pointer ${checkDeadline && 'text-[#0068B6]'} border-x-2 w-2/5 text-center`}>
+                      className={`hover:cursor-pointer ${checkDeadline && 'text-primary'} border-x-2 w-2/5 text-center`}>
                       {content.deadline &&
                         formatShowDeadlineTask(content.deadline)}
                     </p>
                     {content.isImportant ? (
                       <div className="w-1/5 border-r-2 flex items-center justify-center">
-                        <p className="text-center font-medium text-[#0068B6] bg-[#DFE6EA] rounded w-fit px-1 py-0.5">
+                        <p className="text-center font-medium text-primary bg-[#DFE6EA] rounded w-fit px-1 py-0.5">
                           重要
                         </p>
                       </div>

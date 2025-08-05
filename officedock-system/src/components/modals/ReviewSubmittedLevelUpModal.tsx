@@ -182,7 +182,7 @@ const ReviewSubmittedLevelUpModal = memo(
             </div>
           </div>
 
-          <p className="text-[#0068B6] text-[18px] font-medium">
+          <p className="text-primary text-[18px] font-medium">
             {submitLevelUpDetail.status == SubmitLevelStatus.REJECTED
               ? '申請についてコメントが届きました'
               : 'レベルアップしました！'}
@@ -191,7 +191,7 @@ const ReviewSubmittedLevelUpModal = memo(
           {/* Check list */}
           {submitLevelUpDetail.status == SubmitLevelStatus.REJECTED && (
             <div className="bg-[#EBF1F7] py-[24px] px-[30px] rounded-[6px] !w-full">
-              <p className="text-[#0068B6] text-[16px] font-medium mb-4 text-center">
+              <p className="text-primary text-[16px] font-medium mb-4 text-center">
                 チェックリスト
               </p>
               <div className="flex flex-col gap-2 justify-start">
@@ -247,7 +247,7 @@ const ReviewSubmittedLevelUpModal = memo(
 
           {/* Close button */}
           <p
-            className="text-[#0068B6] font-medium text-[13px] mt-2 hover:cursor-pointer"
+            className="text-primary font-medium text-[13px] mt-2 hover:cursor-pointer"
             onClick={onClose}>
             閉じる
           </p>

@@ -62,7 +62,7 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
       }}
       className="bg-white p-4 rounded-md font-medium flex gap-3 justify-between">
       <div className="flex gap-5 flex-grow items-center">
-        <div className="flex flex-col gap-1 items-center min-w-[50px] text-xs  text-[#0068B6]">
+        <div className="flex flex-col gap-1 items-center min-w-[50px] text-xs  text-primary">
           {isConfirm ? (
             <span>確認済</span>
           ) : (

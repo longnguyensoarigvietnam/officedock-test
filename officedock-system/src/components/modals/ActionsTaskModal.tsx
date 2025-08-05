@@ -3179,7 +3179,7 @@ const ActionsTaskModal = ({
                         src="/icons/collapse-description.svg"
                         name="Collapse description icon"
                       />
-                      <p className="text-[#0068B6] text-sm">
+                      <p className="text-primary text-sm">
                         タスクについての詳細
                       </p>
                     </div>
@@ -3202,9 +3202,7 @@ const ActionsTaskModal = ({
                       src="/icons/open-description.svg"
                       name="Open description icon"
                     />
-                    <p className="text-[#0068B6] text-sm">
-                      タスクについての詳細
-                    </p>
+                    <p className="text-primary text-sm">タスクについての詳細</p>
                   </div>
                 )}
               </div>
@@ -3223,7 +3221,7 @@ const ActionsTaskModal = ({
                             src="/icons/collapse-description.svg"
                             name="Collapse description icon"
                           />
-                          <p className="text-[#0068B6] text-sm">
+                          <p className="text-primary text-sm">
                             To Do リストを作成
                           </p>
                         </div>
@@ -3384,7 +3382,7 @@ const ActionsTaskModal = ({
                           src="/icons/open-description.svg"
                           name="Open description icon"
                         />
-                        <p className="text-[#0068B6] text-sm">
+                        <p className="text-primary text-sm">
                           To Do リストを作成
                         </p>
                       </div>

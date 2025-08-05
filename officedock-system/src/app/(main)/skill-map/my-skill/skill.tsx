@@ -190,7 +190,7 @@ const MySkill = () => {
                               <div className="flex gap-[2px] items-end mt-[4px]">
                                 {lastValidSkill.level.measureCount !== null && (
                                   <>
-                                    <p className="text-[18px] text-[#0068B6]">
+                                    <p className="text-[18px] text-primary">
                                       {lastValidSkill.level.actualMeasureCount}/
                                       {lastValidSkill.level.measureCount}
                                     </p>
@@ -201,7 +201,7 @@ const MySkill = () => {
                                 )}
                                 {lastValidSkill.level.measureTime !== null && (
                                   <>
-                                    <p className="text-[18px] text-[#0068B6]">
+                                    <p className="text-[18px] text-primary">
                                       {lastValidSkill.level.actualMeasureTime &&
                                         timeStringToHours(
                                           `${lastValidSkill.level.actualMeasureTime}`,
@@ -216,7 +216,7 @@ const MySkill = () => {
                                 {lastValidSkill.level.lookBackInterval !==
                                   null && (
                                   <>
-                                    <p className="text-[18px] text-[#0068B6]">
+                                    <p className="text-[18px] text-primary">
                                       {lastValidSkill.level.lookBackInterval}
                                     </p>
                                     <p className="relative top-[2px] text-xs">

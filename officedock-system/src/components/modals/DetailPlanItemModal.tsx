@@ -321,14 +321,14 @@ const DetailPlanItemModal = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-[10px] pt-[10px]">
                   {popoverInfo.isImportant ? (
-                    <div className="flex w-9 h-5 text-xs items-center justify-center font-medium text-[#0068B6] bg-[#DFE6EA] rounded">
+                    <div className="flex w-9 h-5 text-xs items-center justify-center font-medium text-primary bg-[#DFE6EA] rounded">
                       重要
                     </div>
                   ) : null}
                   <p className="flex gap-2 items-center text-[13px]">
                     締切
                     <span
-                      className={`hover:cursor-pointer font-normal ${checkDeadline && 'text-[#0068B6]'}`}>
+                      className={`hover:cursor-pointer font-normal ${checkDeadline && 'text-primary'}`}>
                       {popoverInfo.deadline &&
                         formatShowDeadlineTask(popoverInfo.deadline)}
                     </span>

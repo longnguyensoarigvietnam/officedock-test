@@ -159,7 +159,7 @@ export const SearchMessagesModal = ({
       if (status == SubmitLevelStatus.APPROVAL) {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+            <p className="text-primary font-medium text-sm max-w-full break-all">
               {highlightTitleBySearchTerm(skillName, searchChatMsg)}{' '}
               <span className="text-black text-sm font-normal">
                 のスキルがレベルアップしました！
@@ -170,7 +170,7 @@ export const SearchMessagesModal = ({
       } else {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+            <p className="text-primary font-medium text-sm max-w-full break-all">
               {highlightTitleBySearchTerm(skillName, searchChatMsg)}{' '}
               <span className="text-black text-sm font-normal">
                 のレベルアップの申請についてコメントが届いています。
@@ -467,9 +467,7 @@ export const SearchMessagesModal = ({
           </div>
           <div className="flex gap-2 items-center font-medium text-sm">
             <p className="text-[#77858F]">検索結果</p>
-            <p className="text-[#0068B6]">
-              {searchMessageResults?.count || 0}件
-            </p>
+            <p className="text-primary">{searchMessageResults?.count || 0}件</p>
           </div>
         </div>
         <div
@@ -589,7 +587,7 @@ export const SearchMessagesModal = ({
                                                   </div>
                                                 )}
                                                 <p
-                                                  className={`text-[#0068B6] font-medium text-[14px] break-words break-all max-w-full ${
+                                                  className={`text-primary font-medium text-[14px] break-words break-all max-w-full ${
                                                     file.fileType.includes(
                                                       'image',
                                                     )
@@ -1020,7 +1018,7 @@ export const SearchMessagesModal = ({
                               name="Calendar icon"
                               src="/icons/calendar-time.svg"
                             />
-                            <p className="text-[#0068B6] text-sm font-medium">
+                            <p className="text-primary text-sm font-medium">
                               {highlightTitleBySearchTerm(
                                 messageDetail.schedule?.title || '',
                                 searchChatMsg,
@@ -1028,7 +1026,7 @@ export const SearchMessagesModal = ({
                             </p>
                           </div>
                           <div className="flex gap-1 text-sm font-medium">
-                            <p className="text-[#0068B6] max-w-full break-all">
+                            <p className="text-primary max-w-full break-all">
                               {messageDetail.sender.fullName}{' '}
                               <span className="text-black">
                                 {messageDetail.type ===

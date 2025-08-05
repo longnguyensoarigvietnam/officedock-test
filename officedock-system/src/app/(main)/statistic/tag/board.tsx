@@ -472,40 +472,44 @@ const StatisticTagBoard = () => {
 
   return (
     <div className="pt-[30px] pr-10  font-medium ">
-      <div className="flex items-center gap-5 mb-[33px]">
-        <span className="text-[26px] font-medium relative top-[-2px]">
-          集計
-        </span>
-        <div className="flex justify-center items-center gap-2 ">
-          <Button
-            onClick={() => {
-              router.push(pageRouters.STATISTIC_MANAGEMENT.href);
-            }}
-            variant={'outline'}
-            disabled={isHasLoading}
-            className={`!py-0 !px-0 font-bold w-[80px] h-7 
-              !rounded-[20px] text-xs !text-[#77858F] !bg-transparent !border-[#77858F]`}>
-            カテゴリー
-          </Button>
-          <Button
-            onClick={() => {
-              if (isMyTask) {
-                setIsMyTask(false);
-              }
-            }}
-            variant={'primary'}
-            className={` !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
-            タグ
-          </Button>
-        </div>{' '}
+      <div className="flex items-center justify-between ">
+        <div className="flex items-center gap-5 ">
+          <span className="text-[26px] font-medium relative top-[-2px]">
+            集計
+          </span>
+          <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ">
+            <Button
+              onClick={() => {
+                router.push(pageRouters.STATISTIC_MANAGEMENT.href);
+              }}
+              variant={'outline'}
+              disabled={isHasLoading}
+              className={`!py-0 !px-0 font-bold w-[90px] h-7 
+              !rounded-[20px] text-xs !text-[#77858F] !bg-[#EBF1F7] !border-none`}>
+              カテゴリー
+            </Button>
+            <Button
+              onClick={() => {
+                if (isMyTask) {
+                  setIsMyTask(false);
+                }
+              }}
+              variant={'primary'}
+              className={` !py-0 !px-0 font-bold w-[90px] h-7 !rounded-[20px] text-xs`}>
+              タグ
+            </Button>
+          </div>{' '}
+        </div>
+        <div>
+          <StatisticTagCalendar />
+        </div>
       </div>
+      <div className="w-full my-[30px] border-t border-[#D2DBE1]"></div>
+
       <div>
         <div className="flex justify-between w-full">
           {/* Filter tag */}
           <FilterTag />
-          <div>
-            <StatisticTagCalendar />
-          </div>
         </div>
         <div className="my-8"></div>
       </div>

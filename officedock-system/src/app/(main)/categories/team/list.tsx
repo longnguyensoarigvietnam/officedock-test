@@ -255,7 +255,7 @@ const ListHierarchy = () => {
               ) && (
                 <Button
                   variant="outline"
-                  className="w-[100px] h-[34px] !p-0 bg-white text-[#0068B6]">
+                  className="w-[100px] h-[34px] !p-0 bg-white text-primary">
                   インポート
                 </Button>
               )}

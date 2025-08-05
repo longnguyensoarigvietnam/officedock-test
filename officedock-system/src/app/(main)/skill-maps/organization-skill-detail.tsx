@@ -186,7 +186,7 @@ export const OrganizationSkillDetail = ({
       accessorKey: 'level1',
       header: () => (
         <div className="flex gap-1 justify-start px-5 text-nowrap">
-          <p className="font-medium text-xs text-[#0068B6]">レベル1→2</p>
+          <p className="font-medium text-xs text-primary">レベル1→2</p>
           <p className="font-medium text-xs text-[#77858F]">
             のレベルアップ条件
           </p>
@@ -197,7 +197,7 @@ export const OrganizationSkillDetail = ({
       accessorKey: 'level2',
       header: () => (
         <div className="flex gap-1 justify-start px-5 text-nowrap">
-          <p className="font-medium text-xs text-[#0068B6]">レベル2→3</p>
+          <p className="font-medium text-xs text-primary">レベル2→3</p>
           <p className="font-medium text-xs text-[#77858F]">
             のレベルアップ条件
           </p>
@@ -208,7 +208,7 @@ export const OrganizationSkillDetail = ({
       accessorKey: 'level3',
       header: () => (
         <div className="flex gap-1 justify-start px-5 text-nowrap">
-          <p className="font-medium text-xs text-[#0068B6]">レベル3→</p>
+          <p className="font-medium text-xs text-primary">レベル3→</p>
           <p className="font-medium text-xs text-[#77858F]">
             のレベルアップ条件
           </p>
@@ -321,7 +321,7 @@ export const OrganizationSkillDetail = ({
               </div>
             </div>
             <div className="flex gap-2 items-center w-1/3">
-              <p className="bg-[#0068B6] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
+              <p className="bg-primary text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
                 STEP 2
               </p>
               <div className="!w-full">
@@ -372,7 +372,7 @@ export const OrganizationSkillDetail = ({
               </p>
             </div>
             <div className="flex gap-2 items-center max-w-[33.3%] min-w-0">
-              <p className="bg-[#0068B6] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
+              <p className="bg-primary text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
                 STEP 2
               </p>
               <p className="text-sm font-normal max-w-[calc(100%_-_70px)] break-all">
