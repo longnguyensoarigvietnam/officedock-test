@@ -863,7 +863,7 @@ class ChatMessageViewSet(
         if is_bookmark:
             messages = (
                 messages.filter(bookmark_users=user)
-                .order_by("bookmarks__bookmark_at")
+                .order_by("-bookmarks__bookmark_at")
                 .distinct()
             )
         else:
@@ -880,7 +880,7 @@ class ChatMessageViewSet(
                         )
                         | Q(Q(submit_level__skill__name__icontains=message))
                     )
-                    .order_by("bookmarks__bookmark_at")
+                    .order_by("-bookmarks__bookmark_at")
                     .distinct()
                 )
             else:
