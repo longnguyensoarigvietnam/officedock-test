@@ -8,7 +8,7 @@ const MainRootLayout = ({ children }: { children: React.ReactNode }) => {
       <TermAgreeModal />
       <div className={`relative h-screen flex flex-col min-w-[1280px]  w-full`}>
         <Header />
-        <div className="flex-grow overflow-x-hidden flex w-full 2xl:mt-[76px] h-[calc(100vh_-_76px)]">
+        <div className="flex-grow overflow-x-hidden flex w-full 2xl:mt-[76px] h-[calc(100vh_-_76px)] bg-[#E6F3FB]">
           <Sidebar />
           <div className="w-full">{children}</div>
         </div>

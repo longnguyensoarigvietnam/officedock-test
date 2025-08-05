@@ -23,19 +23,18 @@ const OrganizationPage = () => {
       <div className="flex justify-between items-start">
         <div className="flex gap-5 items-center mb-5 w-fit">
           <p className="text-black font-medium text-[26px]">チーム管理</p>
-          <div className="flex justify-center items-center gap-2 ">
+          <div className="flex justify-center items-center gap-2 bg-white w-fit p-[6px] rounded-[20px] ">
             <Button
               onClick={() => {
                 router.push(pageRouters.ORGANIZATION_MANAGEMENT.href);
               }}
               variant={'outline'}
-              className={`!text-[#77858F] !bg-transparent !border-[#77858F] !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
+              className={`w-[80px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
               チーム作成
             </Button>
             <Button
               variant={'primary'}
-              className={`!py-0 !px-0 font-bold w-[80px] h-7 
-              !rounded-[20px] text-xs`}>
+              className={`w-[80px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px]`}>
               チーム階層
             </Button>
           </div>

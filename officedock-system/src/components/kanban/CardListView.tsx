@@ -20,7 +20,7 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useToast } from '@providers/ToastProvider';
 import { TaskContext } from '@providers/TaskProvider';
 
-import { StatusTask, StatusValueTask } from '@constants/enums';
+import { StatusValueTask } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
 import { ERROR_EXTEND_COLUMN } from '@constants/message';
 import { COLOR_BY_TASK_STATUS } from '@constants';
@@ -40,7 +40,6 @@ interface CardListViewProps {
   handleConfirmCopyTask: (id: number) => void;
   handleUpdateItemInline: (data: Task) => void;
   editTaskInline: (data: DataStatusChangeInline) => void;
-  addTask: (columnId: string) => void;
   disableDraggable?: boolean;
   columnsKanbanData?: Columns;
   setColumnsKanbanData: Dispatch<SetStateAction<Columns | undefined>>;
@@ -60,17 +59,16 @@ interface CardListViewProps {
 const CardListView = ({
   isFetchingTaskBoards,
   columnsKanbanData,
-  setColumnsKanbanData,
+  orderTaskSave,
   numberPagesData,
+  creationDataTaskData,
+  setColumnsKanbanData,
   handleActionEditTask,
   handleConfirmCopyTask,
   handleUpdateItemInline,
   editTaskInline,
-  addTask,
   pinItemToTop,
-  creationDataTaskData,
   setNumberPagesData,
-  orderTaskSave,
 }: CardListViewProps) => {
   const { expanded } = useContext(GlobalStateContext);
   const searchParams = useSearchParams();
@@ -127,14 +125,6 @@ const CardListView = ({
               <div
                 className={`${expanded ? 'w-[800px]' : 'w-[950px]'}`}
                 key={index}>
-                {listByStatus.title == StatusTask.NOT_STARTED && (
-                  <div className="flex text-[#77858F] text-[12px] mb-4">
-                    <p className="w-[59%] border-r-2">タスク名</p>
-                    <p className="w-[15%] border-r-2 text-center">締切</p>
-                    <p className="w-[8%] border-r-2 text-center">重要</p>
-                    <p className="px-5 border-r-2">ステータス</p>
-                  </div>
-                )}
                 {isFetchingTaskBoards ? (
                   <>
                     <div className="flex items-center gap-3 mb-3">
@@ -196,7 +186,6 @@ const CardListView = ({
                     handleConfirmCopyTask={handleConfirmCopyTask}
                     handleUpdateItemInline={handleUpdateItemInline}
                     editTaskInline={editTaskInline}
-                    addTask={addTask}
                     totalCount={count || 0}
                     setColumnsKanbanData={setColumnsKanbanData}
                     columnsKanbanData={columnsKanbanData}

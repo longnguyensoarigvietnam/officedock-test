@@ -165,7 +165,7 @@ const ListChatUsers = ({
     setIsReload,
     setChatRoomNotifications,
   } = useContext(ChatContext);
-  const { isChatFilesUploading, cancelUploadChatFiles } =
+  const { expanded, isChatFilesUploading, cancelUploadChatFiles } =
     useContext(GlobalStateContext);
 
   const socket = useWebSocket();
@@ -1056,7 +1056,7 @@ const ListChatUsers = ({
   ]);
 
   return (
-    <aside className="w-[270px] max-w-[270px] min-w-[270px] border-r-[2px] pl-4 pt-5">
+    <aside className={`w-[270px] max-w-[270px] min-w-[270px] !h-[calc(100vh_-_76px)] ${expanded ? '!rounded-r-[60px]' : '!rounded-r-[30px]'} !bg-[#E6F3FB] pl-4 pt-5`}>
       <div className="relative mb-5 pr-4" ref={searchSectionRef}>
         <InputSearch
           placeholder="全体のキーワードを検索"

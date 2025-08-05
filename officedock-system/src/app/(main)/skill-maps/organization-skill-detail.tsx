@@ -296,7 +296,7 @@ export const OrganizationSkillDetail = ({
 
   return (
     <div
-      className="w-full p-5 bg-[#F8FAFC] rounded-[14px]"
+      className="w-full p-5 bg-[#F8FAFC] rounded-[30px]"
       style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
       <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
         {orgSkillDetail.name}
@@ -457,7 +457,7 @@ export const OrganizationSkillDetail = ({
       </div>
 
       {/* Step information */}
-      <Table className="w-full h-full bg-white !rounded-[6px]">
+      <Table className="w-full h-full bg-white !rounded-[10px]">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>

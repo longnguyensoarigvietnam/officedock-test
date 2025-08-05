@@ -1316,7 +1316,8 @@ export const MessageDetail = ({
                                     )}
                                   </h4>
                                   <Button
-                                    className="!text-black !font-medium !text-xs !bg-[#CED8DE] !rounded-[100px] !w-[86px] !h-[30px] !px-0"
+                                    variant='outline'
+                                    className="!font-medium !text-xs !rounded-[8px] !w-[86px] !h-[30px] !px-0"
                                     onClick={() => {
                                       if (
                                         messageDetail.type ==
@@ -1332,11 +1333,6 @@ export const MessageDetail = ({
                                       }
                                     }}>
                                     確認する
-                                    <ImageRound
-                                      name="Filter extend icon"
-                                      src={'/icons/arrow-down.svg'}
-                                      className={`w-4 h-4 cursor-pointer -rotate-90`}
-                                    />
                                   </Button>
                                 </div>
                               </div>
