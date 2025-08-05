@@ -295,3 +295,7 @@ input[type='checkbox']:focus {
 .transform-component-module_wrapper__SPB86 {
   width: 100% !important;
 }
+
+.clip-diagonal-left{
+  clip-path: polygon(100% 0, 0 0, 0 100%);
+}

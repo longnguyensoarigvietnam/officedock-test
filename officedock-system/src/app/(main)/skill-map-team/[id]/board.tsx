@@ -1,12 +1,11 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 import Button from '@components/common/Button';
-import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
+import { SkillMapBanner } from '@components/skillMap/SkillMapBanner';
 
 import { pageRouters } from '@constants/routers';
 
@@ -65,9 +64,9 @@ const BoardSkillUser = () => {
   return (
     <>
       {/* Navigate buttons */}
-      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#EBF1F7]">
+      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#E6F3FB]">
         <div className="flex mb-[30px] justify-between">
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center bg-white w-fit p-[6px] rounded-[20px]">
             <Button
               variant={isMapOption ? 'primary' : 'outline'}
               onClick={() => {
@@ -76,7 +75,7 @@ const BoardSkillUser = () => {
                 params.set('is_map', 'true');
                 router.replace(`?${params.toString()}`);
               }}
-              className={`w-[100px] !p-0 text-xs h-[28px] border-transparent text-white !rounded-[20px] ${isMapOption ? '' : '!text-[#77858F] !bg-transparent !border-[#77858F] border-[1px]'}`}>
+              className={`w-[100px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px] ${isMapOption ? '' : '!text-[#77858F] !bg-[#EBF1F7]'}`}>
               スキルマップ
             </Button>
             <Button
@@ -87,12 +86,15 @@ const BoardSkillUser = () => {
                 params.set('is_skill', 'true');
                 router.replace(`?${params.toString()}`);
               }}
-              className={` w-[120px] !p-0 text-xs h-[28px]  !rounded-[20px] ${!isMapOption ? '' : '!text-[#77858F] !bg-transparent !border-[#77858F] border-[1px]'}`}>
+              className={` w-[120px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px] ${!isMapOption ? '' : '!text-[#77858F] !bg-[#EBF1F7]'}`}>
               マイスキル
             </Button>
           </div>
           <Link href={`${pageRouters.SKILL_MAP_TEAM.href}?tabId=${tabId || 0}`}>
-            <Button className="w-[130px] !p-0 text-sm h-[34px] !border-transparent !text-[#77858F] bg-white rounded-[6px]">
+            <Button
+              variant="secondary"
+              className="w-[130px] !p-0 text-sm h-[34px] !border-transparent !text-[#77858F] bg-white rounded-[6px]"
+              style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
               メンバー一覧{' '}
               <ImageRound
                 src="/icons/detail-task.svg"
@@ -110,75 +112,11 @@ const BoardSkillUser = () => {
 
       <div className="px-10 mb-8">
         {/* Banner */}
-        <div className="w-full h-[189px] relative mb-5">
-          <Image
-            alt="Mountains"
-            src="/images/skill-banner.jpg"
-            fill
-            style={{ height: '100%', width: '100%' }}
-            className=" rounded-[14px]"
-          />
-
-          <div className="absolute w-full h-full top-0 left-0 flex justify-between gap-5 pl-[50px] pr-[30px] pt-[30px]">
-            <div className=" h-full flex gap-5 items-start w-[395px]">
-              <CustomUserAvatar
-                avatarUrl={skillMapInfo?.user?.avatar || ''}
-                avatarColor={skillMapInfo?.user?.avatarColor || ''}
-                size={70}
-              />
-              <div className="flex flex-col items-start justify-center">
-                <p className="text-sm font-medium text-white max-w-full break-all line-clamp-2">
-                  {skillMapInfo?.user?.organizations?.name || ''}
-                </p>
-                <p className="text-black font-medium text-[26px] max-w-[300px] break-all line-clamp-2">
-                  {skillMapInfo?.user.fullName}
-                </p>
-              </div>
-            </div>
-            <div className="text-xs font-medium text-white w-fit flex-grow flex-shrink-0">
-              <div className="bg-[#FFFFFFBF] w-full h-[104px] mt-3 rounded-md px-[30px] py-[25px] flex flex-col gap-2">
-                <div className="flex items-center gap-[10px] text-black font-medium text-base">
-                  <Image
-                    src="/icons/completed.svg"
-                    width={12}
-                    height={12}
-                    alt="completed-icon"
-                  />
-                  <p>直近1ヶ月で大カテゴリーAのタスクを60時間行いました</p>
-                </div>
-                <div className="flex items-center gap-[10px] text-black font-medium text-base">
-                  <Image
-                    src="/icons/completed.svg"
-                    width={12}
-                    height={12}
-                    alt="completed-icon"
-                  />
-                  <p>企画提案力のレベルアップが近づいています！</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div
-            className={`absolute z-20 top-1/2 -translate-y-1/2 left-[-16px] h-[30px] w-[30px] flex items-center justify-center rounded-full bg-white
-              ${skillMapInfo?.prevUser ? 'hover:cursor-pointer' : 'hover:cursor-not-allowed'}`}
-            onClick={() => handleNavigateUser(skillMapInfo?.prevUser)}>
-            <ImageRound
-              src="/icons/chevron-left-calendar.svg"
-              name={'left'}
-              className="h-fit w-fit"
-            />
-          </div>
-          <div
-            className={`absolute z-20 top-1/2 -translate-y-1/2 rotate-180 right-[-16px] h-[30px] w-[30px] flex items-center justify-center rounded-full bg-white
-              ${skillMapInfo?.nextUser ? 'hover:cursor-pointer' : 'hover:cursor-not-allowed'}`}
-            onClick={() => handleNavigateUser(skillMapInfo?.nextUser)}>
-            <ImageRound
-              src="/icons/chevron-left-calendar.svg"
-              name={'right'}
-              className="h-fit w-fit"
-            />
-          </div>
-        </div>
+        <SkillMapBanner
+          skillMapInfo={skillMapInfo}
+          handleNavigateUser={handleNavigateUser}
+          hasNavigateOtherSkillMap={true}
+        />
 
         {isMapOption ? (
           <SkillMapDetailByUser detailSkillData={detailSkillData} />

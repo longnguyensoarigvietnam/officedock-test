@@ -121,9 +121,6 @@ const ActionsEventModal = ({
   onSubmit,
 }: ActionsEventModalProps) => {
   // Creation data
-  const [dataOptionsEventTypes, setDataOptionsEventTypes] = useState<
-    OptionDropdownType[]
-  >([]);
   const [dataOptionsOrganizations, setDataOptionsOrganizations] = useState<
     OptionDropdownType[]
   >([]);
@@ -500,13 +497,6 @@ const ActionsEventModal = ({
   // Get option list for event types, participants
   useEffect(() => {
     if (creationDataEventCalendar) {
-      setDataOptionsEventTypes(
-        creationDataEventCalendar.types.map((org) => ({
-          label: org,
-          value: org,
-        })),
-      );
-
       const eventMembers = creationDataEventCalendar.members.map((org) => ({
         id: `${EventParticipantType.USER}-${org.id}`,
         fullName: org.fullName,
@@ -1694,36 +1684,12 @@ const ActionsEventModal = ({
               )}
             </div>
           </div>
-          {/* Event type */}
-          <div className="flex justify-between items-center">
-            <p className="w-fit font-medium text-[14px]">予定カテゴリ</p>
-            <div className="w-[513px]">
-              <Controller
-                control={control}
-                name={'type'}
-                render={({ field: { value, onChange } }) => (
-                  <Dropdown
-                    className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
-                    classNameTextData="!text-xs"
-                    classNameOption="!text-xs"
-                    options={dataOptionsEventTypes}
-                    selectedOption={dataOptionsEventTypes.find(
-                      (element) =>
-                        element.value === (value as OptionDropdownType).value,
-                    )}
-                    onChange={onChange}
-                    disabled={isDisabled}
-                  />
-                )}
-              />
-            </div>
-          </div>
           {/* Event category */}
-          <div className="flex justify-between items-start">
-            <p className="w-fit font-medium text-[14px]">業務の種類</p>
-            <div className="w-[513px]">
-              <div className="mb-2">
-                <Controller
+          <div className="flex justify-between items-center">
+            <p className="w-fit font-medium text-[14px]">予定カテゴリー</p>
+            <div className="w-[513px] space-y-2">
+              <p className='text-[#7F8991] font-medium text-sm h-[32px] flex items-end leading-none'>カレンダー</p>
+              <Controller
                   control={control}
                   name={'largeCategory'}
                   render={({ field: { value, onChange } }) => (
@@ -1751,7 +1717,6 @@ const ActionsEventModal = ({
                     />
                   )}
                 />
-              </div>
               {watch('largeCategory')?.value && (
                 <div className="mb-2">
                   <Controller

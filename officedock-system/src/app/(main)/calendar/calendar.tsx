@@ -743,7 +743,7 @@ const EventCalendar = () => {
             return (
               <div className="rounded-sm hover:cursor-pointer mb-1 overflow-hidden">
                 <p
-                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-error font-semibold px-1 text-[12px]`}>
+                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-[#E95062] px-1 text-[12px]`}>
                   {eventContent.event.title != 'null'
                     ? eventContent.event.title
                     : ''}
@@ -753,7 +753,7 @@ const EventCalendar = () => {
           }
 
           return (
-            <div className="mb-1 hover:cursor-pointer">
+            <div className={`my-1 hover:cursor-pointer ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-all-day-event'}`}>
               <div
                 className={` text-black bg-white overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
                 style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
@@ -788,7 +788,7 @@ const EventCalendar = () => {
         }
         return (
           <div
-            className={`overflow-hidden p-1.5 ${isMySchedule && isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
+            className={`overflow-hidden p-1.5 ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-event'} ${isMySchedule && isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
             {checkShowUserAvatar(
               eventContent.event.extendedProps.type,
               eventContent.event.extendedProps.participants,
@@ -820,7 +820,7 @@ const EventCalendar = () => {
                     ~{' '}
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                   </p>
-                  <p className={` text-black text-[12px] font-normal`}>
+                  <p className={` text-black text-[12px] font-normal break-all`}>
                     {eventContent.event.extendedProps?.location?.name}
                   </p>
                 </>
@@ -829,7 +829,7 @@ const EventCalendar = () => {
                   {isMoreThanThirtyMinutes(eventContent.timeText) && (
                     <>
                       <p>{eventContent.timeText}</p>
-                      <p className={` text-black text-[12px] font-normal`}>
+                      <p className={`text-black text-[12px] font-normal break-all`}>
                         {eventContent.event.extendedProps?.location?.name}
                       </p>
                     </>
@@ -847,7 +847,7 @@ const EventCalendar = () => {
             return (
               <div className="rounded-sm hover:cursor-pointer mb-1 overflow-hidden">
                 <p
-                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-error font-semibold px-1 text-[12px]`}>
+                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-[#E95062] px-1 text-[12px]`}>
                   {eventContent.event.title != 'null'
                     ? eventContent.event.title
                     : ''}
@@ -862,7 +862,7 @@ const EventCalendar = () => {
             end.setDate(end.getDate() - 1);
           }
           return (
-            <div className="mb-1 hover:cursor-pointer">
+            <div className={`my-1 hover:cursor-pointer ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-all-day-event'}`}>
               <div
                 className={`text-black bg-white flex gap-2 items-center overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
                 style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
@@ -882,7 +882,7 @@ const EventCalendar = () => {
 
         return (
           <div
-            className={`overflow-hidden ${isMySchedule && isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
+            className={`overflow-hidden ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-event'} ${isMySchedule && isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
             <div className={` text-black font-medium px-2 pt-1 text-[14px]`}>
               <p className="truncate max-w-[calc(100%)] font-semibold min-h-5">
                 {eventContent.event.title != 'null'
@@ -903,12 +903,12 @@ const EventCalendar = () => {
                     ~{' '}
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                   </p>
-                  <p>{eventContent.event.extendedProps?.location?.name}</p>
+                  <p className='text-black text-[12px] font-normal break-all'>{eventContent.event.extendedProps?.location?.name}</p>
                 </>
               ) : (
                 <>
                   {isMoreThanThirtyMinutes(eventContent.timeText) && (
-                    <div className="text-black text-[12px] font-normal">
+                    <div className="text-black text-[12px] font-normal break-all">
                       <p>{eventContent.timeText}</p>
                       <p>{eventContent.event.extendedProps?.location?.name}</p>
                     </div>
@@ -934,7 +934,7 @@ const EventCalendar = () => {
             return (
               <div className="rounded-sm hover:cursor-pointer mb-1 overflow-hidden">
                 <p
-                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-error font-semibold px-1 text-[12px]`}>
+                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-[#E95062] px-1 text-[12px]`}>
                   {eventContent.event.title != 'null'
                     ? eventContent.event.title
                     : ''}
@@ -945,7 +945,7 @@ const EventCalendar = () => {
 
           return (
             <div
-              className={`fc-daygrid-event mb-1 ${eventContent.event.allDay && 'hover:cursor-pointer'}`}>
+              className={`fc-daygrid-event mb-1 ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-all-day-event'} ${eventContent.event.allDay && 'hover:cursor-pointer'}`}>
               <div
                 className={`text-black bg-white overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
                 style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
@@ -979,7 +979,7 @@ const EventCalendar = () => {
           );
         }
         return (
-          <div className="rounded-sm hover:cursor-pointer mb-1 overflow-hidden">
+          <div className={`  rounded-sm hover:cursor-pointer mb-1 overflow-hidden`}>
             <div className="flex items-center gap-1">
               <div
                 className={`text-black py-0.5 flex items-center gap-1 font-normal text-[12px]`}>
@@ -2451,7 +2451,8 @@ const EventCalendar = () => {
                 <div>
                   <Button
                     type="button"
-                    className="!self-center !text-[#0068B6] !bg-white !w-[48px] !h-[34px] !rounded-[6px] !text-[14px] !font-medium !p-[8px] !border-none"
+                    variant='secondary'
+                    className="!self-center !text-primary !bg-white !w-[48px] !h-[34px] !rounded-[6px] !text-[14px] !font-medium !p-[8px] !border-none"
                     onClick={handleNavigateToTodayView}>
                     {showCurrentViewButtonContent()}
                   </Button>
@@ -2508,9 +2509,9 @@ const EventCalendar = () => {
                     onClick={() => setShowSidebar((prev) => !prev)}>
                     <ImageRound
                       className="w-8 h-8 ml-2"
-                      src="/icons/multi-users.svg"
+                      src="/icons/calendar-multi-users.svg"
                       border="full"
-                      name="Avatar user"
+                      name="Calendar multiple users"
                     />
                     <ImageRound
                       className="w-4 h-4 -rotate-90 ml-1"

@@ -33,7 +33,7 @@ const EventActionTypeModal = memo(
       <Modal
         open={open}
         isOutSideAction={false}
-        className="font-primary bg-white w-[330px] !rounded-2xl py-4"
+        className="font-primary bg-white w-[330px] !rounded-[14px] py-4"
         onClose={onCancel}
         title={`定期的な予定の${openEventActionTypeModal.type == ActionsEvent.EDIT ? '編集' : '削除'}`}>
         <div className="space-y-4">

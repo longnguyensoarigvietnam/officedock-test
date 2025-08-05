@@ -322,16 +322,16 @@ export const PAGE_SIZE_OPTIONS = [
 ];
 
 export const HIERARCHY_COLOR_LIST = [
-  '#D7576A',
-  '#F0865F',
-  '#2E9267',
-  '#2E9267',
-  '#826AC4',
-  '#FC8EA2',
-  '#EDC45D',
-  '#70CB7E',
-  '#45AFD9',
-  '#899FEB',
+  '#F86683',
+  '#F89A7E',
+  '#51C4B6',
+  '#6C92F4',
+  '#A992FF',
+  '#FA81C1',
+  '#FFCC40',
+  '#86DA91',
+  '#82C5F1',
+  '#B0B8F2',
 ];
 
 export const ALL_TEAMS_OPTION = 'すべてのチーム';

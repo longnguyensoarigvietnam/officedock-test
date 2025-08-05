@@ -584,6 +584,33 @@ export const showModalHeaderBackgroundColorByTime = () => {
   }
   return colorClassName;
 };
+
+export const showSkillMapImageByTime = () => {
+  const hourStr = new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo',
+    hour: 'numeric',
+    hour12: false,
+  }).format(new Date());
+
+  const hour = Number(hourStr.substring(0, hourStr.length - 1));
+  let imgSrc = '';
+
+  switch (true) {
+    case hour >= 6 && hour < 11:
+      imgSrc = '/images/morning-map.png';
+      break;
+    case hour >= 11 && hour < 15:
+      imgSrc = '/images/noon-map.png';
+      break;
+    case hour >= 15 && hour < 18:
+      imgSrc = '/images/afternoon-map.png';
+      break;
+    default:
+      imgSrc = '/images/night-map.png';
+  }
+  return imgSrc;
+};
+
 export function generateOptionsCount(
   inputNumber: number,
 ): OptionDropdownType[] {

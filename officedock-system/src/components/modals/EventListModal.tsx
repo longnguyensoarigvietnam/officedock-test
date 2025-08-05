@@ -189,7 +189,7 @@ export const EventListModal = ({
   return (
     <div className="z-50">
       <div
-        className={`p-4 bg-white border custom-popover w-[330px] border-gray-200 shadow-lg font-primary max-h-[330px] overflow-y-auto !rounded-2xl py-4`}
+        className={`p-4 bg-white border custom-popover w-[330px] border-gray-200 shadow-lg font-primary max-h-[330px] overflow-y-auto !rounded-[14px] py-4`}
         ref={popoverRef}
         style={{
           position: 'absolute',
