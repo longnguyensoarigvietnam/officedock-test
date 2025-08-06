@@ -58,6 +58,7 @@ import MessageDetailQuoteText from './MessageDetailQuoteText';
 export type MessageDetailProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
   messageDetail: ChatMessageResponse;
+  uuidQuote: string;
   msgEditing?: string;
   dashboardMembers: ChatDashboardMember[];
   highlightedMessageId: string | null;
@@ -79,6 +80,7 @@ export const MessageDetailQuote = ({
   messageDetail,
   dashboardMembers,
   highlightedMessageId,
+  uuidQuote,
   setDataPreviewFile,
   handleActionEditTask,
 }: MessageDetailProps) => {
@@ -232,6 +234,7 @@ export const MessageDetailQuote = ({
                     key={`${index}-${i}-msg`}
                     chatRoomDetail={chatRoomDetail}
                     messageDetail={foundQuote}
+                    uuidQuote={uuidQuote}
                     dashboardMembers={dashboardMembers}
                     highlightedMessageId={highlightedMessageId}
                     setDataPreviewFile={setDataPreviewFile}
@@ -252,6 +255,7 @@ export const MessageDetailQuote = ({
                 <div className={`${index !== 0 && 'mt-5'}`}>
                   <MessageDetailQuoteText
                     key={`${index}-${i}-textquote`}
+                    uuidQuote={uuidQuote}
                     messageDetail={foundQuote}
                     dashboardMembers={dashboardMembers}
                     title={dataTitle}

@@ -242,6 +242,7 @@ const KanbanBoardTaskTeam = () => {
 
         setDataTotalStatus(newTotalStatus);
         setIsHasNext(data.hasNext);
+        setPage(1);
       }
     },
     onError: () => {
@@ -309,7 +310,8 @@ const KanbanBoardTaskTeam = () => {
         isHasNext &&
         chatContainer.clientWidth + Math.abs(chatContainer.scrollLeft) >=
           chatContainer.scrollWidth - 10 &&
-        !initialLoad
+        !initialLoad &&
+        !isLoadingDataTask
       ) {
         getDataListTaskTeamMore(page + 1);
       }

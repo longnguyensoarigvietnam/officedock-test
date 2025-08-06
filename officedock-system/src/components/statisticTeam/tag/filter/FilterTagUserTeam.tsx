@@ -12,6 +12,7 @@ import { NO_DATA_AVAILABLE } from '@constants';
 import Checkbox from '@components/common/Checkbox';
 import { OptionDropdownType } from '@interfaces/common';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import Button from '@components/common/Button';
 
 type Props = {
   open: boolean;
@@ -39,6 +40,7 @@ const FilterTagUserTeam = ({
     remainingCountUser,
     listMemberTeam,
     isCheckCompare,
+    isHasLoading,
     setOrderingOptions,
     setIsLoadingLarge,
     setIsLoadingMedium,
@@ -54,6 +56,9 @@ const FilterTagUserTeam = ({
   const [dataOptionsUserIds, setDataOptionsUserIds] = useState<
     OptionDropdownType[]
   >([]);
+  const [selectedOption, setSelectedOption] = useState<OptionDropdownType[]>(
+    [],
+  );
 
   useEffect(() => {
     if (listMemberTeam) {
@@ -69,20 +74,30 @@ const FilterTagUserTeam = ({
       );
     }
   }, [listMemberTeam]);
+
+  useEffect(() => {
+    if (orderingOptions) {
+      setSelectedOption(orderingOptions.user_ids);
+    }
+  }, [orderingOptions, open]);
+
   const handleChangeUser = (selected: OptionDropdownType) => {
-    let updatedUserIds = [];
-    const currentTagIds = orderingOptions?.user_ids || [];
-    const foundItemIndex = currentTagIds.findIndex(
+    const foundItemIndex = selectedOption.findIndex(
       (tag) => tag.value == selected.value,
     );
     if (foundItemIndex == -1) {
-      updatedUserIds = [...currentTagIds, selected];
+      setSelectedOption([...selectedOption, selected]);
     } else {
-      updatedUserIds = currentTagIds.filter(
-        (tag) => tag.value != selected.value,
+      setSelectedOption(
+        selectedOption.filter((op) => op.value != selected.value),
       );
     }
+  };
 
+  const handleReset = () => {
+    setSelectedOption([]);
+  };
+  const handleSearch = () => {
     setIsLoadingLarge(true);
     setIsLoadingMedium(true);
     setIsLoadingSmall(true);
@@ -95,14 +110,7 @@ const FilterTagUserTeam = ({
     }
     setOrderingOptions((prev) => ({
       tag_ids: prev?.tag_ids || [],
-      user_ids: updatedUserIds || [],
-    }));
-  };
-
-  const handleReset = () => {
-    setOrderingOptions((prev) => ({
-      tag_ids: prev?.tag_ids || [],
-      user_ids: [],
+      user_ids: selectedOption,
     }));
   };
 
@@ -171,9 +179,10 @@ const FilterTagUserTeam = ({
                                   <div className="w-5">
                                     <Checkbox
                                       onChange={() => handleChangeUser(option)}
-                                      classLabel="break-words max-w-[300px] line-clamp-3 !text-sm"
+                                      classLabel={`break-words max-w-[300px] line-clamp-3 !text-sm `}
+                                      disable={isHasLoading}
                                       isChecked={
-                                        orderingOptions?.user_ids?.find(
+                                        selectedOption.find(
                                           (selectedOption) =>
                                             selectedOption.value ==
                                             option.value,
@@ -205,6 +214,20 @@ const FilterTagUserTeam = ({
                           </div>
                         )}
                       </div>
+                    </div>
+                    <div className="flex justify-center gap-[10px] mt-4 ">
+                      <Button
+                        variant="outline"
+                        onClick={() => onOpen()}
+                        className="h-9">
+                        キャンセル
+                      </Button>
+                      <Button
+                        onClick={handleSearch}
+                        className="h-9"
+                        disabled={isHasLoading}>
+                        絞り込む
+                      </Button>
                     </div>
                   </div>
                 </PopoverPanel>

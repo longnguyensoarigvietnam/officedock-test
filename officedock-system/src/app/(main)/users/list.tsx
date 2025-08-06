@@ -28,6 +28,7 @@ import {
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
+  ERROR_UPDATE_ORGANIZATION_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
@@ -85,7 +86,8 @@ const ListUsers = () => {
   const [userEditId, setUserEditId] = useState<number | null>(null);
   const [userEditDetail, setUserEditDetail] = useState<User | null>(null);
 
-  const [resetOrganizationFields, setResetOrganizationFields] = useState<boolean>(false)
+  const [resetOrganizationFields, setResetOrganizationFields] =
+    useState<boolean>(false);
 
   // Error messages
   const [errorMessages, setErrorMessages] = useState<{
@@ -328,7 +330,7 @@ const ListUsers = () => {
           password: '',
           fullName: '',
         });
-        setResetOrganizationFields(false)
+        setResetOrganizationFields(false);
       }
     },
     onError: ({
@@ -355,15 +357,19 @@ const ListUsers = () => {
 
       // Flatten remaining keys and check if any unknown error exists
       const hasOtherErrors = Object.keys(rest).length > 0;
-      if(Object.keys(rest).includes('organizationIds')){
-        setResetOrganizationFields(true)
-      }
-
-      if (hasOtherErrors) {
+      if (Object.keys(rest).includes('organizationIds')) {
+        setResetOrganizationFields(true);
         showToast({
           variant: 'error',
-          description: ERROR_UPDATE_MESSAGE,
+          description: ERROR_UPDATE_ORGANIZATION_MESSAGE,
         });
+      } else {
+        if (hasOtherErrors) {
+          showToast({
+            variant: 'error',
+            description: ERROR_UPDATE_MESSAGE,
+          });
+        }
       }
     },
     onSettled: () => {
@@ -446,7 +452,7 @@ const ListUsers = () => {
           password: '',
           fullName: '',
         });
-        setResetOrganizationFields(false)
+        setResetOrganizationFields(false);
       },
       onError: ({
         response,
@@ -838,7 +844,7 @@ const ListUsers = () => {
                 password: '',
                 fullName: '',
               });
-              setResetOrganizationFields(false)
+              setResetOrganizationFields(false);
             }}
             onDelete={(userToDelete: User) => {
               handleOpenDeleteUserModal(userToDelete);
