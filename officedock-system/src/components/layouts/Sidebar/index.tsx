@@ -372,7 +372,7 @@ const Sidebar = ({ className }: Props) => {
         tabs={expanded ? tabSidebar : [tabSidebar[0]]}
         expanded={expanded}
         underline={false}
-        showNotificationDot={true}
+        showNotificationDot={false}
         full
         className="h-full [&_.tab-button]:!text-xs [&_.tab-button]:!font-bold [&_.tab-button]:!py-[unset] [&_.tab-button]:!px-[unset] [&_.tab-button>span]:py-2">
         <TabPanel key={0} className={'h-full relative'}>
