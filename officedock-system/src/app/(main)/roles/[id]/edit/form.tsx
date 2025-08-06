@@ -223,7 +223,7 @@ const EditRoleForm = () => {
         </div>
       </div>
       <form
-        className="bg-[#F8FAFC] rounded-[14px] p-5"
+        className="bg-[#F8FAFC] rounded-[30px] p-5"
         style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
         <div className="mb-5">
           <div className="flex gap-2 items-center">
@@ -249,12 +249,12 @@ const EditRoleForm = () => {
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         </div>
         <div
-          className={`max-h-[calc(100vh_-_320px)] ring-1 ring-gray-200 overflow-x-auto rounded-lg bg-white`}>
-          <div className="flex bg-[#F8FAFC] w-full sticky top-0 z-10 rounded-tl-lg rounded-tr-lg [&>div]:border-b-[1px] [&>div]:border-[#D2DBE1] [&>div]:bg-[#F8FAFC] ">
+          className={`max-h-[calc(100vh_-_320px)] ring-1 ring-gray-200 overflow-x-auto rounded-[10px] bg-white`}>
+          <div className="flex bg-[#F8FAFC] w-full sticky top-0 z-10 rounded-tl-[10px] rounded-tr-[10px] [&>div]:border-b-[1px] [&>div]:border-[#D2DBE1] [&>div]:bg-[#F8FAFC] ">
             <div className="w-1/2 h-12 flex items-center justify-start pl-3 text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
               対応機能
             </div>
-            <div className="w-1/2 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
+            <div className="w-1/2 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs border-[#D2DBE1]">
               権限
             </div>
           </div>
@@ -262,11 +262,11 @@ const EditRoleForm = () => {
             return (
               <div
                 key={index}
-                className="flex w-full bg-white relative [&>div]:border-b-[1px] [&>div]:border-[#D2DBE1]">
+                className={`flex w-full bg-white relative ${index != rows.length - 1 && '[&>div]:border-b-[1px]'} [&>div]:border-[#D2DBE1]`}>
                 <div className="w-1/2 flex items-center sticky left-0 z-[9] bg-white justify-start px-3 border-r-[1px] border-[#D2DBE1] text-[16px] font-medium ">
                   <div className="w-full">{row.screenLabel}</div>
                 </div>
-                <div className="w-1/2 px-3 z-[8] py-2 border-r-[1px] border-[#D2DBE1]">
+                <div className="w-1/2 px-3 z-[8] py-2 border-[#D2DBE1]">
                   <TableDropdown
                     className="w-full !h-10"
                     valueClassName="rounded-[6px] !border-[#77858F]"

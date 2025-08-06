@@ -12,6 +12,7 @@ import Dropdown from '@components/common/Dropdown';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import {
+  EventWorkCategory,
   ItemScheduleType,
   ItemStartType,
   PermissionsSystem,
@@ -40,6 +41,7 @@ import {
   getJapaneseWeekDay,
 } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
+import ClockIconWithDynamicColor from '@components/common/ClockIcon';
 
 interface ListViewItemProps {
   id: string;
@@ -80,30 +82,6 @@ const ListViewItem = ({
     OptionDropdownType[]
   >([]);
 
-  let statusStyle = '';
-
-  // TODO: Because the number of states can change.
-  // So, determining the color code from the enum is unreasonable.
-  // This is a temporary solution as there is no defined color code, this will be changed and updated
-  switch (content.status && content.status.id) {
-    case StatusValueTask.NOT_STARTED:
-      statusStyle = '!bg-[#A3EBF0]';
-      break;
-    case StatusValueTask.IN_PROGRESS:
-      statusStyle = '!bg-[#92E9AF]';
-      break;
-    case StatusValueTask.CONFIRMING:
-      statusStyle = '!bg-[#FCCF79]';
-      break;
-    case StatusValueTask.COMPLETED:
-      statusStyle = '!bg-[#F58383]';
-      break;
-    case StatusValueTask.MY_ROUTINE:
-      statusStyle = '!bg-[#EBF1F7]';
-      break;
-    default:
-      break;
-  }
   const {
     watch,
     control,
@@ -321,6 +299,11 @@ const ListViewItem = ({
     return title;
   };
 
+  const largeColor =
+    content.categories &&
+    content.categories.find((item) => item.type === EventWorkCategory.LARGE)
+      ?.color;
+
   return (
     <>
       <Draggable
@@ -356,14 +339,18 @@ const ListViewItem = ({
                 <div className="flex items-center w-3/4 gap-2">
                   {isShowSchedule ? (
                     <div className="h-full min-w-4">
-                      <ImageRound
-                        src="/icons/clock.svg"
-                        name="Clock icon"
-                        className="text-gray-400 w-4 h-4"
+                      <ClockIconWithDynamicColor
+                        size={16}
+                        color={largeColor || '#228CDB'}
                       />
                     </div>
                   ) : (
-                    <div className="w-4 min-w-4"></div>
+                    <div
+                      className={`w-4 min-w-4 flex items-center justify-center`}>
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{ background: largeColor }}></div>
+                    </div>
                   )}
                   <p className="font-bold text-sm max-w-[calc(100%_-_16px)] truncate">
                     {content.title}
@@ -388,7 +375,7 @@ const ListViewItem = ({
                             : `/icons/unpin-task.svg`
                         }
                         name="Pin icon"
-                        className=" text-gray-400 cursor-pointer w-3 h-3"
+                        className=" text-gray-400 cursor-pointer w-[14px] h-[14px]"
                       />
                     </div>
                   </DynamicTooltip>
@@ -444,13 +431,13 @@ const ListViewItem = ({
                 {content.status?.id !== StatusValueTask.MY_ROUTINE ? (
                   <>
                     <p
-                      className={`hover:cursor-pointer ${checkDeadline && 'text-[#0068B6]'} border-x-2 w-2/5 text-center`}>
+                      className={`hover:cursor-pointer ${checkDeadline && 'text-primary'} border-x-2 w-2/5 text-center`}>
                       {content.deadline &&
                         formatShowDeadlineTask(content.deadline)}
                     </p>
                     {content.isImportant ? (
                       <div className="w-1/5 border-r-2 flex items-center justify-center">
-                        <p className="text-center font-medium text-[#0068B6] bg-[#DFE6EA] rounded w-fit px-1 py-0.5">
+                        <p className="text-center font-medium text-primary bg-[#DFE6EA] rounded w-fit px-1 py-0.5">
                           重要
                         </p>
                       </div>
@@ -474,7 +461,7 @@ const ListViewItem = ({
                               !isPermissionUpdate ||
                               content.status?.id === StatusValueTask.MY_ROUTINE
                             }
-                            className={`!py-1 border-none disabled:opacity-100  !shadow-none ${statusStyle}`}
+                            className={`!py-1 border-none disabled:opacity-100 !shadow-none !bg-[#EBF1F7]`}
                             styleClass={{
                               fontSize: '12px',
                               lineHeight: '18px',

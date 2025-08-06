@@ -2074,7 +2074,7 @@ const LineChartByTeamTagsCompare = ({
       style={{
         boxShadow: '0px 4px 10px 0px #0000000D',
       }}
-      className="p-[30px] bg-[#F8FAFC] mt-5 rounded-[14px]">
+      className="p-[30px] bg-[#F8FAFC] mt-5 rounded-[30px]">
       {/* Header & sort */}
       <div className="flex justify-between">
         <div className="flex items-center gap-x-5">
@@ -2116,7 +2116,7 @@ const LineChartByTeamTagsCompare = ({
               {/* Column Chart 1 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && !selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && !selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   チーム
                 </div>
                 <div className="mt-4 w-full">
@@ -2154,7 +2154,7 @@ const LineChartByTeamTagsCompare = ({
               {/* Column Chart 2 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   大カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -2190,7 +2190,7 @@ const LineChartByTeamTagsCompare = ({
               {/* Column Chart 3 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && selectedMedium && !selectedSmall ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && selectedLarge && selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   中カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -2228,7 +2228,7 @@ const LineChartByTeamTagsCompare = ({
               {/* Column Chart 4 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && selectedMedium && selectedSmall ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && selectedLarge && selectedMedium && selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   小カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -2259,7 +2259,7 @@ const LineChartByTeamTagsCompare = ({
               <div>
                 {startDate && endDate && (
                   <div className="flex items-center mb-3 gap-2">
-                    <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                    <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                       基準期間
                     </p>
                     <div className="text-black text-xs font-normal flex items-center gap-[1px]">
@@ -2281,7 +2281,7 @@ const LineChartByTeamTagsCompare = ({
                 )}
                 {startDateCompare && endDateCompare && (
                   <div className="flex items-center mb-3 gap-2">
-                    <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                    <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                       比較期間
                     </p>
                     <div className="text-black text-xs font-normal flex items-center gap-[1px]">
@@ -2457,7 +2457,7 @@ const LineChartByTeamTagsCompare = ({
               selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <>
                 <div className="flex gap-8 items-center justify-end flex-wrap mb-3">
-                  <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                  <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                     基準
                   </p>
                   {standardLegendList.map((label, index) => {
@@ -2474,7 +2474,7 @@ const LineChartByTeamTagsCompare = ({
                   })}
                 </div>
                 <div className="flex gap-8 items-center justify-end flex-wrap">
-                  <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                  <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                     比較
                   </p>
                   {compareLegendList.map((label, index) => {

@@ -3,7 +3,7 @@ import { memo } from 'react';
 
 export type LevelUpCompletionModalProps = {
   open: boolean;
-  selectRejectOption: boolean
+  selectRejectOption: boolean;
   onClose: () => void;
 };
 
@@ -24,7 +24,7 @@ const LevelUpCompletionModal = memo(
             </p>
           </div>
           <p
-            className="text-[#0068B6] text-[13px] font-medium flex justify-center hover:cursor-pointer"
+            className="text-primary text-[13px] font-medium flex justify-center hover:cursor-pointer"
             onClick={onClose}>
             閉じる
           </p>
@@ -34,4 +34,4 @@ const LevelUpCompletionModal = memo(
   },
 );
 
-export default LevelUpCompletionModal
+export default LevelUpCompletionModal;

@@ -802,7 +802,7 @@ const ActionsSkillMapModal = ({
 
     return (
       <div>
-        <p className="text-[#0068B6] text-md font-medium mt-3">{levelTitle}</p>
+        <p className="text-primary text-md font-medium mt-3">{levelTitle}</p>
         <p className="text-sm font-medium mt-3">レベルアップ条件</p>
         <div className="flex gap-3 items-center mt-3">
           {' '}
@@ -952,10 +952,10 @@ const ActionsSkillMapModal = ({
   return (
     <Drawer
       open={open}
-      className="font-primary bg-white h-screen w-[700px] !px-0 !rounded-tl-xl"
+      className="font-primary bg-white w-[700px] !px-0 !rounded-l-[30px]"
       onClose={handleCloseModal}>
       <header
-        className="px-8 rounded-tl-xl h-[50px] flex items-center justify-between"
+        className="px-8 rounded-tl-[30px] h-[50px] flex items-center justify-between"
         style={{
           background: showModalHeaderBackgroundColorByTime(),
         }}>

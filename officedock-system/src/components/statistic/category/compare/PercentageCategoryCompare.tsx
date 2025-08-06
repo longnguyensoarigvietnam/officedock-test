@@ -486,7 +486,7 @@ const PercentageCategoryCompare = ({
               <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
                 <div className="w-full">
-                  <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
+                  <div className="w-full h-[34px] bg-[#EBF1F7] text-primary rounded-md flex items-center justify-center">
                     大カテゴリー
                   </div>
                   <div className="mt-4 ">
@@ -563,7 +563,7 @@ const PercentageCategoryCompare = ({
                 </div>
                 {/* Pie Chart 2 */}
                 <div className="w-full ">
-                  <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
+                  <div className="w-full h-[34px] bg-[#EBF1F7] text-primary rounded-md flex items-center justify-center">
                     中カテゴリー
                   </div>
                   <div className="mt-4">
@@ -630,7 +630,7 @@ const PercentageCategoryCompare = ({
                 </div>
                 {/* Pie Chart 3 */}
                 <div className="w-full">
-                  <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
+                  <div className="w-full h-[34px] bg-[#EBF1F7] text-primary rounded-md flex items-center justify-center">
                     小カテゴリー
                   </div>
                   <div className="mt-4">

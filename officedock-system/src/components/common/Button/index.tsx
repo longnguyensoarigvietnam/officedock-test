@@ -1,6 +1,6 @@
 import { ButtonHTMLAttributes } from 'react';
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'text';
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'text' | 'option';
 type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -17,10 +17,13 @@ const Button = ({
 }: ButtonProps) => {
   let variantClassNames = '';
   let sizeClassNames = '';
+  let backgroundStyle = '';
 
   switch (variant) {
     case 'primary':
-      variantClassNames = 'border text-white bg-primary hover:bg-opacity-90';
+      variantClassNames = 'border text-white hover:bg-opacity-90';
+      backgroundStyle =
+        'linear-gradient(113.86deg, #289BF2 15.33%, #73CCDF 84.67%)';
       break;
     case 'secondary':
       variantClassNames =
@@ -29,6 +32,10 @@ const Button = ({
     case 'outline':
       variantClassNames =
         'border text-primary border-primary bg-white hover:bg-gray-50';
+      break;
+    case 'option':
+      variantClassNames = 'border bg-[#3CABF3] text-white hover:bg-opacity-90';
+
       break;
     case 'text':
       variantClassNames = 'text-primary hover:text-opacity-70';
@@ -52,6 +59,9 @@ const Button = ({
 
   return (
     <button
+      style={{
+        background: backgroundStyle,
+      }}
       className={`inline-flex rounded-lg justify-center font-medium items-center disabled:cursor-not-allowed disabled:opacity-50 hover:cursor-pointer transition-all duration-300 ${variantClassNames} ${sizeClassNames} ${className}`}
       {...props}>
       {children}

@@ -330,7 +330,7 @@ const AllocationTeamCategory = memo(
           style={{
             boxShadow: '0px 4px 10px 0px #0000000D',
           }}
-          className="p-[30px] bg-[#F8FAFC] mt-5 rounded-[14px]">
+          className="p-[30px] bg-[#F8FAFC] mt-5 rounded-[30px]">
           {/* Header & sort */}
           <div className="flex justify-between">
             <div className="flex items-center gap-x-0">
@@ -369,7 +369,7 @@ const AllocationTeamCategory = memo(
                 <div className="flex  justify-between px-[30px] text-sm font-medium">
                   {/* Column Chart 1 */}
                   <div className="w-[300px]">
-                    <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
+                    <div className="w-full h-[34px] bg-[#EBF1F7] text-primary rounded-md flex items-center justify-center">
                       大カテゴリー
                     </div>
                     <div className="mt-4">
@@ -478,7 +478,7 @@ const AllocationTeamCategory = memo(
                   </div>
                   {/* Column Chart 2 */}
                   <div className="w-[300px]">
-                    <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
+                    <div className="w-full h-[34px] bg-[#EBF1F7] text-primary rounded-md flex items-center justify-center">
                       中カテゴリー
                     </div>
                     <div className="mt-4">
@@ -564,7 +564,7 @@ const AllocationTeamCategory = memo(
                   </div>
                   {/* Column Chart 3 */}
                   <div className="w-[300px]">
-                    <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
+                    <div className="w-full h-[34px] bg-[#EBF1F7] text-primary rounded-md flex items-center justify-center">
                       小カテゴリー
                     </div>
                     <div className="mt-4">

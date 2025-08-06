@@ -488,25 +488,14 @@ class TaskViewSet(
         user,
         message_data,
         can_send_to_self_room=False,
-        send_to_chat=True,
     ):
         """
         Handle send chat message to participant
         """
-        socketEventType = (
-            WebSocketEventType.MESSAGE.value
-            if send_to_chat
-            else WebSocketEventType.EDIT_MESSAGE.value
-        )
-        can_send_to_self_room = can_send_to_self_room if send_to_chat else True
+        socketEventType = WebSocketEventType.MESSAGE.value
         for participant in participants:
-            print(
-                can_send_to_self_room,
-                participant == user,
-            )
             if participant == user and not can_send_to_self_room:
                 continue
-            print("hej ehj ")
             chat_room_participant = participant.chat_rooms_participants.filter(
                 chat_room__type=ChatRoomTypes.TASK.value,
                 company_id=participant.company_id,
@@ -516,16 +505,11 @@ class TaskViewSet(
                 return
             else:
                 chat_room = chat_room_participant.chat_room
-            if send_to_chat:
-                message = chat_room.chat_messages.create(**message_data)
-                chat_room_participant.unread_messages = (
-                    chat_room_participant.unread_messages + 1
-                )
-                chat_room_participant.save()
-            else:
-                message = chat_room.chat_messages.filter(
-                    task=message_data["task"]
-                ).first()
+            message = chat_room.chat_messages.create(**message_data)
+            chat_room_participant.unread_messages = (
+                chat_room_participant.unread_messages + 1
+            )
+            chat_room_participant.save()
 
             send_web_socket_event(
                 {
@@ -539,9 +523,7 @@ class TaskViewSet(
                 chat_room_participant,
             )
 
-    def _send_to_chat(
-        self, user, task, people_in_charges, task_action=None, send_to_chat=True
-    ):
+    def _send_to_chat(self, user, task, people_in_charges, task_action=None):
         """
         Handle send to chat of user
         """
@@ -598,7 +580,6 @@ class TaskViewSet(
                     participants=current_people,
                     user=user,
                     message_data=message_data,
-                    send_to_chat=send_to_chat,
                 )
         elif task_action == ChatMessageTypes.REMOVE_TASK.value:
             message_data["type"] = task_action
@@ -796,25 +777,16 @@ class TaskViewSet(
         # Update task
         task = serializer.save()
 
-        # Handle send to chat
-        people_in_charges = [
-            item["people_in_charge"] for item in people_in_charge_ids
-        ]
         if send_to_chat:
+            # Handle send to chat
+            people_in_charges = [
+                item["people_in_charge"] for item in people_in_charge_ids
+            ]
             self._send_to_chat(
                 user,
                 current_task,
                 people_in_charges,
                 ChatMessageTypes.EDIT_TASK.value,
-            )
-        else:
-            print("ere")
-            self._send_to_chat(
-                user,
-                current_task,
-                people_in_charges,
-                ChatMessageTypes.EDIT_TASK.value,
-                False,
             )
 
         if (

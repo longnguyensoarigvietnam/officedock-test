@@ -126,7 +126,7 @@ const Pagination = ({
   }
 
   const styleTag =
-    'flex justify-center items-center relative rounded inline-flex font-medium hover: cursor-pointer';
+    'flex justify-center items-center relative rounded-[50%] inline-flex font-medium hover: cursor-pointer';
   if (totalPages <= 0) {
     return;
   }
@@ -172,7 +172,7 @@ const Pagination = ({
                   aria-current="page"
                   className={`${sizeClasses} ${styleTag}   items-center ${
                     page === currentNumber
-                      ? `bg-${variant} text-white font-normal`
+                      ? `${variant == 'primary' ? 'bg-[#3CABF3]' : `bg-[${variant}]`} text-white font-normal`
                       : 'text-[#6B7280]'
                   }`}
                   onClick={() => onPageChange(page)}>
@@ -192,7 +192,7 @@ const Pagination = ({
               key={page}
               className={`${sizeClasses} ${styleTag} z-2 items-center" ${
                 page === currentNumber
-                  ? `bg-${variant} text-white font-normal`
+                  ? `${variant == 'primary' ? 'bg-[#3CABF3]' : `bg-[${variant}]`} text-white font-normal`
                   : 'text-[#6B7280]'
               }`}
               onClick={() => onPageChange(page)}>
@@ -213,7 +213,7 @@ const Pagination = ({
                     key={page}
                     className={`${sizeClasses} ${styleTag} z-2 items-center ${
                       page === currentNumber
-                        ? `bg-${variant} text-white font-normal`
+                        ? `${variant == 'primary' ? 'bg-[#3CABF3]' : `bg-[${variant}]`} text-white font-normal`
                         : 'text-[#6B7280]'
                     }`}
                     onClick={() => onPageChange(page)}>

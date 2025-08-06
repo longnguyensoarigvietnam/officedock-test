@@ -24,7 +24,7 @@
 .sunday,
 .react-datepicker__day--keyboard-selected.holiday,
 .react-datepicker__day--keyboard-selected.sunday {
-  color: #c32e2e !important;
+  color: #e95062 !important;
 }
 
 .react-datepicker__day.saturday {

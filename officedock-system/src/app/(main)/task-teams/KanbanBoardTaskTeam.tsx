@@ -98,6 +98,7 @@ import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import api from '@base/api';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 const KanbanBoardTaskTeam = () => {
   // Context
@@ -121,6 +122,7 @@ const KanbanBoardTaskTeam = () => {
 
   const { setIsLoading } = useContext(LoadingContext);
   const {
+    expanded,
     organizationTeamList,
     selectedOrganization: selectedOrganizationSideBar,
   } = useContext(GlobalStateContext);
@@ -240,6 +242,7 @@ const KanbanBoardTaskTeam = () => {
 
         setDataTotalStatus(newTotalStatus);
         setIsHasNext(data.hasNext);
+        setPage(1);
       }
     },
     onError: () => {
@@ -307,7 +310,8 @@ const KanbanBoardTaskTeam = () => {
         isHasNext &&
         chatContainer.clientWidth + Math.abs(chatContainer.scrollLeft) >=
           chatContainer.scrollWidth - 10 &&
-        !initialLoad
+        !initialLoad &&
+        !isLoadingDataTask
       ) {
         getDataListTaskTeamMore(page + 1);
       }
@@ -2378,9 +2382,24 @@ const KanbanBoardTaskTeam = () => {
       ]
     : [];
 
-  const firstThree = allLabels.slice(0, 3);
+  const firstThree = allLabels.slice(0, 2);
 
   const remainingCount = allLabels.length - firstThree.length;
+
+  const handleSetParam = ({
+    id,
+    action,
+  }: {
+    id: string | null;
+    action: string;
+  }) => {
+    if (id) {
+      params.set('task', id);
+    }
+    params.set('action', action);
+    params.set('type', ItemStartType.TASK);
+    router.push(`?${params.toString()}`);
+  };
 
   // Handle start and stop task
 
@@ -2444,10 +2463,10 @@ const KanbanBoardTaskTeam = () => {
                 {selectedOrganization?.label}
               </p>
             </div>
-            <div className="flex justify-center items-center gap-2 ">
+            <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ">
               <Button
                 variant={'primary'}
-                className={`!py-0 !px-0 font-bold w-[80px] h-7 
+                className={`!py-0 !px-0 font-bold w-[90px] h-7 
               !rounded-[20px] text-xs`}>
                 タスク
               </Button>
@@ -2458,64 +2477,19 @@ const KanbanBoardTaskTeam = () => {
                   );
                 }}
                 variant={'outline'}
-                className={`!text-[#77858F] !bg-transparent !border-[#77858F] !py-0 !px-0 font-bold w-[90px] h-7 !rounded-[20px] text-xs`}>
+                className={`!text-[#77858F] !bg-[#EBF1F7] !border-none !py-0 !px-0 font-bold w-[90px] h-7 !rounded-[20px] text-xs`}>
                 スケジュール
               </Button>
             </div>{' '}
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center mr-3">
             {listMemberTeam.length > 0 && getParticipantAvatars(listMemberTeam)}
           </div>
         </div>
-        <div className={`flex gap-7 mb-6 w-fit min-w-[300px]`}>
+        <div className={`flex gap-7 mb-6 w-full min-w-[300px] relative`}>
           <div className="flex items-center gap-2">
-            <ImageRound
-              src="/icons/sort-task.svg"
-              name="Sort icon"
-              className="w-[18px] h-[14px]"
-            />
-            <>
-              <Button
-                disabled={isLoadingDataTask}
-                onClick={() => {
-                  if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
-                    setIsReadyToFetch(true);
-                    setDataOrderRing(FilterTypeKanban.DEADLINE);
-                  }
-                }}
-                variant={
-                  isLoadingDataTask
-                    ? 'outline'
-                    : dataOrderRing === FilterTypeKanban.DEADLINE
-                      ? 'primary'
-                      : 'outline'
-                }
-                className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}  h-6 w-[70px] !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
-                締切期間
-              </Button>
-              <Button
-                disabled={isLoadingDataTask}
-                onClick={() => {
-                  if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
-                    setIsReadyToFetch(true);
-
-                    setDataOrderRing(FilterTypeKanban.IMPORTANT);
-                  }
-                }}
-                variant={
-                  isLoadingDataTask
-                    ? 'outline'
-                    : dataOrderRing === FilterTypeKanban.IMPORTANT
-                      ? 'primary'
-                      : 'outline'
-                }
-                className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
-                重要
-              </Button>
-            </>
-
             {/* Filter option modal */}
-            <Popover className="relative">
+            <Popover className="relative mr-2">
               {() => (
                 <>
                   <div className="flex items-center gap-2">
@@ -2528,9 +2502,9 @@ const KanbanBoardTaskTeam = () => {
                         className="w-[14px] h-[14px] ml-2"
                       />
                     </PopoverButton>
-                    {allLabels.length > 3 ? (
+                    {allLabels.length > 2 ? (
                       <>
-                        {firstThree.slice(0, 3).map((item, index) => (
+                        {firstThree.slice(0, 2).map((item, index) => (
                           <div
                             key={index}
                             onClick={() => {
@@ -2614,6 +2588,50 @@ const KanbanBoardTaskTeam = () => {
                 </>
               )}
             </Popover>
+            <ImageRound
+              src="/icons/sort-task.svg"
+              name="Sort icon"
+              className="w-[18px] h-[14px]"
+            />
+            <>
+              <Button
+                disabled={isLoadingDataTask}
+                onClick={() => {
+                  if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
+                    setIsReadyToFetch(true);
+                    setDataOrderRing(FilterTypeKanban.DEADLINE);
+                  }
+                }}
+                variant={
+                  isLoadingDataTask
+                    ? 'outline'
+                    : dataOrderRing === FilterTypeKanban.DEADLINE
+                      ? 'primary'
+                      : 'outline'
+                }
+                className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}  h-6 w-20 !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
+                締切期間
+              </Button>
+              <Button
+                disabled={isLoadingDataTask}
+                onClick={() => {
+                  if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
+                    setIsReadyToFetch(true);
+
+                    setDataOrderRing(FilterTypeKanban.IMPORTANT);
+                  }
+                }}
+                variant={
+                  isLoadingDataTask
+                    ? 'outline'
+                    : dataOrderRing === FilterTypeKanban.IMPORTANT
+                      ? 'primary'
+                      : 'outline'
+                }
+                className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-20 !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
+                重要
+              </Button>
+            </>
 
             <InputSearch
               className="w-[300px] h-[34px] py-0 bg-white !rounded-[20px]"
@@ -2633,6 +2651,35 @@ const KanbanBoardTaskTeam = () => {
               />
             </div>
           </div>
+          <div className="absolute right-0 top-0">
+            <DynamicTooltip content="タスクを新規作成" placement="top">
+              <Button
+                onClick={() => {
+                  setPeopleDefaultId(COLUMN_ID_TASK);
+                  handleSetParam({
+                    id: null,
+                    action: ActionTask.CREATE,
+                  });
+                }}
+                className="flex gap-2 !p-[10px]">
+                <div
+                  style={{
+                    padding: '6.5px',
+                  }}
+                  className={`rounded-full cursor-pointer w-fit  bg-white `}>
+                  <ImageRound
+                    src={`/icons/add.svg`}
+                    name="Add"
+                    style={{
+                      width: `${(247 / 247) * 9}px`,
+                      height: `${(247 / 247) * 9}px`,
+                    }}
+                  />
+                </div>
+                <p> 新規作成</p>
+              </Button>
+            </DynamicTooltip>
+          </div>
         </div>
 
         {/* BOARD DATA */}
@@ -2645,7 +2692,7 @@ const KanbanBoardTaskTeam = () => {
               onDragEnd={onDragEnd}>
               <div
                 ref={listContainerRef}
-                className="flex gap-4 h-fit overflow-x-auto items-stretch w-[calc(100vw_-_270px)]">
+                className={`flex gap-4 h-fit overflow-x-auto items-stretch  ${expanded ? 'w-[calc(100vw_-_270px)]' : 'w-[calc(100vw_-_120px)]'}`}>
                 <NoSettingColumn
                   totalNoSetting={totalNoSetting}
                   setTotalNoSetting={setTotalNoSetting}

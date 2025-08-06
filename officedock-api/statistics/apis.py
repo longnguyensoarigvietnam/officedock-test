@@ -205,14 +205,18 @@ class StatisticViewSet(BaseAPIViewSet):
                 ),
             )
         )
+        calendar_org = user.company.get_calendar_organization()
+        org_of_task_ids = set(tasks.values_list("organization_id", flat=True))
+        org_of_task_ids.add(calendar_org.id)
         category_types = [
             ("large_statistic_category", ScheduleCategoryTypes.LARGE.value),
             ("medium_statistic_category", ScheduleCategoryTypes.MEDIUM.value),
             ("small_statistic_category", ScheduleCategoryTypes.SMALL.value),
         ]
-        org_values = Organization.all_objects.filter(users=user).values_list(
-            "id", "name", "type"
-        )
+        org_values = Organization.all_objects.filter(
+            id__in=org_of_task_ids
+        ).values_list("id", "name", "type")
+
         org_map = {
             org_id: {"id": org_id, "name": name, "type": org_type}
             for org_id, name, org_type in org_values

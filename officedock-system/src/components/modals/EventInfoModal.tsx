@@ -154,7 +154,7 @@ const EventInfoModal = memo(
     return (
       <div className="z-50">
         <div
-          className="font-primary shadow-lg bg-white w-[330px] !rounded-2xl z-50 p-4"
+          className="font-primary shadow-lg bg-white w-[330px] !rounded-[14px] z-50 p-4"
           ref={popoverRef}
           style={{
             position: 'absolute',

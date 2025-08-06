@@ -17,6 +17,7 @@ export const PROVIDER_GOOGLE = 'google';
 export const TOAST_DURATION = 3000;
 
 export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 255;
 
 export const DATE_FORMAT = 'yyyy/MM/dd';
 export const DATE_TEXT_FORMAT = 'yyyy年 MM月 dd日';
@@ -322,16 +323,16 @@ export const PAGE_SIZE_OPTIONS = [
 ];
 
 export const HIERARCHY_COLOR_LIST = [
-  '#D7576A',
-  '#F0865F',
-  '#2E9267',
-  '#2E9267',
-  '#826AC4',
-  '#FC8EA2',
-  '#EDC45D',
-  '#70CB7E',
-  '#45AFD9',
-  '#899FEB',
+  '#F86683',
+  '#F89A7E',
+  '#51C4B6',
+  '#6C92F4',
+  '#A992FF',
+  '#FA81C1',
+  '#FFCC40',
+  '#86DA91',
+  '#82C5F1',
+  '#B0B8F2',
 ];
 
 export const ALL_TEAMS_OPTION = 'すべてのチーム';
@@ -473,6 +474,10 @@ export const DEFAULT_EMPTY_CATEGORY = [
 export const SUB_TEAMS = 'サブチーム';
 
 export const COLOR_BY_TASK_STATUS = [
+  {
+    name: StatusTask.MY_ROUTINE,
+    color: '#DAE2EB',
+  },
   {
     name: StatusTask.NOT_STARTED,
     color: '#A3EBF0',

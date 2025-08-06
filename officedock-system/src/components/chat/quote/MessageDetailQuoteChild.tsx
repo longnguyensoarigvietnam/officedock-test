@@ -61,7 +61,7 @@ export type MessageDetailProps = {
   msgEditing?: string;
   dashboardMembers: ChatDashboardMember[];
   highlightedMessageId: string | null;
-
+  uuidQuote: string;
   setDataPreviewFile: Dispatch<
     SetStateAction<{
       msgId: string;
@@ -75,6 +75,7 @@ export type MessageDetailProps = {
 };
 
 export const MessageDetailQuoteChild = ({
+  uuidQuote,
   chatRoomDetail,
   messageDetail,
   dashboardMembers,
@@ -232,6 +233,7 @@ export const MessageDetailQuoteChild = ({
                     key={`${index}-${i}-msg`}
                     chatRoomDetail={chatRoomDetail}
                     messageDetail={foundQuote}
+                    uuidQuote={uuidQuote}
                     dashboardMembers={dashboardMembers}
                     highlightedMessageId={highlightedMessageId}
                     setDataPreviewFile={setDataPreviewFile}
@@ -254,6 +256,7 @@ export const MessageDetailQuoteChild = ({
                   <MessageDetailQuoteText
                     key={`${index}-${i}-textquote`}
                     messageDetail={foundQuote}
+                    uuidQuote={uuidQuote}
                     dashboardMembers={dashboardMembers}
                     title={dataTitle}
                   />
@@ -282,7 +285,7 @@ export const MessageDetailQuoteChild = ({
               children.push(
                 <span
                   key={`${index}-${i}-mention`}
-                  className="mention text-[#0068B6]"
+                  className="mention text-primary"
                   data-type="mention"
                   data-id={el.dataset.id}>
                   {mentionText}
@@ -353,7 +356,7 @@ export const MessageDetailQuoteChild = ({
       if (status == SubmitLevelStatus.APPROVAL) {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+            <p className="text-primary font-medium text-sm max-w-full break-all">
               {skillName}{' '}
               <span className="text-black text-sm font-normal">
                 のスキルがレベルアップしました！
@@ -364,7 +367,7 @@ export const MessageDetailQuoteChild = ({
       } else {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+            <p className="text-primary font-medium text-sm max-w-full break-all">
               {skillName}{' '}
               <span className="text-black text-sm font-normal">
                 のレベルアップの申請についてコメントが届いています。
@@ -506,7 +509,7 @@ export const MessageDetailQuoteChild = ({
                                               </div>
                                             )}
                                             <p
-                                              className={`text-[#0068B6] font-medium text-[14px] break-all max-w-full ${
+                                              className={`text-primary font-medium text-[14px] break-all max-w-full ${
                                                 file.fileType.includes('image')
                                                   ? 'max-w-[calc(100%_-_200px)]'
                                                   : 'max-w-[calc(100%)]'
@@ -514,39 +517,44 @@ export const MessageDetailQuoteChild = ({
                                               {file.fileName}
                                             </p>
                                           </div>
-                                          <Button
-                                            onClick={() => {
-                                              const memberInfo =
-                                                dashboardMembers.find(
-                                                  (member) =>
-                                                    member.id ===
-                                                    messageDetail.sender.id,
-                                                );
-                                              setDataPreviewFile({
-                                                msgId:
-                                                  String(messageDetail.id) ||
-                                                  '',
-                                                createAt: String(
-                                                  messageDetail.createdAt,
-                                                ),
-                                                user: {
-                                                  id: messageDetail.sender?.id,
-                                                  avatarColor:
-                                                    memberInfo?.avatarColor ||
+                                          {(file.fileType.includes('image') ||
+                                            file.fileType.includes('pdf')) && (
+                                            <Button
+                                              onClick={() => {
+                                                const memberInfo =
+                                                  dashboardMembers.find(
+                                                    (member) =>
+                                                      member.id ===
+                                                      messageDetail.sender.id,
+                                                  );
+                                                setDataPreviewFile({
+                                                  msgId:
+                                                    String(messageDetail.id) ||
                                                     '',
-                                                  avatarUrl:
-                                                    memberInfo?.avatarUrl || '',
-                                                  fullName:
-                                                    messageDetail.sender
-                                                      ?.fullName,
-                                                },
-                                                file: file,
-                                              });
-                                            }}
-                                            className="font-medium w-[84px] h-[30px] !rounded-[6px] text-xs !px-0"
-                                            variant="outline">
-                                            プレビュー
-                                          </Button>
+                                                  createAt: String(
+                                                    messageDetail.createdAt,
+                                                  ),
+                                                  user: {
+                                                    id: messageDetail.sender
+                                                      ?.id,
+                                                    avatarColor:
+                                                      memberInfo?.avatarColor ||
+                                                      '',
+                                                    avatarUrl:
+                                                      memberInfo?.avatarUrl ||
+                                                      '',
+                                                    fullName:
+                                                      messageDetail.sender
+                                                        ?.fullName,
+                                                  },
+                                                  file: file,
+                                                });
+                                              }}
+                                              className="font-medium w-[84px] h-[30px] !rounded-[6px] text-xs !px-0"
+                                              variant="outline">
+                                              プレビュー
+                                            </Button>
+                                          )}
                                         </div>
                                       );
                                     },
@@ -1043,12 +1051,12 @@ export const MessageDetailQuoteChild = ({
                           name="Calendar icon"
                           src="/icons/calendar-time.svg"
                         />
-                        <p className="text-[#0068B6] text-sm font-medium">
+                        <p className="text-primary text-sm font-medium">
                           {messageDetail.schedule?.title}
                         </p>
                       </div>
                       <div className="flex gap-1 text-sm font-medium">
-                        <p className="text-[#0068B6] break-all max-w-full">
+                        <p className="text-primary break-all max-w-full">
                           {messageDetail.sender.fullName}
                           <span className="text-black">
                             {messageDetail.type === MessageType.REMOVE_SCHEDULE

@@ -8,7 +8,7 @@ const TaskPage = () => {
   return (
     <MainLayout
       title={pageRouters.TASKS_TEAM_MANAGEMENT.name}
-      className="!py-0 pl-10 pr-0 !bg-[#EBF1F7] !overflow-hidden"
+      className="!py-0 pl-10 pr-0 !overflow-hidden"
       permission={PermissionsSystem.TEAMDOCK_VIEW}
       showFooter={false}>
       <KanbanBoardTaskTeam />

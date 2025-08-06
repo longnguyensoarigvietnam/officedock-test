@@ -167,7 +167,7 @@ const TaskListStatistic = ({
       style={{
         boxShadow: '0px 4px 10px 0px #0000000D',
       }}
-      className="p-[30px] bg-[#F8FAFC] my-5 rounded-[14px] mb-10">
+      className="p-[30px] bg-[#F8FAFC] my-5 rounded-[30px] mb-10">
       {/* Header & sort */}
       <div className="flex justify-between">
         <div className="flex items-center gap-x-5">
@@ -346,7 +346,7 @@ const TaskListStatistic = ({
                     classSize="!rounded-full"
                   />
                 </div>
-                <p className="h-[18px] w-[58px] rounded-sm bg-[#EBF1F7] font-medium text-xs text-[#0068B6] flex items-center justify-center">
+                <p className="h-[18px] w-[58px] rounded-sm bg-[#EBF1F7] font-medium text-xs text-primary flex items-center justify-center">
                   基準期間
                 </p>
                 <div className="flex ml-[2px] text-sm font-normal text-black gap-[6px]">
@@ -367,7 +367,7 @@ const TaskListStatistic = ({
                     classSize="!rounded-full"
                   />
                 </div>
-                <p className="h-[18px] w-[58px] rounded-sm bg-[#F9EAEA] font-medium text-xs text-[#C32E2E] flex items-center justify-center">
+                <p className="h-[18px] w-[58px] rounded-sm bg-[#F9EAEA] font-medium text-xs text-[#E95062] flex items-center justify-center">
                   比較期間
                 </p>
                 <div className="flex ml-[2px] text-sm font-normal text-black gap-[6px]">

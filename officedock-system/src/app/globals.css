@@ -197,7 +197,13 @@ html *::-webkit-scrollbar-track {
   height: 99999px;
   background-repeat: no-repeat;
   background-position: 0 0;
-  background-image: conic-gradient(#0068b6, #0088c3, #0088c300);
+  background-image: conic-gradient(
+    from 180deg at 50% 50%,
+    #a6e0db 0deg,
+    #63b8ef 180deg,
+    rgba(0, 136, 195, 0) 180deg,
+    #a6e0db 360deg
+  );
 }
 
 .animated-border-box.animate:before,
@@ -267,6 +273,7 @@ input::-webkit-inner-spin-button {
 input[type='checkbox']:checked {
   background-color: none;
   background-image: url('/icons/radio.svg');
+  color: #228cdb;
 }
 
 input[type='checkbox']:focus {
@@ -287,4 +294,8 @@ input[type='checkbox']:focus {
 /* Preview file */
 .transform-component-module_wrapper__SPB86 {
   width: 100% !important;
+}
+
+.clip-diagonal-left{
+  clip-path: polygon(100% 0, 0 0, 0 100%);
 }

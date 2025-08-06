@@ -129,11 +129,11 @@ const Tabs = ({
       selectedIndex={tabIdx}
       onChange={(idx) => onChangeTab(idx)}
       key={tabIdx}>
-      <div className={`w-full ${className} mt-5`}>
+      <div className={`w-full ${className} mt-[30px]`}>
         <TabList
           className={`tab-list flex justify-center rounded-3xl ${
             expanded && 'bg-[#182A4B33]'
-          } p-1.5 mx-2 mb-3`}>
+          } p-1.5 mx-2 mb-6`}>
           {tabs.length == 2 ? (
             tabs.map((tab, index) => (
               <Tab

@@ -186,7 +186,7 @@ export const OrganizationSkillDetail = ({
       accessorKey: 'level1',
       header: () => (
         <div className="flex gap-1 justify-start px-5 text-nowrap">
-          <p className="font-medium text-xs text-[#0068B6]">レベル1→2</p>
+          <p className="font-medium text-xs text-primary">レベル1→2</p>
           <p className="font-medium text-xs text-[#77858F]">
             のレベルアップ条件
           </p>
@@ -197,7 +197,7 @@ export const OrganizationSkillDetail = ({
       accessorKey: 'level2',
       header: () => (
         <div className="flex gap-1 justify-start px-5 text-nowrap">
-          <p className="font-medium text-xs text-[#0068B6]">レベル2→3</p>
+          <p className="font-medium text-xs text-primary">レベル2→3</p>
           <p className="font-medium text-xs text-[#77858F]">
             のレベルアップ条件
           </p>
@@ -208,7 +208,7 @@ export const OrganizationSkillDetail = ({
       accessorKey: 'level3',
       header: () => (
         <div className="flex gap-1 justify-start px-5 text-nowrap">
-          <p className="font-medium text-xs text-[#0068B6]">レベル3→</p>
+          <p className="font-medium text-xs text-primary">レベル3→</p>
           <p className="font-medium text-xs text-[#77858F]">
             のレベルアップ条件
           </p>
@@ -296,7 +296,7 @@ export const OrganizationSkillDetail = ({
 
   return (
     <div
-      className="w-full p-5 bg-[#F8FAFC] rounded-[14px]"
+      className="w-full p-5 bg-[#F8FAFC] rounded-[30px]"
       style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
       <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
         {orgSkillDetail.name}
@@ -321,7 +321,7 @@ export const OrganizationSkillDetail = ({
               </div>
             </div>
             <div className="flex gap-2 items-center w-1/3">
-              <p className="bg-[#0068B6] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
+              <p className="bg-primary text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
                 STEP 2
               </p>
               <div className="!w-full">
@@ -372,7 +372,7 @@ export const OrganizationSkillDetail = ({
               </p>
             </div>
             <div className="flex gap-2 items-center max-w-[33.3%] min-w-0">
-              <p className="bg-[#0068B6] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
+              <p className="bg-primary text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
                 STEP 2
               </p>
               <p className="text-sm font-normal max-w-[calc(100%_-_70px)] break-all">
@@ -457,7 +457,7 @@ export const OrganizationSkillDetail = ({
       </div>
 
       {/* Step information */}
-      <Table className="w-full h-full bg-white !rounded-[6px]">
+      <Table className="w-full h-full bg-white !rounded-[10px]">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
@@ -519,10 +519,10 @@ export const OrganizationSkillDetail = ({
                 <td
                   className={`w-[20%] break-all h-full border-r-[1px] border-r-[#D2DBE1]`}>
                   <div className="flex justify-between">
-                    <p className="text-sm flex justify-left items-center font-medium py-4 px-5 max-w-[calc(100%_-_40px)] break-all">
+                    <p className="text-sm flex justify-left items-center font-medium py-4 px-5 max-w-[calc(100%_-_50px)] break-all">
                       {row.original.name}
                     </p>
-                    <div className="flex gap-2 items-center w-[40px]">
+                    <div className="flex gap-2 items-center w-[50px]">
                       <ImageRound
                         name="Edit"
                         src={'/icons/edit-gray.svg'}
@@ -538,9 +538,9 @@ export const OrganizationSkillDetail = ({
                         }}
                       />
                       <ImageRound
-                        name="Delete"
-                        src={'/icons/delete-gray.svg'}
-                        className="w-[13px] h-[15px] hover:cursor-pointer"
+                        name="Hide"
+                        src={'/icons/close-eye-gray.svg'}
+                        className="w-[17px] h-[14px] hover:cursor-pointer"
                       />
                     </div>
                   </div>

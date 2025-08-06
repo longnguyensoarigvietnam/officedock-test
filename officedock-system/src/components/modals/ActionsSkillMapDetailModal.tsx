@@ -60,10 +60,10 @@ const ActionsSkillMapDetailModal = ({
   return (
     <Drawer
       open={open}
-      className="font-primary bg-white h-screen w-[700px] !px-0 !rounded-tl-xl"
+      className="font-primary bg-white w-[700px] !px-0 !rounded-l-[30px]"
       onClose={handleCloseModal}>
       <header
-        className="px-8 rounded-tl-xl h-[50px] flex items-center justify-between"
+        className="px-8 rounded-tl-[30px] h-[50px] flex items-center justify-between"
         style={{
           background: showModalHeaderBackgroundColorByTime(),
         }}>
@@ -124,13 +124,13 @@ const ActionsSkillMapDetailModal = ({
           </div>
         </header>
         <div className="text-sm">
-          <p className="text-base text-[#0068B6] font-medium mb-3 ">
+          <p className="text-base text-primary font-medium mb-3 ">
             スキルの定義
           </p>
           <p className="font-normal break-all mb-9">{dataStep?.description}</p>
           {/* Category */}
           <div>
-            <p className="text-base text-[#0068B6] font-medium mb-3 ">
+            <p className="text-base text-primary font-medium mb-3 ">
               対応カテゴリー
             </p>
             <div className="flex flex-col gap-[10px]">
@@ -182,7 +182,7 @@ const ActionsSkillMapDetailModal = ({
 
               return (
                 <div key={level.id}>
-                  <p className="text-base text-[#0068B6] font-medium mb-4 mt-[10px]">
+                  <p className="text-base text-primary font-medium mb-4 mt-[10px]">
                     レベル{number - 1}→{number}
                   </p>
                   <div className="text-[#77858F]">レベルアップ条件</div>
@@ -228,7 +228,9 @@ const ActionsSkillMapDetailModal = ({
                       振り返り項目
                     </p>
                     {level.items.map((item, itemIndex) => (
-                      <li key={itemIndex} className='break-all'>・{item}</li>
+                      <li key={itemIndex} className="break-all">
+                        ・{item}
+                      </li>
                     ))}
                   </ul>
                 </div>

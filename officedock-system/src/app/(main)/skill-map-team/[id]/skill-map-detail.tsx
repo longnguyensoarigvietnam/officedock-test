@@ -15,7 +15,7 @@ import {
 
 import { getLastChar } from '@utils';
 
-import { SKILL_MAP_LEVEL_COUNT } from '@constants'
+import { SKILL_MAP_LEVEL_COUNT } from '@constants';
 
 import useSkillMapComment from '@hooks/useSkillMapComment';
 
@@ -221,7 +221,7 @@ export const SkillMapDetailByUser = ({
                   placement="top"
                   currentStep={2}
                   stepDefinition={skillMap.steps.step2}>
-                  <div className="w-[calc(33.33333%_+_34px)] ml-[-8.5px] bg-[#0068B6] relative clip-middle text-center flex items-center justify-center">
+                  <div className="w-[calc(33.33333%_+_34px)] ml-[-8.5px] bg-primary relative clip-middle text-center flex items-center justify-center">
                     STEP 2
                   </div>
                 </StepInfoTooltip>
@@ -399,7 +399,7 @@ export const SkillMapDetailByUser = ({
             </div>
           </div>
         ))}
-        
+
       {openSkillMapCommentModal && (
         <ViewSkillMapCommentModal
           open={openSkillMapCommentModal}

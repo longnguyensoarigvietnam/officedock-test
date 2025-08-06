@@ -11,7 +11,6 @@ import { useRouter } from 'next/navigation';
 import { useMutation } from 'react-query';
 import Link from 'next/link';
 import { validate as isUUID } from 'uuid';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { AxiosError } from 'axios';
 
@@ -31,6 +30,7 @@ import {
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 
+  import { useSessionCache } from '@providers/SessionCacheProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
@@ -211,16 +211,16 @@ const EditHierarchyBoard = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#EBF1F7]">
+      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#E6F3FB]">
         <div className="flex gap-4 items-center mb-5">
           <p className="text-black font-medium text-[26px]">
             業務カテゴリー設定
           </p>
-          <div className="flex gap-2">
+          <div className="flex gap-2 bg-white w-fit p-[6px] rounded-[20px]">
             <Link href={pageRouters.CATEGORY_MANAGEMENT.href}>
               <Button
                 variant="outline"
-                className={`w-[128px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+                className={`w-[128px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
                 社内共通カテゴリー
               </Button>
             </Link>
@@ -228,7 +228,7 @@ const EditHierarchyBoard = () => {
             <Link href={pageRouters.TEAM_CATEGORY_MANAGEMENT.href}>
               <Button
                 variant="outline"
-                className={`w-[128px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+                className={`w-[128px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
                 チームカテゴリー
               </Button>
             </Link>
@@ -240,7 +240,7 @@ const EditHierarchyBoard = () => {
               ) && (
                 <Button
                   variant="primary"
-                  className={`w-[140px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
+                  className={`w-[140px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px]`}>
                   カレンダーカテゴリー
                 </Button>
               )}

@@ -10,7 +10,6 @@ import {
 import { Droppable } from '@hello-pangea/dnd';
 import { useInView } from 'react-intersection-observer';
 
-
 import ImageRound from '@components/common/ImageRound';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import Spinner from '@components/common/Spinner';
@@ -48,7 +47,6 @@ interface ListViewByStatusProps {
   editTaskInline: (data: DataStatusChangeInline) => void;
   creationDataTaskData?: CreationDataTask;
   columnsKanbanData: Columns;
-  addTask: (columnId: string) => void;
   setColumnsKanbanData: Dispatch<SetStateAction<Columns | undefined>>;
   setNumberPagesData: Dispatch<
     SetStateAction<
@@ -76,7 +74,6 @@ const ListViewByStatus = ({
   handleConfirmCopyTask,
   handleUpdateItemInline,
   editTaskInline,
-  addTask,
   creationDataTaskData,
   columnsKanbanData,
   setColumnsKanbanData,
@@ -259,38 +256,29 @@ const ListViewByStatus = ({
           </div>
         </DynamicTooltip>
 
-        {listId != StatusValueTask.MY_ROUTINE && (
-          <div
-            className={`bg-[${COLOR_BY_TASK_STATUS.find((status) => status.name == listTitle)?.color}] w-3 h-3 rounded-full right-1.5 top-2`}
-          />
-        )}
+        <div
+          className={`bg-[${COLOR_BY_TASK_STATUS.find((status) => status.name == listTitle)?.color}] w-[2px] h-[20px] right-1.5 top-2`}
+        />
+
         <p className="font-medium text-[14px]">{listTitle}</p>
         {listId != StatusValueTask.MY_ROUTINE && !isLoadingDataTask && (
           <p className="text-[#77858F] text-[14px]">{count}</p>
         )}
-
-        <DynamicTooltip content="タスクを新規作成" placement="top">
-          <div
-            className={`rounded-full cursor-pointer p-1.5 w-fit bg-[#E3EAED]`}
-            onClick={() => addTask(String(listId))}
-            style={{
-              padding: '6.5px',
-            }}>
-            <ImageRound
-              src={`/icons/add.svg`}
-              name="Add"
-              className="w-[9px] h-[9px]"
-            />
-          </div>
-        </DynamicTooltip>
       </div>
       {extendByStatus.find((list) => list.id == listId)?.status &&
-        listId == StatusValueTask.MY_ROUTINE && (
+        (listId == StatusValueTask.MY_ROUTINE ? (
           <div className="flex text-[#77858F] text-[12px] mb-4">
             <p className="w-[59%] border-r-2">タスク名</p>
             <p className="w-[20%] border-r-2 text-center">予定日時</p>
           </div>
-        )}
+        ) : (
+          <div className="flex text-[#77858F] text-[12px] mb-4">
+            <p className="w-[59%] border-r-2">タスク名</p>
+            <p className="w-[15%] border-r-2 text-center">締切</p>
+            <p className="w-[8%] border-r-2 text-center">重要</p>
+            <p className="px-5 border-r-2">ステータス</p>
+          </div>
+        ))}
 
       <Droppable droppableId={String(listId)}>
         {(provided, snapshot) => (

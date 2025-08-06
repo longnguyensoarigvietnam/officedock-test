@@ -4187,7 +4187,7 @@ const TimeSchedule = memo(
           </div>
           {!isLoadingSchedule && (
             <div
-              className={`w-[180px] px-3 z-20 h-[38px] absolute  rounded-md ${isExtendCalendar ? 'right-32 bottom-[13px]' : 'right-[10px] bottom-[5px]'} bg-white flex items-center `}>
+              className={`w-[180px] px-3 z-20 h-[38px] absolute rounded-[100px] ${isExtendCalendar ? 'right-32 bottom-[13px]' : 'right-[10px] bottom-[5px]'} bg-white flex items-center `}>
               <RangeSlider
                 min={18}
                 max={100}

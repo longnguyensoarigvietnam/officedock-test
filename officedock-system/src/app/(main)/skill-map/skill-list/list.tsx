@@ -107,13 +107,13 @@ const SkillList = () => {
 
   return (
     <div className="w-full">
-      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#EBF1F7]">
+      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#E6F3FB]">
         <div className="flex mb-7 justify-between">
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center bg-white w-fit p-[6px] rounded-[20px]">
             <Link href={`${pageRouters.SKILL_MAP.href}?tabId=${tabId || 0}`}>
               <Button
                 variant="outline"
-                className={`w-[90px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px] `}>
+                className={`w-[90px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
                 スキルマップ
               </Button>
             </Link>
@@ -122,14 +122,14 @@ const SkillList = () => {
               href={`${pageRouters.SKILL_MAP_SKILL.href}?tabId=${tabId || 0}`}>
               <Button
                 variant="outline"
-                className={`w-[90px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+                className={`w-[90px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
                 マイスキル
               </Button>
             </Link>
 
             <Button
               variant="primary"
-              className={`w-[90px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
+              className={`w-[90px] !p-0 text-xs h-[28px] !font-bold text-white !rounded-[20px]`}>
               スキル一覧
             </Button>
           </div>
@@ -139,7 +139,10 @@ const SkillList = () => {
               PermissionsSystem.SKILL_MAP_MANAGEMENT_VIEW,
             ) && (
               <Link href={pageRouters.SKILL_MAPS_MANAGEMENT.href}>
-                <Button className="w-[158px] !p-0 text-sm h-[34px] !border-transparent !text-[#77858F] bg-white rounded-[6px]">
+                <Button
+                  variant="secondary"
+                  className="w-[158px] !p-0 text-sm h-[34px] !text-[#77858F] !bg-white rounded-[6px]"
+                  style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
                   スキルマップ設定{' '}
                   <ImageRound
                     src="/icons/detail-task.svg"

@@ -118,7 +118,7 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="w-[500px] rounded-2xl p-6 flex flex-col gap-6">
+    <div className="w-[500px] p-6 flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-3xl font-medium">ログイン</h1>
       </div>

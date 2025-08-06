@@ -1,7 +1,8 @@
-import { PASSWORD_MIN_LENGTH } from '@constants';
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '@constants';
 import {
   EMAIL_INVALID_MESSAGE,
   EMAIL_IS_REQUIRED_MESSAGE,
+  PASSWORD_MAX_LENGTH_MESSAGE,
   PASSWORD_MIN_LENGTH_MESSAGE,
   PASSWORD_REQUIRED_MESSAGE,
   PASSWORD_WRONG_FORMAT,
@@ -32,6 +33,10 @@ export const passwordRegisterRules = (isRequired = false) => {
     minLength: {
       value: PASSWORD_MIN_LENGTH,
       message: PASSWORD_MIN_LENGTH_MESSAGE,
+    },
+    maxLength: {
+      value: PASSWORD_MAX_LENGTH,
+      message: PASSWORD_MAX_LENGTH_MESSAGE,
     },
     pattern: {
       value: PASSWORD_REGEX,

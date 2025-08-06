@@ -34,6 +34,8 @@ export const DEFAULT_VALUE_TODO_LIST = '入力してください。';
 //Validate message
 export const PASSWORD_MIN_LENGTH_MESSAGE =
   '半角英数8文字以上で入力してください。';
+export const PASSWORD_MAX_LENGTH_MESSAGE =
+  'この項目が255文字より長くならないようにしてください。';
 export const PASSWORD_NOT_MATCHED_MESSAGE = 'パスワードが一致しません。';
 export const PASSWORD_WRONG_FORMAT = 'このパスワードは一般的すぎます。';
 export const END_DATE_WRONG_SELECTED =
@@ -71,6 +73,8 @@ export const ERROR_UPDATE_MESSAGE = '更新に失敗しました。';
 export const ERROR_SAVE_MESSAGE = '保存に失敗しました。';
 export const ERROR_TIME_START_MESSAGE = '予定時間をオーバーしています';
 export const ERROR_DELETE_TASK_RUNNING = '計測中のカードを削除できません。';
+export const ERROR_UPDATE_ORGANIZATION_MESSAGE =
+  '更この組織はタスクに紐づいているため、削除できません。';
 
 export const OTP_CODE_INVALID =
   '認証コードが無効であるか、有効期限が切れています。';

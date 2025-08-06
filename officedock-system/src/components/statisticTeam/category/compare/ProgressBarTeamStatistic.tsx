@@ -185,7 +185,7 @@ const ProgressBarTeamStatisticCompare = ({
                   <div>
                     {startDate && endDate && (
                       <div className="flex items-center mb-3 px-5 gap-1">
-                        <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                        <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                           基準期間
                         </p>
                         <div className="text-[#77858F] text-sm font-normal flex items-center gap-[1px]">
@@ -249,7 +249,7 @@ const ProgressBarTeamStatisticCompare = ({
                     </p>
                     {startDate && endDate && (
                       <div className="flex items-center mb-3 px-5">
-                        <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                        <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                           基準期間
                         </p>
                         <div className="text-black text-xs font-normal flex items-center gap-[1px]">
@@ -352,7 +352,7 @@ const ProgressBarTeamStatisticCompare = ({
                   <div>
                     {startDateCompare && endDateCompare && (
                       <div className="flex items-center mb-3 px-5">
-                        <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                        <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                           比較期間
                         </p>
                         <div className="text-black text-xs font-normal flex items-center gap-[1px]">
@@ -419,7 +419,7 @@ const ProgressBarTeamStatisticCompare = ({
                     </p>
                     {startDateCompare && endDateCompare && (
                       <div className="flex items-center mb-3 px-5">
-                        <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                        <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                           比較期間
                         </p>
                         <div className="text-black text-xs font-normal flex items-center gap-[1px]">
@@ -552,7 +552,7 @@ const ProgressBarTeamStatisticCompare = ({
                   <div>
                     {startDate && endDate && (
                       <div className="flex items-center my-4 gap-1">
-                        <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                        <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                           基準期間
                         </p>
                         <div className="text-[#77858F] text-sm font-normal flex items-center gap-[1px]">
@@ -646,7 +646,7 @@ const ProgressBarTeamStatisticCompare = ({
                   <div>
                     {startDateCompare && endDateCompare && (
                       <div className="flex items-center my-4 gap-1">
-                        <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                        <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                           比較期間
                         </p>
                         <div className="text-[#77858F] text-sm font-normal flex items-center gap-[1px]">

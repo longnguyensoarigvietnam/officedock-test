@@ -52,7 +52,7 @@ const MySkillDetailByUser = ({ detailSkillData }: Props) => {
       setOpenSkillMapDetailModal(true);
     },
   });
-  
+
   return (
     <>
       <div className="flex flex-col gap-6">
@@ -147,7 +147,7 @@ const MySkillDetailByUser = ({ detailSkillData }: Props) => {
                             <div className="flex gap-[2px] items-end mt-[4px]">
                               {lastValidSkill.level.measureCount !== null && (
                                 <>
-                                  <p className="text-[18px] text-[#0068B6]">
+                                  <p className="text-[18px] text-primary">
                                     {lastValidSkill.level.actualMeasureCount}/
                                     {lastValidSkill.level.measureCount}
                                   </p>
@@ -158,7 +158,7 @@ const MySkillDetailByUser = ({ detailSkillData }: Props) => {
                               )}
                               {lastValidSkill.level.measureTime !== null && (
                                 <>
-                                  <p className="text-[18px] text-[#0068B6]">
+                                  <p className="text-[18px] text-primary">
                                     {lastValidSkill.level.actualMeasureTime &&
                                       timeStringToHours(
                                         `${lastValidSkill.level.actualMeasureTime}`,
@@ -173,7 +173,7 @@ const MySkillDetailByUser = ({ detailSkillData }: Props) => {
                               {lastValidSkill.level.lookBackInterval !==
                                 null && (
                                 <>
-                                  <p className="text-[18px] text-[#0068B6]">
+                                  <p className="text-[18px] text-primary">
                                     {lastValidSkill.level.lookBackInterval}
                                   </p>
                                   <p className="relative top-[2px] text-xs">

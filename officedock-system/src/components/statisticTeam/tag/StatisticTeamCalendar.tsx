@@ -506,7 +506,7 @@ function StatisticTeamCalendar() {
           }}
           className="w-fit h-fit min-h-[34px] flex flex-col gap-[6px]  px-3 py-2 border border-[#77858F] bg-white rounded-md  ">
           <div className="flex items-center gap-[10px] h-5">
-            <div className="text-xs font-medium text-[#0068B6] px-[14px] h-[18px] flex items-center  bg-[#EBF1F7] rounded-sm">
+            <div className="text-xs font-medium text-primary px-[14px] h-[18px] flex items-center  bg-[#EBF1F7] rounded-sm">
               {isTypeTime}
             </div>
             <div className="text-[13px] text-black font-normal flex items-center gap-[6px]">
@@ -526,7 +526,7 @@ function StatisticTeamCalendar() {
           </div>
           {isCheckCompare && (
             <div className="flex items-center gap-[10px] h-5">
-              <div className="text-xs font-medium text-[#C32E2E] px-[14px] flex items-center  bg-[#F9EAEA] rounded-sm">
+              <div className="text-xs font-medium text-[#E95062] px-[14px] flex items-center  bg-[#F9EAEA] rounded-sm">
                 {isTypeTime}
               </div>
               <div className="text-[13px] text-black font-normal flex items-center gap-[6px]">
@@ -590,7 +590,7 @@ function StatisticTeamCalendar() {
                 <div
                   key={option}
                   onClick={() => handleSelectTimeOption(option)}
-                  className={`${isTypeTime === option && 'bg-[#0068B6] rounded-[20px] !text-white'} cursor-pointer h-[24px] px-5 flex items-center`}>
+                  className={`${isTypeTime === option && 'bg-primary rounded-[20px] !text-white'} cursor-pointer h-[24px] px-5 flex items-center`}>
                   {option}
                 </div>
               ))}
@@ -599,7 +599,7 @@ function StatisticTeamCalendar() {
           {/* Value 1 */}
           <div className="flex text-xs font-normal text-black">
             <div className="flex-1">
-              <div className="w-[58px] rounded-sm bg-[#EBF1F7] text-xs text-[#0068B6] font-medium flex justify-center py-1">
+              <div className="w-[58px] rounded-sm bg-[#EBF1F7] text-xs text-primary font-medium flex justify-center py-1">
                 表示期間
               </div>
               <div>
@@ -707,7 +707,7 @@ function StatisticTeamCalendar() {
           {isDataCheckCompare && (
             <div className="flex mt-[30px] text-xs font-normal text-black">
               <div className="flex-1">
-                <div className="w-[58px] rounded-sm bg-[#F9EAEA] text-xs text-[#C32E2E] font-medium flex justify-center py-1">
+                <div className="w-[58px] rounded-sm bg-[#F9EAEA] text-xs text-[#E95062] font-medium flex justify-center py-1">
                   比較期間
                 </div>
                 <div>

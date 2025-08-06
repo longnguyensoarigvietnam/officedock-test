@@ -393,7 +393,7 @@ const ChatDetail = ({
 
   // Scroll to selected message
   useEffect(() => {
-    if (gotoMessageId) {
+    if (gotoMessageId && dataMessageDetail) {
       const timer = setTimeout(() => {
         const targetElement = document.querySelector(
           `[data-message-id="${gotoMessageId}"]`,
@@ -410,7 +410,7 @@ const ChatDetail = ({
       }, 200);
       return () => clearTimeout(timer);
     }
-  }, [gotoMessageId, dataMessageDetail]);
+  }, [gotoMessageId, dataMessageDetail, lastItemId]);
 
   // Get message list
   const handleGetDataMessages = async (pageNumber: number) => {
@@ -604,7 +604,7 @@ const ChatDetail = ({
           }
           setDataMessageDetail((prev) => {
             if (prev) {
-              const newMessages = data.data.results.slice().reverse();
+              const newMessages = data.data.results;
 
               const filteredMessages = newMessages.filter(
                 (newMsg) =>
@@ -1038,7 +1038,10 @@ const ChatDetail = ({
       switch (data.action) {
         case SocketActions.MESSAGE:
           if (data.chatRoom.code === chatRoomCode) {
-            if (!data.clientId || !data.clientId.includes(clientId)) {
+            if (
+              !hasMoreDetailOnScrollDown &&
+              (!data.clientId || !data.clientId.includes(clientId))
+            ) {
               const chatFileList = data.chatMessage.chatFiles.map((file) => {
                 return {
                   ...file,
@@ -1325,39 +1328,43 @@ const ChatDetail = ({
       );
     }
 
-    setDataMessageDetail([
-      {
-        uuid: uuidMsg,
-        message: filterMsg,
-        createdAt: getCurrentTimeInJapan(),
-        deletedAt: null,
-        bookmarkAt: null,
-        type: MessageType.MESSAGE,
-        isEdited: false,
-        task: null,
-        sender: {
-          fullName: session?.user.profile.fullName || '',
-          id: session?.user.id as number,
-          organizations: {
-            id:
-              authenticatedUser?.organizations.find(
-                (organization) => organization.isMain,
-              )?.id || 0,
-            name:
-              authenticatedUser?.organizations.find(
-                (organization) => organization.isMain,
-              )?.name || '',
+    if (!hasMoreDetailOnScrollDown) {
+      setDataMessageDetail([
+        {
+          uuid: uuidMsg,
+          message: filterMsg,
+          createdAt: getCurrentTimeInJapan(),
+          deletedAt: null,
+          bookmarkAt: null,
+          type: MessageType.MESSAGE,
+          isEdited: false,
+          task: null,
+          sender: {
+            fullName: session?.user.profile.fullName || '',
+            id: session?.user.id as number,
+            organizations: {
+              id:
+                authenticatedUser?.organizations.find(
+                  (organization) => organization.isMain,
+                )?.id || 0,
+              name:
+                authenticatedUser?.organizations.find(
+                  (organization) => organization.isMain,
+                )?.name || '',
+            },
           },
+          mentions: mentionIds,
+          isBookmark: false,
+          chatFiles: chatUploadFiles,
+          quote:
+            allMsgIds && allMsgIds.length > 0 ? matchedMessagesQuote : null,
+          // TODO: Update sava data msg detail of reply in onsuccess API "reply"
         },
-        mentions: mentionIds,
-        isBookmark: false,
-        chatFiles: chatUploadFiles,
-        quote: allMsgIds && allMsgIds.length > 0 ? matchedMessagesQuote : null,
-        // TODO: Update sava data msg detail of reply in onsuccess API "reply"
-      },
 
-      ...dataMessageDetail,
-    ]);
+        ...dataMessageDetail,
+      ]);
+    }
+
     setUploadFileStatus((prev) => ({
       ...prev,
       [uuidMsg]: { progress: 0 },
@@ -2679,9 +2686,9 @@ const ChatDetail = ({
             }}>
             {/* Header */}
             <div
-              className="flex justify-between items-center px-4 py-2 min-h-[78px] !w-full border-b-[2px] text-white"
+              className="flex justify-between items-center px-4 py-2 min-h-[78px] !w-[calc(100%_-_20px)] ml-auto border-b-[2px] rounded-bl-[24px] text-white"
               style={{
-                background: 'linear-gradient(to right, #0E8DC5, #0D6FBA)',
+                background: 'linear-gradient(to right, #289BF2, #73CCDF)',
               }}>
               <div className={`flex items-center w-[62%] gap-2`}>
                 {chatRoomDetail && (
@@ -2763,7 +2770,8 @@ const ChatDetail = ({
                           <div>
                             <Button
                               sz="sm"
-                              className="w-fit text-xs min-w-[80px] !px-[10px] !py-[8px] !bg-[#FFFFFF4D] !border-none"
+                              variant="secondary"
+                              className="w-fit text-xs min-w-[80px] text-white !px-[10px] !py-[8px] !bg-[#FFFFFF4D] !border-none"
                               onClick={() => setOpenAddMembersBox(true)}
                               type="button">
                               招待する
@@ -3018,7 +3026,8 @@ const ChatDetail = ({
                       ))}
                   {dataMessageDetail?.length > 0 &&
                   chatRoomNotifications &&
-                  chatRoomNotifications.notifications > 0 ? (
+                  chatRoomNotifications.notifications > 0 &&
+                  !hasMoreDetailOnScrollDown ? (
                     <div className="flex items-center gap-5 justify-center">
                       <div className="wavy-line"></div>
                       <p className="text-[13px] text-[#0068B6] break-all min-w-[105px]">
@@ -3237,7 +3246,7 @@ const ChatDetail = ({
                                   ) &&
                                   msgIdUpdated && (
                                     <Button
-                                      className="w-[120px]"
+                                      className="w-[120px] h-9"
                                       variant="outline"
                                       onClick={() => {
                                         setMsgIdUpdated &&

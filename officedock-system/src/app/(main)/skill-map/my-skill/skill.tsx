@@ -1,14 +1,13 @@
 'use client';
-import Image from 'next/image';
 import { useState } from 'react';
 import { AxiosError } from 'axios';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
-import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ActionsSkillMapDetailModal from '@components/modals/ActionsSkillMapDetailModal';
 import { SkillMapProgressBar } from '@components/common/ProgressBar/SkillMapProgressBar';
 import Button from '@components/common/Button';
+import { SkillMapBanner } from '@components/skillMap/SkillMapBanner';
 
 import useSkillMapUserDetail from '@hooks/useSkillMapUserDetail';
 import useSkillMapInfo from '@hooks/useSkillMapList';
@@ -21,12 +20,14 @@ import {
   OrganizationSkillMapDetail,
   SkillMapByOrganization,
 } from '@interfaces/skills';
+
 import {
   extractLevelNumber,
   extractStepNumber,
   getSkillStep,
   timeStringToHours,
 } from '@utils';
+
 import { useToast } from '@providers/ToastProvider';
 
 const MySkill = () => {
@@ -67,24 +68,25 @@ const MySkill = () => {
 
   return (
     <div className="w-full">
-      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#EBF1F7]">
-        <div className="flex gap-2 items-center mb-7">
+      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#E6F3FB]">
+        <div className="flex gap-2 items-center mb-7 bg-white w-fit p-[6px] rounded-[20px]">
           <Link href={`${pageRouters.SKILL_MAP.href}?tabId=${tabId || 0}`}>
             <Button
-              variant="outline"
-              className={`w-[90px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+              variant="secondary"
+              className={`w-[90px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
               スキルマップ
             </Button>
           </Link>
           <Button
             variant="primary"
-            className={`w-[90px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
+            className={`w-[90px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px]`}>
             マイスキル
           </Button>
-          <Link href={`${pageRouters.SKILL_LIST_MANAGEMENT.href}?tabId=${tabId || 0}`}>
+          <Link
+            href={`${pageRouters.SKILL_LIST_MANAGEMENT.href}?tabId=${tabId || 0}`}>
             <Button
-              variant="outline"
-              className={`w-[90px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+              variant="secondary"
+              className={`w-[90px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
               スキル一覧
             </Button>
           </Link>
@@ -93,55 +95,8 @@ const MySkill = () => {
 
       <div className="px-10">
         {/* Banner */}
-        <div className="w-full h-[189px] relative mb-5">
-          <Image
-            alt="Mountains"
-            src="/images/skill-banner.jpg"
-            fill
-            style={{ height: '100%', width: '100%' }}
-            className=" rounded-[14px]"
-          />
+        <SkillMapBanner skillMapInfo={skillMapInfo} />
 
-          <div className="absolute w-full h-full top-0 left-0 flex justify-between gap-5 pl-[50px] pr-[30px] pt-[30px]">
-            <div className=" h-full flex gap-5 items-start w-[395px]">
-              <CustomUserAvatar
-                avatarUrl={skillMapInfo?.user?.avatar || ''}
-                avatarColor={skillMapInfo?.user?.avatarColor || ''}
-                size={70}
-              />
-              <div className="flex flex-col items-start justify-center">
-                <p className="text-sm font-medium text-white max-w-full break-all line-clamp-2">
-                  {skillMapInfo?.user?.organizations?.name || ''}
-                </p>
-                <p className="text-black font-medium text-[26px] max-w-[300px] truncate">
-                  {skillMapInfo?.user.fullName}
-                </p>
-              </div>
-            </div>
-            <div className="text-xs font-medium text-white w-fit flex-grow flex-shrink-0">
-              <div className="bg-[#FFFFFFBF] w-full h-[104px] mt-3 rounded-md px-[30px] py-[25px] flex flex-col gap-2">
-                <div className="flex items-center gap-[10px] text-black font-medium text-base">
-                  <Image
-                    src="/icons/completed.svg"
-                    width={12}
-                    height={12}
-                    alt="completed-icon"
-                  />
-                  <p>直近1ヶ月で大カテゴリーAのタスクを60時間行いました</p>
-                </div>
-                <div className="flex items-center gap-[10px] text-black font-medium text-base">
-                  <Image
-                    src="/icons/completed.svg"
-                    width={12}
-                    height={12}
-                    alt="completed-icon"
-                  />
-                  <p>企画提案力のレベルアップが近づいています！</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
         {/* My Skill */}
         <div className="flex flex-col gap-6 mb-8">
           {mySkillData.map((item, index) => (
@@ -235,7 +190,7 @@ const MySkill = () => {
                               <div className="flex gap-[2px] items-end mt-[4px]">
                                 {lastValidSkill.level.measureCount !== null && (
                                   <>
-                                    <p className="text-[18px] text-[#0068B6]">
+                                    <p className="text-[18px] text-primary">
                                       {lastValidSkill.level.actualMeasureCount}/
                                       {lastValidSkill.level.measureCount}
                                     </p>
@@ -246,7 +201,7 @@ const MySkill = () => {
                                 )}
                                 {lastValidSkill.level.measureTime !== null && (
                                   <>
-                                    <p className="text-[18px] text-[#0068B6]">
+                                    <p className="text-[18px] text-primary">
                                       {lastValidSkill.level.actualMeasureTime &&
                                         timeStringToHours(
                                           `${lastValidSkill.level.actualMeasureTime}`,
@@ -261,7 +216,7 @@ const MySkill = () => {
                                 {lastValidSkill.level.lookBackInterval !==
                                   null && (
                                   <>
-                                    <p className="text-[18px] text-[#0068B6]">
+                                    <p className="text-[18px] text-primary">
                                       {lastValidSkill.level.lookBackInterval}
                                     </p>
                                     <p className="relative top-[2px] text-xs">

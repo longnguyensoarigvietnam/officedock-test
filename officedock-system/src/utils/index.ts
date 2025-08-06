@@ -212,19 +212,28 @@ export const generatePassword = (): string => {
 export const trimUnnecessaryLineBreaks = (
   content: string | undefined | null,
 ) => {
-  if (!content) {
-    return '';
-  }
+  if (!content) return '';
 
-  const withoutLineBreaks = content
-    .replace(/<p><br><\/p>/g, '')
-    .replace(/<p>\s*<\/p>/g, '')
-    .trim();
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(content, 'text/html');
 
-  const withoutExtraSpaces = withoutLineBreaks.replace(/\s\s+/g, ' ');
+  // Remove empty elements like <p> with only <br>, or with only whitespace
+  const clean = Array.from(doc.body.childNodes).filter((node) => {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
 
-  return withoutExtraSpaces;
+      // If it only contains <br> or is completely empty, ignore
+      return el.textContent?.trim() !== '';
+    } else if (node.nodeType === Node.TEXT_NODE) {
+      return node.textContent?.trim() !== '';
+    }
+
+    return false;
+  });
+
+  return clean.length > 0 ? content : '';
 };
+
 // Utility function for throttling
 export const throttle = (func: (...args: any[]) => void, limit: number) => {
   let lastCall = 0;
@@ -571,19 +580,46 @@ export const showModalHeaderBackgroundColorByTime = () => {
 
   switch (true) {
     case hour >= 6 && hour < 11:
-      colorClassName = '#95c8e9';
+      colorClassName = '#63C2E4';
       break;
     case hour >= 11 && hour < 15:
-      colorClassName = '#68b6dc';
+      colorClassName = '#64BBF3';
       break;
     case hour >= 15 && hour < 18:
-      colorClassName = '#ccc1d7';
+      colorClassName = '#75A5DC';
       break;
     default:
-      colorClassName = '#7988ae';
+      colorClassName = '#5C89D0';
   }
   return colorClassName;
 };
+
+export const showSkillMapImageByTime = () => {
+  const hourStr = new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo',
+    hour: 'numeric',
+    hour12: false,
+  }).format(new Date());
+
+  const hour = Number(hourStr.substring(0, hourStr.length - 1));
+  let imgSrc = '';
+
+  switch (true) {
+    case hour >= 6 && hour < 11:
+      imgSrc = '/images/morning-map.png';
+      break;
+    case hour >= 11 && hour < 15:
+      imgSrc = '/images/noon-map.png';
+      break;
+    case hour >= 15 && hour < 18:
+      imgSrc = '/images/afternoon-map.png';
+      break;
+    default:
+      imgSrc = '/images/night-map.png';
+  }
+  return imgSrc;
+};
+
 export function generateOptionsCount(
   inputNumber: number,
 ): OptionDropdownType[] {
@@ -2190,10 +2226,10 @@ export const highlightTextSafely = (
           mentionName == `@${userFullName}` ||
           mentionName == `@${MENTION_ALL_MEMBERS}`
         ) {
-          element.classList.remove('text-[#0068B6]');
+          element.classList.remove('text-primary');
           element.classList.add('text-[#0068B7]');
         } else {
-          element.classList.remove('text-[#0068B6]');
+          element.classList.remove('text-primary');
           element.classList.add('text-[#77858F]');
         }
       }
@@ -2256,3 +2292,36 @@ export const sortChatParticipants = (
   // 4. Alphabetical
   return prev.fullName.localeCompare(next.fullName);
 };
+export function generateVerticalGradient(hexColor: string): string {
+  const hexToRgb = (hex: string) => {
+    const cleanHex = hex.replace('#', '');
+    const bigint = parseInt(cleanHex, 16);
+    return {
+      r: (bigint >> 16) & 255,
+      g: (bigint >> 8) & 255,
+      b: bigint & 255,
+    };
+  };
+
+  const rgbToHex = ({ r, g, b }: { r: number; g: number; b: number }) => {
+    const toHex = (n: number) => n.toString(16).padStart(2, '0');
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  };
+
+  const adjustColor = (
+    color: { r: number; g: number; b: number },
+    amount: number,
+  ) => {
+    return {
+      r: Math.min(255, Math.max(0, color.r + amount)),
+      g: Math.min(255, Math.max(0, color.g + amount)),
+      b: Math.min(255, Math.max(0, color.b + amount)),
+    };
+  };
+
+  const rgb = hexToRgb(hexColor);
+  const dark = rgbToHex(adjustColor(rgb, -20));
+  const light = rgbToHex(adjustColor(rgb, 30));
+
+  return `linear-gradient(to bottom, ${dark} 0%, ${hexColor} 50%, ${light} 100%)`;
+}

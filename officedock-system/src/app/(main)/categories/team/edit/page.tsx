@@ -11,7 +11,7 @@ const EditHierarchyPage = () => {
   return (
     <MainLayout
       title={pageRouters.EDIT_TEAM_CATEGORY.name}
-      className="px-0 !pt-0 !bg-[#EBF1F7]"
+      className="px-0 !pt-0"
       showFooter={false}
       permission={PermissionsSystem.CATEGORY_HIERARCHY_UPDATE}>
       <EditHierarchyForm />

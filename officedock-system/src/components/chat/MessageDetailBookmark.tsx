@@ -293,7 +293,7 @@ export const MessageDetailBookmark = ({
       if (status == SubmitLevelStatus.APPROVAL) {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+            <p className="text-primary font-medium text-sm max-w-full break-all">
               {isSearchingMessages && allRoomChatMsgSearch
                 ? `${highlightTitleBySearchTerm(skillName, allRoomChatMsgSearch)}`
                 : `${skillName}`}
@@ -306,7 +306,7 @@ export const MessageDetailBookmark = ({
       } else {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+            <p className="text-primary font-medium text-sm max-w-full break-all">
               {isSearchingMessages && allRoomChatMsgSearch
                 ? `${highlightTitleBySearchTerm(skillName, allRoomChatMsgSearch)}`
                 : `${skillName}`}
@@ -444,7 +444,7 @@ export const MessageDetailBookmark = ({
                                                 </div>
                                               )}
                                               <p
-                                                className={`text-[#0068B6] font-medium text-[14px] break-all max-w-full ${
+                                                className={`text-primary font-medium text-[14px] break-all max-w-full ${
                                                   file.fileType.includes(
                                                     'image',
                                                   )
@@ -922,16 +922,12 @@ export const MessageDetailBookmark = ({
                                   )}
                                 </h4>
                                 <Button
-                                  className="!text-black !font-medium !text-xs !bg-[#CED8DE] !rounded-[100px] !w-[86px] !h-[30px] !px-0"
+                                  variant="outline"
+                                  className="!font-medium !text-xs !rounded-[8px] !w-[86px] !h-[30px] !px-0"
                                   onClick={() => {
                                     router.push(pageRouters.LEVEL_UP_TEAM.href);
                                   }}>
                                   確認する
-                                  <ImageRound
-                                    name="Filter extend icon"
-                                    src={'/icons/arrow-down.svg'}
-                                    className={`w-4 h-4 cursor-pointer -rotate-90`}
-                                  />
                                 </Button>
                               </div>
                             </div>
@@ -1009,13 +1005,13 @@ export const MessageDetailBookmark = ({
                         name="Calendar icon"
                         src="/icons/calendar-time.svg"
                       />
-                      <p className="text-[#0068B6] text-sm font-medium">
+                      <p className="text-primary text-sm font-medium">
                         {messageDetail.schedule?.title}
                       </p>
                     </div>
                     <div className="flex gap-3 w-full">
                       <div className="flex flex-row  gap-3 text-sm font-medium">
-                        <p className="text-[#0068B6] max-w-full break-all">
+                        <p className="text-primary max-w-full break-all">
                           {messageDetail.sender.fullName}
                           <span className="text-black">
                             {messageDetail.type === MessageType.REMOVE_SCHEDULE

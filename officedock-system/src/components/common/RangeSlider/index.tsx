@@ -88,10 +88,13 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
   const marks = [18, 38.5, 59, 79.5, 100];
 
   return (
-    <div className="flex w-full items-center gap-2 justify-between">
+    <div className="flex w-full items-center  justify-center">
       <DynamicTooltip content="縮小" placement="top">
         <div>
-          <button
+          <ImageRound
+            className="w-fit h-fit opacity-80  cursor-pointer"
+            src="/icons/zoom-out-calendar.svg"
+            name="remove icon"
             onClick={() => {
               const prevMark = [...marks]
                 .reverse()
@@ -101,13 +104,7 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
                 if (onChange) onChange(prevMark);
               }
             }}
-            className="text-2xl h-[18px] rounded-full bg-[#ECF0F2] w-[18px] flex items-center justify-center cursor-pointer  border-none">
-            <ImageRound
-              className="w-[10px] h-[10px] opacity-80"
-              src="/icons/zoom-out.svg"
-              name="remove icon"
-            />
-          </button>
+          />
         </div>
       </DynamicTooltip>
 
@@ -144,7 +141,7 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
             top: '50%',
             width: '5px',
             height: '14px',
-            background: '#0068B6',
+            background: '#228CDB',
             borderRadius: '1px',
             cursor: 'pointer',
           }}
@@ -158,8 +155,8 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
         customOffset={{
           left: -5,
         }}>
-        <div>
-          <button
+        <div className="ml-2">
+          <ImageRound
             onClick={() => {
               const nextMark = marks.find((mark) => mark > value);
               if (nextMark !== undefined) {
@@ -167,13 +164,10 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
                 if (onChange) onChange(nextMark);
               }
             }}
-            className="text-2xl cursor-pointer h-[18px] rounded-full bg-[#ECF0F2] w-[18px] border-none">
-            <ImageRound
-              className="w-[10px] h-[10px] relative left-1 opacity-80"
-              src="/icons/add.svg"
-              name="remove icon"
-            />
-          </button>
+            className="w-fit h-fit relative left-1 opacity-80 cursor-pointer"
+            src="/icons/zoom-in-calendar.svg"
+            name="remove icon"
+          />
         </div>
       </DynamicTooltip>
     </div>

@@ -9,7 +9,7 @@ const SkillsMapPage = () => {
     <MainLayout
       title={pageRouters.SKILL_MAPS_MANAGEMENT.name}
       permission={PermissionsSystem.SKILL_MAP_MANAGEMENT_VIEW}
-      className="px-0 !pt-0 !overflow-x-auto !bg-[#EBF1F7]"
+      className="px-0 !pt-0 !overflow-x-auto"
       showFooter={false}>
       <ListSkillsMap />
     </MainLayout>

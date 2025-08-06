@@ -35,7 +35,7 @@ const CompletionRewardModal = memo(
             className="w-10 h-10"
           />
         </div>
-        <div className="font-medium text-[18px] text-[#0068B6] text-center my-[30px] break-all">
+        <div className="font-medium text-[18px] text-primary text-center my-[30px] break-all">
           「{dataRewardSkill?.skill.name}」を{' '}
           {dataRewardSkill?.measureCount !== null && (
             <>{dataRewardSkill?.measureCount}回完了しました！</>
@@ -74,7 +74,7 @@ const CompletionRewardModal = memo(
         </div>
 
         <div onClick={onClose} className="text-center">
-          <p className="text-[#0068B6] text-[13px] font-medium cursor-pointer">
+          <p className="text-primary text-[13px] font-medium cursor-pointer">
             今はやめておく
           </p>
         </div>

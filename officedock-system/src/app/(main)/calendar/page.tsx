@@ -8,7 +8,7 @@ import EventCalendar from './calendar';
 const CalendarPage = () => {
   return (
     <MainLayout
-      className="!bg-[#ebf1f4] !p-0 !overflow-y-hidden"
+      className="!p-0 !overflow-y-hidden"
       title={pageRouters.CALENDAR_MANAGEMENT.name}
       showFooter={false}
       permission={PermissionsSystem.CALENDAR_VIEW}>

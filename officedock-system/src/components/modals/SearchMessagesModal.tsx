@@ -59,6 +59,7 @@ import {
   renderEventDatetimeInChat,
   renderScheduleChangeInCalendarRoom,
 } from '@utils';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 interface SearchMessagesModalProps {
   open: boolean;
@@ -159,7 +160,7 @@ export const SearchMessagesModal = ({
       if (status == SubmitLevelStatus.APPROVAL) {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+            <p className="text-primary font-medium text-sm max-w-full break-all">
               {highlightTitleBySearchTerm(skillName, searchChatMsg)}{' '}
               <span className="text-black text-sm font-normal">
                 のスキルがレベルアップしました！
@@ -170,7 +171,7 @@ export const SearchMessagesModal = ({
       } else {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+            <p className="text-primary font-medium text-sm max-w-full break-all">
               {highlightTitleBySearchTerm(skillName, searchChatMsg)}{' '}
               <span className="text-black text-sm font-normal">
                 のレベルアップの申請についてコメントが届いています。
@@ -426,12 +427,12 @@ export const SearchMessagesModal = ({
     <Modal
       open={open}
       isOutSideAction={false}
-      className="font-primary !rounded-xl text-gray-700 !p-0 !w-[800px] !min-w-[800px] h-[790px]"
+      className="font-primary !rounded-[20px] text-gray-700 !p-0 !w-[800px] !min-w-[800px] h-[790px]"
       titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
-      headerClassName="bg-[#EBF1F7] !rounded-t-xl !rounded-b-none px-6 py-4"
+      headerClassName="bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-6 py-4"
       closeIconClassName="!bg-white !rounded-full !p-2 !hover:cursor-pointer !shadow-sm"
       closeClassName="!mt-0 opacity-70 !w-4 !h-4 !hover:cursor-pointer"
-      contentClass="!w-[800px]"
+      contentClass="!w-[800px] !rounded-[20px]"
       onClose={() => {
         onClose();
       }}
@@ -445,6 +446,21 @@ export const SearchMessagesModal = ({
               inputClassName="!py-1 text-[14px] !border-[#77858F]"
               value={searchChatMsg}
               onChange={(e) => setSearchChatMsg(e.target.value)}
+              onKeyDown={(e: any) => {
+                if (e.keyCode == 13 && e.target.value !== '') {
+                  setSearchMessageResults(undefined);
+                  setSearchResultsPage(1);
+                  onSubmit(
+                    searchChatMsg,
+                    1,
+                    chatRoomType == ChatRoomType.CALENDAR ||
+                      chatRoomType == ChatRoomType.SKILL ||
+                      chatRoomType == ChatRoomType.TASK
+                      ? chatRoomType || ''
+                      : '',
+                  );
+                }
+              }}
             />
             <Button
               className="!w-[60px] rounded-[6px] h-[36px] !px-[12px] font-medium text-sm"
@@ -467,9 +483,7 @@ export const SearchMessagesModal = ({
           </div>
           <div className="flex gap-2 items-center font-medium text-sm">
             <p className="text-[#77858F]">検索結果</p>
-            <p className="text-[#0068B6]">
-              {searchMessageResults?.count || 0}件
-            </p>
+            <p className="text-primary">{searchMessageResults?.count || 0}件</p>
           </div>
         </div>
         <div
@@ -589,7 +603,7 @@ export const SearchMessagesModal = ({
                                                   </div>
                                                 )}
                                                 <p
-                                                  className={`text-[#0068B6] font-medium text-[14px] break-words break-all max-w-full ${
+                                                  className={`text-primary font-medium text-[14px] break-words break-all max-w-full ${
                                                     file.fileType.includes(
                                                       'image',
                                                     )
@@ -1020,7 +1034,7 @@ export const SearchMessagesModal = ({
                               name="Calendar icon"
                               src="/icons/calendar-time.svg"
                             />
-                            <p className="text-[#0068B6] text-sm font-medium">
+                            <p className="text-primary text-sm font-medium">
                               {highlightTitleBySearchTerm(
                                 messageDetail.schedule?.title || '',
                                 searchChatMsg,
@@ -1028,7 +1042,7 @@ export const SearchMessagesModal = ({
                             </p>
                           </div>
                           <div className="flex gap-1 text-sm font-medium">
-                            <p className="text-[#0068B6] max-w-full break-all">
+                            <p className="text-primary max-w-full break-all">
                               {messageDetail.sender.fullName}{' '}
                               <span className="text-black">
                                 {messageDetail.type ===
@@ -1076,36 +1090,48 @@ export const SearchMessagesModal = ({
                     </p>
                   </div>
                   <div className="bg-white group-hover:flex hidden rounded-3xl px-3 py-1.5 shadow-md absolute left-1/2 -bottom-4 transform -translate-x-1/2 items-center gap-2">
-                    <div
-                      className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer"
-                      onClick={() => {
-                        setSearchMessageResults(undefined);
-                        setSearchResultsPage(1);
-                        onGotoMessage({
-                          messageId: Number(messageDetail.id),
-                          chatRoomCode: String(messageDetail.chatRoom?.code),
-                        });
-                      }}>
-                      <ImageRound
-                        name="Go to message"
-                        src={'/icons/go-to-message.svg'}
-                        className="w-[15px] h-[13px] hover:cursor-pointer"
-                      />
-                    </div>
-                    <div
-                      onClick={() => {
-                        handleBookmark({
-                          uuid: messageDetail.uuid,
-                          isBookmark: !messageDetail.isBookmark,
-                        });
-                      }}
-                      className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
-                      <ImageRound
-                        name="Book mark"
-                        src={`/icons/${messageDetail.isBookmark ? 'save-active.svg' : 'save-chat.svg'}`}
-                        className="w-[10px] h-[12px] hover:cursor-pointer"
-                      />
-                    </div>
+                    <DynamicTooltip
+                      content={'メッセージに移動'}
+                      placement="top">
+                      <div
+                        className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer"
+                        onClick={() => {
+                          setSearchMessageResults(undefined);
+                          setSearchResultsPage(1);
+                          onGotoMessage({
+                            messageId: Number(messageDetail.id),
+                            chatRoomCode: String(messageDetail.chatRoom?.code),
+                          });
+                        }}>
+                        <ImageRound
+                          name="Go to message"
+                          src={'/icons/go-to-message.svg'}
+                          className="w-[15px] h-[13px] hover:cursor-pointer"
+                        />
+                      </div>
+                    </DynamicTooltip>
+                    <DynamicTooltip
+                      content={
+                        messageDetail.isBookmark
+                          ? 'ブックマークを外す'
+                          : 'ブックマーク'
+                      }
+                      placement="top">
+                      <div
+                        onClick={() => {
+                          handleBookmark({
+                            uuid: messageDetail.uuid,
+                            isBookmark: !messageDetail.isBookmark,
+                          });
+                        }}
+                        className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
+                        <ImageRound
+                          name="Book mark"
+                          src={`/icons/${messageDetail.isBookmark ? 'save-active.svg' : 'save-chat.svg'}`}
+                          className="w-[10px] h-[12px] hover:cursor-pointer"
+                        />
+                      </div>
+                    </DynamicTooltip>
                   </div>
                 </div>
               );

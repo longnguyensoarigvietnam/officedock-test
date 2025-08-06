@@ -627,14 +627,8 @@ const TaskPageDataHeader = () => {
               <div className="w-fit h-10">
                 <Dropdown
                   options={optionsTaskMe.filter((item) => item.type)}
-                  className={`!w-[220px] h-full !p-2  !text-sm !font-semibold`}
+                  className={`!w-[220px] h-full !p-2 !rounded-[6px] !border-[1px] !border-[#63B7EE] !text-sm !font-semibold`}
                   placeholder="打ち合わせ"
-                  styleClass={{
-                    borderColor:
-                      statusTaskSelected?.isStart && taskSelected.value
-                        ? '#0068B6'
-                        : '#D2DBE1',
-                  }}
                   disabled={!isTaskPage || isTaskTeamPage}
                   searchOption
                   selectedOption={
@@ -677,7 +671,7 @@ const TaskPageDataHeader = () => {
                         <ImageRound
                           src={`/icons/${statusTaskSelected?.isStart && taskSelected.value ? 'pause' : 'play'}.svg`}
                           name="Start task day"
-                          className={`!w-9 !h-9 hover:cursor-pointer`}
+                          className={` !w-9 !h-9 hover:cursor-pointer`}
                           onClick={() => {
                             const selectedTask = taskSelected.value;
 
@@ -839,7 +833,7 @@ const TaskPageDataHeader = () => {
                 taskSelected.type === dataOverTimeWarning.type &&
                 `${String(taskSelected.value).replace('event', '')}` ===
                   dataOverTimeWarning.id && (
-                  <div className="flex gap-1 items-center text-xs font-normal text-[#C32E2E] mt-[2px]">
+                  <div className="flex gap-1 items-center text-xs font-normal text-[#E95062] mt-[2px]">
                     <ImageRound
                       src={`/icons/overlap-task.svg`}
                       name="icon warning"
