@@ -1355,7 +1355,7 @@ const ScheduleTeamBoard = () => {
         style={{
           boxShadow: '0px 2px 8px 0px #0000001A',
         }}
-        className={`w-[180px] px-3 z-20 h-[38px] absolute  rounded-full right-[70px] bottom-[35px] bg-white flex items-center `}>
+        className={`w-[180px] px-3 z-20 h-[38px] absolute rounded-[100px] right-[70px] bottom-[35px] bg-white flex items-center `}>
         <RangeSlider
           min={18}
           max={100}

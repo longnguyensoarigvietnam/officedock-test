@@ -2467,7 +2467,7 @@ const EventCalendar = () => {
               </DynamicTooltip>
             </div>
             <div
-              className={`flex gap-5 items-center ${!showSidebar && 'mr-14'}`}>
+              className={`flex gap-5 items-center ${!showSidebar && 'mr-20'}`}>
               <InputSearch
                 placeholder="予定、キーワードを検索"
                 value={keySearch}
@@ -2745,7 +2745,7 @@ const EventCalendar = () => {
               watch('calendarView').value != CalendarViewOptions.VIEW_BY_YEAR &&
               !isEventRendering && (
                 <div
-                  className={`w-[180px] px-3 z-[20] h-[38px] absolute  rounded-md right-[50px] bottom-[30px] bg-white flex items-center `}>
+                  className={`w-[180px] px-3 z-[20] h-[38px] absolute rounded-[100px] right-[50px] bottom-[30px] bg-white flex items-center `}>
                   <RangeSlider
                     min={18}
                     max={100}
