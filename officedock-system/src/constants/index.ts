@@ -17,6 +17,7 @@ export const PROVIDER_GOOGLE = 'google';
 export const TOAST_DURATION = 3000;
 
 export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 255;
 
 export const DATE_FORMAT = 'yyyy/MM/dd';
 export const DATE_TEXT_FORMAT = 'yyyy年 MM月 dd日';
