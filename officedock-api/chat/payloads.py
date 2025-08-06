@@ -1,7 +1,6 @@
 from collections import defaultdict
 from uuid import UUID
 
-from django.db.models import Prefetch
 
 from chat.constants import ChatRoomTypes
 from chat.models import ChatRoom, ChatMessage, Bookmark, Reaction
@@ -47,37 +46,13 @@ def build_chat_participant_payload(
     }
 
 
-def build_chat_message_payload(chat_messages, request_user=None):
+def build_chat_message_payload(full_messages, request_user=None):
     """
     Convert ChatMessage queryset to flat JSON dict list, avoiding N+1 queries.
     """
-    message_ids = [msg.id for msg in chat_messages]
-
-    # Prefetch only bookmarks for this user
     bookmarks_qs = Bookmark.objects.only("chat_message", "user")
     if request_user:
         bookmarks_qs = bookmarks_qs.filter(user=request_user)
-
-    full_messages = (
-        ChatMessage.objects.filter(id__in=message_ids)
-        .select_related(
-            "sender",
-            "task",
-            "submit_level",
-            "schedule",
-            "reply",
-        )
-        .prefetch_related(
-            "chat_files",
-            "tasks",
-            "mentions",
-            Prefetch(
-                "reactions", queryset=Reaction.objects.select_related("user")
-            ),
-            Prefetch("bookmarks", queryset=bookmarks_qs),
-        )
-        .order_by("-created_at")
-    )
 
     # Map message_id → list of bookmark user_ids
     bookmark_user_map = defaultdict(set)
