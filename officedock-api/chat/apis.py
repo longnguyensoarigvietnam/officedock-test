@@ -11,6 +11,7 @@ from django.db.models import (
     F,
     Q,
     Count,
+    Prefetch,
 )
 from django.db.models.functions import Coalesce
 from django.utils import timezone
@@ -40,6 +41,7 @@ from chat.models import (
     ChatRoomsParticipants,
     ChatFile,
     Bookmark,
+    Reaction,
 )
 from chat.serializers import (
     BookMarkSerializer,
@@ -611,9 +613,26 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
             # Sorting message by asc or desc create_at
             order_by_field = "created_at" if sorting else "-created_at"
-            chat_messages = chat_room.chat_messages.order_by(
-                order_by_field
-            ).all()
+            chat_messages = (
+                chat_room.chat_messages.select_related(
+                    "sender",
+                    "task",
+                    "submit_level",
+                    "schedule",
+                    "reply",
+                )
+                .prefetch_related(
+                    "chat_files",
+                    "tasks",
+                    "mentions",
+                    "bookmarks",
+                    Prefetch(
+                        "reactions",
+                        queryset=Reaction.objects.select_related("user"),
+                    ),
+                )
+                .order_by(order_by_field)
+            )
 
             # Filter message_id or bookmark_message_id
             if bookmark_message_id:
