@@ -1038,7 +1038,10 @@ const ChatDetail = ({
       switch (data.action) {
         case SocketActions.MESSAGE:
           if (data.chatRoom.code === chatRoomCode) {
-            if (!data.clientId || !data.clientId.includes(clientId)) {
+            if (
+              !hasMoreDetailOnScrollDown &&
+              (!data.clientId || !data.clientId.includes(clientId))
+            ) {
               const chatFileList = data.chatMessage.chatFiles.map((file) => {
                 return {
                   ...file,
@@ -1325,39 +1328,43 @@ const ChatDetail = ({
       );
     }
 
-    setDataMessageDetail([
-      {
-        uuid: uuidMsg,
-        message: filterMsg,
-        createdAt: getCurrentTimeInJapan(),
-        deletedAt: null,
-        bookmarkAt: null,
-        type: MessageType.MESSAGE,
-        isEdited: false,
-        task: null,
-        sender: {
-          fullName: session?.user.profile.fullName || '',
-          id: session?.user.id as number,
-          organizations: {
-            id:
-              authenticatedUser?.organizations.find(
-                (organization) => organization.isMain,
-              )?.id || 0,
-            name:
-              authenticatedUser?.organizations.find(
-                (organization) => organization.isMain,
-              )?.name || '',
+    if (!hasMoreDetailOnScrollDown) {
+      setDataMessageDetail([
+        {
+          uuid: uuidMsg,
+          message: filterMsg,
+          createdAt: getCurrentTimeInJapan(),
+          deletedAt: null,
+          bookmarkAt: null,
+          type: MessageType.MESSAGE,
+          isEdited: false,
+          task: null,
+          sender: {
+            fullName: session?.user.profile.fullName || '',
+            id: session?.user.id as number,
+            organizations: {
+              id:
+                authenticatedUser?.organizations.find(
+                  (organization) => organization.isMain,
+                )?.id || 0,
+              name:
+                authenticatedUser?.organizations.find(
+                  (organization) => organization.isMain,
+                )?.name || '',
+            },
           },
+          mentions: mentionIds,
+          isBookmark: false,
+          chatFiles: chatUploadFiles,
+          quote:
+            allMsgIds && allMsgIds.length > 0 ? matchedMessagesQuote : null,
+          // TODO: Update sava data msg detail of reply in onsuccess API "reply"
         },
-        mentions: mentionIds,
-        isBookmark: false,
-        chatFiles: chatUploadFiles,
-        quote: allMsgIds && allMsgIds.length > 0 ? matchedMessagesQuote : null,
-        // TODO: Update sava data msg detail of reply in onsuccess API "reply"
-      },
 
-      ...dataMessageDetail,
-    ]);
+        ...dataMessageDetail,
+      ]);
+    }
+
     setUploadFileStatus((prev) => ({
       ...prev,
       [uuidMsg]: { progress: 0 },
@@ -2763,7 +2770,7 @@ const ChatDetail = ({
                           <div>
                             <Button
                               sz="sm"
-                              variant='secondary'
+                              variant="secondary"
                               className="w-fit text-xs min-w-[80px] text-white !px-[10px] !py-[8px] !bg-[#FFFFFF4D] !border-none"
                               onClick={() => setOpenAddMembersBox(true)}
                               type="button">
@@ -3019,7 +3026,8 @@ const ChatDetail = ({
                       ))}
                   {dataMessageDetail?.length > 0 &&
                   chatRoomNotifications &&
-                  chatRoomNotifications.notifications > 0 ? (
+                  chatRoomNotifications.notifications > 0 &&
+                  !hasMoreDetailOnScrollDown ? (
                     <div className="flex items-center gap-5 justify-center">
                       <div className="wavy-line"></div>
                       <p className="text-[13px] text-[#0068B6] break-all min-w-[105px]">

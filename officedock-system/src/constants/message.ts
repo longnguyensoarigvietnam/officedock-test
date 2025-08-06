@@ -34,6 +34,8 @@ export const DEFAULT_VALUE_TODO_LIST = '入力してください。';
 //Validate message
 export const PASSWORD_MIN_LENGTH_MESSAGE =
   '半角英数8文字以上で入力してください。';
+export const PASSWORD_MAX_LENGTH_MESSAGE =
+  'この項目が255文字より長くならないようにしてください。';
 export const PASSWORD_NOT_MATCHED_MESSAGE = 'パスワードが一致しません。';
 export const PASSWORD_WRONG_FORMAT = 'このパスワードは一般的すぎます。';
 export const END_DATE_WRONG_SELECTED =

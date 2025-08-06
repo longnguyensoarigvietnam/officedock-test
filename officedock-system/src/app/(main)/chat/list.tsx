@@ -1056,7 +1056,8 @@ const ListChatUsers = ({
   ]);
 
   return (
-    <aside className={`w-[270px] max-w-[270px] min-w-[270px] !h-[calc(100vh_-_76px)] ${expanded ? '!rounded-r-[60px]' : '!rounded-r-[30px]'} !bg-[#E6F3FB] pl-4 pt-5`}>
+    <aside
+      className={`w-[270px] max-w-[270px] min-w-[270px] !h-[calc(100vh_-_76px)] ${expanded ? '!rounded-r-[60px]' : '!rounded-r-[30px]'} !bg-[#E6F3FB] pl-4 pt-5`}>
       <div className="relative mb-5 pr-4" ref={searchSectionRef}>
         <InputSearch
           placeholder="全体のキーワードを検索"
@@ -1189,34 +1190,42 @@ const ListChatUsers = ({
                     <PopoverPanel className="absolute left-0 z-10 min-w-[196px] max-w-[196px] transform">
                       <div className="bg-[#5B6770] text-white rounded-[6px] py-[5px] mt-2 text-sm font-medium">
                         <p
-                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == '' && 'bg-[#7D8A94]'}`}
+                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == '' && 'bg-[#7D8A94]'}`}
                           onClick={() => {
-                            setSearchRoomType('');
-                            close();
+                            if (!initialLoadSearch) {
+                              setSearchRoomType('');
+                              close();
+                            }
                           }}>
                           すべてのチャット
                         </p>
                         <p
-                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.UNREAD && 'bg-[#7D8A94]'}`}
+                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == ChatRoomType.UNREAD && 'bg-[#7D8A94]'}`}
                           onClick={() => {
-                            setSearchRoomType(ChatRoomType.UNREAD);
-                            close();
+                            if (!initialLoadSearch) {
+                              setSearchRoomType(ChatRoomType.UNREAD);
+                              close();
+                            }
                           }}>
                           未読があるチャット
                         </p>
                         <p
-                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.GROUP && 'bg-[#7D8A94]'}`}
+                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == ChatRoomType.GROUP && 'bg-[#7D8A94]'}`}
                           onClick={() => {
-                            setSearchRoomType(ChatRoomType.GROUP);
-                            close();
+                            if (!initialLoadSearch) {
+                              setSearchRoomType(ChatRoomType.GROUP);
+                              close();
+                            }
                           }}>
                           グループチャット
                         </p>
                         <p
-                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.PRIVATE && 'bg-[#7D8A94]'}`}
+                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == ChatRoomType.PRIVATE && 'bg-[#7D8A94]'}`}
                           onClick={() => {
-                            setSearchRoomType(ChatRoomType.PRIVATE);
-                            close();
+                            if (!initialLoadSearch) {
+                              setSearchRoomType(ChatRoomType.PRIVATE);
+                              close();
+                            }
                           }}>
                           個人チャット
                         </p>
