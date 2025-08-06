@@ -108,6 +108,7 @@ const MultiSelectDropdown = ({
                   onChange={() => {
                     handleOptionClick(option);
                   }}
+                  disable={disabled}
                   classLabel={labelOptionClass}
                   isChecked={
                     selected?.find(

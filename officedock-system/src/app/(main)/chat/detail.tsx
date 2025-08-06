@@ -393,7 +393,7 @@ const ChatDetail = ({
 
   // Scroll to selected message
   useEffect(() => {
-    if (gotoMessageId) {
+    if (gotoMessageId && dataMessageDetail) {
       const timer = setTimeout(() => {
         const targetElement = document.querySelector(
           `[data-message-id="${gotoMessageId}"]`,
@@ -410,7 +410,7 @@ const ChatDetail = ({
       }, 200);
       return () => clearTimeout(timer);
     }
-  }, [gotoMessageId, dataMessageDetail]);
+  }, [gotoMessageId, dataMessageDetail, lastItemId]);
 
   // Get message list
   const handleGetDataMessages = async (pageNumber: number) => {
@@ -604,7 +604,7 @@ const ChatDetail = ({
           }
           setDataMessageDetail((prev) => {
             if (prev) {
-              const newMessages = data.data.results.slice().reverse();
+              const newMessages = data.data.results;
 
               const filteredMessages = newMessages.filter(
                 (newMsg) =>
@@ -788,7 +788,7 @@ const ChatDetail = ({
       Color,
       Mention.configure({
         HTMLAttributes: {
-          class: 'mention text-primary',
+          class: 'mention text-[#0068B6]',
         },
       }),
       Placeholder.configure({
@@ -2479,7 +2479,64 @@ const ChatDetail = ({
   }, [uploadFiles]);
 
   // Reaction message
-  const handleReactionClick = (_msgUuid: string, _icon: string) => {
+  const handleReactionClick = (msgUuid: string, icon: string) => {
+    setDataMessageDetail((prev) =>
+      prev.map((message) => {
+        if (message.uuid !== msgUuid) return message;
+
+        const userId = session?.user.id as number;
+
+        const updatedReactions = (message.reactions || [])
+          // Remove user from all other reactions (only keep if never selected or is new reaction)
+          .map((reaction) => ({
+            ...reaction,
+            users: reaction.users.filter((id) => id !== userId),
+          }))
+          // After filtering out the user from all reactions, check if this reaction exists
+          .filter((reaction) => reaction.users.length > 0);
+
+        const existingReaction = message.reactions?.find(
+          (r) => r.icon === icon,
+        );
+
+        const userReacted = existingReaction?.users.includes(userId);
+
+        // If it already exists and the user has clicked => remove completely (toggle off)
+        if (existingReaction && userReacted) {
+          return {
+            ...message,
+            reactions: updatedReactions,
+          };
+        }
+
+        // If it already exists but the user hasn't selected it => add it
+        if (existingReaction && !userReacted) {
+          return {
+            ...message,
+            reactions: [
+              ...updatedReactions,
+              {
+                ...existingReaction,
+                users: [...(existingReaction.users || []), userId],
+              },
+            ],
+          };
+        }
+
+        // If that reaction doesn't exist => create a new one
+        return {
+          ...message,
+          reactions: [
+            ...updatedReactions,
+            {
+              icon,
+              users: [userId],
+            },
+          ],
+        };
+      }),
+    );
+
     setChatRoomNotifications({
       notifications: 0,
       roomCode: chatRoomCode,
@@ -2964,7 +3021,7 @@ const ChatDetail = ({
                   chatRoomNotifications.notifications > 0 ? (
                     <div className="flex items-center gap-5 justify-center">
                       <div className="wavy-line"></div>
-                      <p className="text-[13px] text-primary break-all min-w-[105px]">
+                      <p className="text-[13px] text-[#0068B6] break-all min-w-[105px]">
                         未読のメッセージ
                       </p>
                       <div className="wavy-line"></div>

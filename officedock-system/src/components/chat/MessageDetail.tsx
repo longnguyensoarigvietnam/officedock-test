@@ -385,6 +385,7 @@ export const MessageDetail = ({
                     key={`${index}-${i}-msg`}
                     chatRoomDetail={chatRoomDetail}
                     messageDetail={foundQuote}
+                    uuidQuote={foundQuote.uuid}
                     dashboardMembers={dashboardMembers}
                     highlightedMessageId={highlightedMessageId}
                     setDataPreviewFile={setDataPreviewFile}
@@ -409,6 +410,7 @@ export const MessageDetail = ({
                     messageDetail={foundQuote}
                     dashboardMembers={dashboardMembers}
                     title={dataTitle}
+                    uuidQuote={foundQuote.uuid}
                   />
                 </div>,
               );

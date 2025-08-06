@@ -61,7 +61,7 @@ export type MessageDetailProps = {
   msgEditing?: string;
   dashboardMembers: ChatDashboardMember[];
   highlightedMessageId: string | null;
-
+  uuidQuote: string;
   setDataPreviewFile: Dispatch<
     SetStateAction<{
       msgId: string;
@@ -75,6 +75,7 @@ export type MessageDetailProps = {
 };
 
 export const MessageDetailQuoteChild = ({
+  uuidQuote,
   chatRoomDetail,
   messageDetail,
   dashboardMembers,
@@ -232,6 +233,7 @@ export const MessageDetailQuoteChild = ({
                     key={`${index}-${i}-msg`}
                     chatRoomDetail={chatRoomDetail}
                     messageDetail={foundQuote}
+                    uuidQuote={uuidQuote}
                     dashboardMembers={dashboardMembers}
                     highlightedMessageId={highlightedMessageId}
                     setDataPreviewFile={setDataPreviewFile}
@@ -254,6 +256,7 @@ export const MessageDetailQuoteChild = ({
                   <MessageDetailQuoteText
                     key={`${index}-${i}-textquote`}
                     messageDetail={foundQuote}
+                    uuidQuote={uuidQuote}
                     dashboardMembers={dashboardMembers}
                     title={dataTitle}
                   />

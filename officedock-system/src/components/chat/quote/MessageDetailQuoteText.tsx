@@ -13,12 +13,14 @@ type Props = {
   messageDetail: ChatMessageResponse;
   dashboardMembers: ChatDashboardMember[];
   title: string;
+  uuidQuote: string;
 };
 
 const MessageDetailQuoteText = ({
   messageDetail,
   dashboardMembers,
   title,
+  uuidQuote,
 }: Props) => {
   // Render avatar
   const renderAvatar = (senderId: number) => {
@@ -69,6 +71,7 @@ const MessageDetailQuoteText = ({
         </div>
       </div>
       <p
+        data-id={uuidQuote}
         className={`text-chat-box font-normal text-sm hover:cursor-pointer max-w-full -ml-1 p-1 rounded-[5px]  `}>
         {title}
       </p>
