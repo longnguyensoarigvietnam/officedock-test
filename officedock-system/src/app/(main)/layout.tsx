@@ -1,8 +1,18 @@
+import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
+import { options } from '@app/api/auth/[...nextauth]/options';
+
 import Header from '@components/layouts/Header';
 import Sidebar from '@components/layouts/Sidebar';
 import TermAgreeModal from '@components/modals/TermAgreeModal';
+import { pageRouters } from '@constants/routers';
 
-const MainRootLayout = ({ children }: { children: React.ReactNode }) => {
+const MainRootLayout = async ({ children }: { children: React.ReactNode }) => {
+  const session = await getServerSession(options);
+
+  if (!session) {
+    redirect(pageRouters.LOGIN.href);
+  }
   return (
     <main className="w-full min-w-[1440px]">
       <TermAgreeModal />

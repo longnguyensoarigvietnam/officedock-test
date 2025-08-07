@@ -74,7 +74,7 @@ export const ERROR_SAVE_MESSAGE = '保存に失敗しました。';
 export const ERROR_TIME_START_MESSAGE = '予定時間をオーバーしています';
 export const ERROR_DELETE_TASK_RUNNING = '計測中のカードを削除できません。';
 export const ERROR_UPDATE_ORGANIZATION_MESSAGE =
-  '更この組織はタスクに紐づいているため、削除できません。';
+  'この組織はタスクに紐づいているため、削除できません。';
 
 export const OTP_CODE_INVALID =
   '認証コードが無効であるか、有効期限が切れています。';

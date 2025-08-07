@@ -10,7 +10,7 @@ export const SETTING_MENU: SettingMenuItem[] = [
   {
     name: '設定',
     href: pageRouters.SETTING.href,
-    disable: true
+    disable: true,
   },
   {
     name: 'ログアウト',
@@ -173,6 +173,16 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     current: false,
     companyMenu: true,
     requiredPermission: PermissionsSystem.CALENDAR_MANAGEMENT_VIEW,
+  },
+  {
+    ...pageRouters.MY_PAGE,
+    name: pageRouters.MY_PAGE.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/skills-map-active.svg' : '/icons/skills-map.svg';
+    },
+    current: false,
+    companyMenu: false,
+    requiredPermission: PermissionsSystem.VIEW_ALL,
   },
 ];
 export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [

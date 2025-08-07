@@ -361,6 +361,11 @@ export const pageRouters = {
     name: 'カレンダー設定',
     href: `/location`,
   },
+  // MY PAGE
+  MY_PAGE: {
+    name: 'マイページ',
+    href: `/my-page`,
+  },
 };
 
 // For the API routers
