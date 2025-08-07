@@ -19,3 +19,10 @@ export interface SettingMenuItem {
   showModal?: boolean;
   disable?: boolean;
 }
+
+export interface MyPageMenuItem {
+  name: string;
+  href: string;
+  iconSrc: string;
+  iconName: string
+}

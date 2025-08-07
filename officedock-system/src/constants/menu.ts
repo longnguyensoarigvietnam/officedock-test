@@ -1,4 +1,4 @@
-import { MenuItem, SettingMenuItem } from '@interfaces/menu';
+import { MenuItem, MyPageMenuItem, SettingMenuItem } from '@interfaces/menu';
 import { pageRouters } from './routers';
 import { PermissionsSystem } from './enums';
 
@@ -237,5 +237,38 @@ export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
     current: false,
     companyMenu: false,
     requiredPermission: PermissionsSystem.TEAM_DOCK_SKILL_MAP_VIEW,
+  },
+];
+
+export const MY_PAGE_MENU: MyPageMenuItem[] = [
+  {
+    name: 'サンクス メッセージ',
+    href: '/',
+    iconSrc: '/icons/heart.svg',
+    iconName: "Heart icon"
+  },
+  {
+    name: '他の人の部屋へ 出かける',
+    href: '/',
+    iconSrc: '/icons/room-profile.svg',
+    iconName: "Room icon"
+  },
+  {
+    name: 'アンケート',
+    href: '/',
+    iconSrc: '/icons/question.svg',
+    iconName: "Question icon",
+  },
+  {
+    name: 'MVP',
+    href: '/',
+    iconSrc: '/icons/mvp.svg',
+    iconName: "MVP icon"
+  },
+  {
+    name: 'アイテム',
+    href: '/',
+    iconSrc: '/icons/shop.svg',
+    iconName: "Shop icon"
   },
 ];
