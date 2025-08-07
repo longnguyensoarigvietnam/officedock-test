@@ -49,6 +49,7 @@ from dashboard.apis import (
 )
 from chat.apis import ChatFileViewSet, ChatMessageViewSet, ChatRoomViewSet
 from roles.apis import RoleViewSet
+from surveys.apis import SurveyViewSet
 
 # Routers provide an easy way of automatically determining the URL conf.
 api_router = routers.SimpleRouter()
@@ -136,6 +137,7 @@ api_router.register(
     TeamViewSet,
     basename="teams",
 )
+api_router.register("surveys", SurveyViewSet, basename="surveys")
 
 # Add api router urls
 urlpatterns = []
