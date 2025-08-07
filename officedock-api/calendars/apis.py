@@ -927,11 +927,11 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 through_defaults={"company": company},
             )
             action = WebSocketEventType.CREATE_CHAT_ROOM.value
-            chat_room_participant = chat_room.chat_rooms_participants.filter(
-                user=participant
-            ).first()
-            chat_room_participant.unread_messages += 1
-            chat_room_participant.save(update_fields=["unread_messages"])
+        chat_room_participant = chat_room.chat_rooms_participants.filter(
+            user=participant
+        ).first()
+        chat_room_participant.unread_messages += 1
+        chat_room_participant.save(update_fields=["unread_messages"])
 
         message_data = {
             "sender": user,

@@ -140,6 +140,7 @@ INSTALLED_APPS = [
     "roles",
     "statistics",
     "surveys",
+    "tweets",
 ]
 
 # Get REDIS_URL from environment variable or install directly
