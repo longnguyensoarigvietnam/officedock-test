@@ -112,6 +112,7 @@ const FilterTagUserTeam = ({
       tag_ids: prev?.tag_ids || [],
       user_ids: selectedOption,
     }));
+    onOpen();
   };
 
   return (
