@@ -578,4 +578,8 @@ export const apiRouters = {
 
   // COMPANY
   COMPANY_SETTINGS: 'companies/settings/',
+
+  // TWEET
+  TWEET_LIST: '/tweets/',
+  TWEET_DETAIL: (id: number) => `/tweets/${id}/`,
 };
