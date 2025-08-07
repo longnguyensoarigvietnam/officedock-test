@@ -1,18 +1,73 @@
 'use client';
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { useMutation } from 'react-query';
+import { AxiosError } from 'axios';
+
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import { useSessionCache } from '@providers/SessionCacheProvider';
+import { RenderAccessories } from '@components/custom/UserCustomize';
 import ImageRound from '@components/common/ImageRound';
 import { SkillMapProgressBar } from '@components/common/ProgressBar/SkillMapProgressBar';
 import { TwinklingStar } from '@components/common/TwinklingStar';
-import { RenderAccessories } from '@components/custom/UserCustomize';
+import { MyPageMenu } from '@components/myPage/Menu';
+import CreateTweetModal from '@components/modals/CreateTweetModal';
+import socketEventEmitter from '@components/socket/socketEventEmitter';
+import { TimeLine } from '@components/myPage/TimeLine';
+
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+import { LoadingContext } from '@providers/LoadingProvider';
+import { useToast } from '@providers/ToastProvider';
+
+import {
+  TweetDetail,
+  TweetFormData,
+  WebSocketTweetMessage,
+} from '@interfaces/tweet';
+
+import {
+  ERROR_CREATE_MESSAGE,
+  SUCCESS_CREATE_MESSAGE,
+} from '@constants/message';
+import { SocketActions } from '@constants/enums';
+import { apiRouters } from '@constants/routers';
+
+import useTweetList from '@hooks/useTweetList';
+import { useErrorToast } from '@hooks/useErrorToast';
+
+import api from '@base/api';
 
 const MyPage = () => {
   const { data: session } = useSessionCache();
+  const showErrorToast = useErrorToast();
+  const { showToast } = useToast();
 
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+  const { setIsLoading } = useContext(LoadingContext);
 
+  // Tweet
+  const [openCreateTweetModal, setOpenCreateTweetModal] =
+    useState<boolean>(false);
+  const [tweetMessage, setTweetMessage] = useState<string>('');
+  const [tweetList, setTweetList] = useState<TweetDetail[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPage, setTotalPage] = useState<number>(1);
+  const [hasNext, setHasNext] = useState<boolean>(false);
+  const isLoadingTweetRef = useRef(false);
+
+  // Get tweet list
+  useTweetList({
+    pagination: {
+      page: currentPage,
+    },
+    isLoadingTweetRef,
+    conditions: [Boolean(currentPage <= totalPage)],
+    onSuccess: (data) => {
+      setHasNext(data?.hasNext || false);
+      setTweetList((prev) => [...prev, ...data.results]);
+      setTotalPage(data.numPages);
+    },
+  });
+  // Render user's avatar
   const renderBoxUser = (userId: string) => {
     const memberInfo = dashboardMembersWithAvatars.find(
       (member) => member.id == userId,
@@ -27,6 +82,34 @@ const MyPage = () => {
     );
   };
 
+  // Socket
+  useEffect(() => {
+    // Create WebSocket
+    const handleSocketMessage = (data: WebSocketTweetMessage) => {
+      switch (data.action) {
+        case SocketActions.CREATE_TWEET:
+          setTweetList((prev) => {
+            const allMessages = [data.tweet, ...prev];
+
+            // Remove duplicates by uuid
+            const uniqueMessages = Array.from(
+              new Map(allMessages.map((msg) => [msg.id, msg])).values(),
+            );
+
+            return uniqueMessages;
+          });
+          break;
+        default:
+          break;
+      }
+    };
+    socketEventEmitter.on('message', handleSocketMessage);
+
+    return () => {
+      socketEventEmitter.off('message', handleSocketMessage);
+    };
+  }, []);
+
   const renderLevelText = (level: number) => (
     <div className="flex gap-1 items-baseline">
       <p className="text-[15px] font-medium">Lv.</p>
@@ -36,8 +119,34 @@ const MyPage = () => {
   const showTwinklingStars = true;
   const listAvatar = ['body', 'head-full', 'hat', 'shoes'];
 
+  // Call API to send tweet message
+  const handleSendTweetMessage = async (data: TweetFormData) => {
+    setIsLoading(true);
+    const { data: response } = await api.post(apiRouters.TWEET_LIST, data);
+    return response;
+  };
+
+  const { mutate: sendTweetMessage } = useMutation(
+    'sendTweetMessage',
+    handleSendTweetMessage,
+    {
+      onSuccess: () => {
+        setTweetMessage('');
+        showToast({
+          description: SUCCESS_CREATE_MESSAGE,
+        });
+      },
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_CREATE_MESSAGE);
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+
   return (
-    <div className="h-full w-full">
+    <div className="h-full w-full relative">
       <div
         style={{
           backgroundImage: 'url("/images/bg-profile.jpg")',
@@ -171,98 +280,8 @@ const MyPage = () => {
           </div>
         </div>
         <div className="mt-[74px] relative ml-[30px] flex items-end">
-          <div className="flex flex-col gap-[35px]">
-            {/* HEART */}
-            <div
-              style={{
-                background: 'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
-                boxShadow: '0px 4px 0px 0px #0028A140',
-              }}
-              className="relative w-[110px] cursor-pointer hover:opacity-80 h-[78px] rounded-[10px] pb-[10px] flex flex-col justify-end items-center text-white text-[13px] font-bold">
-              <p>サンクス</p>
-              <p>メッセージ</p>
-              <div className="w-fit h-fit absolute top-[-30%] left-1/2 transform -translate-x-1/2">
-                <ImageRound
-                  name="Heart icon"
-                  src={'/icons/heart.svg'}
-                  className={`w-fit h-fit `}
-                />
-              </div>
-            </div>
-            {/* ROOM */}
-            <div
-              style={{
-                background: 'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
-                boxShadow: '0px 4px 0px 0px #0028A140',
-              }}
-              className="relative w-[110px] cursor-pointer hover:opacity-80 h-[78px] rounded-[10px] pb-[10px] flex flex-col justify-end items-center text-white text-[13px] font-bold">
-              <p>他の人の部屋へ</p>
-              <p>出かける</p>
-              <div className="w-fit h-fit absolute top-[-30%] left-1/2 transform -translate-x-1/2">
-                <ImageRound
-                  name="Room icon"
-                  src={'/icons/room-profile.svg'}
-                  className={`w-fit h-fit `}
-                />
-              </div>
-            </div>
-            {/* QUESTION */}
-            <div
-              style={{
-                background: 'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
-                boxShadow: '0px 4px 0px 0px #0028A140',
-              }}
-              className="relative w-[110px] cursor-pointer hover:opacity-80 h-[82px] rounded-[10px] pb-[10px] flex flex-col justify-end items-center text-white text-[13px] font-bold">
-              <p>アンケート</p>
-              <p className="text-[10px] bg-[#FFEE6F] mt-[3px] text-black rounded-full w-[70px] h-5 flex items-center justify-center">
-                {' '}
-                投票受付中
-              </p>
-              <div className="w-fit h-fit absolute top-[-30%] left-1/2 transform -translate-x-1/2">
-                <ImageRound
-                  name="Question icon"
-                  src={'/icons/question.svg'}
-                  className={`w-fit h-fit `}
-                />
-              </div>
-            </div>
-            {/* MVP */}
-            <div
-              style={{
-                background: 'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
-                boxShadow: '0px 4px 0px 0px #0028A140',
-              }}
-              className="relative cursor-pointer hover:opacity-80 w-[110px] h-[82px] rounded-[10px] pb-[10px] flex flex-col justify-end items-center text-white text-[13px] font-bold">
-              <p>MVP</p>
-              <p className="text-[10px] bg-[#FFEE6F] mt-[3px] text-black rounded-full w-[70px] h-5 flex items-center justify-center">
-                {' '}
-                投票受付中
-              </p>
-              <div className="w-fit h-fit absolute top-[-30%] left-1/2 transform -translate-x-1/2">
-                <ImageRound
-                  name="MVP icon"
-                  src={'/icons/mvp.svg'}
-                  className={`w-fit h-fit `}
-                />
-              </div>
-            </div>
-            {/* STORE */}
-            <div
-              style={{
-                background: 'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
-                boxShadow: '0px 4px 0px 0px #0028A140',
-              }}
-              className="relative cursor-pointer hover:opacity-80 w-[110px] h-[66px] rounded-[10px] pb-[15px] flex flex-col justify-end items-center text-white text-[13px] font-bold">
-              <p>アイテム</p>
-              <div className="w-fit h-fit absolute top-[-30%] left-1/2 transform -translate-x-1/2">
-                <ImageRound
-                  name="Shop icon"
-                  src={'/icons/shop.svg'}
-                  className={`w-fit h-fit `}
-                />
-              </div>
-            </div>
-          </div>
+          {/* Menu */}
+          <MyPageMenu />
           <div className="flex-grow">
             <div className="h-[424px] w-[336px] ml-[200px] relative">
               <RenderAccessories images={listAvatar} />
@@ -284,8 +303,33 @@ const MyPage = () => {
               <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[25px] w-[22px] top-[128px] left-[585px]"></div>
             </>
           </div>
+          {/* Tweet icon */}
+          <ImageRound
+            name="Tweet icon"
+            src={'/icons/tweet.svg'}
+            className={`w-[88px] h-[94px] z-10 hover:cursor-pointer absolute bottom-[0px] right-[20px]`}
+            onClick={() => setOpenCreateTweetModal(true)}
+          />
         </div>
       </div>
+      {/* Timeline */}
+      <TimeLine
+        tweetList={tweetList}
+        hasNext={hasNext}
+        totalPage={totalPage}
+        currentPage={currentPage}
+        isLoadingTweetRef={isLoadingTweetRef}
+        setCurrentPage={setCurrentPage}
+      />
+      {openCreateTweetModal && (
+        <CreateTweetModal
+          open={openCreateTweetModal}
+          tweetMessage={tweetMessage}
+          setTweetMessage={setTweetMessage}
+          onClose={() => setOpenCreateTweetModal(false)}
+          onSubmit={() => sendTweetMessage({ content: tweetMessage })}
+        />
+      )}
     </div>
   );
 };

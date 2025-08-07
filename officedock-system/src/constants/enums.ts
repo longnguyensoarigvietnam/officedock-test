@@ -156,6 +156,7 @@ export enum SocketActions {
   RESET_STATUS_SORT_TASK = 'RESET_STATUS_SORT_TASK',
   DURATION_OVERTIME_WARNING = 'DURATION_OVERTIME_WARNING',
   SKILL_LEVEL_UP_COMPLETED = 'SKILL_LEVEL_UP_COMPLETED',
+  CREATE_TWEET = 'CREATE_TWEET',
 }
 
 export enum WebSocketState {
@@ -616,5 +617,5 @@ export enum ChatParticipantType {
 }
 export enum TemplateVariant {
   EMPTY = 'EMPTY',
-  DATA = 'DATA'
+  DATA = 'DATA',
 }

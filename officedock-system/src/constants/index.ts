@@ -495,3 +495,5 @@ export const COLOR_BY_TASK_STATUS = [
     color: '#F58383',
   },
 ];
+
+export const MAX_TWEET_MESSAGE_LENGTH = 100;
