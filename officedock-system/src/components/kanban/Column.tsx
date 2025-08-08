@@ -328,15 +328,14 @@ const Column = ({
                 ? `${(columnWidth / 247) * 16}px`
                 : '17px',
           }}
-          className={`flex justify-between ${isMyRoutine && 'bg-[#DAE2EB] rounded-tl-lg rounded-tr-lg'} `}>
+          className={`flex justify-between ${isMyRoutine && 'bg-[#DAE2EB] rounded-tl-[14px] rounded-tr-[14px]'} `}>
           <div
             style={{
               gap: `6px`,
             }}
             className="flex items-center text-sm break-all font-medium ">
             {!isMyRoutine && (
-              <span
-                className={`w-[10px] h-[10px] rounded-full ${statusStyle}`}></span>
+              <span className={`w-[2px] h-[20px] ${statusStyle}`}></span>
             )}
             <span>{title}</span>
             {!isMyRoutine && (
@@ -497,8 +496,8 @@ const Column = ({
     </div>
   ) : (
     <div className="w-[40px] pt-[6px]">
-      <div className="flex gap-[6px] items-center justify-center">
-        <div className={`w-[10px] h-[10px] rounded-full ${statusStyle}`}></div>
+      <div className="flex  items-center justify-center">
+        <div className={`w-[2px] h-[20px] ${statusStyle}`}></div>
         <DynamicTooltip content="タブを拡大" placement="top">
           <div
             className={`flex items-center justify-center cursor-pointer ${Number(columnId) != StatusValueTask.MY_ROUTINE ? 'hover:bg-[#E3EAED]' : 'hover:bg-[#EBF2F7]'} rounded-full w-[22px] h-[22px]`}

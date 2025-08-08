@@ -320,6 +320,7 @@ const ListViewItem = ({
               end: formatISO(addMinutesToDate(`${now}`)),
               startEditable: true,
               itemKanban: true,
+              largeColor: largeColor,
               deadline:
                 content.status?.id == StatusValueTask.MY_ROUTINE
                   ? ''
@@ -411,9 +412,9 @@ const ListViewItem = ({
                       }}>
                       {content.isMyTask && (
                         <ImageRound
-                          src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
+                          src={`/icons/${content.isStart ? 'pause' : 'play-task'}.svg`}
                           name="Start task"
-                          className={`hover:cursor-pointer w-[24px] h-[24px]`}
+                          className={`hover:cursor-pointer !w-fit !h-fit`}
                           onClick={async () => {
                             await new Promise<void>((resolve) => {
                               setTaskSelectedToStart(content);

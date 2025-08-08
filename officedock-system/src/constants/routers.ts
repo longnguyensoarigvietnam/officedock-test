@@ -366,6 +366,10 @@ export const pageRouters = {
     name: 'マイページ',
     href: `/my-page`,
   },
+  SURVEY: {
+    name: 'survey',
+    href: `/survey`,
+  },
 };
 
 // For the API routers

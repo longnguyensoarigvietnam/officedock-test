@@ -3234,7 +3234,7 @@ const KanbanBoardTask = () => {
                     ? ` calc(${Math.max(viewportWidth, 1280)}px - ${500 - (656 - widthCalendar)}px)`
                     : `calc(${Math.max(viewportWidth, 1280)}px - 500px) `,
               }}
-              className={`h-full overflow-x-auto flex flex-col gap-2 py-7 pr-7 pl-1 ${isListView ? 'overflow-y-auto' : 'overflow-y-hidden'}`}
+              className={`h-full overflow-x-auto flex flex-col gap-[14px] py-7 pr-7 pl-1 ${isListView ? 'overflow-y-auto' : 'overflow-y-hidden'}`}
               id="kanbanContainer">
               <FrequentlyTask
                 templates={templates}
@@ -3256,57 +3256,9 @@ const KanbanBoardTask = () => {
                 handleActionEditTemplate={handleActionEditTemplate}
                 handleCreateTaskFromTemplate={handleCreateTaskFromTemplate}
               />
-              <div className="flex-grow flex flex-col gap-2 mt-[30px] mb-6">
+              <div className="flex-grow flex flex-col gap-2  mb-6">
                 <div className={`flex gap-7 mb-6 w-fit min-w-[300px]`}>
                   <div className="flex items-center gap-2">
-                    <ImageRound
-                      src="/icons/sort-task.svg"
-                      name="Sort icon"
-                      className="w-[18px] h-[14px]"
-                    />
-                    <>
-                      <Button
-                        disabled={isFetchingTaskBoards}
-                        onClick={() => {
-                          if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
-                            setIsReadyToFetch(true);
-
-                            setDataOrderRing(FilterTypeKanban.DEADLINE);
-                            setOrderingRequest(FilterTypeKanban.DEADLINE);
-                          }
-                        }}
-                        variant={
-                          isFetchingTaskBoards
-                            ? 'outline'
-                            : dataOrderRing === FilterTypeKanban.DEADLINE
-                              ? 'primary'
-                              : 'outline'
-                        }
-                        className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
-                        締切期間
-                      </Button>
-                      <Button
-                        disabled={isFetchingTaskBoards}
-                        onClick={() => {
-                          if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
-                            setIsReadyToFetch(true);
-
-                            setDataOrderRing(FilterTypeKanban.IMPORTANT);
-                            setOrderingRequest(FilterTypeKanban.IMPORTANT);
-                          }
-                        }}
-                        variant={
-                          isFetchingTaskBoards
-                            ? 'outline'
-                            : dataOrderRing === FilterTypeKanban.IMPORTANT
-                              ? 'primary'
-                              : 'outline'
-                        }
-                        className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
-                        重要
-                      </Button>
-                    </>
-
                     {/* Filter option modal */}
                     <Popover className="relative">
                       {() => (
@@ -3407,7 +3359,53 @@ const KanbanBoardTask = () => {
                         </>
                       )}
                     </Popover>
+                    <ImageRound
+                      src="/icons/sort-task.svg"
+                      name="Sort icon"
+                      className="w-[18px] h-[14px]"
+                    />
+                    <>
+                      <Button
+                        disabled={isFetchingTaskBoards}
+                        onClick={() => {
+                          if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
+                            setIsReadyToFetch(true);
 
+                            setDataOrderRing(FilterTypeKanban.DEADLINE);
+                            setOrderingRequest(FilterTypeKanban.DEADLINE);
+                          }
+                        }}
+                        variant={
+                          isFetchingTaskBoards
+                            ? 'outline'
+                            : dataOrderRing === FilterTypeKanban.DEADLINE
+                              ? 'option'
+                              : 'outline'
+                        }
+                        className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
+                        締切期間
+                      </Button>
+                      <Button
+                        disabled={isFetchingTaskBoards}
+                        onClick={() => {
+                          if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
+                            setIsReadyToFetch(true);
+
+                            setDataOrderRing(FilterTypeKanban.IMPORTANT);
+                            setOrderingRequest(FilterTypeKanban.IMPORTANT);
+                          }
+                        }}
+                        variant={
+                          isFetchingTaskBoards
+                            ? 'outline'
+                            : dataOrderRing === FilterTypeKanban.IMPORTANT
+                              ? 'option'
+                              : 'outline'
+                        }
+                        className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
+                        重要
+                      </Button>
+                    </>
                     <InputSearch
                       className="w-[300px] h-[34px] py-0 bg-[#EBF1F7] !rounded-[20px]"
                       inputClassName="h-[34px] bg-[#EBF1F7] border-none !rounded-[20px] text-sm"

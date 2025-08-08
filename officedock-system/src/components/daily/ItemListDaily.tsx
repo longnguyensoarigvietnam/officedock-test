@@ -60,7 +60,7 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
       style={{
         boxShadow: '0px 2px 8px 0px #0000001A',
       }}
-      className="bg-white p-4 rounded-md font-medium flex gap-3 justify-between">
+      className="bg-white p-4 rounded-[14px] font-medium flex gap-3 justify-between">
       <div className="flex gap-5 flex-grow items-center">
         <div className="flex flex-col gap-1 items-center min-w-[50px] text-xs  text-primary">
           {isConfirm ? (
@@ -90,7 +90,7 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
       </div>
       <div className="text-xs font-medium flex items-center justify-end gap-[14px] min-w-fit">
         <p className="text-[#77858F] block">合計時間</p>
-        <p className="text-black break-all block">
+        <p className="text-black font-normal break-all block">
           {userData.totalDuration &&
             convertToJapaneseTime(userData.totalDuration)}
         </p>
