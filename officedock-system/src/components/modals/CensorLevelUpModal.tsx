@@ -551,7 +551,7 @@ const CensorLevelUpModal = memo(
                       });
                     }
                   }}>
-                  差し戻す
+                 {currentStep == 2 ? '確認する' : '差し戻す'} 
                 </Button>
               ) : (
                 <Button
@@ -573,7 +573,7 @@ const CensorLevelUpModal = memo(
                     }
                   }}
                   className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-white">
-                  承認する
+                 {currentStep == 2 ? '確認する' : '承認する'}
                 </Button>
               )}
             </div>

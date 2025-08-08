@@ -15,6 +15,7 @@ import {
   OrganizationSkillMapDetail,
   SkillMapByOrganization,
 } from '@interfaces/skills';
+
 import {
   extractLevelNumber,
   extractStepNumber,
@@ -59,7 +60,7 @@ const MySkillDetailByUser = ({ detailSkillData }: Props) => {
         {detailSkillData.map((item, index) => (
           <div
             key={index}
-            className="w-full rounded-[14px] p-[30px] font-medium bg-[#F8FAFC]">
+            className="w-full rounded-[30px] p-[30px] font-medium bg-[#F8FAFC]">
             <p className="text-[#77858F] text-base mb-4 max-w-full break-all">
               {item.organizationName}
             </p>
@@ -114,13 +115,13 @@ const MySkillDetailByUser = ({ detailSkillData }: Props) => {
                   const stepNumber =
                     extractStepNumber(`${lastValidSkill?.step}`) || 1;
                   return (
-                    <div key={indexSkill} className="w-full  mt-[14px]">
+                    <div key={indexSkill} className="w-full mt-[14px]">
                       {lastValidSkill && (
                         <div
                           style={{
                             boxShadow: '0px 2px 8px 0px #0000001A',
                           }}
-                          className="inline-flex text-sm font-medium w-full text-black whitespace-normal bg-white py-5 rounded-md">
+                          className="inline-flex text-sm font-medium w-full text-black whitespace-normal bg-white py-5 rounded-[14px]">
                           <div className="min-w-[154px] text-base flex-grow  break-all border-r border-[#D2DBE1] px-5 flex items-center min-h-[50px]">
                             {lastValidSkill.skill.name}
                           </div>

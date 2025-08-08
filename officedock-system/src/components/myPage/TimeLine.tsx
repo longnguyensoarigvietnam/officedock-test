@@ -14,18 +14,16 @@ import {
 
 export const TimeLine = ({
   tweetList,
-  hasNext,
-  totalPage,
-  currentPage,
+  hasNextPage,
   isLoadingTweetRef,
-  setCurrentPage,
+  isFetchingNextPage,
+  fetchNextPage,
 }: {
   tweetList: TweetDetail[];
-  hasNext: boolean;
-  totalPage: number;
-  currentPage: number;
+  hasNextPage: boolean | undefined;
   isLoadingTweetRef: React.MutableRefObject<boolean>;
-  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
+  isFetchingNextPage: boolean;
+  fetchNextPage: any;
 }) => {
   const resultsContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -34,14 +32,14 @@ export const TimeLine = ({
       const resultsContainer = resultsContainerRef.current;
       if (
         resultsContainer &&
-        hasNext &&
-        currentPage + 1 <= totalPage &&
+        hasNextPage &&
+        !isFetchingNextPage &&
         Math.round(
           resultsContainer.clientHeight + Math.abs(resultsContainer.scrollTop),
         ) >= Math.round(0.9 * resultsContainer.scrollHeight)
       ) {
         if (isLoadingTweetRef && isLoadingTweetRef.current) return;
-        setCurrentPage((prev) => prev + 1);
+        fetchNextPage();
       }
     };
 
@@ -56,8 +54,7 @@ export const TimeLine = ({
         resultsContainer.removeEventListener('scroll', handleScroll);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasNext, currentPage, isLoadingTweetRef, totalPage]);
+  }, [hasNextPage, isLoadingTweetRef, isFetchingNextPage, fetchNextPage]);
 
   const renderAvatar = (avatarUrl: string | null, avatarColor: string) => {
     return (
@@ -82,32 +79,21 @@ export const TimeLine = ({
       <div
         ref={resultsContainerRef}
         className={`${isLoadingTweetRef.current && tweetList.length == 0 ? 'overflow-y-hidden' : 'overflow-y-auto'} max-h-[calc(100%_-_50px)] flex flex-col-reverse gap-10 !w-full`}>
-        {isLoadingTweetRef.current ? (
-          tweetList.length == 0 ? (
-            <div className="flex flex-col items-start ml-3 space-y-2">
-              <RowSkeleton
-                className={`!h-[100px] w-[180px] !bg-[#248bcacc]`}
-              />
-              <RowSkeleton
-                className={`!h-[200px] w-[280px] !bg-[#248bcacc]`}
-              />
-              <RowSkeleton
-                className={`!h-[100px] w-[180px] !bg-[#248bcacc]`}
-              />
-              <RowSkeleton
-                className={`!h-[200px] w-[280px] !bg-[#248bcacc]`}
-              />
-              <RowSkeleton
-                numberOfRows={4}
-                className={`!h-[50px] w-[260px] !bg-[#248bcacc]`}
-              />
-            </div>
-          ) : (
-            <Spinner className="!h-fit py-3" iconClassName="h-6 w-6" />
-          )
+        {isLoadingTweetRef.current && tweetList.length == 0 ? (
+          <div className="flex flex-col items-start ml-3 space-y-2">
+            <RowSkeleton className={`!h-[100px] w-[180px] !bg-[#248bcacc]`} />
+            <RowSkeleton className={`!h-[200px] w-[280px] !bg-[#248bcacc]`} />
+            <RowSkeleton className={`!h-[100px] w-[180px] !bg-[#248bcacc]`} />
+            <RowSkeleton className={`!h-[200px] w-[280px] !bg-[#248bcacc]`} />
+            <RowSkeleton
+              numberOfRows={4}
+              className={`!h-[50px] w-[260px] !bg-[#248bcacc]`}
+            />
+          </div>
         ) : (
           <></>
         )}
+
         {tweetList.length ? (
           tweetList.map((tweet) => {
             return (
@@ -136,6 +122,9 @@ export const TimeLine = ({
           })
         ) : (
           <></>
+        )}
+        {isFetchingNextPage && (
+          <Spinner className="!h-fit py-3" iconClassName="h-6 w-6" />
         )}
       </div>
     </div>

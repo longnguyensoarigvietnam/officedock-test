@@ -200,7 +200,7 @@ export const SkillMapDetailByUser = ({
         detailSkillData.map((skillMap, index) => (
           <div
             key={index}
-            className="w-full py-5 px-10 bg-[#F8FAFC] rounded-[14px] mb-6"
+            className="w-full py-5 px-10 bg-[#F8FAFC] rounded-[30px] mb-6"
             style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
             <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
               {skillMap.organizationName}
@@ -239,7 +239,7 @@ export const SkillMapDetailByUser = ({
               {normalizeSkillMaps(skillMap.skillMaps).map(
                 (skillMap: SkillMapByOrganizationInfo[], index) => {
                   return (
-                    <div key={index} className="flex w-full mb-5">
+                    <div key={index} className="flex w-full mb-5 bg-[#E9EEF3] rounded-[20px] p-[10px]">
                       {skillMap.map((skill, idx) => {
                         const isLast = idx === skillMap.length - 1;
                         const isLocked = skill.isLocked;
@@ -274,13 +274,13 @@ export const SkillMapDetailByUser = ({
 
                         return (
                           <div
-                            key={skill.id}
+                            key={skill.id ?? `${index}-${idx}`}
                             className={`relative hover:cursor-pointer flex items-center ${isLast ? 'w-[calc(33.33333%_-_30px)]' : 'w-[calc(33.33333%_+_15px)]'}`}>
                             {!skill.id ? (
-                              <div className="px-5 h-[90px] bg-white w-full rounded-[6px]"></div>
+                              <div className="px-5 h-[90px] bg-white w-full rounded-[14px]"></div>
                             ) : (
                               <div
-                                className="px-5 h-[90px] flex gap-3 items-center w-full rounded-[6px] relative"
+                                className="px-5 h-[90px] flex gap-3 bg-white items-center w-full rounded-[14px] relative"
                                 style={{
                                   boxShadow: showTwinklingStars
                                     ? '0px 0px 20px 0px #36ACDE80'

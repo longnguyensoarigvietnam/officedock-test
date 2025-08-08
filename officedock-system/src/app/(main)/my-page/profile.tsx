@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useRef, useState } from 'react';
 import { useMutation } from 'react-query';
 import { AxiosError } from 'axios';
 
@@ -10,7 +10,6 @@ import { SkillMapProgressBar } from '@components/common/ProgressBar/SkillMapProg
 import { TwinklingStar } from '@components/common/TwinklingStar';
 import { MyPageMenu } from '@components/myPage/Menu';
 import CreateTweetModal from '@components/modals/CreateTweetModal';
-import socketEventEmitter from '@components/socket/socketEventEmitter';
 import { TimeLine } from '@components/myPage/TimeLine';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
@@ -19,16 +18,13 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import {
-  TweetDetail,
   TweetFormData,
-  WebSocketTweetMessage,
 } from '@interfaces/tweet';
 
 import {
   ERROR_CREATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
 } from '@constants/message';
-import { SocketActions } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
 
 import useTweetList from '@hooks/useTweetList';
@@ -48,25 +44,14 @@ const MyPage = () => {
   const [openCreateTweetModal, setOpenCreateTweetModal] =
     useState<boolean>(false);
   const [tweetMessage, setTweetMessage] = useState<string>('');
-  const [tweetList, setTweetList] = useState<TweetDetail[]>([]);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPage, setTotalPage] = useState<number>(1);
-  const [hasNext, setHasNext] = useState<boolean>(false);
   const isLoadingTweetRef = useRef(false);
 
   // Get tweet list
-  useTweetList({
-    pagination: {
-      page: currentPage,
-    },
-    isLoadingTweetRef,
-    conditions: [Boolean(currentPage <= totalPage)],
-    onSuccess: (data) => {
-      setHasNext(data?.hasNext || false);
-      setTweetList((prev) => [...prev, ...data.results]);
-      setTotalPage(data.numPages);
-    },
-  });
+  const { tweetList, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useTweetList({
+      isLoadingTweetRef,
+    });
+
   // Render user's avatar
   const renderBoxUser = (userId: string) => {
     const memberInfo = dashboardMembersWithAvatars.find(
@@ -81,34 +66,6 @@ const MyPage = () => {
       />
     );
   };
-
-  // Socket
-  useEffect(() => {
-    // Create WebSocket
-    const handleSocketMessage = (data: WebSocketTweetMessage) => {
-      switch (data.action) {
-        case SocketActions.CREATE_TWEET:
-          setTweetList((prev) => {
-            const allMessages = [data.tweet, ...prev];
-
-            // Remove duplicates by uuid
-            const uniqueMessages = Array.from(
-              new Map(allMessages.map((msg) => [msg.id, msg])).values(),
-            );
-
-            return uniqueMessages;
-          });
-          break;
-        default:
-          break;
-      }
-    };
-    socketEventEmitter.on('message', handleSocketMessage);
-
-    return () => {
-      socketEventEmitter.off('message', handleSocketMessage);
-    };
-  }, []);
 
   const renderLevelText = (level: number) => (
     <div className="flex gap-1 items-baseline">
@@ -315,11 +272,10 @@ const MyPage = () => {
       {/* Timeline */}
       <TimeLine
         tweetList={tweetList}
-        hasNext={hasNext}
-        totalPage={totalPage}
-        currentPage={currentPage}
+        hasNextPage={hasNextPage}
         isLoadingTweetRef={isLoadingTweetRef}
-        setCurrentPage={setCurrentPage}
+        isFetchingNextPage={isFetchingNextPage}
+        fetchNextPage={fetchNextPage}
       />
       {openCreateTweetModal && (
         <CreateTweetModal
