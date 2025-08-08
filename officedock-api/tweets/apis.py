@@ -2,8 +2,6 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.viewsets import ModelViewSet
 
 from base.apis import BaseAPIViewSet
-from chat.constants import WebSocketEventType
-from common.utils import send_web_socket_event
 
 from tweets.models import Tweet
 from tweets.serializers import TweetSerializer
@@ -37,17 +35,7 @@ class TweetsView(BaseAPIViewSet, ModelViewSet):
         """
         user = self.request.user
         company = user.company
-        instance = serializer.save(user=user, company=user.company)
-        data = self.get_serializer(instance).data
-        for user in company.users.all():
-            # Send WebSocket event for real-time updates
-            send_web_socket_event(
-                {
-                    "action": WebSocketEventType.CREATE_TWEET.value,
-                    "tweet": data,
-                },
-                user,
-            )
+        serializer.save(user=user, company=company)
 
     @extend_schema(parameters=[OpenApiParameter("tweet_id", type=str)])
     def list(self, request, *args, **kwargs):
