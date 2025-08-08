@@ -396,7 +396,7 @@ const ListViewItem = ({
                         <ImageRound
                           src="/icons/copy.svg"
                           name="Copy icon"
-                          className="text-gray-400 cursor-pointer w-4 h-4"
+                          className="text-gray-400 cursor-pointer w-[14px] h-[14px]"
                         />
                       </div>
                     </DynamicTooltip>
@@ -412,9 +412,9 @@ const ListViewItem = ({
                       }}>
                       {content.isMyTask && (
                         <ImageRound
-                          src={`/icons/${content.isStart ? 'pause' : 'play-task'}.svg`}
+                          src={`/icons/${content.isStart ? 'pause' : 'play-taskk'}.svg`}
                           name="Start task"
-                          className={`hover:cursor-pointer !w-fit !h-fit`}
+                          className={`hover:cursor-pointer ${content.isStart ? '!w-fit !h-fit' : '!w-[28px] !h-[28px]'}`}
                           onClick={async () => {
                             await new Promise<void>((resolve) => {
                               setTaskSelectedToStart(content);

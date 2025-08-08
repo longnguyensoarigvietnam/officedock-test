@@ -1,5 +1,5 @@
 'use client';
-import { useQuery } from 'react-query';
+import { useInfiniteQuery } from 'react-query';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
@@ -28,7 +28,6 @@ interface UseTweetHooksProps {
 }
 
 const useTweetList = ({
-  pagination,
   isLoadingTweetRef,
   conditions,
   onSuccess,
@@ -38,47 +37,50 @@ const useTweetList = ({
   const router = useRouter();
 
   // Handle call API get tweet list
-  const getTweetList = async () => {
+  const fetchTweetList = async ({ pageParam = 1 }) => {
     isLoadingTweetRef.current = true;
-    const apiUrl = pagination?.page
-      ? `${apiRouters.TWEET_LIST}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_MEDIUM}`
-      : `${apiRouters.TWEET_LIST}`;
 
+    const apiUrl = `${apiRouters.TWEET_LIST}?page=${pageParam}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}`;
     const { data } = await api.get<BasePagination<TweetDetail[]>>(apiUrl);
-    return data;
+
+    return { ...data, currentPage: pageParam }; // add current page to track next
   };
 
   // Handle API get tweet list
-  const {
-    data: tweetList,
-    refetch: refetchTweetList,
-    isFetched: isFetchedTweetList,
-  } = useQuery({
-    queryKey: ['getTweetList', pagination?.page],
-    queryFn: getTweetList,
-    retry: 0,
-    enabled: !!token && conditions?.every(Boolean),
-    refetchOnMount: true,
-    refetchOnWindowFocus: false,
-    onSuccess: (response: BasePagination<TweetDetail[]>) => {
-      isLoadingTweetRef.current = false;
-      onSuccess && onSuccess(response);
-    },
-    onError: ({ response }: ResponseError<any>) => {
-      isLoadingTweetRef.current = false;
-      if (response?.status === ServerStatusCode.UNAUTHORIZED) {
-        if (session) {
-          signOut();
-          router.push(pageRouters.LOGIN.href);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isFetched } =
+    useInfiniteQuery({
+      queryKey: ['fetchTweetList'],
+      queryFn: fetchTweetList,
+      retry: 0,
+      enabled: 
+        !!token && conditions?.every(Boolean),
+      getNextPageParam: (lastPage) =>
+        lastPage?.hasNext ? lastPage.currentPage + 1 : undefined,
+      refetchOnMount: true,
+      refetchOnWindowFocus: false,
+      onSuccess: (data) => {
+        const lastPage = data.pages[data.pages.length - 1];
+        if (lastPage) {
+          onSuccess?.(lastPage);
         }
-      }
-    },
-  });
-
+        isLoadingTweetRef.current = false;
+      },
+      onError: ({ response }: ResponseError<any>) => {
+        isLoadingTweetRef.current = false;
+        if (response?.status === ServerStatusCode.UNAUTHORIZED) {
+          if (session) {
+            signOut();
+            router.push(pageRouters.LOGIN.href);
+          }
+        }
+      },
+    });
   return {
-    tweetList,
-    refetchTweetList,
-    isFetchedTweetList,
+    tweetList: data?.pages?.flatMap((page) => page?.results ?? []) ?? [],
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetched,
   };
 };
 

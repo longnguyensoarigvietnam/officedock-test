@@ -27,7 +27,7 @@ export const LevelUpListByOrganization = ({
 
   return (
     <div
-      className="w-full py-5 px-10 bg-[#F8FAFC] rounded-[14px] mb-6"
+      className="w-full py-5 px-10 bg-[#F8FAFC] rounded-[30px] mb-6"
       style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
       <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
         {orgSubmitLevel.organizationName}
@@ -64,7 +64,7 @@ export const LevelUpListByOrganization = ({
             return (
               <div
                 key={submitLevel.id}
-                className="bg-white py-[20px] rounded-[6px] mb-5"
+                className="bg-white py-[20px] rounded-[14px] mb-5"
                 style={{
                   boxShadow: '0px 2px 8px 0px #0000001A',
                 }}>

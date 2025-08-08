@@ -33,7 +33,7 @@ export default function HierarchyOrganization() {
   const Parent = ({ item }: { item: ConfigNode }) => {
     return (
       <div
-        className={`tree-custom-item relative bg-primary rounded-md text-white text-base font-medium flex items-center px-[10px] break-all`}>
+        className={`tree-custom-item relative bg-[#3CABF3] rounded-md text-white text-base font-medium flex items-center px-[10px] break-all`}>
         <p className="w-full break-all truncate">{item.name}</p>
       </div>
     );
@@ -63,7 +63,7 @@ export default function HierarchyOrganization() {
           {listItemRoot.map((item, index) => (
             <div
               key={index}
-              className="w-[204px] bg-primary h-[34px] rounded-md text-white text-base font-medium flex items-center px-[10px] truncate">
+              className="w-[204px] bg-[#3CABF3] h-[34px] rounded-md text-white text-base font-medium flex items-center px-[10px] truncate">
               <p className="w-full truncate">{item.name}</p>
             </div>
           ))}

@@ -428,7 +428,7 @@ export const SkillMapByOrganizationPanel = ({
                         }
                       }}>
                       {!skill.id ? (
-                        <div className="px-5 h-[90px] bg-white w-full rounded-[6px]"></div>
+                        <div className="px-5 h-[90px] bg-white w-full rounded-[14px]"></div>
                       ) : (
                         <div
                           className="px-5 h-[90px] flex gap-3 bg-white items-center w-full rounded-[14px] relative"

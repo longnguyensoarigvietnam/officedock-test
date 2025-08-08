@@ -93,7 +93,7 @@ const MemberList = () => {
             return (
               <div
                 key={org.orgId}
-                className="p-[30px] bg-[#F8FAFC] rounded-[14px]"
+                className="p-[30px] bg-[#F8FAFC] rounded-[30px]"
                 style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
                 <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
                   {org.orgName}
@@ -103,7 +103,7 @@ const MemberList = () => {
                     return (
                       <div
                         key={user.id}
-                        className="flex justify-between items-center px-3 h-[70px] bg-white rounded-[6px]"
+                        className="flex justify-between items-center px-3 h-[70px] bg-white rounded-[14px]"
                         style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
                         <div className="flex gap-3 items-center w-[calc(100%_-_320px)]">
                           <CustomUserAvatar
