@@ -217,7 +217,7 @@ const PieChartCustom = ({
             top: tooltipData.y,
             left: tooltipData.x,
             backgroundColor: 'white',
-            borderRadius: '6px',
+            borderRadius: '14px',
             boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
             zIndex: 999,
           }}>

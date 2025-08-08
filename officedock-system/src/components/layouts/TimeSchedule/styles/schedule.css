@@ -99,6 +99,9 @@
 .schedule-custom .fc-timeGridDay-view .fc-col-header {
   display: none !important;
 }
+.schedule-custom .fc-col-header {
+  background-color: '#E6F3FB' !important;
+}
 
 .schedule-custom
   .fc
@@ -175,7 +178,16 @@
 /* Custom conflict calendar */
 .schedule-custom th .fc-scrollgrid-sync-inner {
   border-bottom: none !important;
+  background-color: '#E6F3FB' !important;
+  background: '#E6F3FB' !important;
 }
+.schedule-custom .fc-col-header-cell.fc-resource {
+  background-color: #e6f3fb !important;
+}
+.schedule-custom .fc-col-header-cell.fc-day {
+  background: #e6f3fb !important;
+}
+
 .schedule-custom .item-schedule-shadow {
   box-shadow: 0px 2px 8px 0px rgba(0, 0, 0, 0.1);
 }
@@ -403,6 +415,7 @@
 .schedule-custom .half-hour-line::after {
   background-color: #d2dbe1 !important;
 }
+
 /* Day */
 
 .schedule-custom

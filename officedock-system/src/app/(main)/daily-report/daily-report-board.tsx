@@ -1878,8 +1878,8 @@ const DailyReportBoard = () => {
           </div>
         </header>
         <div className="mt-4 flex gap-3">
-          <div className="w-[262px] px-5 bg-[#F8FAFC] h-[calc(100vh_-_177px)] rounded-[14px] daily-custom  overflow-y-auto">
-            <p className=" pt-[30px] mb-2">スケジュール実績</p>
+          <div className="w-[262px] px-5 bg-[#F8FAFC] h-[calc(100vh_-_177px)] rounded-[30px] daily-custom  overflow-y-auto">
+            <p className=" pt-[30px] text-[#77858F] mb-2">スケジュール実績</p>
             <FullCalendar
               ref={calendarRef}
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -1917,7 +1917,7 @@ const DailyReportBoard = () => {
           </div>
           <div className="w-[calc(100%_-_260px)] h-[calc(100vh_-_177px)] font-medium overflow-y-auto mr-5 bg-[#F8FAFC] p-[30px] rounded-[14px]">
             <div className="overflow-y-auto">
-              <p className="text-base ">カテゴリーの割合</p>
+              <p className="text-base text-[#77858F]">カテゴリーの割合</p>
               <div className="flex pt-5">
                 <section className="flex-1 max-w-[360px]">
                   {chartData?.data && (
@@ -1959,7 +1959,7 @@ const DailyReportBoard = () => {
                               style={{
                                 backgroundColor: item.color,
                               }}
-                              className={`w-3 h-3 mt-[7px] `}></div>
+                              className={`w-3 h-3 mt-[7px] rounded-full `}></div>
                             <span className="w-[200px] break-all">
                               {item.categoryName}
                             </span>
@@ -1977,8 +1977,8 @@ const DailyReportBoard = () => {
               </div>
             </div>
             <div className="mt-5 h-[548px]">
-              <p className="text-base font-medium">タスク一覧</p>
-              <Table className=" border border-[#D2DBE1] !ring-0 bg-white h-[496px] !pt-0 overflow-y-auto py-0 mt-5 rounded-md">
+              <p className="text-base font-medium text-[#77858F]">タスク一覧</p>
+              <Table className=" border border-[#D2DBE1] !ring-0 bg-white h-[496px] !pt-0 overflow-y-auto py-0 mt-5 rounded-[10px]">
                 <thead className="bg-gray-100 sticky z-10">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr
@@ -2112,7 +2112,7 @@ const DailyReportBoard = () => {
               </Table>
             </div>
             <div className="mt-[30px] pb-14">
-              <p>備考</p>
+              <p className="text-[#77858F]">備考</p>
               <ResizeTextArea
                 currentDate={currentDate}
                 defaultData={

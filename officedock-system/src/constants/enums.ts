@@ -467,6 +467,12 @@ export enum TabType {
   MY_DOC = 'マイドック',
   TEAM_DOCK = 'チームドック',
 }
+export enum TabTypeSurvey {
+  ALL = '全て',
+  RECEIVING = '受付中',
+  ENDED = '受付終了',
+  MY_SURVEY = 'マイアンケート',
+}
 
 export enum TimeType {
   HOURS = '時間前',

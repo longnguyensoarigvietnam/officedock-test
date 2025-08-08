@@ -1,6 +1,7 @@
 import React from 'react';
 import { EventContentArg } from '@fullcalendar/core/index.js';
 import { convertToTimeString, isMoreThanSixtyMinutes } from '@utils/date';
+import { generateVerticalGradient } from '@utils';
 
 type Props = {
   event: EventContentArg;
@@ -18,9 +19,11 @@ const TaskDailyCard = ({ event, isDownload }: Props) => {
       <div
         key={event.event.id}
         style={{
-          backgroundColor: largeColor ? largeColor : 'white',
+          background: largeColor
+            ? generateVerticalGradient(largeColor)
+            : '#A7B9C2',
         }}
-        className={`h-full card-schedule item-schedule-shadow   text-white rounded-md  flex justify-between overflow-hidden p-2 bg-white border`}>
+        className={`h-full card-schedule item-schedule-shadow   text-white rounded-[14px]  flex justify-between overflow-hidden p-2 bg-white border`}>
         <div className="flex flex-col gap-3 w-[80%]">
           <p
             className={`text-sm font-bold truncate block w-full ${isDownload ? '-translate-y-[50%] h-8' : ''} `}>

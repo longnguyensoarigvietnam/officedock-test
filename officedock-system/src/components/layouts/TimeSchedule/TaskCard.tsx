@@ -24,6 +24,7 @@ import {
 } from '@utils/date';
 import { TaskTimeSchedule } from '@interfaces/task';
 import { EventEditFormData } from '@interfaces/calendar';
+import { generateVerticalGradient } from '@utils';
 
 interface TaskCardProps {
   event: EventContentArg;
@@ -351,7 +352,7 @@ const TaskCard = ({
     if (isShiftPressed) return;
     return (
       <div
-        className={`w-[250px]    fixed top-0 left-0 z-[999]  h-fit rounded-md pl-5 pr-[10px] pt-[10px] pb-5 bg-white`}
+        className={`w-[250px]    fixed top-0 left-0 z-[999]  h-fit rounded-[14px] pl-5 pr-[10px] pt-[10px] pb-5 bg-white`}
         ref={popupRef}
         onMouseLeave={handlePopupLeave}
         onMouseEnter={() => setIsHovering(true)}
@@ -467,11 +468,10 @@ const TaskCard = ({
         style={{
           paddingTop: `${(slotHeight / baseHeight) * 7}px`,
           paddingBottom: `${(slotHeight / baseHeight) * 8}px`,
-          borderLeftColor: resourcePlan ? largeColor : '',
-          backgroundColor: resourcePlan
+          background: resourcePlan
             ? 'white'
             : largeColor
-              ? largeColor
+              ? generateVerticalGradient(largeColor)
               : '#A7B9C2',
         }}
         ref={containerRef}
@@ -505,7 +505,7 @@ const TaskCard = ({
             }
           }
         }}
-        className={`h-full event-bottom  ${isSelect && '!opacity-30'} ${largeColor && resourcePlan && 'border border-l-2'} flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-primary'}    text-black rounded-md   justify-between   px-2 border`}>
+        className={`h-full event-bottom  ${isSelect && '!opacity-30'} ${largeColor && resourcePlan && 'border border-l-2'} flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-primary'}    text-black rounded-[14px]   justify-between   px-2 border`}>
         <div className="flex w-full relative  h-full justify-between ">
           <div
             onMouseEnter={(e) => {
@@ -554,7 +554,12 @@ const TaskCard = ({
                       : '0'
                     : '0',
                 }}
-                className="font-bold min-h-[20px] text-sm truncate block w-full  ">
+                className="font-bold min-h-[20px] text-sm truncate  w-full flex items-center gap-[6px]  ">
+                {!isEvent && resourcePlan && (
+                  <div
+                    style={{ backgroundColor: largeColor || 'white' }}
+                    className="w-2 h-2 rounded-full mt-[5px] flex-shrink-0"></div>
+                )}
                 {event?.event instanceof Error
                   ? ''
                   : event?.event?.title
@@ -602,16 +607,16 @@ const TaskCard = ({
                   src={`/icons/lock.svg`}
                   name="icon lock"
                   style={{
-                    bottom: `${(slotHeight / baseHeight) * 13}px`,
+                    bottom: `${(slotHeight / baseHeight) * 16}px`,
                   }}
                   className={`absolute w-3 h-3 bottom-1 right-9 ${isTooSmall && 'hidden'}`}
                 />
               )}
               <ImageRound
-                src={`/icons/${isStart ? 'pause' : 'play'}.svg`}
+                src={`/icons/${isStart ? 'pause' : 'play-task'}.svg`}
                 name="Start task"
                 style={{
-                  bottom: `${(slotHeight / baseHeight) * 8}px`,
+                  bottom: `${(slotHeight / baseHeight) * 3}px`,
                 }}
                 hidden={
                   !isMoreThanFifteenMinutes(
@@ -619,7 +624,7 @@ const TaskCard = ({
                     `${event.event.end}`,
                   ) && isOptionZoomSchedule === '01:00:00'
                 }
-                className="absolute   w-[20px] h-[20px] bottom-2 z-[30] right-2  hover:cursor-pointer"
+                className="absolute   !w-fit !h-fit  z-[30] right-2  hover:cursor-pointer"
                 onClick={handleStartStopTask}
               />
             </>
