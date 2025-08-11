@@ -24,5 +24,10 @@ export interface MyPageMenuItem {
   name: string;
   href: string;
   iconSrc: string;
-  iconName: string
+  iconName: string;
+  child?: {
+    name: string;
+    href: string;
+    onClick?: () => void;
+  }[];
 }

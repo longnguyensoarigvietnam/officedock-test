@@ -588,4 +588,7 @@ export const apiRouters = {
   // TWEET
   TWEET_LIST: '/tweets/',
   TWEET_DETAIL: (id: number) => `/tweets/${id}/`,
+
+  // SURVEY
+  SURVEY_LIST: '/surveys/',
 };

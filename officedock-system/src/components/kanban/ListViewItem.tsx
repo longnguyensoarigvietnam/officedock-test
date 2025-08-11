@@ -328,7 +328,7 @@ const ListViewItem = ({
             })}
             {...provided.draggableProps}
             {...provided.dragHandleProps}
-            className={`relative ${isPermissionUpdate ? 'ex-event-draggable' : ''} group border border-transparent no-show hover:border hover:border-[#BEC9CE]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-1 ${snapshot.isDragging && 'opacity-100'}`}>
+            className={`relative ${isPermissionUpdate ? 'ex-event-draggable' : ''} group border border-transparent no-show hover:border hover:border-[#BEC9CE]  hover:border-solid   ${content.isStart && ' !border-primary'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-1 ${snapshot.isDragging && 'opacity-100'}`}>
             <div
               className="flex items-center py-2.5 px-3 w-full"
               onClick={() => {

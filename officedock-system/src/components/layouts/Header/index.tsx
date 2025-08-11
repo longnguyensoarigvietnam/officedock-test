@@ -1179,14 +1179,14 @@ const Header = ({ className }: HeaderProps) => {
                       leaveFrom="opacity-100 translate-y-0"
                       leaveTo="opacity-0 translate-y-1">
                       <PopoverPanel className="absolute right-0 z-10 w-fit transform">
-                        <div className="overflow-hidden bg-[#5B6770] rounded-lg shadow-common py-1 w-[180px]">
+                        <div className="overflow-hidden bg-[#5B6770] rounded-lg shadow-common py-1 w-[180px] px-[6px]">
                           <div className="relative flex flex-col gap-1 text-white text-[14px] font-medium">
                             {companyItems
                               .filter((item) => item.companyMenu == true)
                               .map((item) => (
                                 <div
                                   key={item.name}
-                                  className={`flex px-4 py-2 hover:bg-[#7D8A94] ${pathname == item.href && 'bg-[#7D8A94]'}`}
+                                  className={`flex px-4 py-2 hover:bg-[#7D8A94] cursor-pointer rounded-md ${pathname == item.href && 'bg-[#7D8A94]'}`}
                                   onClick={() => {
                                     if (isChatFilesUploading) {
                                       setPendingPageChange(item.href as string);

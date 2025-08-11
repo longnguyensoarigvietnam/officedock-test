@@ -261,11 +261,9 @@ const MyPage = () => {
             <div>
               {session?.user.id && renderBoxUser(`${session?.user.id}`)}
             </div>
-            <p className="break-all max-w-[100px] line-clamp-2">
-              {session?.user.profile.fullName}
-            </p>
+            <p className="break-all max-w-[100px] line-clamp-2">名前</p>
             <p className="break-all text-[22px] text-black max-w-[100px] line-clamp-2">
-              湊藤 哉斗
+              {session?.user.profile.fullName}
             </p>
             <div className="h-full border-l border-[#D2DBE1]"></div>
             <div className="flex items-center text-sm font-medium gap-[10px]">

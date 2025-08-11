@@ -238,7 +238,7 @@ const Dropdown = ({
                   <ListboxOptions
                     ref={listboxRef}
                     onScroll={handleScroll as any}
-                    className={`absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none !border-[1px] !border-[#77858F] ${classNameOption}`}>
+                    className={`absolute ${isStatusDropdown && '!px-1'} z-20 mt-1 max-h-56 w-full overflow-auto rounded bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none !border-[1px] !border-[#D2DBE1] ${classNameOption}`}>
                     {searchOption && (
                       <div className="flex gap-2 items-center ">
                         <div className="w-full">
@@ -279,7 +279,7 @@ const Dropdown = ({
                           key={option.value}
                           style={styleClassOption}
                           className={({ focus }) =>
-                            `relative ${openByDefault && priorityStyles.find((item) => item.label === option.value)?.color} cursor-default border-b-[1px] border-[#EBF1F7] select-none ${!openByDefault ? (isShowTextActive && selected?.value === option.value ? 'pl-3 pr-1' : 'pl-3 pr-5') : 'pl-3 pr-5'} py-2 hover:cursor-pointer ${focus ? 'bg-slate-50' : 'text-gray-900'} ${labelOptionClass} overflow-x-hidden`
+                            `relative  ${isStatusDropdown && '!px-0 !rounded'} ${openByDefault && priorityStyles.find((item) => item.label === option.value)?.color} cursor-default border-b-[1px] border-[#D2DBE1] select-none ${!openByDefault ? (isShowTextActive && selected?.value === option.value ? 'pl-3 pr-1' : 'pl-3 pr-5') : 'pl-3 pr-5'} py-2 hover:cursor-pointer ${focus ? 'bg-slate-50' : 'text-gray-900'} ${labelOptionClass} overflow-x-hidden`
                           }
                           value={option}
                           onClick={() => handleOptionClick(option)}
@@ -304,15 +304,15 @@ const Dropdown = ({
                                 )}
                                 {isStatusDropdown && (
                                   <div
-                                    className={`${statusStyles.find((item) => item.label == option.label)?.color} w-3 h-3 ml-2 rounded-full`}
+                                    className={`${statusStyles.find((item) => item.label == option.label)?.color} w-[2px] h-[14px] ml-[6px] `}
                                   />
                                 )}
                                 <p
-                                  className={` ${!openByDefault ? 'ml-1' : 'text-center w-full'} ${!isStatusDropdown && selected?.value == option.value ? (isShowTextActive ? '' : 'text-blue-500') : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px]'} w-[100%] break-words ${disableItems.includes(String(option.value)) && 'text-gray-300 hover:cursor-not-allowed'}`}>
+                                  className={` ${!openByDefault ? 'ml-1' : 'text-center w-full'} ${!isStatusDropdown && selected?.value == option.value ? (isShowTextActive ? '' : 'text-blue-500') : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px] !text-sm'} w-[100%] break-words ${disableItems.includes(String(option.value)) && 'text-gray-300 hover:cursor-not-allowed'}`}>
                                   {option.label}
                                 </p>
                                 {isStatusDropdown && (
-                                  <p className="w-[40px] text-xs text-[#A7B7C2]">
+                                  <p className="w-fit text-xs text-[#A7B7C2]">
                                     {selected?.value === option.value &&
                                       '選択中'}
                                   </p>

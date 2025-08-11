@@ -200,7 +200,7 @@
 .schedule-custom .fc .fc-timegrid-now-indicator-arrow {
   border-top: 5px solid transparent;
   border-bottom: 5px solid transparent;
-  border-left: 8px solid #e95062;
+  border-left: 8px solid #64bbf3;
   width: 0;
   height: 0;
   position: relative;
@@ -214,11 +214,11 @@
   transform: translateY(-50%);
   width: 70px;
   height: 2px;
-  background-color: #e95062;
+  background-color: #64bbf3;
   margin-left: -3px;
 }
 .schedule-custom .fc-timegrid-now-indicator-line {
-  border: 1px solid #e95062 !important;
+  border: 1px solid #64bbf3 !important;
 }
 .schedule-custom .fc-timeGridWeek-view .fc-timegrid-now-indicator-line {
   margin-top: -6px;

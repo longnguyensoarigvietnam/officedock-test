@@ -506,11 +506,11 @@
   transform: translateY(-50%);
   width: 67px;
   height: 2px;
-  background-color: #e95062;
+  background-color: #64bbf3;
   margin-left: -3px;
 }
 .calendar-team-custom .fc-timegrid-now-indicator-line {
-  border: 1px solid #e95062 !important;
+  border: 1px solid #64bbf3 !important;
 }
 .calendar-team-custom .fc-timeGridWeek-view .fc-timegrid-now-indicator-line {
   margin-top: -6px;

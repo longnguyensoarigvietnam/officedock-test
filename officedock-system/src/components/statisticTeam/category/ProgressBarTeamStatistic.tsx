@@ -115,7 +115,7 @@ const ProgressBarTeamStatistic = ({
                   value: id || '',
                 });
             }}></div>
-          <div className="absolute -top-[25%] left-[40%] w-[250px] rounded-md py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+          <div className="absolute -top-[25%] left-[40%] w-[250px] rounded-[14px] py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
             {id != -1 ? (
               <div>
                 <div className="flex items-center gap-1 px-5">
@@ -123,7 +123,7 @@ const ProgressBarTeamStatistic = ({
                     style={{
                       backgroundColor: color,
                     }}
-                    className="w-3 h-3"></div>
+                    className="w-3 h-3 rounded-full"></div>
                   <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                     {label}
                   </span>
@@ -173,7 +173,7 @@ const ProgressBarTeamStatistic = ({
                               style={{
                                 backgroundColor: item.color,
                               }}
-                              className="w-3 h-3"></div>
+                              className="w-3 h-3 rounded-full"></div>
                             <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                               {item.label}
                             </span>
@@ -255,7 +255,7 @@ const ProgressBarTeamStatistic = ({
                   backgroundColor: color,
                 }}></div>
               {/*  Hover user compare */}
-              <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+              <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-[14px] p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
                 <div className="flex items-center gap-2">
                   <CustomUserAvatar
                     avatarUrl={item.user.avatar || ''}

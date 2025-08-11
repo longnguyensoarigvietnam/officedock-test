@@ -1375,7 +1375,7 @@ const DailyReportBoard = () => {
               </div>
             )}
             {isParent && (
-              <div className="text-base font-medium text-blacks mt-3 text-end mr-[14px]">
+              <div className="text-base font-medium text-blacks mt-3 text-end mr-[19px]">
                 {convertToJapaneseTime(getValue() as string)}{' '}
               </div>
             )}
@@ -1933,7 +1933,7 @@ const DailyReportBoard = () => {
                 </section>
 
                 <section className="flex-1 flex flex-col items-start gap-4 justify-start">
-                  <div className="w-fit px-4 h-14 flex items-center font-medium justify-center gap-1 text-[34px]">
+                  <div className="w-fit  h-14 flex items-center font-medium justify-center gap-1 text-[34px]">
                     <span className="text-sm font-medium pt-6 mr-2">
                       合計時間
                     </span>

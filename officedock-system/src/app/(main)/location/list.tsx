@@ -385,7 +385,7 @@ const ListLocation = () => {
                       <ImageRound
                         name="Edit"
                         src={'/icons/edit-gray.svg'}
-                        className={`w-3.5 h-3.5 hover:cursor-pointer`}
+                        className={`w-3.5 h-3.5 hover:cursor-pointer ${editingId == item.uuid ? '' : 'opacity-45'}`}
                         onClick={() => {
                           if (isEditing || isCreating) return;
                           setIsEditing(true);

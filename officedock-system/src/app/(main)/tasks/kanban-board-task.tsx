@@ -3704,10 +3704,10 @@ const KanbanBoardTask = () => {
         <div className="fixed flex items-center gap-2 bottom-5 right-20 z-20 ">
           <div className="w-[80px] !h-[30px]">
             <Dropdown
-              labelOptionClass="!ml-0 !pr-0 !pl-0 flex justify-center w-full "
-              className="text-sm h-8 !py-0 !pl-0 !pr-0 !px-[14px] !rounded-lg"
+              labelOptionClass="!ml-[0px] !pr-0 !pl-2 !pl-0 flex justify-start w-full !border-none"
+              className="text-sm h-8 !py-0 !pl-0 !pr-0 !px-[14px] !rounded-lg !border-none !shadow-common"
               classActive="!pr-[10px] !ml-0 w-full text-center left-[52px]"
-              classNameOption="top-[-150px] !px-0 text-sm"
+              classNameOption="top-[-190px] !px-0 w-[80px] !border-none text-start text-sm !justify-center shadow-common !ring-0 !rounded-lg"
               selectedOption={selectedOptionZoom}
               options={[
                 {

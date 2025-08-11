@@ -31,7 +31,7 @@ export const DATE_SCHEDULE_FORMAT = 'yyyy年 M月 d日 (E)';
 export const NO_DATA_AVAILABLE = 'データが見つかりません。';
 export const UNREGISTERED = '未設定';
 export const NO_OPTIONS = 'データが見つかりません。';
-export const NO_OPTIONS_CUSTOM = 'データがありません';
+export const NO_OPTIONS_CUSTOM = 'データがありません。';
 
 export const PAGINATION_PAGE_SIZE_DEFAULT = 5;
 
@@ -52,7 +52,7 @@ export const TOTAL_SKILL_LEVELS = 3;
 
 export const MESSAGE_DELETED = 'このメッセージが削除されました';
 
-export const TASK_DELETED = 'タスクが削除されました';
+export const TASK_DELETED = 'タスクが削除されました。';
 
 export const EVENT_DELETED = 'が予定を削除しました。';
 

@@ -710,9 +710,9 @@ const BookmarkList = ({
     <>
       <div className="w-full !bg-[#F8FAFC]">
         <div
-          className="flex justify-between items-center px-4 py-[14px] !w-full border-b-[2px] text-white"
+          className="flex justify-between items-center px-5 py-4 min-h-[78px] !w-[calc(100%_-_20px)] ml-auto border-b-[2px] rounded-bl-[24px] text-white"
           style={{
-            background: 'linear-gradient(to right, #0E8DC5, #0D6FBA)',
+            background: 'linear-gradient(to right, #289BF2, #73CCDF)',
           }}>
           <div className={`flex items-center w-[60%] gap-[10px]`}>
             <div className="">

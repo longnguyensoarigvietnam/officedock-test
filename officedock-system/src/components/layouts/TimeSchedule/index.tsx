@@ -3994,15 +3994,15 @@ const TimeSchedule = memo(
                           fontWeight: 'bold',
                           zIndex: 1000,
                         }}
-                        className={`absolute flex justify-center border border-dashed border-[#A7B7C2] top-[13px]  right-[70px] w-[130px] gap-[2px] items-center  h-10 ${isDraggingSchedule ? '' : 'hidden'}`}>
-                        <p className="text-white  bg-[#5B6770] text-[10px] leading-[14px]  py-[2px] px-1 rounded-sm">
-                          スケジュールから削除
-                        </p>
+                        className={`flex justify-center border border-dashed border-[#A7B7C2] top-[13px]  right-[70px] w-[130px] gap-[2px] items-center  h-10 ${isDraggingSchedule ? '' : 'hidden'}`}>
                         <ImageRound
                           name="Delete"
-                          src={'/icons/delete-task.svg'}
+                          src={'/icons/delete-gray-bold.svg'}
                           className={`w-[14px] h-fit hover:cursor-pointer`}
                         />
+                        <p className="text-[#77858F] text-[10px] leading-[14px]  py-[2px] px-1 rounded-sm">
+                          予定から削除
+                        </p>
                       </div>
                     </>
                   )}
@@ -4162,8 +4162,8 @@ const TimeSchedule = memo(
                       eventDragStop={handleEventDragStop}
                       // TODO: Update hover event
                       eventClick={handleEventClick}
-                      eventOverlap={true}
-                      slotEventOverlap={true}
+                      // eventOverlap={true}
+                      // slotEventOverlap={true}
                       selectMirror={true}
                       locales={[jaLocale]}
                       locale="ja"
@@ -4180,6 +4180,10 @@ const TimeSchedule = memo(
                           <span className="fc-day-header">{`${day}(${weekday})`}</span>
                         );
                       }}
+                      eventOverlap={false} // Không cho chồng event
+                      slotMinWidth={100} // Mỗi slot đủ rộng để chứa nhiều event cạnh nhau
+                      slotEventOverlap={false} // (nếu dùng version mới)
+                      schedulerLicenseKey="GPL-My-Project-Is-Open-Source"
                     />
                   </div>
                   {isLoadingSchedule && (

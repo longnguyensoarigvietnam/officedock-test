@@ -291,7 +291,7 @@
 .multi-date .react-datepicker__today-button {
   color: white;
   background-color: theme('colors.button') !important;
-  border-radius: 5px;
+  border-radius: 20px;
   font-size: 11px;
   font-weight: 500;
   font-family: theme('fontFamily.primary');

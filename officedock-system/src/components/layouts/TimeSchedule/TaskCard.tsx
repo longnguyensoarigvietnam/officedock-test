@@ -633,37 +633,41 @@ const TaskCard = ({
                 </div>
                 {/* TODO: UPDATE UI if item too small */}
                 {/* <div className="text-[11px] flex gap-2">
-                <p
-                  style={{
-                    width: resourcePlan ? '100%' : 'fit-content',
-                  }}
-                  className=" h-full w-fit">
-                  {!isCalculation ? (
-                    event.timeText && isEvent ? (
-                      <p className="w-[80%] break-all">
-                        {extendedPropsData &&
-                          convertToTimeString(extendedPropsData.planStartDate)}
-                        ~
-                        {extendedPropsData &&
-                          convertToTimeString(
-                            extendedPropsData.planEndDate,
-                          )}{' '}
-                      </p>
+                  <p
+                    style={{
+                      width: resourcePlan ? '100%' : 'fit-content',
+                    }}
+                    className=" h-full w-fit">
+                    {!isCalculation ? (
+                      event.timeText && isEvent ? (
+                        <p className="w-[80%] break-all">
+                          {extendedPropsData &&
+                            convertToTimeString(
+                              extendedPropsData.planStartDate,
+                            )}
+                          ~
+                          {extendedPropsData &&
+                            convertToTimeString(
+                              extendedPropsData.planEndDate,
+                            )}{' '}
+                        </p>
+                      ) : (
+                        event.timeText &&
+                        differentTime &&
+                        event.timeText.replace(' - ', ' ~')
+                      )
                     ) : (
-                      event.timeText &&
-                      differentTime &&
-                      event.timeText.replace(' - ', ' ~')
-                    )
-                  ) : (
-                    <>{convertToTimeString(`${event.event.start}`)} ~ 計測中</>
-                  )}
-                </p>
-                {!resourcePlan && !isCalculation && (
-                  <p className="break-all">
-                    {getMinuteDifference(event.timeText)}分
+                      <>
+                        {convertToTimeString(`${event.event.start}`)} ~ 計測中
+                      </>
+                    )}
                   </p>
-                )}
-              </div> */}
+                  {!resourcePlan && !isCalculation && (
+                    <p className="break-all">
+                      {getMinuteDifference(event.timeText)}分
+                    </p>
+                  )}
+                </div> */}
               </div>
             )}
 

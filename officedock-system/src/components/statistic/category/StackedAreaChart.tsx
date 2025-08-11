@@ -1013,7 +1013,7 @@ const StackedAreaChart = ({
                                 style={{
                                   boxShadow: '0px 2px 8px 0px #0000001A',
                                 }}
-                                className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                                className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-[14px] w-[250px] ${isHovered && 'z-[50]'}`}>
                                 <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-center w-full block">
                                   {convertToJapaneseDateRange(
                                     dataDetail?.startDate as string,
@@ -1032,7 +1032,7 @@ const StackedAreaChart = ({
                                         key={cateIndex}
                                         className="flex items-baseline gap-1.5">
                                         <div
-                                          className="w-3 h-3 rounded-sm"
+                                          className="w-3 h-3 rounded-full"
                                           style={{
                                             backgroundColor:
                                               cate.categoryColor ||
@@ -1062,7 +1062,7 @@ const StackedAreaChart = ({
                                 style={{
                                   boxShadow: '0px 2px 8px 0px #0000001A',
                                 }}
-                                className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                                className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-[14px] w-[250px] ${isHovered && 'z-[50]'}`}>
                                 <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-center w-full block">
                                   {convertToJapaneseDateRange(
                                     dataDetailAllTeam?.startDate as string,
@@ -1079,7 +1079,7 @@ const StackedAreaChart = ({
                                               key={orgIndex}
                                               className="flex items-baseline gap-1.5">
                                               <div
-                                                className="w-3 h-3 rounded-sm"
+                                                className="w-3 h-3 rounded-full"
                                                 style={{
                                                   backgroundColor: org.color,
                                                 }}
@@ -1102,7 +1102,7 @@ const StackedAreaChart = ({
                                             key={orgIndex}
                                             className="flex items-baseline gap-1.5">
                                             <div
-                                              className="w-3 h-3 rounded-sm"
+                                              className="w-3 h-3 rounded-full"
                                               style={{
                                                 backgroundColor:
                                                   org.categoryColor,
