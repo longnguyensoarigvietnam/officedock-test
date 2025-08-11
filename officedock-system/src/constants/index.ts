@@ -497,3 +497,5 @@ export const COLOR_BY_TASK_STATUS = [
 ];
 
 export const MAX_TWEET_MESSAGE_LENGTH = 100;
+
+export const MAX_MY_PAGE_SET_SKILLS = 3;
