@@ -472,7 +472,12 @@ export enum TabTypeSurvey {
   ENDED = '受付終了',
   MY_SURVEY = 'マイアンケート',
 }
-
+export enum TabTypeSurveyValue {
+  ALL = 'all',
+  RECEIVING = 'open',
+  ENDED = 'close',
+  MY_SURVEY = 'my_survey',
+}
 export enum TimeType {
   HOURS = '時間前',
   DAY = '日前',

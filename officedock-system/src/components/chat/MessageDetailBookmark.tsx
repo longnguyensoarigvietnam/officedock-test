@@ -101,7 +101,7 @@ export const MessageDetailBookmark = ({
     );
 
     return (
-      <div className="h-6">
+      <div className="h-6 relative top-[-8px]">
         <CustomUserAvatar
           avatarUrl={memberInfo?.avatarUrl || ''}
           avatarColor={memberInfo?.avatarColor || ''}
@@ -373,13 +373,11 @@ export const MessageDetailBookmark = ({
                       {messageDetail.sender?.organizations?.name}
                     </span>
                   </p>
-                  {messageDetail.isBookmark && (
-                    <ImageRound
-                      name="Save"
-                      src={`/icons/save-active.svg`}
-                      className="w-[10px] h-[12px] hover:cursor-pointer"
-                    />
-                  )}
+                  <ImageRound
+                    name="Save"
+                    src={`/icons/save-active.svg`}
+                    className="w-[10px] relative top-[4px] h-[12px] hover:cursor-pointer"
+                  />
                 </div>
                 <div className={`flex items-start`}>
                   <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">

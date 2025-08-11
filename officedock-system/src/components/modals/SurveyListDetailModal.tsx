@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Button from '@components/common/Button';
@@ -29,6 +29,23 @@ const SurveyListDetailModal = ({ open, onClose }: Props) => {
       />
     );
   };
+  type Option = {
+    label: string;
+    votes: number;
+  };
+
+  const [options] = useState<Option[]>([
+    { label: 'ちょうど良い', votes: 8 },
+    { label: '少し寒い', votes: 2 },
+    { label: '少し暑い', votes: 0 },
+    {
+      label:
+        '季節や時間帯によって極端に暑すぎたり寒すぎたりすることがあり、体調を崩しやすいと感じる',
+      votes: 0,
+    },
+  ]);
+  const totalVotes = options.reduce((sum, o) => sum + o.votes, 0);
+
   return (
     <Modal
       open={open}
@@ -57,7 +74,42 @@ const SurveyListDetailModal = ({ open, onClose }: Props) => {
       <div className="mt-4 font-medium text-base">
         <p>明日のランチで食べたいものは何ですか</p>
         <div className="flex flex-col gap-[6px] mt-4">
-          <div className="h-fit p-3  flex items-center gap-2 justify-between rounded-md border border-[#77858F]"></div>
+          {options.map((opt, idx) => {
+            const percent = totalVotes
+              ? Math.round((opt.votes / totalVotes) * 100)
+              : 0;
+
+            const isSelected = idx === 0;
+
+            return (
+              <div
+                key={idx}
+                className={`relative min-h-[44px] flex items-center justify-between rounded-md border border-[#77858F] overflow-hidden`}>
+                {/* Background color bar */}
+                <div
+                  className={`absolute top-0 left-0 h-full ${
+                    isSelected ? 'bg-[#A7D4F5]' : 'bg-gray-200'
+                  }`}
+                  style={{ width: `${percent}%` }}></div>
+
+                {/* Content */}
+                <div className="relative flex-1 p-3 flex items-center justify-between z-10">
+                  <span
+                    className={`text-sm ${
+                      opt.votes === 0 ? 'text-gray-400' : 'text-black'
+                    }`}>
+                    {opt.label}
+                  </span>
+                  <span
+                    className={`text-sm ${
+                      opt.votes === 0 ? 'text-gray-400' : 'text-black'
+                    }`}>
+                    {opt.votes}票
+                  </span>
+                </div>
+              </div>
+            );
+          })}{' '}
         </div>
       </div>
       <div className="flex justify-center gap-3  items-center">

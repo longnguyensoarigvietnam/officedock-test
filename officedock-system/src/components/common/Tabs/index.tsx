@@ -129,17 +129,17 @@ const Tabs = ({
       selectedIndex={tabIdx}
       onChange={(idx) => onChangeTab(idx)}
       key={tabIdx}>
-      <div className={`w-full ${className} mt-[30px]`}>
+      <div className={`w-full  ${className} mt-[30px]`}>
         <TabList
-          className={`tab-list flex justify-center rounded-3xl ${
+          className={`tab-list max-w-[172px] flex justify-center rounded-3xl ${
             expanded && 'bg-[#182A4B33]'
-          } p-1.5 mx-2 mb-6`}>
+          } py-1 px-1 mx-2 mb-6`}>
           {tabs.length == 2 ? (
             tabs.map((tab, index) => (
               <Tab
                 key={index}
                 className={({ selected }) =>
-                  `tab-button relative flex gap-1 justify-center ${
+                  `tab-button relative w-full flex gap-1 items-center h-[26px] justify-center ${
                     full && 'w-full'
                   } whitespace-nowrap text-base font-medium leading-5 ${
                     underline ? 'border-b-2' : ''
@@ -149,7 +149,7 @@ const Tabs = ({
                       : `text-[#00000066] ${tabClassName?.default}`
                   }`
                 }>
-                <span>{tab.name}</span>
+                <span className="!py-0">{tab.name}</span>
                 {showNotificationDot && (
                   <div className="notification-dot absolute bg-error w-1 h-1 rounded-full right-1.5 top-2" />
                 )}
@@ -171,7 +171,7 @@ const Tabs = ({
                 }}>
                 <div>
                   <Switch
-                    className="!gap-0 ml-1"
+                    className="!gap-0 ml-1 "
                     customTranslate="!translate-x-[115%]"
                     enableColor={showToggleButtonColorByTime()}
                     disableColor="#182A4B33"

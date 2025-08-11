@@ -1,8 +1,14 @@
-import Button from '@components/common/Button';
-import ImageRound from '@components/common/ImageRound';
 import React from 'react';
 
+import Button from '@components/common/Button';
+import ImageRound from '@components/common/ImageRound';
+import { TabTypeSurveyValue } from '@constants/enums';
+import useSurveyList from '@hooks/useListSurvey';
+
 const AllSurveyTab = () => {
+  useSurveyList({
+    status: TabTypeSurveyValue.ALL,
+  });
   return (
     <div>
       {/* Header */}

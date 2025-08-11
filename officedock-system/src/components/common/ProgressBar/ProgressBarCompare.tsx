@@ -104,7 +104,7 @@ const PercentageBarCompare = ({
                     style={{
                       boxShadow: '0px 2px 8px 0px #0000001A',
                     }}
-                    className={`absolute top-0 ${isLast ? 'left-[-100px]' : 'left-[70%]'} z-30  w-[250px]  rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg `}>
+                    className={`absolute top-0 ${isLast ? 'left-[-100px]' : 'left-[70%]'} z-30  w-[250px]  rounded-[14px] p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg `}>
                     {item.mergedItems.length > 0 ? (
                       <>
                         <p className="text-xs text-start font-medium text-[#77858F] mb-5">
@@ -118,7 +118,7 @@ const PercentageBarCompare = ({
                                   style={{
                                     backgroundColor: mergeItem.categoryColor,
                                   }}
-                                  className="w-3 h-3"></div>
+                                  className="w-3 h-3 rounded-full"></div>
                                 <span className="truncate max-w-[180px] font-bold text-base text-black">
                                   {mergeItem.categoryName}
                                 </span>
@@ -181,7 +181,7 @@ const PercentageBarCompare = ({
                             style={{
                               backgroundColor: item.color,
                             }}
-                            className="w-3 h-3"></div>
+                            className="w-3 h-3 rounded-full"></div>
 
                           <span className="truncate max-w-[180px] font-bold text-base text-black">
                             {item.label}
@@ -273,7 +273,7 @@ const PercentageBarCompare = ({
                     style={{
                       boxShadow: '0px 2px 8px 0px #0000001A',
                     }}
-                    className={`absolute top-0 ${isLast ? 'left-[-125px]' : 'left-[70%]'} w-[250px] z-30  rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg `}>
+                    className={`absolute top-0 ${isLast ? 'left-[-125px]' : 'left-[70%]'} w-[250px] z-30  rounded-[14px] p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg `}>
                     {item.mergedItems.length > 0 ? (
                       <>
                         <p className="text-xs text-start font-medium text-[#77858F] mb-5">
@@ -288,7 +288,7 @@ const PercentageBarCompare = ({
                                   style={{
                                     backgroundColor: mergeItem.categoryColor,
                                   }}
-                                  className="w-3 h-3"></div>
+                                  className="w-3 h-3 rounded-full"></div>
                                 <span className="truncate max-w-[180px] font-bold text-base text-black">
                                   {mergeItem.categoryName}
                                 </span>
@@ -362,7 +362,7 @@ const PercentageBarCompare = ({
                             style={{
                               backgroundColor: item.color,
                             }}
-                            className="w-3 h-3"></div>
+                            className="w-3 h-3 rounded-full"></div>
                           <span className="truncate font-bold text-base text-black">
                             {item.label}
                           </span>

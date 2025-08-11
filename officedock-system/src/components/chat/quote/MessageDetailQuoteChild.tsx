@@ -269,9 +269,15 @@ export const MessageDetailQuoteChild = ({
 
             children.push(
               <p key={`${index}-msg-reply`}>
-                <span className="inline-msg-quote" contentEditable={false}>
-                  <span style={{ color: '#77858F' }}>[返信]</span>{' '}
-                  <span style={{ color: '#0068B7' }}>{title}</span>
+                <span
+                  className="inline-msg-quote flex items-center gap-[6px]"
+                  contentEditable={false}>
+                  <ImageRound
+                    name="Reply"
+                    src={'/icons/reply.svg'}
+                    className="w-[14px] h-[12px] hover:cursor-pointer"
+                  />
+                  <span style={{ color: '#77858F' }}>{title}</span>
                 </span>
               </p>,
             );

@@ -258,6 +258,21 @@ export const MY_PAGE_MENU: MyPageMenuItem[] = [
     href: pageRouters.SURVEY.href,
     iconSrc: '/icons/question.svg',
     iconName: 'Question icon',
+    child: [
+      {
+        name: 'アンケートを見る',
+        href: '/',
+      },
+      {
+        name: 'アンケートを作る',
+        href: '/',
+        onClick: () => {},
+      },
+      {
+        name: 'マイアンケートを見る',
+        href: '/',
+      },
+    ],
   },
   {
     name: 'MVP',

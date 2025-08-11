@@ -22,8 +22,10 @@ export const TemplateItem = ({
   onEdit?: (id: number) => void;
 }) => (
   <div
-    style={{boxShadow: `${variant == TemplateVariant.EMPTY ? '' : '0px 2px 8px 0px #0000001A'}`}}
-    className={`relative min-w-[200px] !max-w-[200px] h-[55px] p-3 mb-3 rounded-[50px] bg-white flex items-center hover:cursor-pointer ${variant == TemplateVariant.EMPTY ? 'border border-dashed border-[#D5DCE0]' : 'border-transparent'} ${className}`}
+    style={{
+      boxShadow: `${variant == TemplateVariant.EMPTY ? '' : '0px 2px 8px 0px #0000001A'}`,
+    }}
+    className={`relative min-w-[200px] !max-w-[200px] h-[55px] p-3 mb-3 rounded-[50px] bg-white flex items-center hover:cursor-pointer ${variant == TemplateVariant.EMPTY ? 'border border-dashed !bg-transparent border-[#D5DCE0]' : 'border-transparent'} ${className}`}
     onClick={() => onClick?.(templateId ?? undefined)}>
     <ImageRound
       src={`/icons/${variant == TemplateVariant.EMPTY ? 'add-dashed' : 'add-template'}.svg`}

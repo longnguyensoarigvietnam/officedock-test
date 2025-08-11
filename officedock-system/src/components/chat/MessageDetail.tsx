@@ -421,9 +421,15 @@ export const MessageDetail = ({
 
             children.push(
               <p key={`${index}-msg-reply`}>
-                <span className="inline-msg-quote" contentEditable={false}>
-                  <span style={{ color: '#77858F' }}>[返信]</span>{' '}
-                  <span style={{ color: '#0068B7' }}>{title}</span>
+                <span
+                  className="inline-msg-quote flex items-center gap-[6px]"
+                  contentEditable={false}>
+                  <ImageRound
+                    name="Reply"
+                    src={'/icons/reply.svg'}
+                    className="w-[14px] h-[12px] hover:cursor-pointer"
+                  />
+                  <span style={{ color: '#77858F' }}>{title}</span>
                 </span>
               </p>,
             );
@@ -1160,7 +1166,7 @@ export const MessageDetail = ({
                                       <span className="text-[#228CDB]">
                                         {messageDetail.sender?.fullName}
                                       </span>
-                                      があなたに割り当てました
+                                      があなたに割り当てました。
                                     </p>
                                   )}
                                   {messageDetail.type ==
@@ -1169,7 +1175,7 @@ export const MessageDetail = ({
                                       <span className="text-[#228CDB]">
                                         {messageDetail.sender?.fullName}
                                       </span>
-                                      があなたのタスクカードを編集しました
+                                      があなたのタスクカードを編集しました。
                                     </p>
                                   )}
                                   {messageDetail.type ==
@@ -1318,7 +1324,7 @@ export const MessageDetail = ({
                                     )}
                                   </h4>
                                   <Button
-                                    variant='outline'
+                                    variant="outline"
                                     className="!font-medium !text-xs !rounded-[8px] !w-[86px] !h-[30px] !px-0"
                                     onClick={() => {
                                       if (
