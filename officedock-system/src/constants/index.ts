@@ -54,11 +54,11 @@ export const MESSAGE_DELETED = 'このメッセージが削除されました';
 
 export const TASK_DELETED = 'タスクが削除されました';
 
-export const EVENT_DELETED = 'が予定を削除しました。';
+export const EVENT_DELETED = 'があなたが参加予定の予定を削除しました。';
 
 export const EVENT_CREATED = 'があなたに予定を割り振りしました。';
 
-export const EVENT_EDITED = 'が予定を更新しました。';
+export const EVENT_EDITED = 'があなたが参加予定の予定を更新しました。';
 
 export const EVENT_BEFORE_EDITED = '変更前の実施予定日時：';
 

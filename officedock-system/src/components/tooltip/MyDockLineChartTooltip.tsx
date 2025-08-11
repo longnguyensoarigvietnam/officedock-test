@@ -31,7 +31,7 @@ export const MyDockLineChartTooltip = ({ data }: { data: any[] }) => {
 
             <div className="flex items-center mb-[8px]">
               <div
-                className="mr-1 w-3 h-3 rounded-sm min-w-[12px]"
+                className="mr-1 w-3 h-3 rounded-full min-w-[12px]"
                 style={{ backgroundColor: point.color }}></div>
               <p className="font-bold text-base max-w-[200px] whitespace-nowrap overflow-hidden text-ellipsis">
                 {point.label}

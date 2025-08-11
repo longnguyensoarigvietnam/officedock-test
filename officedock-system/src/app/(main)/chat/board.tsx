@@ -114,7 +114,7 @@ const BoardChat = () => {
       const eventOrganizations = dataOptionsOrganizations
         ? dataOptionsOrganizations.map((org) => ({
             id: `${ChatParticipantType.ORGANIZATION}-${org.id}`,
-            fullName: org.fullName,
+            fullName: `${org.fullName}の全員を選択`,
             type: ChatParticipantType.ORGANIZATION,
             userIds: org.userIds,
             color: org.color,

@@ -1541,7 +1541,7 @@ const TableComponent = ({
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="text-[#77858F] border-r-[1px] w-1/4 font-medium text-xs py-3">
+                  className="text-[#77858F] bg-[#F8FAFC] border-r-[1px] w-1/4 font-medium text-xs py-3">
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext(),
@@ -1782,7 +1782,7 @@ const TableComponent = ({
                       <ImageRound
                         name="Delete"
                         src={'/icons/delete-gray.svg'}
-                        className="w-[15px] h-[17px] ml-[-7px] hover:cursor-pointer"
+                        className="w-[15px] h-[17px] ml-[-5px] hover:cursor-pointer"
                         onClick={async () => {
                           const oldLargeValue = row.original.large.value;
                           const matchingHierarchies =
@@ -1900,7 +1900,7 @@ const TableComponent = ({
                           <ImageRound
                             name="Delete"
                             src={'/icons/delete-gray.svg'}
-                            className="w-[15px] h-[17px] hover:cursor-pointer"
+                            className="w-[15px] h-[17px] ml-[-5px] hover:cursor-pointer"
                             onClick={async () => {
                               const oldLargeValue = row.original.large.value;
                               const oldMediumValue = row.original.medium.value;
@@ -2052,7 +2052,7 @@ const TableComponent = ({
                         <ImageRound
                           name="Delete"
                           src={'/icons/delete-gray.svg'}
-                          className="w-[15px] h-[17px] hover:cursor-pointer"
+                          className="w-[15px] h-[17px] ml-[-5px] hover:cursor-pointer"
                           onClick={async () => {
                             const oldLargeOption = row.original.large;
                             const oldMediumOption = row.original.medium;
