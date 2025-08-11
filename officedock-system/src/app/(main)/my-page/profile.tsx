@@ -17,9 +17,7 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
-import {
-  TweetFormData,
-} from '@interfaces/tweet';
+import { TweetFormData } from '@interfaces/tweet';
 
 import {
   ERROR_CREATE_MESSAGE,

@@ -55,6 +55,7 @@ type Props = {
   styleClass?: CSSProperties;
   styleClassOption?: CSSProperties;
   imgClassname?: string;
+  isShowTextActive?: boolean;
   onScrollEnd?: () => void;
   onChange?: (value: OptionDropdownType) => void;
   onAdd?: (value: string) => void;
@@ -89,6 +90,7 @@ const Dropdown = ({
   isShowIconDrop = true,
   imgClassname,
   disableItems = [],
+  isShowTextActive = false,
   onScrollEnd,
   onAdd,
   onChange,
@@ -277,7 +279,7 @@ const Dropdown = ({
                           key={option.value}
                           style={styleClassOption}
                           className={({ focus }) =>
-                            `relative ${openByDefault && priorityStyles.find((item) => item.label === option.value)?.color} cursor-default border-b-[1px] border-[#EBF1F7] select-none ${!openByDefault && 'pl-3 pr-5'} py-2 hover:cursor-pointer ${focus ? 'bg-slate-50' : 'text-gray-900'} ${labelOptionClass} overflow-x-hidden`
+                            `relative ${openByDefault && priorityStyles.find((item) => item.label === option.value)?.color} cursor-default border-b-[1px] border-[#EBF1F7] select-none ${!openByDefault ? (isShowTextActive && selected?.value === option.value ? 'pl-3 pr-1' : 'pl-3 pr-5') : 'pl-3 pr-5'} py-2 hover:cursor-pointer ${focus ? 'bg-slate-50' : 'text-gray-900'} ${labelOptionClass} overflow-x-hidden`
                           }
                           value={option}
                           onClick={() => handleOptionClick(option)}
@@ -306,11 +308,17 @@ const Dropdown = ({
                                   />
                                 )}
                                 <p
-                                  className={` ${!openByDefault ? 'ml-1' : 'text-center w-full'} ${!isStatusDropdown && selected?.value == option.value ? 'text-blue-500' : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px]'} w-[100%] break-words ${disableItems.includes(String(option.value)) && 'text-gray-300 hover:cursor-not-allowed'}`}>
+                                  className={` ${!openByDefault ? 'ml-1' : 'text-center w-full'} ${!isStatusDropdown && selected?.value == option.value ? (isShowTextActive ? '' : 'text-blue-500') : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px]'} w-[100%] break-words ${disableItems.includes(String(option.value)) && 'text-gray-300 hover:cursor-not-allowed'}`}>
                                   {option.label}
                                 </p>
                                 {isStatusDropdown && (
-                                  <p className="w-[40px] text-[#A7B7C2]">
+                                  <p className="w-[40px] text-xs text-[#A7B7C2]">
+                                    {selected?.value === option.value &&
+                                      '選択中'}
+                                  </p>
+                                )}
+                                {isShowTextActive && (
+                                  <p className="w-fit text-[#A7B7C2] text-xs flex-shrink-0">
                                     {selected?.value === option.value &&
                                       '選択中'}
                                   </p>

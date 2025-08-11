@@ -631,6 +631,7 @@ const TaskPageDataHeader = () => {
                   placeholder="打ち合わせ"
                   disabled={!isTaskPage || isTaskTeamPage}
                   searchOption
+                  isShowTextActive
                   selectedOption={
                     taskSelected.value
                       ? optionsTaskMe.find(

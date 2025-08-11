@@ -124,7 +124,7 @@ const MultiSelectDropdown = ({
                   style={{
                     backgroundColor: option.largeColor,
                   }}
-                  className="w-3 h-3 rounded-sm relative top-[6px]"></div>
+                  className="w-3 h-3 rounded-full relative top-[6px]"></div>
               )}
             </div>
           </>

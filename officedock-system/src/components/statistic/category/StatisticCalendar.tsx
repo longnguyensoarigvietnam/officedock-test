@@ -587,7 +587,7 @@ function StatisticCalendar() {
                 <div
                   key={option}
                   onClick={() => handleSelectTimeOption(option)}
-                  className={`${isTypeTime === option && 'bg-primary rounded-[20px] !text-white'} cursor-pointer h-[24px] px-5 flex items-center`}>
+                  className={`${isTypeTime === option && 'bg-button rounded-[20px] !text-white'} cursor-pointer h-[24px] px-5 flex items-center`}>
                   {option}
                 </div>
               ))}

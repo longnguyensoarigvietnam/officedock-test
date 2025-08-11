@@ -8,8 +8,9 @@ import {
   ChartData,
   ChartOptions,
 } from 'chart.js';
-import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
 import { useRef, useState } from 'react';
+import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
+
 import { OptionDropdownType } from '@interfaces/common';
 import { StatisticCategoryInfo } from '@interfaces/statistic';
 import ModalCustomTooltip from '@components/tooltip/ModalCustomTooltip';

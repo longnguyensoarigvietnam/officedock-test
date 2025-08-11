@@ -245,30 +245,30 @@ export const MY_PAGE_MENU: MyPageMenuItem[] = [
     name: 'サンクス メッセージ',
     href: '/',
     iconSrc: '/icons/heart.svg',
-    iconName: "Heart icon"
+    iconName: 'Heart icon',
   },
   {
     name: '他の人の部屋へ 出かける',
     href: '/',
     iconSrc: '/icons/room-profile.svg',
-    iconName: "Room icon"
+    iconName: 'Room icon',
   },
   {
     name: 'アンケート',
-    href: '/',
+    href: pageRouters.SURVEY.href,
     iconSrc: '/icons/question.svg',
-    iconName: "Question icon",
+    iconName: 'Question icon',
   },
   {
     name: 'MVP',
     href: '/',
     iconSrc: '/icons/mvp.svg',
-    iconName: "MVP icon"
+    iconName: 'MVP icon',
   },
   {
     name: 'アイテム',
     href: '/',
     iconSrc: '/icons/shop.svg',
-    iconName: "Shop icon"
+    iconName: 'Shop icon',
   },
 ];
