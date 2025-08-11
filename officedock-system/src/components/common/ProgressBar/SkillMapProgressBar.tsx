@@ -3,6 +3,7 @@ interface SkillMapProgressBarProps {
   className?: string;
   strokeColor: string;
   trailColor?: string;
+  height?: string;
 }
 
 export const SkillMapProgressBar = ({
@@ -10,11 +11,12 @@ export const SkillMapProgressBar = ({
   className = '',
   strokeColor,
   trailColor = '#D2DBE1',
+  height = '10px'
 }: SkillMapProgressBarProps) => {
   return (
     <div
       className={`w-full rounded-full overflow-hidden ${className}`}
-      style={{ backgroundColor: trailColor, height: '10px' }}
+      style={{ backgroundColor: trailColor, height }}
     >
       <div
         className="h-full transition-all duration-300 ease-in-out"
