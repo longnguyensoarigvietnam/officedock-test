@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import lodash from 'lodash';
 
 import ImageRound from '@components/common/ImageRound';
@@ -13,14 +14,15 @@ export const MyPageMenu = () => {
     <div className="flex flex-col gap-[35px]">
       {menuItemsClone.map((page: MyPageMenuItem, index) => {
         return (
-          <div
+          <Link
             key={index}
+            href={page.href}
             style={{
               background: 'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
               boxShadow: '0px 4px 0px 0px #0028A140',
             }}
             className="relative w-[110px] cursor-pointer hover:opacity-80 h-fit rounded-[10px] pb-[15px] pt-[30px] flex flex-col justify-end items-center text-white text-[13px] font-bold">
-            <div className='flex flex-col items-center'>
+            <div className="flex flex-col items-center">
               {page.name.split(' ').map((section, index) => (
                 <p key={index}>{section}</p>
               ))}
@@ -32,7 +34,7 @@ export const MyPageMenu = () => {
                 className={`w-fit h-fit `}
               />
             </div>
-          </div>
+          </Link>
         );
       })}
     </div>

@@ -1915,7 +1915,7 @@ const DailyReportBoard = () => {
               locale="ja"
             />
           </div>
-          <div className="w-[calc(100%_-_260px)] h-[calc(100vh_-_177px)] font-medium overflow-y-auto mr-5 bg-[#F8FAFC] p-[30px] rounded-[14px]">
+          <div className="w-[calc(100%_-_260px)] h-[calc(100vh_-_177px)] font-medium overflow-y-auto mr-5 bg-[#F8FAFC] p-[30px] rounded-[30px]">
             <div className="overflow-y-auto">
               <p className="text-base text-[#77858F]">カテゴリーの割合</p>
               <div className="flex pt-5">
@@ -1927,6 +1927,7 @@ const DailyReportBoard = () => {
                       labels={chartData?.labels}
                       actualValues={chartData?.actualValue}
                       className="w-[280px] h-[280px] ml-5 "
+                      colorLabel="white"
                     />
                   )}
                 </section>

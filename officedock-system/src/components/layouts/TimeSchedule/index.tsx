@@ -3990,11 +3990,11 @@ const TimeSchedule = memo(
                         style={{
                           textAlign: 'center',
                           lineHeight: '80px',
-                          borderRadius: '8px',
+                          borderRadius: '50px',
                           fontWeight: 'bold',
                           zIndex: 1000,
                         }}
-                        className={` w-[150px] flex flex-col gap-[2px] items-center justify-center h-[48px] ${isDraggingSchedule ? '' : 'hidden'}`}>
+                        className={`absolute flex justify-center border border-dashed border-[#A7B7C2] top-[13px]  right-[70px] w-[130px] gap-[2px] items-center  h-10 ${isDraggingSchedule ? '' : 'hidden'}`}>
                         <p className="text-white  bg-[#5B6770] text-[10px] leading-[14px]  py-[2px] px-1 rounded-sm">
                           スケジュールから削除
                         </p>
@@ -4255,19 +4255,19 @@ const TimeSchedule = memo(
               style={{
                 textAlign: 'center',
                 lineHeight: '80px',
-                borderRadius: '8px',
+                borderRadius: '50px',
                 fontWeight: 'bold',
                 zIndex: 1000,
               }}
-              className={`absolute top-[9px]  right-[53px] w-[150px] flex flex-col gap-[2px] items-center justify-center h-[48px] ${isDraggingSchedule ? '' : 'hidden'}`}>
-              <p className="text-white  bg-[#5B6770] text-[10px] leading-[14px]  py-[2px] px-1 rounded-sm">
-                スケジュールから削除
-              </p>
+              className={`absolute flex justify-center border border-dashed border-[#A7B7C2] top-[13px]  right-[70px] w-[130px] gap-[2px] items-center  h-10 ${isDraggingSchedule ? '' : 'hidden'}`}>
               <ImageRound
                 name="Delete"
-                src={'/icons/delete-task.svg'}
+                src={'/icons/delete-gray-bold.svg'}
                 className={`w-[14px] h-fit hover:cursor-pointer`}
               />
+              <p className="text-[#77858F] text-[10px] leading-[14px]  py-[2px] px-1 rounded-sm">
+                予定から削除
+              </p>
             </div>
           )}
         </div>

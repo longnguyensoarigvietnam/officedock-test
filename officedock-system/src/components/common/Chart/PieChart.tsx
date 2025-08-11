@@ -63,12 +63,7 @@ const PieChart = ({
         backgroundColor: filteredData.map(
           (item) => item.color || defaultColors[0],
         ),
-        borderColor:
-          colorLabel !== '#fff'
-            ? colorLabel
-            : filteredData.map((item) =>
-                (item.color || defaultColors[0]).replace('1', '1'),
-              ),
+        borderColor: colorLabel !== '#fff' ? colorLabel : 'white',
         borderWidth: 0.5,
         hoverOffset: 0,
       },
@@ -81,22 +76,73 @@ const PieChart = ({
         display: showLegend,
       },
       tooltip: {
-        enabled: showTooltip,
-
-        callbacks: {
-          title: () => '',
-          label: (tooltipItem) => {
-            const value = tooltipItem.raw as number;
-            const actualValue = filteredData[tooltipItem.dataIndex].actualValue;
-
-            const maxLabelLength = 15;
-            let label = tooltipItem.label;
-            if (label.length > maxLabelLength) {
-              label = `${label.substring(0, maxLabelLength)}...`;
+        enabled: false,
+        external: (context) => {
+          const tooltipModel = context.tooltip;
+          let tooltipEl = document.getElementById('custom-tooltip');
+          if (!showTooltip) {
+            if (tooltipEl) {
+              tooltipEl.style.opacity = '0';
             }
+            return;
+          }
 
-            return [`${label} : ${value}%`, `${actualValue}`];
-          },
+          if (!tooltipEl) {
+            tooltipEl = document.createElement('div');
+            tooltipEl.id = 'custom-tooltip';
+            tooltipEl.style.position = 'absolute';
+            tooltipEl.style.pointerEvents = 'none';
+            tooltipEl.style.transition = 'all .1s ease';
+            document.body.appendChild(tooltipEl);
+          }
+
+          if (tooltipModel.opacity === 0) {
+            tooltipEl.style.opacity = '0';
+            return;
+          }
+
+          const index = tooltipModel.dataPoints[0].dataIndex;
+          const datasetIndex = tooltipModel.dataPoints[0].datasetIndex;
+          const dataset = context.chart.data.datasets[datasetIndex];
+          const bgColor = Array.isArray(dataset.backgroundColor)
+            ? (dataset.backgroundColor[index] as string)
+            : (dataset.backgroundColor as string);
+          const item = filteredData[index];
+
+          tooltipEl.innerHTML = `
+            <div style="
+              background:white;
+              padding:20px;
+              border-radius:8px;
+              box-shadow:0 2px 8px rgba(0,0,0,0.15);
+              font-family: sans-serif;
+              width : '167px'
+            ">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+                <div style="width:12px;height:12px;border-radius:50%;background:${bgColor};"></div>
+             <strong style="
+        font-size:16px;
+        display:-webkit-box;
+        -webkit-line-clamp:2;
+        -webkit-box-orient:vertical;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        line-height:1.3em;
+        max-height:2.6em;
+        word-break:break-word;
+      ">${item.label}</strong>
+              </div>
+              <div style="font-size:16px;display:flex;gap:10px;">
+                <span>${item.value}%</span>
+                <span>${item.actualValue}</span>
+              </div>
+            </div>
+          `;
+
+          const { offsetLeft, offsetTop } = context.chart.canvas;
+          tooltipEl.style.opacity = '1';
+          tooltipEl.style.left = offsetLeft + tooltipModel.caretX + 'px';
+          tooltipEl.style.top = offsetTop + tooltipModel.caretY + 'px';
         },
       },
       datalabels: {

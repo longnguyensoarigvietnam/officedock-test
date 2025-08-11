@@ -86,6 +86,7 @@ const Column = ({
   columnsKanbanData,
   creationDataTaskData,
   showFrequentlyTasks,
+
   pinItemToTop,
   addTask,
   editTask,
@@ -296,6 +297,11 @@ const Column = ({
       paddingRight = `${(columnWidth / 247) * 15}px`;
   }
 
+  const isHasOrdering =
+    (orderingOptions && orderingOptions.tag_ids.length > 0) ||
+    (orderingOptions && orderingOptions.category_ids.length > 0) ||
+    (orderingOptions && orderingOptions.organization_ids.length > 0);
+
   return extendByStatus.find((item) => String(item.id) == String(columnId))
     ?.status ? (
     <div
@@ -426,8 +432,12 @@ const Column = ({
                 paddingRight: isMyRoutine ? paddingRight : '10px',
                 boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 ${!isMyRoutine ? '#f8fafc' : '#EBF1F7'}`,
                 minHeight: showFrequentlyTasks
-                  ? 'calc(100vh - 372px)'
-                  : 'calc(100vh - 280px)',
+                  ? isHasOrdering
+                    ? 'calc(100vh - 402px)'
+                    : 'calc(100vh - 372px)'
+                  : isHasOrdering
+                    ? 'calc(100vh - 320px)'
+                    : 'calc(100vh - 280px)',
               }}
               className={`flex-grow overflow-y-auto w-[100%]
                 ${isMyRoutine && 'bg-[#EBF1F7] '}
@@ -437,8 +447,12 @@ const Column = ({
               <div
                 className={`flex flex-col ${
                   showFrequentlyTasks === true
-                    ? 'h-[calc(100vh_-_370px)]'
-                    : 'h-[calc(100vh_-_350px)]'
+                    ? isHasOrdering
+                      ? 'h-[calc(100vh_-_410px)]'
+                      : 'h-[calc(100vh_-_370px)]'
+                    : isHasOrdering
+                      ? 'h-[calc(100vh_-_380px)]'
+                      : 'h-[calc(100vh_-_350px)]'
                 }`}>
                 {items.map((item, index) => (
                   <>
@@ -558,7 +572,7 @@ const Column = ({
       </div>
       <div className="w-full flex justify-center">
         <div
-          className={`w-2 ${showFrequentlyTasks ? 'h-[calc(100vh_-_400px)]' : 'h-[calc(100vh_-_280px)]'} bg-[#EBF1F7]`}></div>
+          className={`w-2 ${showFrequentlyTasks ? (isHasOrdering ? 'h-[calc(100vh_-_430px)]' : 'h-[calc(100vh_-_400px)]') : isHasOrdering ? 'h-[calc(100vh_-_310px)]' : 'h-[calc(100vh_-_280px)]'} bg-[#EBF1F7]`}></div>
       </div>
     </div>
   );

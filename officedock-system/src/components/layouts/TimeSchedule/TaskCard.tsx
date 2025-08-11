@@ -442,6 +442,7 @@ const TaskCard = ({
       }
     }
   }, [isOptionZoomSchedule, slotHeight, event]);
+
   useEffect(() => {
     if (isShiftPressed) {
       setIsHovering(false);
@@ -451,16 +452,15 @@ const TaskCard = ({
   const [isTooSmall, setIsTooSmall] = useState(false);
 
   useEffect(() => {
-    const checkWidth = () => {
-      if (containerRef.current) {
-        const width = containerRef.current.offsetWidth;
-        setIsTooSmall(width < 50);
+    if (containerRef.current) {
+      const width = containerRef.current.offsetWidth;
+      if (width > 70) {
+        setIsTooSmall(false);
+      } else {
+        setIsTooSmall(true);
       }
-    };
-    checkWidth();
-    window.addEventListener('resize', checkWidth);
-    return () => window.removeEventListener('resize', checkWidth);
-  }, []);
+    }
+  }, [isOptionZoomSchedule, slotHeight, event]);
 
   return (
     <>
@@ -505,7 +505,7 @@ const TaskCard = ({
             }
           }
         }}
-        className={`h-full event-bottom  ${isSelect && '!opacity-30'} ${largeColor && resourcePlan && 'border border-l-2'} flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-primary'}    text-black rounded-[14px]   justify-between   px-2 border`}>
+        className={`h-full event-bottom  ${isSelect && '!opacity-30'} ${isStart && resourcePlan && '!border !border-[#3CABF3]'} flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-primary'}    text-black rounded-[14px]   justify-between   px-2 border`}>
         <div className="flex w-full relative  h-full justify-between ">
           <div
             onMouseEnter={(e) => {
@@ -539,33 +539,36 @@ const TaskCard = ({
                 resizer.style.setProperty('opacity', '1', 'important');
               }
             }}
-            className={`group  bg-transparent z-[20] w-full ${resourcePlan ? 'h-[calc(100%_-_27px)]' : 'h-[calc(100%_-_10px)]'} ${isSmallItem && '!h-full overflow-hidden'}`}>
-            <div className="flex overflow-hidden flex-col gap-1 w-[95%]">
-              <p
-                style={{
-                  width: extendedPropsData.isAllDay
-                    ? view === ViewOptions.WEEK
-                      ? '100%'
-                      : '100px'
-                    : '100%',
-                  paddingRight: extendedPropsData.isAllDay
-                    ? view === ViewOptions.WEEK
-                      ? '44px'
-                      : '0'
-                    : '0',
-                }}
-                className="font-bold min-h-[20px] text-sm truncate  w-full flex items-center gap-[6px]  ">
+            className={`group  flex ${isTooSmall && 'flex-col justify-between'} h-full bg-transparent z-[20] w-full ${resourcePlan ? 'h-[calc(100%_-_27px)]' : 'h-[calc(100%_-_10px)]'} ${isSmallItem && '!h-full overflow-hidden'}`}>
+            <div
+              className={`${isTooSmall && 'hidden'} flex overflow-hidden flex-col   flex-grow gap-[10px]`}>
+              <div className="flex items-center gap-[6px] w-full">
                 {!isEvent && resourcePlan && (
                   <div
                     style={{ backgroundColor: largeColor || 'white' }}
                     className="w-2 h-2 rounded-full mt-[5px] flex-shrink-0"></div>
                 )}
-                {event?.event instanceof Error
-                  ? ''
-                  : event?.event?.title
-                    ? event.event.title
-                    : NO_SETTING}
-              </p>
+                <p
+                  style={{
+                    width: extendedPropsData.isAllDay
+                      ? view === ViewOptions.WEEK
+                        ? '100%'
+                        : '100px'
+                      : '100%',
+                    paddingRight: extendedPropsData.isAllDay
+                      ? view === ViewOptions.WEEK
+                        ? '44px'
+                        : '0'
+                      : '0',
+                  }}
+                  className="font-bold  text-sm break-all truncate  w-full   ">
+                  {event?.event instanceof Error
+                    ? ''
+                    : event?.event?.title
+                      ? event.event.title
+                      : NO_SETTING}
+                </p>
+              </div>
               <div className="text-[11px] flex gap-2">
                 <p
                   style={{
@@ -599,36 +602,97 @@ const TaskCard = ({
                 )}
               </div>
             </div>
-          </div>
-          {resourcePlan && (
-            <>
-              {isEvent && (
-                <ImageRound
-                  src={`/icons/lock.svg`}
-                  name="icon lock"
+            {isTooSmall && (
+              <div>
+                <div className="flex items-center gap-[6px] w-full">
+                  {!isEvent && resourcePlan && (
+                    <div
+                      style={{ backgroundColor: largeColor || 'white' }}
+                      className="w-2 h-2 rounded-full mt-[5px] flex-shrink-0"></div>
+                  )}
+                  <p
+                    style={{
+                      width: extendedPropsData.isAllDay
+                        ? view === ViewOptions.WEEK
+                          ? '100%'
+                          : '100px'
+                        : '100%',
+                      paddingRight: extendedPropsData.isAllDay
+                        ? view === ViewOptions.WEEK
+                          ? '44px'
+                          : '0'
+                        : '0',
+                    }}
+                    className="font-bold  text-sm break-all truncate  w-full   ">
+                    {event?.event instanceof Error
+                      ? ''
+                      : event?.event?.title
+                        ? event.event.title
+                        : NO_SETTING}
+                  </p>
+                </div>
+                {/* TODO: UPDATE UI if item too small */}
+                {/* <div className="text-[11px] flex gap-2">
+                <p
                   style={{
-                    bottom: `${(slotHeight / baseHeight) * 16}px`,
+                    width: resourcePlan ? '100%' : 'fit-content',
                   }}
-                  className={`absolute w-3 h-3 bottom-1 right-9 ${isTooSmall && 'hidden'}`}
-                />
+                  className=" h-full w-fit">
+                  {!isCalculation ? (
+                    event.timeText && isEvent ? (
+                      <p className="w-[80%] break-all">
+                        {extendedPropsData &&
+                          convertToTimeString(extendedPropsData.planStartDate)}
+                        ~
+                        {extendedPropsData &&
+                          convertToTimeString(
+                            extendedPropsData.planEndDate,
+                          )}{' '}
+                      </p>
+                    ) : (
+                      event.timeText &&
+                      differentTime &&
+                      event.timeText.replace(' - ', ' ~')
+                    )
+                  ) : (
+                    <>{convertToTimeString(`${event.event.start}`)} ~ 計測中</>
+                  )}
+                </p>
+                {!resourcePlan && !isCalculation && (
+                  <p className="break-all">
+                    {getMinuteDifference(event.timeText)}分
+                  </p>
+                )}
+              </div> */}
+              </div>
+            )}
+
+            <div className="h-full flex gap-[6px] items-end w-fit flex-shrink-0">
+              {resourcePlan && (
+                <>
+                  {isEvent && (
+                    <ImageRound
+                      src={`/icons/lock.svg`}
+                      name="icon lock"
+                      className={` w-3 h-3 relative  ${isTooSmall && '!top-[-25px]'} top-[-5px]`}
+                    />
+                  )}
+                  <ImageRound
+                    src={`/icons/${isStart ? 'pause-task' : 'play-task'}.svg`}
+                    name="Start task"
+                    hidden={
+                      !isMoreThanFifteenMinutes(
+                        `${event.event.start}`,
+                        `${event.event.end}`,
+                      ) && isOptionZoomSchedule === '01:00:00'
+                    }
+                    className={`!w-fit ${isTooSmall && '!top-[-15px]'} !h-fit  z-[30] ${isStart ? 'top-[-1px]' : 'top-[4px]'} relative    hover:cursor-pointer`}
+                    onClick={handleStartStopTask}
+                  />
+                </>
               )}
-              <ImageRound
-                src={`/icons/${isStart ? 'pause' : 'play-task'}.svg`}
-                name="Start task"
-                style={{
-                  bottom: `${(slotHeight / baseHeight) * 3}px`,
-                }}
-                hidden={
-                  !isMoreThanFifteenMinutes(
-                    `${event.event.start}`,
-                    `${event.event.end}`,
-                  ) && isOptionZoomSchedule === '01:00:00'
-                }
-                className="absolute   !w-fit !h-fit  z-[30] right-2  hover:cursor-pointer"
-                onClick={handleStartStopTask}
-              />
-            </>
-          )}
+            </div>
+          </div>
         </div>
       </div>
       {isHovering &&

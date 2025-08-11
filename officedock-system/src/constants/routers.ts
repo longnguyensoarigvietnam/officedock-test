@@ -368,7 +368,7 @@ export const pageRouters = {
   },
   SURVEY: {
     name: 'survey',
-    href: `/survey`,
+    href: `/my-page/survey`,
   },
 };
 

@@ -100,6 +100,7 @@ const AllSurveyTab = () => {
             </div>
           </div>
           <div className="bg-[#409EDE] w-full h-[2px]"></div>
+
           {/* End */}
           <div className="flex items-stretch bg-white text-black text-xs font-normal py-[14px]">
             {/* Date column */}

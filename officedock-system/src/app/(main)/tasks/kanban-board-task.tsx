@@ -3112,9 +3112,9 @@ const KanbanBoardTask = () => {
       ]
     : [];
 
-  const firstThree = allLabels.slice(0, 3);
+  const firstSix = allLabels.slice(0, 6);
 
-  const remainingCount = allLabels.length - firstThree.length;
+  const remainingCount = allLabels.length - firstSix.length;
 
   const handleRemoveItem = (
     category: 'organization_ids' | 'tag_ids' | 'category_ids',
@@ -3257,7 +3257,7 @@ const KanbanBoardTask = () => {
                 handleCreateTaskFromTemplate={handleCreateTaskFromTemplate}
               />
               <div className="flex-grow flex flex-col gap-2  mb-6">
-                <div className={`flex gap-7 mb-6 w-fit min-w-[300px]`}>
+                <div className={`flex gap-7 mb-4 w-fit min-w-[300px]`}>
                   <div className="flex items-center gap-2">
                     {/* Filter option modal */}
                     <Popover className="relative">
@@ -3275,68 +3275,6 @@ const KanbanBoardTask = () => {
                                 className="w-[14px] h-[14px] ml-2"
                               />
                             </PopoverButton>
-                            {allLabels.length > 3 ? (
-                              <>
-                                {firstThree.slice(0, 3).map((item, index) => (
-                                  <div
-                                    key={index}
-                                    onClick={() =>
-                                      handleRemoveItem(
-                                        item.category as
-                                          | 'organization_ids'
-                                          | 'tag_ids'
-                                          | 'category_ids',
-                                        item.value,
-                                      )
-                                    }
-                                    className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
-                                    <span className="w-[71px] truncate">
-                                      {item.label}
-                                    </span>
-                                    {!isFetchingTaskBoards && (
-                                      <ImageRound
-                                        src={`/icons/close.svg`}
-                                        name="close"
-                                        className="w-fit h-fit cursor-pointer"
-                                      />
-                                    )}
-                                  </div>
-                                ))}
-                                <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
-                                  +{remainingCount}
-                                </p>
-                              </>
-                            ) : (
-                              <>
-                                {allLabels.map((item, index) => (
-                                  <div
-                                    key={index}
-                                    onClick={() => {
-                                      setIsReadyToFetch(true);
-
-                                      handleRemoveItem(
-                                        item.category as
-                                          | 'organization_ids'
-                                          | 'tag_ids'
-                                          | 'category_ids',
-                                        item.value,
-                                      );
-                                    }}
-                                    className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
-                                    <span className="w-[71px] truncate">
-                                      {item.label}
-                                    </span>
-                                    {!isFetchingTaskBoards && (
-                                      <ImageRound
-                                        src={`/icons/close.svg`}
-                                        name="close"
-                                        className="w-fit h-fit cursor-pointer"
-                                      />
-                                    )}
-                                  </div>
-                                ))}
-                              </>
-                            )}
                           </div>
                           <Transition
                             as={Fragment}
@@ -3382,7 +3320,7 @@ const KanbanBoardTask = () => {
                               ? 'option'
                               : 'outline'
                         }
-                        className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
+                        className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
                         締切期間
                       </Button>
                       <Button
@@ -3402,7 +3340,7 @@ const KanbanBoardTask = () => {
                               ? 'option'
                               : 'outline'
                         }
-                        className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
+                        className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
                         重要
                       </Button>
                     </>
@@ -3413,6 +3351,7 @@ const KanbanBoardTask = () => {
                       placeholder="タスク、キーワードを検索"
                     />
                   </div>
+
                   <div
                     className={`fixed ${showFrequentlyTasks ? 'top-[200px]' : 'top-[125px]'} hover:cursor-pointer right-5 z-20`}>
                     <DynamicTooltip
@@ -3437,6 +3376,71 @@ const KanbanBoardTask = () => {
                       />
                     </DynamicTooltip>
                   </div>
+                </div>
+                {/* Data filter */}
+                <div className="flex items-center gap-2 mb-6">
+                  {allLabels.length > 6 ? (
+                    <>
+                      {firstSix.slice(0, 6).map((item, index) => (
+                        <div
+                          key={index}
+                          onClick={() =>
+                            handleRemoveItem(
+                              item.category as
+                                | 'organization_ids'
+                                | 'tag_ids'
+                                | 'category_ids',
+                              item.value,
+                            )
+                          }
+                          className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
+                          <span className="w-[71px] truncate">
+                            {item.label}
+                          </span>
+                          {!isFetchingTaskBoards && (
+                            <ImageRound
+                              src={`/icons/close.svg`}
+                              name="close"
+                              className="w-fit h-fit cursor-pointer"
+                            />
+                          )}
+                        </div>
+                      ))}
+                      <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
+                        +{remainingCount}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      {allLabels.map((item, index) => (
+                        <div
+                          key={index}
+                          onClick={() => {
+                            setIsReadyToFetch(true);
+
+                            handleRemoveItem(
+                              item.category as
+                                | 'organization_ids'
+                                | 'tag_ids'
+                                | 'category_ids',
+                              item.value,
+                            );
+                          }}
+                          className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
+                          <span className="w-[71px] truncate">
+                            {item.label}
+                          </span>
+                          {!isFetchingTaskBoards && (
+                            <ImageRound
+                              src={`/icons/close.svg`}
+                              name="close"
+                              className="w-fit h-fit cursor-pointer"
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </>
+                  )}
                 </div>
                 {!isListView ? (
                   <div
