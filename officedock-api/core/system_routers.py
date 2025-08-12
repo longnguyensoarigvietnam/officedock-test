@@ -51,6 +51,7 @@ from dashboard.apis import (
 from chat.apis import ChatFileViewSet, ChatMessageViewSet, ChatRoomViewSet
 from roles.apis import RoleViewSet
 from surveys.apis import SurveyViewSet
+from thanks_messages.apis import ThanksMessageViewSet
 
 # Routers provide an easy way of automatically determining the URL conf.
 api_router = routers.SimpleRouter()
@@ -144,6 +145,8 @@ api_router.register(
     TweetsView,
     basename="tweets",
 )
+api_router.register("thanks-messages", ThanksMessageViewSet, basename="thanks_messages")
+
 # Add api router urls
 urlpatterns = []
 urlpatterns += api_router.urls
