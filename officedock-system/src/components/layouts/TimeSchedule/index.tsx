@@ -4102,14 +4102,14 @@ const TimeSchedule = memo(
                           const height = rect.height;
 
                           if (
-                            offsetY > height - 30 &&
+                            offsetY > height - 50 &&
                             info.event.extendedProps.type !==
                               EventCalendarType.SCHEDULE
                           ) {
                             info.el.classList.add('resizable-disabled');
                           } else {
                             if (
-                              offsetY > height - 30 &&
+                              offsetY > height - 50 &&
                               resourceId === ItemScheduleType.ACTUAL
                             ) {
                               info.el.classList.add('resizable-disabled');
@@ -4162,8 +4162,8 @@ const TimeSchedule = memo(
                       eventDragStop={handleEventDragStop}
                       // TODO: Update hover event
                       eventClick={handleEventClick}
-                      // eventOverlap={true}
-                      // slotEventOverlap={true}
+                      eventOverlap={true}
+                      slotEventOverlap={true}
                       selectMirror={true}
                       locales={[jaLocale]}
                       locale="ja"
@@ -4180,10 +4180,6 @@ const TimeSchedule = memo(
                           <span className="fc-day-header">{`${day}(${weekday})`}</span>
                         );
                       }}
-                      eventOverlap={false} // Không cho chồng event
-                      slotMinWidth={100} // Mỗi slot đủ rộng để chứa nhiều event cạnh nhau
-                      slotEventOverlap={false} // (nếu dùng version mới)
-                      schedulerLicenseKey="GPL-My-Project-Is-Open-Source"
                     />
                   </div>
                   {isLoadingSchedule && (

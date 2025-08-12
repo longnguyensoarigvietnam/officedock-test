@@ -203,7 +203,7 @@ const ProgressBarTeamTagCompare = ({
                       style={{
                         backgroundColor: item.color,
                       }}
-                      className="w-3 h-3"></div>
+                      className="w-3 h-3 rounded-full"></div>
                     <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                       {item.label}
                     </span>
@@ -273,7 +273,7 @@ const ProgressBarTeamTagCompare = ({
                                 style={{
                                   backgroundColor: mergeItem.color,
                                 }}
-                                className="w-3 h-3"></div>
+                                className="w-3 h-3 rounded-full"></div>
                               <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                                 {mergeItem.label}
                               </span>
@@ -367,7 +367,7 @@ const ProgressBarTeamTagCompare = ({
                         style={{
                           backgroundColor: itemCompare.color,
                         }}
-                        className="w-3 h-3"></div>
+                        className="w-3 h-3 rounded-full"></div>
                       <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                         {itemCompare.label}
                       </span>
@@ -440,7 +440,7 @@ const ProgressBarTeamTagCompare = ({
                                   style={{
                                     backgroundColor: itemUser.color,
                                   }}
-                                  className="w-3 h-3"></div>
+                                  className="w-3 h-3 rounded-full"></div>
                                 <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                                   {itemUser.label}
                                 </span>

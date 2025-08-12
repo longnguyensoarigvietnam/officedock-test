@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import Button from '@components/common/Button';
@@ -91,8 +91,6 @@ const StatisticTeamBoard = () => {
   const searchParams = useSearchParams();
 
   const params = new URLSearchParams(searchParams);
-
-  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
 
   const { showToast } = useToast();
 
@@ -688,12 +686,7 @@ const StatisticTeamBoard = () => {
         </div>
         <div>
           {/* Filter modal */}
-          <FilterTeamStatistic
-            open={isOpenModalFilter}
-            className="my-[30px]"
-            classNameData=" w-[80%]"
-            onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-          />
+          <FilterTeamStatistic className="my-[30px]" classNameData=" w-[80%]" />
         </div>
       </div>
 

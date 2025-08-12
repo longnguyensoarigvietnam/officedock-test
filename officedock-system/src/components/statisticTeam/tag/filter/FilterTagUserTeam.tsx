@@ -1,4 +1,4 @@
-import React, { Fragment, useContext, useEffect, useState } from 'react';
+import React, { Fragment, useContext } from 'react';
 import {
   Popover,
   PopoverButton,
@@ -7,26 +7,17 @@ import {
 } from '@headlessui/react';
 
 import ImageRound from '@components/common/ImageRound';
+
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
-import { NO_DATA_AVAILABLE } from '@constants';
-import Checkbox from '@components/common/Checkbox';
-import { OptionDropdownType } from '@interfaces/common';
-import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
-import Button from '@components/common/Button';
+
+import FilterDataUserTeam from '../modal/FilterDataUserTeamModal';
 
 type Props = {
-  open: boolean;
   className?: string;
   classNameData?: string;
-  onOpen: () => void;
 };
 
-const FilterTagUserTeam = ({
-  open,
-  className,
-  classNameData,
-  onOpen,
-}: Props) => {
+const FilterTagUserTeam = ({ className, classNameData }: Props) => {
   const {
     orderingOptions,
     firstThreeUser,
@@ -38,94 +29,19 @@ const FilterTagUserTeam = ({
     isLoadingLargeCompare,
     isLoadingMediumCompare,
     remainingCountUser,
-    listMemberTeam,
-    isCheckCompare,
-    isHasLoading,
-    setOrderingOptions,
-    setIsLoadingLarge,
-    setIsLoadingMedium,
-    setIsLoadingSmall,
-    setIsLoadingSmallCompare,
-    setIsLoadingOrganization,
-    setIsLoadingLargeCompare,
-    setIsLoadingMediumCompare,
-    setIsLoadingOrganizationCompare,
+
     removeUser,
   } = useContext(StatisticTeamTagsStateContext);
-
-  const [dataOptionsUserIds, setDataOptionsUserIds] = useState<
-    OptionDropdownType[]
-  >([]);
-  const [selectedOption, setSelectedOption] = useState<OptionDropdownType[]>(
-    [],
-  );
-
-  useEffect(() => {
-    if (listMemberTeam) {
-      setDataOptionsUserIds(
-        listMemberTeam.map((org) => ({
-          label: String(org.fullName),
-          value: String(org.id),
-          imgUrl: org.avatarUrl,
-          iconColor: org.color,
-          color: org?.color || '',
-          avatarUrl: org?.avatarUrl || '',
-        })),
-      );
-    }
-  }, [listMemberTeam]);
-
-  useEffect(() => {
-    if (orderingOptions) {
-      setSelectedOption(orderingOptions.user_ids);
-    }
-  }, [orderingOptions, open]);
-
-  const handleChangeUser = (selected: OptionDropdownType) => {
-    const foundItemIndex = selectedOption.findIndex(
-      (tag) => tag.value == selected.value,
-    );
-    if (foundItemIndex == -1) {
-      setSelectedOption([...selectedOption, selected]);
-    } else {
-      setSelectedOption(
-        selectedOption.filter((op) => op.value != selected.value),
-      );
-    }
-  };
-
-  const handleReset = () => {
-    setSelectedOption([]);
-  };
-  const handleSearch = () => {
-    setIsLoadingLarge(true);
-    setIsLoadingMedium(true);
-    setIsLoadingSmall(true);
-    setIsLoadingOrganization(true);
-    if (isCheckCompare) {
-      setIsLoadingLargeCompare(true);
-      setIsLoadingMediumCompare(true);
-      setIsLoadingSmallCompare(true);
-      setIsLoadingOrganizationCompare(true);
-    }
-    setOrderingOptions((prev) => ({
-      tag_ids: prev?.tag_ids || [],
-      user_ids: selectedOption,
-    }));
-    onOpen();
-  };
 
   return (
     <div className={`flex items-center  gap-2  ${className}`}>
       <div className="flex-shrink-0 h-6 relative ">
         {/* Filter option modal */}
         <Popover className="relative">
-          {() => (
+          {({ open, close }) => (
             <>
               <div className="flex items-center gap-2 relative top-[5px]">
-                <PopoverButton
-                  onClick={onOpen}
-                  className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
+                <PopoverButton className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
                   <ImageRound
                     src="/icons/filter.svg"
                     name="Filter icon"
@@ -146,91 +62,7 @@ const FilterTagUserTeam = ({
                 leaveFrom="opacity-100 translate-y-0"
                 leaveTo="opacity-0 translate-y-1">
                 <PopoverPanel className="absolute left-[30px] top-[-5px] z-[1] w-[400px] transform">
-                  <div className="w-full pt-[10px]  pb-5 bg-white rounded-[14px] shadow-common p-1 flex flex-col gap-1 text-sm">
-                    <div className="text-xs pl-5 pr-[10px] font-medium text-[#77858F] flex justify-between items-center">
-                      <span>メンバーの絞り込み</span>
-                      <div className="flex items-center gap-x-[10px]">
-                        <span onClick={handleReset} className="cursor-pointer">
-                          選択をクリア
-                        </span>
-                        <div
-                          style={{
-                            padding: '5px',
-                          }}
-                          onClick={() => onOpen()}
-                          className={`rounded-full cursor-pointer w-6 h-6 bg-[#E3EAED]`}>
-                          <ImageRound
-                            src={`/icons/close-black.svg`}
-                            name="close"
-                            className="w-fit h-fit"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="px-5">
-                      <div className="mt-[10px] flex max-h-64 overflow-y-auto   px-1 border border-[#77858F] rounded-md  flex-col  ">
-                        {/*  User */}
-                        {dataOptionsUserIds.length ? (
-                          dataOptionsUserIds.map((option) => (
-                            <>
-                              <div
-                                key={option.value}
-                                className={`relative hover:cursor-pointer flex items-start justify-between  select-none hover:bg-[#f8fafc] py-2 pl-2 pr-3 border-b-[1px] border-gray-100`}>
-                                <div className="max-w-[80%] flex items-center gap-2">
-                                  <div className="w-5">
-                                    <Checkbox
-                                      onChange={() => handleChangeUser(option)}
-                                      classLabel={`break-words max-w-[300px] line-clamp-3 !text-sm `}
-                                      disable={isHasLoading}
-                                      isChecked={
-                                        selectedOption.find(
-                                          (selectedOption) =>
-                                            selectedOption.value ==
-                                            option.value,
-                                        )
-                                          ? true
-                                          : false
-                                      }
-                                    />
-                                  </div>
-                                  <div className="min-w-[30px]">
-                                    <CustomUserAvatar
-                                      avatarUrl={option?.imgUrl || ''}
-                                      avatarColor={option?.iconColor || ''}
-                                      size={30}
-                                      customClassName={`${!option?.imgUrl && 'mt-[2px]'}`}
-                                    />
-                                  </div>
-                                  <span
-                                    className={` text-sm font-medium break-words max-w-[300px] line-clamp-3 `}>
-                                    {option.label}
-                                  </span>
-                                </div>
-                              </div>
-                            </>
-                          ))
-                        ) : (
-                          <div className="block py-2 px-3 text-sm text-gray-500">
-                            {NO_DATA_AVAILABLE}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex justify-center gap-[10px] mt-4 ">
-                      <Button
-                        variant="outline"
-                        onClick={() => onOpen()}
-                        className="h-9">
-                        キャンセル
-                      </Button>
-                      <Button
-                        onClick={handleSearch}
-                        className="h-9"
-                        disabled={isHasLoading}>
-                        絞り込む
-                      </Button>
-                    </div>
-                  </div>
+                  <FilterDataUserTeam open={open} close={close} />
                 </PopoverPanel>
               </Transition>
             </>
