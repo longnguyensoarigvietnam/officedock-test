@@ -747,16 +747,15 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         client_id,
                         ChatMessageTypes.REMOVE_SCHEDULE.value,
                     )
-                else:
-                    self._send_to_calendar_room(
-                        user,
-                        participant,
-                        instance,
-                        data,
-                        schedule_message,
-                        client_id,
-                        ChatMessageTypes.REMOVE_SCHEDULE.value,
-                    )
+                self._send_to_calendar_room(
+                    user,
+                    participant,
+                    instance,
+                    data,
+                    schedule_message,
+                    client_id,
+                    ChatMessageTypes.REMOVE_SCHEDULE.value,
+                )
         if recurring_event_option in [
             ScheduleRepeatOption.THIS_AND_FOLLOWING_EVENTS.value,
             ScheduleRepeatOption.ALL_EVENTS.value,
