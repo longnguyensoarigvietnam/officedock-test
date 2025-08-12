@@ -1188,9 +1188,9 @@ const ListChatUsers = ({
                     leaveFrom="opacity-100 translate-y-0"
                     leaveTo="opacity-0 translate-y-1">
                     <PopoverPanel className="absolute left-0 z-10 min-w-[196px] max-w-[196px] transform">
-                      <div className="bg-[#5B6770] text-white rounded-[6px] py-[5px] mt-2 text-sm font-medium">
+                      <div className="bg-[#5B6770] text-white rounded-[10px] p-[6px] space-y-1 mt-2 text-sm font-medium">
                         <p
-                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == '' && 'bg-[#7D8A94]'}`}
+                          className={`py-[7px] px-[14px] hover:bg-[#7D8A94] rounded-[6px] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == '' && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             if (!initialLoadSearch) {
                               setSearchRoomType('');
@@ -1200,7 +1200,7 @@ const ListChatUsers = ({
                           すべてのチャット
                         </p>
                         <p
-                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == ChatRoomType.UNREAD && 'bg-[#7D8A94]'}`}
+                          className={`py-[7px] px-[14px] hover:bg-[#7D8A94] rounded-[6px] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == ChatRoomType.UNREAD && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             if (!initialLoadSearch) {
                               setSearchRoomType(ChatRoomType.UNREAD);
@@ -1210,7 +1210,7 @@ const ListChatUsers = ({
                           未読があるチャット
                         </p>
                         <p
-                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == ChatRoomType.GROUP && 'bg-[#7D8A94]'}`}
+                          className={`py-[7px] px-[14px] hover:bg-[#7D8A94] rounded-[6px] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == ChatRoomType.GROUP && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             if (!initialLoadSearch) {
                               setSearchRoomType(ChatRoomType.GROUP);
@@ -1220,7 +1220,7 @@ const ListChatUsers = ({
                           グループチャット
                         </p>
                         <p
-                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == ChatRoomType.PRIVATE && 'bg-[#7D8A94]'}`}
+                          className={`py-[7px] px-[14px] hover:bg-[#7D8A94] rounded-[6px] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == ChatRoomType.PRIVATE && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             if (!initialLoadSearch) {
                               setSearchRoomType(ChatRoomType.PRIVATE);

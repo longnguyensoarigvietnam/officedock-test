@@ -112,11 +112,11 @@ export const EventListModal = ({
           <DynamicTooltip
             content={`${participantList[0].fullName}`}
             placement="top">
-            <div className="border-[1px] border-white rounded-full mt-[-7px] mr-1">
+            <div className="border-[1px] relative border-white rounded-full mt-[-7px] mr-1">
               <CustomUserAvatar
                 avatarUrl={memberInfo?.avatar || ''}
                 avatarColor={memberInfo?.avatarColor || ''}
-                size={27}
+                size={24}
               />
             </div>
           </DynamicTooltip>
@@ -135,11 +135,11 @@ export const EventListModal = ({
                   placement="top"
                   key={participant.id}>
                   <div
-                    className={`border-[1px] border-white rounded-full ${index != 0 && 'ml-[-7px]'}`}>
+                    className={`border-[1px] relative border-white rounded-full ${index != 0 && 'ml-[-7px]'}`}>
                     <CustomUserAvatar
                       avatarUrl={memberInfo?.avatar || ''}
                       avatarColor={memberInfo?.avatarColor || ''}
-                      size={27}
+                      size={24}
                     />
                   </div>
                 </DynamicTooltip>
@@ -161,11 +161,11 @@ export const EventListModal = ({
                   placement="top"
                   key={participant.id}>
                   <div
-                    className={`border-[1px] border-white rounded-full ${index != 0 && 'ml-[-7px]'}`}>
+                    className={`border-[1px] relative border-white rounded-full ${index != 0 && 'ml-[-7px]'}`}>
                     <CustomUserAvatar
                       avatarUrl={memberInfo?.avatar || ''}
                       avatarColor={memberInfo?.avatarColor || ''}
-                      size={27}
+                      size={24}
                     />
                   </div>
                 </DynamicTooltip>
@@ -175,7 +175,7 @@ export const EventListModal = ({
               <DynamicTooltip
                 content={`他に${participantList.length - 1}人の表示があります`}
                 placement="top">
-                <div className="text-white border-[1px] w-[27px] h-[27px] ml-[-7px] border-white rounded-full text-[11px] font-medium bg-[#77858F] flex items-center justify-center">
+                <div className="text-white relative border-[1px] !w-[24px] h-[24px] ml-[-7px] border-white rounded-full text-[10px] font-medium bg-[#77858F] flex items-center justify-center">
                   +{participantList.length - 1}
                 </div>
               </DynamicTooltip>
@@ -189,7 +189,7 @@ export const EventListModal = ({
   return (
     <div className="z-50">
       <div
-        className={`p-4 bg-white border custom-popover w-[330px] border-gray-200 shadow-lg font-primary max-h-[330px] overflow-y-auto !rounded-[14px] py-4`}
+        className={`px-[6px] py-4 bg-white border custom-popover w-[250px] border-gray-200 shadow-lg font-primary max-h-[330px] overflow-y-auto !rounded-[14px]`}
         ref={popoverRef}
         style={{
           position: 'absolute',
@@ -257,7 +257,7 @@ export const EventListModal = ({
                         showUserAvatars(event.participants || [])}
                       <div className="mb-2">
                         <div
-                          className={`font-semibold max-w-[200px] min-h-4 truncate ${event.repeatScheduleId.includes('holiday') && 'text-error'}`}>
+                          className={`font-semibold max-w-[170px] min-h-4 truncate ${event.repeatScheduleId.includes('holiday') && 'text-error'}`}>
                           {event.title || ''}
                         </div>
                         <div className="flex gap-1">
@@ -303,7 +303,7 @@ export const EventListModal = ({
                                 </div>
                               )}
                           </div>
-                          <p className="text-[11px] truncate max-w-[100px]">
+                          <p className="text-[11px] truncate max-w-[90px]">
                             {event.location?.name}
                           </p>
                         </div>

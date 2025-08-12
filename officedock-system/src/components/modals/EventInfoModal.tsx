@@ -154,7 +154,7 @@ const EventInfoModal = memo(
     return (
       <div className="z-50">
         <div
-          className="font-primary shadow-lg bg-white w-[330px] !rounded-[14px] z-50 p-4"
+          className="font-primary shadow-lg bg-white w-[250px] !rounded-[14px] z-50 p-4"
           ref={popoverRef}
           style={{
             position: 'absolute',
@@ -178,7 +178,7 @@ const EventInfoModal = memo(
                       <ImageRound
                         name="Edit"
                         src={'/icons/edit-task.svg'}
-                        className="w-[15px] h-[15px] hover:cursor-pointer"
+                        className="w-[13px] h-[13px] hover:cursor-pointer"
                       />
                     </div>
                   </DynamicTooltip>
@@ -197,7 +197,7 @@ const EventInfoModal = memo(
                       <ImageRound
                         name="Copy"
                         src={'/icons/copy-event.svg'}
-                        className="w-[16px] h-[16px] hover:cursor-pointer"
+                        className="w-[13px] h-[13px] hover:cursor-pointer"
                       />
                     </div>
                   </DynamicTooltip>
@@ -216,7 +216,7 @@ const EventInfoModal = memo(
                       <ImageRound
                         name="Delete"
                         src={'/icons/delete-task.svg'}
-                        className="w-[13px] h-[16px] hover:cursor-pointer"
+                        className="w-[12px] h-[14px] hover:cursor-pointer"
                       />
                     </div>
                   </DynamicTooltip>
@@ -227,7 +227,7 @@ const EventInfoModal = memo(
                 <ImageRound
                   name="Close"
                   src={'/icons/close.svg'}
-                  className="w-[18px] h-[18px] hover:cursor-pointer"
+                  className="w-[15px] h-[15px] hover:cursor-pointer"
                 />
               </div>
             </div>
@@ -283,7 +283,7 @@ const EventInfoModal = memo(
           {/* Location */}
           <div className="flex items-center gap-3 mt-3">
             <p className="flex-none text-[14px]">場所</p>
-            <p className="bg-[#EBF1F7] rounded-[4px] px-[5px] py-[6px] truncate max-w-[280px] text-[14px]">
+            <p className="bg-[#EBF1F7] rounded-[4px] px-[5px] py-[6px] truncate max-w-[175px] text-[14px]">
               {(dataEvent?.location as LocationEventType)?.name ||
                 `${NO_SETTING}`}
             </p>
@@ -302,7 +302,7 @@ const EventInfoModal = memo(
               dataEvent.participants,
             ) && (
               <div className="mt-3">
-                <p className="text-[#77858F] flex-none text-[14px] mb-3">
+                <p className="text-[#77858F] flex-none text-[12px] mb-3">
                   参加メンバー {dataEvent.participants?.length}人
                 </p>
                 <div className="flex flex-wrap">
@@ -313,7 +313,7 @@ const EventInfoModal = memo(
                         content={`${dataEvent.participants[0].fullName}`}
                         placement="top">
                         <div
-                          className={`border-[2px] border-white rounded-full w-[40px] h-[40px] ${checkShowDimmedUserAvatar(Number(dataEvent.participants[0].id)) && 'opacity-60'}`}>
+                          className={`rounded-full relative ${checkShowDimmedUserAvatar(Number(dataEvent.participants[0].id)) && 'opacity-60'}`}>
                           <CustomUserAvatar
                             avatarUrl={
                               (dataEvent.participants?.[0] &&
@@ -333,7 +333,7 @@ const EventInfoModal = memo(
                                 )?.avatarColor) ||
                               ''
                             }
-                            size={36}
+                            size={26}
                             customClassName={`${
                               !dataEvent.participants?.[0] &&
                               dashboardMembersWithAvatars?.find(
@@ -374,7 +374,7 @@ const EventInfoModal = memo(
                             content={`${participant.fullName}`}
                             key={index}
                             placement="top">
-                            <div className={`${index > 0 && 'ml-[-6px]'} mb-1`}>
+                            <div className={`${index > 0 && 'ml-[-6px]'} relative mb-1`}>
                               <CustomUserAvatar
                                 avatarUrl={memberInfo?.avatar || ''}
                                 avatarColor={
@@ -387,7 +387,7 @@ const EventInfoModal = memo(
                                       )
                                     : memberInfo?.avatarColor || ''
                                 }
-                                size={36}
+                                size={26}
                                 customClassName={`${!memberInfo?.avatar && '!mt-0'}`}
                               />
                             </div>

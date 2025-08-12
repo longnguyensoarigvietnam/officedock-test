@@ -41,6 +41,7 @@ const ChatDroppingFileModal = memo(
             </p>
             <p className="text-sm text-[#5B6770] font-medium">または</p>
             <Button
+              variant="secondary"
               className="text-white font-medium !text-xs !bg-[#77858F] !w-[104px] !p-0 !h-[30px] !rounded-[4px]"
               onClick={() => {
                 fileInputRef.current?.click();

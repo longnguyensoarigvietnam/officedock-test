@@ -425,7 +425,7 @@ export default function EditNode() {
               if (item.value === 'treeNode') return;
               addChildToNode(item.uuid);
             }}
-            className="absolute  z-[999] right-[-40px] top-[5px]  w-6 h-6 rounded-full ">
+            className="absolute  z-[10] right-[-40px] top-[5px]  w-6 h-6 rounded-full ">
             <Button
               sz="sm"
               disabled={item.value === 'treeNode'}

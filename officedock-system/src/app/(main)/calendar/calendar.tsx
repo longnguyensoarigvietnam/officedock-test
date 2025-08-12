@@ -624,7 +624,7 @@ const EventCalendar = () => {
             content={`${participantList[0].fullName}`}
             placement="top">
             <div
-              className={`border-[1px] border-white rounded-full ${borderClassName}`}>
+              className={`border-[1px] relative border-white rounded-full ${borderClassName}`}>
               <CustomUserAvatar
                 avatarUrl={memberInfo?.avatar || ''}
                 avatarColor={memberInfo?.avatarColor || ''}
@@ -648,7 +648,7 @@ const EventCalendar = () => {
                   placement="top"
                   key={participant.id}>
                   <div
-                    className={`border-[1px] border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
+                    className={`border-[1px] relative border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
                     <CustomUserAvatar
                       avatarUrl={memberInfo?.avatar || ''}
                       avatarColor={memberInfo?.avatarColor || ''}
@@ -677,7 +677,7 @@ const EventCalendar = () => {
                     placement="top"
                     key={participant.id}>
                     <div
-                      className={`border-[1px] border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
+                      className={`border-[1px] relative border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
                       <CustomUserAvatar
                         avatarUrl={memberInfo?.avatar || ''}
                         avatarColor={memberInfo?.avatarColor || ''}
@@ -695,7 +695,7 @@ const EventCalendar = () => {
                     content={`他に${participantList.length - 5}人の表示があります`}
                     placement="top">
                     <div
-                      className={`text-[#77858F] text-[11px] font-medium ml-[-12px] ${isWeekView && 'border-[1px] !ml-[-12px] border-white text-white rounded-full shrink-0 !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'}`}>
+                      className={`text-[#77858F] relative text-[11px] font-medium ml-[-12px] ${isWeekView && 'border-[1px] !ml-[-12px] border-white text-white rounded-full shrink-0 !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'}`}>
                       +{participantList.length - 5}
                     </div>
                   </DynamicTooltip>
@@ -706,7 +706,7 @@ const EventCalendar = () => {
                     content={`他に${participantList.length - 1}人の表示があります`}
                     placement="top">
                     <div
-                      className={`text-[#77858F] text-[11px] font-medium ${isWeekViewAllDaySection && 'border-[1px] !ml-[-12px] !text-[9px] text-white shrink-0 border-white rounded-full !w-[19px] !h-[19px] bg-[#77858F] flex items-center justify-center'} `}>
+                      className={`text-[#77858F] relative text-[11px] font-medium ${isWeekViewAllDaySection && 'border-[1px] !ml-[-12px] !text-[9px] text-white shrink-0 border-white rounded-full !w-[19px] !h-[19px] bg-[#77858F] flex items-center justify-center'} `}>
                       +{participantList.length - 1}
                     </div>
                   </DynamicTooltip>

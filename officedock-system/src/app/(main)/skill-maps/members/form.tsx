@@ -141,7 +141,7 @@ export const SkillMapByMembersDetail = ({
                         maxWidth: header.getSize(),
                       }}
                       className={`
-                        text-[#77858F] text-xs font-medium py-3 max-w-[100%] truncate 
+                        text-[#77858F] bg-[#F8FAFC] text-xs font-medium py-3 max-w-[100%] truncate 
                         ${index !== headerGroup.headers.length - 1 ? 'border-r-[1px]' : ''}
                         ${isSticky ? 'sticky left-0 z-20 bg-white' : ''}
                       `}>

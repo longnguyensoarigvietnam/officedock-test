@@ -412,7 +412,7 @@ const ListViewItem = ({
                       }}>
                       {content.isMyTask && (
                         <ImageRound
-                          src={`/icons/${content.isStart ? 'pause' : 'play-taskk'}.svg`}
+                          src={`/icons/${content.isStart ? 'pause' : 'play-task'}.svg`}
                           name="Start task"
                           className={`hover:cursor-pointer ${content.isStart ? '!w-fit !h-fit' : '!w-[28px] !h-[28px]'}`}
                           onClick={async () => {
