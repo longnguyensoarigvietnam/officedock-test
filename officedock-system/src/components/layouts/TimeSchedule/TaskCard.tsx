@@ -539,9 +539,9 @@ const TaskCard = ({
                 resizer.style.setProperty('opacity', '1', 'important');
               }
             }}
-            className={`group  flex ${isTooSmall && 'flex-col justify-between'} h-full bg-transparent z-[20] w-full ${resourcePlan ? 'h-[calc(100%_-_27px)]' : 'h-[calc(100%_-_10px)]'} ${isSmallItem && '!h-full overflow-hidden'}`}>
+            className={`group  flex items-end ${isTooSmall && 'flex-col justify-between'} h-full bg-transparent z-[20] w-full ${resourcePlan ? 'h-[calc(100%_-_27px)]' : 'h-[calc(100%_-_10px)]'} ${isSmallItem && '!h-full overflow-hidden'}`}>
             <div
-              className={`${isTooSmall && 'hidden'} flex overflow-hidden flex-col   flex-grow gap-[10px]`}>
+              className={`${isTooSmall && 'hidden'} flex overflow-hidden h-full flex-col   flex-grow gap-[10px]`}>
               <div className="flex items-center gap-[6px] w-full">
                 {!isEvent && resourcePlan && (
                   <div
@@ -671,28 +671,31 @@ const TaskCard = ({
               </div>
             )}
 
-            <div className="h-full flex gap-[6px] items-end w-fit flex-shrink-0">
+            <div className="h-fit flex gap-[6px] items-end w-fit flex-shrink-0">
               {resourcePlan && (
                 <>
                   {isEvent && (
                     <ImageRound
                       src={`/icons/lock.svg`}
                       name="icon lock"
-                      className={` w-3 h-3 relative  ${isTooSmall && '!top-[-25px]'} top-[-5px]`}
+                      className={` w-3 h-3 relative   top-[-5px]`}
                     />
                   )}
-                  <ImageRound
-                    src={`/icons/${isStart ? 'pause-task' : 'play-task'}.svg`}
-                    name="Start task"
-                    hidden={
-                      !isMoreThanFifteenMinutes(
-                        `${event.event.start}`,
-                        `${event.event.end}`,
-                      ) && isOptionZoomSchedule === '01:00:00'
-                    }
-                    className={`!w-fit ${isTooSmall && '!top-[-15px]'} !h-fit  z-[30] ${isStart ? 'top-[-1px]' : 'top-[4px]'} relative    hover:cursor-pointer`}
-                    onClick={handleStartStopTask}
-                  />
+                  <div
+                    className={`w-[30px] h-[30px] flex items-center justify-center relative top-[5px]`}>
+                    <ImageRound
+                      src={`/icons/${isStart ? 'pause-task' : 'play-task'}.svg`}
+                      name="Start task"
+                      hidden={
+                        !isMoreThanFifteenMinutes(
+                          `${event.event.start}`,
+                          `${event.event.end}`,
+                        ) && isOptionZoomSchedule === '01:00:00'
+                      }
+                      className={`!w-fit  !h-fit  z-[30]   hover:cursor-pointer`}
+                      onClick={handleStartStopTask}
+                    />
+                  </div>
                 </>
               )}
             </div>

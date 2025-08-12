@@ -59,8 +59,6 @@ const PercentageCategoryTeam = ({
 
   const [isExtendData, setIsExtendData] = useState(true);
 
-  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
-
   const [dataChartLarge, setDataChartLarge] = useState<DataChartType>({
     actualValue: [],
     colors: [],
@@ -386,10 +384,7 @@ const PercentageCategoryTeam = ({
             </div>
 
             {/* Filter modal */}
-            <FilterTeamStatistic
-              open={isOpenModalFilter}
-              onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-            />
+            <FilterTeamStatistic />
           </div>
           <ImageRound
             src="/icons/extend-calendar.svg"

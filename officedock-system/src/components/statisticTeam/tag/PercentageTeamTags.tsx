@@ -73,7 +73,6 @@ const PercentageTeamTags = ({
     id: number | null;
     type: string;
   } | null>(null);
-  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
 
   const [dataChartLarge, setDataChartLarge] = useState<DataChartType>({
     actualValue: [],
@@ -458,10 +457,7 @@ const PercentageTeamTags = ({
               </span>
             </div>
             <div>
-              <FilterTagUserTeam
-                open={isOpenModalFilter}
-                onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-              />
+              <FilterTagUserTeam />
             </div>
           </div>
           <ImageRound

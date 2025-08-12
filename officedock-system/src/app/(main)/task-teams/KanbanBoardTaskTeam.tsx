@@ -251,6 +251,7 @@ const KanbanBoardTaskTeam = () => {
       }
     },
   });
+  const isCreatingRef = useRef(false);
   // Handle get list and more data task
   const getTaskBoardListTeamMore = async (pageNumber: number) => {
     setInitialLoad(true);
@@ -282,6 +283,9 @@ const KanbanBoardTaskTeam = () => {
     'getDataListTaskTeamMore',
     getTaskBoardListTeamMore,
     {
+      onMutate: () => {
+        isCreatingRef.current = true;
+      },
       onSuccess: (data) => {
         if (data.results) {
           const newData = transformDataTeamTask(data.results);
@@ -298,6 +302,7 @@ const KanbanBoardTaskTeam = () => {
       },
       onError: () => {},
       onSettled: () => {
+        isCreatingRef.current = true;
         setInitialLoad(false);
       },
     },
@@ -311,7 +316,8 @@ const KanbanBoardTaskTeam = () => {
         chatContainer.clientWidth + Math.abs(chatContainer.scrollLeft) >=
           chatContainer.scrollWidth - 10 &&
         !initialLoad &&
-        !isLoadingDataTask
+        !isLoadingDataTask &&
+        !isCreatingRef.current
       ) {
         getDataListTaskTeamMore(page + 1);
       }
@@ -328,8 +334,13 @@ const KanbanBoardTaskTeam = () => {
         chatContainer.removeEventListener('scroll', handleScroll);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHasNext]);
+  }, [
+    getDataListTaskTeamMore,
+    initialLoad,
+    isHasNext,
+    isLoadingDataTask,
+    page,
+  ]);
 
   useEffect(() => {
     if (!isReadyToFetch) {

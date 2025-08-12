@@ -180,7 +180,6 @@ const StackedAreaTeamChart = ({
   ] = useState(OptionOrganizationStatisticType.MAIN_TEAM);
 
   const [isExtendData, setIsExtendData] = useState(true);
-  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
 
   // Sorting
   const [percentageSortingStatus, setPercentageSortingStatus] =
@@ -1123,10 +1122,7 @@ const StackedAreaTeamChart = ({
             </span>
           </div>
           {/* Filter modal */}
-          <FilterTeamStatistic
-            open={isOpenModalFilter}
-            onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-          />
+          <FilterTeamStatistic />
         </div>
         <ImageRound
           src="/icons/extend-calendar.svg"

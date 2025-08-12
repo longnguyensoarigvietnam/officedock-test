@@ -11,19 +11,13 @@ import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatis
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 
 type Props = {
-  open: boolean;
   className?: string;
   classNameData?: string;
-  onOpen: () => void;
 };
 
-const FilterTeamStatistic = ({
-  open,
-  className,
-  classNameData,
-  onOpen,
-}: Props) => {
+const FilterTeamStatistic = ({ className, classNameData }: Props) => {
   const {
+    orderingOptions,
     tagsOptions,
     listMemberTeam,
     firstThreeUser,
@@ -41,22 +35,24 @@ const FilterTeamStatistic = ({
     removeTag,
     removeUser,
   } = useContext(StatisticTeamStateContext);
+
   return (
     <div className={`flex items-center gap-2  ${className}`}>
       <div className="flex-shrink-0 h-6 relative">
         {/* Filter option modal */}
         <Popover className="relative">
-          {() => (
+          {({ open, close }) => (
             <>
               <div className="flex items-center gap-2 relative top-[5px]">
-                <PopoverButton
-                  onClick={onOpen}
-                  className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
+                <PopoverButton className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
                   <ImageRound
                     src="/icons/filter.svg"
                     name="Filter icon"
                     className="w-[14px] h-[14px] ml-2"
                   />
+                  {orderingOptions?.user_ids.length == 0 && (
+                    <span>メンバーの絞り込み</span>
+                  )}
                 </PopoverButton>
               </div>
               <Transition
@@ -71,7 +67,7 @@ const FilterTeamStatistic = ({
                 <PopoverPanel className="absolute left-[30px] top-[-5px] z-[1] w-[400px] transform">
                   <ActionFilterStatisticTeam
                     tagsOptions={tagsOptions}
-                    handleClose={onOpen}
+                    handleClose={close}
                     listMemberTeam={listMemberTeam}
                   />
                 </PopoverPanel>

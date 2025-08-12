@@ -246,7 +246,6 @@ const AllocationTeamCategoryCompare = memo(
     handleSelectSmall,
   }: Props) => {
     const [isExtendData, setIsExtendData] = useState(true);
-    const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
     const [isShowModal, setIsShowModal] = useState(false);
     const [isModalCompare, setIsModalCompare] = useState(false);
 
@@ -548,10 +547,7 @@ const AllocationTeamCategoryCompare = memo(
                 </span>
               </div>
               {/* Filter modal */}
-              <FilterTeamStatistic
-                open={isOpenModalFilter}
-                onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-              />
+              <FilterTeamStatistic />
             </div>
             <ImageRound
               src="/icons/extend-calendar.svg"

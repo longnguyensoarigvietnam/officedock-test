@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import Button from '@components/common/Button';
@@ -99,8 +99,6 @@ const StatisticTeamTagBoard = () => {
     params.set('organization', id);
     router.push(`?${params.toString()}`);
   };
-
-  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
 
   const organizationId = searchParams.get('organization');
   const { creationDataStatisticData } = useCreationDataStatisticTeam({
@@ -580,10 +578,7 @@ const StatisticTeamTagBoard = () => {
           </div>
         </div>
         <div className="my-[30px]">
-          <FilterTagUserTeam
-            open={isOpenModalFilter}
-            onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-          />
+          <FilterTagUserTeam />
         </div>
       </div>
 

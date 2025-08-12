@@ -91,6 +91,8 @@ const PieChart = ({
             tooltipEl = document.createElement('div');
             tooltipEl.id = 'custom-tooltip';
             tooltipEl.style.position = 'absolute';
+            tooltipEl.style.zIndex = '99';
+
             tooltipEl.style.pointerEvents = 'none';
             tooltipEl.style.transition = 'all .1s ease';
             document.body.appendChild(tooltipEl);
@@ -117,6 +119,7 @@ const PieChart = ({
               box-shadow:0 2px 8px rgba(0,0,0,0.15);
               font-family: sans-serif;
               width : '167px'
+              zIndex : '99999'
             ">
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
                 <div style="width:12px;height:12px;border-radius:50%;background:${bgColor};"></div>

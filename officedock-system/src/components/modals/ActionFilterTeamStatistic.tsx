@@ -38,7 +38,6 @@ const ActionFilterStatisticTeam = ({
     setIsLoadingMediumCompare,
     setIsLoadingOrganizationCompare,
   } = useContext(StatisticTeamStateContext);
-  const [_isOpen, setIsOpen] = useState(false);
 
   const [dataOptionsTagIds, setDataOptionsTagIds] = useState<
     OptionDropdownType[]
@@ -117,7 +116,7 @@ const ActionFilterStatisticTeam = ({
   useEffect(() => {
     const handleClickOutside = (event: any) => {
       if (boxListRef.current && !boxListRef.current.contains(event.target)) {
-        setIsOpen(false);
+        handleClose();
       }
     };
 
@@ -125,7 +124,7 @@ const ActionFilterStatisticTeam = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [handleClose]);
 
   const handleSearch = () => {
     setIsLoadingLarge(true);
@@ -235,7 +234,10 @@ const ActionFilterStatisticTeam = ({
           <Button variant="outline" onClick={handleClose} className="h-9">
             キャンセル
           </Button>
-          <Button onClick={handleSearch} className="h-9" disabled={isHasLoading}>
+          <Button
+            onClick={handleSearch}
+            className="h-9"
+            disabled={isHasLoading}>
             絞り込む
           </Button>
         </div>

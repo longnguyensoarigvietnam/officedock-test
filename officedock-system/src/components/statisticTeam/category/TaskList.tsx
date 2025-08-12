@@ -72,7 +72,6 @@ const TaskListTeamStatistic = ({
   } = useContext(StatisticTeamStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
-  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
 
   // Value
   const [totalPages, setTotalPages] = useState<number>(1);
@@ -206,10 +205,7 @@ const TaskListTeamStatistic = ({
             </span>
           </div>
           {/* Filter modal */}
-          <FilterTeamStatistic
-            open={isOpenModalFilter}
-            onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-          />
+          <FilterTeamStatistic />
         </div>
         <ImageRound
           src="/icons/extend-calendar.svg"

@@ -235,7 +235,6 @@ const AllocationTagTeamCompare = memo(
     handleSelectMedium,
     handleSelectSmall,
   }: Props) => {
-    const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
     const [isExtendData, setIsExtendData] = useState(true);
     const [isShowModal, setIsShowModal] = useState(false);
     const [detailCategory, setDetailCategory] = useState<{
@@ -494,10 +493,7 @@ const AllocationTagTeamCompare = memo(
               </div>
               <div>
                 {' '}
-                <FilterTagUserTeam
-                  open={isOpenModalFilter}
-                  onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-                />
+                <FilterTagUserTeam />
               </div>
             </div>
             <ImageRound
