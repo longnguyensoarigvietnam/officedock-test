@@ -88,6 +88,9 @@
   color: white !important;
   margin-top: 3px;
 }
+.calendar-custom.year .fc-daygrid-day-number.current-day {
+  margin-top: -2px;
+}
 .calendar-custom .fc .fc-col-header-cell {
   border-bottom: 1px solid black;
 }
