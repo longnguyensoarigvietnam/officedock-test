@@ -296,6 +296,22 @@ input[type='checkbox']:focus {
   width: 100% !important;
 }
 
-.clip-diagonal-left{
+.clip-diagonal-left {
   clip-path: polygon(100% 0, 0 0, 0 100%);
+}
+
+/* Customized scrollbar */
+.customized-scrollbar::-webkit-scrollbar-track {
+  border-radius: 10px;
+  background-color: transparent;
+}
+
+.customized-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  background-color: transparent;
+}
+
+.customized-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background-color: #DFE6EA;
 }
