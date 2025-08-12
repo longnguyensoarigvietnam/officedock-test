@@ -32,12 +32,28 @@ class SurveyQuestionSerializer(serializers.ModelSerializer):
         """Get selected current user question"""
         request = self.context.get("request")
         current_user = request.user if hasattr(request, "user") else None
-        return (
+        return bool(
             current_user
             and SurveyAnswer.objects.filter(
                 question=obj, respondent=current_user
             ).exists()
         )
+
+
+class SurveyQuestionDetailSerializer(SurveyQuestionSerializer):
+    """
+    Serializer for get survey question
+    Only the creator can view the details of an open survey.
+    """
+
+    class Meta:
+        model = SurveyQuestion
+        fields = [
+            "id",
+            "text",
+            "order",
+            "is_selected",
+        ]
 
 
 class SurveyListSerializer(serializers.ModelSerializer):
@@ -67,7 +83,9 @@ class SurveyListSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         current_user = getattr(request, "user", None)
         is_open = is_open_survey(obj.end_at)
-        is_my_survey = current_user and obj.created_by_id == current_user.id
+        is_my_survey = bool(
+            current_user and obj.created_by_id == current_user.id
+        )
 
         return {
             "open": is_open,
@@ -120,6 +138,26 @@ class SurveySerializer(SurveyListSerializer):
         return value
 
 
+class SurveyDetailSerializer(SurveyListSerializer):
+    """
+    Serializer for survey detail
+    Only the creator can view the details of an open survey.
+    """
+
+    questions = SurveyQuestionDetailSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Survey
+        fields = [
+            "id",
+            "title",
+            "end_at",
+            "questions",
+            "status",
+            "created_at",
+        ]
+
+
 class UserSelectAnswerSerializer(serializers.ModelSerializer):
     """Serializer for user select answer option"""
 
@@ -137,7 +175,7 @@ class UserSelectAnswerSerializer(serializers.ModelSerializer):
         # Cannot answer a closed survey
         if not is_open_survey(survey.end_at):
             raise serializers.ValidationError(
-                ERROR_MESSAGES["permission_denied"]
+                ERROR_MESSAGES["cannot_answer_closed_survey"]
             )
 
         # Cannot select a question that belongs to another survey
