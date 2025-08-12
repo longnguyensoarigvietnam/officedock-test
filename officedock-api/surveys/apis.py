@@ -3,12 +3,11 @@ from django.utils.timezone import now
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
 from base.apis import BaseAPIViewSet
-from base.messages import ERROR_MESSAGES
 from surveys.serializers import (
+    SurveyDetailSerializer,
     SurveyListSerializer,
     SurveySerializer,
     UserSelectAnswerSerializer,
@@ -86,8 +85,10 @@ class SurveyViewSet(
         if survey.created_by_id != current_user.id and is_open_survey(
             survey.end_at
         ):
-            raise ValidationError(
-                {"detail": ERROR_MESSAGES["cannot_view_open_survey"]}
+            return self.response_ok(
+                SurveyDetailSerializer(
+                    survey, context={"request": request}
+                ).data
             )
 
         return super().retrieve(request, *args, **kwargs)
