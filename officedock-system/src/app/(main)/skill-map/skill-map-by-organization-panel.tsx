@@ -358,7 +358,7 @@ export const SkillMapByOrganizationPanel = ({
 
       <div>
         {/* Steps bar */}
-        <div className="flex w-full font-medium text-white text-[16px] mb-5 h-[32px]">
+        <div className={`flex ${settingSkillAction && 'gap-[3px]'} w-full font-medium text-white text-[16px] mb-5 h-[32px]`}>
           <StepInfoTooltip
             placement="top"
             currentStep={1}

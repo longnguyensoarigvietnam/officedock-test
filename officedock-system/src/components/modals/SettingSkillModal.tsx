@@ -47,14 +47,14 @@ export const SettingSkillModal = ({
       contentClass="!rounded-[20px]"
       isOutSideAction={false}
       onClose={onClose}>
-      <div className="flex flex-col items-center gap-5">
+      <div className="flex flex-col items-center gap-5 h-full">
         <p className="text-[18px] font-medium text-center">
           {action == ActionsModal.CREATE
             ? 'スキルセット'
             : 'スキルセットを変更する'}
         </p>
         {/* Skill map by organizations */}
-        <div className="overflow-y-auto max-h-[550px]">
+        <div className="overflow-y-auto max-h-[550px] !w-full">
           {skillMapByOrganizations.length > 0 &&
             skillMapByOrganizations.map((skillMap, index) => (
               <SkillMapByOrganizationPanel

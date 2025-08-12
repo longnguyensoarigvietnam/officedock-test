@@ -9,6 +9,7 @@ import { MAX_TWEET_MESSAGE_LENGTH } from '@constants';
 export type ConfirmActionsEventModalProps = {
   open: boolean;
   tweetMessage: string;
+  isSendTweetSuccess: boolean;
   setTweetMessage?: React.Dispatch<React.SetStateAction<string>>;
   onClose: () => void;
   onSubmit: () => void;
@@ -18,6 +19,7 @@ const CreateTweetModal = memo(
   ({
     open,
     tweetMessage,
+    isSendTweetSuccess,
     setTweetMessage,
     onClose,
     onSubmit,
@@ -30,9 +32,9 @@ const CreateTweetModal = memo(
       <Modal
         open={open}
         isOutSideAction={false}
-        className={`font-primary bg-white ${isTweetSubmitted ? 'w-[400px]' : 'w-[500px]'} !rounded-[14px] py-5`}
+        className={`font-primary bg-white ${isTweetSubmitted && isSendTweetSuccess ? 'w-[400px]' : 'w-[500px]'} !rounded-[14px] py-5`}
         onClose={() => {}}>
-        {isTweetSubmitted ? (
+        {isTweetSubmitted && isSendTweetSuccess ? (
           <div className="flex flex-col items-center space-y-3">
             <p className="text-sm">つぶやきました</p>
             <Button variant="text" className="pb-0" onClick={onClose}>

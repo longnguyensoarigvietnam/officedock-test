@@ -157,7 +157,7 @@ const MyPage = () => {
     return response;
   };
 
-  const { mutate: sendTweetMessage } = useMutation(
+  const { mutate: sendTweetMessage, isSuccess: isSendTweetSuccess } = useMutation(
     'sendTweetMessage',
     handleSendTweetMessage,
     {
@@ -495,6 +495,7 @@ const MyPage = () => {
         <CreateTweetModal
           open={openCreateTweetModal}
           tweetMessage={tweetMessage}
+          isSendTweetSuccess={isSendTweetSuccess}
           setTweetMessage={setTweetMessage}
           onClose={() => setOpenCreateTweetModal(false)}
           onSubmit={() => sendTweetMessage({ content: tweetMessage })}
