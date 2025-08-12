@@ -36,7 +36,7 @@ interface SkillMapByOrganizationPanelProps {
   skillMapDetail: SkillMapByOrganization;
   userId: number;
   settingSkillAction?: ActionsModal;
-  onOpenConfirmSettingSkillInfo:
+  onOpenConfirmSettingSkillInfo?:
     | ((skill: SkillMapByOrganizationInfo) => void)
     | undefined;
   onEditSettingSkill?: (skillId: string) => Promise<void>;
