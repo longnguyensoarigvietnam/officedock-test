@@ -75,7 +75,6 @@ const PercentageTeamCategoryCompare = ({
   } = useContext(StatisticTeamStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
-  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
 
   // Data value
   const [dataChartLarge, setDataChartLarge] = useState<
@@ -330,10 +329,7 @@ const PercentageTeamCategoryCompare = ({
               </span>
             </div>
             {/* Filter modal */}
-            <FilterTeamStatistic
-              open={isOpenModalFilter}
-              onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-            />
+            <FilterTeamStatistic />
           </div>
           <ImageRound
             src="/icons/extend-calendar.svg"

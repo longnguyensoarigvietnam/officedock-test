@@ -14,9 +14,10 @@ import { ToastProvider } from '@providers/ToastProvider';
 import { TaskProvider } from '@providers/TaskProvider';
 import { GlobalStateProvider } from '@providers/GlobalStateProvider';
 import { WebSocketProvider } from '@providers/WebSocketProvider';
+import { SessionCacheProvider } from '@providers/SessionCacheProvider';
+import InfiniteQueryProvider from '@providers/InfiniteQueryProvider';
 
 import { fontPrimary } from '@utils/fonts';
-import { SessionCacheProvider } from '@providers/SessionCacheProvider';
 
 export const metadata: Metadata = {
   title: '',
@@ -42,16 +43,18 @@ export default function RootLayout({
           <SessionCacheProvider>
             <GlobalStateProvider>
               <QueryProvider>
-                <WebSocketProvider>
-                  <LoadingProvider>
-                    <ToastProvider>
-                      <TaskProvider>
-                        <DraggableLayout />
-                        {children}
-                      </TaskProvider>
-                    </ToastProvider>
-                  </LoadingProvider>
-                </WebSocketProvider>
+                <InfiniteQueryProvider>
+                  <WebSocketProvider>
+                    <LoadingProvider>
+                      <ToastProvider>
+                        <TaskProvider>
+                          <DraggableLayout />
+                          {children}
+                        </TaskProvider>
+                      </ToastProvider>
+                    </LoadingProvider>
+                  </WebSocketProvider>
+                </InfiniteQueryProvider>
               </QueryProvider>
             </GlobalStateProvider>
           </SessionCacheProvider>

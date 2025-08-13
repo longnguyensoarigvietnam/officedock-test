@@ -237,7 +237,7 @@ const ListData = () => {
             })),
           ]}
           selectedOption={selectedOrganization}
-          className="!h-[34px] !py-0"
+          className="!h-[34px] !py-0 border !border-[#77858F] !rounded-md"
           onChange={(e) => {
             setSelectedOrganization(e);
           }}
@@ -252,7 +252,7 @@ const ListData = () => {
                 style={{
                   boxShadow: '0px 4px 10px 0px #0000000D',
                 }}
-                className="p-[30px] rounded-[14px] bg-[#F8FAFC] w-full h-fit">
+                className="p-[30px] rounded-[30px] bg-[#F8FAFC] w-full h-fit">
                 <p className="text-base max-w-full break-all font-medium text-[#77858F] line-clamp-3 mb-[30px]">
                   {item.organization.name}
                 </p>

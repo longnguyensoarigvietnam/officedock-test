@@ -180,7 +180,6 @@ const StackedAreaTeamChart = ({
   ] = useState(OptionOrganizationStatisticType.MAIN_TEAM);
 
   const [isExtendData, setIsExtendData] = useState(true);
-  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
 
   // Sorting
   const [percentageSortingStatus, setPercentageSortingStatus] =
@@ -1123,10 +1122,7 @@ const StackedAreaTeamChart = ({
             </span>
           </div>
           {/* Filter modal */}
-          <FilterTeamStatistic
-            open={isOpenModalFilter}
-            onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-          />
+          <FilterTeamStatistic />
         </div>
         <ImageRound
           src="/icons/extend-calendar.svg"
@@ -1343,7 +1339,7 @@ const StackedAreaTeamChart = ({
                               style={{
                                 boxShadow: '0px 2px 8px 0px #0000001A',
                               }}
-                              className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                              className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-[14px] w-[250px] ${isHovered && 'z-[50]'}`}>
                               <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-center w-full block">
                                 {dataDetail &&
                                   dataDetail.length > 0 &&
@@ -1394,7 +1390,7 @@ const StackedAreaTeamChart = ({
                               style={{
                                 boxShadow: '0px 2px 8px 0px #0000001A',
                               }}
-                              className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                              className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-[14px] w-[250px] ${isHovered && 'z-[50]'}`}>
                               <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-center w-full block">
                                 {dataDetailAllTeam &&
                                   convertToJapaneseDateRange(

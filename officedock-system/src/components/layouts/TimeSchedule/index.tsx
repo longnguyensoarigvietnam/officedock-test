@@ -3871,317 +3871,326 @@ const TimeSchedule = memo(
                 : '1040px'
               : '440px',
           }}
-          className={`${searchParams.get('view') == ViewOptions.DAY && 'w-[440px] '}  schedule-page  relative overflow-x-auto overflow-y-hidden `}
+          className={`${searchParams.get('view') == ViewOptions.DAY && 'w-[440px] '}  !bg-[#E6F3FB]  schedule-page rounded-tr-[60px] relative overflow-x-auto overflow-y-hidden `}
           ref={resizableElementRef}>
           <div
             className={`resizer absolute cursor-ew-resize right-[2px] z-[2] top-1/2 translate-x-1/2 -translate-y-1/2 h-full w-1 bg-transparent ${isExtendCalendar ? 'block' : 'hidden'}`}
             onMouseDown={handleMouseDown}
           />
-          <div
-            className={` overflow-x-hidden h-full overflow-y-auto flex flex-col gap-8 bg-[#EBF1F7] pt-1 pb-6`}>
-            <div className="overflow-y-hidden flex flex-col gap-4 mt-[6px] h-full">
-              <div className={`items-center gap-4 flex h-12 sticky z-20`}>
-                {!isExtendCalendar ? (
-                  <div
-                    className={`flex relative ${isLoadingSchedule && '!opacity-45'}`}>
-                    <div className="w-[260px] ml-6 z-20 flex gap-[18px] items-center">
-                      <DynamicTooltip content="前日" placement="top">
-                        <div>
-                          <ImageRound
-                            onClick={() => {
-                              if (!isLoadingSchedule) {
-                                debouncedFunction(handlePreviousDay);
-                              }
-                            }}
-                            className=" !w-2 !h-3 cursor-pointer"
-                            src="/icons/left-schedule.svg"
-                            name="left"
-                          />
-                        </div>
-                      </DynamicTooltip>
+          <div className="w-full">
+            <div
+              className={` overflow-x-hidden h-full overflow-y-auto flex flex-col gap-8 !bg-[#E6F3FB] pt-1 pb-6`}>
+              <div className="overflow-y-hidden flex flex-col gap-4 mt-[6px] h-full">
+                <div className={`items-center gap-4 flex h-12 sticky z-20`}>
+                  {!isExtendCalendar ? (
+                    <div
+                      className={`flex relative ${isLoadingSchedule && '!opacity-45'}`}>
+                      <div className="w-[260px] ml-6 z-20 flex gap-[18px] items-center">
+                        <DynamicTooltip content="前日" placement="top">
+                          <div>
+                            <ImageRound
+                              onClick={() => {
+                                if (!isLoadingSchedule) {
+                                  debouncedFunction(handlePreviousDay);
+                                }
+                              }}
+                              className=" !w-2 !h-3 cursor-pointer"
+                              src="/icons/left-schedule.svg"
+                              name="left"
+                            />
+                          </div>
+                        </DynamicTooltip>
 
-                      <div className="flex items-end text-xl gap-1 text-[#5B6770] font-medium">
-                        <p>{dataDate.month}月</p>
-                        <p>{dataDate.day}日</p>
-                        <p className="text-[15px] relative top-[2px]">
-                          ({dataDate.dayOfWeek})
+                        <div className="flex items-end text-xl gap-1 text-[#5B6770] font-medium">
+                          <p>{dataDate.month}月</p>
+                          <p>{dataDate.day}日</p>
+                          <p className="text-[15px] relative top-[2px]">
+                            ({dataDate.dayOfWeek})
+                          </p>
+                        </div>
+
+                        <DynamicTooltip content="翌日" placement="top">
+                          <div>
+                            <ImageRound
+                              onClick={() => {
+                                if (!isLoadingSchedule) {
+                                  debouncedFunction(handleNextDay);
+                                }
+                              }}
+                              className=" !w-2 !h-3 cursor-pointer"
+                              src="/icons/right-schedule.svg"
+                              name="right"
+                            />
+                          </div>
+                        </DynamicTooltip>
+                      </div>
+
+                      <div className="absolute w-7 z-50 right-[50px] top-[10px] time-schedule">
+                        <DatePicker
+                          className="h-10 z-50 "
+                          isShowInput={false}
+                          selected={displayHeaderDateStart}
+                          tooltipMsg="カレンダーから日付を選択"
+                          iconClassName="!static !w-8"
+                          disabled={isLoadingSchedule}
+                          onChange={(e) => {
+                            if (!isLoadingSchedule) {
+                              handleChooseDay(e as Date);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div
+                        className={`flex items-center ml-8 gap-3 ${isLoadingSchedule && '!opacity-45'}`}>
+                        <DynamicTooltip content="前日" placement="top">
+                          <div>
+                            <ImageRound
+                              src="/icons/chevron-left-calendar.svg"
+                              name="Previous day"
+                              className="!w-[6px] !h-3  hover:cursor-pointer"
+                              onClick={() => {
+                                if (!isLoadingSchedule) {
+                                  handlePreviousDay();
+                                }
+                              }}
+                            />
+                          </div>
+                        </DynamicTooltip>
+                        <DynamicTooltip content="翌日" placement="top">
+                          <div>
+                            <ImageRound
+                              src="/icons/chevron-left-calendar.svg"
+                              name="Next day"
+                              className="!w-[6px] !h-3 rotate-180 hover:cursor-pointer"
+                              onClick={() => {
+                                if (!isLoadingSchedule) {
+                                  handleNextDay();
+                                }
+                              }}
+                            />
+                          </div>
+                        </DynamicTooltip>
+                      </div>
+                      <Heading as="h4" className="text-sm font-medium">
+                        {isExtendCalendar
+                          ? `${formattedStartDate} - ${formattedEndDate}`
+                          : formattedCurrentDate}
+                      </Heading>
+                      {isToday && !isExtendCalendar && (
+                        <div className="bg-primary -ml-[10px] px-1 py-[2px] rounded-md text-xs text-white font-medium">
+                          今日
+                        </div>
+                      )}
+                      {/* Trash area */}
+                      <div
+                        id="trash-area"
+                        style={{
+                          textAlign: 'center',
+                          lineHeight: '80px',
+                          borderRadius: '50px',
+                          fontWeight: 'bold',
+                          zIndex: 1000,
+                        }}
+                        className={`flex justify-center border border-dashed border-[#A7B7C2] top-[13px]  right-[70px] w-[130px] gap-[2px] items-center  h-10 ${isDraggingSchedule ? '' : 'hidden'}`}>
+                        <ImageRound
+                          name="Delete"
+                          src={'/icons/delete-gray-bold.svg'}
+                          className={`w-[14px] h-fit hover:cursor-pointer`}
+                        />
+                        <p className="text-[#77858F] text-[10px] leading-[14px]  py-[2px] px-1 rounded-sm">
+                          予定から削除
                         </p>
                       </div>
-
-                      <DynamicTooltip content="翌日" placement="top">
-                        <div>
-                          <ImageRound
-                            onClick={() => {
-                              if (!isLoadingSchedule) {
-                                debouncedFunction(handleNextDay);
-                              }
-                            }}
-                            className=" !w-2 !h-3 cursor-pointer"
-                            src="/icons/right-schedule.svg"
-                            name="right"
-                          />
-                        </div>
-                      </DynamicTooltip>
-                    </div>
-
-                    <div className="absolute w-7 z-50 right-[50px] top-[10px] time-schedule">
-                      <DatePicker
-                        className="h-10 z-50 "
-                        isShowInput={false}
-                        selected={displayHeaderDateStart}
-                        tooltipMsg="カレンダーから日付を選択"
-                        iconClassName="!static !w-8"
-                        disabled={isLoadingSchedule}
-                        onChange={(e) => {
-                          if (!isLoadingSchedule) {
-                            handleChooseDay(e as Date);
-                          }
-                        }}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div
-                      className={`flex items-center ml-8 gap-3 ${isLoadingSchedule && '!opacity-45'}`}>
-                      <DynamicTooltip content="前日" placement="top">
-                        <div>
-                          <ImageRound
-                            src="/icons/chevron-left-calendar.svg"
-                            name="Previous day"
-                            className="!w-[6px] !h-3  hover:cursor-pointer"
-                            onClick={() => {
-                              if (!isLoadingSchedule) {
-                                handlePreviousDay();
-                              }
-                            }}
-                          />
-                        </div>
-                      </DynamicTooltip>
-                      <DynamicTooltip content="翌日" placement="top">
-                        <div>
-                          <ImageRound
-                            src="/icons/chevron-left-calendar.svg"
-                            name="Next day"
-                            className="!w-[6px] !h-3 rotate-180 hover:cursor-pointer"
-                            onClick={() => {
-                              if (!isLoadingSchedule) {
-                                handleNextDay();
-                              }
-                            }}
-                          />
-                        </div>
-                      </DynamicTooltip>
-                    </div>
-                    <Heading as="h4" className="text-sm font-medium">
-                      {isExtendCalendar
-                        ? `${formattedStartDate} - ${formattedEndDate}`
-                        : formattedCurrentDate}
-                    </Heading>
-                    {isToday && !isExtendCalendar && (
-                      <div className="bg-primary -ml-[10px] px-1 py-[2px] rounded-md text-xs text-white font-medium">
-                        今日
-                      </div>
-                    )}
-                    {/* Trash area */}
-                    <div
-                      id="trash-area"
-                      style={{
-                        textAlign: 'center',
-                        lineHeight: '80px',
-                        borderRadius: '8px',
-                        fontWeight: 'bold',
-                        zIndex: 1000,
+                    </>
+                  )}
+                </div>
+                <div
+                  className={`schedule-custom relative h-[calc(100vh_-_184px)] pr-5  w-full overflow-y-scroll`}>
+                  <div className="w-full bg-[#E6F3FB]">
+                    <FullCalendar
+                      ref={calendarRef}
+                      plugins={[
+                        resourceTimeGridPlugin,
+                        interactionPlugin,
+                        resourcePlugin,
+                        timeGridPlugin,
+                        dayGridPlugin,
+                        scrollGridPlugin,
+                      ]}
+                      views={{
+                        timeGridWeek: {
+                          dayMinWidth: 192,
+                          dayMaxWidth: 192,
+                        },
                       }}
-                      className={` w-[150px] flex flex-col gap-[2px] items-center justify-center h-[48px] ${isDraggingSchedule ? '' : 'hidden'}`}>
-                      <p className="text-white  bg-[#5B6770] text-[10px] leading-[14px]  py-[2px] px-1 rounded-sm">
-                        スケジュールから削除
-                      </p>
-                      <ImageRound
-                        name="Delete"
-                        src={'/icons/delete-task.svg'}
-                        className={`w-[14px] h-fit hover:cursor-pointer`}
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-              <div
-                className={`schedule-custom relative h-[calc(100vh_-_184px)]  w-full overflow-y-scroll`}>
-                <FullCalendar
-                  ref={calendarRef}
-                  plugins={[
-                    resourceTimeGridPlugin,
-                    interactionPlugin,
-                    resourcePlugin,
-                    timeGridPlugin,
-                    dayGridPlugin,
-                    scrollGridPlugin,
-                  ]}
-                  views={{
-                    timeGridWeek: {
-                      dayMinWidth: 192,
-                      dayMaxWidth: 192,
-                    },
-                  }}
-                  scrollTimeReset={false}
-                  height="auto"
-                  editable={
-                    session?.user.permissions &&
-                    hasPermissionInArray(
-                      session?.user.permissions,
-                      PermissionsSystem.MY_TASK_UPDATE,
-                    )
-                  }
-                  eventResizableFromStart={true}
-                  firstDay={1}
-                  droppable={true}
-                  resources={currentResources}
-                  datesSet={handleDatesSet}
-                  events={modifyEvents(filteredEvents)}
-                  headerToolbar={false}
-                  nowIndicator={true}
-                  initialView={
-                    searchParams.get('view') == ViewOptions.WEEK
-                      ? CalendarViewOptions.VIEW_BY_WEEK
-                      : CalendarViewOptions.VIEW_BY_DAY
-                  }
-                  datesAboveResources={true}
-                  slotLabelFormat={{
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    omitZeroMinute: false,
-                    hour12: false,
-                  }}
-                  slotDuration={isOptionZoomSchedule}
-                  initialDate={new Date()}
-                  eventDragStart={(event) => {
-                    if (
-                      event.event.extendedProps &&
-                      event.event.extendedProps.type === ItemStartType.TASK &&
-                      event.event.getResources()[0]?.id ===
-                        ItemScheduleType.PLANS
-                    ) {
-                      setDraggingSchedule(true);
-                    }
-                    setIsInteracting(true);
-                  }}
-                  eventDrop={handleEventDrop}
-                  eventContent={handleRenderEvent}
-                  eventReceive={handleEventReceive}
-                  eventResizeStart={() => setIsInteracting(true)}
-                  eventResize={handleEventResize}
-                  eventAllow={handleEventAllow}
-                  eventDidMount={(info) => {
-                    const resourceId = info.event.getResources()?.[0]?.id;
-                    if (resourceId === ItemScheduleType.PLANS) {
-                      info.el.style.left = '6px';
-                    }
-                    if (
-                      info.event &&
-                      info.event.extendedProps &&
-                      info.event.extendedProps.type ===
-                        EventCalendarType.SCHEDULE
-                    ) {
-                      info.event.setProp('editable', false);
-                      info.event.setProp('startEditable', false);
-                      info.event.setProp('durationEditable', false);
-                      info.event.setProp('resizableFromStart', false);
-                    }
-                    const resizer = info.el.querySelector(
-                      '.fc-event-resizer-end',
-                    ) as HTMLElement;
-                    if (!resizer) return;
-
-                    info.el.addEventListener('mousemove', (e) => {
-                      const rect = info.el.getBoundingClientRect();
-                      const offsetY = e.clientY - rect.top;
-                      const height = rect.height;
-
-                      if (
-                        offsetY > height - 30 &&
-                        info.event.extendedProps.type !==
-                          EventCalendarType.SCHEDULE
-                      ) {
-                        info.el.classList.add('resizable-disabled');
-                      } else {
-                        if (
-                          offsetY > height - 30 &&
-                          resourceId === ItemScheduleType.ACTUAL
-                        ) {
-                          info.el.classList.add('resizable-disabled');
-                        } else {
-                          info.el.classList.remove('resizable-disabled');
-                        }
+                      scrollTimeReset={false}
+                      height="auto"
+                      editable={
+                        session?.user.permissions &&
+                        hasPermissionInArray(
+                          session?.user.permissions,
+                          PermissionsSystem.MY_TASK_UPDATE,
+                        )
                       }
-                    });
+                      eventResizableFromStart={true}
+                      firstDay={1}
+                      droppable={true}
+                      resources={currentResources}
+                      datesSet={handleDatesSet}
+                      events={modifyEvents(filteredEvents)}
+                      headerToolbar={false}
+                      nowIndicator={true}
+                      initialView={
+                        searchParams.get('view') == ViewOptions.WEEK
+                          ? CalendarViewOptions.VIEW_BY_WEEK
+                          : CalendarViewOptions.VIEW_BY_DAY
+                      }
+                      datesAboveResources={true}
+                      slotLabelFormat={{
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        omitZeroMinute: false,
+                        hour12: false,
+                      }}
+                      slotDuration={isOptionZoomSchedule}
+                      initialDate={new Date()}
+                      eventDragStart={(event) => {
+                        if (
+                          event.event.extendedProps &&
+                          event.event.extendedProps.type ===
+                            ItemStartType.TASK &&
+                          event.event.getResources()[0]?.id ===
+                            ItemScheduleType.PLANS
+                        ) {
+                          setDraggingSchedule(true);
+                        }
+                        setIsInteracting(true);
+                      }}
+                      eventDrop={handleEventDrop}
+                      eventContent={handleRenderEvent}
+                      eventReceive={handleEventReceive}
+                      eventResizeStart={() => setIsInteracting(true)}
+                      eventResize={handleEventResize}
+                      eventAllow={handleEventAllow}
+                      eventDidMount={(info) => {
+                        const resourceId = info.event.getResources()?.[0]?.id;
+                        if (resourceId === ItemScheduleType.PLANS) {
+                          info.el.style.left = '6px';
+                        }
+                        if (
+                          info.event &&
+                          info.event.extendedProps &&
+                          info.event.extendedProps.type ===
+                            EventCalendarType.SCHEDULE
+                        ) {
+                          info.event.setProp('editable', false);
+                          info.event.setProp('startEditable', false);
+                          info.event.setProp('durationEditable', false);
+                          info.event.setProp('resizableFromStart', false);
+                        }
+                        const resizer = info.el.querySelector(
+                          '.fc-event-resizer-end',
+                        ) as HTMLElement;
+                        if (!resizer) return;
 
-                    info.el.addEventListener('mouseleave', () => {
-                      info.el.classList.remove('resizable-disabled');
-                    });
-                  }}
-                  eventClassNames={(arg) => {
-                    const event = arg.event;
-                    const allEvents =
-                      calendarRef.current?.getApi()?.getEvents() ?? [];
-                    const eventResourceId = event.getResources()?.[0]?.id;
+                        info.el.addEventListener('mousemove', (e) => {
+                          const rect = info.el.getBoundingClientRect();
+                          const offsetY = e.clientY - rect.top;
+                          const height = rect.height;
 
-                    const aStart = event.start?.getTime() ?? 0;
-                    const aEnd = event.end?.getTime() ?? 0;
+                          if (
+                            offsetY > height - 50 &&
+                            info.event.extendedProps.type !==
+                              EventCalendarType.SCHEDULE
+                          ) {
+                            info.el.classList.add('resizable-disabled');
+                          } else {
+                            if (
+                              offsetY > height - 50 &&
+                              resourceId === ItemScheduleType.ACTUAL
+                            ) {
+                              info.el.classList.add('resizable-disabled');
+                            } else {
+                              info.el.classList.remove('resizable-disabled');
+                            }
+                          }
+                        });
 
-                    const isOverlappedFromBelow = allEvents.some((other) => {
-                      if (event.id === other.id) return false;
+                        info.el.addEventListener('mouseleave', () => {
+                          info.el.classList.remove('resizable-disabled');
+                        });
+                      }}
+                      eventClassNames={(arg) => {
+                        const event = arg.event;
+                        const allEvents =
+                          calendarRef.current?.getApi()?.getEvents() ?? [];
+                        const eventResourceId = event.getResources()?.[0]?.id;
 
-                      const otherResourceId = other.getResources()?.[0]?.id;
+                        const aStart = event.start?.getTime() ?? 0;
+                        const aEnd = event.end?.getTime() ?? 0;
 
-                      if (
-                        eventResourceId &&
-                        eventResourceId !== otherResourceId &&
-                        searchParams.get('view') === ViewOptions.DAY
-                      )
-                        return false;
+                        const isOverlappedFromBelow = allEvents.some(
+                          (other) => {
+                            if (event.id === other.id) return false;
 
-                      const bStart = other.start?.getTime() ?? 0;
-                      const bEnd = other.end?.getTime() ?? 0;
+                            const otherResourceId =
+                              other.getResources()?.[0]?.id;
 
-                      const isOverlapping = aStart < bEnd && aEnd > bStart;
-                      const isBelowInTime = bStart > aStart;
+                            if (
+                              eventResourceId &&
+                              eventResourceId !== otherResourceId &&
+                              searchParams.get('view') === ViewOptions.DAY
+                            )
+                              return false;
 
-                      return isOverlapping && isBelowInTime;
-                    });
+                            const bStart = other.start?.getTime() ?? 0;
+                            const bEnd = other.end?.getTime() ?? 0;
 
-                    return isOverlappedFromBelow ? ['overlap-event'] : [];
-                  }}
-                  eventDragStop={handleEventDragStop}
-                  // TODO: Update hover event
-                  eventClick={handleEventClick}
-                  eventOverlap={true}
-                  slotEventOverlap={true}
-                  selectMirror={true}
-                  locales={[jaLocale]}
-                  locale="ja"
-                  dayHeaderContent={(arg) => {
-                    const date = new Date(arg.date);
-                    let day = date.getDate().toString();
-                    if (day.length === 1) {
-                      day = '0' + day;
-                    }
-                    const weekday = date.toLocaleDateString('ja-JP', {
-                      weekday: 'short',
-                    });
-                    return (
-                      <span className="fc-day-header">{`${day}(${weekday})`}</span>
-                    );
-                  }}
-                />
-                {isLoadingSchedule && (
-                  <div className="absolute top-0 left-0 z-10 w-full">
-                    <ScheduleDaySkeleton
-                      height={heightSkeleton}
-                      numberOfResources={2}
+                            const isOverlapping =
+                              aStart < bEnd && aEnd > bStart;
+                            const isBelowInTime = bStart > aStart;
+
+                            return isOverlapping && isBelowInTime;
+                          },
+                        );
+
+                        return isOverlappedFromBelow ? ['overlap-event'] : [];
+                      }}
+                      eventDragStop={handleEventDragStop}
+                      // TODO: Update hover event
+                      eventClick={handleEventClick}
+                      eventOverlap={true}
+                      slotEventOverlap={true}
+                      selectMirror={true}
+                      locales={[jaLocale]}
+                      locale="ja"
+                      dayHeaderContent={(arg) => {
+                        const date = new Date(arg.date);
+                        let day = date.getDate().toString();
+                        if (day.length === 1) {
+                          day = '0' + day;
+                        }
+                        const weekday = date.toLocaleDateString('ja-JP', {
+                          weekday: 'short',
+                        });
+                        return (
+                          <span className="fc-day-header">{`${day}(${weekday})`}</span>
+                        );
+                      }}
                     />
                   </div>
-                )}
+                  {isLoadingSchedule && (
+                    <div className="absolute top-0 left-0 z-10 w-full">
+                      <ScheduleDaySkeleton
+                        height={heightSkeleton}
+                        numberOfResources={2}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -4246,19 +4255,19 @@ const TimeSchedule = memo(
               style={{
                 textAlign: 'center',
                 lineHeight: '80px',
-                borderRadius: '8px',
+                borderRadius: '50px',
                 fontWeight: 'bold',
                 zIndex: 1000,
               }}
-              className={`absolute top-[9px]  right-[53px] w-[150px] flex flex-col gap-[2px] items-center justify-center h-[48px] ${isDraggingSchedule ? '' : 'hidden'}`}>
-              <p className="text-white  bg-[#5B6770] text-[10px] leading-[14px]  py-[2px] px-1 rounded-sm">
-                スケジュールから削除
-              </p>
+              className={`absolute flex justify-center border border-dashed border-[#A7B7C2] top-[13px]  right-[70px] w-[130px] gap-[2px] items-center  h-10 ${isDraggingSchedule ? '' : 'hidden'}`}>
               <ImageRound
                 name="Delete"
-                src={'/icons/delete-task.svg'}
+                src={'/icons/delete-gray-bold.svg'}
                 className={`w-[14px] h-fit hover:cursor-pointer`}
               />
+              <p className="text-[#77858F] text-[10px] leading-[14px]  py-[2px] px-1 rounded-sm">
+                予定から削除
+              </p>
             </div>
           )}
         </div>

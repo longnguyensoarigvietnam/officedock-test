@@ -346,21 +346,22 @@ const ItemNoSetting = ({
                   </p>
                 </div>
                 <div>
-                  <p
-                    style={{
-                      fontSize:
-                        (selectedOptionZoom.value as number) > 75
-                          ? '13px'
-                          : '10px',
-                    }}
-                    className="flex gap-2 font-normal items-center">
-                    締切
-                    <span
-                      className={`hover:cursor-pointer ${checkDeadline && 'text-primary'}`}>
-                      {content.deadline &&
-                        formatShowDeadlineTask(content.deadline)}
-                    </span>
-                  </p>
+                  {content.deadline && (
+                    <p
+                      style={{
+                        fontSize:
+                          (selectedOptionZoom.value as number) > 75
+                            ? '13px'
+                            : '10px',
+                      }}
+                      className="flex gap-2 font-normal items-center">
+                      締切
+                      <span
+                        className={`hover:cursor-pointer ${checkDeadline && 'text-primary'}`}>
+                        {formatShowDeadlineTask(content.deadline)}
+                      </span>
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex justify-between items-center">

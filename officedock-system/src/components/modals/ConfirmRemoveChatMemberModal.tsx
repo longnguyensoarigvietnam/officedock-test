@@ -52,7 +52,7 @@ const ConfirmRemoveChatMemberModal = memo(
         onClose={onClose}>
         <div className="mb-5 flex gap-2 justify-center items-center">
           {selectedRemoveMemberId && renderAvatar(selectedRemoveMemberId)}
-          <p className="text-black text-[15px] font-medium">
+          <p className="text-black text-[15px] font-medium max-w-full break-all">
             {
               dashboardMembers.find((member) => {
                 return member.id == selectedRemoveMemberId;

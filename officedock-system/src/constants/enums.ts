@@ -466,7 +466,18 @@ export enum TabType {
   MY_DOC = 'マイドック',
   TEAM_DOCK = 'チームドック',
 }
-
+export enum TabTypeSurvey {
+  ALL = '全て',
+  RECEIVING = '受付中',
+  ENDED = '受付終了',
+  MY_SURVEY = 'マイアンケート',
+}
+export enum TabTypeSurveyValue {
+  ALL = 'all',
+  RECEIVING = 'open',
+  ENDED = 'close',
+  MY_SURVEY = 'my_survey',
+}
 export enum TimeType {
   HOURS = '時間前',
   DAY = '日前',
@@ -616,5 +627,5 @@ export enum ChatParticipantType {
 }
 export enum TemplateVariant {
   EMPTY = 'EMPTY',
-  DATA = 'DATA'
+  DATA = 'DATA',
 }

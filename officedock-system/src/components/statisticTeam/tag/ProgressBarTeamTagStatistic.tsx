@@ -165,7 +165,7 @@ const ProgressBarTeamTagStatistic = ({
                     style={{
                       backgroundColor: color,
                     }}
-                    className="w-3 h-3"></div>
+                    className="w-3 h-3 rounded-full"></div>
                   <span className="truncate  max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                     {label}
                   </span>
@@ -253,7 +253,7 @@ const ProgressBarTeamTagStatistic = ({
                               style={{
                                 backgroundColor: item.color,
                               }}
-                              className="w-3 h-3"></div>
+                              className="w-3 h-3 rounded-full"></div>
                             <span className="truncate  max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                               {item.label}
                             </span>

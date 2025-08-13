@@ -90,7 +90,7 @@ const ProgressBarStatistic = ({
                 });
             }}></div>
           {percentage > 0 && (
-            <div className="absolute -top-[25%] left-[40%] w-[250px] rounded-md py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+            <div className="absolute -top-[25%] left-[40%] w-[250px] rounded-[14px] py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
               {id != -1 ? (
                 <div className="px-5">
                   {startDate && endDate && (
@@ -136,7 +136,7 @@ const ProgressBarStatistic = ({
                       style={{
                         backgroundColor: color,
                       }}
-                      className="w-3 h-3"></div>
+                      className="w-3 h-3 rounded-full"></div>
                     <p className="max-w-[calc(100%_-_20px)] break-all line-clamp-3 font-bold text-[16px]">
                       {label}
                     </p>
@@ -227,7 +227,7 @@ const ProgressBarStatistic = ({
                                 style={{
                                   backgroundColor: item.color,
                                 }}
-                                className="w-3 h-3"></div>
+                                className="w-3 h-3 rounded-full"></div>
                               <p className="break-all line-clamp-3 max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                                 {item.label}
                               </p>

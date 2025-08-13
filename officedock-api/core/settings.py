@@ -139,7 +139,19 @@ INSTALLED_APPS = [
     "submit_levels",
     "roles",
     "statistics",
+    "surveys",
+    "tweets",
+    "thanks_messages",
 ]
+
+# Define constants
+SECRET_KEY_FOR_CRONJOB = os.getenv("SECRET_KEY_FOR_CRONJOB", None)
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+MONTHLY_QUOTA_THANKS_MESSAGES = os.getenv("MONTHLY_QUOTA_THANKS_MESSAGES", 5)
+THANKS_MESSAGE_SOFT_DELETE_RETENTION_DAYS = os.getenv(
+    "THANKS_MESSAGE_SOFT_DELETE_RETENTION_DAYS", 30
+)
 
 # Get REDIS_URL from environment variable or install directly
 REDIS_URL = os.getenv("REDIS_URL", None)
@@ -215,10 +227,6 @@ if not EMAIL_HOST:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-
-SECRET_KEY_FOR_CRONJOB = os.getenv("SECRET_KEY_FOR_CRONJOB", None)
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

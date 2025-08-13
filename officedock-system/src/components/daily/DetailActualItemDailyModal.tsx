@@ -39,7 +39,7 @@ const DetailActualItemDailyModal = ({
     <>
       {popoverInfo && (
         <div
-          className={`w-[250px] z-[10] h-fit relative rounded-md pl-5 pr-[10px] pt-[10px] pb-5 bg-white`}
+          className={`w-[250px] z-[10] h-fit relative rounded-[14px] pl-5 pr-[10px] pt-[10px] pb-5 bg-white`}
           ref={popoverRef}
           style={{
             position: 'absolute',
@@ -78,7 +78,7 @@ const DetailActualItemDailyModal = ({
               style={{
                 backgroundColor: popoverInfo.largeColor,
               }}
-              className="w-3 h-3 flex-shrink-0 rounded-sm"></div>
+              className="w-3 h-3 flex-shrink-0 rounded-full"></div>
             <span className="text-black font-bold text-base truncate">
               {popoverInfo.title}
             </span>

@@ -29,6 +29,7 @@ from tasks.apis import (
     TodoListViewSet,
 )
 from terms.apis import SystemTermViewSet
+from tweets.apis import TweetsView
 from users.apis import (
     SystemAuthViewSet,
     SystemUserMemoViewSet,
@@ -49,6 +50,8 @@ from dashboard.apis import (
 )
 from chat.apis import ChatFileViewSet, ChatMessageViewSet, ChatRoomViewSet
 from roles.apis import RoleViewSet
+from surveys.apis import SurveyViewSet
+from thanks_messages.apis import ThanksMessageViewSet
 
 # Routers provide an easy way of automatically determining the URL conf.
 api_router = routers.SimpleRouter()
@@ -136,6 +139,13 @@ api_router.register(
     TeamViewSet,
     basename="teams",
 )
+api_router.register("surveys", SurveyViewSet, basename="surveys")
+api_router.register(
+    "tweets",
+    TweetsView,
+    basename="tweets",
+)
+api_router.register("thanks-messages", ThanksMessageViewSet, basename="thanks_messages")
 
 # Add api router urls
 urlpatterns = []

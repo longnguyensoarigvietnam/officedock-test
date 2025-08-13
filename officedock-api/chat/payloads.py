@@ -141,7 +141,10 @@ def build_chat_message_payload(full_messages, request_user=None):
             "id": sm["id"],
             "staff": sm["staff"],
             "organization": sm["organization"],
-            "skill": sm["skill"],
+            "skill": {
+                "id": sm["skill__id"],
+                "name": sm["skill__name"],
+            },
             "status": sm["status"],
             "comment": sm["comment"],
         }
@@ -151,7 +154,8 @@ def build_chat_message_payload(full_messages, request_user=None):
             "id",
             "staff",
             "organization",
-            "skill",
+            "skill__id",
+            "skill__name",
             "status",
             "comment",
         )

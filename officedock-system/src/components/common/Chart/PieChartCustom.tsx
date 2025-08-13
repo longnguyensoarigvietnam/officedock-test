@@ -8,8 +8,9 @@ import {
   ChartData,
   ChartOptions,
 } from 'chart.js';
-import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
 import { useRef, useState } from 'react';
+import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
+
 import { OptionDropdownType } from '@interfaces/common';
 import { StatisticCategoryInfo } from '@interfaces/statistic';
 import ModalCustomTooltip from '@components/tooltip/ModalCustomTooltip';
@@ -217,7 +218,7 @@ const PieChartCustom = ({
             top: tooltipData.y,
             left: tooltipData.x,
             backgroundColor: 'white',
-            borderRadius: '6px',
+            borderRadius: '14px',
             boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
             zIndex: 999,
           }}>

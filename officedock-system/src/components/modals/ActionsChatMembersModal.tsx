@@ -324,7 +324,7 @@ const ActionsChatMembersModal = memo(
         className="font-primary !rounded-[20px] text-gray-700 !p-0 w-[500px]"
         titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
         headerClassName="bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-6 py-4"
-        contentClass='!rounded-[20px]'
+        contentClass="!rounded-[20px]"
         closeIconClassName="!bg-white !rounded-full !p-2 !hover:cursor-pointer !shadow-sm"
         closeClassName="!mt-0 opacity-70 !w-4 !h-4 !hover:cursor-pointer"
         onClose={() => {
@@ -465,12 +465,13 @@ const ActionsChatMembersModal = memo(
                             </div>
                           )}
                           <p
-                            className={`truncate font-medium text-[15px] max-w-[430px] text-black`}>
-                            <span className="font-normal text-sm text-black">
+                            className={`break-all font-medium text-[15px] max-w-[430px] text-black`}>
+                            <span className="text-sm text-black">
                               {member.fullName}
                             </span>
-                            <span className="font-normal text-xs text-[#77858F] ml-2">
-                              {member?.organizations?.name}
+                            <span className="text-xs text-[#77858F] ml-2">
+                              {member.type == ChatParticipantType.USER &&
+                                member?.mainOrganization}
                             </span>
                           </p>
                         </div>

@@ -86,6 +86,7 @@ const Column = ({
   columnsKanbanData,
   creationDataTaskData,
   showFrequentlyTasks,
+
   pinItemToTop,
   addTask,
   editTask,
@@ -296,6 +297,11 @@ const Column = ({
       paddingRight = `${(columnWidth / 247) * 15}px`;
   }
 
+  const isHasOrdering =
+    (orderingOptions && orderingOptions.tag_ids.length > 0) ||
+    (orderingOptions && orderingOptions.category_ids.length > 0) ||
+    (orderingOptions && orderingOptions.organization_ids.length > 0);
+
   return extendByStatus.find((item) => String(item.id) == String(columnId))
     ?.status ? (
     <div
@@ -328,15 +334,14 @@ const Column = ({
                 ? `${(columnWidth / 247) * 16}px`
                 : '17px',
           }}
-          className={`flex justify-between ${isMyRoutine && 'bg-[#DAE2EB] rounded-tl-lg rounded-tr-lg'} `}>
+          className={`flex justify-between ${isMyRoutine && 'bg-[#DAE2EB] rounded-tl-[14px] rounded-tr-[14px]'} `}>
           <div
             style={{
               gap: `6px`,
             }}
             className="flex items-center text-sm break-all font-medium ">
             {!isMyRoutine && (
-              <span
-                className={`w-[10px] h-[10px] rounded-full ${statusStyle}`}></span>
+              <span className={`w-[2px] h-[20px] ${statusStyle}`}></span>
             )}
             <span>{title}</span>
             {!isMyRoutine && (
@@ -427,8 +432,12 @@ const Column = ({
                 paddingRight: isMyRoutine ? paddingRight : '10px',
                 boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 ${!isMyRoutine ? '#f8fafc' : '#EBF1F7'}`,
                 minHeight: showFrequentlyTasks
-                  ? 'calc(100vh - 372px)'
-                  : 'calc(100vh - 280px)',
+                  ? isHasOrdering
+                    ? 'calc(100vh - 402px)'
+                    : 'calc(100vh - 372px)'
+                  : isHasOrdering
+                    ? 'calc(100vh - 320px)'
+                    : 'calc(100vh - 280px)',
               }}
               className={`flex-grow overflow-y-auto w-[100%]
                 ${isMyRoutine && 'bg-[#EBF1F7] '}
@@ -438,8 +447,12 @@ const Column = ({
               <div
                 className={`flex flex-col ${
                   showFrequentlyTasks === true
-                    ? 'h-[calc(100vh_-_370px)]'
-                    : 'h-[calc(100vh_-_350px)]'
+                    ? isHasOrdering
+                      ? 'h-[calc(100vh_-_410px)]'
+                      : 'h-[calc(100vh_-_370px)]'
+                    : isHasOrdering
+                      ? 'h-[calc(100vh_-_380px)]'
+                      : 'h-[calc(100vh_-_350px)]'
                 }`}>
                 {items.map((item, index) => (
                   <>
@@ -497,8 +510,8 @@ const Column = ({
     </div>
   ) : (
     <div className="w-[40px] pt-[6px]">
-      <div className="flex gap-[6px] items-center justify-center">
-        <div className={`w-[10px] h-[10px] rounded-full ${statusStyle}`}></div>
+      <div className="flex  items-center justify-center">
+        <div className={`w-[2px] h-[20px] ${statusStyle}`}></div>
         <DynamicTooltip content="タブを拡大" placement="top">
           <div
             className={`flex items-center justify-center cursor-pointer ${Number(columnId) != StatusValueTask.MY_ROUTINE ? 'hover:bg-[#E3EAED]' : 'hover:bg-[#EBF2F7]'} rounded-full w-[22px] h-[22px]`}
@@ -559,7 +572,7 @@ const Column = ({
       </div>
       <div className="w-full flex justify-center">
         <div
-          className={`w-2 ${showFrequentlyTasks ? 'h-[calc(100vh_-_400px)]' : 'h-[calc(100vh_-_280px)]'} bg-[#EBF1F7]`}></div>
+          className={`w-2 ${showFrequentlyTasks ? (isHasOrdering ? 'h-[calc(100vh_-_430px)]' : 'h-[calc(100vh_-_400px)]') : isHasOrdering ? 'h-[calc(100vh_-_310px)]' : 'h-[calc(100vh_-_280px)]'} bg-[#EBF1F7]`}></div>
       </div>
     </div>
   );

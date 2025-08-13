@@ -747,16 +747,15 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         client_id,
                         ChatMessageTypes.REMOVE_SCHEDULE.value,
                     )
-                else:
-                    self._send_to_calendar_room(
-                        user,
-                        participant,
-                        instance,
-                        data,
-                        schedule_message,
-                        client_id,
-                        ChatMessageTypes.REMOVE_SCHEDULE.value,
-                    )
+                self._send_to_calendar_room(
+                    user,
+                    participant,
+                    instance,
+                    data,
+                    schedule_message,
+                    client_id,
+                    ChatMessageTypes.REMOVE_SCHEDULE.value,
+                )
         if recurring_event_option in [
             ScheduleRepeatOption.THIS_AND_FOLLOWING_EVENTS.value,
             ScheduleRepeatOption.ALL_EVENTS.value,
@@ -927,11 +926,11 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 through_defaults={"company": company},
             )
             action = WebSocketEventType.CREATE_CHAT_ROOM.value
-            chat_room_participant = chat_room.chat_rooms_participants.filter(
-                user=participant
-            ).first()
-            chat_room_participant.unread_messages += 1
-            chat_room_participant.save(update_fields=["unread_messages"])
+        chat_room_participant = chat_room.chat_rooms_participants.filter(
+            user=participant
+        ).first()
+        chat_room_participant.unread_messages += 1
+        chat_room_participant.save(update_fields=["unread_messages"])
 
         message_data = {
             "sender": user,

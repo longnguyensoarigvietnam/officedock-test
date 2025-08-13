@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import ImageRound from '@components/common/ImageRound';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import Dropdown from '@components/common/Dropdown';
+import ClockIconColor from '@components/custom/ClockIconColor';
 
 import {
   EventWorkCategory,
@@ -23,7 +24,6 @@ import {
 } from '@utils/date';
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 import { NO_SETTING } from '@constants';
-import ClockIconColor from '@components/custom/ClockIconColor';
 
 interface ItemProps {
   id: string;
@@ -303,11 +303,13 @@ const ItemTeam = ({
               }}>
               <div className="flex gap-1 items-start">
                 {isShowSchedule ? (
-                  <ClockIconColor color={largeColor} />
+                  <div className="w-fit flex-shrink-0">
+                    <ClockIconColor color={largeColor} />
+                  </div>
                 ) : (
                   <div
                     style={{ backgroundColor: largeColor || 'white' }}
-                    className="w-2 h-2 rounded-full mt-[5px]"></div>
+                    className="w-2 h-2 rounded-full mt-[5px] flex-shrink-0"></div>
                 )}
                 <p
                   style={{

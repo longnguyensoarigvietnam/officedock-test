@@ -660,3 +660,14 @@ class UpdateSkillMapSkillLevelSerializer(SkillMapSkillLevelSerializer):
             "id",
             "popup",
         ]
+
+
+class UpdateSkillMapDefaultSerializer(serializers.ModelSerializer):
+    """Serializer for update skill map"""
+
+    class Meta:
+        model = SkillMap
+        fields = [
+            "id",
+            "is_default",
+        ]

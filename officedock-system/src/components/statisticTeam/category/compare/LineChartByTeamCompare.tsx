@@ -153,7 +153,6 @@ const LineChartByTeamCompare = ({
     setSelectedOrganizationOptionInTable,
   ] = useState(AllTeamStatisticOption.MAIN_TEAM);
 
-  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const [memberOptions, setMemberOptions] = useState<
     {
       id: number;
@@ -2007,10 +2006,7 @@ const LineChartByTeamCompare = ({
             </span>
           </div>
           {/* Filter modal */}
-          <FilterTeamStatistic
-            open={isOpenModalFilter}
-            onOpen={() => setIsOpenModalFilter(!isOpenModalFilter)}
-          />
+          <FilterTeamStatistic />
         </div>
         <ImageRound
           src="/icons/extend-calendar.svg"

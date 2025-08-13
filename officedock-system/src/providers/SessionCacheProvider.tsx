@@ -30,7 +30,7 @@ export const SessionCacheProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <SessionCacheContext.Provider value={cachedSession}>
-      {children}
+      {cachedSession && children}
     </SessionCacheContext.Provider>
   );
 };

@@ -1,4 +1,4 @@
-import { MenuItem, SettingMenuItem } from '@interfaces/menu';
+import { MenuItem, MyPageMenuItem, SettingMenuItem } from '@interfaces/menu';
 import { pageRouters } from './routers';
 import { PermissionsSystem } from './enums';
 
@@ -10,7 +10,7 @@ export const SETTING_MENU: SettingMenuItem[] = [
   {
     name: '設定',
     href: pageRouters.SETTING.href,
-    disable: true
+    disable: true,
   },
   {
     name: 'ログアウト',
@@ -174,6 +174,16 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     companyMenu: true,
     requiredPermission: PermissionsSystem.CALENDAR_MANAGEMENT_VIEW,
   },
+  {
+    ...pageRouters.MY_PAGE,
+    name: pageRouters.MY_PAGE.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/skills-map-active.svg' : '/icons/skills-map.svg';
+    },
+    current: false,
+    companyMenu: false,
+    requiredPermission: PermissionsSystem.VIEW_ALL,
+  },
 ];
 export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
   {
@@ -227,5 +237,53 @@ export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
     current: false,
     companyMenu: false,
     requiredPermission: PermissionsSystem.TEAM_DOCK_SKILL_MAP_VIEW,
+  },
+];
+
+export const MY_PAGE_MENU: MyPageMenuItem[] = [
+  {
+    name: 'サンクス メッセージ',
+    href: '/',
+    iconSrc: '/icons/heart.svg',
+    iconName: 'Heart icon',
+  },
+  {
+    name: '他の人の部屋へ 出かける',
+    href: '/',
+    iconSrc: '/icons/room-profile.svg',
+    iconName: 'Room icon',
+  },
+  {
+    name: 'アンケート',
+    href: pageRouters.SURVEY.href,
+    iconSrc: '/icons/question.svg',
+    iconName: 'Question icon',
+    child: [
+      {
+        name: 'アンケートを見る',
+        href: '/',
+      },
+      {
+        name: 'アンケートを作る',
+        href: '/',
+        onClick: () => {},
+      },
+      {
+        name: 'マイアンケートを見る',
+        href: '/',
+      },
+    ],
+  },
+  {
+    name: 'MVP',
+    href: '/',
+    iconSrc: '/icons/mvp.svg',
+    iconName: 'MVP icon',
+  },
+  {
+    name: 'アイテム',
+    href: '/',
+    iconSrc: '/icons/shop.svg',
+    iconName: 'Shop icon',
   },
 ];

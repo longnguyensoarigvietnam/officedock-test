@@ -37,6 +37,7 @@ const Button = ({
       variantClassNames = 'border bg-[#3CABF3] text-white hover:bg-opacity-90';
 
       break;
+
     case 'text':
       variantClassNames = 'text-primary hover:text-opacity-70';
       break;

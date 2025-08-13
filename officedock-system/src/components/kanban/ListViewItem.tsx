@@ -320,6 +320,7 @@ const ListViewItem = ({
               end: formatISO(addMinutesToDate(`${now}`)),
               startEditable: true,
               itemKanban: true,
+              largeColor: largeColor,
               deadline:
                 content.status?.id == StatusValueTask.MY_ROUTINE
                   ? ''
@@ -327,7 +328,7 @@ const ListViewItem = ({
             })}
             {...provided.draggableProps}
             {...provided.dragHandleProps}
-            className={`relative ${isPermissionUpdate ? 'ex-event-draggable' : ''} group border border-transparent no-show hover:border hover:border-[#BEC9CE]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-1 ${snapshot.isDragging && 'opacity-100'}`}>
+            className={`relative ${isPermissionUpdate ? 'ex-event-draggable' : ''} group border border-transparent no-show hover:border hover:border-[#BEC9CE]  hover:border-solid   ${content.isStart && ' !border-primary'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-1 ${snapshot.isDragging && 'opacity-100'}`}>
             <div
               className="flex items-center py-2.5 px-3 w-full"
               onClick={() => {
@@ -395,7 +396,7 @@ const ListViewItem = ({
                         <ImageRound
                           src="/icons/copy.svg"
                           name="Copy icon"
-                          className="text-gray-400 cursor-pointer w-4 h-4"
+                          className="text-gray-400 cursor-pointer w-[14px] h-[14px]"
                         />
                       </div>
                     </DynamicTooltip>
@@ -411,9 +412,9 @@ const ListViewItem = ({
                       }}>
                       {content.isMyTask && (
                         <ImageRound
-                          src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
+                          src={`/icons/${content.isStart ? 'pause' : 'play-task'}.svg`}
                           name="Start task"
-                          className={`hover:cursor-pointer w-[24px] h-[24px]`}
+                          className={`hover:cursor-pointer ${content.isStart ? '!w-fit !h-fit' : '!w-[28px] !h-[28px]'}`}
                           onClick={async () => {
                             await new Promise<void>((resolve) => {
                               setTaskSelectedToStart(content);

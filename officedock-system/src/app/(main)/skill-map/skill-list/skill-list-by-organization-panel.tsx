@@ -78,7 +78,7 @@ export const SkillListByOrganizationPanel = ({
 
   return (
     <div
-      className="w-full p-7 bg-[#F8FAFC] rounded-[14px] mb-6 overflow-x-auto scrollbar-gutter-stable max-w-full"
+      className="w-full p-7 bg-[#F8FAFC] rounded-[30px] mb-6 overflow-x-auto scrollbar-gutter-stable max-w-full"
       style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
       <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
         {skillMapDetail.organizationName}
@@ -151,13 +151,13 @@ export const SkillListByOrganizationPanel = ({
                   <div key={skill.id ?? `${index}-${idx}`}>
                     {!skill.id ? (
                       <div
-                        className="px-5 w-[613px] h-[90px] bg-white rounded-[6px]"
+                        className="px-5 w-[613px] h-[90px] bg-white rounded-[14px]"
                         style={{
                           boxShadow: '0px 2px 8px 0px #0000001A',
                         }}></div>
                     ) : (
                       <div
-                        className="px-5 py-4 w-[613px] h-[90px] bg-white flex justify-between items-center rounded-[6px]"
+                        className="px-5 py-4 w-[613px] h-[90px] bg-white flex justify-between items-center rounded-[14px]"
                         style={{
                           boxShadow: '0px 2px 8px 0px #0000001A',
                         }}>

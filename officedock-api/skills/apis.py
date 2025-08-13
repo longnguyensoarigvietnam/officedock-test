@@ -46,6 +46,7 @@ from skills.serializers import (
     SkillReplaceSkilMapSerializer,
     GroupStepSkillMapSerializer,
     UpdateSkillMapSkillLevelSerializer,
+    UpdateSkillMapDefaultSerializer,
 )
 from skills.filters import StatisticCategoryFilter
 from skills.utils import get_lookback_time, get_next_progression
@@ -699,6 +700,50 @@ class SkillMapViewSet(
                 skill_map.delete()
 
         return self.response_ok()
+
+    @action(
+        methods=["PUT"],
+        detail=True,
+        url_path="set-skill",
+        serializer_class=UpdateSkillMapDefaultSerializer,
+    )
+    @transaction.atomic()
+    def set_skill_default(self, request, pk=None):
+        """
+        Handle update default skill show in mypage of user
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return self.response_ok()
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("user_id", type=int, required=True),
+        ]
+    )
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="set-skill",
+        serializer_class=UpdateSkillMapDefaultSerializer,
+    )
+    def get_skill_default(self, request, *args, **kwargs):
+        """
+        Handle data and response list of skill map by user
+        """
+        user_id = request.query_params.get("user_id", None)
+        skill_maps = (
+            self.get_queryset()
+            .filter(staff_id=user_id, is_default=True, is_valid=True)
+            .all()[:3]
+        )
+
+        return self.response_ok(SkillMapSerializer(skill_maps, many=True).data)
 
 
 @extend_schema(tags=["System > Skill"])

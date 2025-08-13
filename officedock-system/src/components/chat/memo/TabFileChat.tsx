@@ -90,7 +90,11 @@ const TabFileChat = ({
 
   useEffect(() => {
     if (dataFileAddList && dataFileAddList.length > 0) {
-      setDataFiles((prev) => [...dataFileAddList, ...prev]);
+      setDataFiles((prev) => {
+        const seen = new Set(prev.map((item) => item.uuid));
+        const newItems = dataFileAddList.filter((item) => !seen.has(item.uuid));
+        return [...newItems, ...prev];
+      });
       setDataFileAddList([]);
     }
   }, [dataFileAddList, setDataFileAddList]);

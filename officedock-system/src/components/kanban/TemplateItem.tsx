@@ -1,6 +1,6 @@
-import ImageRound from "@components/common/ImageRound";
+import ImageRound from '@components/common/ImageRound';
 
-import { TemplateAction, TemplateVariant } from "@constants/enums";
+import { TemplateAction, TemplateVariant } from '@constants/enums';
 
 export const TemplateItem = ({
   templateName,
@@ -22,23 +22,23 @@ export const TemplateItem = ({
   onEdit?: (id: number) => void;
 }) => (
   <div
-    className={`relative min-w-[200px] !max-w-[200px] h-[55px] p-3 mb-3 rounded-[50px] bg-white flex items-center border-[1px] hover:cursor-pointer  ${TemplateVariant.EMPTY ? '!border-dotted !border-[#D5DCE0]' : 'border-transparent shadow-common'} ${className}`}
+    style={{
+      boxShadow: `${variant == TemplateVariant.EMPTY ? '' : '0px 2px 8px 0px #0000001A'}`,
+    }}
+    className={`relative min-w-[200px] !max-w-[200px] h-[55px] p-3 mb-3 rounded-[50px] bg-white flex items-center hover:cursor-pointer ${variant == TemplateVariant.EMPTY ? 'border border-dashed !bg-transparent border-[#D5DCE0]' : 'border-transparent'} ${className}`}
     onClick={() => onClick?.(templateId ?? undefined)}>
-    <div
-      className={`rounded-full p-[6px] w-fit border-[1px] ${TemplateVariant.EMPTY ? 'bg-transparent border-dotted border-[#D5DCE0]' : 'bg-gray-200 border-transparent'}`}>
-      <ImageRound
-        src={`/icons/${variant == TemplateVariant.EMPTY ? 'add-gray' : 'add'}.svg`}
-        name="Add"
-        className="!w-3 !h-3"
-      />
-    </div>
+    <ImageRound
+      src={`/icons/${variant == TemplateVariant.EMPTY ? 'add-dashed' : 'add-template'}.svg`}
+      name="Add"
+      className="!w-[24px] !h-[24px]"
+    />
     {templateName && (
       <p
         className={`text-sm font-medium ml-2 ${variant != TemplateVariant.EMPTY ? '!max-w-[calc(100%_-_50px)]' : ''} max-h-[50px] break-all line-clamp-2 overflow-hidden ${action == TemplateAction.CREATE && 'text-[#77858F]'} ${templateNameStyle}`}>
         {templateName}
       </p>
     )}
-    <div className='ml-auto'>
+    <div className="ml-auto">
       {action != TemplateAction.CREATE && action != TemplateAction.DEFAULT && (
         <ImageRound
           src="/icons/edit-gray.svg"

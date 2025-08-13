@@ -602,9 +602,10 @@ const ChatDetail = ({
           if (data.data.results.length <= 0 || !data.data.hasNext) {
             setHasMoreDetailOnScrollDown(false);
           }
+
           setDataMessageDetail((prev) => {
             if (prev) {
-              const newMessages = data.data.results;
+              const newMessages = data.data.results.slice().reverse();
 
               const filteredMessages = newMessages.filter(
                 (newMsg) =>
@@ -613,7 +614,7 @@ const ChatDetail = ({
 
               return [...filteredMessages, ...prev];
             } else {
-              return [...data.data.results];
+              return [...data.data.results.slice().reverse()];
             }
           });
 
@@ -723,6 +724,7 @@ const ChatDetail = ({
       } else if (isAtBottom && hasMoreDetailOnScrollDown) {
         chatContainer.scrollTop = -20;
         setIsLoadingNewer(true);
+
         getDataListMessagesOnScrollDown({ pageNumber: page, sorting: true });
       }
     }, 200);
@@ -2486,64 +2488,7 @@ const ChatDetail = ({
   }, [uploadFiles]);
 
   // Reaction message
-  const handleReactionClick = (msgUuid: string, icon: string) => {
-    setDataMessageDetail((prev) =>
-      prev.map((message) => {
-        if (message.uuid !== msgUuid) return message;
-
-        const userId = session?.user.id as number;
-
-        const updatedReactions = (message.reactions || [])
-          // Remove user from all other reactions (only keep if never selected or is new reaction)
-          .map((reaction) => ({
-            ...reaction,
-            users: reaction.users.filter((id) => id !== userId),
-          }))
-          // After filtering out the user from all reactions, check if this reaction exists
-          .filter((reaction) => reaction.users.length > 0);
-
-        const existingReaction = message.reactions?.find(
-          (r) => r.icon === icon,
-        );
-
-        const userReacted = existingReaction?.users.includes(userId);
-
-        // If it already exists and the user has clicked => remove completely (toggle off)
-        if (existingReaction && userReacted) {
-          return {
-            ...message,
-            reactions: updatedReactions,
-          };
-        }
-
-        // If it already exists but the user hasn't selected it => add it
-        if (existingReaction && !userReacted) {
-          return {
-            ...message,
-            reactions: [
-              ...updatedReactions,
-              {
-                ...existingReaction,
-                users: [...(existingReaction.users || []), userId],
-              },
-            ],
-          };
-        }
-
-        // If that reaction doesn't exist => create a new one
-        return {
-          ...message,
-          reactions: [
-            ...updatedReactions,
-            {
-              icon,
-              users: [userId],
-            },
-          ],
-        };
-      }),
-    );
-
+  const handleReactionClick = (_msgUuid: string, _icon: string) => {
     setChatRoomNotifications({
       notifications: 0,
       roomCode: chatRoomCode,

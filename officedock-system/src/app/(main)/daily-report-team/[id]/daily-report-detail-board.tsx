@@ -1441,7 +1441,7 @@ const DailyReportDetailBoard = () => {
               </div>
             )}
             {isParent && (
-              <div className="text-base font-medium text-blacks mt-3 text-end mr-[14px]">
+              <div className="text-base font-medium text-blacks mt-3 text-end mr-[19px]">
                 {convertToJapaneseTime(getValue() as string)}{' '}
               </div>
             )}
@@ -2029,7 +2029,7 @@ const DailyReportDetailBoard = () => {
           </div>
         </div>
         <div className=" flex gap-3">
-          <div className="w-[262px] px-5 bg-[#F8FAFC] h-[calc(100vh_-_260px)] rounded-[14px] daily-custom  overflow-y-auto">
+          <div className="w-[262px] px-5 bg-[#F8FAFC] h-[calc(100vh_-_260px)] rounded-[30px] daily-custom  overflow-y-auto">
             <p className=" pt-[30px] mb-2">スケジュール実績</p>
             <FullCalendar
               ref={calendarRef}
@@ -2066,9 +2066,9 @@ const DailyReportDetailBoard = () => {
               locale="ja"
             />
           </div>
-          <div className="w-[calc(100%_-_260px)] h-[calc(100vh_-_260px)] font-medium overflow-y-auto mr-5 bg-[#F8FAFC] p-[30px] rounded-[14px]">
+          <div className="w-[calc(100%_-_260px)] h-[calc(100vh_-_260px)] font-medium overflow-y-auto mr-5 bg-[#F8FAFC] p-[30px] rounded-[30px]">
             <div className="overflow-y-auto">
-              <p className="text-base">カテゴリーの割合</p>
+              <p className="text-base text-[#77858F]">カテゴリーの割合</p>
               <div className="flex pt-5">
                 <section className="flex-1  max-w-[360px]">
                   {chartData?.data && (
@@ -2083,7 +2083,7 @@ const DailyReportDetailBoard = () => {
                 </section>
 
                 <section className="flex-1 flex flex-col items-start gap-4 justify-start">
-                  <div className="w-fit px-4 h-14 flex items-center font-medium justify-center gap-1 text-[34px]">
+                  <div className="w-fit h-14 flex items-center font-medium justify-center gap-1 text-[34px]">
                     <span className="text-sm font-medium pt-6 mr-2">
                       合計時間
                     </span>
@@ -2108,7 +2108,7 @@ const DailyReportDetailBoard = () => {
                             style={{
                               backgroundColor: item.color,
                             }}
-                            className={`w-3 h-3 mt-[7px] `}></div>
+                            className={`w-3 h-3 rounded-full mt-[7px] `}></div>
                           <span className="w-[200px] break-all">
                             {item.categoryName}
                           </span>
@@ -2124,8 +2124,8 @@ const DailyReportDetailBoard = () => {
               </div>
             </div>
             <div className="mt-5 h-[548px]">
-              <p className="text-base font-medium">タスク一覧</p>
-              <Table className=" border border-[#D2DBE1] !ring-0 bg-white h-[496px] !pt-0 overflow-y-auto py-0 mt-5 rounded-md">
+              <p className="text-base font-medium text-[#77858F]">タスク一覧</p>
+              <Table className=" border border-[#D2DBE1] !ring-0 bg-white h-[496px] !pt-0 overflow-y-auto py-0 mt-5 rounded-[10px]">
                 <thead className="bg-gray-100 sticky z-10">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr
@@ -2259,7 +2259,7 @@ const DailyReportDetailBoard = () => {
               </Table>
             </div>
             <div className="mt-[30px] pb-14">
-              <p>備考</p>
+              <p className="text-[#77858F]">備考</p>
               <ResizeTextArea
                 currentDate={dataDatePicker}
                 defaultData={

@@ -9,7 +9,7 @@ import SubmitLevelUpModal from '@components/modals/SubmitLevelUpModal';
 import ViewSkillMapCommentModal from '@components/modals/ViewSkillMapCommentModal';
 import { StepInfoTooltip } from '@components/tooltip/StepInfoTooltip';
 
-import { ScreenName, SubmitLevelStatus } from '@constants/enums';
+import { ActionsModal, ScreenName, SubmitLevelStatus } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
 import { ERROR_SAVE_MESSAGE, SUCCESS_SAVE_MESSAGE } from '@constants/message';
 import { SKILL_MAP_LEVEL_COUNT } from '@constants';
@@ -35,11 +35,19 @@ import api from '@base/api';
 interface SkillMapByOrganizationPanelProps {
   skillMapDetail: SkillMapByOrganization;
   userId: number;
+  settingSkillAction?: ActionsModal;
+  onOpenConfirmSettingSkillInfo?:
+    | ((skill: SkillMapByOrganizationInfo) => void)
+    | undefined;
+  onEditSettingSkill?: (skillId: string) => Promise<void>;
 }
 
 export const SkillMapByOrganizationPanel = ({
   skillMapDetail,
   userId,
+  settingSkillAction,
+  onOpenConfirmSettingSkillInfo,
+  onEditSettingSkill,
 }: SkillMapByOrganizationPanelProps) => {
   const showErrorToast = useErrorToast();
   const { showToast } = useToast();
@@ -130,7 +138,7 @@ export const SkillMapByOrganizationPanel = ({
         <ImageRound
           name={`Step ${step} treasure`}
           src={treasureIcons[step]}
-          className="w-[60px] h-[60px] cursor-pointer"
+          className={`${!settingSkillAction ? 'w-[60px] h-[60px]' : 'w-[50px] h-[50px]'} cursor-pointer`}
         />
       );
     }
@@ -193,7 +201,7 @@ export const SkillMapByOrganizationPanel = ({
 
     return (
       <div className="flex flex-col items-center">
-        {renderStepIcons()}
+        {!settingSkillAction && renderStepIcons()}
         {renderLevelText()}
       </div>
     );
@@ -342,7 +350,7 @@ export const SkillMapByOrganizationPanel = ({
 
   return (
     <div
-      className="w-full py-5 px-10 bg-[#F8FAFC] rounded-[30px] mb-6"
+      className={`w-full py-5 ${settingSkillAction ? 'px-4' : 'px-10'} bg-[#F8FAFC] rounded-[30px] mb-6`}
       style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
       <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
         {skillMapDetail.organizationName}
@@ -350,7 +358,7 @@ export const SkillMapByOrganizationPanel = ({
 
       <div>
         {/* Steps bar */}
-        <div className="flex w-full font-medium text-white text-[16px] mb-5 h-[32px]">
+        <div className={`flex ${settingSkillAction && 'gap-[3px]'} w-full font-medium text-white text-[16px] mb-5 h-[32px]`}>
           <StepInfoTooltip
             placement="top"
             currentStep={1}
@@ -421,17 +429,31 @@ export const SkillMapByOrganizationPanel = ({
                     <div
                       key={skill.id ?? `${index}-${idx}`}
                       className={`relative hover:cursor-pointer flex items-center ${isLast ? 'w-[calc(33.33333%_-_30px)]' : 'w-[calc(33.33333%_+_15px)]'}`}
-                      onClick={() => {
-                        if (!stepCompleted && !isLocked) {
-                          setSelectedSkillMapToSubmitLevelUp(skill.id);
-                          setOpenSubmitLevelUpModal(true);
+                      onClick={async () => {
+                        if (stepCompleted || isLocked) return;
+
+                        if (settingSkillAction === ActionsModal.CREATE) {
+                          onOpenConfirmSettingSkillInfo &&
+                            onOpenConfirmSettingSkillInfo(skill);
+                          return;
                         }
+
+                        if (settingSkillAction === ActionsModal.EDIT) {
+                          onEditSettingSkill &&
+                            onEditSettingSkill(String(skill.id));
+
+                          return;
+                        }
+
+                        setSelectedSkillMapToSubmitLevelUp(skill.id);
+                        setOpenSubmitLevelUpModal(true);
                       }}>
                       {!skill.id ? (
-                        <div className="px-5 h-[90px] bg-white w-full rounded-[6px]"></div>
+                        <div
+                          className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} bg-white w-full rounded-[14px]`}></div>
                       ) : (
                         <div
-                          className="px-5 h-[90px] flex gap-3 bg-white items-center w-full rounded-[14px] relative"
+                          className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} flex gap-3 bg-white items-center w-full rounded-[14px] relative`}
                           style={{
                             boxShadow: showTwinklingStars
                               ? '0px 0px 20px 0px #36ACDE80'
@@ -478,12 +500,13 @@ export const SkillMapByOrganizationPanel = ({
                           )}
 
                           <div className="w-[calc(100%_-_72px)]">
-                            <div className="flex justify-between items-start mb-4">
+                            <div
+                              className={`flex justify-between items-start ${settingSkillAction ? 'mb-1' : 'mb-4'}`}>
                               <p
-                                className={`text-[16px] font-medium max-w-[calc(100%_-_20px)] line-clamp-1 break-all ${stepCompleted ? 'text-[#B3B3B3]' : 'text-black'}`}>
+                                className={`text-[16px] font-medium ${settingSkillAction ? 'max-w-[calc(100%_-_5px)]' : 'max-w-[calc(100%_-_20px)]'} line-clamp-1 break-all ${stepCompleted ? 'text-[#B3B3B3]' : 'text-black'}`}>
                                 {skill.skill?.name}
                               </p>
-                              {hasComment ? (
+                              {!settingSkillAction && hasComment ? (
                                 <ImageRound
                                   name="Comment"
                                   src={'/icons/comment.svg'}
@@ -505,6 +528,7 @@ export const SkillMapByOrganizationPanel = ({
                                 trailColor={
                                   stepCompleted ? '#D2DBE1' : '#EBF1F7'
                                 }
+                                height={settingSkillAction ? '6px' : '10px'}
                               />
                             </div>
                           </div>

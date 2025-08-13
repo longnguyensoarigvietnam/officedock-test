@@ -361,6 +361,15 @@ export const pageRouters = {
     name: 'カレンダー設定',
     href: `/location`,
   },
+  // MY PAGE
+  MY_PAGE: {
+    name: 'マイページ',
+    href: `/my-page`,
+  },
+  SURVEY: {
+    name: 'survey',
+    href: `/my-page/survey`,
+  },
 };
 
 // For the API routers
@@ -516,6 +525,8 @@ export const apiRouters = {
   SKILL_MAPS_LEVEL_UP: (id: string) => `/skill-maps/${id}/level-up`,
   SAVE_SKILL_MAPS_LEVEL_UP_DRAFT: (id: string) =>
     `/skill-maps/${id}/skill-map-level/`,
+  SET_SKILL: (id: string) => `/skill-maps/${id}/set-skill/`,
+  SET_SKILL_LIST: '/skill-maps/set-skill/',
 
   // SUBMIT LEVELS
   SUBMIT_LEVELS_LIST: '/submit-levels/',
@@ -573,4 +584,11 @@ export const apiRouters = {
 
   // COMPANY
   COMPANY_SETTINGS: 'companies/settings/',
+
+  // TWEET
+  TWEET_LIST: '/tweets/',
+  TWEET_DETAIL: (id: number) => `/tweets/${id}/`,
+
+  // SURVEY
+  SURVEY_LIST: '/surveys/',
 };

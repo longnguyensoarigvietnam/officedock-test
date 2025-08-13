@@ -76,7 +76,7 @@ const ModalCustomTooltip = ({
                           style={{
                             backgroundColor: item.categoryColor,
                           }}
-                          className="w-3 h-3 rounded-sm"></div>
+                          className="w-3 h-3 rounded-full"></div>
                         <p className="font-bold max-w-[190px] break-all line-clamp-3">
                           {item.categoryName || item.tagName}
                         </p>
@@ -157,7 +157,7 @@ const ModalCustomTooltip = ({
                   style={{
                     backgroundColor: color,
                   }}
-                  className="w-3 h-3 rounded-sm"></div>
+                  className="w-3 h-3 rounded-full"></div>
                 <p className="font-bold max-w-[190px] break-all line-clamp-3">
                   {label}
                 </p>

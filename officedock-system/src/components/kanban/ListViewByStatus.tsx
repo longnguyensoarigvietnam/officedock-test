@@ -261,7 +261,7 @@ const ListViewByStatus = ({
         />
 
         <p className="font-medium text-[14px]">{listTitle}</p>
-        {listId != StatusValueTask.MY_ROUTINE && !isLoadingDataTask && (
+        {!isLoadingDataTask && (
           <p className="text-[#77858F] text-[14px]">{count}</p>
         )}
       </div>

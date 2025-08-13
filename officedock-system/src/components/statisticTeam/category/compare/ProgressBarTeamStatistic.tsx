@@ -180,7 +180,7 @@ const ProgressBarTeamStatisticCompare = ({
                   });
               }}></div>
             {item && item.value > 0 && (
-              <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-md py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+              <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-[14px] py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
                 {item.id != -1 ? (
                   <div>
                     {startDate && endDate && (
@@ -206,7 +206,7 @@ const ProgressBarTeamStatisticCompare = ({
                         style={{
                           backgroundColor: item.color,
                         }}
-                        className="w-3 h-3"></div>
+                        className="w-3 h-3 rounded-full"></div>
                       <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                         {item.label}
                       </span>
@@ -276,7 +276,7 @@ const ProgressBarTeamStatisticCompare = ({
                                   style={{
                                     backgroundColor: mergeItem.color,
                                   }}
-                                  className="w-3 h-3"></div>
+                                  className="w-3 h-3 rounded-full"></div>
                                 <span className="truncate max-w-[calc(100%_-_50px)] font-bold text-[16px]">
                                   {mergeItem.label}
                                 </span>
@@ -347,7 +347,7 @@ const ProgressBarTeamStatisticCompare = ({
                   });
               }}></div>
             {itemCompare && itemCompare.value > 0 && (
-              <div className="absolute -top-[25%] left-[40%] w-[250px] rounded-md py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+              <div className="absolute -top-[25%] left-[40%] w-[250px] rounded-[14px] py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
                 {itemCompare.id != -1 ? (
                   <div>
                     {startDateCompare && endDateCompare && (
@@ -375,7 +375,7 @@ const ProgressBarTeamStatisticCompare = ({
                         style={{
                           backgroundColor: itemCompare.color,
                         }}
-                        className="w-3 h-3"></div>
+                        className="w-3 h-3 rounded-full"></div>
                       <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                         {itemCompare.label}
                       </span>
@@ -448,7 +448,7 @@ const ProgressBarTeamStatisticCompare = ({
                                   style={{
                                     backgroundColor: itemUser.color,
                                   }}
-                                  className="w-3 h-3"></div>
+                                  className="w-3 h-3 rounded-full"></div>
                                 <span className="truncate max-w-[calc(100%_-_50px)] font-bold text-[16px]">
                                   {itemUser.label}
                                 </span>
@@ -538,7 +538,7 @@ const ProgressBarTeamStatisticCompare = ({
                   }}></div>
 
                 {/*  Hover user */}
-                <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+                <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-[14px] p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
                   <div className="flex items-center gap-2">
                     <CustomUserAvatar
                       avatarUrl={itemUser.user.user.avatar || ''}
@@ -632,7 +632,7 @@ const ProgressBarTeamStatisticCompare = ({
                     backgroundColor: itemUser.userCompare.user.avatarColor,
                   }}></div>
                 {/*  Hover user compare */}
-                <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+                <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-[14px] p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
                   <div className="flex items-center gap-2">
                     <CustomUserAvatar
                       avatarUrl={itemUser.userCompare.user.avatar || ''}

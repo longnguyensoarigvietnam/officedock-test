@@ -177,7 +177,7 @@ const ProgressBarTeamTagCompare = ({
                     value: item.id || '',
                   });
               }}></div>
-            <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-md py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+            <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-[14px] py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
               {item.id != -1 ? (
                 <div>
                   {startDate && endDate && (
@@ -203,7 +203,7 @@ const ProgressBarTeamTagCompare = ({
                       style={{
                         backgroundColor: item.color,
                       }}
-                      className="w-3 h-3"></div>
+                      className="w-3 h-3 rounded-full"></div>
                     <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                       {item.label}
                     </span>
@@ -273,7 +273,7 @@ const ProgressBarTeamTagCompare = ({
                                 style={{
                                   backgroundColor: mergeItem.color,
                                 }}
-                                className="w-3 h-3"></div>
+                                className="w-3 h-3 rounded-full"></div>
                               <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                                 {mergeItem.label}
                               </span>
@@ -339,7 +339,7 @@ const ProgressBarTeamTagCompare = ({
                   });
               }}></div>
             {itemCompare && itemCompare?.value > 0 && (
-              <div className="absolute -top-[25%] left-[40%] w-[250px] rounded-md py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+              <div className="absolute -top-[25%] left-[40%] w-[250px] rounded-[14px] py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
                 {itemCompare.id != -1 ? (
                   <div>
                     {startDateCompare && endDateCompare && (
@@ -367,7 +367,7 @@ const ProgressBarTeamTagCompare = ({
                         style={{
                           backgroundColor: itemCompare.color,
                         }}
-                        className="w-3 h-3"></div>
+                        className="w-3 h-3 rounded-full"></div>
                       <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                         {itemCompare.label}
                       </span>
@@ -440,7 +440,7 @@ const ProgressBarTeamTagCompare = ({
                                   style={{
                                     backgroundColor: itemUser.color,
                                   }}
-                                  className="w-3 h-3"></div>
+                                  className="w-3 h-3 rounded-full"></div>
                                 <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                                   {itemUser.label}
                                 </span>
@@ -530,7 +530,7 @@ const ProgressBarTeamTagCompare = ({
                   }}></div>
 
                 {/*  Hover user */}
-                <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+                <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-[14px] p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
                   <div className="flex items-center gap-2">
                     <CustomUserAvatar
                       avatarUrl={itemUser.user.user.avatar || ''}
@@ -619,7 +619,7 @@ const ProgressBarTeamTagCompare = ({
                     backgroundColor: itemUser.userCompare.user.avatarColor,
                   }}></div>
                 {/*  Hover user compare */}
-                <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+                <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-[14px] p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
                   <div className="flex items-center gap-2">
                     <CustomUserAvatar
                       avatarUrl={itemUser.userCompare.user.avatar || ''}

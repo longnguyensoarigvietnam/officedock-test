@@ -164,6 +164,7 @@ class SkillMap(BaseModel):
     )
     is_valid = models.BooleanField(default=False)
     is_complete = models.BooleanField(default=False)
+    is_default = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         """

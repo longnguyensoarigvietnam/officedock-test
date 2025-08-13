@@ -1,8 +1,15 @@
-import React, { useContext } from 'react';
+import React, { Fragment, useContext } from 'react';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
 
 import ImageRound from '@components/common/ImageRound';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+
 import { StatisticStateContext } from '@providers/StatisticProvider';
+import FilterStatisticModal from '../modal/FilterStatisticModal';
 
 type Props = {
   className?: string;
@@ -10,8 +17,6 @@ type Props = {
 
 const FilterStatistic = ({ className }: Props) => {
   const {
-    isHasLoading,
-    tagsOptions,
     selectedTags,
     isLoadingLarge,
     isLoadingMedium,
@@ -19,57 +24,42 @@ const FilterStatistic = ({ className }: Props) => {
     isLoadingLargeCompare,
     isLoadingMediumCompare,
     isLoadingOrganizationCompare,
-    isCheckCompare,
-    setSelectedTags,
     removeTag,
-    setIsLoadingLarge,
-    setIsLoadingMedium,
-    setIsLoadingOrganization,
-    setIsLoadingLargeCompare,
-    setIsLoadingMediumCompare,
-    setIsLoadingOrganizationCompare,
   } = useContext(StatisticStateContext);
+
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <div className="w-[240px]  relative top-[10px] flex-shrink-0">
-        <MultiSelectDropdown
-          isShowIconFilter
-          options={tagsOptions}
-          disabled={isHasLoading}
-          placeholder="集計対象のタグを選択"
-          className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-          optionClassName="!top-6"
-          labelOptionClass="break-all w-[190px]"
-          selectedOptions={selectedTags || []}
-          onChange={(selected) => {
-            let updatedTagIds = [];
-            const currentTagIds = selectedTags || [];
-            const foundItemIndex = currentTagIds.findIndex(
-              (tag) => tag.value == selected.value,
-            );
-            if (foundItemIndex == -1) {
-              updatedTagIds = [...currentTagIds, selected];
-            } else {
-              updatedTagIds = currentTagIds.filter(
-                (tag) => tag.value != selected.value,
-              );
-            }
-            setIsLoadingLarge(true);
-            setIsLoadingMedium(true);
-            setIsLoadingOrganization(true);
-            if (isCheckCompare) {
-              setIsLoadingLargeCompare(true);
-              setIsLoadingMediumCompare(true);
-              setIsLoadingOrganizationCompare(true);
-            }
-            setSelectedTags(updatedTagIds);
-          }}
-        />
-        {selectedTags.length === 0 && (
-          <span className="text-xs absolute text-[#77858F] top-[2px] right-[135px]">
-            タグの絞り込み
-          </span>
-        )}
+      <div className="flex-shrink-0 h-fit relative ">
+        {/* Filter option modal */}
+        <Popover className="relative">
+          {({ open, close }) => (
+            <>
+              <div className="flex items-center gap-2 ">
+                <PopoverButton className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
+                  <ImageRound
+                    src="/icons/filter.svg"
+                    name="Filter icon"
+                    className="w-[14px] h-[14px] ml-2"
+                  />
+                  {selectedTags.length == 0 && <span>タグの絞り込み</span>}
+                </PopoverButton>
+              </div>
+              <Transition
+                as={Fragment}
+                show={open}
+                enter="transition ease-out duration-200"
+                enterFrom="opacity-0 translate-y-1"
+                enterTo="opacity-100 translate-y-0"
+                leave="transition ease-in duration-150"
+                leaveFrom="opacity-100 translate-y-0"
+                leaveTo="opacity-0 translate-y-1">
+                <PopoverPanel className="absolute left-[30px] top-[-5px]  z-[1] w-[400px] transform">
+                  <FilterStatisticModal open={open} close={close} />
+                </PopoverPanel>
+              </Transition>
+            </>
+          )}
+        </Popover>
       </div>
       <div className="relative right-[224px] flex-grow top-[3px]">
         <div className="flex gap-2 flex-wrap  w-full flex-shrink-0">

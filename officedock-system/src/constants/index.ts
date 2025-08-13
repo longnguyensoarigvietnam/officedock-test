@@ -31,7 +31,7 @@ export const DATE_SCHEDULE_FORMAT = 'yyyy年 M月 d日 (E)';
 export const NO_DATA_AVAILABLE = 'データが見つかりません。';
 export const UNREGISTERED = '未設定';
 export const NO_OPTIONS = 'データが見つかりません。';
-export const NO_OPTIONS_CUSTOM = 'データがありません';
+export const NO_OPTIONS_CUSTOM = 'データがありません。';
 
 export const PAGINATION_PAGE_SIZE_DEFAULT = 5;
 
@@ -52,13 +52,13 @@ export const TOTAL_SKILL_LEVELS = 3;
 
 export const MESSAGE_DELETED = 'このメッセージが削除されました';
 
-export const TASK_DELETED = 'タスクが削除されました';
+export const TASK_DELETED = 'タスクが削除されました。';
 
-export const EVENT_DELETED = 'が予定を削除しました。';
+export const EVENT_DELETED = 'があなたが参加予定の予定を削除しました。';
 
 export const EVENT_CREATED = 'があなたに予定を割り振りしました。';
 
-export const EVENT_EDITED = 'が予定を更新しました。';
+export const EVENT_EDITED = 'があなたが参加予定の予定を更新しました。';
 
 export const EVENT_BEFORE_EDITED = '変更前の実施予定日時：';
 
@@ -495,3 +495,7 @@ export const COLOR_BY_TASK_STATUS = [
     color: '#F58383',
   },
 ];
+
+export const MAX_TWEET_MESSAGE_LENGTH = 100;
+
+export const MAX_MY_PAGE_SET_SKILLS = 3;

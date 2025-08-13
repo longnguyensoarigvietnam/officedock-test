@@ -3112,9 +3112,9 @@ const KanbanBoardTask = () => {
       ]
     : [];
 
-  const firstThree = allLabels.slice(0, 3);
+  const firstSix = allLabels.slice(0, 6);
 
-  const remainingCount = allLabels.length - firstThree.length;
+  const remainingCount = allLabels.length - firstSix.length;
 
   const handleRemoveItem = (
     category: 'organization_ids' | 'tag_ids' | 'category_ids',
@@ -3234,7 +3234,7 @@ const KanbanBoardTask = () => {
                     ? ` calc(${Math.max(viewportWidth, 1280)}px - ${500 - (656 - widthCalendar)}px)`
                     : `calc(${Math.max(viewportWidth, 1280)}px - 500px) `,
               }}
-              className={`h-full overflow-x-auto flex flex-col gap-2 py-7 pr-7 pl-1 ${isListView ? 'overflow-y-auto' : 'overflow-y-hidden'}`}
+              className={`h-full overflow-x-auto flex flex-col gap-[14px] py-7 pr-7 pl-1 ${isListView ? 'overflow-y-auto' : 'overflow-y-hidden'}`}
               id="kanbanContainer">
               <FrequentlyTask
                 templates={templates}
@@ -3256,57 +3256,9 @@ const KanbanBoardTask = () => {
                 handleActionEditTemplate={handleActionEditTemplate}
                 handleCreateTaskFromTemplate={handleCreateTaskFromTemplate}
               />
-              <div className="flex-grow flex flex-col gap-2 mt-[30px] mb-6">
-                <div className={`flex gap-7 mb-6 w-fit min-w-[300px]`}>
+              <div className="flex-grow flex flex-col gap-2  mb-6">
+                <div className={`flex gap-7 mb-4 w-fit min-w-[300px]`}>
                   <div className="flex items-center gap-2">
-                    <ImageRound
-                      src="/icons/sort-task.svg"
-                      name="Sort icon"
-                      className="w-[18px] h-[14px]"
-                    />
-                    <>
-                      <Button
-                        disabled={isFetchingTaskBoards}
-                        onClick={() => {
-                          if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
-                            setIsReadyToFetch(true);
-
-                            setDataOrderRing(FilterTypeKanban.DEADLINE);
-                            setOrderingRequest(FilterTypeKanban.DEADLINE);
-                          }
-                        }}
-                        variant={
-                          isFetchingTaskBoards
-                            ? 'outline'
-                            : dataOrderRing === FilterTypeKanban.DEADLINE
-                              ? 'primary'
-                              : 'outline'
-                        }
-                        className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
-                        締切期間
-                      </Button>
-                      <Button
-                        disabled={isFetchingTaskBoards}
-                        onClick={() => {
-                          if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
-                            setIsReadyToFetch(true);
-
-                            setDataOrderRing(FilterTypeKanban.IMPORTANT);
-                            setOrderingRequest(FilterTypeKanban.IMPORTANT);
-                          }
-                        }}
-                        variant={
-                          isFetchingTaskBoards
-                            ? 'outline'
-                            : dataOrderRing === FilterTypeKanban.IMPORTANT
-                              ? 'primary'
-                              : 'outline'
-                        }
-                        className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
-                        重要
-                      </Button>
-                    </>
-
                     {/* Filter option modal */}
                     <Popover className="relative">
                       {() => (
@@ -3323,68 +3275,6 @@ const KanbanBoardTask = () => {
                                 className="w-[14px] h-[14px] ml-2"
                               />
                             </PopoverButton>
-                            {allLabels.length > 3 ? (
-                              <>
-                                {firstThree.slice(0, 3).map((item, index) => (
-                                  <div
-                                    key={index}
-                                    onClick={() =>
-                                      handleRemoveItem(
-                                        item.category as
-                                          | 'organization_ids'
-                                          | 'tag_ids'
-                                          | 'category_ids',
-                                        item.value,
-                                      )
-                                    }
-                                    className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
-                                    <span className="w-[71px] truncate">
-                                      {item.label}
-                                    </span>
-                                    {!isFetchingTaskBoards && (
-                                      <ImageRound
-                                        src={`/icons/close.svg`}
-                                        name="close"
-                                        className="w-fit h-fit cursor-pointer"
-                                      />
-                                    )}
-                                  </div>
-                                ))}
-                                <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
-                                  +{remainingCount}
-                                </p>
-                              </>
-                            ) : (
-                              <>
-                                {allLabels.map((item, index) => (
-                                  <div
-                                    key={index}
-                                    onClick={() => {
-                                      setIsReadyToFetch(true);
-
-                                      handleRemoveItem(
-                                        item.category as
-                                          | 'organization_ids'
-                                          | 'tag_ids'
-                                          | 'category_ids',
-                                        item.value,
-                                      );
-                                    }}
-                                    className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
-                                    <span className="w-[71px] truncate">
-                                      {item.label}
-                                    </span>
-                                    {!isFetchingTaskBoards && (
-                                      <ImageRound
-                                        src={`/icons/close.svg`}
-                                        name="close"
-                                        className="w-fit h-fit cursor-pointer"
-                                      />
-                                    )}
-                                  </div>
-                                ))}
-                              </>
-                            )}
                           </div>
                           <Transition
                             as={Fragment}
@@ -3407,7 +3297,53 @@ const KanbanBoardTask = () => {
                         </>
                       )}
                     </Popover>
+                    <ImageRound
+                      src="/icons/sort-task.svg"
+                      name="Sort icon"
+                      className="w-[18px] h-[14px]"
+                    />
+                    <>
+                      <Button
+                        disabled={isFetchingTaskBoards}
+                        onClick={() => {
+                          if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
+                            setIsReadyToFetch(true);
 
+                            setDataOrderRing(FilterTypeKanban.DEADLINE);
+                            setOrderingRequest(FilterTypeKanban.DEADLINE);
+                          }
+                        }}
+                        variant={
+                          isFetchingTaskBoards
+                            ? 'outline'
+                            : dataOrderRing === FilterTypeKanban.DEADLINE
+                              ? 'option'
+                              : 'outline'
+                        }
+                        className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
+                        締切期間
+                      </Button>
+                      <Button
+                        disabled={isFetchingTaskBoards}
+                        onClick={() => {
+                          if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
+                            setIsReadyToFetch(true);
+
+                            setDataOrderRing(FilterTypeKanban.IMPORTANT);
+                            setOrderingRequest(FilterTypeKanban.IMPORTANT);
+                          }
+                        }}
+                        variant={
+                          isFetchingTaskBoards
+                            ? 'outline'
+                            : dataOrderRing === FilterTypeKanban.IMPORTANT
+                              ? 'option'
+                              : 'outline'
+                        }
+                        className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
+                        重要
+                      </Button>
+                    </>
                     <InputSearch
                       className="w-[300px] h-[34px] py-0 bg-[#EBF1F7] !rounded-[20px]"
                       inputClassName="h-[34px] bg-[#EBF1F7] border-none !rounded-[20px] text-sm"
@@ -3415,6 +3351,7 @@ const KanbanBoardTask = () => {
                       placeholder="タスク、キーワードを検索"
                     />
                   </div>
+
                   <div
                     className={`fixed ${showFrequentlyTasks ? 'top-[200px]' : 'top-[125px]'} hover:cursor-pointer right-5 z-20`}>
                     <DynamicTooltip
@@ -3439,6 +3376,71 @@ const KanbanBoardTask = () => {
                       />
                     </DynamicTooltip>
                   </div>
+                </div>
+                {/* Data filter */}
+                <div className="flex items-center gap-2 mb-6">
+                  {allLabels.length > 6 ? (
+                    <>
+                      {firstSix.slice(0, 6).map((item, index) => (
+                        <div
+                          key={index}
+                          onClick={() =>
+                            handleRemoveItem(
+                              item.category as
+                                | 'organization_ids'
+                                | 'tag_ids'
+                                | 'category_ids',
+                              item.value,
+                            )
+                          }
+                          className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
+                          <span className="w-[71px] truncate">
+                            {item.label}
+                          </span>
+                          {!isFetchingTaskBoards && (
+                            <ImageRound
+                              src={`/icons/close.svg`}
+                              name="close"
+                              className="w-fit h-fit cursor-pointer"
+                            />
+                          )}
+                        </div>
+                      ))}
+                      <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
+                        +{remainingCount}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      {allLabels.map((item, index) => (
+                        <div
+                          key={index}
+                          onClick={() => {
+                            setIsReadyToFetch(true);
+
+                            handleRemoveItem(
+                              item.category as
+                                | 'organization_ids'
+                                | 'tag_ids'
+                                | 'category_ids',
+                              item.value,
+                            );
+                          }}
+                          className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
+                          <span className="w-[71px] truncate">
+                            {item.label}
+                          </span>
+                          {!isFetchingTaskBoards && (
+                            <ImageRound
+                              src={`/icons/close.svg`}
+                              name="close"
+                              className="w-fit h-fit cursor-pointer"
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </>
+                  )}
                 </div>
                 {!isListView ? (
                   <div
@@ -3702,10 +3704,10 @@ const KanbanBoardTask = () => {
         <div className="fixed flex items-center gap-2 bottom-5 right-20 z-20 ">
           <div className="w-[80px] !h-[30px]">
             <Dropdown
-              labelOptionClass="!ml-0 !pr-0 !pl-0 flex justify-center w-full "
-              className="text-sm h-8 !py-0 !pl-0 !pr-0 !px-[14px] !rounded-lg"
+              labelOptionClass="!ml-[0px] !pr-0 !pl-2 !pl-0 flex justify-start w-full !border-none"
+              className="text-sm h-8 !py-0 !pl-0 !pr-0 !px-[14px] !rounded-lg !border-none !shadow-common"
               classActive="!pr-[10px] !ml-0 w-full text-center left-[52px]"
-              classNameOption="top-[-150px] !px-0 text-sm"
+              classNameOption="top-[-190px] !px-0 w-[80px] !border-none text-start text-sm !justify-center shadow-common !ring-0 !rounded-lg"
               selectedOption={selectedOptionZoom}
               options={[
                 {

@@ -145,7 +145,7 @@ const HierarchyTable = ({
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className={`text-[#77858F] border-[1px] w-1/2 font-medium text-xs py-3`}>
+                  className={`text-[#77858F] bg-[#F8FAFC] border-[1px] w-1/2 font-medium text-xs py-3`}>
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext(),

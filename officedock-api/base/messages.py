@@ -107,6 +107,21 @@ _ERROR_MESSAGES = {
         "organization_linked_to_task": _(
             "This organization is linked to a task and cannot be deleted."
         ),
+        # Survey
+        "end_time_in_future": _(
+            "Please select an end date and time in the future."
+        ),
+        "cannot_view_open_survey": _(
+            "The user cannot view the details of an open survey."
+        ),
+        "cannot_answer_closed_survey": _(
+            "The user cannot answer the closed survey."
+        ),
+        # Thanks messages
+        "cannot_send_yourself": _("You cannot send to yourself."),
+        "quota_exceeded": _(
+            "You have reached your thank message limit for this month."
+        ),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -182,6 +197,13 @@ _ERROR_MESSAGES = {
         "cannot_select_category_other_team": _("他のチームのカテゴリーを選択できません。"),
         "password_not_same": _("現在のパスワードと同じパスワードは使用できません。"),
         "organization_linked_to_task": _("この組織はタスクに紐づいているため、削除できません。"),
+        # Survey
+        "end_time_in_future": _("未来の日時を設定してください。"),
+        "cannot_view_open_survey": _("受付中のアンケートの詳細を見ることはできません。"),
+        "cannot_answer_closed_survey": _("受付終了したアンケートに回答できません。"),
+        # Thanks messages
+        "cannot_send_yourself": _("自分自身にサンクスメッセージを送ることはできません。"),
+        "quota_exceeded": _("今月のサンクスメッセージ送信可能回数は上限に達しました。"),
     },
 }
 

@@ -142,7 +142,7 @@ const PopupDetail = ({
           style={{
             backgroundColor: largeColor,
           }}
-          className="w-3 h-3 rounded-sm"></div>
+          className="w-3 h-3 rounded-full"></div>
         <span className="text-black max-w-[180px] font-bold text-base truncate">
           {title}
         </span>
@@ -379,9 +379,9 @@ const PopupDetail = ({
             </div>
           </div>
           <ImageRound
-            src={`/icons/${isStart ? 'pause' : 'play'}.svg`}
+            src={`/icons/${isStart ? 'pause' : 'play-task'}.svg`}
             name="Start task"
-            className="absolute  w-[26px] h-[26px] bottom-0 right-2  hover:cursor-pointer"
+            className="absolute  !w-fit !h-fit bottom-[-10px] right-2  hover:cursor-pointer"
             onClick={handleStartStopTask}
           />
         </div>

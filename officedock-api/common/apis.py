@@ -1,5 +1,6 @@
 from datetime import timedelta, datetime, time
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Count, Q, F
 from django.shortcuts import get_object_or_404
@@ -38,6 +39,7 @@ from tasks.constants import (
 from organizations.models import Organization
 from roles.constants import Actions, Screens, SelectionResultOptions
 from chat.models import ChatRoom
+from thanks_messages.models import ThanksMessage
 from .serializers import (
     CreationDataOrganizationSerializer,
     CreationDataTaskListSerializer,
@@ -772,3 +774,23 @@ class CronJobViewSet(BaseAPIViewSet):
             return data
 
         return False
+
+    @extend_schema(
+        parameters=[OpenApiParameter("cronjob_key", type=str, required=True)]
+    )
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="thanks-messages/remove-soft-deleted",
+    )
+    @transaction.atomic()
+    def delete_thanks_messages(self, request):
+        """Handle delete thanks messages if is soft delete after 30 days"""
+        threshold_date = now() - timedelta(
+            days=settings.THANKS_MESSAGE_SOFT_DELETE_RETENTION_DAYS
+        )
+        deleted_count, _ = ThanksMessage.objects.filter(
+            deleted_at__isnull=False, deleted_at__lte=threshold_date
+        ).delete()
+
+        return self.response_ok({"deleted": deleted_count})

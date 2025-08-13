@@ -32,8 +32,8 @@ const FrequentlyTask = ({
   return (
     <div className={`w-fit`}>
       <div className={`${isExtendCalendar && 'overflow-y-hidden'} `}>
-        <div className="flex gap-2 min-w-[130px]">
-          <p className="text-gray-500 text-xs break-all min-w-[110px]">
+        <div className="flex gap-0 min-w-[130px]">
+          <p className="text-gray-500 text-xs break-all min-w-[95px]">
             マイテンプレート
           </p>
           <DynamicTooltip

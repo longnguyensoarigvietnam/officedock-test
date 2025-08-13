@@ -1496,7 +1496,7 @@ const StackedAreaTeamTagChart = ({
                               style={{
                                 boxShadow: '0px 2px 8px 0px #0000001A',
                               }}
-                              className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                              className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-[14px] w-[250px] ${isHovered && 'z-[50]'}`}>
                               <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-start w-full block">
                                 {dataDetail &&
                                   dataDetail.length > 0 &&
@@ -1547,7 +1547,7 @@ const StackedAreaTeamTagChart = ({
                               style={{
                                 boxShadow: '0px 2px 8px 0px #0000001A',
                               }}
-                              className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-md w-[250px] ${isHovered && 'z-[50]'}`}>
+                              className={`bg-white absolute py-5 top-1/2 ${isLargerTime ? 'left-[-100px]' : 'left-0'} hidden group-hover:!block  rounded-[14px] w-[250px] ${isHovered && 'z-[50]'}`}>
                               <p className="text-sm px-5 font-normal text-[#77858F] mb-1 text-start w-full block">
                                 {dataDetailAllTeam &&
                                   convertToJapaneseDateRange(

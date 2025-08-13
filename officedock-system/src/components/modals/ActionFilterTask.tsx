@@ -354,7 +354,7 @@ const ActionFilterTask = ({
                                 />
                               </div>
                               <span
-                                className="w-3 h-3 rounded-sm relative top-2"
+                                className="w-3 h-3 rounded-full relative top-2"
                                 style={{
                                   backgroundColor: category.color || '',
                                 }}

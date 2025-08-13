@@ -566,15 +566,15 @@ const ListUsers = () => {
   return (
     <Fragment>
       <div>
-        <div className="font-medium text-sm text-[#77858F] flex items-center justify-between">
+        <div className="font-medium text-sm text-[#77858F] flex items-center gap-5 ">
           <div className=" flex items-center  gap-5">
             <p className="text-black text-[26px]">ユーザー管理</p>
             <span>{authenticatedUser?.company.name || ''}</span>
             <span>全メンバー30人 / 50</span>
           </div>
-          <div className="flex gap-[10px] items-center">
-            <p>現在のプラン</p>
-            <div className="w-24 h-[34px] cursor-pointer  bg-white rounded-md text-black text-xs flex items-center justify-center ">
+          <div className="flex gap-[10px] font-medium items-center">
+            <p className="text-xs ">現在のプラン</p>
+            <div className="w-[100px] h-[34px] cursor-pointer  bg-white rounded-lg text-black text-xs flex items-center justify-center ">
               スタンダード
             </div>
           </div>

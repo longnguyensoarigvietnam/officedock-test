@@ -9,6 +9,8 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import ClockIconColor from '@components/custom/ClockIconColor';
 
 import {
   EventWorkCategory,
@@ -35,7 +37,6 @@ import {
   formatShowDeadlineTask,
 } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 interface ItemProps {
   id: string;
@@ -70,7 +71,6 @@ const Item = ({
     setDataClickTask,
     setDataRunning,
     setIdTaskStarting,
-    setTaskSelectedToStart,
     setShowWarningStartTaskModal,
     setDataActualAddSchedule,
   } = useContext(TaskContext);
@@ -238,7 +238,7 @@ const Item = ({
     },
   });
   // Action call API check start task
-  const handleConfirmCheckStartTask = (id: string) => {
+  const _handleConfirmCheckStartTask = (id: string) => {
     calculateDurationTask({
       id: id,
       type: ItemStartType.TASK,
@@ -300,12 +300,7 @@ const Item = ({
               style={{
                 ...provided.draggableProps.style,
               }}
-              className={`relative ${selectedOptionZoom.value !== 50 && 'gap-2'} ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col  mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
-              {!content.isStart && (
-                <div
-                  className={`absolute left-[-1px] h-[98.5%] top-1/2 -translate-y-1/2 w-[2.5px] overflow-hidden rounded-l-md`}
-                  style={{ backgroundColor: largeColor }}></div>
-              )}
+              className={`relative ${selectedOptionZoom.value !== 50 && 'gap-2'} ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-primary'} bg-white shadow-common rounded-[20px] text-xs flex flex-col  mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
               <div className="relative w-[100%] h-full">
                 {isPermissionUpdate && (
                   <>
@@ -402,29 +397,13 @@ const Item = ({
                 }}>
                 <div className="flex gap-1 items-start">
                   {isShowSchedule ? (
-                    <div
-                      style={{
-                        width: `${(columnWidth / 247) * 20}px`,
-                      }}
-                      className="h-full flex items-start mt-[3px]">
-                      <ImageRound
-                        src="/icons/clock.svg"
-                        name="Clock icon"
-                        style={{
-                          width:
-                            (selectedOptionZoom.value as number) > 75
-                              ? `14px`
-                              : '10px',
-                          height:
-                            (selectedOptionZoom.value as number) > 75
-                              ? `14px`
-                              : '10px',
-                        }}
-                        className="text-gray-400"
-                      />
+                    <div className="w-fit flex-shrink-0">
+                      <ClockIconColor color={largeColor} />
                     </div>
                   ) : (
-                    ''
+                    <div
+                      style={{ backgroundColor: largeColor || 'white' }}
+                      className="w-2 h-2 rounded-full mt-[5px] flex-shrink-0"></div>
                   )}
                   <p
                     style={{
@@ -494,7 +473,8 @@ const Item = ({
                         </span>
                       </p>
                     </div>
-                    {selectedOptionZoom.value === 50 && (
+                    {/* TODO: PLAY / PAUSE TASK */}
+                    {/* {selectedOptionZoom.value === 50 && (
                       <DynamicTooltip
                         content={content.isStart ? '計測停止' : '計測開始'}
                         placement="top">
@@ -505,7 +485,7 @@ const Item = ({
                           }}>
                           {content.isMyTask && (
                             <ImageRound
-                              src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
+                              src={`/icons/${content.isStart ? 'pause' : 'play-task'}.svg`}
                               name="Start task"
                               style={{
                                 width:
@@ -533,7 +513,7 @@ const Item = ({
                           )}
                         </div>
                       </DynamicTooltip>
-                    )}
+                    )} */}
                   </div>
                 )}
                 {selectedOptionZoom.value !== 50 && (
@@ -607,8 +587,8 @@ const Item = ({
                         />
                       </div>
                     </DynamicTooltip>
-
-                    <DynamicTooltip
+                    {/* TODO: PLAY / PAUSE TASK */}
+                    {/* <DynamicTooltip
                       content={content.isStart ? '計測停止' : '計測開始'}
                       placement="top">
                       <div
@@ -618,7 +598,7 @@ const Item = ({
                         }}>
                         {content.isMyTask && (
                           <ImageRound
-                            src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
+                            src={`/icons/${content.isStart ? 'pause' : 'play-task'}.svg`}
                             name="Start task"
                             style={{
                               width:
@@ -645,7 +625,7 @@ const Item = ({
                           />
                         )}
                       </div>
-                    </DynamicTooltip>
+                    </DynamicTooltip> */}
                   </div>
                 )}
               </div>
@@ -670,7 +650,7 @@ const Item = ({
               })}
               {...provided.draggableProps}
               {...provided.dragHandleProps}
-              className={`relative ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
+              className={`relative ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-primary'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
               <div
                 style={{
                   paddingTop: `${(columnWidth / 247) * 12}px`,
@@ -686,24 +666,13 @@ const Item = ({
                 }}>
                 <div className="flex gap-1 items-start">
                   {isShowSchedule ? (
-                    <div
-                      style={{
-                        width: `${(columnWidth / 247) * 20}px`,
-                      }}
-                      className="h-full">
-                      <ImageRound
-                        src="/icons/clock.svg"
-                        name="Clock icon"
-                        style={{
-                          width: `10px`,
-                          height: `10px`,
-                          marginTop: `${(columnWidth / 247) * 5}px`,
-                        }}
-                        className="text-gray-400"
-                      />
+                    <div className="w-fit flex-shrink-0">
+                      <ClockIconColor color={largeColor} />
                     </div>
                   ) : (
-                    ''
+                    <div
+                      style={{ backgroundColor: largeColor || 'white' }}
+                      className="w-2 h-2 rounded-full mt-[5px] flex-shrink-0"></div>
                   )}
                   <p
                     style={{
@@ -716,7 +685,8 @@ const Item = ({
                     className={`!border-none leading-[1.4] break-all line-clamp-2 cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
                     {content.title}
                   </p>
-                  <DynamicTooltip
+                  {/* TODO: PLAY / PAUSE TASK */}
+                  {/* <DynamicTooltip
                     content={content.isStart ? '計測停止' : '計測開始'}
                     placement="top">
                     <div
@@ -726,13 +696,9 @@ const Item = ({
                       }}>
                       {content.isMyTask && (
                         <ImageRound
-                          src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
+                          src={`/icons/${content.isStart ? 'pause' : 'play-task'}.svg`}
                           name="Start task"
-                          style={{
-                            width: `16px`,
-                            height: `16px`,
-                          }}
-                          className={`hover:cursor-pointer `}
+                          className={`hover:cursor-pointer w-fit h-fit`}
                           onClick={async () => {
                             await new Promise<void>((resolve) => {
                               setTaskSelectedToStart(content);
@@ -743,7 +709,7 @@ const Item = ({
                         />
                       )}
                     </div>
-                  </DynamicTooltip>
+                  </DynamicTooltip> */}
                 </div>
               </div>
             </div>
