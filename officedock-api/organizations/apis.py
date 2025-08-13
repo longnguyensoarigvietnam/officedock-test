@@ -1020,18 +1020,26 @@ class OrganizationCategoryHierarchyViewSet(
         large_statistic_category = None
 
         if obj:
-            (
-                large_statistic_category,
-                created,
-            ) = StatisticCategory.objects.get_or_create(
-                company=company,
-                name=obj.get("name"),
-                uuid=obj.get("uuid"),
-            )
+            try:
+                (
+                    large_statistic_category,
+                    created,
+                ) = StatisticCategory.objects.get_or_create(
+                    company=company,
+                    name=obj.get("name"),
+                    uuid=obj.get("uuid"),
+                )
+            except Exception:
+                # Handle case UUID duplicate - try to create with new UUID
+                created = True
+                large_statistic_category = StatisticCategory.objects.create(
+                    company=company,
+                    name=obj.get("name"),
+                )
 
             if created:
                 large_statistic_category.team = org
-                large_statistic_category.save()
+                large_statistic_category.save(update_fields=["team"])
 
         return large_statistic_category
 
