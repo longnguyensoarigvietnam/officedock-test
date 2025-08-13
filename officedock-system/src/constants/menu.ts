@@ -243,13 +243,13 @@ export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
 export const MY_PAGE_MENU: MyPageMenuItem[] = [
   {
     name: 'サンクス メッセージ',
-    href: '/',
+    href: '#',
     iconSrc: '/icons/heart.svg',
     iconName: 'Heart icon',
   },
   {
     name: '他の人の部屋へ 出かける',
-    href: '/',
+    href: '#',
     iconSrc: '/icons/room-profile.svg',
     iconName: 'Room icon',
   },
@@ -276,13 +276,13 @@ export const MY_PAGE_MENU: MyPageMenuItem[] = [
   },
   {
     name: 'MVP',
-    href: '/',
+    href: '#',
     iconSrc: '/icons/mvp.svg',
     iconName: 'MVP icon',
   },
   {
     name: 'アイテム',
-    href: '/',
+    href: '#',
     iconSrc: '/icons/shop.svg',
     iconName: 'Shop icon',
   },

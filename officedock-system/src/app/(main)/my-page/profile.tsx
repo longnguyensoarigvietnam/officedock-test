@@ -82,7 +82,7 @@ const MyPage = () => {
   const isLoadingTweetRef = useRef(false);
 
   // Get tweet list
-  const { tweetList, fetchNextPage, hasNextPage, isFetchingNextPage } =
+  const { tweetList, fetchNextPage, refetchTweetList, hasNextPage, isFetchingNextPage,  } =
     useTweetList({
       isLoadingTweetRef,
     });
@@ -166,6 +166,7 @@ const MyPage = () => {
         showToast({
           description: SUCCESS_CREATE_MESSAGE,
         });
+        refetchTweetList()
       },
       onError: (error: AxiosError) => {
         showErrorToast(error, ERROR_CREATE_MESSAGE);
