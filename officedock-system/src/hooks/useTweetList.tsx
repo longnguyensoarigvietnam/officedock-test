@@ -47,7 +47,7 @@ const useTweetList = ({
   };
 
   // Handle API get tweet list
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isFetched } =
+  const { data, fetchNextPage, refetch, hasNextPage, isFetchingNextPage, isFetched } =
     useInfiniteQuery({
       queryKey: ['fetchTweetList'],
       queryFn: fetchTweetList,
@@ -78,6 +78,7 @@ const useTweetList = ({
   return {
     tweetList: data?.pages?.flatMap((page) => page?.results ?? []) ?? [],
     fetchNextPage,
+    refetchTweetList: refetch, 
     hasNextPage,
     isFetchingNextPage,
     isFetched,
