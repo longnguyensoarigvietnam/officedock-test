@@ -2,6 +2,7 @@ from django.utils.timezone import now
 from rest_framework import serializers
 
 from base.messages import ERROR_MESSAGES
+from common.serializers import CreationDataUserSerializer
 from surveys.models import Survey, SurveyAnswer, SurveyQuestion
 from surveys.utils import is_open_survey
 
@@ -63,6 +64,7 @@ class SurveyListSerializer(serializers.ModelSerializer):
 
     status = serializers.SerializerMethodField()
     is_answered = serializers.SerializerMethodField()
+    created_by = CreationDataUserSerializer(read_only=True)
 
     class Meta:
         model = Survey
@@ -73,6 +75,7 @@ class SurveyListSerializer(serializers.ModelSerializer):
             "status",
             "is_answered",
             "created_at",
+            "created_by",
         ]
 
     def get_status(self, obj):
@@ -128,6 +131,7 @@ class SurveySerializer(SurveyListSerializer):
             "questions",
             "status",
             "created_at",
+            "created_by",
         ]
 
     def validate_end_at(self, value):
@@ -155,6 +159,7 @@ class SurveyDetailSerializer(SurveyListSerializer):
             "questions",
             "status",
             "created_at",
+            "created_by",
         ]
 
 
