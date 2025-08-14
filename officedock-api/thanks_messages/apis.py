@@ -5,6 +5,11 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
 from base.apis import BaseAPIViewSet
+
+from organizations.models import Organization
+from organizations.serializers import OrganizationMemberSerializer
+from organizations.constants import OrganizationTypes
+
 from thanks_messages.constants import ThanksMessageTypes
 from thanks_messages.models import ThanksMessage
 from thanks_messages.serializers import (
@@ -19,7 +24,6 @@ class ThanksMessageViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    mixins.DestroyModelMixin,
 ):
     """
     API endpoint for Thanks Messages
@@ -42,22 +46,21 @@ class ThanksMessageViewSet(
                 "type", type=str, enum=ThanksMessageTypes.values()
             ),
             OpenApiParameter("is_read", type=bool, required=False),
-            OpenApiParameter("user_id", type=int, required=False),
-            OpenApiParameter("is_show_deleted", type=bool, required=False),
+            OpenApiParameter("is_pagination", type=bool, required=False),
         ]
     )
     def list(self, request, *args, **kwargs):
         current_user = request.user
         type = request.query_params.get("type")
         is_read_str = request.query_params.get("is_read")
-        user_id = request.query_params.get("user_id", current_user.id)
+        is_pagination_str = request.query_params.get("is_pagination")
         queryset = self.get_queryset()
 
         if type:
             if type == ThanksMessageTypes.RECEIVED.value:
-                queryset = queryset.filter(recipient_id=user_id)
+                queryset = queryset.filter(recipient_id=current_user.id)
             elif type == ThanksMessageTypes.SENT.value:
-                queryset = queryset.filter(sender_id=user_id)
+                queryset = queryset.filter(sender_id=current_user.id)
 
         if is_read_str:
             is_read = is_read_str.lower() == "true"
@@ -66,7 +69,27 @@ class ThanksMessageViewSet(
             else:
                 queryset = queryset.filter(read_at__isnull=True)
 
-        return self.response_pagination(request, queryset, self.get_serializer)
+        # Return list thanks messages unread for user
+        if is_pagination_str and is_pagination_str.lower() == "false":
+            return self.response_ok(
+                self.get_serializer(
+                    queryset.filter(deleted_at__isnull=True).order_by(
+                        "created_at"
+                    ),
+                    many=True,
+                    context={
+                        "request": request,
+                        "is_show_deleted_message": False,
+                    },
+                ).data
+            )
+
+        return self.response_pagination(
+            request,
+            queryset,
+            self.get_serializer,
+            extra_context={"is_show_deleted_message": False},
+        )
 
     def perform_create(self, serializer):
         # TODO: Handle adding coins for the sender and the receiver
@@ -103,8 +126,9 @@ class ThanksMessageViewSet(
         tks_msgs = validated_data.pop("thanks_messages", [])
 
         items_to_update = []
+        time_now = now()
         for item in tks_msgs:
-            item.read_at = now()
+            item.read_at = time_now
             items_to_update.append(item)
 
         ThanksMessage.objects.bulk_update(items_to_update, ["read_at"])
@@ -117,6 +141,98 @@ class ThanksMessageViewSet(
             }
         )
 
+
+@extend_schema(tags=["System > Thanks Messages management"])
+class ThanksMessageManagementViewSet(
+    BaseAPIViewSet,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+):
+    """
+    API endpoint for Thanks Messages Management
+    """
+
+    queryset = ThanksMessage.objects.order_by("-created_at")
+    serializer_class = ThanksMessageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Filtering by company
+        """
+        company_id = self.request.user.company_id
+        return super().get_queryset().filter(company_id=company_id)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "type", type=str, enum=ThanksMessageTypes.values()
+            ),
+            OpenApiParameter("is_read", type=bool, required=False),
+            OpenApiParameter("user_id", type=int, required=False),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        current_user = request.user
+        type = request.query_params.get("type")
+        is_read_str = request.query_params.get("is_read")
+        user_id = request.query_params.get("user_id", current_user.id)
+        queryset = self.filter_queryset(self.get_queryset())
+
+        if type:
+            if type == ThanksMessageTypes.RECEIVED.value:
+                queryset = queryset.filter(recipient_id=user_id)
+            elif type == ThanksMessageTypes.SENT.value:
+                queryset = queryset.filter(sender_id=user_id)
+
+        if is_read_str:
+            is_read = is_read_str.lower() == "true"
+            if is_read:
+                queryset = queryset.filter(read_at__isnull=False)
+            else:
+                queryset = queryset.filter(read_at__isnull=True)
+
+        return self.response_pagination(
+            request,
+            queryset,
+            self.get_serializer,
+            extra_context={"is_show_deleted_message": True},
+        )
+
     def perform_destroy(self, instance):
         """Override delete"""
         instance.soft_delete()
+
+    @extend_schema(parameters=[OpenApiParameter("search", type=str)])
+    @extend_schema(parameters=[OpenApiParameter("organization_id", type=int)])
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="members",
+        serializer_class=OrganizationMemberSerializer,
+    )
+    def thanks_msg_members(self, request):
+        """
+        Get list of member in organization
+        """
+        queryset = Organization.objects.filter(
+            company_id=request.user.company_id
+        ).exclude(type=OrganizationTypes.CALENDAR.value)
+        queryset = self.filter_queryset(queryset)
+        search = request.query_params.get("search")
+        organization_id = request.query_params.get("organization_id")
+
+        if search:
+            queryset = queryset.filter(
+                users__profile__full_name__icontains=search
+            )
+
+        if organization_id:
+            queryset = queryset.filter(id=organization_id)
+
+        return self.response_ok(
+            self.get_serializer(
+                queryset, many=True, context={"search": search}
+            ).data
+        )
