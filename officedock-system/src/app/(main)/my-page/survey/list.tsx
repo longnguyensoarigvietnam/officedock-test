@@ -1,6 +1,8 @@
 'use client';
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
+import { useMutation } from 'react-query';
+import { AxiosError } from 'axios';
 
 import ImageRound from '@components/common/ImageRound';
 import { RenderAccessories } from '@components/custom/UserCustomize';
@@ -12,9 +14,24 @@ import MySurveyTab from '@components/survey/MySurveyTab';
 import ActionAnswerSurveyModal from '@components/modals/ActionAnswerSurvey';
 import ActionSettingSurvey from '@components/modals/ActionSettingSurvey';
 import SuccessSurveyActionModal from '@components/modals/SuccessSurveyActionModal';
+import CreateTweetModal from '@components/modals/CreateTweetModal';
 
 import { TabTypeSurvey, TabTypeSurveyValue } from '@constants/enums';
+import { apiRouters } from '@constants/routers';
+import {
+  ERROR_CREATE_MESSAGE,
+  SUCCESS_CREATE_MESSAGE,
+} from '@constants/message';
+
 import { useUpdateSurveyCache } from '@hooks/CacheQuery/useUpdateSurveyCache';
+import { useErrorToast } from '@hooks/useErrorToast';
+
+import { TweetFormData } from '@interfaces/tweet';
+
+import { LoadingContext } from '@providers/LoadingProvider';
+import { useToast } from '@providers/ToastProvider';
+
+import api from '@base/api';
 
 const SurveyListPage = () => {
   const searchParams = useSearchParams();
@@ -23,9 +40,11 @@ const SurveyListPage = () => {
   const tabParam = searchParams.get('tab') as TabTypeSurvey | null;
 
   const router = useRouter();
+  const { setIsLoading } = useContext(LoadingContext);
+  const showErrorToast = useErrorToast();
+  const { showToast } = useToast();
 
   // State
-
   const [activeTab, setActiveTab] = useState<TabTypeSurvey>(
     tabParam || TabTypeSurvey.ALL,
   );
@@ -37,6 +56,11 @@ const SurveyListPage = () => {
   // Survey
   const [openSettingSurvey, setOpenSettingSurvey] = useState(false);
   const [openSuccessSurvey, setOpenSuccessSurvey] = useState(false);
+
+  // Tweet
+  const [openCreateTweetModal, setOpenCreateTweetModal] =
+    useState<boolean>(false);
+  const [tweetMessage, setTweetMessage] = useState<string>('');
 
   const listAvatar = ['body', 'head-full', 'shoes', 'hat'];
 
@@ -125,6 +149,29 @@ const SurveyListPage = () => {
 
     updateSurveyAnswered(id, activeTabValue); // Update cache when survey is answered
   };
+
+  // Call API to send tweet message
+  const handleSendTweetMessage = async (data: TweetFormData) => {
+    setIsLoading(true);
+    const { data: response } = await api.post(apiRouters.TWEET_LIST, data);
+    return response;
+  };
+
+  const { mutate: sendTweetMessage, isSuccess: isSendTweetSuccess } =
+    useMutation('sendTweetMessage', handleSendTweetMessage, {
+      onSuccess: () => {
+        setTweetMessage('');
+        showToast({
+          description: SUCCESS_CREATE_MESSAGE,
+        });
+      },
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_CREATE_MESSAGE);
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    });
 
   return (
     <>
@@ -263,7 +310,17 @@ const SurveyListPage = () => {
         <SuccessSurveyActionModal
           open={openSuccessSurvey}
           onClose={() => setOpenSuccessSurvey(false)}
-          onTwice={() => setOpenSuccessSurvey(false)}
+          onTweet={() => setOpenCreateTweetModal(true)}
+        />
+      )}
+      {openCreateTweetModal && (
+        <CreateTweetModal
+          open={openCreateTweetModal}
+          tweetMessage={tweetMessage}
+          isSendTweetSuccess={isSendTweetSuccess}
+          setTweetMessage={setTweetMessage}
+          onClose={() => setOpenCreateTweetModal(false)}
+          onSubmit={() => sendTweetMessage({ content: tweetMessage })}
         />
       )}
     </>

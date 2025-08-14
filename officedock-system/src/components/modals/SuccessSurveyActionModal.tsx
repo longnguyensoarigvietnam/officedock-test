@@ -7,10 +7,10 @@ type Props = {
   open: boolean;
   type?: string;
   onClose: () => void;
-  onTwice: () => void;
+  onTweet: () => void;
 };
 
-const SuccessSurveyActionModal = ({ open, onClose, onTwice }: Props) => {
+const SuccessSurveyActionModal = ({ open, onClose, onTweet }: Props) => {
   return (
     <Modal
       open={open}
@@ -28,7 +28,7 @@ const SuccessSurveyActionModal = ({ open, onClose, onTwice }: Props) => {
         </Button>
         <Button
           variant="post"
-          onClick={onTwice}
+          onClick={onTweet}
           className={`w-[147px] rounded-lg h-9`}>
           つぶやきでシェア
         </Button>
