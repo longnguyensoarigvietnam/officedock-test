@@ -615,7 +615,7 @@ const MyPage = () => {
         <SuccessSurveyActionModal
           open={openSuccessSurvey}
           onClose={() => setOpenSuccessSurvey(false)}
-          onTwice={() => setOpenSuccessSurvey(false)}
+          onTweet={() => setOpenCreateTweetModal(true)}
         />
       )}
     </div>
