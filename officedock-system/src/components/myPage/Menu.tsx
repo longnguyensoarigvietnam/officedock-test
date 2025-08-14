@@ -7,7 +7,11 @@ import { MyPageMenuItem } from '@interfaces/menu';
 
 import { MY_PAGE_MENU } from '@constants/menu';
 
-export const MyPageMenu = () => {
+interface PropMenuMyPage {
+  onClickSettingSurvey: () => void;
+}
+
+export const MyPageMenu = ({ onClickSettingSurvey }: PropMenuMyPage) => {
   const menuItemsClone: MyPageMenuItem[] = lodash.cloneDeep(MY_PAGE_MENU);
 
   return (
@@ -53,11 +57,17 @@ export const MyPageMenu = () => {
                 className="absolute after:content-[''] after:absolute after:top-0 after:left-[-10px] after:w-[10px] after:h-full after:bg-transparent hidden group-hover:flex top-0 text-black left-[116px] text-sm  flex-col gap-[2px] py-1 font-medium bg-white w-[180px] h-fit rounded-md border border-button">
                 {page.child.map((item, index) => (
                   <>
-                    <p
+                    <Link
                       key={index}
+                      href={item.href}
+                      onClick={() => {
+                        if (item.onClick) {
+                          onClickSettingSurvey();
+                        }
+                      }}
                       className="px-2 py-[10px] hover:opacity-85 hover:text-primary cursor-pointer">
                       {item.name}
-                    </p>
+                    </Link>
                     {page.child && index < page?.child.length - 1 && (
                       <div className="w-full h-[1px] bg-[#EBF1F7]"></div>
                     )}
