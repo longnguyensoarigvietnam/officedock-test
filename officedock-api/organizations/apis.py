@@ -911,14 +911,13 @@ class OrganizationCategoryHierarchyViewSet(
 
                 else:
                     # Handle to update organization_statistic_category
-                    organization_statistic_category = (
-                        OrganizationsStatisticCategories.objects.create(
+                    if large_statistic_category and medium_statistic_category:
+                        organization_statistic_category = OrganizationsStatisticCategories.objects.create(
                             **item,
                             large_statistic_category=large_statistic_category,
                             medium_statistic_category=medium_statistic_category,
                             small_statistic_category=small_statistic_category,
                         )
-                    )
 
                 # Remove duplicate record
                 records = OrganizationsStatisticCategories.objects.filter(
@@ -927,9 +926,10 @@ class OrganizationCategoryHierarchyViewSet(
                     medium_statistic_category=medium_statistic_category,
                     small_statistic_category=small_statistic_category,
                 ).order_by("-updated_at")
-                ids = records.exclude(id=records.first().id).values_list(
-                    "id", flat=True
-                )
+                first_records = records.first()
+                ids = records.exclude(
+                    id=first_records.id if first_records else None
+                ).values_list("id", flat=True)
                 ids_to_delete = set(ids_to_delete) | set(
                     ids
                 )  # Merge ids to delete
