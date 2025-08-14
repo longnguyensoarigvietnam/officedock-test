@@ -31,6 +31,11 @@ export const TITLE_TASK_REQUIRED_MESSAGE = 'タスクのタイトルは必須で
 
 export const DEFAULT_VALUE_TODO_LIST = '入力してください。';
 
+export const QUESTION_VALUE_REQUIRED_MESSAGE = '質問の内容を入力してください。';
+export const ANSWER_VALUE_REQUIRED_MESSAGE = '回答の内容を入力してください。';
+export const DATE_STOP_SURVEY_REQUIRED_MESSAGE =
+  '受付終了時間を指定してください。';
+
 //Validate message
 export const PASSWORD_MIN_LENGTH_MESSAGE =
   '半角英数8文字以上で入力してください。';

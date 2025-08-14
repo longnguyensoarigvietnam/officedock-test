@@ -21,6 +21,8 @@ import { SettingSkillModal } from '@components/modals/SettingSkillModal';
 import { TimeLine } from '@components/myPage/TimeLine';
 import { CompletedActionsSettingSkillModal } from '@components/modals/CompletedActionsSettingSkillModal';
 import { ConfirmSettingSkillModal } from '@components/modals/ConfirmSettingSkillModal';
+import ActionSettingSurvey from '@components/modals/ActionSettingSurvey';
+import SuccessSurveyActionModal from '@components/modals/SuccessSurveyActionModal';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
@@ -101,7 +103,9 @@ const MyPage = () => {
         }
       },
     });
-
+  // Survey
+  const [openSettingSurvey, setOpenSettingSurvey] = useState(false);
+  const [openSuccessSurvey, setOpenSuccessSurvey] = useState(false);
   // Render user's avatar
   const renderBoxUser = (userId: string) => {
     const memberInfo = dashboardMembersWithAvatars.find(
@@ -481,7 +485,7 @@ const MyPage = () => {
         </div>
         <div className="mt-[74px] relative ml-[30px] flex items-end">
           {/* Menu */}
-          <MyPageMenu />
+          <MyPageMenu onClickSettingSurvey={() => setOpenSettingSurvey(true)} />
           <div className="flex-grow">
             <div className="h-[424px] w-[336px] ml-[200px] relative">
               <RenderAccessories images={listAvatar} />
@@ -597,6 +601,23 @@ const MyPage = () => {
             }}
           />
         )}
+      {openSettingSurvey && (
+        <ActionSettingSurvey
+          open={openSettingSurvey}
+          onSusses={() => {
+            setOpenSettingSurvey(false);
+            setOpenSuccessSurvey(true);
+          }}
+          onClose={() => setOpenSettingSurvey(false)}
+        />
+      )}
+      {openSuccessSurvey && (
+        <SuccessSurveyActionModal
+          open={openSuccessSurvey}
+          onClose={() => setOpenSuccessSurvey(false)}
+          onTwice={() => setOpenSuccessSurvey(false)}
+        />
+      )}
     </div>
   );
 };

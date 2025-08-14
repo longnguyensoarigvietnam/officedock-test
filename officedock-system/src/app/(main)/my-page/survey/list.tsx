@@ -1,22 +1,103 @@
 'use client';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useState } from 'react';
+
 import ImageRound from '@components/common/ImageRound';
 import { RenderAccessories } from '@components/custom/UserCustomize';
 import Button from '@components/common/Button';
 import AllSurveyTab from '@components/survey/AllSurveyTab';
+import ReceivingSurveyTab from '@components/survey/ReceivingSurveyTab';
+import EndedSurveyTab from '@components/survey/EndedSurveyTab';
+import MySurveyTab from '@components/survey/MySurveyTab';
+import ActionAnswerSurveyModal from '@components/modals/ActionAnswerSurvey';
+import ActionSettingSurvey from '@components/modals/ActionSettingSurvey';
+import SuccessSurveyActionModal from '@components/modals/SuccessSurveyActionModal';
 
-import { TabTypeSurvey } from '@constants/enums';
-import SurveyListDetailModal from '@components/modals/SurveyListDetailModal';
+import { TabTypeSurvey, TabTypeSurveyValue } from '@constants/enums';
+import { useUpdateSurveyCache } from '@hooks/CacheQuery/useUpdateSurveyCache';
 
 const SurveyListPage = () => {
-  const [activeTab, setActiveTab] = useState<TabTypeSurvey>(TabTypeSurvey.ALL);
+  const searchParams = useSearchParams();
+  const params = new URLSearchParams(searchParams);
+  const surveyId = searchParams.get('question') ?? '';
+  const tabParam = searchParams.get('tab') as TabTypeSurvey | null;
 
-  const listAvatar = ['body', 'head-full', 'hat', 'shoes'];
+  const router = useRouter();
+
+  // State
+
+  const [activeTab, setActiveTab] = useState<TabTypeSurvey>(
+    tabParam || TabTypeSurvey.ALL,
+  );
+  const [surveyDetailId, setSurveyDetailId] = useState('');
+
+  const [isShowActionAnswerModal, setIsShowActionAnswerModal] =
+    useState<boolean>(!!surveyId || !!surveyDetailId);
+
+  // Survey
+  const [openSettingSurvey, setOpenSettingSurvey] = useState(false);
+  const [openSuccessSurvey, setOpenSuccessSurvey] = useState(false);
+
+  const listAvatar = ['body', 'head-full', 'shoes', 'hat'];
+
+  // Set param
+  const handleSetParam = (id: string) => {
+    if (id) {
+      params.set('question', id);
+    }
+
+    router.push(`?${params.toString()}`);
+  };
+  // Handle remove param
+  const handleRemoveParam = () => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('question');
+
+    router.replace(`?${params.toString()}`);
+  };
 
   const renderContent = () => {
     switch (activeTab) {
       case TabTypeSurvey.ALL:
-        return <AllSurveyTab />;
+        return (
+          <AllSurveyTab
+            handleAnswer={(id: number) => {
+              setSurveyDetailId(String(id));
+              handleSetParam(String(id));
+              setIsShowActionAnswerModal(true);
+            }}
+          />
+        );
+      case TabTypeSurvey.RECEIVING:
+        return (
+          <ReceivingSurveyTab
+            handleAnswer={(id: number) => {
+              setSurveyDetailId(String(id));
+              handleSetParam(String(id));
+              setIsShowActionAnswerModal(true);
+            }}
+          />
+        ); // Replace with ReceivingSurveyTab when implemented
+      case TabTypeSurvey.ENDED:
+        return (
+          <EndedSurveyTab
+            handleAnswer={(id: number) => {
+              setSurveyDetailId(String(id));
+              handleSetParam(String(id));
+              setIsShowActionAnswerModal(true);
+            }}
+          />
+        );
+      case TabTypeSurvey.MY_SURVEY:
+        return (
+          <MySurveyTab
+            handleAnswer={(id: number) => {
+              setSurveyDetailId(String(id));
+              handleSetParam(String(id));
+              setIsShowActionAnswerModal(true);
+            }}
+          />
+        );
 
       default:
         return null;
@@ -29,6 +110,21 @@ const SurveyListPage = () => {
     { name: TabTypeSurvey.ENDED, value: TabTypeSurvey.ENDED },
     { name: TabTypeSurvey.MY_SURVEY, value: TabTypeSurvey.MY_SURVEY },
   ];
+
+  // Cache update and refresh functions
+  const { updateSurveyAnswered, refreshSurveyList } = useUpdateSurveyCache();
+
+  const mapping: Record<TabTypeSurvey, TabTypeSurveyValue> = {
+    [TabTypeSurvey.ALL]: TabTypeSurveyValue.ALL,
+    [TabTypeSurvey.RECEIVING]: TabTypeSurveyValue.RECEIVING,
+    [TabTypeSurvey.ENDED]: TabTypeSurveyValue.ENDED,
+    [TabTypeSurvey.MY_SURVEY]: TabTypeSurveyValue.MY_SURVEY,
+  };
+  const handleAnswerSurvey = (id: number) => {
+    const activeTabValue = mapping[activeTab];
+
+    updateSurveyAnswered(id, activeTabValue); // Update cache when survey is answered
+  };
 
   return (
     <>
@@ -45,9 +141,10 @@ const SurveyListPage = () => {
           <div className="flex absolute top-0 left-0 ">
             <div className="h-20 bg-white w-fit px-10 py-4 text-[#77858F] font-medium flex items-center gap-[10px] rounded-br-[30px]">
               <ImageRound
+                onClick={() => router.back()}
                 name="Left icon"
                 src={'/icons/chevron-left.svg'}
-                className={`w-fit h-fit cursor-pointer`}
+                className={`w-fit h-fit !cursor-pointer`}
               />
               <span className="text-sm text-black">戻る</span>
               <ImageRound
@@ -79,6 +176,7 @@ const SurveyListPage = () => {
                     みんなの声を聞くために、新しくアンケートを作ってみるのはどうかな？
                   </p>
                   <div
+                    onClick={() => setOpenSettingSurvey(true)}
                     style={{
                       background:
                         'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
@@ -129,14 +227,45 @@ const SurveyListPage = () => {
                   })}
                 </div>
               </div>
-              <div className="h-full w-full px-[30px] mt-5">
+              <div className="h-full w-full pl-[30px] mt-5">
                 {renderContent()}
               </div>
             </div>
           </div>
         </div>
       </div>
-      <SurveyListDetailModal open={false} onClose={() => {}} />
+      {isShowActionAnswerModal && (
+        <ActionAnswerSurveyModal
+          open={isShowActionAnswerModal}
+          detailId={surveyId || surveyDetailId}
+          handleAnswerSurvey={handleAnswerSurvey}
+          onClose={() => {
+            handleRemoveParam();
+            setIsShowActionAnswerModal(false);
+          }}
+        />
+      )}
+      {openSettingSurvey && (
+        <ActionSettingSurvey
+          open={openSettingSurvey}
+          onSusses={() => {
+            const activeTabValue = mapping[activeTab];
+            setOpenSettingSurvey(false);
+            setOpenSuccessSurvey(true);
+            if (activeTab !== TabTypeSurvey.ENDED) {
+              refreshSurveyList(activeTabValue);
+            }
+          }}
+          onClose={() => setOpenSettingSurvey(false)}
+        />
+      )}
+      {openSuccessSurvey && (
+        <SuccessSurveyActionModal
+          open={openSuccessSurvey}
+          onClose={() => setOpenSuccessSurvey(false)}
+          onTwice={() => setOpenSuccessSurvey(false)}
+        />
+      )}
     </>
   );
 };

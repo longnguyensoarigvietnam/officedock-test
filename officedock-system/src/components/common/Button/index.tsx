@@ -1,6 +1,12 @@
 import { ButtonHTMLAttributes } from 'react';
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'text' | 'option';
+type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'outline'
+  | 'text'
+  | 'option'
+  | 'post';
 type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -36,6 +42,10 @@ const Button = ({
     case 'option':
       variantClassNames = 'border bg-[#3CABF3] text-white hover:bg-opacity-90';
 
+      break;
+    case 'post':
+      variantClassNames = 'border-none text-white hover:bg-opacity-90';
+      backgroundStyle = 'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)';
       break;
 
     case 'text':

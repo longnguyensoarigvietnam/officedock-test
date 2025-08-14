@@ -230,10 +230,10 @@ html *::-webkit-scrollbar-track {
 }
 
 .ProseMirror {
-  height: 150px;
+  height: fit-content;
   border: 1px solid #77858f !important;
   border-radius: 6px !important;
-  padding: 14px;
+  padding: 11px 14px 11px 14px;
   overflow-y: auto;
   max-height: 150px !important;
 }

@@ -591,4 +591,6 @@ export const apiRouters = {
 
   // SURVEY
   SURVEY_LIST: '/surveys/',
+  SURVEY_DETAIL: (id: string) => `/surveys/${id}/`,
+  ANSWER_QUESTION: (id: string) => `/surveys/${id}/answer/`,
 };

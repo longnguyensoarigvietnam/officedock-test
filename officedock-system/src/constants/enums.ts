@@ -475,7 +475,7 @@ export enum TabTypeSurvey {
 export enum TabTypeSurveyValue {
   ALL = 'all',
   RECEIVING = 'open',
-  ENDED = 'close',
+  ENDED = 'closed',
   MY_SURVEY = 'my_survey',
 }
 export enum TimeType {

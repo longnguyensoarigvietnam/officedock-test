@@ -1,6 +1,6 @@
 import { MenuItem, MyPageMenuItem, SettingMenuItem } from '@interfaces/menu';
 import { pageRouters } from './routers';
-import { PermissionsSystem } from './enums';
+import { PermissionsSystem, TabTypeSurvey } from './enums';
 
 export const SETTING_MENU: SettingMenuItem[] = [
   {
@@ -255,22 +255,22 @@ export const MY_PAGE_MENU: MyPageMenuItem[] = [
   },
   {
     name: 'アンケート',
-    href: pageRouters.SURVEY.href,
+    href: '',
     iconSrc: '/icons/question.svg',
     iconName: 'Question icon',
     child: [
       {
         name: 'アンケートを見る',
-        href: '/',
+        href: pageRouters.SURVEY.href,
       },
       {
         name: 'アンケートを作る',
-        href: '/',
+        href: '',
         onClick: () => {},
       },
       {
         name: 'マイアンケートを見る',
-        href: '/',
+        href: `${pageRouters.SURVEY.href}?tab=${TabTypeSurvey.MY_SURVEY}`,
       },
     ],
   },
