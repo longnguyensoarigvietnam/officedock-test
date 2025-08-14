@@ -9,10 +9,16 @@ import { MY_PAGE_MENU } from '@constants/menu';
 
 interface PropMenuMyPage {
   onClickSettingSurvey: () => void;
+  isVisitRoom?: boolean;
 }
 
-export const MyPageMenu = ({ onClickSettingSurvey }: PropMenuMyPage) => {
-  const menuItemsClone: MyPageMenuItem[] = lodash.cloneDeep(MY_PAGE_MENU);
+export const MyPageMenu = ({
+  isVisitRoom = false,
+  onClickSettingSurvey,
+}: PropMenuMyPage) => {
+  const menuItemsClone: MyPageMenuItem[] = isVisitRoom
+    ? lodash.cloneDeep(MY_PAGE_MENU).slice(0, 2)
+    : lodash.cloneDeep(MY_PAGE_MENU).slice(1);
 
   return (
     <div className="flex flex-col gap-[35px]">
