@@ -41,7 +41,7 @@ const SurveyListPage = () => {
             width: '100%',
             height: '100%',
           }}
-          className="bg-red-300 rounded-bl-[30px] relative rounded-tr-[30px] rounded-br-[30px] h-[calc(100vh-120px)] w-full">
+          className="rounded-bl-[30px] relative rounded-tr-[30px] rounded-br-[30px] h-[calc(100vh-120px)] w-full">
           <div className="flex absolute top-0 left-0 ">
             <div className="h-20 bg-white w-fit px-10 py-4 text-[#77858F] font-medium flex items-center gap-[10px] rounded-br-[30px]">
               <ImageRound

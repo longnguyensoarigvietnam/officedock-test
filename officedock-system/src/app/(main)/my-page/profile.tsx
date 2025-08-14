@@ -1,6 +1,7 @@
 'use client';
 import React, { Fragment, useContext, useRef, useState } from 'react';
 import { useMutation } from 'react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import {
   Popover,
@@ -79,12 +80,26 @@ const MyPage = () => {
   const [openCreateTweetModal, setOpenCreateTweetModal] =
     useState<boolean>(false);
   const [tweetMessage, setTweetMessage] = useState<string>('');
+  const [lastTweetId, setLastTweetId] = useState<number | null>(null);
   const isLoadingTweetRef = useRef(false);
+  const queryClient = useQueryClient();
 
   // Get tweet list
-  const { tweetList, fetchNextPage, refetchTweetList, hasNextPage, isFetchingNextPage,  } =
+  const { tweetList, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useTweetList({
       isLoadingTweetRef,
+      lastTweetId,
+      onSuccess: (data) => {
+        if (
+          data.results.length > 0 &&
+          data.results[data.results.length - 1].id
+        ) {
+          setLastTweetId &&
+            setLastTweetId(data.results[data.results.length - 1].id);
+        } else {
+          setLastTweetId(null);
+        }
+      },
     });
 
   // Render user's avatar
@@ -157,16 +172,30 @@ const MyPage = () => {
     return response;
   };
 
-  const { mutate: sendTweetMessage, isSuccess: isSendTweetSuccess } = useMutation(
-    'sendTweetMessage',
-    handleSendTweetMessage,
-    {
-      onSuccess: () => {
+  const { mutate: sendTweetMessage, isSuccess: isSendTweetSuccess } =
+    useMutation('sendTweetMessage', handleSendTweetMessage, {
+      onSuccess: (data) => {
         setTweetMessage('');
         showToast({
           description: SUCCESS_CREATE_MESSAGE,
         });
-        refetchTweetList()
+        queryClient.setQueryData(['fetchTweetList'], (oldData: any) => {
+          if (!oldData) return oldData;
+
+          // Insert new tweet at the start of the first page
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any, index: number) => {
+              if (index === 0) {
+                return {
+                  ...page,
+                  results: [data, ...page.results],
+                };
+              }
+              return page;
+            }),
+          };
+        });
       },
       onError: (error: AxiosError) => {
         showErrorToast(error, ERROR_CREATE_MESSAGE);
@@ -174,8 +203,7 @@ const MyPage = () => {
       onSettled: () => {
         setIsLoading(false);
       },
-    },
-  );
+    });
 
   // Get set skill list
   const { myPageSkillList, refetchSetSkillList } = useSetSkillList({
@@ -256,7 +284,7 @@ const MyPage = () => {
           width: '100%',
           height: '100%',
         }}
-        className="bg-red-300 h-[calc(100vh-120px)] w-full">
+        className="h-[calc(100vh-120px)] w-full">
         <div className="flex ">
           <div className="h-20 bg-white w-fit px-5 py-4 text-[#77858F] font-medium flex items-center gap-5 rounded-br-[30px]">
             <div>
