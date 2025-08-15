@@ -3,9 +3,11 @@ from django.utils.timezone import now
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
 from base.apis import BaseAPIViewSet
+from base.messages import ERROR_MESSAGES
 from surveys.serializers import (
     SurveyDetailSerializer,
     SurveyListSerializer,
@@ -23,6 +25,7 @@ class SurveyViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
 ):
     """
     API endpoint for Surveys
@@ -169,3 +172,12 @@ class SurveyViewSet(
         unanswered_count = all_surveys.count() - answered_surveys.count()
 
         return self.response_ok({"count": unanswered_count})
+
+    def perform_destroy(self, instance):
+        """Cannot delete surveys created by others."""
+        if instance.created_by_id != self.request.user.id:
+            raise ValidationError(
+                {"detail": ERROR_MESSAGES["cannot_delete_other_survey"]}
+            )
+
+        return super().perform_destroy(instance)
