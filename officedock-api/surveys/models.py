@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.timezone import now
 
 from base.models import BaseModel
 from companies.models import Company
@@ -52,3 +53,29 @@ class SurveyAnswer(BaseModel):
         null=True,
         related_name="survey_answers",
     )
+
+
+class UsersViewedSurveys(BaseModel):
+    """
+    Track user who viewed a survey result.
+    """
+
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="survey_viewed_records",
+    )
+    survey = models.ForeignKey(
+        Survey,
+        on_delete=models.CASCADE,
+        related_name="viewed_records",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="viewed_surveys",
+    )
+    viewed_at = models.DateTimeField(default=now)
+
+    class Meta:
+        unique_together = ("user", "survey")

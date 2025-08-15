@@ -17,7 +17,7 @@ from surveys.serializers import (
 )
 from surveys.models import Survey, SurveyAnswer, SurveyQuestion
 from surveys.constants import SurveyFilterTypes
-from surveys.utils import is_open_survey
+from surveys.utils import is_open_survey, view_survey_result
 
 
 @extend_schema(tags=["System > Surveys"])
@@ -85,10 +85,13 @@ class SurveyViewSet(
         """
         current_user = request.user
         survey = self.get_object()
+        is_open = is_open_survey(survey.end_at)
 
-        if survey.created_by_id != current_user.id and is_open_survey(
-            survey.end_at
-        ):
+        if not is_open:
+            # Handle view survey result if closed
+            view_survey_result(survey, current_user)
+
+        if survey.created_by_id != current_user.id and is_open:
             return self.response_ok(
                 SurveyDetailSerializer(
                     survey, context={"request": request}
@@ -156,23 +159,51 @@ class SurveyViewSet(
     )
     def get_unanswered_survey_count(self, request, pk=None):
         """
-        Returns the count of surveys that the current user has not answered.
+        Returns the count of surveys that need user attention:
+        1. Open surveys that haven't been answered (excluding user's own surveys)
+        2. Closed surveys that haven't been viewed (including user's own surveys)
         """
         current_user = request.user
         company_id = current_user.company_id
 
-        # Get all surveys for the company
-        all_surveys = Survey.objects.filter(company_id=company_id)
+        # 1. Count open surveys that haven't been answered (excluding user's own surveys)
+        open_surveys = Survey.objects.filter(
+            company_id=company_id,
+            end_at__gt=now(),  # Open surveys
+        ).exclude(
+            created_by=current_user  # Exclude user's own surveys
+        )
 
-        # Get surveys that the user has already answered
-        answered_surveys = Survey.objects.filter(
-            company_id=company_id, answers__respondent=current_user
+        # Get open surveys that the user has already answered
+        answered_open_surveys = open_surveys.filter(
+            answers__respondent=current_user
         ).distinct()
 
-        # Calculate unanswered surveys
-        unanswered_count = all_surveys.count() - answered_surveys.count()
+        # Calculate unanswered open surveys
+        unanswered_open_count = (
+            open_surveys.count() - answered_open_surveys.count()
+        )
 
-        return self.response_ok({"count": unanswered_count})
+        # 2. Count closed surveys that haven't been viewed (including user's own surveys)
+        closed_surveys = Survey.objects.filter(
+            company_id=company_id,
+            end_at__lte=now(),  # Closed surveys
+        )
+
+        # Get closed surveys that the user has already viewed
+        viewed_closed_surveys = closed_surveys.filter(
+            viewed_records__user=current_user
+        ).distinct()
+
+        # Calculate unviewed closed surveys
+        unviewed_closed_count = (
+            closed_surveys.count() - viewed_closed_surveys.count()
+        )
+
+        # Total count
+        total_count = unanswered_open_count + unviewed_closed_count
+
+        return self.response_ok({"count": total_count})
 
     def perform_destroy(self, instance):
         """Cannot delete surveys created by others."""
