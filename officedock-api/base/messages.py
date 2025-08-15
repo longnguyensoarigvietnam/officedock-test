@@ -117,6 +117,9 @@ _ERROR_MESSAGES = {
         "cannot_answer_closed_survey": _(
             "The user cannot answer the closed survey."
         ),
+        "cannot_delete_other_survey": _(
+            "You cannot delete surveys created by others."
+        ),
         # Thanks messages
         "cannot_send_yourself": _("You cannot send to yourself."),
         "quota_exceeded": _(
@@ -201,6 +204,7 @@ _ERROR_MESSAGES = {
         "end_time_in_future": _("未来の日時を設定してください。"),
         "cannot_view_open_survey": _("受付中のアンケートの詳細を見ることはできません。"),
         "cannot_answer_closed_survey": _("受付終了したアンケートに回答できません。"),
+        "cannot_delete_other_survey": _("他人のアンケートを削除することはできません。"),
         # Thanks messages
         "cannot_send_yourself": _("自分自身にサンクスメッセージを送ることはできません。"),
         "quota_exceeded": _("今月のサンクスメッセージ送信可能回数は上限に達しました。"),
