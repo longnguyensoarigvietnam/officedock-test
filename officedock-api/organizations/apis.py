@@ -355,13 +355,17 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         return super().perform_destroy(instance)
 
-    @extend_schema(parameters=[OpenApiParameter("search", type=str)])
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("search", type=str),
+            OpenApiParameter("screen_name", type=str, required=False),
+        ]
+    )
     @action(
         methods=["GET"],
         detail=False,
         url_path="members",
         serializer_class=OrganizationMemberSerializer,
-        screen_name=Screens.TEAM_DOCK_SKILL_MAP.value,
     )
     def members(self, request):
         """
@@ -391,7 +395,18 @@ class OrganizationByIDViewSet(BaseAPIViewSet):
     queryset = Organization.all_objects.order_by("-created_at")
     serializer_class = OrganizationSerializer
     permission_classes = [ActionPermission]
-    screen_name = Screens.ORGANIZATION.value
+    screen_name = None
+
+    def get_permissions(self):
+        """Filter data by current screen"""
+        screen_name = self.request.query_params.get(
+            "screen_name", Screens.ORGANIZATION.value
+        )
+        if screen_name and to_camel_case(screen_name) in [
+            to_camel_case(item.value) for item in Screens
+        ]:
+            self.screen_name = to_snake_case(screen_name)
+        return super().get_permissions()
 
     def get_queryset(self):
         """
