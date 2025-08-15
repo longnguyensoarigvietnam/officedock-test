@@ -245,6 +245,16 @@ class StatisticViewSet(BaseAPIViewSet):
                             "type": type_value,
                         }
                     )
+            else:
+                # Set null category
+                for attr, type_value in category_types:
+                    category_formatted.append(
+                        {
+                            "id": NONE_CATEGORY,
+                            "name": NONE_CATEGORY,
+                            "type": type_value,
+                        }
+                    )
             # Calculate percent
             percent_part = percentage_calculation_of_duration(
                 total_duration.total_seconds(),
@@ -1702,6 +1712,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                 for team in teams:
                     team.pop("data", None)
                     team.pop("sub_teams", [])
+
             break_team = [data_by_range] if (user_ids and option) else teams
             data["durations"].append(
                 {
