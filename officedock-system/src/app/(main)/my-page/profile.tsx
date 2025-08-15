@@ -21,6 +21,7 @@ import { SettingSkillModal } from '@components/modals/SettingSkillModal';
 import { TimeLine } from '@components/myPage/TimeLine';
 import { CompletedActionsSettingSkillModal } from '@components/modals/CompletedActionsSettingSkillModal';
 import { ConfirmSettingSkillModal } from '@components/modals/ConfirmSettingSkillModal';
+import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import ActionSettingSurvey from '@components/modals/ActionSettingSurvey';
 import SuccessSurveyActionModal from '@components/modals/SuccessSurveyActionModal';
 
@@ -29,7 +30,7 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
-import { TweetFormData } from '@interfaces/tweet';
+import { TweetDetail, TweetFormData } from '@interfaces/tweet';
 import { SkillMapByOrganizationInfo } from '@interfaces/skills';
 
 import {
@@ -37,6 +38,7 @@ import {
   ERROR_DELETE_MESSAGE,
   ERROR_SAVE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
+  SUCCESS_DELETE_MESSAGE,
 } from '@constants/message';
 import { apiRouters } from '@constants/routers';
 import { MAX_MY_PAGE_SET_SKILLS } from '@constants';
@@ -83,6 +85,9 @@ const MyPage = () => {
     useState<boolean>(false);
   const [tweetMessage, setTweetMessage] = useState<string>('');
   const [lastTweetId, setLastTweetId] = useState<number | null>(null);
+  const [selectedTweetToDelete, setSelectedTweetToDelete] = useState<
+    number | null
+  >(null);
   const isLoadingTweetRef = useRef(false);
   const queryClient = useQueryClient();
 
@@ -208,6 +213,44 @@ const MyPage = () => {
         setIsLoading(false);
       },
     });
+
+  // Call API to delete tweet message
+  const handleDeleteTweetMessage = async (id: number) => {
+    setIsLoading(true);
+    const { data: response } = await api.delete(apiRouters.TWEET_DETAIL(id));
+    return response;
+  };
+
+  const { mutate: deleteTweetMessage } = useMutation(
+    'deleteTweetMessage',
+    handleDeleteTweetMessage,
+    {
+      onSuccess: (_data, variables) => {
+        setSelectedTweetToDelete(null);
+        showToast({
+          description: SUCCESS_DELETE_MESSAGE,
+        });
+        queryClient.setQueryData(['fetchTweetList'], (oldData: any) => {
+          if (!oldData) return oldData;
+
+          // Delete selected tweet
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any) => ({
+              ...page,
+              results: page.results.filter((tweet: TweetDetail) => tweet.id !== variables), // remove deleted tweet
+            })),
+          };
+        });
+      },
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_DELETE_MESSAGE);
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
 
   // Get set skill list
   const { myPageSkillList, refetchSetSkillList } = useSetSkillList({
@@ -523,6 +566,7 @@ const MyPage = () => {
         isLoadingTweetRef={isLoadingTweetRef}
         isFetchingNextPage={isFetchingNextPage}
         fetchNextPage={fetchNextPage}
+        setSelectedTweetToDelete={setSelectedTweetToDelete}
       />
       {openCreateTweetModal && (
         <CreateTweetModal
@@ -601,6 +645,15 @@ const MyPage = () => {
             }}
           />
         )}
+      {selectedTweetToDelete && (
+        <ConfirmDeleteModal
+          open={Boolean(selectedTweetToDelete)}
+          type="つぶやき"
+          onConfirm={() => deleteTweetMessage(Number(selectedTweetToDelete))}
+          onClose={() => setSelectedTweetToDelete(null)}
+        />
+      )}
+
       {openSettingSurvey && (
         <ActionSettingSurvey
           open={openSettingSurvey}
