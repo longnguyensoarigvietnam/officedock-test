@@ -242,12 +242,6 @@ export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
 
 export const MY_PAGE_MENU: MyPageMenuItem[] = [
   {
-    name: '自分の部屋へ 戻る',
-    href: pageRouters.MY_PAGE.href,
-    iconSrc: '/icons/room-profile.svg',
-    iconName: 'Room icon',
-  },
-  {
     name: 'サンクス メッセージ',
     href: '#',
     iconSrc: '/icons/heart.svg',
@@ -291,5 +285,19 @@ export const MY_PAGE_MENU: MyPageMenuItem[] = [
     href: '#',
     iconSrc: '/icons/shop.svg',
     iconName: 'Shop icon',
+  },
+];
+export const VISIT_PAGE_MENU: MyPageMenuItem[] = [
+  {
+    name: '自分の部屋へ 戻る',
+    href: pageRouters.MY_PAGE.href,
+    iconSrc: '/icons/room-profile.svg',
+    iconName: 'Room icon',
+  },
+  {
+    name: 'サンクスを送る',
+    href: '#',
+    iconSrc: '/icons/heart.svg',
+    iconName: 'Heart icon',
   },
 ];

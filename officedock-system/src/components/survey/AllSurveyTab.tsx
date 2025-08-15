@@ -168,7 +168,9 @@ const AllSurveyTab = ({ handleAnswer, handleDelete }: AllSurveyTabProp) => {
                                   'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
                               }}
                               className="text-white w-[50px] h-[22px] !rounded-[3px] hover:opacity-80 !text-xs font-normal !border-none !px-0 !py-0">
-                              詳細
+                              {item.createdBy.id == session?.user.id
+                                ? '詳細'
+                                : '回答済'}
                             </Button>
                           ) : (
                             <Button

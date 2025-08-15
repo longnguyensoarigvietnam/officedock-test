@@ -61,7 +61,7 @@ const FilterStatistic = ({ className }: Props) => {
           )}
         </Popover>
       </div>
-      <div className="relative right-[224px] flex-grow top-[3px]">
+      <div className="relative  flex-grow ">
         <div className="flex gap-2 flex-wrap  w-full flex-shrink-0">
           {selectedTags.map((item) => {
             return (

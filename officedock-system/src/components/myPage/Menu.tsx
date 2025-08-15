@@ -5,7 +5,7 @@ import ImageRound from '@components/common/ImageRound';
 
 import { MyPageMenuItem } from '@interfaces/menu';
 
-import { MY_PAGE_MENU } from '@constants/menu';
+import { MY_PAGE_MENU, VISIT_PAGE_MENU } from '@constants/menu';
 
 interface PropMenuMyPage {
   onClickSettingSurvey: () => void;
@@ -17,8 +17,8 @@ export const MyPageMenu = ({
   onClickSettingSurvey,
 }: PropMenuMyPage) => {
   const menuItemsClone: MyPageMenuItem[] = isVisitRoom
-    ? lodash.cloneDeep(MY_PAGE_MENU).slice(0, 2)
-    : lodash.cloneDeep(MY_PAGE_MENU).slice(1);
+    ? lodash.cloneDeep(VISIT_PAGE_MENU)
+    : lodash.cloneDeep(MY_PAGE_MENU);
 
   return (
     <div className="flex flex-col gap-[35px]">
