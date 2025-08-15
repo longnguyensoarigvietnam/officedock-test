@@ -295,7 +295,18 @@ const SurveyListPage = () => {
       {openSettingSurvey && (
         <ActionSettingSurvey
           open={openSettingSurvey}
-          onSusses={() => {
+          onSuccess={(title: string) => {
+            const doc = new DOMParser().parseFromString(title, 'text/html');
+            const paragraphs = doc.querySelectorAll('p');
+
+            if (paragraphs.length > 0) {
+              // Insert 【 at start of first <p>
+              paragraphs[0].innerHTML = `【${paragraphs[0].innerHTML}`;
+              // Insert 】 at end of last <p>
+              paragraphs[paragraphs.length - 1].innerHTML =
+                `${paragraphs[paragraphs.length - 1].innerHTML}】アンケート実施中！ぜひご協力ください！`;
+            }
+            setTweetMessage(doc.body.innerHTML);
             const activeTabValue = mapping[activeTab];
             setOpenSettingSurvey(false);
             setOpenSuccessSurvey(true);
@@ -309,8 +320,14 @@ const SurveyListPage = () => {
       {openSuccessSurvey && (
         <SuccessSurveyActionModal
           open={openSuccessSurvey}
-          onClose={() => setOpenSuccessSurvey(false)}
-          onTweet={() => setOpenCreateTweetModal(true)}
+          onClose={() => {
+            setOpenSuccessSurvey(false);
+            setTweetMessage('');
+          }}
+          onTweet={() => {
+            setOpenSuccessSurvey(false);
+            setOpenCreateTweetModal(true);
+          }}
         />
       )}
       {openCreateTweetModal && (
