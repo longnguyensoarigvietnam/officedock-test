@@ -66,6 +66,7 @@ const ItemRoutine = ({
 
   const {
     columnWidth,
+    setTaskSelectedToStart,
     selectedOptionZoom,
     setDataClickTask,
     setDataRunning,
@@ -222,7 +223,7 @@ const ItemRoutine = ({
   });
 
   // Action call API check start task
-  const _handleConfirmCheckStartTask = (id: string) => {
+  const handleConfirmCheckStartTask = (id: string) => {
     calculateDurationTask({
       id: id,
       type: ItemStartType.TASK,
@@ -464,7 +465,7 @@ const ItemRoutine = ({
                     {displayRoutineTaskScheduleTitle(content)}
                   </div>
                   {/* TODO: PLAY / PAUSE task */}
-                  {/* <DynamicTooltip
+                  <DynamicTooltip
                     content={content.isStart ? '計測停止' : '計測開始'}
                     placement="top">
                     <div
@@ -474,23 +475,9 @@ const ItemRoutine = ({
                       }}>
                       {content.isMyTask && (
                         <ImageRound
-                          src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
+                          src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
                           name="Start task"
-                          style={{
-                            width:
-                              (selectedOptionZoom.value as number) > 75
-                                ? '26px'
-                                : (selectedOptionZoom.value as number) == 75
-                                  ? '20px'
-                                  : '16px',
-                            height:
-                              (selectedOptionZoom.value as number) > 75
-                                ? '26px'
-                                : (selectedOptionZoom.value as number) == 75
-                                  ? '20px'
-                                  : '16px',
-                          }}
-                          className={`hover:cursor-pointer `}
+                          className={`hover:cursor-pointer w-fit h-fit  ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
                           onClick={async () => {
                             await new Promise<void>((resolve) => {
                               setTaskSelectedToStart(content);
@@ -501,7 +488,7 @@ const ItemRoutine = ({
                         />
                       )}
                     </div>
-                  </DynamicTooltip> */}
+                  </DynamicTooltip>
                 </div>
               </div>
             </div>
@@ -561,7 +548,7 @@ const ItemRoutine = ({
                     {content.title}
                   </p>
                   {/* TODO: PLAY / PAUSE task */}
-                  {/* <DynamicTooltip
+                  <DynamicTooltip
                     content={content.isStart ? '計測停止' : '計測開始'}
                     placement="top">
                     <div
@@ -571,13 +558,9 @@ const ItemRoutine = ({
                       }}>
                       {content.isMyTask && (
                         <ImageRound
-                          src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
+                          src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
                           name="Start task"
-                          style={{
-                            width: `16px`,
-                            height: `16px`,
-                          }}
-                          className={`hover:cursor-pointer `}
+                          className={`hover:cursor-pointer w-fit h-fit  ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
                           onClick={async () => {
                             await new Promise<void>((resolve) => {
                               setTaskSelectedToStart(content);
@@ -588,7 +571,7 @@ const ItemRoutine = ({
                         />
                       )}
                     </div>
-                  </DynamicTooltip> */}
+                  </DynamicTooltip>
                 </div>
               </div>
             </div>
