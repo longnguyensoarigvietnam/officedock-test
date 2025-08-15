@@ -301,7 +301,7 @@ const MyPage = () => {
             <div className="h-full border-l border-[#D2DBE1]"></div>
             <div className="flex items-center text-sm font-medium gap-[10px]">
               <p>ID</p>
-              <p className="text-base text-black">001</p>
+              <p className="text-base text-black">{session?.user.id}</p>
             </div>
           </div>
           <div className="w-[303px] mt-5 ml-5 font-bold text-base bg-white rounded-full h-10 flex items-center justify-center gap-[9px]">
@@ -365,7 +365,7 @@ const MyPage = () => {
                               ? '0px 0px 20px 0px #36ACDE80'
                               : '0px 2px 8px 0px #0000001A',
                           }}
-                          className="w-[245px] h-[55px] relative bg-white px-5 py-3 flex items-center gap-3 justify-center  rounded-[14px]">
+                          className="w-[245px] h-[55px] relative bg-white px-5 py-3 flex items-center gap-[10px] justify-center  rounded-[14px]">
                           {showTwinklingStars && (
                             <>
                               <div className="absolute -top-[20px] left-[20px] bg-primary rounded-[20px] w-[140px] h-[20px] flex items-center justify-center">
@@ -421,7 +421,7 @@ const MyPage = () => {
                               />
                             </div>
                           </div>
-                          <div className="relative top-[5px]">
+                          <div className="relative">
                             {renderTreasureForStep(
                               Boolean(isLocked),
                               step,

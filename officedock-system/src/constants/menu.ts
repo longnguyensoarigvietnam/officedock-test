@@ -242,6 +242,12 @@ export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
 
 export const MY_PAGE_MENU: MyPageMenuItem[] = [
   {
+    name: '自分の部屋へ 戻る',
+    href: pageRouters.MY_PAGE.href,
+    iconSrc: '/icons/room-profile.svg',
+    iconName: 'Room icon',
+  },
+  {
     name: 'サンクス メッセージ',
     href: '#',
     iconSrc: '/icons/heart.svg',
@@ -249,7 +255,7 @@ export const MY_PAGE_MENU: MyPageMenuItem[] = [
   },
   {
     name: '他の人の部屋へ 出かける',
-    href: '#',
+    href: pageRouters.VISIT_ROOM.href,
     iconSrc: '/icons/room-profile.svg',
     iconName: 'Room icon',
   },

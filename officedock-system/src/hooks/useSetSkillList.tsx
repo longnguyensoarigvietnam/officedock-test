@@ -1,16 +1,13 @@
 'use client';
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
-import { signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { AxiosError } from 'axios';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
-import { apiRouters, pageRouters } from '@constants/routers';
-import { ServerStatusCode } from '@constants/enums';
+import { apiRouters } from '@constants/routers';
 
-import { ResponseError } from '@interfaces/response';
 import { SkillMapByOrganizationInfo } from '@interfaces/skills';
 
 import api from '@base/api';
@@ -21,11 +18,12 @@ interface FilterProps {
 
 const useSetSkillList = ({
   filter,
+  onError,
 }: {
   filter?: FilterProps;
+  onError?: (error: AxiosError) => void;
 }) => {
   const { data: session } = useSessionCache();
-  const router = useRouter();
   const token = session?.accessToken;
 
   const { setIsLoading } = useContext(LoadingContext);
@@ -53,13 +51,8 @@ const useSetSkillList = ({
     enabled: !!token,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onError: ({ response }: ResponseError<any>) => {
-      if (response?.status === ServerStatusCode.UNAUTHORIZED) {
-        if (session) {
-          signOut();
-          router.push(pageRouters.LOGIN.href);
-        }
-      }
+    onError: (error: AxiosError) => {
+      onError && onError(error);
     },
     onSettled: () => {
       setIsLoading(false);
