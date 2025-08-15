@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from base.apis import BaseAPIViewSet
 from base.messages import ERROR_MESSAGES
+from base.paginations import CustomCursorPagination
 from surveys.serializers import (
     SurveyDetailSerializer,
     SurveyListSerializer,
@@ -31,16 +32,30 @@ class SurveyViewSet(
     API endpoint for Surveys
     """
 
-    queryset = Survey.objects.order_by("-end_at")
+    queryset = Survey.objects.all()
     serializer_class = SurveySerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomCursorPagination
+    ordering = ("-end_at", "-id")
 
     def get_queryset(self):
         """
         Filtering by company
         """
         company_id = self.request.user.company_id
-        return super().get_queryset().filter(company_id=company_id)
+        status = self.request.query_params.get("status")
+        queryset = super().get_queryset().filter(company_id=company_id)
+
+        if status:
+            match status:
+                case SurveyFilterTypes.OPEN.value:
+                    queryset = queryset.filter(end_at__gt=now())
+                case SurveyFilterTypes.CLOSED.value:
+                    queryset = queryset.filter(end_at__lte=now())
+                case SurveyFilterTypes.MY_SURVEY.value:
+                    queryset = queryset.filter(created_by=self.request.user)
+
+        return queryset
 
     def get_serializer_class(self):
         """
@@ -56,25 +71,11 @@ class SurveyViewSet(
             OpenApiParameter(
                 "status", type=str, enum=SurveyFilterTypes.values()
             ),
+            OpenApiParameter("ordering", type=str),
         ]
     )
     def list(self, request, *args, **kwargs):
-        """
-        Returns a paginated list of surveys, filtered by status if provided.
-        Status can be OPEN, CLOSED, or MY_SURVEY.
-        """
-        queryset = self.get_queryset()
-        status = request.query_params.get("status")
-        if status:
-            match status:
-                case SurveyFilterTypes.OPEN.value:
-                    queryset = queryset.filter(end_at__gt=now())
-                case SurveyFilterTypes.CLOSED.value:
-                    queryset = queryset.filter(end_at__lte=now())
-                case SurveyFilterTypes.MY_SURVEY.value:
-                    queryset = queryset.filter(created_by=request.user)
-
-        return self.response_pagination(request, queryset, self.get_serializer)
+        return super().list(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
         """
