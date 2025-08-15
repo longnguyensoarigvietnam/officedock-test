@@ -22,6 +22,21 @@ export function useUpdateSurveyCache() {
       },
     );
   };
+  const removeSurveyFromCache = (id: number, TabTypeSurveyValue: string) => {
+    queryClient.setQueryData(
+      ['getSurveyList', undefined, TabTypeSurveyValue],
+      (oldData: any) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            results: page.results.filter((item: Survey) => item.id !== id),
+          })),
+        };
+      },
+    );
+  };
   const refreshSurveyList = async (TabTypeSurveyValue: string) => {
     await queryClient.invalidateQueries({
       queryKey: ['getSurveyList', undefined, TabTypeSurveyValue],
@@ -29,5 +44,5 @@ export function useUpdateSurveyCache() {
     });
   };
 
-  return { updateSurveyAnswered, refreshSurveyList };
+  return { updateSurveyAnswered, refreshSurveyList, removeSurveyFromCache };
 }

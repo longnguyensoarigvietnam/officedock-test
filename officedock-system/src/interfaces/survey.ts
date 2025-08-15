@@ -13,6 +13,12 @@ export type Survey = {
   id: number;
   endAt: string;
   createdAt: string;
+  createdBy: {
+    avatar: string;
+    avatarColor: string;
+    fullName: string;
+    id: 108;
+  };
   isAnswered: boolean;
   title: string;
   status: {

@@ -9,12 +9,17 @@ import { TabTypeSurveyValue } from '@constants/enums';
 import useSurveyList from '@hooks/useListSurvey';
 import { formatShowDateJapanese } from '@utils/date';
 import { getDaysUntil } from '@utils';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 type ReceivingSurveyTabProp = {
-  handleAnswer: (id: number) => void;
+  handleAnswer: (id: number, isMySurvey?: boolean) => void;
+  handleDelete: (id: number) => void;
 };
 
-const ReceivingSurveyTab = ({ handleAnswer }: ReceivingSurveyTabProp) => {
+const ReceivingSurveyTab = ({
+  handleAnswer,
+  handleDelete,
+}: ReceivingSurveyTabProp) => {
   const {
     surveyList,
     fetchNextPage,
@@ -28,6 +33,7 @@ const ReceivingSurveyTab = ({ handleAnswer }: ReceivingSurveyTabProp) => {
   const resultsContainerRef = useRef<HTMLDivElement | null>(null);
 
   const queryClient = useQueryClient();
+  const { data: session } = useSessionCache();
 
   useEffect(() => {
     return () => {
@@ -104,12 +110,15 @@ const ReceivingSurveyTab = ({ handleAnswer }: ReceivingSurveyTabProp) => {
                           }
                         }}
                         dangerouslySetInnerHTML={{ __html: item.title }}
-                        className={`${item.isAnswered ? 'text-black' : 'text-[#228CDB]'} ${item.status.open && 'cursor-pointer'} text-sm font-medium`}></p>
-                      <ImageRound
-                        name="Delete icon"
-                        src={'/icons/delete.svg'}
-                        className="w-fit h-fit cursor-pointer"
-                      />
+                        className={`${item.isAnswered === false && item.status.open && 'text-[#228CDB]'} ${item.status.open && 'cursor-pointer'} text-sm font-medium`}></p>
+                      {item.status.mySurvey && (
+                        <ImageRound
+                          onClick={() => handleDelete(item.id)}
+                          name="Delete icon"
+                          src={'/icons/delete.svg'}
+                          className="w-fit h-fit cursor-pointer"
+                        />
+                      )}
                     </div>
                     <div className="w-[1px] border-l border-[#D2DBE1] -my-[15px]"></div>
                     <div className="px-5 w-[132px] flex flex-col gap-[10px] items-center justify-center">
@@ -143,8 +152,47 @@ const ReceivingSurveyTab = ({ handleAnswer }: ReceivingSurveyTabProp) => {
                       )}
                     </div>
                     <div className="w-[1px] border-l border-[#D2DBE1] -my-[15px]"></div>
-                    <div className="flex-grow flex items-center justify-center">
-                      {item.isAnswered ? (
+                    {item.status.open && (
+                      <div className="flex-grow flex items-center justify-center">
+                        {item.isAnswered ? (
+                          <Button
+                            onClick={() => {
+                              if (item.createdBy.id == session?.user.id) {
+                                handleAnswer(item.id, true);
+                              } else {
+                                handleAnswer(item.id);
+                              }
+                            }}
+                            style={{
+                              background:
+                                'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
+                            }}
+                            className="text-white w-[50px] h-[22px] !rounded-[3px] hover:opacity-80 !text-xs font-normal !border-none !px-0 !py-0">
+                            詳細
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => {
+                              if (item.createdBy.id == session?.user.id) {
+                                handleAnswer(item.id, true);
+                              } else {
+                                handleAnswer(item.id);
+                              }
+                            }}
+                            style={{
+                              background:
+                                'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
+                            }}
+                            className="text-white w-[50px] h-[22px] !rounded-[3px] hover:opacity-80 !text-xs font-normal !border-none !px-0 !py-0">
+                            {item.createdBy.id == session?.user.id
+                              ? '詳細'
+                              : '未回答'}
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                    {item.status.closed && (
+                      <div className="flex-grow flex items-center justify-center">
                         <Button
                           onClick={() => {
                             handleAnswer(item.id);
@@ -156,18 +204,8 @@ const ReceivingSurveyTab = ({ handleAnswer }: ReceivingSurveyTabProp) => {
                           className="text-white w-[50px] h-[22px] !rounded-[3px] hover:opacity-80 !text-xs font-normal !border-none !px-0 !py-0">
                           詳細
                         </Button>
-                      ) : (
-                        <Button
-                          onClick={() => handleAnswer(item.id)}
-                          style={{
-                            background:
-                              'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
-                          }}
-                          className="text-white w-[50px] h-[22px] !rounded-[3px] hover:opacity-80 !text-xs font-normal !border-none !px-0 !py-0">
-                          未回答
-                        </Button>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                   {index !== surveyList.length - 1 && (
                     <div className="bg-[#409EDE] w-full h-[2px]"></div>

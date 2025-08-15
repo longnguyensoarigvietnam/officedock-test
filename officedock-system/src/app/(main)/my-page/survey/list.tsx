@@ -15,12 +15,15 @@ import ActionAnswerSurveyModal from '@components/modals/ActionAnswerSurvey';
 import ActionSettingSurvey from '@components/modals/ActionSettingSurvey';
 import SuccessSurveyActionModal from '@components/modals/SuccessSurveyActionModal';
 import CreateTweetModal from '@components/modals/CreateTweetModal';
+import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 
 import { TabTypeSurvey, TabTypeSurveyValue } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
 import {
   ERROR_CREATE_MESSAGE,
+  ERROR_DELETE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
+  SUCCESS_DELETE_MESSAGE,
 } from '@constants/message';
 
 import { useUpdateSurveyCache } from '@hooks/CacheQuery/useUpdateSurveyCache';
@@ -38,6 +41,7 @@ const SurveyListPage = () => {
   const params = new URLSearchParams(searchParams);
   const surveyId = searchParams.get('question') ?? '';
   const tabParam = searchParams.get('tab') as TabTypeSurvey | null;
+  const mySurvey = searchParams.get('my-survey');
 
   const router = useRouter();
   const { setIsLoading } = useContext(LoadingContext);
@@ -56,6 +60,12 @@ const SurveyListPage = () => {
   // Survey
   const [openSettingSurvey, setOpenSettingSurvey] = useState(false);
   const [openSuccessSurvey, setOpenSuccessSurvey] = useState(false);
+  const [isMySurvey, setIsMySurvey] = useState(!!mySurvey);
+
+  const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
+  const [selectedSurveyToDelete, setSelectedSurveyToDelete] = useState<
+    number | null
+  >(null);
 
   // Tweet
   const [openCreateTweetModal, setOpenCreateTweetModal] =
@@ -65,9 +75,12 @@ const SurveyListPage = () => {
   const listAvatar = ['body', 'head-full', 'shoes', 'hat'];
 
   // Set param
-  const handleSetParam = (id: string) => {
+  const handleSetParam = (id: string, isMySurvey?: boolean) => {
     if (id) {
       params.set('question', id);
+      if (isMySurvey) {
+        params.set('my-survey', 'true');
+      }
     }
 
     router.push(`?${params.toString()}`);
@@ -76,6 +89,7 @@ const SurveyListPage = () => {
   const handleRemoveParam = () => {
     const params = new URLSearchParams(searchParams);
     params.delete('question');
+    params.delete('my-survey');
 
     router.replace(`?${params.toString()}`);
   };
@@ -85,40 +99,60 @@ const SurveyListPage = () => {
       case TabTypeSurvey.ALL:
         return (
           <AllSurveyTab
-            handleAnswer={(id: number) => {
+            handleAnswer={(id: number, isMySurvey?: boolean) => {
               setSurveyDetailId(String(id));
-              handleSetParam(String(id));
+              handleSetParam(String(id), isMySurvey);
               setIsShowActionAnswerModal(true);
+              setIsMySurvey(isMySurvey || false);
+            }}
+            handleDelete={(id: number) => {
+              setSelectedSurveyToDelete(id);
+              setOpenConfirmDeleteModal(true);
             }}
           />
         );
       case TabTypeSurvey.RECEIVING:
         return (
           <ReceivingSurveyTab
-            handleAnswer={(id: number) => {
+            handleAnswer={(id: number, isMySurvey?: boolean) => {
               setSurveyDetailId(String(id));
-              handleSetParam(String(id));
+              handleSetParam(String(id), isMySurvey);
               setIsShowActionAnswerModal(true);
+              setIsMySurvey(isMySurvey || false);
+            }}
+            handleDelete={(id: number) => {
+              setSelectedSurveyToDelete(id);
+              setOpenConfirmDeleteModal(true);
             }}
           />
         ); // Replace with ReceivingSurveyTab when implemented
       case TabTypeSurvey.ENDED:
         return (
           <EndedSurveyTab
-            handleAnswer={(id: number) => {
+            handleAnswer={(id: number, isMySurvey?: boolean) => {
               setSurveyDetailId(String(id));
-              handleSetParam(String(id));
+              handleSetParam(String(id), isMySurvey);
               setIsShowActionAnswerModal(true);
+              setIsMySurvey(isMySurvey || false);
+            }}
+            handleDelete={(id: number) => {
+              setSelectedSurveyToDelete(id);
+              setOpenConfirmDeleteModal(true);
             }}
           />
         );
       case TabTypeSurvey.MY_SURVEY:
         return (
           <MySurveyTab
-            handleAnswer={(id: number) => {
+            handleAnswer={(id: number, isMySurvey?: boolean) => {
               setSurveyDetailId(String(id));
-              handleSetParam(String(id));
+              handleSetParam(String(id), isMySurvey);
               setIsShowActionAnswerModal(true);
+              setIsMySurvey(isMySurvey || false);
+            }}
+            handleDelete={(id: number) => {
+              setSelectedSurveyToDelete(id);
+              setOpenConfirmDeleteModal(true);
             }}
           />
         );
@@ -136,7 +170,8 @@ const SurveyListPage = () => {
   ];
 
   // Cache update and refresh functions
-  const { updateSurveyAnswered, refreshSurveyList } = useUpdateSurveyCache();
+  const { updateSurveyAnswered, refreshSurveyList, removeSurveyFromCache } =
+    useUpdateSurveyCache();
 
   const mapping: Record<TabTypeSurvey, TabTypeSurveyValue> = {
     [TabTypeSurvey.ALL]: TabTypeSurveyValue.ALL,
@@ -144,9 +179,9 @@ const SurveyListPage = () => {
     [TabTypeSurvey.ENDED]: TabTypeSurveyValue.ENDED,
     [TabTypeSurvey.MY_SURVEY]: TabTypeSurveyValue.MY_SURVEY,
   };
-  const handleAnswerSurvey = (id: number) => {
-    const activeTabValue = mapping[activeTab];
+  const activeTabValue = mapping[activeTab];
 
+  const handleAnswerSurvey = (id: number) => {
     updateSurveyAnswered(id, activeTabValue); // Update cache when survey is answered
   };
 
@@ -173,6 +208,45 @@ const SurveyListPage = () => {
       },
     });
 
+  // Delete location API
+  const handleDeleteSurvey = async (id: string) => {
+    setIsLoading(true);
+    return await api.delete(apiRouters.SURVEY_DETAIL(id));
+  };
+
+  const { mutate: deleteSurvey } = useMutation(
+    'postDeleteSurvey',
+    handleDeleteSurvey,
+    {
+      onSuccess: () => {
+        if (selectedSurveyToDelete) {
+          removeSurveyFromCache(selectedSurveyToDelete, activeTabValue);
+        }
+        showToast({
+          description: SUCCESS_DELETE_MESSAGE,
+        });
+        setOpenConfirmDeleteModal(false);
+        setSelectedSurveyToDelete(null);
+      },
+      onError: () => {
+        showToast({
+          variant: 'error',
+          description: ERROR_DELETE_MESSAGE,
+        });
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+
+  // Handle confirm delete
+  const handleConfirmDeleteLocation = () => {
+    if (selectedSurveyToDelete) {
+      deleteSurvey(String(selectedSurveyToDelete));
+    }
+  };
+
   return (
     <>
       <div className="h-full w-full">
@@ -186,7 +260,7 @@ const SurveyListPage = () => {
           }}
           className="rounded-bl-[30px] relative rounded-tr-[30px] rounded-br-[30px] h-[calc(100vh-120px)] w-full">
           <div className="flex absolute top-0 left-0 ">
-            <div className="h-20 bg-white w-fit px-10 py-4 text-[#77858F] font-medium flex items-center gap-[10px] rounded-br-[30px]">
+            <div className="h-20 z-[30] bg-white w-fit px-10 py-4 text-[#77858F] font-medium flex items-center gap-[10px] rounded-br-[30px]">
               <ImageRound
                 onClick={() => router.back()}
                 name="Left icon"
@@ -199,7 +273,7 @@ const SurveyListPage = () => {
                 src={'/icons/room-profile.svg'}
                 className={`w-fit h-fit ml-[10px]`}
               />
-              <span className="text-sm text-black ml-1">アンケート</span>
+              <span className="text-[22px] text-black ml-1">アンケート</span>
             </div>
           </div>
           <div className="relative  pr-[30px] flex w-full justify-between items-center h-full">
@@ -284,6 +358,7 @@ const SurveyListPage = () => {
       {isShowActionAnswerModal && (
         <ActionAnswerSurveyModal
           open={isShowActionAnswerModal}
+          isMySurvey={isMySurvey || mySurvey ? true : false}
           detailId={surveyId || surveyDetailId}
           handleAnswerSurvey={handleAnswerSurvey}
           onClose={() => {
@@ -321,6 +396,17 @@ const SurveyListPage = () => {
           setTweetMessage={setTweetMessage}
           onClose={() => setOpenCreateTweetModal(false)}
           onSubmit={() => sendTweetMessage({ content: tweetMessage })}
+        />
+      )}
+      {openConfirmDeleteModal && (
+        <ConfirmDeleteModal
+          open={openConfirmDeleteModal}
+          type="アンケート"
+          onConfirm={handleConfirmDeleteLocation}
+          onClose={() => {
+            setOpenConfirmDeleteModal(false);
+            setSelectedSurveyToDelete(null);
+          }}
         />
       )}
     </>

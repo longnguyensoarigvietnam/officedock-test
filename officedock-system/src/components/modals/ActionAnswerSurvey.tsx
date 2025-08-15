@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import { useMutation } from 'react-query';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
@@ -9,7 +9,6 @@ import RowSkeleton from '@components/skeleton/RowSkeleton';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { apiRouters } from '@constants/routers';
 
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 import { useToast } from '@providers/ToastProvider';
 
@@ -21,6 +20,7 @@ import api from '@base/api';
 type Props = {
   open: boolean;
   detailId: string;
+  isMySurvey: boolean;
   handleAnswerSurvey: (id: number) => void;
   onClose: () => void;
 };
@@ -28,13 +28,12 @@ type Props = {
 const ActionAnswerSurveyModal = ({
   open,
   detailId,
+  isMySurvey,
   handleAnswerSurvey,
   onClose,
 }: Props) => {
   const { data: session } = useSessionCache();
   const { showToast } = useToast();
-
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
 
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
 
@@ -69,24 +68,11 @@ const ActionAnswerSurveyModal = ({
     },
   );
 
-  const renderBoxUser = (userId: string) => {
-    const memberInfo = dashboardMembersWithAvatars.find(
-      (member) => member.id == userId,
-    );
-
-    return (
-      <CustomUserAvatar
-        avatarUrl={memberInfo?.avatar || ''}
-        avatarColor={memberInfo?.avatarColor || ''}
-        size={36}
-      />
-    );
-  };
-
   const totalVotes = surveyDetail?.questions.reduce(
     (sum, o) => sum + o.selectedUserCount,
     0,
   );
+  const isViewDetail = isMySurvey;
 
   return (
     <Modal
@@ -134,9 +120,13 @@ const ActionAnswerSurveyModal = ({
           </div>
           <div className="flex items-center gap-2 mt-[26px]">
             <div>
-              {session?.user.id && renderBoxUser(`${session?.user.id}`)}
+              <CustomUserAvatar
+                avatarUrl={surveyDetail?.createdBy.avatar || ''}
+                avatarColor={surveyDetail?.createdBy.avatarColor || ''}
+                size={36}
+              />
             </div>
-            <p className="break-all max-w-[100px] line-clamp-2 text-base font-medium">
+            <p className="break-all line-clamp-2 text-base font-medium">
               {session?.user.profile.fullName}
             </p>
           </div>
@@ -156,20 +146,22 @@ const ActionAnswerSurveyModal = ({
                   <div
                     key={idx}
                     onClick={() => {
-                      if (surveyDetail.status.open) {
+                      if (surveyDetail.status.open && !isViewDetail) {
                         answerQuestion(question.id);
                         setSelectedAnswer(question.id);
                         handleAnswerSurvey(surveyDetail.id);
                       }
                     }}
-                    className={`${selectedAnswer == question.id && surveyDetail.status.open && 'bg-[#8DD1EE] !text-black'} relative min-h-[44px] flex items-center justify-between rounded-md border border-[#77858F] overflow-hidden`}>
+                    className={`${selectedAnswer == question.id && surveyDetail.status.open && !isViewDetail && 'bg-[#8DD1EE] !text-black'} relative min-h-[44px] flex items-center justify-between rounded-md border border-[#77858F] overflow-hidden`}>
                     {/* Background color bar */}
-                    {surveyDetail.status.closed && (
+                    {(surveyDetail.status.closed || isViewDetail) && (
                       <div
                         className={`absolute top-0 left-0 h-full ${
                           selectedAnswer == question.id
-                            ? 'bg-[#8DD1EE]'
-                            : 'bg-gray-200'
+                            ? isViewDetail
+                              ? 'bg-white'
+                              : 'bg-[#8DD1EE]'
+                            : 'bg-white'
                         }`}
                         style={{ width: `${percent}%` }}></div>
                     )}
@@ -178,12 +170,14 @@ const ActionAnswerSurveyModal = ({
                     <div className="relative flex-1 p-3 flex items-center justify-between z-10">
                       <p
                         dangerouslySetInnerHTML={{ __html: question.text }}
-                        className={`text-sm font-normal text-[#77858F] ${selectedAnswer == question.id && ' !text-black'}`}></p>
-                      {surveyDetail.status.closed && (
+                        className={`text-sm font-normal text-[#77858F] ${selectedAnswer == question.id && !isViewDetail && ' !text-black'}`}></p>
+                      {(surveyDetail.status.closed || isViewDetail) && (
                         <span
                           className={`text-sm ${
                             question.selectedUserCount === 0
-                              ? 'text-[#77858F]'
+                              ? isViewDetail
+                                ? 'text-back'
+                                : 'text-[#77858F]'
                               : 'text-black'
                           }`}>
                           {question.selectedUserCount}票
@@ -194,12 +188,12 @@ const ActionAnswerSurveyModal = ({
                 );
               })}{' '}
             </div>
-            {surveyDetail?.status.open && (
+            {surveyDetail?.status.open && !isViewDetail && (
               <p className="text-[13px] font-normal mt-[8px]">
                 残り{surveyDetail?.endAt && getDaysUntil(surveyDetail.endAt)}日
               </p>
             )}
-            {surveyDetail?.status.closed && (
+            {(surveyDetail?.status.closed || isViewDetail) && (
               <p className="text-[13px] font-normal mt-[8px]">
                 合計{totalVotes}票 残り
               </p>
