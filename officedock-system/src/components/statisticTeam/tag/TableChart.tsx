@@ -711,6 +711,8 @@ const TableChart = ({
                 options={removeDuplicateOptions(largeCategories)}
                 isDisabled={info.row.original.type !== EventCalendarType.TASK}
                 onChange={(e) => {
+                  if (e?.value == largeItem?.value) return;
+
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
                       id: String(info.row.original.id),
@@ -779,6 +781,8 @@ const TableChart = ({
                 options={removeDuplicateOptions(mediumCategories)}
                 isDisabled={info.row.original.type !== EventCalendarType.TASK}
                 onChange={(e) => {
+                  if (e?.value == mediumItem?.value) return;
+
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
                       id: String(info.row.original.id),
@@ -852,6 +856,8 @@ const TableChart = ({
                 options={removeDuplicateOptions(smallCategories)}
                 showArrow={info.row.original.type === EventCalendarType.TASK}
                 onChange={(e) => {
+                  if (e?.value == smallItem?.value) return;
+
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
                       id: String(info.row.original.id),

@@ -35,7 +35,7 @@ const RoomList = () => {
     },
   });
 
-  const listAvatar = ['body', 'head-full', 'hat', 'shoes'];
+  const listAvatar = ['boat', 'body', 'head-full', 'hat', 'shoes'];
 
   return (
     <>
@@ -48,12 +48,12 @@ const RoomList = () => {
             width: '100%',
             height: '100%',
           }}
-          className="rounded-bl-[30px] relative rounded-tr-[30px] rounded-br-[30px] h-[calc(100vh-120px)] w-full">
+          className=" relative  h-[calc(100vh-120px)] w-full">
           <div className="relative  pr-[30px] flex w-full justify-between items-center h-full">
             {/* Header */}
             <div className="flex absolute top-0 left-0 ">
               <div className="h-[92px] bg-white w-[402px] py-4 font-medium flex items-center justify-center gap-5 rounded-br-[30px]">
-                <div className='flex items-center'>
+                <div className="flex items-center">
                   <ImageRound
                     name="Left icon"
                     src={'/icons/chevron-left.svg'}

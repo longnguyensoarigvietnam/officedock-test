@@ -119,7 +119,7 @@ const RoomDetail = () => {
           width: '100%',
           height: '100%',
         }}
-        className="h-[calc(100vh-120px)] w-full">
+        className="h-[calc(100vh-120px)] w-full rounded-bl-[30px]  rounded-tr-[30px] rounded-br-[30px]">
         <div className="flex ">
           <div className="h-20 bg-white w-fit px-5 py-4 text-[#77858F] font-medium flex items-center gap-5 rounded-br-[30px]">
             <div>{params.id && renderBoxUser(params.id as string)}</div>
@@ -249,7 +249,7 @@ const RoomDetail = () => {
             );
           })}
         </div>
-        <div className='mt-[120px] ml-[30px]'>
+        <div className="mt-[120px] ml-[30px]">
           <MyPageMenu onClickSettingSurvey={() => {}} isVisitRoom={true} />
         </div>
         <div className="absolute bottom-[50px] left-[200px]">

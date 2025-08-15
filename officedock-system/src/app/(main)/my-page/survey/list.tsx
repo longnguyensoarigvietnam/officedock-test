@@ -261,13 +261,16 @@ const SurveyListPage = () => {
           className="rounded-bl-[30px] relative rounded-tr-[30px] rounded-br-[30px] h-[calc(100vh-120px)] w-full">
           <div className="flex absolute top-0 left-0 ">
             <div className="h-20 z-[30] bg-white w-fit px-10 py-4 text-[#77858F] font-medium flex items-center gap-[10px] rounded-br-[30px]">
-              <ImageRound
+              <div
                 onClick={() => router.back()}
-                name="Left icon"
-                src={'/icons/chevron-left.svg'}
-                className={`w-fit h-fit !cursor-pointer`}
-              />
-              <span className="text-sm text-black">戻る</span>
+                className="flex items-center gap-[10px]">
+                <ImageRound
+                  name="Left icon"
+                  src={'/icons/chevron-left.svg'}
+                  className={`w-fit h-fit !cursor-pointer`}
+                />
+                <span className="text-sm text-black cursor-pointer">戻る</span>
+              </div>
               <ImageRound
                 name="Room icon"
                 src={'/icons/room-profile.svg'}

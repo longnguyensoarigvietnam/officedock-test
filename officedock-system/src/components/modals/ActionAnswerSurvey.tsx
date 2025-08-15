@@ -195,7 +195,7 @@ const ActionAnswerSurveyModal = ({
             )}
             {(surveyDetail?.status.closed || isViewDetail) && (
               <p className="text-[13px] font-normal mt-[8px]">
-                合計{totalVotes}票 残り
+                合計{totalVotes}票
               </p>
             )}
           </div>

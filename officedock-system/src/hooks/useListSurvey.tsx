@@ -16,11 +16,9 @@ interface PaginationProps {
 }
 
 interface UseSurveyListProps {
-  condition?: boolean[];
   screenName?: string;
   pagination?: PaginationProps;
   status: 'all' | 'closed' | 'my_survey' | 'open';
-
   onSuccess?: (success: BasePagination<Survey[]>) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
@@ -36,25 +34,38 @@ const useSurveyList = ({
   const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
-  // API call with infinite scroll
+  /**
+   * getSurveyList: load the first page if pageParam has no URL
+   * Otherwise if pageParam is a URL (string), call that URL directly
+   */
   const getSurveyList = async ({
-    pageParam = 1,
+    pageParam,
     signal,
   }: {
-    pageParam?: number;
+    pageParam?: number | string;
     signal?: AbortSignal;
   }) => {
-    const params = new URLSearchParams();
-    params.append('page', String(pageParam));
-    params.append('page_size', String(PAGINATION_PAGE_SIZE_MEDIUM));
-    params.append('status', status);
+    let apiUrl: string;
 
-    const apiUrl = `${apiRouters.SURVEY_LIST}?${params.toString()}`;
+    if (typeof pageParam === 'string') {
+      // next page url for API
+      apiUrl = pageParam;
+    } else {
+      const params = new URLSearchParams();
+      params.append('page', String(pageParam ?? 1));
+      params.append('page_size', String(PAGINATION_PAGE_SIZE_MEDIUM));
+      params.append('status', status);
+      apiUrl = `${apiRouters.SURVEY_LIST}?${params.toString()}`;
+    }
+
     const { data } = await api.get<BasePagination<Survey[]>>(apiUrl, {
       signal,
     });
 
-    return { ...data, currentPage: pageParam };
+    return {
+      ...data,
+      currentUrl: apiUrl, // only for tracking/debug
+    };
   };
 
   const {
@@ -67,17 +78,16 @@ const useSurveyList = ({
   } = useInfiniteQuery({
     queryKey: ['getSurveyList', screenName, status],
     queryFn: ({ pageParam, signal }) => getSurveyList({ pageParam, signal }),
-    retry: 0,
     enabled: !!token,
+    retry: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    getNextPageParam: (lastPage) =>
-      lastPage?.hasNext ? lastPage.currentPage + 1 : undefined,
-    onSuccess: (data) => {
-      const lastPage = data.pages[data.pages.length - 1];
-      if (lastPage) {
-        onSuccess?.(lastPage);
-      }
+    getNextPageParam: (lastPage) => {
+      return lastPage?.next ? `/surveys/${lastPage?.next}` : undefined;
+    },
+    onSuccess: (allPages) => {
+      const lastPage = allPages.pages[allPages.pages.length - 1];
+      if (lastPage) onSuccess?.(lastPage);
     },
     onError: (error: AxiosError) => {
       onError?.(error);
@@ -88,7 +98,7 @@ const useSurveyList = ({
   });
 
   return {
-    surveyList: data?.pages?.flatMap((page) => page?.results ?? []) ?? [],
+    surveyList: data?.pages?.flatMap((p) => p?.results ?? []) ?? [],
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
