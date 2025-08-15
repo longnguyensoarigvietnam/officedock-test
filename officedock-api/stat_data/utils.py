@@ -1033,6 +1033,8 @@ def _handle_structure_data_for_team(
         percent += data["percent"]
         if last_element and percent < 100:
             data["percent"] += 100 - percent
+        if data.get("percent") > 100:
+            data["percent"] = 100
         if data.get("sub_teams"):
             data["sub_teams"] = sorted(
                 data["sub_teams"], key=lambda x: x["duration"], reverse=True
