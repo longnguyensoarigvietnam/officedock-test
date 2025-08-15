@@ -153,7 +153,7 @@ const ActionSettingSurvey = ({ open, onClose, onSusses }: Props) => {
                       />
                     )}
                   />
-                  {fields.length > 1 && (
+                  {fields.length > 2 && (
                     <ImageRound
                       src="/icons/delete-task.svg"
                       name="Delete icon"

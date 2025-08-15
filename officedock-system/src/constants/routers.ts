@@ -367,7 +367,7 @@ export const pageRouters = {
     href: `/my-page`,
   },
   SURVEY: {
-    name: 'survey',
+    name: 'アンケート',
     href: `/my-page/survey`,
   },
 };
