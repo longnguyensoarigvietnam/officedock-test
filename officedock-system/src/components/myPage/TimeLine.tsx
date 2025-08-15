@@ -14,6 +14,7 @@ import {
 } from '@utils/date';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
+import { formatWithParagraphTags } from '@utils';
 
 export const TimeLine = ({
   tweetList,
@@ -28,7 +29,7 @@ export const TimeLine = ({
   isLoadingTweetRef: React.MutableRefObject<boolean>;
   isFetchingNextPage: boolean;
   fetchNextPage: any;
-  setSelectedTweetToDelete: React.Dispatch<React.SetStateAction<number | null>>
+  setSelectedTweetToDelete: React.Dispatch<React.SetStateAction<number | null>>;
 }) => {
   const resultsContainerRef = useRef<HTMLDivElement | null>(null);
   const { data: session } = useSessionCache();
@@ -127,9 +128,12 @@ export const TimeLine = ({
                   )}
                 </div>
 
-                <p className="!break-all !max-w-full text-sm font-semibold">
-                  {tweet.content}
-                </p>
+                <p
+                  className="!break-all !max-w-full text-sm font-semibold"
+                  dangerouslySetInnerHTML={{
+                    __html: formatWithParagraphTags(tweet.content),
+                  }}></p>
+
                 <p className="text-xs">
                   {tweet.createdAt &&
                     formatCheckDate(

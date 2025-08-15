@@ -39,11 +39,17 @@ const useTweetList = ({
   const router = useRouter();
 
   // Handle call API get tweet list
-  const fetchTweetList = async ({ pageParam = 1 }) => {
+  const fetchTweetList = async ({ pageParam = 1,
+    signal, }: {
+    pageParam?: number;
+    signal?: AbortSignal;
+  }) => {
     isLoadingTweetRef.current = true;
 
     const apiUrl = `${apiRouters.TWEET_LIST}?page=${pageParam}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${lastTweetId ? `&tweet_id=${lastTweetId}` : ''}`;
-    const { data } = await api.get<BasePagination<TweetDetail[]>>(apiUrl);
+    const { data } = await api.get<BasePagination<TweetDetail[]>>(apiUrl, {
+      signal,
+    });
 
     return { ...data, currentPage: pageParam }; // add current page to track next
   };
@@ -58,7 +64,7 @@ const useTweetList = ({
     isFetched,
   } = useInfiniteQuery({
     queryKey: ['fetchTweetList'],
-    queryFn: fetchTweetList,
+    queryFn: ({ pageParam, signal }) => fetchTweetList({ pageParam, signal }),
     retry: 0,
     enabled: !!token && conditions?.every(Boolean),
     getNextPageParam: (lastPage) => (lastPage?.hasNext ? 1 : undefined),

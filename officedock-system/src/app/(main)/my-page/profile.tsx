@@ -1,5 +1,11 @@
 'use client';
-import React, { Fragment, useContext, useRef, useState } from 'react';
+import React, {
+  Fragment,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useMutation } from 'react-query';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
@@ -30,7 +36,7 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
-import { TweetDetail, TweetFormData } from '@interfaces/tweet';
+import { TweetFormData } from '@interfaces/tweet';
 import { SkillMapByOrganizationInfo } from '@interfaces/skills';
 
 import {
@@ -47,6 +53,7 @@ import { ActionsModal } from '@constants/enums';
 import useTweetList from '@hooks/useTweetList';
 import useSetSkillList from '@hooks/useSetSkillList';
 import { useErrorToast } from '@hooks/useErrorToast';
+import { useUpdateTweetCache } from '@hooks/CacheQuery/useUpdateTweetCache';
 
 import { getLastChar } from '@utils';
 
@@ -56,6 +63,7 @@ const MyPage = () => {
   const { data: session } = useSessionCache();
   const showErrorToast = useErrorToast();
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
 
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
   const { setIsLoading } = useContext(LoadingContext);
@@ -89,7 +97,7 @@ const MyPage = () => {
     number | null
   >(null);
   const isLoadingTweetRef = useRef(false);
-  const queryClient = useQueryClient();
+  const { createTweetMessageLocal, deleteTweetLocal } = useUpdateTweetCache();
 
   // Get tweet list
   const { tweetList, fetchNextPage, hasNextPage, isFetchingNextPage } =
@@ -126,6 +134,12 @@ const MyPage = () => {
     );
   };
 
+  useEffect(() => {
+    return () => {
+      queryClient.removeQueries({ queryKey: ['fetchTweetList'] });
+    };
+  }, [queryClient]);
+
   const renderTreasureForStep = (
     isLocked: boolean,
     step: number,
@@ -155,7 +169,7 @@ const MyPage = () => {
         <ImageRound
           name={`Step ${step} treasure`}
           src={treasureIcons[step]}
-          className={`w-[50px] h-[50px] cursor-pointer`}
+          className={`w-[40px] h-[40px] cursor-pointer`}
         />
       );
     }
@@ -188,23 +202,7 @@ const MyPage = () => {
         showToast({
           description: SUCCESS_CREATE_MESSAGE,
         });
-        queryClient.setQueryData(['fetchTweetList'], (oldData: any) => {
-          if (!oldData) return oldData;
-
-          // Insert new tweet at the start of the first page
-          return {
-            ...oldData,
-            pages: oldData.pages.map((page: any, index: number) => {
-              if (index === 0) {
-                return {
-                  ...page,
-                  results: [data, ...page.results],
-                };
-              }
-              return page;
-            }),
-          };
-        });
+        createTweetMessageLocal(data);
       },
       onError: (error: AxiosError) => {
         showErrorToast(error, ERROR_CREATE_MESSAGE);
@@ -230,18 +228,7 @@ const MyPage = () => {
         showToast({
           description: SUCCESS_DELETE_MESSAGE,
         });
-        queryClient.setQueryData(['fetchTweetList'], (oldData: any) => {
-          if (!oldData) return oldData;
-
-          // Delete selected tweet
-          return {
-            ...oldData,
-            pages: oldData.pages.map((page: any) => ({
-              ...page,
-              results: page.results.filter((tweet: TweetDetail) => tweet.id !== variables), // remove deleted tweet
-            })),
-          };
-        });
+        deleteTweetLocal(variables);
       },
       onError: (error: AxiosError) => {
         showErrorToast(error, ERROR_DELETE_MESSAGE);
@@ -657,7 +644,18 @@ const MyPage = () => {
       {openSettingSurvey && (
         <ActionSettingSurvey
           open={openSettingSurvey}
-          onSusses={() => {
+          onSuccess={(title: string) => {
+            const doc = new DOMParser().parseFromString(title, 'text/html');
+            const paragraphs = doc.querySelectorAll('p');
+
+            if (paragraphs.length > 0) {
+              // Insert 【 at start of first <p>
+              paragraphs[0].innerHTML = `【${paragraphs[0].innerHTML}`;
+              // Insert 】 at end of last <p>
+              paragraphs[paragraphs.length - 1].innerHTML =
+                `${paragraphs[paragraphs.length - 1].innerHTML}】アンケート実施中！ぜひご協力ください！`;
+            }
+            setTweetMessage(doc.body.innerHTML);
             setOpenSettingSurvey(false);
             setOpenSuccessSurvey(true);
           }}
@@ -667,8 +665,14 @@ const MyPage = () => {
       {openSuccessSurvey && (
         <SuccessSurveyActionModal
           open={openSuccessSurvey}
-          onClose={() => setOpenSuccessSurvey(false)}
-          onTweet={() => setOpenCreateTweetModal(true)}
+          onClose={() => {
+            setOpenSuccessSurvey(false);
+            setTweetMessage('');
+          }}
+          onTweet={() => {
+            setOpenSuccessSurvey(false);
+            setOpenCreateTweetModal(true);
+          }}
         />
       )}
     </div>

@@ -251,6 +251,10 @@ html *::-webkit-scrollbar-track {
   font-size: 14px !important;
 }
 
+.tweet-form .ProseMirror {
+  height: 130px;
+}
+
 @media screen and (-webkit-min-device-pixel-ratio: 0) {
   .custom-password-mask[type='password'] {
     -webkit-text-stroke-width: 0.5em;

@@ -431,7 +431,7 @@ export const SkillMapByOrganizationPanel = ({
                       key={skill.id ?? `${index}-${idx}`}
                       className={`relative hover:cursor-pointer flex items-center ${isLast ? 'w-[calc(33.33333%_-_30px)]' : 'w-[calc(33.33333%_+_15px)]'}`}
                       onClick={async () => {
-                        if (isLocked) return;
+                        if (isLocked || !skill.id) return;
 
                         if (settingSkillAction === ActionsModal.CREATE) {
                           onOpenConfirmSettingSkillInfo &&

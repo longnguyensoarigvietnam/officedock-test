@@ -32,10 +32,10 @@ import { SurveyFormData, SurveyRequestData } from '@interfaces/survey';
 type Props = {
   open: boolean;
   onClose: () => void;
-  onSusses: () => void;
+  onSuccess: (title: string) => void;
 };
 
-const ActionSettingSurvey = ({ open, onClose, onSusses }: Props) => {
+const ActionSettingSurvey = ({ open, onClose, onSuccess }: Props) => {
   const {
     control,
     watch,
@@ -69,8 +69,8 @@ const ActionSettingSurvey = ({ open, onClose, onSusses }: Props) => {
     'postCreateSurvey',
     handleCreateSurvey,
     {
-      onSuccess: () => {
-        onSusses();
+      onSuccess: (data) => {
+        onSuccess(data.data.title);
       },
       onError: () => {
         showToast({
