@@ -230,10 +230,10 @@ html *::-webkit-scrollbar-track {
 }
 
 .ProseMirror {
-  height: 150px;
+  height: fit-content;
   border: 1px solid #77858f !important;
   border-radius: 6px !important;
-  padding: 14px;
+  padding: 11px 14px 11px 14px;
   overflow-y: auto;
   max-height: 150px !important;
 }
@@ -249,6 +249,10 @@ html *::-webkit-scrollbar-track {
   pointer-events: none;
   height: 0;
   font-size: 14px !important;
+}
+
+.tweet-form .ProseMirror {
+  height: 130px;
 }
 
 @media screen and (-webkit-min-device-pixel-ratio: 0) {

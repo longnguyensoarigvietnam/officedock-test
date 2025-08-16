@@ -1,6 +1,6 @@
 import { MenuItem, MyPageMenuItem, SettingMenuItem } from '@interfaces/menu';
 import { pageRouters } from './routers';
-import { PermissionsSystem } from './enums';
+import { PermissionsSystem, TabTypeSurvey } from './enums';
 
 export const SETTING_MENU: SettingMenuItem[] = [
   {
@@ -249,28 +249,28 @@ export const MY_PAGE_MENU: MyPageMenuItem[] = [
   },
   {
     name: '他の人の部屋へ 出かける',
-    href: '#',
+    href: pageRouters.VISIT_ROOM.href,
     iconSrc: '/icons/room-profile.svg',
     iconName: 'Room icon',
   },
   {
     name: 'アンケート',
-    href: pageRouters.SURVEY.href,
+    href: '',
     iconSrc: '/icons/question.svg',
     iconName: 'Question icon',
     child: [
       {
         name: 'アンケートを見る',
-        href: '/',
+        href: pageRouters.SURVEY.href,
       },
       {
         name: 'アンケートを作る',
-        href: '/',
+        href: '',
         onClick: () => {},
       },
       {
         name: 'マイアンケートを見る',
-        href: '/',
+        href: `${pageRouters.SURVEY.href}?tab=${TabTypeSurvey.MY_SURVEY}`,
       },
     ],
   },
@@ -285,5 +285,19 @@ export const MY_PAGE_MENU: MyPageMenuItem[] = [
     href: '#',
     iconSrc: '/icons/shop.svg',
     iconName: 'Shop icon',
+  },
+];
+export const VISIT_PAGE_MENU: MyPageMenuItem[] = [
+  {
+    name: '自分の部屋へ 戻る',
+    href: pageRouters.MY_PAGE.href,
+    iconSrc: '/icons/room-profile.svg',
+    iconName: 'Room icon',
+  },
+  {
+    name: 'サンクスを送る',
+    href: '#',
+    iconSrc: '/icons/heart.svg',
+    iconName: 'Heart icon',
   },
 ];

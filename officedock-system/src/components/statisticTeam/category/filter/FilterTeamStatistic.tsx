@@ -51,7 +51,7 @@ const FilterTeamStatistic = ({ className, classNameData }: Props) => {
                     className="w-[14px] h-[14px] ml-2"
                   />
                   {orderingOptions?.user_ids.length == 0 && (
-                    <span>メンバーの絞り込み</span>
+                    <span>メンバーとタグの絞り込み</span>
                   )}
                 </PopoverButton>
               </div>

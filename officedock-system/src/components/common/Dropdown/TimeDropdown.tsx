@@ -37,16 +37,20 @@ type Props = {
   addInput?: boolean;
   styleClass?: CSSProperties;
   styleClassOption?: CSSProperties;
+  isBottomOptions?: boolean;
+  iconSrc?: string;
   onChange?: (value: OptionDropdownType) => void;
   onAdd?: (value: string) => void;
 };
 
 const TimeDropdown = ({
   error,
+  iconSrc,
   isLoading,
   options,
   labelOptionClass,
   disabled = false,
+  isBottomOptions = true,
   className,
   classNameOption,
   classNameError,
@@ -138,8 +142,8 @@ const TimeDropdown = ({
                   style={styleClass}
                   className={`  w-full h-full cursor-default leading-5.5 !text-center rounded bg-white text-gray-900  text-base focus-visible:!outline-none focus-visible:!shadow-none ${disabled && 'opacity-55'}  ${className}`}>
                   <ImageRound
-                    className="h-[14px] w-[15px] hover:cursor-pointer absolute top-[2px]"
-                    src="/icons/clock-time.svg"
+                    className={`${iconSrc ? 'w-[22px] h-fit' : 'h-[14px] w-[15px]'} hover:cursor-pointer absolute top-[2px]`}
+                    src={`/icons/${iconSrc ? iconSrc : 'clock-time'}.svg`}
                     name="Clock icon"
                   />
                 </ListboxButton>
@@ -150,7 +154,7 @@ const TimeDropdown = ({
                   leaveFrom="opacity-100"
                   leaveTo="opacity-0">
                   <ListboxOptions
-                    className={`absolute z-20 left-[-4px] top-6 mt-1 max-h-56 w-full min-w-[65px] overflow-auto rounded bg-white text-xs shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none ${classNameOption}`}>
+                    className={`absolute z-20 left-[-4px]  mt-1 max-h-56 w-full min-w-[65px] overflow-auto rounded bg-white text-xs shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none ${classNameOption} ${isBottomOptions ? 'top-6' : 'bottom-8'}`}>
                     {isLoading ? (
                       <Spinner
                         className="!h-fit py-3"

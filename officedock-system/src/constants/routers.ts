@@ -366,8 +366,16 @@ export const pageRouters = {
     name: 'マイページ',
     href: `/my-page`,
   },
+  VISIT_ROOM: {
+    name: '他の人の部屋へ出かける',
+    href: '/my-page/visit-rooms',
+  },
+  VISIT_ROOM_DETAIL: {
+    name: '他の人の部屋へ出かける',
+    href: (id: string) => `/my-page/visit-rooms/${id}`,
+  },
   SURVEY: {
-    name: 'survey',
+    name: 'アンケート',
     href: `/my-page/survey`,
   },
 };
@@ -591,4 +599,6 @@ export const apiRouters = {
 
   // SURVEY
   SURVEY_LIST: '/surveys/',
+  SURVEY_DETAIL: (id: string) => `/surveys/${id}/`,
+  ANSWER_QUESTION: (id: string) => `/surveys/${id}/answer/`,
 };

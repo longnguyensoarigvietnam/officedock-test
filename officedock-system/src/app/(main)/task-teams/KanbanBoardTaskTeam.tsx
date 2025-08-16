@@ -302,7 +302,7 @@ const KanbanBoardTaskTeam = () => {
       },
       onError: () => {},
       onSettled: () => {
-        isCreatingRef.current = true;
+        isCreatingRef.current = false;
         setInitialLoad(false);
       },
     },

@@ -1,22 +1,161 @@
 'use client';
-import React, { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useContext, useState } from 'react';
+import { useMutation } from 'react-query';
+import { AxiosError } from 'axios';
+
 import ImageRound from '@components/common/ImageRound';
 import { RenderAccessories } from '@components/custom/UserCustomize';
 import Button from '@components/common/Button';
 import AllSurveyTab from '@components/survey/AllSurveyTab';
+import ReceivingSurveyTab from '@components/survey/ReceivingSurveyTab';
+import EndedSurveyTab from '@components/survey/EndedSurveyTab';
+import MySurveyTab from '@components/survey/MySurveyTab';
+import ActionAnswerSurveyModal from '@components/modals/ActionAnswerSurvey';
+import ActionSettingSurvey from '@components/modals/ActionSettingSurvey';
+import SuccessSurveyActionModal from '@components/modals/SuccessSurveyActionModal';
+import CreateTweetModal from '@components/modals/CreateTweetModal';
+import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 
-import { TabTypeSurvey } from '@constants/enums';
-import SurveyListDetailModal from '@components/modals/SurveyListDetailModal';
+import { TabTypeSurvey, TabTypeSurveyValue } from '@constants/enums';
+import { apiRouters } from '@constants/routers';
+import {
+  ERROR_CREATE_MESSAGE,
+  ERROR_DELETE_MESSAGE,
+  SUCCESS_CREATE_MESSAGE,
+  SUCCESS_DELETE_MESSAGE,
+} from '@constants/message';
+
+import { useUpdateSurveyCache } from '@hooks/CacheQuery/useUpdateSurveyCache';
+import { useErrorToast } from '@hooks/useErrorToast';
+
+import { TweetFormData } from '@interfaces/tweet';
+
+import { LoadingContext } from '@providers/LoadingProvider';
+import { useToast } from '@providers/ToastProvider';
+
+import api from '@base/api';
 
 const SurveyListPage = () => {
-  const [activeTab, setActiveTab] = useState<TabTypeSurvey>(TabTypeSurvey.ALL);
+  const searchParams = useSearchParams();
+  const params = new URLSearchParams(searchParams);
+  const surveyId = searchParams.get('question') ?? '';
+  const tabParam = searchParams.get('tab') as TabTypeSurvey | null;
+  const mySurvey = searchParams.get('my-survey');
 
-  const listAvatar = ['body', 'head-full', 'hat', 'shoes'];
+  const router = useRouter();
+  const { setIsLoading } = useContext(LoadingContext);
+  const showErrorToast = useErrorToast();
+  const { showToast } = useToast();
+
+  // State
+  const [activeTab, setActiveTab] = useState<TabTypeSurvey>(
+    tabParam || TabTypeSurvey.ALL,
+  );
+  const [surveyDetailId, setSurveyDetailId] = useState('');
+
+  const [isShowActionAnswerModal, setIsShowActionAnswerModal] =
+    useState<boolean>(!!surveyId || !!surveyDetailId);
+
+  // Survey
+  const [openSettingSurvey, setOpenSettingSurvey] = useState(false);
+  const [openSuccessSurvey, setOpenSuccessSurvey] = useState(false);
+  const [isMySurvey, setIsMySurvey] = useState(!!mySurvey);
+
+  const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
+  const [selectedSurveyToDelete, setSelectedSurveyToDelete] = useState<
+    number | null
+  >(null);
+
+  // Tweet
+  const [openCreateTweetModal, setOpenCreateTweetModal] =
+    useState<boolean>(false);
+  const [tweetMessage, setTweetMessage] = useState<string>('');
+
+  const listAvatar = ['body', 'head-full', 'shoes', 'hat'];
+
+  // Set param
+  const handleSetParam = (id: string, isMySurvey?: boolean) => {
+    if (id) {
+      params.set('question', id);
+      if (isMySurvey) {
+        params.set('my-survey', 'true');
+      }
+    }
+
+    router.push(`?${params.toString()}`);
+  };
+  // Handle remove param
+  const handleRemoveParam = () => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('question');
+    params.delete('my-survey');
+
+    router.replace(`?${params.toString()}`);
+  };
 
   const renderContent = () => {
     switch (activeTab) {
       case TabTypeSurvey.ALL:
-        return <AllSurveyTab />;
+        return (
+          <AllSurveyTab
+            handleAnswer={(id: number, isMySurvey?: boolean) => {
+              setSurveyDetailId(String(id));
+              handleSetParam(String(id), isMySurvey);
+              setIsShowActionAnswerModal(true);
+              setIsMySurvey(isMySurvey || false);
+            }}
+            handleDelete={(id: number) => {
+              setSelectedSurveyToDelete(id);
+              setOpenConfirmDeleteModal(true);
+            }}
+          />
+        );
+      case TabTypeSurvey.RECEIVING:
+        return (
+          <ReceivingSurveyTab
+            handleAnswer={(id: number, isMySurvey?: boolean) => {
+              setSurveyDetailId(String(id));
+              handleSetParam(String(id), isMySurvey);
+              setIsShowActionAnswerModal(true);
+              setIsMySurvey(isMySurvey || false);
+            }}
+            handleDelete={(id: number) => {
+              setSelectedSurveyToDelete(id);
+              setOpenConfirmDeleteModal(true);
+            }}
+          />
+        ); // Replace with ReceivingSurveyTab when implemented
+      case TabTypeSurvey.ENDED:
+        return (
+          <EndedSurveyTab
+            handleAnswer={(id: number, isMySurvey?: boolean) => {
+              setSurveyDetailId(String(id));
+              handleSetParam(String(id), isMySurvey);
+              setIsShowActionAnswerModal(true);
+              setIsMySurvey(isMySurvey || false);
+            }}
+            handleDelete={(id: number) => {
+              setSelectedSurveyToDelete(id);
+              setOpenConfirmDeleteModal(true);
+            }}
+          />
+        );
+      case TabTypeSurvey.MY_SURVEY:
+        return (
+          <MySurveyTab
+            handleAnswer={(id: number, isMySurvey?: boolean) => {
+              setSurveyDetailId(String(id));
+              handleSetParam(String(id), isMySurvey);
+              setIsShowActionAnswerModal(true);
+              setIsMySurvey(isMySurvey || false);
+            }}
+            handleDelete={(id: number) => {
+              setSelectedSurveyToDelete(id);
+              setOpenConfirmDeleteModal(true);
+            }}
+          />
+        );
 
       default:
         return null;
@@ -30,6 +169,84 @@ const SurveyListPage = () => {
     { name: TabTypeSurvey.MY_SURVEY, value: TabTypeSurvey.MY_SURVEY },
   ];
 
+  // Cache update and refresh functions
+  const { updateSurveyAnswered, refreshSurveyList, removeSurveyFromCache } =
+    useUpdateSurveyCache();
+
+  const mapping: Record<TabTypeSurvey, TabTypeSurveyValue> = {
+    [TabTypeSurvey.ALL]: TabTypeSurveyValue.ALL,
+    [TabTypeSurvey.RECEIVING]: TabTypeSurveyValue.RECEIVING,
+    [TabTypeSurvey.ENDED]: TabTypeSurveyValue.ENDED,
+    [TabTypeSurvey.MY_SURVEY]: TabTypeSurveyValue.MY_SURVEY,
+  };
+  const activeTabValue = mapping[activeTab];
+
+  const handleAnswerSurvey = (id: number) => {
+    updateSurveyAnswered(id, activeTabValue); // Update cache when survey is answered
+  };
+
+  // Call API to send tweet message
+  const handleSendTweetMessage = async (data: TweetFormData) => {
+    setIsLoading(true);
+    const { data: response } = await api.post(apiRouters.TWEET_LIST, data);
+    return response;
+  };
+
+  const { mutate: sendTweetMessage, isSuccess: isSendTweetSuccess } =
+    useMutation('sendTweetMessage', handleSendTweetMessage, {
+      onSuccess: () => {
+        setTweetMessage('');
+        showToast({
+          description: SUCCESS_CREATE_MESSAGE,
+        });
+      },
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_CREATE_MESSAGE);
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    });
+
+  // Delete location API
+  const handleDeleteSurvey = async (id: string) => {
+    setIsLoading(true);
+    return await api.delete(apiRouters.SURVEY_DETAIL(id));
+  };
+
+  const { mutate: deleteSurvey } = useMutation(
+    'postDeleteSurvey',
+    handleDeleteSurvey,
+    {
+      onSuccess: () => {
+        if (selectedSurveyToDelete) {
+          removeSurveyFromCache(selectedSurveyToDelete, activeTabValue);
+        }
+        showToast({
+          description: SUCCESS_DELETE_MESSAGE,
+        });
+        setOpenConfirmDeleteModal(false);
+        setSelectedSurveyToDelete(null);
+      },
+      onError: () => {
+        showToast({
+          variant: 'error',
+          description: ERROR_DELETE_MESSAGE,
+        });
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+
+  // Handle confirm delete
+  const handleConfirmDeleteLocation = () => {
+    if (selectedSurveyToDelete) {
+      deleteSurvey(String(selectedSurveyToDelete));
+    }
+  };
+
   return (
     <>
       <div className="h-full w-full">
@@ -41,21 +258,25 @@ const SurveyListPage = () => {
             width: '100%',
             height: '100%',
           }}
-          className="bg-red-300 rounded-bl-[30px] relative rounded-tr-[30px] rounded-br-[30px] h-[calc(100vh-120px)] w-full">
+          className="rounded-bl-[30px] relative rounded-tr-[30px] rounded-br-[30px] h-[calc(100vh-120px)] w-full">
           <div className="flex absolute top-0 left-0 ">
-            <div className="h-20 bg-white w-fit px-10 py-4 text-[#77858F] font-medium flex items-center gap-[10px] rounded-br-[30px]">
-              <ImageRound
-                name="Left icon"
-                src={'/icons/chevron-left.svg'}
-                className={`w-fit h-fit cursor-pointer`}
-              />
-              <span className="text-sm text-black">戻る</span>
+            <div className="h-20 z-[30] bg-white w-fit px-10 py-4 text-[#77858F] font-medium flex items-center gap-[10px] rounded-br-[30px]">
+              <div
+                onClick={() => router.back()}
+                className="flex items-center gap-[10px]">
+                <ImageRound
+                  name="Left icon"
+                  src={'/icons/chevron-left.svg'}
+                  className={`w-fit h-fit !cursor-pointer`}
+                />
+                <span className="text-sm text-black cursor-pointer">戻る</span>
+              </div>
               <ImageRound
                 name="Room icon"
                 src={'/icons/room-profile.svg'}
                 className={`w-fit h-fit ml-[10px]`}
               />
-              <span className="text-sm text-black ml-1">アンケート</span>
+              <span className="text-[22px] text-black ml-1">アンケート</span>
             </div>
           </div>
           <div className="relative  pr-[30px] flex w-full justify-between items-center h-full">
@@ -79,6 +300,7 @@ const SurveyListPage = () => {
                     みんなの声を聞くために、新しくアンケートを作ってみるのはどうかな？
                   </p>
                   <div
+                    onClick={() => setOpenSettingSurvey(true)}
                     style={{
                       background:
                         'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
@@ -129,14 +351,84 @@ const SurveyListPage = () => {
                   })}
                 </div>
               </div>
-              <div className="h-full w-full px-[30px] mt-5">
+              <div className="h-full w-full pl-[30px] mt-5">
                 {renderContent()}
               </div>
             </div>
           </div>
         </div>
       </div>
-      <SurveyListDetailModal open={false} onClose={() => {}} />
+      {isShowActionAnswerModal && (
+        <ActionAnswerSurveyModal
+          open={isShowActionAnswerModal}
+          isMySurvey={isMySurvey || mySurvey ? true : false}
+          detailId={surveyId || surveyDetailId}
+          handleAnswerSurvey={handleAnswerSurvey}
+          onClose={() => {
+            handleRemoveParam();
+            setIsShowActionAnswerModal(false);
+          }}
+        />
+      )}
+      {openSettingSurvey && (
+        <ActionSettingSurvey
+          open={openSettingSurvey}
+          onSuccess={(title: string) => {
+            const doc = new DOMParser().parseFromString(title, 'text/html');
+            const paragraphs = doc.querySelectorAll('p');
+
+            if (paragraphs.length > 0) {
+              // Insert 【 at start of first <p>
+              paragraphs[0].innerHTML = `【${paragraphs[0].innerHTML}`;
+              // Insert 】 at end of last <p>
+              paragraphs[paragraphs.length - 1].innerHTML =
+                `${paragraphs[paragraphs.length - 1].innerHTML}】アンケート実施中！ぜひご協力ください！`;
+            }
+            setTweetMessage(doc.body.innerHTML);
+            const activeTabValue = mapping[activeTab];
+            setOpenSettingSurvey(false);
+            setOpenSuccessSurvey(true);
+            if (activeTab !== TabTypeSurvey.ENDED) {
+              refreshSurveyList(activeTabValue);
+            }
+          }}
+          onClose={() => setOpenSettingSurvey(false)}
+        />
+      )}
+      {openSuccessSurvey && (
+        <SuccessSurveyActionModal
+          open={openSuccessSurvey}
+          onClose={() => {
+            setOpenSuccessSurvey(false);
+            setTweetMessage('');
+          }}
+          onTweet={() => {
+            setOpenSuccessSurvey(false);
+            setOpenCreateTweetModal(true);
+          }}
+        />
+      )}
+      {openCreateTweetModal && (
+        <CreateTweetModal
+          open={openCreateTweetModal}
+          tweetMessage={tweetMessage}
+          isSendTweetSuccess={isSendTweetSuccess}
+          setTweetMessage={setTweetMessage}
+          onClose={() => setOpenCreateTweetModal(false)}
+          onSubmit={() => sendTweetMessage({ content: tweetMessage })}
+        />
+      )}
+      {openConfirmDeleteModal && (
+        <ConfirmDeleteModal
+          open={openConfirmDeleteModal}
+          type="アンケート"
+          onConfirm={handleConfirmDeleteLocation}
+          onClose={() => {
+            setOpenConfirmDeleteModal(false);
+            setSelectedSurveyToDelete(null);
+          }}
+        />
+      )}
     </>
   );
 };

@@ -68,6 +68,7 @@ const Item = ({
   const {
     columnWidth,
     selectedOptionZoom,
+    setTaskSelectedToStart,
     setDataClickTask,
     setDataRunning,
     setIdTaskStarting,
@@ -238,7 +239,7 @@ const Item = ({
     },
   });
   // Action call API check start task
-  const _handleConfirmCheckStartTask = (id: string) => {
+  const handleConfirmCheckStartTask = (id: string) => {
     calculateDurationTask({
       id: id,
       type: ItemStartType.TASK,
@@ -300,7 +301,7 @@ const Item = ({
               style={{
                 ...provided.draggableProps.style,
               }}
-              className={`relative ${selectedOptionZoom.value !== 50 && 'gap-2'} ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-primary'} bg-white shadow-common rounded-[20px] text-xs flex flex-col  mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
+              className={`relative  ${selectedOptionZoom.value !== 50 && 'gap-2'} ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-primary'} bg-white shadow-common rounded-[20px] text-xs flex flex-col  mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
               <div className="relative w-[100%] h-full">
                 {isPermissionUpdate && (
                   <>
@@ -474,46 +475,34 @@ const Item = ({
                       </p>
                     </div>
                     {/* TODO: PLAY / PAUSE TASK */}
-                    {/* {selectedOptionZoom.value === 50 && (
-                      <DynamicTooltip
-                        content={content.isStart ? '計測停止' : '計測開始'}
-                        placement="top">
-                        <div
-                          className=""
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}>
-                          {content.isMyTask && (
-                            <ImageRound
-                              src={`/icons/${content.isStart ? 'pause' : 'play-task'}.svg`}
-                              name="Start task"
-                              style={{
-                                width:
-                                  (selectedOptionZoom.value as number) > 75
-                                    ? '26px'
-                                    : (selectedOptionZoom.value as number) == 75
-                                      ? '20px'
-                                      : '16px',
-                                height:
-                                  (selectedOptionZoom.value as number) > 75
-                                    ? '26px'
-                                    : (selectedOptionZoom.value as number) == 75
-                                      ? '20px'
-                                      : '16px',
-                              }}
-                              className={`hover:cursor-pointer `}
-                              onClick={async () => {
-                                await new Promise<void>((resolve) => {
-                                  setTaskSelectedToStart(content);
-                                  resolve();
-                                });
-                                handleConfirmCheckStartTask(`${content.id}`);
-                              }}
-                            />
-                          )}
-                        </div>
-                      </DynamicTooltip>
-                    )} */}
+                    <div className="">
+                      {selectedOptionZoom.value === 50 && (
+                        <DynamicTooltip
+                          content={content.isStart ? '計測停止' : '計測開始'}
+                          placement="top">
+                          <div
+                            className=""
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}>
+                            {content.isMyTask && (
+                              <ImageRound
+                                src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
+                                name="Start task"
+                                className={`hover:cursor-pointer w-fit h-fit  ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
+                                onClick={async () => {
+                                  await new Promise<void>((resolve) => {
+                                    setTaskSelectedToStart(content);
+                                    resolve();
+                                  });
+                                  handleConfirmCheckStartTask(`${content.id}`);
+                                }}
+                              />
+                            )}
+                          </div>
+                        </DynamicTooltip>
+                      )}
+                    </div>
                   </div>
                 )}
                 {selectedOptionZoom.value !== 50 && (
@@ -588,7 +577,7 @@ const Item = ({
                       </div>
                     </DynamicTooltip>
                     {/* TODO: PLAY / PAUSE TASK */}
-                    {/* <DynamicTooltip
+                    <DynamicTooltip
                       content={content.isStart ? '計測停止' : '計測開始'}
                       placement="top">
                       <div
@@ -598,23 +587,9 @@ const Item = ({
                         }}>
                         {content.isMyTask && (
                           <ImageRound
-                            src={`/icons/${content.isStart ? 'pause' : 'play-task'}.svg`}
+                            src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
                             name="Start task"
-                            style={{
-                              width:
-                                (selectedOptionZoom.value as number) > 75
-                                  ? '26px'
-                                  : (selectedOptionZoom.value as number) == 75
-                                    ? '20px'
-                                    : '16px',
-                              height:
-                                (selectedOptionZoom.value as number) > 75
-                                  ? '26px'
-                                  : (selectedOptionZoom.value as number) == 75
-                                    ? '20px'
-                                    : '16px',
-                            }}
-                            className={`hover:cursor-pointer `}
+                            className={`hover:cursor-pointer w-fit h-fit ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
                             onClick={async () => {
                               await new Promise<void>((resolve) => {
                                 setTaskSelectedToStart(content);
@@ -625,7 +600,7 @@ const Item = ({
                           />
                         )}
                       </div>
-                    </DynamicTooltip> */}
+                    </DynamicTooltip>
                   </div>
                 )}
               </div>
@@ -686,7 +661,7 @@ const Item = ({
                     {content.title}
                   </p>
                   {/* TODO: PLAY / PAUSE TASK */}
-                  {/* <DynamicTooltip
+                  <DynamicTooltip
                     content={content.isStart ? '計測停止' : '計測開始'}
                     placement="top">
                     <div
@@ -696,9 +671,9 @@ const Item = ({
                       }}>
                       {content.isMyTask && (
                         <ImageRound
-                          src={`/icons/${content.isStart ? 'pause' : 'play-task'}.svg`}
+                          src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
                           name="Start task"
-                          className={`hover:cursor-pointer w-fit h-fit`}
+                          className={`hover:cursor-pointer w-fit h-fit ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
                           onClick={async () => {
                             await new Promise<void>((resolve) => {
                               setTaskSelectedToStart(content);
@@ -709,7 +684,7 @@ const Item = ({
                         />
                       )}
                     </div>
-                  </DynamicTooltip> */}
+                  </DynamicTooltip>
                 </div>
               </div>
             </div>

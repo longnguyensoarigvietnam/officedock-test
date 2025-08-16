@@ -2325,3 +2325,11 @@ export function generateVerticalGradient(hexColor: string): string {
 
   return `linear-gradient(to bottom, ${dark} 0%, ${hexColor} 50%, ${light} 100%)`;
 }
+
+// Get total day remaining
+export function getDaysUntil(endAt: string): number {
+  const endDate = new Date(endAt);
+  const now = new Date();
+  const diffMs = endDate.getTime() - now.getTime();
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+}

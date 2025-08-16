@@ -355,13 +355,17 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         return super().perform_destroy(instance)
 
-    @extend_schema(parameters=[OpenApiParameter("search", type=str)])
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("search", type=str),
+            OpenApiParameter("screen_name", type=str, required=False),
+        ]
+    )
     @action(
         methods=["GET"],
         detail=False,
         url_path="members",
         serializer_class=OrganizationMemberSerializer,
-        screen_name=Screens.TEAM_DOCK_SKILL_MAP.value,
     )
     def members(self, request):
         """
@@ -391,7 +395,18 @@ class OrganizationByIDViewSet(BaseAPIViewSet):
     queryset = Organization.all_objects.order_by("-created_at")
     serializer_class = OrganizationSerializer
     permission_classes = [ActionPermission]
-    screen_name = Screens.ORGANIZATION.value
+    screen_name = None
+
+    def get_permissions(self):
+        """Filter data by current screen"""
+        screen_name = self.request.query_params.get(
+            "screen_name", Screens.ORGANIZATION.value
+        )
+        if screen_name and to_camel_case(screen_name) in [
+            to_camel_case(item.value) for item in Screens
+        ]:
+            self.screen_name = to_snake_case(screen_name)
+        return super().get_permissions()
 
     def get_queryset(self):
         """
@@ -911,14 +926,13 @@ class OrganizationCategoryHierarchyViewSet(
 
                 else:
                     # Handle to update organization_statistic_category
-                    organization_statistic_category = (
-                        OrganizationsStatisticCategories.objects.create(
+                    if large_statistic_category and medium_statistic_category:
+                        organization_statistic_category = OrganizationsStatisticCategories.objects.create(
                             **item,
                             large_statistic_category=large_statistic_category,
                             medium_statistic_category=medium_statistic_category,
                             small_statistic_category=small_statistic_category,
                         )
-                    )
 
                 # Remove duplicate record
                 records = OrganizationsStatisticCategories.objects.filter(
@@ -927,9 +941,10 @@ class OrganizationCategoryHierarchyViewSet(
                     medium_statistic_category=medium_statistic_category,
                     small_statistic_category=small_statistic_category,
                 ).order_by("-updated_at")
-                ids = records.exclude(id=records.first().id).values_list(
-                    "id", flat=True
-                )
+                first_records = records.first()
+                ids = records.exclude(
+                    id=first_records.id if first_records else None
+                ).values_list("id", flat=True)
                 ids_to_delete = set(ids_to_delete) | set(
                     ids
                 )  # Merge ids to delete
@@ -1020,18 +1035,26 @@ class OrganizationCategoryHierarchyViewSet(
         large_statistic_category = None
 
         if obj:
-            (
-                large_statistic_category,
-                created,
-            ) = StatisticCategory.objects.get_or_create(
-                company=company,
-                name=obj.get("name"),
-                uuid=obj.get("uuid"),
-            )
+            try:
+                (
+                    large_statistic_category,
+                    created,
+                ) = StatisticCategory.objects.get_or_create(
+                    company=company,
+                    name=obj.get("name"),
+                    uuid=obj.get("uuid"),
+                )
+            except Exception:
+                # Handle case UUID duplicate - try to create with new UUID
+                created = True
+                large_statistic_category = StatisticCategory.objects.create(
+                    company=company,
+                    name=obj.get("name"),
+                )
 
             if created:
                 large_statistic_category.team = org
-                large_statistic_category.save()
+                large_statistic_category.save(update_fields=["team"])
 
         return large_statistic_category
 

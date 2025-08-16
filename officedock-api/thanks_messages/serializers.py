@@ -65,13 +65,12 @@ class ThanksMessageSerializer(serializers.ModelSerializer):
         return super().validate(attrs)
 
     def to_representation(self, instance):
-        request = self.context.get("request")
-        is_show_deleted = (
-            request.query_params.get("is_show_deleted", "").lower() == "true"
+        is_show_deleted_message = self.context.get(
+            "is_show_deleted_message", False
         )
         representation = super().to_representation(instance)
 
-        if not is_show_deleted and instance.deleted_at:
+        if not is_show_deleted_message and instance.deleted_at:
             representation["message"] = None
 
         return representation

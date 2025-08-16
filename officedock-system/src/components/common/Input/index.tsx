@@ -18,6 +18,8 @@ export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   register?: UseFormRegisterReturn;
   isShowClockIcon?: boolean;
   classNameOption?: string;
+  isBottomOptions?: boolean;
+  iconSrc?: string;
   options?: OptionDropdownType[];
   onChangeDropdown?: (value: OptionDropdownType) => void;
 };
@@ -26,6 +28,7 @@ const Input = ({
   label,
   type = 'text',
   error,
+  iconSrc,
   register,
   required,
   requireText,
@@ -36,6 +39,7 @@ const Input = ({
   isShowClockIcon = false,
   options,
   classNameOption,
+  isBottomOptions,
   onChangeDropdown,
   ...props
 }: InputProps) => {
@@ -62,10 +66,12 @@ const Input = ({
         {isShowClockIcon && (
           <>
             <div
-              className={`w-4 absolute left-[5px] top-[8px] ${classNameOption} `}>
+              className={`${iconSrc ? 'w-[22px] left-[10px] top-[4px]' : 'w-4 left-[5px] top-[8px]'} absolute  ${classNameOption} `}>
               <TimeDropdown
                 options={options ? options : []}
                 onChange={onChangeDropdown}
+                iconSrc={iconSrc}
+                isBottomOptions={isBottomOptions}
               />
             </div>
           </>

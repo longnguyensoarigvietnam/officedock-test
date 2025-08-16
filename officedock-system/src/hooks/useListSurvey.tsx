@@ -1,83 +1,110 @@
 'use client';
 import { AxiosError } from 'axios';
-import { useQuery } from 'react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters } from '@constants/routers';
-import { Organizations } from '@interfaces/organization';
+import { PAGINATION_PAGE_SIZE_MEDIUM } from '@constants';
+
 import api from '@base/api';
 import { BasePagination } from '@interfaces/common';
-import { PAGINATION_PAGE_SIZE_MEDIUM } from '@constants';
+import { Survey } from '@interfaces/survey';
 
 interface PaginationProps {
   page?: number;
   pageSize?: number;
 }
 
-interface useSurveyListProps {
-  condition?: boolean[];
+interface UseSurveyListProps {
   screenName?: string;
   pagination?: PaginationProps;
   status: 'all' | 'closed' | 'my_survey' | 'open';
-  onSuccess?: (success: Organizations[]) => void;
+  onSuccess?: (success: BasePagination<Survey[]>) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
 }
 
 const useSurveyList = ({
-  pagination,
   status = 'all',
   onSuccess,
   onError,
   onSettled,
   screenName,
-}: useSurveyListProps) => {
+}: UseSurveyListProps) => {
   const { data: session } = useSessionCache();
   const token = session?.accessToken;
-  // Handle call API get survey list
-  const getSurveyList = async () => {
-    const params = new URLSearchParams();
 
-    if (pagination?.page) {
-      params.append('page', String(pagination.page));
-    }
-    if (pagination?.pageSize) {
-      params.append('page_size', String(pagination.pageSize));
+  /**
+   * getSurveyList: load the first page if pageParam has no URL
+   * Otherwise if pageParam is a URL (string), call that URL directly
+   */
+  const getSurveyList = async ({
+    pageParam,
+    signal,
+  }: {
+    pageParam?: number | string;
+    signal?: AbortSignal;
+  }) => {
+    let apiUrl: string;
+
+    if (typeof pageParam === 'string') {
+      // next page url for API
+      apiUrl = pageParam;
     } else {
+      const params = new URLSearchParams();
+      params.append('page', String(pageParam ?? 1));
       params.append('page_size', String(PAGINATION_PAGE_SIZE_MEDIUM));
+      params.append('status', status);
+      apiUrl = `${apiRouters.SURVEY_LIST}?${params.toString()}`;
     }
-    params.append('status', status);
 
-    const apiUrl = `${apiRouters.SURVEY_LIST}?${params.toString()}`;
+    const { data } = await api.get<BasePagination<Survey[]>>(apiUrl, {
+      signal,
+    });
 
-    const { data } = await api.get<BasePagination<any[]>>(apiUrl);
-    return data;
+    return {
+      ...data,
+      currentUrl: apiUrl, // only for tracking/debug
+    };
   };
 
-  // Handle API get Survey list
   const {
-    data: surveyList,
-    refetch: refetchSurveyList,
-    isFetched: isFetchedTeams,
-  } = useQuery({
-    queryKey: ['getSurveyList', screenName],
-    queryFn: getSurveyList,
-    retry: 0,
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isLoading,
+    isFetchingNextPage,
+    isFetched,
+  } = useInfiniteQuery({
+    queryKey: ['getSurveyList', screenName, status],
+    queryFn: ({ pageParam, signal }) => getSurveyList({ pageParam, signal }),
     enabled: !!token,
+    retry: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onSuccess: (response: Organizations[]) => {
-      onSuccess && onSuccess(response);
+    getNextPageParam: (lastPage) => {
+      return lastPage?.next ? `/surveys/${lastPage?.next}` : undefined;
+    },
+    onSuccess: (allPages) => {
+      const lastPage = allPages.pages[allPages.pages.length - 1];
+      if (lastPage) onSuccess?.(lastPage);
     },
     onError: (error: AxiosError) => {
-      onError && onError(error);
+      onError?.(error);
     },
     onSettled: () => {
-      onSettled && onSettled();
+      onSettled?.();
     },
   });
 
-  return { surveyList, refetchSurveyList, isFetchedTeams };
+  return {
+    surveyList: data?.pages?.flatMap((p) => p?.results ?? []) ?? [],
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetched,
+    isLoadingList: isLoading,
+  };
 };
 
 export default useSurveyList;

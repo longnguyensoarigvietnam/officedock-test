@@ -1,0 +1,55 @@
+export type SurveyFormData = {
+  question: string;
+  answers: { value: string }[];
+  endDate: string;
+  endTime: string;
+};
+export type SurveyRequestData = {
+  title: string;
+  endAt: string;
+  questionOptions: string[];
+};
+export type Survey = {
+  id: number;
+  endAt: string;
+  createdAt: string;
+  createdBy: {
+    avatar: string;
+    avatarColor: string;
+    fullName: string;
+    id: 108;
+  };
+  isAnswered: boolean;
+  title: string;
+  status: {
+    closed: boolean;
+    mySurvey: boolean;
+    open: boolean;
+  };
+};
+export type SurveyDetailType = {
+  id: number;
+  endAt: string;
+  createdAt: string;
+  createdBy: {
+    avatar: string;
+    avatarColor: string;
+    fullName: string;
+    id: 108;
+  };
+
+  isAnswered: boolean;
+  title: string;
+  questions: {
+    id: 1;
+    isSelected: boolean;
+    order: number;
+    selectedUserCount: number;
+    text: string;
+  }[];
+  status: {
+    closed: boolean;
+    mySurvey: boolean;
+    open: boolean;
+  };
+};

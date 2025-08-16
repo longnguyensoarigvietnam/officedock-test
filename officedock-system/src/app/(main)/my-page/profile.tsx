@@ -1,6 +1,13 @@
 'use client';
-import React, { Fragment, useContext, useRef, useState } from 'react';
+import React, {
+  Fragment,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useMutation } from 'react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import {
   Popover,
@@ -20,6 +27,9 @@ import { SettingSkillModal } from '@components/modals/SettingSkillModal';
 import { TimeLine } from '@components/myPage/TimeLine';
 import { CompletedActionsSettingSkillModal } from '@components/modals/CompletedActionsSettingSkillModal';
 import { ConfirmSettingSkillModal } from '@components/modals/ConfirmSettingSkillModal';
+import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
+import ActionSettingSurvey from '@components/modals/ActionSettingSurvey';
+import SuccessSurveyActionModal from '@components/modals/SuccessSurveyActionModal';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
@@ -34,6 +44,7 @@ import {
   ERROR_DELETE_MESSAGE,
   ERROR_SAVE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
+  SUCCESS_DELETE_MESSAGE,
 } from '@constants/message';
 import { apiRouters } from '@constants/routers';
 import { MAX_MY_PAGE_SET_SKILLS } from '@constants';
@@ -42,6 +53,7 @@ import { ActionsModal } from '@constants/enums';
 import useTweetList from '@hooks/useTweetList';
 import useSetSkillList from '@hooks/useSetSkillList';
 import { useErrorToast } from '@hooks/useErrorToast';
+import { useUpdateTweetCache } from '@hooks/CacheQuery/useUpdateTweetCache';
 
 import { getLastChar } from '@utils';
 
@@ -51,6 +63,7 @@ const MyPage = () => {
   const { data: session } = useSessionCache();
   const showErrorToast = useErrorToast();
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
 
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
   const { setIsLoading } = useContext(LoadingContext);
@@ -79,14 +92,33 @@ const MyPage = () => {
   const [openCreateTweetModal, setOpenCreateTweetModal] =
     useState<boolean>(false);
   const [tweetMessage, setTweetMessage] = useState<string>('');
+  const [lastTweetId, setLastTweetId] = useState<number | null>(null);
+  const [selectedTweetToDelete, setSelectedTweetToDelete] = useState<
+    number | null
+  >(null);
   const isLoadingTweetRef = useRef(false);
+  const { createTweetMessageLocal, deleteTweetLocal } = useUpdateTweetCache();
 
   // Get tweet list
-  const { tweetList, fetchNextPage, refetchTweetList, hasNextPage, isFetchingNextPage,  } =
+  const { tweetList, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useTweetList({
       isLoadingTweetRef,
+      lastTweetId,
+      onSuccess: (data) => {
+        if (
+          data.results.length > 0 &&
+          data.results[data.results.length - 1].id
+        ) {
+          setLastTweetId &&
+            setLastTweetId(data.results[data.results.length - 1].id);
+        } else {
+          setLastTweetId(null);
+        }
+      },
     });
-
+  // Survey
+  const [openSettingSurvey, setOpenSettingSurvey] = useState(false);
+  const [openSuccessSurvey, setOpenSuccessSurvey] = useState(false);
   // Render user's avatar
   const renderBoxUser = (userId: string) => {
     const memberInfo = dashboardMembersWithAvatars.find(
@@ -101,6 +133,12 @@ const MyPage = () => {
       />
     );
   };
+
+  useEffect(() => {
+    return () => {
+      queryClient.removeQueries({ queryKey: ['fetchTweetList'] });
+    };
+  }, [queryClient]);
 
   const renderTreasureForStep = (
     isLocked: boolean,
@@ -131,7 +169,7 @@ const MyPage = () => {
         <ImageRound
           name={`Step ${step} treasure`}
           src={treasureIcons[step]}
-          className={`w-[50px] h-[50px] cursor-pointer`}
+          className={`w-[40px] h-[40px] cursor-pointer`}
         />
       );
     }
@@ -157,19 +195,43 @@ const MyPage = () => {
     return response;
   };
 
-  const { mutate: sendTweetMessage, isSuccess: isSendTweetSuccess } = useMutation(
-    'sendTweetMessage',
-    handleSendTweetMessage,
-    {
-      onSuccess: () => {
+  const { mutate: sendTweetMessage, isSuccess: isSendTweetSuccess } =
+    useMutation('sendTweetMessage', handleSendTweetMessage, {
+      onSuccess: (data) => {
         setTweetMessage('');
         showToast({
           description: SUCCESS_CREATE_MESSAGE,
         });
-        refetchTweetList()
+        createTweetMessageLocal(data);
       },
       onError: (error: AxiosError) => {
         showErrorToast(error, ERROR_CREATE_MESSAGE);
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    });
+
+  // Call API to delete tweet message
+  const handleDeleteTweetMessage = async (id: number) => {
+    setIsLoading(true);
+    const { data: response } = await api.delete(apiRouters.TWEET_DETAIL(id));
+    return response;
+  };
+
+  const { mutate: deleteTweetMessage } = useMutation(
+    'deleteTweetMessage',
+    handleDeleteTweetMessage,
+    {
+      onSuccess: (_data, variables) => {
+        setSelectedTweetToDelete(null);
+        showToast({
+          description: SUCCESS_DELETE_MESSAGE,
+        });
+        deleteTweetLocal(variables);
+      },
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_DELETE_MESSAGE);
       },
       onSettled: () => {
         setIsLoading(false);
@@ -256,7 +318,7 @@ const MyPage = () => {
           width: '100%',
           height: '100%',
         }}
-        className="bg-red-300 h-[calc(100vh-120px)] w-full">
+        className="h-[calc(100vh-120px)] w-full">
         <div className="flex ">
           <div className="h-20 bg-white w-fit px-5 py-4 text-[#77858F] font-medium flex items-center gap-5 rounded-br-[30px]">
             <div>
@@ -269,7 +331,7 @@ const MyPage = () => {
             <div className="h-full border-l border-[#D2DBE1]"></div>
             <div className="flex items-center text-sm font-medium gap-[10px]">
               <p>ID</p>
-              <p className="text-base text-black">001</p>
+              <p className="text-base text-black">{session?.user.id}</p>
             </div>
           </div>
           <div className="w-[303px] mt-5 ml-5 font-bold text-base bg-white rounded-full h-10 flex items-center justify-center gap-[9px]">
@@ -333,7 +395,7 @@ const MyPage = () => {
                               ? '0px 0px 20px 0px #36ACDE80'
                               : '0px 2px 8px 0px #0000001A',
                           }}
-                          className="w-[245px] h-[55px] relative bg-white px-5 py-3 flex items-center gap-3 justify-center  rounded-[14px]">
+                          className="w-[245px] h-[55px] relative bg-white px-5 py-3 flex items-center gap-[10px] justify-center  rounded-[14px]">
                           {showTwinklingStars && (
                             <>
                               <div className="absolute -top-[20px] left-[20px] bg-primary rounded-[20px] w-[140px] h-[20px] flex items-center justify-center">
@@ -389,7 +451,7 @@ const MyPage = () => {
                               />
                             </div>
                           </div>
-                          <div className="relative top-[5px]">
+                          <div className="relative">
                             {renderTreasureForStep(
                               Boolean(isLocked),
                               step,
@@ -453,7 +515,7 @@ const MyPage = () => {
         </div>
         <div className="mt-[74px] relative ml-[30px] flex items-end">
           {/* Menu */}
-          <MyPageMenu />
+          <MyPageMenu onClickSettingSurvey={() => setOpenSettingSurvey(true)} />
           <div className="flex-grow">
             <div className="h-[424px] w-[336px] ml-[200px] relative">
               <RenderAccessories images={listAvatar} />
@@ -491,6 +553,7 @@ const MyPage = () => {
         isLoadingTweetRef={isLoadingTweetRef}
         isFetchingNextPage={isFetchingNextPage}
         fetchNextPage={fetchNextPage}
+        setSelectedTweetToDelete={setSelectedTweetToDelete}
       />
       {openCreateTweetModal && (
         <CreateTweetModal
@@ -569,6 +632,49 @@ const MyPage = () => {
             }}
           />
         )}
+      {selectedTweetToDelete && (
+        <ConfirmDeleteModal
+          open={Boolean(selectedTweetToDelete)}
+          type="つぶやき"
+          onConfirm={() => deleteTweetMessage(Number(selectedTweetToDelete))}
+          onClose={() => setSelectedTweetToDelete(null)}
+        />
+      )}
+
+      {openSettingSurvey && (
+        <ActionSettingSurvey
+          open={openSettingSurvey}
+          onSuccess={(title: string) => {
+            const doc = new DOMParser().parseFromString(title, 'text/html');
+            const paragraphs = doc.querySelectorAll('p');
+
+            if (paragraphs.length > 0) {
+              // Insert 【 at start of first <p>
+              paragraphs[0].innerHTML = `【${paragraphs[0].innerHTML}`;
+              // Insert 】 at end of last <p>
+              paragraphs[paragraphs.length - 1].innerHTML =
+                `${paragraphs[paragraphs.length - 1].innerHTML}】アンケート実施中！ぜひご協力ください！`;
+            }
+            setTweetMessage(doc.body.innerHTML);
+            setOpenSettingSurvey(false);
+            setOpenSuccessSurvey(true);
+          }}
+          onClose={() => setOpenSettingSurvey(false)}
+        />
+      )}
+      {openSuccessSurvey && (
+        <SuccessSurveyActionModal
+          open={openSuccessSurvey}
+          onClose={() => {
+            setOpenSuccessSurvey(false);
+            setTweetMessage('');
+          }}
+          onTweet={() => {
+            setOpenSuccessSurvey(false);
+            setOpenCreateTweetModal(true);
+          }}
+        />
+      )}
     </div>
   );
 };

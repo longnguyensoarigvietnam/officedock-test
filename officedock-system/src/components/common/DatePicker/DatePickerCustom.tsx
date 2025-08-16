@@ -25,6 +25,7 @@ export type DatePickerProps = Omit<ReactDatePickerProps, 'onChange'> & {
   placeholder?: string;
   autoFocus?: boolean;
   size?: string;
+  iconSrc?: string;
   onChange?: (date: Date | null) => void;
 };
 
@@ -43,6 +44,7 @@ const DatePickerCustom = ({
   placeholder,
   selected,
   size,
+  iconSrc,
   autoFocus = false,
   onChange,
   ...props
@@ -149,9 +151,9 @@ const DatePickerCustom = ({
           {...props}
         />
         <ImageRound
-          className={`absolute w-[15px] h-[14px] top-1/2 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} left-4 transform -translate-x-1/2 -translate-y-1/2 hover:cursor-pointer ${className?.includes('hidden') && 'hidden'}`}
+          className={`absolute ${iconSrc ? 'w-fit h-fit left-[20px]' : 'w-[15px] left-4 h-[14px]'} top-1/2 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN}  transform -translate-x-1/2 -translate-y-1/2 hover:cursor-pointer ${className?.includes('hidden') && 'hidden'}`}
           name="Calendar icon"
-          src="/icons/calendar-time.svg"
+          src={`/icons/${iconSrc ? iconSrc : 'calendar-time'}.svg`}
           onClick={(e) => {
             e.stopPropagation();
             if (isOpen) {

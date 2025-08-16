@@ -358,7 +358,8 @@ export const SkillMapByOrganizationPanel = ({
 
       <div>
         {/* Steps bar */}
-        <div className={`flex ${settingSkillAction && 'gap-[3px]'} w-full font-medium text-white text-[16px] mb-5 h-[32px]`}>
+        <div
+          className={`flex ${settingSkillAction && 'gap-[3px]'} w-full font-medium text-white text-[16px] mb-5 h-[32px]`}>
           <StepInfoTooltip
             placement="top"
             currentStep={1}
@@ -430,7 +431,7 @@ export const SkillMapByOrganizationPanel = ({
                       key={skill.id ?? `${index}-${idx}`}
                       className={`relative hover:cursor-pointer flex items-center ${isLast ? 'w-[calc(33.33333%_-_30px)]' : 'w-[calc(33.33333%_+_15px)]'}`}
                       onClick={async () => {
-                        if (stepCompleted || isLocked) return;
+                        if (isLocked || !skill.id) return;
 
                         if (settingSkillAction === ActionsModal.CREATE) {
                           onOpenConfirmSettingSkillInfo &&
@@ -445,8 +446,10 @@ export const SkillMapByOrganizationPanel = ({
                           return;
                         }
 
-                        setSelectedSkillMapToSubmitLevelUp(skill.id);
-                        setOpenSubmitLevelUpModal(true);
+                        if (!stepCompleted) {
+                          setSelectedSkillMapToSubmitLevelUp(skill.id);
+                          setOpenSubmitLevelUpModal(true);
+                        }
                       }}>
                       {!skill.id ? (
                         <div

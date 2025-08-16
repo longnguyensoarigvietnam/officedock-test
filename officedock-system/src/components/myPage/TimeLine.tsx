@@ -11,6 +11,7 @@ import {
   formatCheckDate,
   getFormattedDateTime,
 } from '@utils/date';
+import { formatWithParagraphTags } from '@utils';
 
 export const TimeLine = ({
   tweetList,
@@ -24,6 +25,7 @@ export const TimeLine = ({
   isLoadingTweetRef: React.MutableRefObject<boolean>;
   isFetchingNextPage: boolean;
   fetchNextPage: any;
+  setSelectedTweetToDelete?: React.Dispatch<React.SetStateAction<number | null>>;
 }) => {
   const resultsContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -96,19 +98,39 @@ export const TimeLine = ({
 
         {tweetList.length ? (
           tweetList.map((tweet) => {
+            {/* TODO: Show delete icon */}
+            // const showDeleteIcon = tweet.user.id == session?.user.id;
             return (
               <div key={tweet.id} className="space-y-2 text-white !w-full pr-3">
-                <div className="flex gap-3 items-center">
-                  <div className="h-[30px]">
-                    {renderAvatar(tweet.user.avatar, tweet.user.avatarColor)}
+                <div className="flex items-center justify-between">
+                  <div
+                    className={`flex gap-3 items-center`}>
+                    <div className="h-[30px]">
+                      {renderAvatar(tweet.user.avatar, tweet.user.avatarColor)}
+                    </div>
+                    <p className="text-[16px] font-medium !break-all !max-w-full">
+                      {tweet.user.fullName}
+                    </p>
                   </div>
-                  <p className="text-[16px] font-medium !break-all !max-w-full">
-                    {tweet.user.fullName}
-                  </p>
+                  {/* TODO: Show delete icon */}
+                  {/* {showDeleteIcon ? (
+                    <ImageRound
+                      className="w-[12px] h-[14px] hover:cursor-pointer"
+                      src="/icons/delete-event.svg"
+                      name="Delete icon"
+                      onClick={() => setSelectedTweetToDelete(tweet.id)}
+                    />
+                  ) : (
+                    <></>
+                  )} */}
                 </div>
-                <p className="!break-all !max-w-full text-sm font-semibold">
-                  {tweet.content}
-                </p>
+
+                <p
+                  className="!break-all !max-w-full text-sm font-semibold"
+                  dangerouslySetInnerHTML={{
+                    __html: formatWithParagraphTags(tweet.content),
+                  }}></p>
+
                 <p className="text-xs">
                   {tweet.createdAt &&
                     formatCheckDate(

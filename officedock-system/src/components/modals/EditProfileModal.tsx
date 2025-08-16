@@ -51,12 +51,18 @@ const EditProfileModal = memo(
     setOpenErrorUploadFileModal,
   }: EditProfileModalProps) => {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const { reset, handleSubmit, register, getValues, formState: {errors} } =
-      useForm<UserProfileFormData>();
+    const {
+      reset,
+      handleSubmit,
+      register,
+      getValues,
+      formState: { errors, isDirty },
+    } = useForm<UserProfileFormData>();
     const [previewAvatarUrl, setPreviewAvatarUrl] = useState<string | null>(
       null,
     );
     const [avatarImgFile, setAvatarImgFile] = useState<File | null>(null);
+    const [isAvatarChanged, setIsAvatarChanged] = useState<boolean>(false);
 
     useEffect(() => {
       if (authenticatedUser) {
@@ -85,6 +91,7 @@ const EditProfileModal = memo(
         setOpenErrorUploadFileModal(true);
         return;
       }
+      setIsAvatarChanged(true);
 
       const newFile = new File([file], file.name, {
         type: file.type,
@@ -201,16 +208,22 @@ const EditProfileModal = memo(
                   })}
                 />
                 <ErrorMessage
-                    error={errors?.password?.message || editProfileErrorMessages.password}
-                    className="mt-[5px] mb-[5px] !text-xs"
-                  />
+                  error={
+                    errors?.password?.message ||
+                    editProfileErrorMessages.password
+                  }
+                  className="mt-[5px] mb-[5px] !text-xs"
+                />
               </div>
             </div>
             <div className="flex justify-center gap-3 my-7 items-center">
               <Button variant="outline" onClick={onClose} className="w-[110px]">
                 キャンセル
               </Button>
-              <Button className="w-[110px] !py-2 !px-0" type="submit">
+              <Button
+                className="w-[110px] !py-2 !px-0"
+                type="submit"
+                disabled={!isDirty && !isAvatarChanged}>
                 保存する
               </Button>
             </div>
