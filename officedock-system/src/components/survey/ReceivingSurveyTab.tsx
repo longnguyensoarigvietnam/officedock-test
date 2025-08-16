@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import Button from '@components/common/Button';
-import ImageRound from '@components/common/ImageRound';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 import { TabTypeSurveyValue } from '@constants/enums';
@@ -13,12 +12,11 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 
 type ReceivingSurveyTabProp = {
   handleAnswer: (id: number, isMySurvey?: boolean) => void;
-  handleDelete: (id: number) => void;
+  handleDelete?: (id: number) => void;
 };
 
 const ReceivingSurveyTab = ({
   handleAnswer,
-  handleDelete,
 }: ReceivingSurveyTabProp) => {
   const {
     surveyList,
@@ -111,14 +109,15 @@ const ReceivingSurveyTab = ({
                         }}
                         dangerouslySetInnerHTML={{ __html: item.title }}
                         className={`${item.isAnswered === false && item.status.open && 'text-[#228CDB]'} ${item.status.open && 'cursor-pointer'} text-sm font-medium`}></p>
-                      {item.status.mySurvey && (
+                      {/* TODO: Delete survey */}
+                      {/* {item.status.mySurvey && (
                         <ImageRound
                           onClick={() => handleDelete(item.id)}
                           name="Delete icon"
                           src={'/icons/delete.svg'}
                           className="w-fit h-fit cursor-pointer"
                         />
-                      )}
+                      )} */}
                     </div>
                     <div className="w-[1px] border-l border-[#D2DBE1] -my-[15px]"></div>
                     <div className="px-5 w-[132px] flex flex-col gap-[10px] items-center justify-center">

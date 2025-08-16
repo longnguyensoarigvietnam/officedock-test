@@ -3,7 +3,6 @@ import { useEffect, useRef } from 'react';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Spinner from '@components/common/Spinner';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
-import ImageRound from '@components/common/ImageRound';
 
 import { TweetDetail } from '@interfaces/tweet';
 
@@ -12,8 +11,6 @@ import {
   formatCheckDate,
   getFormattedDateTime,
 } from '@utils/date';
-
-import { useSessionCache } from '@providers/SessionCacheProvider';
 import { formatWithParagraphTags } from '@utils';
 
 export const TimeLine = ({
@@ -22,17 +19,15 @@ export const TimeLine = ({
   isLoadingTweetRef,
   isFetchingNextPage,
   fetchNextPage,
-  setSelectedTweetToDelete,
 }: {
   tweetList: TweetDetail[];
   hasNextPage: boolean | undefined;
   isLoadingTweetRef: React.MutableRefObject<boolean>;
   isFetchingNextPage: boolean;
   fetchNextPage: any;
-  setSelectedTweetToDelete: React.Dispatch<React.SetStateAction<number | null>>;
+  setSelectedTweetToDelete?: React.Dispatch<React.SetStateAction<number | null>>;
 }) => {
   const resultsContainerRef = useRef<HTMLDivElement | null>(null);
-  const { data: session } = useSessionCache();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -103,12 +98,13 @@ export const TimeLine = ({
 
         {tweetList.length ? (
           tweetList.map((tweet) => {
-            const showDeleteIcon = tweet.user.id == session?.user.id;
+            {/* TODO: Show delete icon */}
+            // const showDeleteIcon = tweet.user.id == session?.user.id;
             return (
               <div key={tweet.id} className="space-y-2 text-white !w-full pr-3">
                 <div className="flex items-center justify-between">
                   <div
-                    className={`flex gap-3 items-center ${showDeleteIcon && 'w-[calc(100%_-_30px)]'}`}>
+                    className={`flex gap-3 items-center`}>
                     <div className="h-[30px]">
                       {renderAvatar(tweet.user.avatar, tweet.user.avatarColor)}
                     </div>
@@ -116,7 +112,8 @@ export const TimeLine = ({
                       {tweet.user.fullName}
                     </p>
                   </div>
-                  {showDeleteIcon ? (
+                  {/* TODO: Show delete icon */}
+                  {/* {showDeleteIcon ? (
                     <ImageRound
                       className="w-[12px] h-[14px] hover:cursor-pointer"
                       src="/icons/delete-event.svg"
@@ -125,7 +122,7 @@ export const TimeLine = ({
                     />
                   ) : (
                     <></>
-                  )}
+                  )} */}
                 </div>
 
                 <p
