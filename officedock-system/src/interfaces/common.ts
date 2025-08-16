@@ -23,7 +23,7 @@ export interface BasePagination<T> {
   hasNext?: boolean;
   totalDuration?: string;
   next?: string | null;
-  previous: string | null;
+  previous?: string | null;
 }
 
 export interface OptionTabType {
