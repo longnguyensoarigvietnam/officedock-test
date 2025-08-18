@@ -165,7 +165,9 @@ const ActionAnswerSurveyModal = ({
                         className={`absolute top-0 left-0 h-full ${
                           selectedAnswer == question.id
                             ? 'bg-[#8DD1EE]'
-                            : 'bg-white'
+                            : percent > 0 && selectedAnswer
+                              ? 'bg-[#ECF1F7]'
+                              : 'bg-white'
                         }`}
                         style={{ width: `${percent}%` }}></div>
                     )}

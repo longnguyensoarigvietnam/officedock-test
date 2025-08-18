@@ -106,7 +106,7 @@ const ReceivingSurveyTab = ({ handleAnswer }: ReceivingSurveyTabProp) => {
                           }
                         }}
                         dangerouslySetInnerHTML={{ __html: item.title }}
-                        className={`${item.isAnswered === false && item.status.open && 'text-[#228CDB]'} ${item.status.open && 'cursor-pointer'} text-sm font-medium`}></p>
+                        className={`${item.isAnswered === false && item.status.open && 'text-[#228CDB]'} ${item.status.open && 'cursor-pointer'} break-all text-sm font-medium`}></p>
                       {/* TODO: Delete survey */}
                       {/* {item.status.mySurvey && (
                         <ImageRound

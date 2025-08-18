@@ -113,8 +113,8 @@ const PieChartCustom = ({
     }
 
     const gradient = ctx.createRadialGradient(cx, cy, r0, cx, cy, r1);
-    gradient.addColorStop(0, `rgba(${r},${g},${b},0.7)`);
-    gradient.addColorStop(1, `rgba(${r},${g},${b},0.9)`);
+    gradient.addColorStop(0, `rgba(${r},${g},${b},1)`);
+    gradient.addColorStop(1, `rgba(${r},${g},${b},1)`);
 
     return gradient;
   };
@@ -191,7 +191,11 @@ const PieChartCustom = ({
           return `${truncatedLabel}\n${value}%`;
         },
         color: '#fff',
-        font: { weight: 'bold', size: 14 },
+        font: {
+          size: 14,
+          weight: 500,
+          family: '"Noto Sans JP", sans-serif',
+        },
         align: 'center',
         anchor: 'center',
         textAlign: 'center',
