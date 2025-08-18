@@ -6,14 +6,17 @@ import ImageRound from '@components/common/ImageRound';
 import { MyPageMenuItem } from '@interfaces/menu';
 
 import { MY_PAGE_MENU, VISIT_PAGE_MENU } from '@constants/menu';
+import { MAXIMUM_VISIBLE_COUNT } from '@constants';
 
 interface PropMenuMyPage {
   onClickSettingSurvey: () => void;
+  unAnsweredSurveyCount?: number;
   isVisitRoom?: boolean;
 }
 
 export const MyPageMenu = ({
   isVisitRoom = false,
+  unAnsweredSurveyCount,
   onClickSettingSurvey,
 }: PropMenuMyPage) => {
   const menuItemsClone: MyPageMenuItem[] = isVisitRoom
@@ -72,7 +75,16 @@ export const MyPageMenu = ({
                         }
                       }}
                       className="px-2 py-[10px] hover:opacity-85 hover:text-primary cursor-pointer">
-                      {item.name}
+                      {item.name}{' '}
+                      {item.displayCount && unAnsweredSurveyCount ? (
+                        <span className="bg-[#FFEE6F] ml-1 py-[5px] px-[6px] w-[38px] text-[13px] rounded-[100px] text-black font-bold">
+                          {unAnsweredSurveyCount > MAXIMUM_VISIBLE_COUNT
+                            ? `${MAXIMUM_VISIBLE_COUNT}+`
+                            : unAnsweredSurveyCount}
+                        </span>
+                      ) : (
+                        <></>
+                      )}
                     </Link>
                     {page.child && index < page?.child.length - 1 && (
                       <div className="w-full h-[1px] bg-[#EBF1F7]"></div>

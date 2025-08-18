@@ -3234,7 +3234,7 @@ const ChatDetail = ({
                             <div className="mt-5 !max-w-full">
                               <EditorContent
                                 editor={editor}
-                                className="w-full break-all whitespace-pre-wrap"
+                                className="w-full break-all whitespace-pre-wrap chat"
                               />
                             </div>
                           </div>

@@ -53,15 +53,15 @@ const RoomList = () => {
             {/* Header */}
             <div className="flex absolute top-0 left-0 ">
               <div className="h-[92px] bg-white w-[402px] py-4 font-medium flex items-center justify-center gap-5 rounded-br-[30px]">
-                <div className="flex items-center">
+                <div
+                  className="flex items-center"
+                  onClick={() => router.push(pageRouters.MY_PAGE.href)}>
                   <ImageRound
                     name="Left icon"
                     src={'/icons/chevron-left.svg'}
                     className={`w-[8px] h-[16px] mr-3 cursor-pointer`}
                   />
-                  <p
-                    className="text-sm font-medium hover:cursor-pointer"
-                    onClick={() => router.push(pageRouters.MY_PAGE.href)}>
+                  <p className="text-sm font-medium hover:cursor-pointer">
                     戻る
                   </p>
                 </div>

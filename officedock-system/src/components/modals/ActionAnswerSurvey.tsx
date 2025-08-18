@@ -9,7 +9,6 @@ import RowSkeleton from '@components/skeleton/RowSkeleton';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { apiRouters } from '@constants/routers';
 
-import { useSessionCache } from '@providers/SessionCacheProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import useSurveyDetail from '@hooks/useSurveyDetail';
@@ -32,7 +31,6 @@ const ActionAnswerSurveyModal = ({
   handleAnswerSurvey,
   onClose,
 }: Props) => {
-  const { data: session } = useSessionCache();
   const { showToast } = useToast();
 
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -127,7 +125,7 @@ const ActionAnswerSurveyModal = ({
               />
             </div>
             <p className="break-all line-clamp-2 text-base font-medium">
-              {session?.user.profile.fullName}
+              {surveyDetail?.createdBy.fullName}
             </p>
           </div>
           {/* Question */}
