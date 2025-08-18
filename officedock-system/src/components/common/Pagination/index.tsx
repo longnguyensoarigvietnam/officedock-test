@@ -17,6 +17,7 @@ export type PaginationActiveButtonVariant =
 export type PaginationSize = 'xs' | 'sm' | 'md' | 'lg';
 
 export type PaginationProps = {
+  disable?: boolean;
   currentPage: number;
   totalPages: number;
   showFirst?: boolean;
@@ -35,6 +36,7 @@ export type PaginationProps = {
 };
 
 const Pagination = ({
+  disable = false,
   currentPage,
   totalPages,
   showFirst = true,
@@ -153,7 +155,10 @@ const Pagination = ({
             <a
               href="#"
               className={`${sizeClasses} ${styleTag} ${isSpace && 'mr-5'} items-center`}
-              onClick={() => onPageChange(currentNumber - 1)}>
+              onClick={() => {
+                if (disable) return;
+                onPageChange(currentNumber - 1);
+              }}>
               <Image
                 src="/icons/chevron-left-pagination.svg"
                 alt="Chevron left"
@@ -175,15 +180,18 @@ const Pagination = ({
                       ? `${variant == 'primary' ? 'bg-[#3CABF3]' : `bg-[${variant}]`} text-white font-normal`
                       : 'text-[#6B7280]'
                   }`}
-                  onClick={() => onPageChange(page)}>
+                  onClick={() => {
+                    if (disable) return;
+
+                    onPageChange(page);
+                  }}>
                   {page}
                 </a>
               ))}
             </>
           )}
           {hasLeftEllipsis && (
-            <span
-              className={`items-center ${sizeClasses} ${styleTag}`}>
+            <span className={`items-center ${sizeClasses} ${styleTag}`}>
               ...
             </span>
           )}
@@ -195,13 +203,16 @@ const Pagination = ({
                   ? `${variant == 'primary' ? 'bg-[#3CABF3]' : `bg-[${variant}]`} text-white font-normal`
                   : 'text-[#6B7280]'
               }`}
-              onClick={() => onPageChange(page)}>
+              onClick={() => {
+                if (disable) return;
+
+                onPageChange(page);
+              }}>
               {page}
             </a>
           ))}
           {hasRightEllipsis && (
-            <span
-              className={`items-center ${sizeClasses} ${styleTag}`}>
+            <span className={`items-center ${sizeClasses} ${styleTag}`}>
               ...
             </span>
           )}
@@ -216,7 +227,11 @@ const Pagination = ({
                         ? `${variant == 'primary' ? 'bg-[#3CABF3]' : `bg-[${variant}]`} text-white font-normal`
                         : 'text-[#6B7280]'
                     }`}
-                    onClick={() => onPageChange(page)}>
+                    onClick={() => {
+                      if (disable) return;
+
+                      onPageChange(page);
+                    }}>
                     {page}
                   </a>
                 ))}
@@ -225,7 +240,10 @@ const Pagination = ({
           {currentNumber != totalPages && (
             <a
               className={`${sizeClasses} ${styleTag} ${isSpace && '!ml-5'} items-center`}
-              onClick={() => onPageChange(currentNumber + 1)}>
+              onClick={() => {
+                if (disable) return;
+                onPageChange(currentNumber + 1);
+              }}>
               <Image
                 src="/icons/chevron-left-pagination.svg"
                 alt="Chevron right"

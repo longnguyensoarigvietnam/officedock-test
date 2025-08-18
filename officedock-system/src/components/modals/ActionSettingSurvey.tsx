@@ -54,7 +54,7 @@ const ActionSettingSurvey = ({ open, onClose, onSuccess }: Props) => {
   const { setIsLoading } = useContext(LoadingContext);
   const { showToast } = useToast();
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append } = useFieldArray({
     control,
     name: 'answers',
   });
@@ -153,14 +153,15 @@ const ActionSettingSurvey = ({ open, onClose, onSuccess }: Props) => {
                       />
                     )}
                   />
-                  {fields.length > 2 && (
+                  {/* TODO: Handle delete quesion */}
+                  {/* {fields.length > 2 && (
                     <ImageRound
                       src="/icons/delete-task.svg"
                       name="Delete icon"
                       onClick={() => remove(index)}
                       className="!w-[14px] relative top-[3px] !h-fit cursor-pointer hover:opacity-80"
                     />
-                  )}
+                  )} */}
                 </div>
                 {errors?.answers?.[index]?.value?.message && (
                   <ErrorMessage
