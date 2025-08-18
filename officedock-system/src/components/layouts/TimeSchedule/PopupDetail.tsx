@@ -378,12 +378,14 @@ const PopupDetail = ({
               </p>
             </div>
           </div>
-          <ImageRound
-            src={`/icons/${isStart ? 'pause' : 'play-task'}.svg`}
-            name="Start task"
-            className="absolute  !w-fit !h-fit bottom-[-10px] right-2  hover:cursor-pointer"
-            onClick={handleStartStopTask}
-          />
+          <div className="!w-[30px] !h-[30px]">
+            <ImageRound
+              src={`/icons/${isStart ? 'pause' : 'play-task'}.svg`}
+              name="Start task"
+              className={`absolute  ${isStart ? '!w-[20px] !h-[20px] bottom-[-5px] right-3' : '!w-[30px] !h-[30px] bottom-[-10px] right-2'} hover:cursor-pointer`}
+              onClick={handleStartStopTask}
+            />
+          </div>
         </div>
       )}
 
