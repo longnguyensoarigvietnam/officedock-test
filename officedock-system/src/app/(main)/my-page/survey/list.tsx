@@ -324,7 +324,7 @@ const SurveyListPage = () => {
                 background: 'rgba(53, 153, 216, 0.8)',
                 boxShadow: '0px 4px 10px 0px #0000000D',
               }}
-              className="w-[720px] h-[715px] font-medium text-white border border-white rounded-3xl py-[30px]">
+              className="w-[720px] h-[calc(100vh_-_260px)] font-medium text-white border border-white rounded-3xl py-[30px]">
               {/* Button switch */}
               <div className="flex px-[30px] items-center justify-between">
                 <p className="text-[18px]">アンケート一覧</p>

@@ -81,7 +81,7 @@ const AllSurveyTab = ({ handleAnswer }: AllSurveyTabProp) => {
         {/* Table */}
         <div
           ref={resultsContainerRef}
-          className="h-full max-h-[560px]  pr-[10px]  overflow-y-auto  mt-[14px]">
+          className="h-full max-h-[calc(100vh_-_415px)]  pr-[10px]  overflow-y-auto  mt-[14px]">
           <div className="w-full bg-white h-full py-[14px] rounded-[14px]">
             {isLoadingList && (
               <div>
@@ -116,7 +116,7 @@ const AllSurveyTab = ({ handleAnswer }: AllSurveyTabProp) => {
                             onClick={() => handleDelete(item.id)}
                             name="Delete icon"
                             src={'/icons/delete.svg'}
-                            className="w-fit h-fit cursor-pointer"
+                            className="w-fit h-fit flex-shrink-0 ml-1 cursor-pointer"
                           />
                         )} */}
                       </div>
