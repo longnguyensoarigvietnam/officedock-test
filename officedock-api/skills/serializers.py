@@ -665,9 +665,19 @@ class UpdateSkillMapSkillLevelSerializer(SkillMapSkillLevelSerializer):
 class UpdateSkillMapDefaultSerializer(serializers.ModelSerializer):
     """Serializer for update skill map"""
 
+    is_default = serializers.BooleanField(required=False)
+    unset_default_id = serializers.PrimaryKeyRelatedField(
+        source="skill_map",
+        queryset=SkillMap.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+
     class Meta:
         model = SkillMap
         fields = [
             "id",
             "is_default",
+            "unset_default_id",
         ]
