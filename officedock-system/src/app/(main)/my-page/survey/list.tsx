@@ -18,7 +18,7 @@ import CreateTweetModal from '@components/modals/CreateTweetModal';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 
 import { TabTypeSurvey, TabTypeSurveyValue } from '@constants/enums';
-import { apiRouters } from '@constants/routers';
+import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
@@ -262,7 +262,7 @@ const SurveyListPage = () => {
           <div className="flex absolute top-0 left-0 ">
             <div className="h-20 z-[30] bg-white w-fit px-10 py-4 text-[#77858F] font-medium flex items-center gap-[10px] rounded-br-[30px]">
               <div
-                onClick={() => router.back()}
+                onClick={() => router.push(pageRouters.MY_PAGE.href)}
                 className="flex items-center gap-[10px]">
                 <ImageRound
                   name="Left icon"

@@ -239,7 +239,9 @@ export const SkillMapDetailByUser = ({
               {normalizeSkillMaps(skillMap.skillMaps).map(
                 (skillMap: SkillMapByOrganizationInfo[], index) => {
                   return (
-                    <div key={index} className="flex w-full mb-5 bg-[#E9EEF3] rounded-[20px] p-[10px]">
+                    <div
+                      key={index}
+                      className="flex w-full mb-5 bg-[#E9EEF3] rounded-[20px] p-[10px]">
                       {skillMap.map((skill, idx) => {
                         const isLast = idx === skillMap.length - 1;
                         const isLocked = skill.isLocked;
@@ -286,6 +288,16 @@ export const SkillMapDetailByUser = ({
                                     ? '0px 0px 20px 0px #36ACDE80'
                                     : '0px 2px 8px 0px #0000001A',
                                 }}>
+                                {showTwinklingStars && (
+                                  <>
+                                    <div className="absolute -top-[20px] left-[20px] bg-primary rounded-[20px] w-[140px] h-[28px] flex items-center justify-center">
+                                      <p className="text-white text-xs font-bold">
+                                        レベルアップ申請可能
+                                      </p>
+                                    </div>
+                                    <div className="bg-primary absolute clip-diagonal-left h-3 w-3 top-[3px] left-[38px]"></div>
+                                  </>
+                                )}
                                 {showTwinklingStars && (
                                   <div>
                                     <TwinklingStar

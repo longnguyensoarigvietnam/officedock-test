@@ -262,6 +262,7 @@ export const MY_PAGE_MENU: MyPageMenuItem[] = [
       {
         name: 'アンケートを見る',
         href: pageRouters.SURVEY.href,
+        displayCount: true
       },
       {
         name: 'アンケートを作る',
@@ -295,7 +296,7 @@ export const VISIT_PAGE_MENU: MyPageMenuItem[] = [
     iconName: 'Room icon',
   },
   {
-    name: 'サンクスを送る',
+    name: 'サンクスを 送る',
     href: '#',
     iconSrc: '/icons/heart.svg',
     iconName: 'Heart icon',

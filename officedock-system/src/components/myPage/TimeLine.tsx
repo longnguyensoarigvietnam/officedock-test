@@ -16,33 +16,40 @@ import { formatWithParagraphTags } from '@utils';
 export const TimeLine = ({
   tweetList,
   hasNextPage,
-  isLoadingTweetRef,
+  isLoadingList,
   isFetchingNextPage,
   fetchNextPage,
 }: {
   tweetList: TweetDetail[];
   hasNextPage: boolean | undefined;
-  isLoadingTweetRef: React.MutableRefObject<boolean>;
+  isLoadingList: boolean;
   isFetchingNextPage: boolean;
   fetchNextPage: any;
-  setSelectedTweetToDelete?: React.Dispatch<React.SetStateAction<number | null>>;
+  setSelectedTweetToDelete?: React.Dispatch<
+    React.SetStateAction<number | null>
+  >;
 }) => {
   const resultsContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    let debounceTimer: NodeJS.Timeout;
+
     const handleScroll = () => {
-      const resultsContainer = resultsContainerRef.current;
-      if (
-        resultsContainer &&
-        hasNextPage &&
-        !isFetchingNextPage &&
-        Math.round(
-          resultsContainer.clientHeight + Math.abs(resultsContainer.scrollTop),
-        ) >= Math.round(0.9 * resultsContainer.scrollHeight)
-      ) {
-        if (isLoadingTweetRef && isLoadingTweetRef.current) return;
-        fetchNextPage();
-      }
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        const resultsContainer = resultsContainerRef.current;
+        if (
+          resultsContainer &&
+          hasNextPage &&
+          !isFetchingNextPage &&
+          Math.round(
+            resultsContainer.clientHeight +
+              Math.abs(resultsContainer.scrollTop),
+          ) >= Math.round(0.9 * resultsContainer.scrollHeight)
+        ) {
+          fetchNextPage();
+        }
+      }, 200); 
     };
 
     const resultsContainer = resultsContainerRef.current;
@@ -55,8 +62,9 @@ export const TimeLine = ({
       if (resultsContainer) {
         resultsContainer.removeEventListener('scroll', handleScroll);
       }
+      clearTimeout(debounceTimer);
     };
-  }, [hasNextPage, isLoadingTweetRef, isFetchingNextPage, fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const renderAvatar = (avatarUrl: string | null, avatarColor: string) => {
     return (
@@ -80,8 +88,8 @@ export const TimeLine = ({
       {/* Messages */}
       <div
         ref={resultsContainerRef}
-        className={`customized-scrollbar ${isLoadingTweetRef.current && tweetList.length == 0 ? 'overflow-y-hidden' : 'overflow-y-auto'}  max-h-[calc(100%_-_50px)] flex flex-col-reverse gap-10 !w-full`}>
-        {isLoadingTweetRef.current && tweetList.length == 0 ? (
+        className={`customized-scrollbar ${isLoadingList && tweetList.length == 0 ? 'overflow-y-hidden' : 'overflow-y-auto'}  max-h-[calc(100%_-_50px)] flex flex-col gap-10 !w-full`}>
+        {isLoadingList && tweetList.length == 0 ? (
           <div className="flex flex-col items-start ml-3 space-y-2">
             <RowSkeleton className={`!h-[100px] w-[180px] !bg-[#248bcacc]`} />
             <RowSkeleton className={`!h-[200px] w-[280px] !bg-[#248bcacc]`} />
@@ -96,15 +104,16 @@ export const TimeLine = ({
           <></>
         )}
 
-        {tweetList.length ? (
+        {!isLoadingList && tweetList.length ? (
           tweetList.map((tweet) => {
-            {/* TODO: Show delete icon */}
+            {
+              /* TODO: Show delete icon */
+            }
             // const showDeleteIcon = tweet.user.id == session?.user.id;
             return (
               <div key={tweet.id} className="space-y-2 text-white !w-full pr-3">
                 <div className="flex items-center justify-between">
-                  <div
-                    className={`flex gap-3 items-center`}>
+                  <div className={`flex gap-3 items-center`}>
                     <div className="h-[30px]">
                       {renderAvatar(tweet.user.avatar, tweet.user.avatarColor)}
                     </div>
