@@ -8,7 +8,7 @@ import {
   ChartData,
   ChartOptions,
 } from 'chart.js';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
 
 import { OptionDropdownType } from '@interfaces/common';
@@ -41,7 +41,9 @@ interface PieChartProps {
 
   handleClickTooltip?: (id: number | null, organizationId?: string) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
+  isGradient?: boolean;
 }
+
 interface TooltipData {
   x: number;
   y: number;
@@ -65,6 +67,7 @@ const PieChartCustom = ({
   isAllTeamOption = false,
   handleClickChart,
   handleClickTooltip,
+  isGradient = true,
 }: PieChartProps) => {
   const defaultColors = [
     'rgba(255, 99, 132, 0.8)',
@@ -74,7 +77,6 @@ const PieChartCustom = ({
   ];
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
   const [isHovered, setIsHovered] = useState(false);
-
   const filteredData = data.reduce<
     { value: number; label: string; color?: string }[]
   >((acc, value, index) => {
@@ -88,19 +90,66 @@ const PieChartCustom = ({
     return acc;
   }, []);
 
+  const chartRef = useRef<any>(null);
+
+  const makeGradientColor = (
+    ctx: CanvasRenderingContext2D,
+    color: string,
+  ): CanvasGradient => {
+    const { width, height } = ctx.canvas;
+    const r0 = 0; // inner radius
+    const r1 = Math.max(width, height) / 2; // outer radius
+    const [cx, cy] = [width / 2, height / 2];
+
+    const baseMatch = color.match(/#([0-9a-f]{6})/i);
+    let r = 0,
+      g = 0,
+      b = 0;
+    if (baseMatch) {
+      const hex = baseMatch[1];
+      r = parseInt(hex.slice(0, 2), 16);
+      g = parseInt(hex.slice(2, 4), 16);
+      b = parseInt(hex.slice(4, 6), 16);
+    }
+
+    const gradient = ctx.createRadialGradient(cx, cy, r0, cx, cy, r1);
+    gradient.addColorStop(0, `rgba(${r},${g},${b},0.7)`);
+    gradient.addColorStop(1, `rgba(${r},${g},${b},0.9)`);
+
+    return gradient;
+  };
+
+  const ctx = chartRef.current?.ctx;
+
   const chartData: ChartData<'pie', number[], string> = {
     labels: filteredData.map((item) => item.label),
     datasets: [
       {
         data,
-        backgroundColor: colors || defaultColors,
-        borderColor:
-          colors?.map((color) => color.replace('1', '1')) ||
-          defaultColors.map((color) => color.replace('1', '1')),
+        backgroundColor:
+          isGradient && ctx
+            ? (colors || defaultColors).map((c) => makeGradientColor(ctx, c))
+            : colors || defaultColors,
+        borderColor: '#ffffff',
         borderWidth: 1,
       },
     ],
   };
+
+  useEffect(() => {
+    if (!chartRef.current) return;
+    if (!isGradient) return;
+
+    const chartInstance = chartRef.current;
+    const ctx = chartInstance.ctx;
+
+    if (ctx) {
+      chartInstance.data.datasets[0].backgroundColor = (
+        colors || defaultColors
+      ).map((c) => makeGradientColor(ctx, c));
+      chartInstance.update();
+    }
+  }, [chartRef.current, isGradient]);
 
   const options: ChartOptions<'pie'> = {
     plugins: {
@@ -111,22 +160,15 @@ const PieChartCustom = ({
         enabled: false,
         external: (context: any) => {
           const { tooltip } = context;
-
           if (tooltip.opacity === 0 && !isHovered) {
             setTooltipData(null);
             return;
           }
-
           const dataIndex = tooltip.dataPoints[0]?.dataIndex;
-
           const tooltipX =
             tooltip.caretX + isLast ? tooltip.caretX - 90 : tooltip.caretX + 10;
-
           const tooltipY = tooltip.caretY - 20;
-          if (
-            !tooltipData ||
-            (tooltipData && tooltipData?.value !== dataIndex)
-          ) {
+          if (!tooltipData || tooltipData?.value !== dataIndex) {
             setTooltipData({
               x: tooltipX,
               y: tooltipY,
@@ -135,28 +177,21 @@ const PieChartCustom = ({
           }
         },
       },
-
       datalabels: {
         formatter: (value, context: Context) => {
           if (value < 20) return `${value}%`;
-
           const label = String(
             context.chart.data.labels?.[context.dataIndex] || '',
           );
-
           const maxLabelLength = 10;
           const truncatedLabel =
             label.length > maxLabelLength
               ? `${label.substring(0, maxLabelLength)}...`
               : label;
-
           return `${truncatedLabel}\n${value}%`;
         },
         color: '#fff',
-        font: {
-          weight: 'bold',
-          size: 14,
-        },
+        font: { weight: 'bold', size: 14 },
         align: 'center',
         anchor: 'center',
         textAlign: 'center',
@@ -164,11 +199,8 @@ const PieChartCustom = ({
     },
   };
 
-  const chartRef = useRef<any>(null);
   const handleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!chartRef.current) return;
-    if (!isClickTooltip) return;
-
+    if (!chartRef.current || !isClickTooltip) return;
     const chart = chartRef.current;
     const points = chart.getElementsAtEventForMode(
       event.nativeEvent,
@@ -176,21 +208,17 @@ const PieChartCustom = ({
       { intersect: true },
       true,
     );
-
     if (points.length) {
       const firstPoint = points[0];
       const dataIndex = firstPoint.index;
-
       const label = chartData.labels?.[dataIndex] || 'Unknown';
       const optionsId =
         listIdData && listIdData.length > 0 ? listIdData[dataIndex] : '';
-
       if (optionsId !== -1) {
-        handleClickChart &&
-          handleClickChart({
-            label: label,
-            value: optionsId || '',
-          });
+        handleClickChart?.({
+          label: label,
+          value: optionsId || '',
+        });
       }
     }
   };

@@ -35,16 +35,17 @@ const ActionAnswerSurveyModal = ({
 
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
 
-  const { surveyDetail, isFetchingSurveyDetail } = useSurveyDetail({
-    surveyId: detailId,
-    onSuccess: (data) => {
-      const selectedItem = data.questions.find((q) => q.isSelected);
+  const { surveyDetail, isFetchingSurveyDetail, refetchSurveyDetail } =
+    useSurveyDetail({
+      surveyId: detailId,
+      onSuccess: (data) => {
+        const selectedItem = data.questions.find((q) => q.isSelected);
 
-      if (selectedItem) {
-        setSelectedAnswer(selectedItem.id);
-      }
-    },
-  });
+        if (selectedItem) {
+          setSelectedAnswer(selectedItem.id);
+        }
+      },
+    });
 
   // Answer API
   const handleAnswerQuestion = async (id: number) => {
@@ -55,7 +56,11 @@ const ActionAnswerSurveyModal = ({
     'postAnswerQuestion',
     handleAnswerQuestion,
     {
-      onSuccess: () => {},
+      onSuccess: () => {
+        if (isMySurvey) {
+          refetchSurveyDetail();
+        }
+      },
       onError: () => {
         showToast({
           variant: 'error',
@@ -144,21 +149,22 @@ const ActionAnswerSurveyModal = ({
                   <div
                     key={idx}
                     onClick={() => {
-                      if (surveyDetail.status.open && !isViewDetail) {
+                      if (
+                        surveyDetail.status.open &&
+                        selectedAnswer != question.id
+                      ) {
                         answerQuestion(question.id);
                         setSelectedAnswer(question.id);
                         handleAnswerSurvey(surveyDetail.id);
                       }
                     }}
-                    className={`${selectedAnswer == question.id && surveyDetail.status.open && !isViewDetail && 'bg-[#8DD1EE] !text-black'} relative min-h-[44px] flex items-center justify-between rounded-md border border-[#77858F] overflow-hidden`}>
+                    className={`${selectedAnswer == question.id && surveyDetail.status.open && !isViewDetail && 'bg-[#8DD1EE] !text-black'} relative min-h-[44px] flex items-center ${surveyDetail.status.open && 'cursor-pointer'}  justify-between rounded-md border border-[#77858F] overflow-hidden`}>
                     {/* Background color bar */}
                     {(surveyDetail.status.closed || isViewDetail) && (
                       <div
                         className={`absolute top-0 left-0 h-full ${
                           selectedAnswer == question.id
-                            ? isViewDetail
-                              ? 'bg-white'
-                              : 'bg-[#8DD1EE]'
+                            ? 'bg-[#8DD1EE]'
                             : 'bg-white'
                         }`}
                         style={{ width: `${percent}%` }}></div>
@@ -168,10 +174,10 @@ const ActionAnswerSurveyModal = ({
                     <div className="relative flex-1 p-3 flex items-center justify-between z-10">
                       <p
                         dangerouslySetInnerHTML={{ __html: question.text }}
-                        className={`text-sm font-normal text-[#77858F] ${selectedAnswer == question.id && !isViewDetail && ' !text-black'}`}></p>
+                        className={`text-sm break-all font-normal text-[#77858F] ${selectedAnswer == question.id && ' !text-black'}`}></p>
                       {(surveyDetail.status.closed || isViewDetail) && (
                         <span
-                          className={`text-sm ${
+                          className={`text-sm flex-shrink-0 ${
                             question.selectedUserCount === 0
                               ? isViewDetail
                                 ? 'text-back'
