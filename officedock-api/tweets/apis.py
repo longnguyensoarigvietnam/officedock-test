@@ -2,6 +2,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.viewsets import ModelViewSet
 
 from base.apis import BaseAPIViewSet
+from base.paginations import CustomCursorPagination
 
 from tweets.models import Tweet
 from tweets.serializers import TweetSerializer
@@ -15,6 +16,8 @@ class TweetsView(BaseAPIViewSet, ModelViewSet):
 
     queryset = Tweet.objects.all()
     serializer_class = TweetSerializer
+    pagination_class = CustomCursorPagination
+    ordering = "-created_at"
 
     def get_queryset(self):
         """
@@ -26,7 +29,6 @@ class TweetsView(BaseAPIViewSet, ModelViewSet):
             .filter(
                 company_id=self.request.user.company_id,
             )
-            .order_by("-created_at")
         )
 
     def perform_create(self, serializer):
@@ -37,16 +39,13 @@ class TweetsView(BaseAPIViewSet, ModelViewSet):
         company = user.company
         serializer.save(user=user, company=company)
 
-    @extend_schema(parameters=[OpenApiParameter("tweet_id", type=str)])
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("ordering", type=str),
+        ]
+    )
     def list(self, request, *args, **kwargs):
         """
         Handle get list tweet pagination with scroll
         """
-        tweet_id = request.query_params.get("tweet_id")
-        tweets = self.get_queryset()
-        if tweet_id is not None:
-            tweets = tweets.filter(id__lt=tweet_id)
-        tweets = tweets.order_by("-created_at")
-
-        # Return the response with the serialized data
-        return self.response_pagination(request, tweets, TweetSerializer)
+        return super().list(request, *args, **kwargs)
