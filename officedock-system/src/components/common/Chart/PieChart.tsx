@@ -165,8 +165,9 @@ const PieChart = ({
         },
         color: colorLabel,
         font: {
-          weight: 'bold',
-          size: 10,
+          size: 14,
+          weight: 500,
+          family: '"Noto Sans JP", sans-serif',
         },
       },
     },

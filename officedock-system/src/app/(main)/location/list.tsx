@@ -439,7 +439,9 @@ const ListLocation = () => {
           <div className="flex justify-center flex-1">
             {dataLocation && dataLocation.length ? (
               <Pagination
+                disable={isEditing}
                 onChange={(pageNumber) => {
+                  setIsCreating(false);
                   setDebouncedParams((prev) => ({
                     ...prev,
                     page: pageNumber,
@@ -457,12 +459,14 @@ const ListLocation = () => {
                 selectedOption={PAGE_SIZE_OPTIONS.find(
                   (element) => element.value == pageSize,
                 )}
+                disabled={isEditing}
                 className="h-[34px] !w-full !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
                 classNameTextData="!text-xs"
                 classActive="!text-sm"
                 classNameOption="!text-sm !border-[#77858F] !ring-[#77858F] !ring-opacity-100 !bottom-full !mb-1"
                 labelOptionClass="!text-sm font-medium !pl-1.5"
                 onChange={(e) => {
+                  setIsCreating(false);
                   setPageSize(Number(e.value));
                   setDebouncedParams((prev) => ({
                     ...prev,
