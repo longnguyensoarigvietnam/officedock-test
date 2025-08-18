@@ -1,11 +1,5 @@
 'use client';
-import React, {
-  Fragment,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { useMutation } from 'react-query';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
@@ -50,6 +44,7 @@ import { apiRouters } from '@constants/routers';
 import { MAX_MY_PAGE_SET_SKILLS } from '@constants';
 import { ActionsModal } from '@constants/enums';
 
+import useUnansweredSurveyCount from '@hooks/useUnansweredSurveyCount';
 import useTweetList from '@hooks/useTweetList';
 import useSetSkillList from '@hooks/useSetSkillList';
 import { useErrorToast } from '@hooks/useErrorToast';
@@ -92,30 +87,19 @@ const MyPage = () => {
   const [openCreateTweetModal, setOpenCreateTweetModal] =
     useState<boolean>(false);
   const [tweetMessage, setTweetMessage] = useState<string>('');
-  const [lastTweetId, setLastTweetId] = useState<number | null>(null);
   const [selectedTweetToDelete, setSelectedTweetToDelete] = useState<
     number | null
   >(null);
-  const isLoadingTweetRef = useRef(false);
   const { createTweetMessageLocal, deleteTweetLocal } = useUpdateTweetCache();
 
   // Get tweet list
-  const { tweetList, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useTweetList({
-      isLoadingTweetRef,
-      lastTweetId,
-      onSuccess: (data) => {
-        if (
-          data.results.length > 0 &&
-          data.results[data.results.length - 1].id
-        ) {
-          setLastTweetId &&
-            setLastTweetId(data.results[data.results.length - 1].id);
-        } else {
-          setLastTweetId(null);
-        }
-      },
-    });
+  const {
+    tweetList,
+    isLoadingList,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useTweetList({});
   // Survey
   const [openSettingSurvey, setOpenSettingSurvey] = useState(false);
   const [openSuccessSurvey, setOpenSuccessSurvey] = useState(false);
@@ -133,6 +117,9 @@ const MyPage = () => {
       />
     );
   };
+
+  // Unanswered survey count
+  const { unansweredSurveyCount } = useUnansweredSurveyCount({});
 
   useEffect(() => {
     return () => {
@@ -260,15 +247,51 @@ const MyPage = () => {
     handleDeleteMyPageSkill,
     {
       onSuccess: () => {
-        if (!skillIdToUpdate) {
-          setOpenCompletedActionsSkillModal({
-            open: true,
-            message: 'スキルのセットを解除しました',
-          });
-          setOpenConfirmDeleteSkillModal(false);
-          setConfirmDeleteSkillInfo(null);
-          refetchSetSkillList();
-        }
+        setOpenCompletedActionsSkillModal({
+          open: true,
+          message: 'スキルのセットを解除しました',
+        });
+        setOpenConfirmDeleteSkillModal(false);
+        setConfirmDeleteSkillInfo(null);
+        refetchSetSkillList();
+      },
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_DELETE_MESSAGE);
+        setIsLoading(false);
+      },
+    },
+  );
+
+  // Call API to update my page skill
+  const handleUpdateMyPageSkill = async (data: {
+    newSkillId: string;
+    oldSkillId: string;
+  }) => {
+    setIsLoading(true);
+    const { data: response } = await api.put(
+      `${apiRouters.SET_SKILL(data.newSkillId)}`,
+      {
+        isDefault: false,
+        unsetDefaultId: data.oldSkillId,
+      },
+    );
+    return response;
+  };
+
+  const { mutate: updateMyPageSkill } = useMutation(
+    'updateMyPageSkill',
+    handleUpdateMyPageSkill,
+    {
+      onSuccess: () => {
+        setOpenCompletedActionsSkillModal({
+          open: true,
+          message: 'スキルを変更しました',
+        });
+        refetchSetSkillList();
+        setSkillIdToUpdate(null);
+        setOpenConfirmSettingSkillModal(false);
+        setOpenSetSkillModal(false);
+        setConfirmSettingSkillInfo(null);
       },
       onError: (error: AxiosError) => {
         showErrorToast(error, ERROR_DELETE_MESSAGE);
@@ -513,9 +536,12 @@ const MyPage = () => {
             <></>
           )}
         </div>
-        <div className="mt-[74px] relative ml-[30px] flex items-end">
+        <div className="mt-[74px] mb-5 relative ml-[30px] flex items-end">
           {/* Menu */}
-          <MyPageMenu onClickSettingSurvey={() => setOpenSettingSurvey(true)} />
+          <MyPageMenu
+            onClickSettingSurvey={() => setOpenSettingSurvey(true)}
+            unAnsweredSurveyCount={unansweredSurveyCount?.count || 0}
+          />
           <div className="flex-grow">
             <div className="h-[424px] w-[336px] ml-[200px] relative">
               <RenderAccessories images={listAvatar} />
@@ -550,8 +576,8 @@ const MyPage = () => {
       <TimeLine
         tweetList={tweetList}
         hasNextPage={hasNextPage}
-        isLoadingTweetRef={isLoadingTweetRef}
         isFetchingNextPage={isFetchingNextPage}
+        isLoadingList={isLoadingList}
         fetchNextPage={fetchNextPage}
         setSelectedTweetToDelete={setSelectedTweetToDelete}
       />
@@ -580,12 +606,12 @@ const MyPage = () => {
             setOpenConfirmSettingSkillModal(true);
             setOpenSetSkillModal(false);
           }}
-          onEditSettingSkill={async (skillId: string) => {
-            await Promise.all([
-              deleteMyPageSkill(String(skillIdToUpdate)),
-              setMyPageSkill(skillId),
-            ]);
-          }}
+          onEditSettingSkill={async (skillId: string) =>
+            updateMyPageSkill({
+              newSkillId: skillId,
+              oldSkillId: String(skillIdToUpdate),
+            })
+          }
         />
       )}
       {openConfirmDeleteSkillModal && confirmDeleteSkillInfo && (

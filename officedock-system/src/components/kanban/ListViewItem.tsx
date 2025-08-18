@@ -407,14 +407,15 @@ const ListViewItem = ({
                     content={content.isStart ? '計測停止' : '計測開始'}
                     placement="top">
                     <div
+                    className="!w-[30px] !h-[30px] flex items-center justify-center"
                       onClick={(e) => {
                         e.stopPropagation();
                       }}>
                       {content.isMyTask && (
                         <ImageRound
-                          src={`/icons/${content.isStart ? 'pause' : 'play-task'}.svg`}
+                          src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
                           name="Start task"
-                          className={`hover:cursor-pointer ${content.isStart ? '!w-fit !h-fit' : '!w-[28px] !h-[28px]'}`}
+                          className={`hover:cursor-pointer ${content.isStart ? '!w-[20px] !h-[20px]' : '!w-[30px] !h-[30px]'}`}
                           onClick={async () => {
                             await new Promise<void>((resolve) => {
                               setTaskSelectedToStart(content);

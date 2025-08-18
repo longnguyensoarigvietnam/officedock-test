@@ -6,6 +6,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, NotFound
+from django.utils.timezone import now
 
 from base.apis import BaseAPIViewSet
 from base.messages import ERROR_MESSAGES, KEYWORDS
@@ -717,7 +718,14 @@ class SkillMapViewSet(
             instance, data=request.data, partial=True
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        is_default = serializer.validated_data.pop("is_default", False)
+        skill_map = serializer.validated_data.pop("skill_map", None)
+        time_now = now() if is_default else None
+        if skill_map:
+            time_now = skill_map.set_default_at
+            skill_map.set_default_at = None
+            skill_map.save()
+        serializer.save(set_default_at=time_now)
 
         return self.response_ok()
 
@@ -739,8 +747,10 @@ class SkillMapViewSet(
         user_id = request.query_params.get("user_id", None)
         skill_maps = (
             self.get_queryset()
-            .filter(staff_id=user_id, is_default=True, is_valid=True)
-            .all()[:3]
+            .filter(
+                staff_id=user_id, set_default_at__isnull=False, is_valid=True
+            )
+            .order_by("set_default_at")[:3]
         )
 
         return self.response_ok(SkillMapSerializer(skill_maps, many=True).data)

@@ -22,15 +22,11 @@ interface PaginationProps {
 
 interface UseTweetHooksProps {
   pagination?: PaginationProps;
-  isLoadingTweetRef: React.MutableRefObject<boolean>;
-  lastTweetId: number | null;
   conditions?: boolean[];
   onSuccess?: (success: BasePagination<TweetDetail[]>) => void;
 }
 
 const useTweetList = ({
-  isLoadingTweetRef,
-  lastTweetId,
   conditions,
   onSuccess,
 }: UseTweetHooksProps) => {
@@ -39,19 +35,33 @@ const useTweetList = ({
   const router = useRouter();
 
   // Handle call API get tweet list
-  const fetchTweetList = async ({ pageParam = 1,
-    signal, }: {
-    pageParam?: number;
+  const fetchTweetList = async ({
+    pageParam,
+    signal,
+  }: {
+    pageParam?: number | string;
     signal?: AbortSignal;
   }) => {
-    isLoadingTweetRef.current = true;
+    let apiUrl: string;
 
-    const apiUrl = `${apiRouters.TWEET_LIST}?page=${pageParam}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${lastTweetId ? `&tweet_id=${lastTweetId}` : ''}`;
+    if (typeof pageParam === 'string') {
+      // next page url for API
+      apiUrl = pageParam;
+    } else {
+      const params = new URLSearchParams();
+      params.append('page', String(pageParam ?? 1));
+      params.append('page_size', String(PAGINATION_PAGE_SIZE_MEDIUM));
+      apiUrl = `${apiRouters.TWEET_LIST}?${params.toString()}`;
+    }
+
     const { data } = await api.get<BasePagination<TweetDetail[]>>(apiUrl, {
       signal,
     });
 
-    return { ...data, currentPage: pageParam }; // add current page to track next
+    return {
+      ...data,
+      currentUrl: apiUrl, // only for tracking/debug
+    };
   };
 
   // Handle API get tweet list
@@ -60,25 +70,26 @@ const useTweetList = ({
     fetchNextPage,
     refetch,
     hasNextPage,
+    isLoading,
     isFetchingNextPage,
     isFetched,
   } = useInfiniteQuery({
     queryKey: ['fetchTweetList'],
     queryFn: ({ pageParam, signal }) => fetchTweetList({ pageParam, signal }),
-    retry: 0,
     enabled: !!token && conditions?.every(Boolean),
-    getNextPageParam: (lastPage) => (lastPage?.hasNext ? 1 : undefined),
+    retry: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onSuccess: (data) => {
-      const lastPage = data.pages[data.pages.length - 1];
+    getNextPageParam: (lastPage) => {
+      return lastPage?.next ? `/tweets/${lastPage?.next}` : undefined;
+    },
+    onSuccess: (allPages) => {
+      const lastPage = allPages.pages[allPages.pages.length - 1];
       if (lastPage) {
         onSuccess?.(lastPage);
       }
-      isLoadingTweetRef.current = false;
     },
     onError: ({ response }: ResponseError<any>) => {
-      isLoadingTweetRef.current = false;
       if (response?.status === ServerStatusCode.UNAUTHORIZED) {
         if (session) {
           signOut();
@@ -94,6 +105,7 @@ const useTweetList = ({
     hasNextPage,
     isFetchingNextPage,
     isFetched,
+    isLoadingList: isLoading,
   };
 };
 

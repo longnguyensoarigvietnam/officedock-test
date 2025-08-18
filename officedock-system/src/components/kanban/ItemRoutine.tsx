@@ -469,7 +469,7 @@ const ItemRoutine = ({
                     content={content.isStart ? '計測停止' : '計測開始'}
                     placement="top">
                     <div
-                      className=""
+                      className="!w-[30px] !h-[30px] flex items-center justify-center"
                       onClick={(e) => {
                         e.stopPropagation();
                       }}>
@@ -477,7 +477,7 @@ const ItemRoutine = ({
                         <ImageRound
                           src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
                           name="Start task"
-                          className={`hover:cursor-pointer w-fit h-fit  ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
+                          className={`hover:cursor-pointer ${content.isStart ? '!w-[20px] !h-[20px]' : '!w-[30px] !h-[30px]'} ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
                           onClick={async () => {
                             await new Promise<void>((resolve) => {
                               setTaskSelectedToStart(content);
@@ -552,7 +552,7 @@ const ItemRoutine = ({
                     content={content.isStart ? '計測停止' : '計測開始'}
                     placement="top">
                     <div
-                      className=""
+                      className="!w-[30px] !h-[30px] flex items-center justify-center"
                       onClick={(e) => {
                         e.stopPropagation();
                       }}>
@@ -560,7 +560,7 @@ const ItemRoutine = ({
                         <ImageRound
                           src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
                           name="Start task"
-                          className={`hover:cursor-pointer w-fit h-fit  ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
+                          className={`hover:cursor-pointer ${content.isStart ? '!w-[20px] !h-[20px]' : '!w-[30px] !h-[30px]'} ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
                           onClick={async () => {
                             await new Promise<void>((resolve) => {
                               setTaskSelectedToStart(content);

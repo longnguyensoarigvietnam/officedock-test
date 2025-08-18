@@ -52,7 +52,7 @@ export const SkillMapByMembersDetail = ({
               avatarColor={row.original?.avatarColor || ''}
               size={25}
             />
-            <p className="text-left max-w-[100%] break-all">
+            <p className="text-left max-w-[100%] break-all text-black font-medium">
               {row.original.fullName}
             </p>
           </div>
