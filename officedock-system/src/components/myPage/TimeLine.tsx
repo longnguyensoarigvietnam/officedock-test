@@ -88,7 +88,7 @@ export const TimeLine = ({
       {/* Messages */}
       <div
         ref={resultsContainerRef}
-        className={`customized-scrollbar ${isLoadingList && tweetList.length == 0 ? 'overflow-y-hidden' : 'overflow-y-auto'}  max-h-[calc(100%_-_50px)] flex flex-col gap-10 !w-full`}>
+        className={`customized-scrollbar ${isLoadingList && tweetList.length == 0 ? 'overflow-y-hidden' : 'overflow-y-auto'}  max-h-[calc(100%_-_50px)] flex flex-col-reverse gap-10 !w-full`}>
         {isLoadingList && tweetList.length == 0 ? (
           <div className="flex flex-col items-start ml-3 space-y-2">
             <RowSkeleton className={`!h-[100px] w-[180px] !bg-[#248bcacc]`} />
