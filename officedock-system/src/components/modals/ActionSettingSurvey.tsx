@@ -15,6 +15,7 @@ import {
   ANSWER_VALUE_REQUIRED_MESSAGE,
   DATE_STOP_SURVEY_REQUIRED_MESSAGE,
   ERROR_CREATE_MESSAGE,
+  ERROR_WRONG_DATE_SURVEY,
   QUESTION_VALUE_REQUIRED_MESSAGE,
 } from '@constants/message';
 import { apiRouters } from '@constants/routers';
@@ -39,6 +40,7 @@ const ActionSettingSurvey = ({ open, onClose, onSuccess }: Props) => {
   const {
     control,
     watch,
+    setError,
     register,
     setValue,
     handleSubmit,
@@ -72,11 +74,18 @@ const ActionSettingSurvey = ({ open, onClose, onSuccess }: Props) => {
       onSuccess: (data) => {
         onSuccess(data.data.title);
       },
-      onError: () => {
-        showToast({
-          variant: 'error',
-          description: ERROR_CREATE_MESSAGE,
-        });
+      onError: (data: any) => {
+        const error = data.response.data;
+        if (error && error.endAt) {
+          setError('endTime', {
+            message: ERROR_WRONG_DATE_SURVEY,
+          });
+        } else {
+          showToast({
+            variant: 'error',
+            description: ERROR_CREATE_MESSAGE,
+          });
+        }
       },
       onSettled: () => {
         setIsLoading(false);
@@ -231,9 +240,7 @@ const ActionSettingSurvey = ({ open, onClose, onSuccess }: Props) => {
                           const m = parseInt(mStr, 10);
 
                           if (isNaN(h) || isNaN(m)) {
-                            const nowPlus30 = new Date(
-                              today.getTime() + 30 * 60 * 1000,
-                            );
+                            const nowPlus30 = new Date(today.getTime());
                             const hh = String(nowPlus30.getHours()).padStart(
                               2,
                               '0',
@@ -243,24 +250,6 @@ const ActionSettingSurvey = ({ open, onClose, onSuccess }: Props) => {
                               '0',
                             );
                             setValue('endTime', `${hh}:${mm}`);
-                            return;
-                          }
-
-                          const formattedMinutes = h * 60 + m;
-                          const currentMinutes =
-                            today.getHours() * 60 + today.getMinutes();
-
-                          if (formattedMinutes < currentMinutes) {
-                            const newDate = new Date(
-                              today.getTime() + 30 * 60 * 1000,
-                            );
-                            const newHours = String(
-                              newDate.getHours(),
-                            ).padStart(2, '0');
-                            const newMinutes = String(
-                              newDate.getMinutes(),
-                            ).padStart(2, '0');
-                            setValue('endTime', `${newHours}:${newMinutes}`);
                             return;
                           }
                         }
