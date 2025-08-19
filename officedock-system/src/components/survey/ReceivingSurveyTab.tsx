@@ -101,7 +101,9 @@ const ReceivingSurveyTab = ({ handleAnswer }: ReceivingSurveyTabProp) => {
                     <div className="w-[317px] px-[15px] flex items-center justify-between">
                       <p
                         onClick={() => {
-                          if (item.status.open) {
+                          if (item.createdBy.id == session?.user.id) {
+                            handleAnswer(item.id, true);
+                          } else {
                             handleAnswer(item.id);
                           }
                         }}
