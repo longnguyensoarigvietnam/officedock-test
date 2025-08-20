@@ -378,6 +378,10 @@ export const pageRouters = {
     name: 'アンケート',
     href: `/my-page/survey`,
   },
+  THANKS_MESSAGE: {
+    name: 'サンクスメッセージ',
+    href: `/my-page/thanks-message`,
+  },
 };
 
 // For the API routers
@@ -602,4 +606,9 @@ export const apiRouters = {
   SURVEY_DETAIL: (id: string) => `/surveys/${id}/`,
   ANSWER_QUESTION: (id: string) => `/surveys/${id}/answer/`,
   UNANSWERED_COUNT: '/surveys/unanswered-count/',
+
+  // THANKS MESSAGES
+  THANKS_MESSAGES_LIST: '/thanks-messages/',
+  REMAINING_QUOTA: '/thanks-messages/remaining-quota',
+  READ_THANKS_MESSAGE: '/thanks-messages/read/',
 };

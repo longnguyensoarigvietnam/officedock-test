@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import { StepInfoTooltip } from '@components/tooltip/StepInfoTooltip';
 import ImageRound from '@components/common/ImageRound';
-import { TwinklingStar } from '@components/common/TwinklingStar';
+import { TwinklingIcon } from '@components/common/TwinklingIcon';
 import ViewSkillMapCommentModal from '@components/modals/ViewSkillMapCommentModal';
 import { SkillMapProgressBar } from '@components/common/ProgressBar/SkillMapProgressBar';
 
@@ -300,29 +300,35 @@ export const SkillMapDetailByUser = ({
                                 )}
                                 {showTwinklingStars && (
                                   <div>
-                                    <TwinklingStar
+                                    <TwinklingIcon
                                       className="absolute top-[-10px] left-[-10px]"
                                       delay={0}
+                                      iconUrl='/icons/blue-star.svg'
                                     />
-                                    <TwinklingStar
+                                    <TwinklingIcon
                                       className="absolute top-[5px] right-[-15px]"
                                       delay={0.5}
+                                      iconUrl='/icons/blue-star.svg'
                                     />
-                                    <TwinklingStar
+                                    <TwinklingIcon
                                       className="absolute top-[-15px] right-[5px]"
                                       delay={0.8}
+                                      iconUrl='/icons/blue-star.svg'
                                     />
-                                    <TwinklingStar
+                                    <TwinklingIcon
                                       className="absolute bottom-[5px] left-[-15px]"
                                       delay={1}
+                                      iconUrl='/icons/blue-star.svg'
                                     />
-                                    <TwinklingStar
+                                    <TwinklingIcon
                                       className="absolute bottom-[-15px] left-[5px]"
                                       delay={1.2}
+                                      iconUrl='/icons/blue-star.svg'
                                     />
-                                    <TwinklingStar
+                                    <TwinklingIcon
                                       className="absolute bottom-[-10px] right-[-10px]"
                                       delay={1.5}
+                                      iconUrl='/icons/blue-star.svg'
                                     />
                                   </div>
                                 )}

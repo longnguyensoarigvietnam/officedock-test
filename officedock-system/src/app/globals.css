@@ -323,3 +323,14 @@ input[type='checkbox']:focus {
   border-radius: 10px;
   background-color: #dfe6ea;
 }
+
+.clip-envelope-left-front{
+  clip-path: polygon(0 0, 0% 100%, 100% 50%);
+}
+
+.clip-envelope-right-front{
+  clip-path: polygon(100% 0, 0 50%, 100% 100%);
+}
+.clip-envelope-front{
+  clip-path: polygon(100% 100%, 50% 0, 0 100%);
+}

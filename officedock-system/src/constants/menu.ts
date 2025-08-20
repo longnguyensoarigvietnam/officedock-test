@@ -243,7 +243,7 @@ export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
 export const MY_PAGE_MENU: MyPageMenuItem[] = [
   {
     name: 'サンクス メッセージ',
-    href: '#',
+    href: pageRouters.THANKS_MESSAGE.href,
     iconSrc: '/icons/heart.svg',
     iconName: 'Heart icon',
   },
