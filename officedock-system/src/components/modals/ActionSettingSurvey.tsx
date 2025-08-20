@@ -24,7 +24,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import {
   addTimeToDate,
-  formatTimeInput,
+  formatTimeInputCustom,
   getFilteredTimeOptions,
 } from '@utils/date';
 import api from '@base/api';
@@ -92,7 +92,6 @@ const ActionSettingSurvey = ({ open, onClose, onSuccess }: Props) => {
       },
     },
   );
-  const endDate = watch('endDate');
 
   const onSubmit = (data: SurveyFormData) => {
     createSurvey({
@@ -225,34 +224,9 @@ const ActionSettingSurvey = ({ open, onClose, onSuccess }: Props) => {
                     register={register('endTime', {
                       required: DATE_STOP_SURVEY_REQUIRED_MESSAGE,
                       onBlur: (time) => {
-                        const formatted = formatTimeInput(time.target.value);
-                        const selectedDate = new Date(endDate);
-                        const today = new Date();
-
-                        const isToday =
-                          selectedDate.getFullYear() === today.getFullYear() &&
-                          selectedDate.getMonth() === today.getMonth() &&
-                          selectedDate.getDate() === today.getDate();
-
-                        if (isToday) {
-                          const [hStr, mStr] = formatted.split(':');
-                          const h = parseInt(hStr, 10);
-                          const m = parseInt(mStr, 10);
-
-                          if (isNaN(h) || isNaN(m)) {
-                            const nowPlus30 = new Date(today.getTime());
-                            const hh = String(nowPlus30.getHours()).padStart(
-                              2,
-                              '0',
-                            );
-                            const mm = String(nowPlus30.getMinutes()).padStart(
-                              2,
-                              '0',
-                            );
-                            setValue('endTime', `${hh}:${mm}`);
-                            return;
-                          }
-                        }
+                        const formatted = formatTimeInputCustom(
+                          time.target.value,
+                        );
 
                         setValue('endTime', formatted);
                       },
