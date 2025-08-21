@@ -1,18 +1,24 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useMutation } from 'react-query';
 import { useRouter } from 'next/navigation';
 
 import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
 import { SendThanksMessageList } from '@components/thanksMessage/SendThanksMessageList';
 import SendEnvelopeAnimationOverlay from '@components/thanksMessage/SendEnvelopeAnimationOverlay';
+import { ReceiveAndSendThanksMessageTable } from '@components/thanksMessage/ReceiveAndSendThanksMessageTable';
 
 import useMemberOrganizationList from '@hooks/userMemberOrganizationList';
 import useRemainingQuota from '@hooks/useRemainingQuota';
+import useThanksMessageInfiniteList from '@hooks/useThanksMessageInfiniteList';
 
 import { UserOrganization } from '@interfaces/user';
 
-import { pageRouters } from '@constants/routers';
+import { apiRouters, pageRouters } from '@constants/routers';
+import { ThanksMessageType } from '@constants/enums';
+
+import api from '@base/api';
 
 const ThanksMessageListPage = () => {
   const [openSendThanksMessageTable, setOpenSendThanksMessageTable] =
@@ -35,6 +41,10 @@ const ThanksMessageListPage = () => {
     status: false,
     userInfo: null,
   });
+  const [activeTab, setActiveTab] = useState<ThanksMessageType>(
+    ThanksMessageType.RECEIVED,
+  );
+  const hasReadAllMessages = useRef(false);
   const router = useRouter();
 
   useMemberOrganizationList({
@@ -51,7 +61,42 @@ const ThanksMessageListPage = () => {
     },
   });
 
+  const { thanksMessageList, fetchNextPage, hasNextPage, isFetchingNextPage, isLoadingList } = useThanksMessageInfiniteList({
+    filter: {
+      type: activeTab,
+    },
+  });
+
   const { remainingQuota, refetchRemainingQuota } = useRemainingQuota();
+
+  // Call API to read thanks message
+  const handleReadAllThanksMessage = async () => {
+    const { data: response } = await api.post(apiRouters.READ_THANKS_MESSAGE, {
+      readAll: true,
+    });
+    return response;
+  };
+
+  const { mutate: readAllThanksMessage } = useMutation(
+    'readAllThanksMessage',
+    handleReadAllThanksMessage,
+    {
+      onSuccess: () => {
+        hasReadAllMessages.current = false;
+      },
+      onError: () => {
+        hasReadAllMessages.current = false;
+      },
+    },
+  );
+
+  useEffect(() => {
+    if (activeTab == ThanksMessageType.RECEIVED && !hasReadAllMessages.current) {
+      hasReadAllMessages.current = true;
+      readAllThanksMessage();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   return (
     <>
@@ -65,9 +110,9 @@ const ThanksMessageListPage = () => {
             height: '100%',
           }}
           className="rounded-bl-[30px] relative rounded-tr-[30px] rounded-br-[30px] h-[calc(100vh-120px)] w-full">
-          <div className="relative  pr-[30px] flex w-full justify-between items-center h-full">
+          <div className="relative pr-[30px] flex w-full justify-between items-center h-full !overflow-hidden rounded-b-[30px]">
             {/* Header */}
-            <div className="flex absolute top-0 left-0 ">
+            <div className="flex absolute top-0 left-0">
               <div className="h-[92px] bg-white w-fit px-10 py-4 font-medium flex items-center rounded-br-[30px]">
                 <div
                   className="flex items-center"
@@ -77,7 +122,9 @@ const ThanksMessageListPage = () => {
                     src={'/icons/chevron-left.svg'}
                     className={`w-[8px] h-[16px] mr-3 cursor-pointer`}
                   />
-                  <p className="text-sm font-medium hover:cursor-pointer">戻る</p>
+                  <p className="text-sm font-medium hover:cursor-pointer">
+                    戻る
+                  </p>
                 </div>
 
                 <ImageRound
@@ -125,11 +172,11 @@ const ThanksMessageListPage = () => {
               </Button>
             </div>
             {/* Seagull icon */}
-            <div className="absolute -bottom-[339px] -left-[7px]">
+            <div className="absolute -bottom-[250px] -left-[7px]">
               <ImageRound
                 name="Seagull"
                 src="/icons/seagull.svg"
-                className="w-[504px] h-[796px] cursor-pointer"
+                className="w-fit h-[73vh] cursor-pointer"
               />
             </div>
 
@@ -141,7 +188,15 @@ const ThanksMessageListPage = () => {
                 setOpenSendThanksMessageForm={setOpenSendThanksMessageForm}
               />
             ) : (
-              <></>
+              <ReceiveAndSendThanksMessageTable
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                thanksMessageList={thanksMessageList}
+                fetchNextPage={fetchNextPage}
+                hasNextPage={hasNextPage}
+                isLoadingList={isLoadingList}
+                isFetchingNextPage={isFetchingNextPage}
+              />
             )}
           </div>
         </div>
