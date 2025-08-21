@@ -15,27 +15,18 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import api from '@base/api';
 
-interface PaginationProps {
-  page?: number;
-  pageSize?: number;
-}
-
 interface FilterProps {
-  isRead: boolean,
-  isPagination: boolean
-  type: ThanksMessageType
+  type: ThanksMessageType;
 }
 
 interface UseThanksMessageInfiniteListHooksProps {
-  filter?: FilterProps,
-  pagination?: PaginationProps;
+  filter?: FilterProps;
   conditions?: boolean[];
   onSuccess?: (success: BasePagination<ThanksMessageDetail[]>) => void;
 }
 
 const useThanksMessageInfiniteList = ({
   filter,
-  pagination,
   conditions,
   onSuccess,
 }: UseThanksMessageInfiniteListHooksProps) => {
@@ -44,59 +35,88 @@ const useThanksMessageInfiniteList = ({
   const router = useRouter();
 
   // Handle call API get thanks message list
-  const fetchThanksMessageList = async ({ pageParam = 1 }) => {
-    const params = new URLSearchParams();
-    params.append('is_read', String(filter?.isRead));
-    params.append('is_pagination', String(filter?.isPagination));
-    if (filter?.type) {
-      params.append('type', String(filter?.type));
-    }
-    if (pagination?.page) {
-      params.append('page', String(pagination?.page));
-    }
-    if (pagination?.pageSize) {
-      params.append('page_size', String(pagination?.pageSize || PAGINATION_PAGE_SIZE_MEDIUM));
-    }
-    const apiUrl = `${apiRouters.THANKS_MESSAGES_LIST}?${params.toString()}`;
-    const { data } = await api.get<BasePagination<ThanksMessageDetail[]>>(apiUrl);
+  const fetchThanksMessageList = async ({
+    pageParam,
+    signal,
+  }: {
+    pageParam?: number | string;
+    signal?: AbortSignal;
+  }) => {
+    let apiUrl: string;
 
-    return { ...data, currentPage: pageParam }; // add current page to track next
+    if (typeof pageParam === 'string') {
+      // next page url for API
+      apiUrl = pageParam;
+    } else {
+      const params = new URLSearchParams();
+      if (filter?.type) {
+        params.append('type', String(filter?.type));
+      }
+      params.append('page', String(pageParam ?? 1));
+      params.append('page_size', String(PAGINATION_PAGE_SIZE_MEDIUM));
+      apiUrl = `${apiRouters.THANKS_MESSAGES_LIST}?${params.toString()}`;
+    }
+
+    const { data } = await api.get<BasePagination<ThanksMessageDetail[]>>(
+      apiUrl,
+      {
+        signal,
+      },
+    );
+
+    return {
+      ...data,
+      currentUrl: apiUrl, // only for tracking/debug
+    };
   };
 
   // Handle API get thanks message list
-  const { data, fetchNextPage, refetch, hasNextPage, isFetchingNextPage, isFetched } =
-    useInfiniteQuery({
-      queryKey: ['fetchThanksMessageInfiniteList'],
-      queryFn: fetchThanksMessageList,
-      retry: 0,
-      enabled: 
-        !!token && conditions?.every(Boolean),
-      getNextPageParam: (lastPage) =>
-        lastPage?.hasNext ? lastPage.currentPage + 1 : undefined,
-      refetchOnMount: true,
-      refetchOnWindowFocus: false,
-      onSuccess: (data) => {
-        const lastPage = data.pages[data.pages.length - 1];
-        if (lastPage) {
-          onSuccess?.(lastPage);
-        }
-      },
-      onError: ({ response }: ResponseError<any>) => {
-        if (response?.status === ServerStatusCode.UNAUTHORIZED) {
-          if (session) {
-            signOut();
-            router.push(pageRouters.LOGIN.href);
-          }
-        }
-      },
-    });
-  return {
-    thanksMessageList: data?.pages?.flatMap((page) => page?.results ?? []) ?? [],
+  const {
+    data,
     fetchNextPage,
-    refetchThanksMessageList: refetch, 
+    refetch,
+    hasNextPage,
+    isLoading,
+    isFetchingNextPage,
+    isFetched,
+  } = useInfiniteQuery({
+    queryKey: ['fetchThanksMessageInfiniteList', filter],
+    queryFn: ({ pageParam, signal }) =>
+      fetchThanksMessageList({ pageParam, signal }),
+    enabled: !!token && conditions?.every(Boolean),
+    retry: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    cacheTime: 0,
+    getNextPageParam: (lastPage) => {
+      return lastPage?.next
+        ? `${apiRouters.THANKS_MESSAGES_LIST}${lastPage?.next}`
+        : undefined;
+    },
+    onSuccess: (data) => {
+      const lastPage = data.pages[data.pages.length - 1];
+      if (lastPage) {
+        onSuccess?.(lastPage);
+      }
+    },
+    onError: ({ response }: ResponseError<any>) => {
+      if (response?.status === ServerStatusCode.UNAUTHORIZED) {
+        if (session) {
+          signOut();
+          router.push(pageRouters.LOGIN.href);
+        }
+      }
+    },
+  });
+  return {
+    thanksMessageList:
+      data?.pages?.flatMap((page) => page?.results ?? []) ?? [],
+    fetchNextPage,
+    refetchThanksMessageList: refetch,
     hasNextPage,
     isFetchingNextPage,
     isFetched,
+    isLoadingList: isLoading,
   };
 };
 
