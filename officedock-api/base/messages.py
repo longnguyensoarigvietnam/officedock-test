@@ -125,6 +125,7 @@ _ERROR_MESSAGES = {
         "quota_exceeded": _(
             "You have reached your thank message limit for this month."
         ),
+        "unique_vote": _("This candidate is voted"),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -208,6 +209,7 @@ _ERROR_MESSAGES = {
         # Thanks messages
         "cannot_send_yourself": _("自分自身にサンクスメッセージを送ることはできません。"),
         "quota_exceeded": _("今月のサンクスメッセージ送信可能回数は上限に達しました。"),
+        "unique_vote": _("この候補者に投票しました。"),
     },
 }
 
