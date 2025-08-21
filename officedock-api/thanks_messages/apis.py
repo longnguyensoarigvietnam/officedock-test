@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
 from base.apis import BaseAPIViewSet
+from base.paginations import CustomCursorPagination
 
 from organizations.models import Organization
 from organizations.serializers import OrganizationMemberSerializer
@@ -32,6 +33,8 @@ class ThanksMessageViewSet(
     queryset = ThanksMessage.objects.order_by("-created_at")
     serializer_class = ThanksMessageSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomCursorPagination
+    ordering = "-created_at"
 
     def get_queryset(self):
         """
@@ -88,6 +91,7 @@ class ThanksMessageViewSet(
             request,
             queryset,
             self.get_serializer,
+            CustomCursorPagination,
             extra_context={"is_show_deleted_message": False},
         )
 
@@ -124,6 +128,10 @@ class ThanksMessageViewSet(
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
         tks_msgs = validated_data.pop("thanks_messages", [])
+        read_all = validated_data.pop("read_all", False)
+
+        if read_all and not tks_msgs:
+            tks_msgs = ThanksMessage.objects.unread_for(request.user)
 
         items_to_update = []
         time_now = now()
@@ -134,11 +142,7 @@ class ThanksMessageViewSet(
         ThanksMessage.objects.bulk_update(items_to_update, ["read_at"])
 
         return self.response_ok(
-            {
-                "remaining_quota": ThanksMessage.objects.remaining_quota(
-                    request.user
-                )
-            }
+            {"unread_count": ThanksMessage.objects.unread_count(request.user)}
         )
 
 
@@ -156,6 +160,8 @@ class ThanksMessageManagementViewSet(
     queryset = ThanksMessage.objects.order_by("-created_at")
     serializer_class = ThanksMessageSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomCursorPagination
+    ordering = "-created_at"
 
     def get_queryset(self):
         """
@@ -197,6 +203,7 @@ class ThanksMessageManagementViewSet(
             request,
             queryset,
             self.get_serializer,
+            CustomCursorPagination,
             extra_context={"is_show_deleted_message": True},
         )
 
@@ -204,8 +211,12 @@ class ThanksMessageManagementViewSet(
         """Override delete"""
         instance.soft_delete()
 
-    @extend_schema(parameters=[OpenApiParameter("search", type=str)])
-    @extend_schema(parameters=[OpenApiParameter("organization_id", type=int)])
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("organization_id", type=int),
+            OpenApiParameter("search", type=str),
+        ]
+    )
     @action(
         methods=["GET"],
         detail=False,

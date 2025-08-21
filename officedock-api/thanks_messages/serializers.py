@@ -91,12 +91,17 @@ class ReadThanksMessageSerializer(serializers.ModelSerializer):
     Serialzier for read thanks message
     """
 
+    read_all = serializers.BooleanField(
+        default=False, required=False, allow_null=True, write_only=True
+    )
     ids = CompanyThanksMessagePKField(
         source="thanks_messages",
         many=True,
-        required=True,
+        required=False,
+        allow_null=True,
+        write_only=True,
     )
 
     class Meta:
         model = ThanksMessage
-        fields = ["ids"]
+        fields = ["ids", "read_all"]
