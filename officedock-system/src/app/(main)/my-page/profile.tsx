@@ -9,12 +9,13 @@ import {
   PopoverPanel,
   Transition,
 } from '@headlessui/react';
+import { useRouter } from 'next/navigation';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { RenderAccessories } from '@components/custom/UserCustomize';
 import ImageRound from '@components/common/ImageRound';
 import { SkillMapProgressBar } from '@components/common/ProgressBar/SkillMapProgressBar';
-import { TwinklingStar } from '@components/common/TwinklingStar';
+import { TwinklingIcon } from '@components/common/TwinklingIcon';
 import { MyPageMenu } from '@components/myPage/Menu';
 import CreateTweetModal from '@components/modals/CreateTweetModal';
 import { SettingSkillModal } from '@components/modals/SettingSkillModal';
@@ -24,6 +25,7 @@ import { ConfirmSettingSkillModal } from '@components/modals/ConfirmSettingSkill
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import ActionSettingSurvey from '@components/modals/ActionSettingSurvey';
 import SuccessSurveyActionModal from '@components/modals/SuccessSurveyActionModal';
+import ReceiveEnvelopeAnimationOverlay from '@components/thanksMessage/ReceiveEnvelopeAnimationOverlay';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
@@ -31,6 +33,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import { TweetFormData } from '@interfaces/tweet';
+import { ThanksMessageDetail } from '@interfaces/thanks-message';
 import { SkillMapByOrganizationInfo } from '@interfaces/skills';
 
 import {
@@ -40,11 +43,12 @@ import {
   SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
 } from '@constants/message';
-import { apiRouters } from '@constants/routers';
+import { apiRouters, pageRouters } from '@constants/routers';
 import { MAX_MY_PAGE_SET_SKILLS } from '@constants';
-import { ActionsModal } from '@constants/enums';
+import { ActionsModal, ThanksMessageType } from '@constants/enums';
 
 import useUnansweredSurveyCount from '@hooks/useUnansweredSurveyCount';
+import useThanksMessageList from '@hooks/useThanksMessageList';
 import useTweetList from '@hooks/useTweetList';
 import useSetSkillList from '@hooks/useSetSkillList';
 import { useErrorToast } from '@hooks/useErrorToast';
@@ -62,6 +66,7 @@ const MyPage = () => {
 
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
   const { setIsLoading } = useContext(LoadingContext);
+  const router = useRouter();
 
   // Set skills
   const [openSetSkillModal, setOpenSetSkillModal] = useState<boolean>(false);
@@ -92,6 +97,14 @@ const MyPage = () => {
   >(null);
   const { createTweetMessageLocal, deleteTweetLocal } = useUpdateTweetCache();
 
+  // Thanks msg
+  const [showReceiveEnvelopeAnimation, setShowReceiveEnvelopeAnimation] =
+    useState<boolean>(false);
+  const [receivedThanksMessageList, setReceivedThanksMessageList] = useState<
+    ThanksMessageDetail[]
+  >([]);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
+
   // Get tweet list
   const {
     tweetList,
@@ -103,6 +116,27 @@ const MyPage = () => {
   // Survey
   const [openSettingSurvey, setOpenSettingSurvey] = useState(false);
   const [openSuccessSurvey, setOpenSuccessSurvey] = useState(false);
+
+  // Get thanks message list
+  const { refetchThanksMessageList } = useThanksMessageList({
+    filter: {
+      isRead: false,
+      isPagination: false,
+      type: ThanksMessageType.RECEIVED,
+    },
+    conditions: [Boolean(isFirstLoad || showReceiveEnvelopeAnimation)],
+    onSuccess: (data) => {
+      setReceivedThanksMessageList(
+        data.map((message) => {
+          return { ...message, isRead: false };
+        }),
+      );
+      if (isFirstLoad) {
+        setIsFirstLoad(false);
+      }
+    },
+  });
+
   // Render user's avatar
   const renderBoxUser = (userId: string) => {
     const memberInfo = dashboardMembersWithAvatars.find(
@@ -432,29 +466,35 @@ const MyPage = () => {
 
                           {showTwinklingStars && (
                             <div>
-                              <TwinklingStar
+                              <TwinklingIcon
                                 className="absolute top-[-10px] left-[-10px]"
                                 delay={0}
+                                iconUrl="/icons/blue-star.svg"
                               />
-                              <TwinklingStar
+                              <TwinklingIcon
                                 className="absolute top-[5px] right-[-15px]"
                                 delay={0.5}
+                                iconUrl="/icons/blue-star.svg"
                               />
-                              <TwinklingStar
+                              <TwinklingIcon
                                 className="absolute top-[-15px] right-[5px]"
                                 delay={0.8}
+                                iconUrl="/icons/blue-star.svg"
                               />
-                              <TwinklingStar
+                              <TwinklingIcon
                                 className="absolute bottom-[5px] left-[-15px]"
                                 delay={1}
+                                iconUrl="/icons/blue-star.svg"
                               />
-                              <TwinklingStar
+                              <TwinklingIcon
                                 className="absolute bottom-[-15px] left-[5px]"
                                 delay={1.2}
+                                iconUrl="/icons/blue-star.svg"
                               />
-                              <TwinklingStar
+                              <TwinklingIcon
                                 className="absolute bottom-[-10px] right-[-10px]"
                                 delay={1.5}
+                                iconUrl="/icons/blue-star.svg"
                               />
                             </div>
                           )}
@@ -546,6 +586,7 @@ const MyPage = () => {
             <div className="h-[424px] w-[336px] ml-[200px] relative">
               <RenderAccessories images={listAvatar} />
             </div>
+
             {/* Message user */}
             <>
               <div
@@ -562,6 +603,17 @@ const MyPage = () => {
               </div>
               <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[25px] w-[22px] top-[128px] left-[585px]"></div>
             </>
+            {/* Seagull icon */}
+            {receivedThanksMessageList?.length && (
+              <div className="absolute bottom-0 left-[610px]">
+                <ImageRound
+                  name="Seagull"
+                  src="/icons/seagull.svg"
+                  className="w-[201px] h-[317px] cursor-pointer"
+                  onClick={() => setShowReceiveEnvelopeAnimation(true)}
+                />
+              </div>
+            )}
           </div>
           {/* Tweet icon */}
           <ImageRound
@@ -581,6 +633,22 @@ const MyPage = () => {
         fetchNextPage={fetchNextPage}
         setSelectedTweetToDelete={setSelectedTweetToDelete}
       />
+      {showReceiveEnvelopeAnimation && receivedThanksMessageList?.length && (
+        <ReceiveEnvelopeAnimationOverlay
+          receivedThanksMessageList={receivedThanksMessageList}
+          onFinish={() => {
+            setReceivedThanksMessageList([]);
+            setShowReceiveEnvelopeAnimation(false);
+            refetchThanksMessageList();
+          }}
+          onNavigateToThanksMessageList={() => {
+            setReceivedThanksMessageList([]);
+            setShowReceiveEnvelopeAnimation(false);
+            router.push(pageRouters.THANKS_MESSAGE.href);
+          }}
+          setReceivedThanksMessageList={setReceivedThanksMessageList}
+        />
+      )}
       {openCreateTweetModal && (
         <CreateTweetModal
           open={openCreateTweetModal}

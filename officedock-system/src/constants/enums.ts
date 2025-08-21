@@ -629,3 +629,11 @@ export enum TemplateVariant {
   EMPTY = 'EMPTY',
   DATA = 'DATA',
 }
+export enum ThanksMessageTab {
+  RECEIVED_THANKS_MESSAGES = '受け取ったサンクスメッセージ',
+  SENT_THANKS_MESSAGES = '送ったサンクスメッセージ',
+}
+export enum ThanksMessageType {
+  RECEIVED = 'received',
+  SENT = 'sent',
+}

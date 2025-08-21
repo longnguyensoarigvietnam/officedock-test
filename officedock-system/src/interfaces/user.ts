@@ -52,7 +52,7 @@ export interface User {
   organizations: Organizations[];
   isTwoFactorAuth: boolean;
   isEnterSendMessage?: boolean;
-  avatar?: string
+  avatar?: string;
   setting?: {
     isCheckSelfTask?: boolean;
     isCheckSelfSchedule?: boolean;
@@ -143,7 +143,7 @@ export interface UserOrganization {
     id: number;
     fullName: string;
     avatarColor: string;
-    avatar: string
+    avatar: string;
   }[];
 }
 export interface UserProfileFormData {
@@ -153,15 +153,15 @@ export interface UserProfileFormData {
   password: string | null;
   fullName: string;
   username: string;
-  avatarUrl?: string
+  avatarUrl?: string;
 }
 export interface UserProfileFormRequest {
   id?: number;
   avatar: File | null;
   password: string | null;
   profile: {
-    fullName: string,
-  }
+    fullName: string;
+  };
 }
 export interface Staff {
   id: number;
@@ -170,6 +170,20 @@ export interface Staff {
   twoFactorAuthEmail: string;
   profile: Profile;
   loginType: string;
-  avatar?: string
+  avatar?: string;
   avatarColor: string;
+}
+export interface UserProfile {
+  id: number;
+  fullName: string;
+  avatarColor: string;
+  avatar: string | null;
+  organizations: {
+    id: number;
+    uuid: string;
+    name: string;
+    icon: string | null;
+    iconColor: string;
+    type: string;
+  };
 }

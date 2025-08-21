@@ -1,0 +1,168 @@
+'use client';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+import ImageRound from '@components/common/ImageRound';
+import Button from '@components/common/Button';
+import { SendThanksMessageList } from '@components/thanksMessage/SendThanksMessageList';
+import SendEnvelopeAnimationOverlay from '@components/thanksMessage/SendEnvelopeAnimationOverlay';
+
+import useMemberOrganizationList from '@hooks/userMemberOrganizationList';
+import useRemainingQuota from '@hooks/useRemainingQuota';
+
+import { UserOrganization } from '@interfaces/user';
+
+import { pageRouters } from '@constants/routers';
+
+const ThanksMessageListPage = () => {
+  const [openSendThanksMessageTable, setOpenSendThanksMessageTable] =
+    useState<boolean>(false);
+  const [memberListByOrganization, setMemberListByOrganization] = useState<
+    {
+      orgInfo: UserOrganization;
+      collapseStatus: boolean;
+    }[]
+  >([]);
+  const [openSendThanksMessageForm, setOpenSendThanksMessageForm] = useState<{
+    status: boolean;
+    userInfo: {
+      id: number;
+      fullName: string;
+      avatarColor: string;
+      avatar: string;
+    } | null;
+  }>({
+    status: false,
+    userInfo: null,
+  });
+  const router = useRouter();
+
+  useMemberOrganizationList({
+    search: '',
+    onSuccess: (data) => {
+      setMemberListByOrganization(
+        data.map((org) => {
+          return {
+            orgInfo: { ...org },
+            collapseStatus: true,
+          };
+        }),
+      );
+    },
+  });
+
+  const { remainingQuota, refetchRemainingQuota } = useRemainingQuota();
+
+  return (
+    <>
+      <div className="h-full w-full overflow-hidden">
+        <div
+          style={{
+            backgroundImage: 'url("/images/bg-profile.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            width: '100%',
+            height: '100%',
+          }}
+          className="rounded-bl-[30px] relative rounded-tr-[30px] rounded-br-[30px] h-[calc(100vh-120px)] w-full">
+          <div className="relative  pr-[30px] flex w-full justify-between items-center h-full">
+            {/* Header */}
+            <div className="flex absolute top-0 left-0 ">
+              <div className="h-[92px] bg-white w-fit px-10 py-4 font-medium flex items-center rounded-br-[30px]">
+                <div
+                  className="flex items-center"
+                  onClick={() => router.push(pageRouters.MY_PAGE.href)}>
+                  <ImageRound
+                    name="Left icon"
+                    src={'/icons/chevron-left.svg'}
+                    className={`w-[8px] h-[16px] mr-3 cursor-pointer`}
+                  />
+                  <p className="text-sm font-medium hover:cursor-pointer">戻る</p>
+                </div>
+
+                <ImageRound
+                  name="Heart icon"
+                  src={'/icons/heart.svg'}
+                  className={`w-[60px] h-[60px]`}
+                />
+                <span className="text-[22px] font-medium">
+                  サンクスメッセージ
+                </span>
+              </div>
+            </div>
+            {/* Number of remaining thanks messages */}
+            <div className="w-[290px] h-[142px] absolute top-[110px] left-[30px] rounded-[14px] py-[20px] px-[26px] bg-white">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[#77858F] text-sm font-medium w-[140px]">
+                  今月送ることができる サンクスメッセージ
+                </p>
+                <p className="text-[15px] font-medium">
+                  残り
+                  <span className="text-primary text-[28px] font-medium mx-1">
+                    {remainingQuota?.remainingQuota || 0}
+                  </span>
+                  通
+                </p>
+              </div>
+              <Button
+                className="text-white !text-[13px] !rounded-[10px] font-bold hover:cursor-pointer w-full"
+                style={{
+                  background:
+                    'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
+                  boxShadow: '0px 4px 0px 0px #0028A140',
+                }}
+                onClick={() => setOpenSendThanksMessageTable((prev) => !prev)}>
+                <div className="w-[28px] h-[28px] mr-2 bg-white rounded-full flex items-center justify-center">
+                  <ImageRound
+                    name="Heart icon"
+                    src={'/icons/blue-heart.svg'}
+                    className={`w-[14px] h-[13px] mb-[-3px]`}
+                  />
+                </div>{' '}
+                {openSendThanksMessageTable
+                  ? 'サンクスメッセージ一覧'
+                  : 'サンクスメッセージを送る'}
+              </Button>
+            </div>
+            {/* Seagull icon */}
+            <div className="absolute -bottom-[339px] -left-[7px]">
+              <ImageRound
+                name="Seagull"
+                src="/icons/seagull.svg"
+                className="w-[504px] h-[796px] cursor-pointer"
+              />
+            </div>
+
+            {openSendThanksMessageTable ? (
+              <SendThanksMessageList
+                memberListByOrganization={memberListByOrganization}
+                remainingQuota={remainingQuota}
+                setMemberListByOrganization={setMemberListByOrganization}
+                setOpenSendThanksMessageForm={setOpenSendThanksMessageForm}
+              />
+            ) : (
+              <></>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {openSendThanksMessageForm.status &&
+        openSendThanksMessageForm.userInfo && (
+          <SendEnvelopeAnimationOverlay
+            userInfo={openSendThanksMessageForm.userInfo}
+            remainingQuota={remainingQuota}
+            refetchRemainingQuota={refetchRemainingQuota}
+            onFinish={() => {
+              setOpenSendThanksMessageForm({
+                status: false,
+                userInfo: null,
+              });
+            }}
+          />
+        )}
+    </>
+  );
+};
+
+export default ThanksMessageListPage;
