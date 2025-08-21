@@ -294,7 +294,6 @@ const ListRoles = () => {
         open={openConfirmDeleteModal}
         name={selectedRoleToDelete?.name || ''}
         type="権限"
-        message="この権限を持っているユーザーは一般権限になります。"
         onConfirm={handleConfirmDeleteRole}
         onClose={() => setOpenConfirmDeleteModal(false)}
       />

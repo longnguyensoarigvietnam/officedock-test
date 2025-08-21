@@ -3257,7 +3257,8 @@ const KanbanBoardTask = () => {
                 handleCreateTaskFromTemplate={handleCreateTaskFromTemplate}
               />
               <div className="flex-grow flex flex-col gap-2  mb-6">
-                <div className={`flex gap-7 mb-4 w-fit min-w-[300px]`}>
+                <div
+                  className={`flex gap-7 mb-4 w-full min-w-[300px]  justify-between items-center`}>
                   <div className="flex items-center gap-2">
                     {/* Filter option modal */}
                     <Popover className="relative">
@@ -3352,8 +3353,7 @@ const KanbanBoardTask = () => {
                     />
                   </div>
 
-                  <div
-                    className={`fixed ${showFrequentlyTasks ? 'top-[200px]' : 'top-[125px]'} hover:cursor-pointer right-5 z-20`}>
+                  <div className={` hover:cursor-pointer  z-20`}>
                     <DynamicTooltip
                       content={
                         isListView ? 'タスクを看板表示' : 'タスクをリスト表示'

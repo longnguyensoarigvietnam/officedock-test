@@ -500,7 +500,7 @@ export default function EditNode() {
       </div>
       <div className=" flex mt-5 flex-col gap-5 h-[calc(100vh_-_215px)] overflow-y-auto">
         <div className="px-10">
-          <div className="bg-white p-[30px] overflow-auto max-w-[calc(100vw_-_288px)] min-h-[538px] min-w-[1152px]  rounded-[14px]">
+          <div className="bg-white p-[30px] overflow-auto max-w-[calc(100vw_-_288px)] min-h-[538px] min-w-[1152px]  rounded-[30px]">
             <p className="text-base font-medium text-[#77858F] mb-[30px]">
               チーム階層
             </p>
@@ -528,7 +528,7 @@ export default function EditNode() {
               )}
             </div>
           </div>
-          <div className="bg-white p-[30px] mt-5 w-full min-h-[190px] rounded-[14px] mb-10">
+          <div className="bg-white p-[30px] mt-5 w-full min-h-[190px] rounded-[30px] mb-10">
             <p className="text-base font-medium text-[#77858F] mb-[30px] ">
               プロジェクトチーム
             </p>

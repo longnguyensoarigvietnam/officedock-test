@@ -41,7 +41,7 @@ export default function HierarchyOrganization() {
 
   return (
     <>
-      <div className="bg-white p-[30px] overflow-auto max-w-[calc(100vw_-_288px)] min-h-[538px] min-w-[1152px]  rounded-[14px]">
+      <div className="bg-white p-[30px] overflow-auto max-w-[calc(100vw_-_288px)] min-h-[538px] min-w-[1152px]  rounded-[30px]">
         <p className="text-base font-medium text-[#77858F] mb-[30px]">
           チーム階層
         </p>
@@ -55,7 +55,7 @@ export default function HierarchyOrganization() {
           )}
         </div>
       </div>
-      <div className="bg-white p-[30px] w-full min-h-[190px] rounded-[14px]">
+      <div className="bg-white p-[30px] w-full min-h-[190px] rounded-[30px]">
         <p className="text-base font-medium text-[#77858F] mb-[30px]">
           プロジェクトチーム
         </p>
