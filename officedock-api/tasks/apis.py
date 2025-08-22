@@ -18,7 +18,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import (
     extend_schema,
     OpenApiParameter,
-    OpenApiResponse,
 )
 from rest_framework import filters, mixins, status
 from rest_framework.decorators import action
@@ -53,7 +52,6 @@ from common.utils import (
 )
 from stat_data.utils import validate_date_by_regex_and_reformat
 from tasks.constants import (
-    DEFAULT_PAGE_SIZE,
     INITIAL_INDEX_VALUE,
     TaskTypes,
     TaskStatus,
@@ -82,7 +80,6 @@ from .models import (
     PeopleInChargeTasks,
     Task,
     TaskDuration,
-    TaskFrequent,
     TaskIndex,
     TaskSchedule,
     TeamTaskIndex,
@@ -605,7 +602,6 @@ class TaskViewSet(
         Handle updating the count of task usage by the user.
         """
         task = self.get_object()
-        user = request.user
         task_schedule_from_date = request.query_params.get(
             "task_schedule_from_date"
         )
@@ -622,15 +618,6 @@ class TaskViewSet(
             if task_schedule_end_date
             else None
         )
-        # Retrieve or create TaskFrequent and set the default company
-        task_frequent, created = TaskFrequent.objects.get_or_create(
-            user=user, task=task, defaults={"company_id": task.company_id}
-        )
-
-        # Increment the count if it's not a newly created instance
-        if not created:
-            task_frequent.count += 1
-            task_frequent.save()
 
         return self.response_ok(
             self.get_serializer(
@@ -1151,14 +1138,6 @@ class TaskViewSet(
 
         return self.response(status_code=status.HTTP_204_NO_CONTENT)
 
-    @extend_schema(
-        parameters=[OpenApiParameter("page_size", type=int)],
-        responses={
-            status.HTTP_200_OK: OpenApiResponse(
-                response=TaskBoardSerializer(many=True)
-            )
-        },
-    )
     @action(
         methods=["GET"],
         detail=False,
@@ -1169,34 +1148,8 @@ class TaskViewSet(
         """
         Get the top tasks with the highest counts for the logged-in user.
         """
-        # Get page_size from query params
-        user = request.user
-        page_size = request.query_params.get("page_size", DEFAULT_PAGE_SIZE)
-
-        try:
-            page_size = int(page_size)
-        except (TypeError, ValueError):
-            page_size = DEFAULT_PAGE_SIZE
-
-        if page_size <= 0:
-            page_size = DEFAULT_PAGE_SIZE
-
-        frequent_tasks = (
-            TaskFrequent.objects.filter(
-                user=user,
-                company_id=user.company_id,
-                task__people_in_charge__id=user.id,
-            )
-            .order_by("-count")
-            .prefetch_related("task")[:page_size]
-        )
-        tasks = [item.task for item in frequent_tasks]
-
-        return self.response_ok(
-            TaskBoardSerializer(
-                tasks, many=True, context={"request": request}
-            ).data
-        )
+        # TODO: Delete function when FE update
+        return self.response_ok([])
 
     @action(
         methods=["GET"],
@@ -1206,21 +1159,21 @@ class TaskViewSet(
     )
     def template(self, request):
         """
-        Get all the task template by logged user
+        Get all the task templates of the logged-in user
         """
         user = request.user
-        people_in_charge_tasks = (
-            user.people_in_charge_tasks.filter(
-                task__type=TaskTypes.MY_TEMPLATE.value
-            )
-            .all()
-            .order_by("task_id")
-        )
-        data = []
-        for people_in_charge_task in people_in_charge_tasks:
-            data.append(TaskTemplateSerializer(people_in_charge_task.task).data)
 
-        return self.response_ok(data)
+        tasks = (
+            Task.objects.filter(
+                people_in_charge_tasks__user=user,
+                type=TaskTypes.MY_TEMPLATE.value,
+            )
+            .order_by("id")
+            .distinct()
+        )
+
+        serializer = TaskTemplateSerializer(tasks, many=True)
+        return self.response_ok(serializer.data)
 
     @action(
         methods=["PUT"],

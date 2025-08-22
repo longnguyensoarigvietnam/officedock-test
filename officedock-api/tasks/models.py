@@ -458,25 +458,3 @@ class TaskDuration(BaseModel):
             self.company = self.schedule.company
 
         super().save(*args, **kwargs)
-
-
-class TaskFrequent(BaseModel):
-    """
-    Model to track frequently used tasks by users.
-    """
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    count = models.IntegerField(default=0)
-    user = models.ForeignKey(
-        "users.User",
-        related_name="task_frequents",
-        on_delete=models.CASCADE,
-    )
-    task = models.ForeignKey(
-        "Task", related_name="task_frequents", on_delete=models.CASCADE
-    )
-    company = models.ForeignKey(
-        "companies.Company",
-        related_name="task_frequents",
-        on_delete=models.CASCADE,
-    )
