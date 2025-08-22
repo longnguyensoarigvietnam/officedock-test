@@ -433,6 +433,27 @@ def transform_statistic_categories(statistic_categories):
     return result
 
 
+def get_large_statistic_category_color(task):
+    """Handle get large statistic category color"""
+
+    color = (
+        OrganizationsStatisticCategories.objects.filter(
+            organization_id=task.organization_id,
+            large_statistic_category__large_categories__task=task,
+        )
+        .values_list("color", flat=True)
+        .first()
+    )
+    return [
+        {
+            "id": None,
+            "name": None,
+            "color": color,
+            "type": ScheduleCategoryTypes.LARGE.value,
+        }
+    ]
+
+
 def get_common_categories(category, obj=None):
     """Handle transform common category"""
 
