@@ -243,7 +243,7 @@ export default function SendEnvelopeAnimationOverlay({
       </div>
       <div className="absolute bottom-5">
         {showConfirmMessage && (
-          <div className="w-[675px] bg-white rounded-[10px] p-[6px] flex items-center justify-between">
+          <div className="w-[675px] bg-white rounded-[10px] pl-5 pr-[6px] py-[6px] flex items-center justify-between">
             <p className="text-sm">
               受け取り側にはこのように表示されます。この内容で送りますか？
             </p>
@@ -255,7 +255,7 @@ export default function SendEnvelopeAnimationOverlay({
                 キャンセル
               </Button>
               <Button
-                variant="primary"
+                variant="post"
                 className={`w-[100px] rounded-[8px] h-[36px]`}
                 onClick={async () => {
                   sendThanksMessage({

@@ -6,7 +6,6 @@ export interface ThanksMessageDetail {
   recipient: UserProfile
   message: string;
   readAt: string | Date | null
-  isRead?: boolean;
   createdAt: string | Date | null
   updatedAt: string | Date | null
   deletedAt: string | Date | null

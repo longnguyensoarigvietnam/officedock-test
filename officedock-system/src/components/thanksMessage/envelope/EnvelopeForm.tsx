@@ -60,7 +60,7 @@ export const EnvelopeForm = ({
           キャンセル
         </Button>
         <Button
-          variant="primary"
+          variant="post"
           className={`w-[100px] rounded-[8px] h-[36px]`}
           disabled={
             envelopeMessage.trim() == '' || !remainingQuota?.remainingQuota

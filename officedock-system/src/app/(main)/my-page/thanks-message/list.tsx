@@ -172,7 +172,7 @@ const ThanksMessageListPage = () => {
               </Button>
             </div>
             {/* Seagull icon */}
-            <div className="absolute -bottom-[250px] -left-[7px]">
+            <div className="absolute -bottom-[220px] left-[20px]">
               <ImageRound
                 name="Seagull"
                 src="/icons/seagull.svg"
