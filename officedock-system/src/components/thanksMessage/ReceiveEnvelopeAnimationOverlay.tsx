@@ -299,7 +299,11 @@ export default function ReceiveEnvelopeAnimationOverlay({
                 if (el) contentRefs.current[idx] = el;
               }}
               className="absolute inset-0 z-20 top-[150px] left-[60px]">
-              <EnvelopeContent content={env.message} userInfo={env.sender} />
+              <EnvelopeContent
+                content={env.message}
+                userInfo={env.sender}
+                isSendThanksMessage={false}
+              />
             </div>
             <div
               ref={(el) => {

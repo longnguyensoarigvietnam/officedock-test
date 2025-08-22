@@ -190,14 +190,18 @@ export default function SendEnvelopeAnimationOverlay({
 
         <div
           ref={contentRef}
-          className="absolute inset-0 z-30 top-[80px] left-[60px]">
+          className={`absolute inset-0 z-30 top-[80px] left-[60px] ${!showEnvelopeContent && 'hidden'}`}>
           {showEnvelopeContent && (
-            <EnvelopeContent content={envelopeMessage} userInfo={userInfo} />
+            <EnvelopeContent
+              content={envelopeMessage}
+              userInfo={userInfo}
+              isSendThanksMessage={true}
+            />
           )}
         </div>
         <div
           ref={formRef}
-          className="absolute inset-0 z-30 top-[30px] left-[60px]">
+          className={`absolute inset-0 z-30 top-[30px] left-[60px] ${showEnvelopeContent && 'hidden'}`}>
           {!showEnvelopeContent && (
             <EnvelopeForm
               userInfo={userInfo}

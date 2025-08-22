@@ -1,7 +1,11 @@
+'use client';
+
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
 
 import { UserOrganization } from '@interfaces/user';
+
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 interface SendThanksMessageListProps {
   memberListByOrganization: {
@@ -40,6 +44,7 @@ export const SendThanksMessageList = ({
   setMemberListByOrganization,
   setOpenSendThanksMessageForm,
 }: SendThanksMessageListProps) => {
+  const { data: session } = useSessionCache();
   return (
     <div
       style={{
@@ -81,9 +86,10 @@ export const SendThanksMessageList = ({
                   return (
                     <div
                       key={`${organization.orgInfo.id}-${user.id}`}
-                      className={`w-[157px] bg-white rounded-[14px] h-[50px] px-[20px] py-[10px] flex items-center gap-2 ${!remainingQuota?.remainingQuota && 'hover:cursor-not-allowed'}`}
+                      className={`w-[157px] bg-white rounded-[14px] h-[50px] px-[20px] py-[10px] flex items-center gap-2 ${(!remainingQuota?.remainingQuota || session?.user.id == user.id) && 'hover:cursor-not-allowed'}`}
                       onClick={() => {
                         remainingQuota?.remainingQuota &&
+                          session?.user.id != user.id &&
                           setOpenSendThanksMessageForm({
                             status: true,
                             userInfo: user,

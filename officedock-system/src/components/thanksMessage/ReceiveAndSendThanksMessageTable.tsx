@@ -11,6 +11,7 @@ import Button from '@components/common/Button';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 import { ThanksMessageType } from '@constants/enums';
+import { NO_DATA_AVAILABLE } from '@constants';
 
 import { ResponseError } from '@interfaces/response';
 import { ThanksMessageDetail } from '@interfaces/thanks-message';
@@ -132,12 +133,11 @@ export const ReceiveAndSendThanksMessageTable = ({
       <div
         ref={resultsContainerRef}
         className="overflow-y-auto overflow-x-hidden customized-scrollbar h-fit max-h-[calc(100%_-_105px)] w-full bg-white py-[14px] mt-3 rounded-[14px] flex flex-col gap-1">
-        {isLoadingList && (
+        {isLoadingList ? (
           <div>
             <RowSkeleton numberOfRows={6} className="h-[90px]" />
           </div>
-        )}
-        {!isLoadingList &&
+        ) : thanksMessageList.length ? (
           thanksMessageList.map((message, index) => {
             return (
               <>
@@ -186,7 +186,12 @@ export const ReceiveAndSendThanksMessageTable = ({
                 </div>
               </>
             );
-          })}
+          })
+        ) : (
+          <p className="text-sm text-center text-[#77858F]">
+            {NO_DATA_AVAILABLE}
+          </p>
+        )}
         {isFetchingNextPage && (
           <div className="mt-2">
             <RowSkeleton numberOfRows={2} className="h-[90px]" />
