@@ -604,7 +604,7 @@ const MyPage = () => {
               <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[25px] w-[22px] top-[128px] left-[585px]"></div>
             </>
             {/* Seagull icon */}
-            {receivedThanksMessageList?.length && (
+            {receivedThanksMessageList?.length ? (
               <div className="absolute bottom-0 left-[610px]">
                 <ImageRound
                   name="Seagull"
@@ -613,6 +613,8 @@ const MyPage = () => {
                   onClick={() => setShowReceiveEnvelopeAnimation(true)}
                 />
               </div>
+            ) : (
+              <></>
             )}
           </div>
           {/* Tweet icon */}
