@@ -1,13 +1,14 @@
 from datetime import datetime, timedelta, time
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, OuterRef, F, Subquery
 from django.utils.timezone import now
 from rest_framework.exceptions import ValidationError
 
 from chat.constants import WebSocketEventType
 from common.utils import (
     send_web_socket_event,
+    split_id_from_string,
     time_str_to_timedelta,
     format_duration,
 )
@@ -22,10 +23,16 @@ from tasks.constants import (
     TaskStatus,
     CalculateSkillMapProcessCases,
 )
-from tasks.models import Task, TaskSchedule, TodoList, TaskDuration
-from tasks.serializers import TaskScheduleSerializer, TodoListSerializer
+from tasks.models import (
+    Task,
+    TaskIndex,
+    TaskSchedule,
+    TeamTaskIndex,
+    TodoList,
+    TaskDuration,
+)
 from calendars.models import Schedule
-from users.models import User
+from users.models import Setting, User
 
 
 def split_date_range(plan_start_date, plan_end_date):
@@ -69,6 +76,8 @@ def create_task_schedule(task: Task, schedule_data):
     """
     Create a new task schedule.
     """
+    from tasks.serializers import TaskScheduleSerializer
+
     schedule_serializer = TaskScheduleSerializer(data=schedule_data)
     schedule_serializer.is_valid(raise_exception=True)
     plan_start_date = schedule_data.get("plan_start_date")
@@ -126,6 +135,8 @@ def create_todo_list_for_task(current_user: User, task: Task, todo_data):
     """
     Create a new todo list for the task.
     """
+    from tasks.serializers import TodoListSerializer
+
     todo_serializer = TodoListSerializer(data=todo_data)
     if todo_serializer.is_valid(raise_exception=True):
         todo_serializer.save(
@@ -139,6 +150,8 @@ def update_todo_list_for_task(todo_list: TodoList, todo_data):
     """
     Update an existing todo list for the task.
     """
+    from tasks.serializers import TodoListSerializer
+
     todo_serializer = TodoListSerializer(instance=todo_list, data=todo_data)
     if todo_serializer.is_valid(raise_exception=True):
         todo_serializer.save()
@@ -408,3 +421,118 @@ def get_total_hours_of_task(task, skill_map_level_created_at=None):
         total_duration += duration.paused_at - duration.started_at
 
     return total_duration
+
+
+"""
+Block code for my task and team task list
+"""
+
+
+def annotate_and_order_tasks_by_pin_and_index(
+    queryset, user, is_team_task=False, organization_id=None, user_id=None
+):
+    """
+    Annotate a Task queryset with `index` and `pin_at` values,
+    then order tasks by the following priority:
+
+    1. Pinned tasks first (latest `pin_at` on top, nulls last).
+    2. Higher `index` value first (custom ordering).
+    3. More recently updated tasks (`updated_at`) first.
+    """
+    if is_team_task:
+        task_index = TeamTaskIndex.objects.filter(
+            task=OuterRef("pk"), team_id=organization_id, user_id=user.id
+        ).values("index")[:1]
+
+        task_pin = TeamTaskIndex.objects.filter(
+            task=OuterRef("pk"), team_id=organization_id, user_id=user.id
+        ).values("pin_at")[:1]
+    else:
+        uid = user_id or user.id
+        task_index = TaskIndex.objects.filter(
+            task=OuterRef("pk"), user_id=uid
+        ).values("index")[:1]
+
+        task_pin = TaskIndex.objects.filter(
+            task=OuterRef("pk"), user_id=uid
+        ).values("pin_at")[:1]
+
+    return queryset.annotate(
+        index=Subquery(task_index),
+        pin_at=Subquery(task_pin),
+    ).order_by(
+        F("pin_at").desc(nulls_last=True),
+        F("index").desc(),
+        F("updated_at").desc(),
+    )
+
+
+def update_sorting_setting(user, ordering):
+    """
+    Update user sorting preference
+    """
+    if "deadline" in ordering:
+        Setting.objects.update_or_create(
+            user=user,
+            company_id=user.company_id,
+            defaults={
+                "is_sorting_task_by_deadline": True,
+                "is_sorting_task_by_important": False,
+            },
+        )
+    if "is_important" in ordering:
+        Setting.objects.update_or_create(
+            user=user,
+            company_id=user.company_id,
+            defaults={
+                "is_sorting_task_by_deadline": False,
+                "is_sorting_task_by_important": True,
+            },
+        )
+
+
+def apply_ordering_to_tasks(tasks_queryset, ordering):
+    """
+    Ordering by deadline, important for tasks queryset
+    """
+    if "deadline" in ordering:
+        return tasks_queryset.order_by(
+            F("deadline").asc(nulls_last=True),
+            F("is_important").desc(),
+            F("updated_at").desc(),
+        )
+    if "is_important" in ordering:
+        return tasks_queryset.order_by(
+            F("is_important").desc(),
+            F("deadline").asc(nulls_last=True),
+            F("updated_at").desc(),
+        )
+    return tasks_queryset
+
+
+def apply_filters_to_tasks(tasks_queryset, query_params):
+    """
+    Apply filter to tasks queryset
+    """
+    if ids := query_params.get("ids"):
+        if exclude_ids := split_id_from_string(ids):
+            tasks_queryset = tasks_queryset.exclude(id__in=exclude_ids)
+
+    if tag_ids := query_params.get("tag_ids"):
+        if ids := split_id_from_string(tag_ids):
+            tasks_queryset = tasks_queryset.filter(tags__id__in=ids)
+
+    if category_ids := query_params.get("category_ids"):
+        if ids := split_id_from_string(category_ids):
+            tasks_queryset = tasks_queryset.filter(
+                categories__large_statistic_category__in=ids
+            )
+
+    if organization_ids := query_params.get("organization_ids"):
+        if ids := split_id_from_string(organization_ids):
+            tasks_queryset = tasks_queryset.filter(organization__in=ids)
+
+    if search := query_params.get("search"):
+        tasks_queryset = tasks_queryset.filter(title__icontains=search)
+
+    return tasks_queryset

@@ -6,15 +6,12 @@ from django.db import transaction
 from django.db.models import (
     Case,
     When,
-    OuterRef,
-    Subquery,
     Q,
     Value,
-    DateTimeField,
     IntegerField,
     Max,
+    F,
 )
-from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.timezone import make_aware, now
 from django_filters.rest_framework import DjangoFilterBackend
@@ -28,7 +25,6 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 
 from base.apis import BaseAPIViewSet
-from base.constants import REPLACE_NULL_DATE, REPLACE_NULL_DATE_WITH_FUTURE
 from base.messages import ERROR_MESSAGES
 from base.permissions import ActionPermission
 from calendars.constants import CalendarTypes
@@ -66,10 +62,14 @@ from tasks.constants import (
     CalculateSkillMapProcessCases,
 )
 from tasks.utils import (
+    apply_filters_to_tasks,
+    apply_ordering_to_tasks,
     create_task_schedule,
     create_todo_list_for_task,
     delete_task_schedules,
     delete_todo_list_for_task,
+    annotate_and_order_tasks_by_pin_and_index,
+    update_sorting_setting,
     update_task_schedule,
     update_todo_list_for_task,
     calculate_new_time,
@@ -77,7 +77,6 @@ from tasks.utils import (
 )
 from roles.constants import Screens
 from users.utils import reset_sort_task
-from users.models import Setting
 from users.models import User
 from .models import (
     PeopleInChargeTasks,
@@ -1749,46 +1748,20 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         # Apply custom ordering if 'ordering' parameter is not provided
         if not ordering:
-            if is_team_task:
-                # Handle load more for team tasks
-                task_pin = TeamTaskIndex.objects.filter(
-                    task=OuterRef("pk"),
-                    team_id=organization_id,
-                    user_id=user.id,
-                ).values("pin_at")[:1]
-                task_index = TeamTaskIndex.objects.filter(
-                    task=OuterRef("pk"),
-                    team_id=organization_id,
-                    user_id=user.id,
-                ).values("index")[:1]
-            else:
-                # Handle load more for my tasks
-                task_pin = TaskIndex.objects.filter(
-                    task=OuterRef("pk"), user_id=user_id if user_id else user.id
-                ).values("pin_at")[:1]
-                task_index = TaskIndex.objects.filter(
-                    task=OuterRef("pk"), user_id=user_id if user_id else user.id
-                ).values("index")[:1]
-
             # Annotate the queryset with the index from TaskIndex and TeamTaskIndex
-            queryset = queryset.annotate(
-                index=Subquery(task_index),
-                coalesced_pin_at=Coalesce(
-                    Subquery(task_pin),
-                    Value(REPLACE_NULL_DATE),
-                    output_field=DateTimeField(),
-                ),
-                task_index_pin_at=Subquery(task_pin),
-            ).order_by("-coalesced_pin_at", "-index")
+            queryset = annotate_and_order_tasks_by_pin_and_index(
+                queryset, user, is_team_task, organization_id, user_id
+            )
 
+            # Handle cursor pagination with pin_at or index
             if pin_at := query_params.get("pin_at"):
-                queryset = queryset.filter(coalesced_pin_at__lt=pin_at)
-            elif index := query_params.get("index"):
                 queryset = queryset.filter(
-                    index__lt=index, task_index_pin_at__isnull=True
+                    Q(pin_at__lt=pin_at) | Q(pin_at__isnull=True)
                 )
+            elif index := query_params.get("index"):
+                queryset = queryset.filter(index__lt=index, pin_at__isnull=True)
         else:
-            # Handle filter when pagination
+            # Handle cursor pagination with deadline or task id
             if id := query_params.get("task_id") and "deadline" in ordering:
                 if deadline := query_params.get("deadline"):
                     queryset = queryset.filter(
@@ -1800,24 +1773,8 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                         id__lt=id,
                     )
 
-        # Handle exclude ids when case add, drag drop item
-        if ids := query_params.get("ids"):
-            if exclude_ids := split_id_from_string(ids):
-                queryset = queryset.exclude(id__in=exclude_ids)
-
-        if tag_ids := query_params.get("tag_ids"):
-            if ids := split_id_from_string(tag_ids):
-                queryset = queryset.filter(tags__id__in=ids)
-
-        if category_ids := query_params.get("category_ids"):
-            if ids := split_id_from_string(category_ids):
-                queryset = queryset.filter(
-                    Q(categories__large_statistic_category__in=ids)
-                )
-
-        if organization_ids := query_params.get("organization_ids"):
-            if ids := split_id_from_string(organization_ids):
-                queryset = queryset.filter(Q(organization__in=ids))
+        # Apply filter for task queryset
+        queryset = apply_filters_to_tasks(queryset, query_params)
 
         return queryset.distinct()
 
@@ -1840,9 +1797,16 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         Handle get list tasks
         """
         user = request.user
+        query_params = request.query_params
+        ordering = query_params.get("ordering", None)
+        status_id = query_params.get("status_id", None)
+        is_team_task = query_params.get("is_team_task")
+        organization_id = query_params.get("organization_id")
+        user_id = query_params.get("user_id")
+
+        # Task queryset
         queryset = self.filter_queryset(self.get_queryset())
-        ordering = request.query_params.get("ordering", None)
-        status_id = request.query_params.get("status_id", None)
+
         if ordering:
             task_routine_status = TaskStatusModel.objects.filter(
                 name=TaskStatus.MY_ROUTINE.value
@@ -1851,31 +1815,22 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 "deadline" in ordering
                 and int(status_id) == task_routine_status.id
             ):
-                queryset = queryset.annotate(
-                    coalesced_ordering_datetime=Coalesce(
-                        "deadline",
-                        Value(REPLACE_NULL_DATE_WITH_FUTURE),
-                        output_field=DateTimeField(),
-                    )
-                )
-                if "is_important" in ordering:
-                    queryset = queryset.order_by(
-                        "-is_important",
-                        "coalesced_ordering_datetime",
-                        "-updated_at",
-                    )
-                if "deadline" in ordering:
-                    queryset = queryset.order_by(
-                        "coalesced_ordering_datetime",
-                        "-is_important",
-                        "-updated_at",
-                    )
+                # Ordering by deadline, important for tasks
+                queryset = apply_ordering_to_tasks(queryset, ordering)
 
+                # Reindex task if has ordering
+                create_task_indexes = []
+                update_task_indexes = []
                 for idx, task in enumerate(queryset):
                     task_index = task.task_index.filter(user=user).first()
                     if not task_index:
-                        TaskIndex.update_index_for_user(
-                            user, task, False, INITIAL_INDEX_VALUE - idx
+                        create_task_indexes.append(
+                            TaskIndex(
+                                index=INITIAL_INDEX_VALUE - idx,
+                                user=user,
+                                task=task,
+                                company_id=user.company_id,
+                            )
                         )
                     else:
                         if task_index.pin_at:
@@ -1883,49 +1838,30 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                                 minutes=INITIAL_INDEX_VALUE + idx
                             )
                         task_index.index = INITIAL_INDEX_VALUE - idx
-                        task_index.save()
+                        update_task_indexes.append(task_index)
 
-            task_pin = TaskIndex.objects.filter(
-                task=OuterRef("pk"), user_id=user.id
-            ).values("pin_at")[:1]
-            task_index = TaskIndex.objects.filter(
-                task=OuterRef("pk"), user_id=user.id
-            ).values("index")[:1]
+                if create_task_indexes:
+                    TaskIndex.objects.bulk_create(
+                        create_task_indexes, ignore_conflicts=True
+                    )
+                if update_task_indexes:
+                    TaskIndex.objects.bulk_update(
+                        update_task_indexes, fields=["index", "pin_at"]
+                    )
+                # ================ #
+
             # Annotate the queryset with the index from TaskIndex
-            queryset = queryset.annotate(
-                index=Subquery(task_index),
-                coalesced_pin_at=Coalesce(
-                    Subquery(task_pin),
-                    Value(REPLACE_NULL_DATE),
-                    output_field=DateTimeField(),
-                ),
-            ).order_by("-coalesced_pin_at", "-index")
+            queryset = annotate_and_order_tasks_by_pin_and_index(
+                queryset, user, is_team_task, organization_id, user_id
+            )
 
-            if "deadline" in ordering:
-                Setting.objects.update_or_create(
-                    user=user,
-                    company_id=user.company_id,
-                    defaults={
-                        "is_sorting_task_by_deadline": True,
-                        "is_sorting_task_by_important": False,
-                    },
-                )
-            if "is_important" in ordering:
-                Setting.objects.update_or_create(
-                    user=user,
-                    company_id=user.company_id,
-                    defaults={
-                        "is_sorting_task_by_deadline": False,
-                        "is_sorting_task_by_important": True,
-                    },
-                )
+            # Update user sorting preference
+            update_sorting_setting(user, ordering)
 
         # Fill context to serializer
         context = {}
-        if request.query_params.get("is_team_task"):
-            context["organization_id"] = request.query_params.get(
-                "organization_id"
-            )
+        if is_team_task:
+            context["organization_id"] = organization_id
             context["user_id"] = user.id
 
         return self.response_pagination(
@@ -2024,52 +1960,15 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         user = request.user
         organization_id = request.query_params.get("organization_id")
         ordering = request.query_params.get("ordering")
-        tasks = (
-            Task.objects.filter(
-                organization_id=organization_id,
-                people_in_charge__isnull=True,
-                company_id=user.company_id,
-            )
-            .exclude(type=TaskTypes.MY_TEMPLATE.value)
-            .all()
-        )
+        tasks = Task.objects.filter(
+            organization_id=organization_id,
+            people_in_charge__isnull=True,
+            company_id=user.company_id,
+        ).exclude(type=TaskTypes.MY_TEMPLATE.value)
 
         # Validate ordering before applying it
         if ordering:
-            if ordering in self.ordering_fields:
-                tasks = tasks.annotate(
-                    coalesced_deadline=Coalesce(
-                        "deadline",
-                        Value(
-                            REPLACE_NULL_DATE_WITH_FUTURE,
-                            output_field=DateTimeField(),
-                        ),
-                    )
-                )
-
-                if "deadline" in ordering:
-                    tasks = tasks.order_by(
-                        "coalesced_deadline", "-is_important", "-updated_at"
-                    )
-
-                if "is_important" in ordering:
-                    tasks = tasks.order_by(
-                        "-is_important", "coalesced_deadline", "-updated_at"
-                    )
-
-                # Update team task index only if sorting by deadline or importance
-                for idx, task in enumerate(tasks):
-                    team_task_index = task.team_task_index.filter(
-                        team_id=organization_id, user=user
-                    ).first()
-                    if team_task_index:
-                        if team_task_index.pin_at:
-                            team_task_index.pin_at = timezone.now() - timedelta(
-                                minutes=INITIAL_INDEX_VALUE + idx
-                            )
-                        team_task_index.index = INITIAL_INDEX_VALUE - idx
-                        team_task_index.save()
-            else:
+            if ordering not in self.ordering_fields:
                 raise ValidationError(
                     {
                         "detail": ERROR_MESSAGES[
@@ -2078,68 +1977,82 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     }
                 )
 
-        # Handle filter data
-        if tag_ids := request.query_params.get("tag_ids"):
-            if ids := split_id_from_string(tag_ids):
-                tasks = tasks.filter(tags__id__in=ids)
+            # Ordering by deadline, important for tasks queryset
+            tasks = apply_ordering_to_tasks(tasks, ordering)
 
-        if category_ids := request.query_params.get("category_ids"):
-            if ids := split_id_from_string(category_ids):
-                tasks = tasks.filter(
-                    categories__large_statistic_category__in=ids
+            # Update team task index only if sorting by deadline or importance
+            update_team_task_indexes = []
+            for idx, task in enumerate(tasks):
+                team_task_index = task.team_task_index.filter(
+                    team_id=organization_id, user=user
+                ).first()
+                if team_task_index:
+                    if team_task_index.pin_at:
+                        team_task_index.pin_at = timezone.now() - timedelta(
+                            minutes=INITIAL_INDEX_VALUE + idx
+                        )
+                    team_task_index.index = INITIAL_INDEX_VALUE - idx
+                    update_team_task_indexes.append(team_task_index)
+
+            if update_team_task_indexes:
+                TeamTaskIndex.objects.bulk_update(
+                    update_team_task_indexes, fields=["index", "pin_at"]
                 )
 
-        if organization_ids := request.query_params.get("organization_ids"):
-            if ids := split_id_from_string(organization_ids):
-                tasks = tasks.filter(organization_id__in=ids)
-
-        if search := request.query_params.get("search"):
-            tasks = tasks.filter(title__icontains=search)
+        # Handle filter data
+        tasks = apply_filters_to_tasks(tasks, request.query_params)
 
         # If the current user has no team task index, reindex tasks
-        if (
-            not ordering
-            and not TeamTaskIndex.objects.filter(
+        if not ordering:
+            tasks_had_index = TeamTaskIndex.objects.filter(
                 team_id=organization_id,
                 user=user,
                 task__people_in_charge__isnull=True,
-            ).exists()
-        ):
-            tasks = tasks.annotate(
-                coalesced_deadline=Coalesce(
-                    "deadline",
-                    Value(
-                        REPLACE_NULL_DATE_WITH_FUTURE,
-                        output_field=DateTimeField(),
-                    ),
-                )
-            ).order_by("coalesced_deadline", "-updated_at")
+            ).values("task_id")
+            tasks_without_index = tasks.exclude(id__in=tasks_had_index)
 
-            # Update team task index only if sorting by deadline or importance
-            for idx, task in enumerate(tasks):
-                TeamTaskIndex.objects.create(
-                    task=task,
-                    team_id=organization_id,
-                    user=user,
-                    index=INITIAL_INDEX_VALUE - idx,
+            if tasks_without_index.exists():
+                # Get max index task not assigned user of user logged in team
+                max_index = (
+                    TeamTaskIndex.objects.filter(
+                        team_id=organization_id,
+                        user=user,
+                        task__people_in_charge__isnull=True,
+                    )
+                    .aggregate(max_idx=Max("index"))
+                    .get("max_idx")
                 )
-        else:
-            # Fetch task index and pinned status for the user
-            team_task_index_obj = TeamTaskIndex.objects.filter(
-                task=OuterRef("pk"), team_id=organization_id, user=user
-            )
-            task_pin = team_task_index_obj.values("pin_at")[:1]
-            task_index = team_task_index_obj.values("index")[:1]
 
-            # Annotate tasks with task index and pin timestamp
-            tasks = tasks.annotate(
-                index=Subquery(task_index),
-                coalesced_pin_at=Coalesce(
-                    Subquery(task_pin),
-                    Value(REPLACE_NULL_DATE),
-                    output_field=DateTimeField(),
-                ),
-            ).order_by("-coalesced_pin_at", "-index", "-created_at")
+                if max_index is None:
+                    max_index = INITIAL_INDEX_VALUE
+
+                tasks = tasks.order_by(
+                    F("deadline").asc(nulls_last=True),
+                    F("is_important").desc(),
+                    F("updated_at").desc(),
+                )
+
+                # Add index start to max_index - 1, max_index - 2, ...
+                create_team_task_indexes = []
+                for idx, task in enumerate(tasks_without_index, start=1):
+                    create_team_task_indexes.append(
+                        TeamTaskIndex(
+                            task=task,
+                            team_id=organization_id,
+                            user=user,
+                            company_id=user.company_id,
+                            index=max_index - idx,
+                        )
+                    )
+                if create_team_task_indexes:
+                    TeamTaskIndex.objects.bulk_create(
+                        create_team_task_indexes, ignore_conflicts=True
+                    )
+
+        # Fetch task index and pinned status for the user
+        tasks = annotate_and_order_tasks_by_pin_and_index(
+            tasks, user, True, organization_id
+        )
 
         return self.response_pagination(
             request,
