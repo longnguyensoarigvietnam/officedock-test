@@ -16,6 +16,7 @@ import {
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
   ERROR_DUPLICATE_LOCATION,
+  ERROR_LONG_FIELD_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
@@ -211,12 +212,12 @@ const ListLocation = () => {
       if (isCreating) {
         showToast({
           variant: 'error',
-          description: ERROR_CREATE_MESSAGE,
+          description: ERROR_LONG_FIELD_MESSAGE,
         });
       } else {
         showToast({
           variant: 'error',
-          description: ERROR_UPDATE_MESSAGE,
+          description: ERROR_LONG_FIELD_MESSAGE,
         });
       }
       setErrors((prev) => ({ ...prev, [uuid]: true }));

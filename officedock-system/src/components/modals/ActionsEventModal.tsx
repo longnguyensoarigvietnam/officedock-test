@@ -49,6 +49,7 @@ import {
 import {
   END_DATE_REQUIRED_SELECTED,
   END_DATE_WRONG_SELECTED,
+  ERROR_LONG_FIELD_MESSAGE,
   ORGANIZATION_REQUIRED_MESSAGE,
   START_DATE_WRONG_SELECTED,
 } from '@constants/message';
@@ -844,6 +845,10 @@ const ActionsEventModal = ({
               className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
               register={register('title', {
                 required: watch('title') !== null ? true : false,
+                maxLength: {
+                  value: 255,
+                  message: ERROR_LONG_FIELD_MESSAGE,
+                },
               })}
               placeholder="新規スケジュール"
               error={errors.title?.message}
@@ -1688,35 +1693,37 @@ const ActionsEventModal = ({
           <div className="flex justify-between items-center">
             <p className="w-fit font-medium text-[14px]">予定カテゴリー</p>
             <div className="w-[513px] space-y-2">
-              <p className='text-[#7F8991] font-medium text-sm h-[32px] flex items-end leading-none'>カレンダー</p>
+              <p className="text-[#7F8991] font-medium text-sm h-[32px] flex items-end leading-none">
+                カレンダー
+              </p>
               <Controller
-                  control={control}
-                  name={'largeCategory'}
-                  render={({ field: { value, onChange } }) => (
-                    <Dropdown
-                      className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
-                      classNameTextData="!text-xs"
-                      classNameOption="!text-xs"
-                      options={[...dataOptionsCategoryLarge]}
-                      selectedOption={[...dataOptionsCategoryLarge].find(
-                        (element) =>
-                          element.value == (value as OptionDropdownType)?.value,
-                      )}
-                      placeholder={'大カテゴリー'}
-                      onChange={(e) => {
-                        if (e.value != watch('largeCategory.value')) {
-                          setValue(
-                            'mediumCategory',
-                            { label: '', value: '' },
-                            { shouldDirty: true },
-                          );
-                        }
-                        onChange(e);
-                      }}
-                      disabled={isDisabled}
-                    />
-                  )}
-                />
+                control={control}
+                name={'largeCategory'}
+                render={({ field: { value, onChange } }) => (
+                  <Dropdown
+                    className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
+                    classNameTextData="!text-xs"
+                    classNameOption="!text-xs"
+                    options={[...dataOptionsCategoryLarge]}
+                    selectedOption={[...dataOptionsCategoryLarge].find(
+                      (element) =>
+                        element.value == (value as OptionDropdownType)?.value,
+                    )}
+                    placeholder={'大カテゴリー'}
+                    onChange={(e) => {
+                      if (e.value != watch('largeCategory.value')) {
+                        setValue(
+                          'mediumCategory',
+                          { label: '', value: '' },
+                          { shouldDirty: true },
+                        );
+                      }
+                      onChange(e);
+                    }}
+                    disabled={isDisabled}
+                  />
+                )}
+              />
               {watch('largeCategory')?.value && (
                 <div className="mb-2">
                   <Controller

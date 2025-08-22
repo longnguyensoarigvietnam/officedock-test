@@ -361,6 +361,10 @@ export const pageRouters = {
     name: 'カレンダー設定',
     href: `/location`,
   },
+  THANK_MESSAGE_MANAGEMENT: {
+    name: 'サンクスメッセージ履歴',
+    href: `/thank-message-history`,
+  },
   // MY PAGE
   MY_PAGE: {
     name: 'マイページ',
@@ -611,4 +615,10 @@ export const apiRouters = {
   THANKS_MESSAGES_LIST: '/thanks-messages/',
   REMAINING_QUOTA: '/thanks-messages/remaining-quota',
   READ_THANKS_MESSAGE: '/thanks-messages/read/',
+
+  // THANK MANAGEMENT
+  LIST_MEMBER_THANKS_MSG: '/thanks-messages-management/members/',
+  LIST_THANKS_DETAIL_HISTORY: '/thanks-messages-management/',
+  DETAIL_THANK_MSG_HISTORY: (id: string) =>
+    `/thanks-messages-management/${id} /`,
 };

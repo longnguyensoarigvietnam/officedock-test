@@ -36,6 +36,7 @@ import {
   PermissionsSystem,
 } from '@constants/enums';
 import {
+  ERROR_LONG_FIELD_MESSAGE,
   ID_REQUIRED_MESSAGE,
   NAME_REQUIRED_MESSAGE,
   ROLE_REQUIRED_MESSAGE,
@@ -363,7 +364,7 @@ const ActionsUserModal = ({
       className="font-primary w-[700px] !px-0 !rounded-l-[30px]"
       onClose={onClose}>
       <header
-        className="px-8 rounded-tl-[30px] h-[50px] flex items-center justify-between"
+        className="px-9 rounded-tl-[30px] h-[50px] flex items-center justify-between"
         style={{
           background: showModalHeaderBackgroundColorByTime(),
         }}>
@@ -415,6 +416,10 @@ const ActionsUserModal = ({
                 placeholder="入力してください"
                 register={register('name', {
                   required: NAME_REQUIRED_MESSAGE,
+                  maxLength: {
+                    value: 255,
+                    message: ERROR_LONG_FIELD_MESSAGE,
+                  },
                   onChange: () => {
                     setErrorMessages((prev) => {
                       return {
@@ -509,6 +514,10 @@ const ActionsUserModal = ({
                     disabled={action == ActionsEvent.EDIT}
                     register={register('username', {
                       required: ID_REQUIRED_MESSAGE,
+                      maxLength: {
+                        value: 255,
+                        message: ERROR_LONG_FIELD_MESSAGE,
+                      },
                       onChange: () => {
                         setErrorMessages((prev) => {
                           return {
@@ -541,6 +550,10 @@ const ActionsUserModal = ({
                     placeholder="入力してください"
                     register={register('email', {
                       ...emailRules(true),
+                      maxLength: {
+                        value: 255,
+                        message: ERROR_LONG_FIELD_MESSAGE,
+                      },
                       onChange: () => {
                         setErrorMessages((prev) => {
                           return {
@@ -598,6 +611,10 @@ const ActionsUserModal = ({
                     placeholder="入力してください"
                     register={register('twoFactorAuthEmail', {
                       ...emailRules(false),
+                      maxLength: {
+                        value: 255,
+                        message: ERROR_LONG_FIELD_MESSAGE,
+                      },
                       onChange: () => {
                         clearErrors('twoFactorAuthEmail');
                       },
@@ -621,6 +638,10 @@ const ActionsUserModal = ({
                       autoComplete="off"
                       register={register('password', {
                         ...passwordRegisterRules(false),
+                        maxLength: {
+                          value: 255,
+                          message: ERROR_LONG_FIELD_MESSAGE,
+                        },
                         onChange: () => {
                           setErrorMessages((prev) => {
                             return {

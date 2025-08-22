@@ -25,7 +25,9 @@ const Drawer = ({
       />
       <div
         className={`fixed ${className} top-[76px] z-[22] h-[calc(100vh-76px)] overflow-hidden right-0  w-fit bg-white shadow-lg  transform transition-transform ${
-          open ? 'translate-x-0' : 'translate-x-full'
+          open
+            ? 'animate-[slideToLeft_0.7s_linear_forwards]'
+            : 'animate-[slideToRight_0.7s_linear_forwards]'
         }`}>
         <div className={`px-4 font-primary ${className}`}>
           {title && (

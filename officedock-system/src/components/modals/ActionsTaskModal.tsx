@@ -41,6 +41,7 @@ import TextAreaLink from '@components/common/TextAreaLink';
 import {
   DEFAULT_VALUE_TODO_LIST,
   END_DATE_WRONG_SELECTED,
+  ERROR_LONG_FIELD_MESSAGE,
   ERROR_PERSON_IN_CHART_START,
   ORGANIZATION_REQUIRED_MESSAGE,
   START_DATE_REQUIRED_SELECTED,
@@ -1207,6 +1208,10 @@ const ActionsTaskModal = ({
               className={`shadow-none text-2xl leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[1px] rounded-md  ${!errors?.title ? '!border-[#77858F]' : '!border-error'}`}
               register={register('title', {
                 required: watch('title') !== null ? true : false,
+                maxLength: {
+                  value: 255,
+                  message: ERROR_LONG_FIELD_MESSAGE,
+                },
                 onChange: () => {
                   setIsFormTouched(true);
                 },

@@ -8,37 +8,31 @@ import { PAGINATION_PAGE_SIZE_MEDIUM } from '@constants';
 
 import api from '@base/api';
 import { BasePagination } from '@interfaces/common';
-import { Survey } from '@interfaces/survey';
+import { ThankListDetailMsgType } from '@interfaces/thank';
 
-interface PaginationProps {
-  page?: number;
-  pageSize?: number;
-}
-
-interface UseSurveyListProps {
-  screenName?: string;
-  pagination?: PaginationProps;
-  status: 'all' | 'closed' | 'my_survey' | 'open';
-  onSuccess?: (success: BasePagination<Survey[]>) => void;
+interface UseThankMsgDetailUserListProps {
+  type: 'received' | 'sent';
+  user_id: string;
+  onSuccess?: (success: BasePagination<ThankListDetailMsgType[]>) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
 }
 
-const useSurveyList = ({
-  status = 'all',
+const useThankMsgDetailUserList = ({
+  type = 'received',
+  user_id,
   onSuccess,
   onError,
   onSettled,
-  screenName,
-}: UseSurveyListProps) => {
+}: UseThankMsgDetailUserListProps) => {
   const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
   /**
-   * getSurveyList: load the first page if pageParam has no URL
+   * ThankListDetailMsgType: load the first page if pageParam has no URL
    * Otherwise if pageParam is a URL (string), call that URL directly
    */
-  const getSurveyList = async ({
+  const getDetailThankMsgList = async ({
     pageParam,
     signal,
   }: {
@@ -54,13 +48,18 @@ const useSurveyList = ({
       const params = new URLSearchParams();
       params.append('page', String(pageParam ?? 1));
       params.append('page_size', String(PAGINATION_PAGE_SIZE_MEDIUM));
-      params.append('status', status);
-      apiUrl = `${apiRouters.SURVEY_LIST}?${params.toString()}`;
+      params.append('type', type);
+      params.append('user_id', String(user_id));
+
+      apiUrl = `${apiRouters.LIST_THANKS_DETAIL_HISTORY}?${params.toString()}`;
     }
 
-    const { data } = await api.get<BasePagination<Survey[]>>(apiUrl, {
-      signal,
-    });
+    const { data } = await api.get<BasePagination<ThankListDetailMsgType[]>>(
+      apiUrl,
+      {
+        signal,
+      },
+    );
 
     return {
       ...data,
@@ -76,15 +75,16 @@ const useSurveyList = ({
     isFetchingNextPage,
     isFetched,
   } = useInfiniteQuery({
-    queryKey: ['getSurveyList', screenName, status],
-    queryFn: ({ pageParam, signal }) => getSurveyList({ pageParam, signal }),
-    enabled: !!token,
+    queryKey: ['getDetailThankMsgList', [type, user_id]],
+    queryFn: ({ pageParam, signal }) =>
+      getDetailThankMsgList({ pageParam, signal }),
+    enabled: !!token && !!user_id,
     retry: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     getNextPageParam: (lastPage) => {
       return lastPage?.next
-        ? `/${apiRouters.SURVEY_LIST}/${lastPage?.next}`
+        ? `/${apiRouters.LIST_THANKS_DETAIL_HISTORY}/${lastPage?.next}`
         : undefined;
     },
     onSuccess: (allPages) => {
@@ -100,7 +100,7 @@ const useSurveyList = ({
   });
 
   return {
-    surveyList: data?.pages?.flatMap((p) => p?.results ?? []) ?? [],
+    thankDetailList: data?.pages?.flatMap((p) => p?.results ?? []) ?? [],
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -109,4 +109,4 @@ const useSurveyList = ({
   };
 };
 
-export default useSurveyList;
+export default useThankMsgDetailUserList;
