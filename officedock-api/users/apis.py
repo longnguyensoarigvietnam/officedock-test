@@ -22,6 +22,7 @@ from base.constants import (
     OTP_TOKEN_SECONDS_EXPIRATION,
     ACCESS_TOKEN_LIFETIME_REMEMBER,
 )
+from base.decorators import user_cache_page
 from base.messages import ERROR_MESSAGES
 from base.permissions import ActionPermission, IsOperationAdminOnly
 from chat.constants import ChatRoomTypes, WebSocketEventType
@@ -672,6 +673,7 @@ class SystemAuthViewSet(BaseAPIViewSet):
         serializer_class=UserSerializer,
         permission_classes=[IsAuthenticated],
     )
+    @user_cache_page(key_prefix="user_profile")
     def get_user_profile(self, request):
         """
         Get profile of user logged
