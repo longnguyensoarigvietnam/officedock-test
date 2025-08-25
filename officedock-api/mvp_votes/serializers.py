@@ -60,10 +60,18 @@ class MvpVoteManagementSerializer(serializers.ModelSerializer):
             or not instance
             and mvp_vote.exists()
         ):
-            raise ValidationError({"detail": ERROR_MESSAGES["exists_duration"]})
+            raise ValidationError(
+                {"detail": ERROR_MESSAGES["cannot_start_vote"]}
+            )
 
-        if is_start is True and instance and instance.end_date < now():
-            raise ValidationError({"detail": ERROR_MESSAGES["exists_duration"]})
+        if is_start is True:
+            is_exist_voting = MVPVoteManagement.objects.filter(
+                start_date__lte=now(), end_date__gte=now(), is_start=True
+            ).exists()
+            if is_exist_voting or instance and instance.end_date < now():
+                raise ValidationError(
+                    {"detail": ERROR_MESSAGES["cannot_start_vote"]}
+                )
 
         if candidates:
             company_ids = set(
