@@ -11,7 +11,6 @@ import Button from '@components/common/Button';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 import { ThanksMessageType } from '@constants/enums';
-import { NO_DATA_AVAILABLE } from '@constants';
 
 import { ResponseError } from '@interfaces/response';
 import { ThanksMessageDetail } from '@interfaces/thanks-message';
@@ -132,65 +131,79 @@ export const ReceiveAndSendThanksMessageTable = ({
       {/* Table */}
       <div
         ref={resultsContainerRef}
-        className="overflow-y-auto overflow-x-hidden customized-scrollbar h-fit max-h-[calc(100%_-_105px)] w-full bg-white py-[14px] mt-3 rounded-[14px] flex flex-col gap-1">
+        className={`overflow-y-auto overflow-x-hidden customized-scrollbar h-fit max-h-[calc(100%_-_105px)] w-full mt-3 rounded-[14px] flex flex-col gap-[2px] ${!isLoadingList && !thanksMessageList.length ? 'bg-white h-full' : ''}`}>
         {isLoadingList ? (
           <div>
             <RowSkeleton numberOfRows={6} className="h-[90px]" />
           </div>
-        ) : thanksMessageList.length ? (
+        ) : (
           thanksMessageList.map((message, index) => {
             return (
               <>
                 <div
                   key={index}
-                  className={`flex items-start bg-white text-black font-normal gap-5 py-[14px] ${thanksMessageList.length - 1 != index && 'border-b-[1px] border-[#567caa]'}`}>
+                  className={`relative flex items-start ${!message.readAt ? 'bg-[#FFF3F9]' : 'bg-white'} text-black font-normal gap-5 py-[14px]`}>
+                  {!message.readAt ? (
+                    <div
+                      className="absolute w-[10px] h-[10px] rounded-full top-3 right-3"
+                      style={{
+                        background:
+                          'linear-gradient(157.85deg, #FF4D50 15%, #FF6E90 85.72%)',
+                      }}></div>
+                  ) : (
+                    <></>
+                  )}
                   {/* Date column */}
-                  <p className="w-[105px] text-xs pl-5 pr-2 flex items-center text-nowrap">
+                  <p className="w-[105px] text-xs pl-5 pr-2 flex items-center text-nowrap py-[15px]">
                     {activeTab == ThanksMessageType.RECEIVED
-                      ? message.readAt && formatShowDateJapanese(message.readAt)
+                      ? message.readAt
+                        ? formatShowDateJapanese(message.readAt)
+                        : formatShowDateJapanese(new Date())
                       : message.createdAt &&
                         formatShowDateJapanese(message.createdAt)}
                   </p>
                   <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
-                  <div className="w-[140px] flex items-center justify-center gap-2">
-                    <CustomUserAvatar
-                      avatarUrl={
-                        activeTab == ThanksMessageType.RECEIVED
-                          ? message.recipient?.avatar || ''
-                          : message.sender?.avatar || ''
-                      }
-                      avatarColor={
-                        activeTab == ThanksMessageType.RECEIVED
-                          ? message.recipient?.avatarColor || ''
-                          : message.sender?.avatarColor || ''
-                      }
-                      size={30}
-                    />
-                    <div className="space-y-1 w-full">
-                      <p className="text-[#77858F] font-medium text-xs max-w-full break-all">
-                        {activeTab == ThanksMessageType.RECEIVED
-                          ? message.recipient?.organizations.name || ''
-                          : message.sender?.organizations.name || ''}
-                      </p>
-                      <p className="text-black text-[15px] font-medium text-sm max-w-full break-all line-clamp-2">
-                        {activeTab == ThanksMessageType.RECEIVED
-                          ? message.recipient?.fullName || ''
-                          : message.sender?.fullName || ''}
-                      </p>
+                  <div className="w-[140px] flex flex-col gap-2 py-[15px]">
+                    <p
+                      className={`${message.readAt ? 'bg-[#EBF1F7] text-primary' : 'bg-[#FFDAEC] text-[#D85A9D]'} text-[11px] font-medium w-fit rounded-[2px] py-[4px] px-[5px] leading-none`}>
+                      {activeTab == ThanksMessageType.RECEIVED ? 'From' : 'To'}
+                    </p>
+                    <div className="flex items-start justify-center gap-2">
+                      <CustomUserAvatar
+                        avatarUrl={
+                          activeTab == ThanksMessageType.RECEIVED
+                            ? message.sender?.avatar || ''
+                            : message.recipient?.avatar || ''
+                        }
+                        avatarColor={
+                          activeTab == ThanksMessageType.RECEIVED
+                            ? message.sender?.avatarColor || ''
+                            : message.recipient?.avatarColor || ''
+                        }
+                        size={30}
+                      />
+                      <div className="space-y-1 w-full">
+                        <p className="text-[#77858F] font-medium text-xs max-w-full break-all">
+                          {activeTab == ThanksMessageType.RECEIVED
+                            ? message.sender?.organizations.name || ''
+                            : message.recipient?.organizations.name || ''}
+                        </p>
+                        <p className="text-black text-[15px] font-medium text-sm max-w-full break-all">
+                          {activeTab == ThanksMessageType.RECEIVED
+                            ? message.sender?.fullName || ''
+                            : message.recipient?.fullName || ''}
+                        </p>
+                      </div>
                     </div>
                   </div>
                   <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
-                  <p className="w-[calc(100%_-_300px)] max-w-[calc(100%_-_300px)] pr-2 text-sm break-all">
+                  <p className="w-[calc(100%_-_300px)] max-w-[calc(100%_-_300px)] pr-2 text-sm break-all py-[15px]">
                     {message.message}
                   </p>
                 </div>
               </>
             );
           })
-        ) : (
-          <p className="text-sm text-center text-[#77858F]">
-            {NO_DATA_AVAILABLE}
-          </p>
         )}
         {isFetchingNextPage && (
           <div className="mt-2">

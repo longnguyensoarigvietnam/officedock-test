@@ -41,7 +41,7 @@ export const EnvelopeContent = ({
   };
 
   return (
-    <div className="w-[500px] h-[250px] bg-white rounded-[20px] pt-[50px] pb-[30px] px-[60px] text-sm space-y-5">
+    <div className="w-[500px] h-[282px] bg-white rounded-[20px] pt-[50px] pb-[10px] px-[60px] text-sm space-y-5">
       <div className="flex items-center gap-3 justify-center">
         <ImageRound
           name="Heart icon"
@@ -63,7 +63,7 @@ export const EnvelopeContent = ({
             />
           )}
 
-          <p className="text-black text-[15px] font-medium max-w-[calc(100%_-_40px)] break-all line-clamp-3">
+          <p className="text-black text-sm font-medium max-w-[calc(100%_-_40px)] break-all line-clamp-3">
             {isSendThanksMessage
               ? session?.user.profile.fullName
               : userInfo.fullName}
@@ -73,7 +73,7 @@ export const EnvelopeContent = ({
           </p>
         </div>
       </p>
-      <p className="overflow-y-auto max-h-[60px] break-all max-w-full text-sm">
+      <p className="overflow-y-auto max-h-[96px] break-all max-w-full text-sm">
         {content}
       </p>
     </div>
