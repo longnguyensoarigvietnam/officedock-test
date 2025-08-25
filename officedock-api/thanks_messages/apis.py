@@ -227,9 +227,11 @@ class ThanksMessageManagementViewSet(
         """
         Get list of member in organization
         """
-        queryset = Organization.objects.filter(
-            company_id=request.user.company_id
-        ).exclude(type=OrganizationTypes.CALENDAR.value)
+        queryset = (
+            Organization.objects.filter(company_id=request.user.company_id)
+            .exclude(type=OrganizationTypes.CALENDAR.value)
+            .order_by("-created_at")
+        )
         queryset = self.filter_queryset(queryset)
         search = request.query_params.get("search")
         organization_id = request.query_params.get("organization_id")
