@@ -3,6 +3,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from base.messages import ERROR_MESSAGES
+from common.serializers import CreationDataUserSerializer
 from users.models import User
 from mvp_votes.models import MVPVote, MVPVoteManagement
 
@@ -20,11 +21,14 @@ class MvpVoteManagementSerializer(serializers.ModelSerializer):
         allow_null=True,
         write_only=True,
     )
+    created_by = CreationDataUserSerializer(read_only=True)
+    updated_by = CreationDataUserSerializer(read_only=True)
 
     class Meta:
         model = MVPVoteManagement
         fields = [
             "id",
+            "title",
             "candidate_ids",
             "selected_organizations",
             "bonus_point",

@@ -20,7 +20,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         fake = Faker()
         total = kwargs["total"]
-
+        MVPVoteManagement.objects.all().delete()
         # Seed Votes
         companies = Company.objects.all()
         for company in companies:
