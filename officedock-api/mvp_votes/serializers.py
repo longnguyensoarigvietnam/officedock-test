@@ -40,39 +40,15 @@ class MvpVoteManagementSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
-        start_date = attrs.get("start_date")
-        end_date = attrs.get("end_date")
         candidates = attrs.get("candidates")
         is_start = attrs.get("is_start")
         instance = self.instance
-        mvp_vote = None
-        if start_date and end_date:
-            mvp_vote = MVPVoteManagement.objects.filter(
-                start_date__lt=end_date, end_date__gt=start_date
-            )
-        elif start_date:
-            mvp_vote = MVPVoteManagement.objects.filter(
-                start_date__lte=start_date, end_date__gte=start_date
-            )
-        elif end_date:
-            mvp_vote = MVPVoteManagement.objects.filter(
-                start_date__lte=end_date, end_date__gte=end_date
-            )
-        if mvp_vote and (
-            instance
-            and mvp_vote.exclude(id=instance.id).exists()
-            or not instance
-            and mvp_vote.exists()
-        ):
-            raise ValidationError(
-                {"detail": ERROR_MESSAGES["cannot_start_vote"]}
-            )
 
-        if is_start is True:
-            is_exist_voting = MVPVoteManagement.objects.filter(
-                start_date__lte=now(), end_date__gte=now(), is_start=True
-            ).exists()
-            if is_exist_voting or instance and instance.end_date < now():
+        if is_start is True and instance:
+            is_exists_voting = MVPVoteManagement.objects.filter(
+                end_date__gte=now(), is_start=True, company=instance.company
+            ).exclude(id=instance.id)
+            if is_exists_voting.exists() or instance.end_date < now():
                 raise ValidationError(
                     {"detail": ERROR_MESSAGES["cannot_start_vote"]}
                 )

@@ -102,11 +102,13 @@ class MVPVoteManagementViewSet(BaseAPIViewSet, ModelViewSet):
             ).all()
         elif timeline == Timeline.PRESENT.value:
             mvp_vote = mvp_votes.filter(
-                start_date__lte=now(), end_date__gte=now(), is_start=True
+                end_date__gte=now(), is_start=True
             ).first()
 
             return self.response_ok(
                 build_list_mvp_vote_manage_payload(mvp_vote)
+                if mvp_vote
+                else None
             )
         elif timeline == Timeline.PAST.value:
             mvp_votes = mvp_votes.filter(

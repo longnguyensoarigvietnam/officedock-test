@@ -26,12 +26,14 @@ class Command(BaseCommand):
         for company in companies:
             candidates = company.users.all()
             for _ in range(total):
-                # Set the range for the random date
-                now = datetime.now()
                 # Generate a random number of days
                 random_days = random.randint(0, 30)
-                start_range = now - timedelta(days=random_days)
-                end_range = now + timedelta(days=random_days)
+                direction = random.choice([-1, 1])
+                random_date = datetime.now() + timedelta(
+                    days=direction * random_days
+                )
+                start_range = random_date - timedelta(days=random_days)
+                end_range = random_date + timedelta(days=random_days)
                 mvp_vote = MVPVoteManagement.objects.create(
                     company=company,
                     start_date=start_range,
