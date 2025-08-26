@@ -49,6 +49,13 @@ export default function ReceiveEnvelopeAnimationOverlay({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAll, setShowAll] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showReadMessage, setShowReadMessage] = useState<{
+    show: boolean;
+    index: number;
+  }>({
+    show: false,
+    index: 0,
+  });
 
   const animateEnvelopeOpen = (
     flapEl: HTMLElement | null,
@@ -186,45 +193,48 @@ export default function ReceiveEnvelopeAnimationOverlay({
 
     const envelopeEl = envelopeRefs.current[currentIndex];
     if (!envelopeEl) return;
+    if (showReadMessage.show && showReadMessage.index < currentIndex) {
+      setShowReadMessage({
+        show: true,
+        index: showReadMessage.index + 1,
+      });
+    } else {
+      const tl = gsap.timeline({
+        defaults: { duration: 0.8, ease: 'power2.out' },
+      });
 
-    const tl = gsap.timeline({
-      defaults: { duration: 0.8, ease: 'power2.out' },
-    });
-
-    tl.to(envelopeEl, {
-      x: -2000,
-      duration: 2,
-      ease: 'bounce.out',
-      onStart: () => {
-        if (envelopeEl) envelopeEl.style.display = 'block';
-      },
-    });
-    const nextIndex = currentIndex + 1;
-    setCurrentIndex(nextIndex);
-    !receivedThanksMessageList[nextIndex].isRead &&
-      playOpenEnvelopeAnimation(nextIndex);
+      tl.to(envelopeEl, {
+        x: -2000,
+        duration: 2,
+        ease: 'bounce.out',
+        onStart: () => {
+          if (envelopeEl) envelopeEl.style.display = 'block';
+        },
+      });
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
+      setShowReadMessage({
+        show: false,
+        index: nextIndex,
+      });
+      !receivedThanksMessageList[nextIndex]?.isRead &&
+        playOpenEnvelopeAnimation(nextIndex);
+    }
   };
 
   const onPrevEnvelope = () => {
     setShowTwinklingStars(false);
-    const prevIndex = currentIndex - 1;
+
+    const prevIndex = Number(showReadMessage.index) - 1;
+    if (prevIndex < 0) return;
+
     const envelopeEl = envelopeRefs.current[prevIndex];
     if (!envelopeEl) return;
 
-    const tl = gsap.timeline({
-      defaults: { duration: 0.8, ease: 'power2.out' },
+    setShowReadMessage({
+      show: true,
+      index: prevIndex,
     });
-
-    const offsetX = prevIndex * 8;
-    const offsetY = prevIndex * -8;
-
-    tl.to(envelopeEl, {
-      x: offsetX,
-      y: offsetY,
-      duration: 2,
-    });
-
-    setCurrentIndex(prevIndex);
   };
 
   const safeReadThanksMessage = (id: number) => {
@@ -282,6 +292,20 @@ export default function ReceiveEnvelopeAnimationOverlay({
               transform: `translate(${idx * 8}px, ${idx * -8}px)`,
               zIndex: receivedThanksMessageList.length - idx,
               filter: `brightness(${brightness})`,
+            }}
+            onClick={() => {
+              if (
+                isAnimating ||
+                (showReadMessage.show
+                  ? showReadMessage.index ==
+                    receivedThanksMessageList.length - 1
+                  : currentIndex == receivedThanksMessageList.length - 1) ||
+                (showReadMessage.show
+                  ? showReadMessage.index == idx
+                  : idx == currentIndex)
+              )
+                return;
+              onNextEnvelope();
             }}>
             <EnvelopeBackFlap
               ref={(el) => {
@@ -300,8 +324,18 @@ export default function ReceiveEnvelopeAnimationOverlay({
               }}
               className="absolute inset-0 z-20 top-[150px] left-[60px]">
               <EnvelopeContent
-                content={env.message}
-                userInfo={env.sender}
+                content={
+                  showReadMessage.show
+                    ? receivedThanksMessageList[showReadMessage.index as number]
+                        .message
+                    : env.message
+                }
+                userInfo={
+                  showReadMessage.show
+                    ? receivedThanksMessageList[showReadMessage.index as number]
+                        .sender
+                    : env.sender
+                }
                 isSendThanksMessage={false}
               />
             </div>
@@ -384,7 +418,12 @@ export default function ReceiveEnvelopeAnimationOverlay({
                 <Button
                   variant="option"
                   className="w-[60px] !rounded-full h-[60px] !bg-white !p-0"
-                  disabled={currentIndex == 0 || isAnimating}
+                  disabled={
+                    isAnimating ||
+                    (showReadMessage.show
+                      ? showReadMessage.index == 0
+                      : currentIndex == 0)
+                  }
                   onClick={onPrevEnvelope}>
                   <ImageRound
                     name="Prev"
@@ -397,7 +436,10 @@ export default function ReceiveEnvelopeAnimationOverlay({
                   className="w-[60px] !rounded-full h-[60px] !bg-white !p-0"
                   disabled={
                     isAnimating ||
-                    currentIndex == receivedThanksMessageList.length - 1
+                    (showReadMessage.show
+                      ? showReadMessage.index ==
+                        receivedThanksMessageList.length - 1
+                      : currentIndex == receivedThanksMessageList.length - 1)
                   }
                   onClick={onNextEnvelope}>
                   <ImageRound
