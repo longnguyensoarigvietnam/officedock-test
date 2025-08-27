@@ -37,6 +37,7 @@ class MvpVoteManagementSerializer(serializers.ModelSerializer):
             "created_by",
             "updated_by",
             "is_start",
+            "created_at",
         ]
 
     def validate(self, attrs):

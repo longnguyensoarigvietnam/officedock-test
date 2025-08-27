@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Q
 from django.utils.timezone import now
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins
@@ -98,7 +99,8 @@ class MVPVoteManagementViewSet(BaseAPIViewSet, ModelViewSet):
         )
         if timeline == Timeline.FUTURE.value:
             mvp_votes = mvp_votes.filter(
-                end_date__gte=now(), is_start=False
+                Q(Q(end_date__gte=now()) | Q(end_date__isnull=True))
+                & Q(is_start=False)
             ).all()
         elif timeline == Timeline.PRESENT.value:
             mvp_vote = mvp_votes.filter(
