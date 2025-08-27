@@ -637,3 +637,8 @@ export enum ThanksMessageType {
   RECEIVED = 'received',
   SENT = 'sent',
 }
+export enum VotingManagementType {
+  PRESENT = 'PRESENT',
+  PAST = 'PAST',
+  FUTURE = 'FUTURE',
+}

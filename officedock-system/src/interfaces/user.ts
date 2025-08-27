@@ -178,7 +178,7 @@ export interface UserProfile {
   fullName: string;
   avatarColor: string;
   avatar: string | null;
-  organizations: {
+  organizations?: {
     id: number;
     uuid: string;
     name: string;

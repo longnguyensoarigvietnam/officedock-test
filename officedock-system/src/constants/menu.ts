@@ -194,6 +194,13 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     companyMenu: false,
     requiredPermission: PermissionsSystem.VIEW_ALL,
   },
+  {
+    ...pageRouters.MVP_MANAGEMENT,
+    name: pageRouters.MVP_MANAGEMENT.name,
+    current: false,
+    companyMenu: true,
+    requiredPermission: PermissionsSystem.VIEW_ALL,
+  },
 ];
 export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
   {

@@ -501,3 +501,5 @@ export const MAX_TWEET_MESSAGE_LENGTH = 100;
 export const MAX_MY_PAGE_SET_SKILLS = 3;
 
 export const MAXIMUM_VISIBLE_COUNT = 99;
+
+export const VOTING_TITLE_MAX_LENGTH = 18;

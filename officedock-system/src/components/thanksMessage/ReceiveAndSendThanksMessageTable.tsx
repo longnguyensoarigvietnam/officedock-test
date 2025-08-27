@@ -185,8 +185,8 @@ export const ReceiveAndSendThanksMessageTable = ({
                       <div className="space-y-1 w-full">
                         <p className="text-[#77858F] font-medium text-xs max-w-full break-all">
                           {activeTab == ThanksMessageType.RECEIVED
-                            ? message.sender?.organizations.name || ''
-                            : message.recipient?.organizations.name || ''}
+                            ? message.sender?.organizations?.name || ''
+                            : message.recipient?.organizations?.name || ''}
                         </p>
                         <p className="text-black text-[15px] font-medium text-sm max-w-full break-all">
                           {activeTab == ThanksMessageType.RECEIVED
