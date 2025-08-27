@@ -23,7 +23,7 @@ export function useUpdateVotingCache() {
             if (index === 0) {
               return {
                 ...page,
-                results: [data, ...page.results],
+                results: [data, ...(page.results ?? [])],
               };
             }
             return page;

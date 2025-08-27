@@ -16,7 +16,7 @@ import useThanksMessageInfiniteList from '@hooks/useThanksMessageInfiniteList';
 import { UserOrganization } from '@interfaces/user';
 
 import { apiRouters, pageRouters } from '@constants/routers';
-import { ThanksMessageType } from '@constants/enums';
+import { ScreenName, ThanksMessageType } from '@constants/enums';
 
 import api from '@base/api';
 
@@ -49,6 +49,7 @@ const ThanksMessageListPage = () => {
 
   useMemberOrganizationList({
     search: '',
+    currentScreen: ScreenName.CALENDAR,
     onSuccess: (data) => {
       setMemberListByOrganization(
         data.map((org) => {
