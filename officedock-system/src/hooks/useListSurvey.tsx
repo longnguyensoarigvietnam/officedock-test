@@ -84,7 +84,7 @@ const useSurveyList = ({
     refetchOnWindowFocus: false,
     getNextPageParam: (lastPage) => {
       return lastPage?.next
-        ? `/${apiRouters.SURVEY_LIST}/${lastPage?.next}`
+        ? `${apiRouters.SURVEY_LIST}${lastPage?.next}`
         : undefined;
     },
     onSuccess: (allPages) => {
