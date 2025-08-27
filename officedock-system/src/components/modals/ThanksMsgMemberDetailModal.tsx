@@ -15,6 +15,7 @@ import { apiRouters } from '@constants/routers';
 import { useMutation } from 'react-query';
 import { ERROR_DELETE_MESSAGE } from '@constants/message';
 import { useUpdateThankMsgHistoryCache } from '@hooks/CacheQuery/useUpdateThankMsgHistory';
+import { formatWithParagraphTags } from '@utils';
 
 type Props = {
   open: boolean;
@@ -247,10 +248,11 @@ const ThanksMsgMemberDetailModal = ({ open, userDetailId, onClose }: Props) => {
                       </div>
                       <div className="w-[1px] border-l border-[#D2DBE1] -my-[15px]"></div>
                       <div className="px-5 w-[588px] flex items-start gap-3 justify-between">
-                        <p className="break-all text-sm font-normal">
-                          {' '}
-                          {item.message}
-                        </p>
+                        <p
+                          className="break-all text-sm font-normal"
+                          dangerouslySetInnerHTML={{
+                            __html: formatWithParagraphTags(item.message),
+                          }}></p>
                         {item.deletedAt ? (
                           <></>
                         ) : (

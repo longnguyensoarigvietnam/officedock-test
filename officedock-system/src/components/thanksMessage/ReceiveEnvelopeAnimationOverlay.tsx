@@ -395,7 +395,7 @@ export default function ReceiveEnvelopeAnimationOverlay({
           <div className="flex items-center gap-3">
             <div className="w-[352px] bg-white rounded-[10px] p-[6px] flex items-center justify-between">
               <Button
-                variant="primary"
+                variant="post"
                 className="w-[240px] rounded-[8px] h-[36px] !p-0"
                 onClick={() => {
                   readIdsRef.current = new Set();

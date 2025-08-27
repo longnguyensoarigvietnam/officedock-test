@@ -425,6 +425,7 @@ export enum ScreenName {
   MY_TASK_SKILL_MAP = 'my_task_skill_map',
   TEAM_DOCK_SKILL_MAP = 'team_dock_skill_map',
   SKILL_MAP_MANAGEMENT = 'skill_map_management',
+  THANKS_MESSAGE = 'thanks_message'
 }
 
 export enum PermissionType {

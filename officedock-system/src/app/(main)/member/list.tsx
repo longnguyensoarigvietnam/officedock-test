@@ -7,8 +7,11 @@ import DetailProfileMemberModal from '@components/modals/DetailProfileMemberModa
 import GroupMember from './group';
 
 import { pageRouters } from '@constants/routers';
+import { ScreenName } from '@constants/enums';
+
 import useMemberOrganizationList from '@hooks/userMemberOrganizationList';
 import useDebounceText from '@hooks/useDebounceText';
+
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 const ListMember = () => {
@@ -20,6 +23,7 @@ const ListMember = () => {
 
   const { listMemberOrganization } = useMemberOrganizationList({
     search: searchTermDebounce,
+    currentScreen: ScreenName.CALENDAR
   });
 
   const [isShowModalDetail, setIsShowModalDetail] = useState(false);
