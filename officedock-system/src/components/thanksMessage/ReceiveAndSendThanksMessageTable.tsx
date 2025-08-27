@@ -16,6 +16,7 @@ import { ResponseError } from '@interfaces/response';
 import { ThanksMessageDetail } from '@interfaces/thanks-message';
 
 import { formatShowDateJapanese } from '@utils/date';
+import { formatWithParagraphTags } from '@utils';
 
 interface ReceiveAndSendThanksMessageTableProps {
   thanksMessageList: ThanksMessageDetail[];
@@ -131,7 +132,7 @@ export const ReceiveAndSendThanksMessageTable = ({
       {/* Table */}
       <div
         ref={resultsContainerRef}
-        className={`overflow-y-auto overflow-x-hidden customized-scrollbar h-fit max-h-[calc(100%_-_105px)] w-full mt-3  flex flex-col gap-[2px] ${!isLoadingList && !thanksMessageList.length ? 'bg-white h-full' : ''}`}>
+        className={`overflow-y-auto overflow-x-hidden customized-scrollbar h-fit max-h-[calc(100%_-_105px)] w-full mt-3 flex flex-col gap-[2px] ${!isLoadingList && !thanksMessageList.length ? 'bg-white h-full' : ''}`}>
         {isLoadingList ? (
           <div>
             <RowSkeleton numberOfRows={6} className="h-[90px]" />
@@ -143,8 +144,9 @@ export const ReceiveAndSendThanksMessageTable = ({
                 <>
                   <div
                     key={index}
-                    className={`relative ${index == 0 && 'rounded-tr-[14px] rounded-tl-[14px]'} ${index == thanksMessageList.length - 1 && 'rounded-br-[14px] rounded-bl-[14px]'} flex items-start ${!message.readAt ? 'bg-[#FFF3F9]' : 'bg-white'} text-black font-normal gap-5 py-[14px]`}>
-                    {!message.readAt ? (
+                    className={`relative mb-[2px] ${index == 0 && 'rounded-tr-[14px] rounded-tl-[14px]'} ${index == thanksMessageList.length - 1 && 'rounded-br-[14px] rounded-bl-[14px]'} flex items-start ${activeTab == ThanksMessageType.RECEIVED && !message.readAt ? 'bg-[#FFF3F9]' : 'bg-white'} text-black font-normal gap-[14px] py-[14px]`}>
+                    {activeTab == ThanksMessageType.RECEIVED &&
+                    !message.readAt ? (
                       <div
                         className="absolute w-[10px] h-[10px] rounded-full top-3 right-3"
                         style={{
@@ -155,7 +157,7 @@ export const ReceiveAndSendThanksMessageTable = ({
                       <></>
                     )}
                     {/* Date column */}
-                    <p className="w-[105px] text-xs pl-5 pr-2 flex items-center text-nowrap py-[15px]">
+                    <p className="w-[109px] text-xs pl-5 pr-2 flex items-center text-nowrap py-[15px]">
                       {activeTab == ThanksMessageType.RECEIVED
                         ? message.readAt
                           ? formatShowDateJapanese(message.readAt)
@@ -163,37 +165,52 @@ export const ReceiveAndSendThanksMessageTable = ({
                         : message.createdAt &&
                           formatShowDateJapanese(message.createdAt)}
                     </p>
-                    <div className="flex items-start justify-center gap-2">
-                      <CustomUserAvatar
-                        avatarUrl={
-                          activeTab == ThanksMessageType.RECEIVED
-                            ? message.sender?.avatar || ''
-                            : message.recipient?.avatar || ''
-                        }
-                        avatarColor={
-                          activeTab == ThanksMessageType.RECEIVED
-                            ? message.sender?.avatarColor || ''
-                            : message.recipient?.avatarColor || ''
-                        }
-                        size={30}
-                      />
-                      <div className="space-y-1 w-full">
-                        <p className="text-[#77858F] font-medium text-xs max-w-full break-all">
-                          {activeTab == ThanksMessageType.RECEIVED
-                            ? message.sender?.organizations?.name || ''
-                            : message.recipient?.organizations?.name || ''}
-                        </p>
-                        <p className="text-black text-[15px] font-medium text-sm max-w-full break-all">
-                          {activeTab == ThanksMessageType.RECEIVED
-                            ? message.sender?.fullName || ''
-                            : message.recipient?.fullName || ''}
-                        </p>
+                    <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
+                    <div className="w-[154px] flex flex-col gap-2 -ml-1 py-[15px]">
+                      <p
+                        className={`${message.readAt ? 'bg-[#EBF1F7] text-primary' : 'bg-[#FFDAEC] text-[#D85A9D]'} text-[11px] font-medium w-fit rounded-[2px] py-[4px] px-[5px] leading-none`}>
+                        {activeTab == ThanksMessageType.RECEIVED
+                          ? 'From'
+                          : 'To'}
+                      </p>
+                      <div className="flex items-start justify-center gap-2">
+                        <CustomUserAvatar
+                          avatarUrl={
+                            activeTab == ThanksMessageType.RECEIVED
+                              ? message.sender?.avatar || ''
+                              : message.recipient?.avatar || ''
+                          }
+                          avatarColor={
+                            activeTab == ThanksMessageType.RECEIVED
+                              ? message.sender?.avatarColor || ''
+                              : message.recipient?.avatarColor || ''
+                          }
+                          size={30}
+                        />
+                        <div className="space-y-1 w-full">
+                          <p className="text-[#77858F] font-medium text-xs max-w-full break-all">
+                            {activeTab == ThanksMessageType.RECEIVED
+                              ? message.sender?.organizations?.name || ''
+                              : message.recipient?.organizations?.name || ''}
+                          </p>
+                          <p className="text-black text-[15px] font-medium text-sm max-w-full break-all">
+                            {activeTab == ThanksMessageType.RECEIVED
+                              ? message.sender?.fullName || ''
+                              : message.recipient?.fullName || ''}
+                          </p>
+                        </div>
                       </div>
                     </div>
                     <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
-                    <p className="w-[calc(100%_-_300px)] max-w-[calc(100%_-_300px)] pr-2 text-sm break-all py-[15px]">
-                      {message.message}
-                    </p>
+                    <p
+                      className={`w-[calc(100%_-_300px)] max-w-[calc(100%_-_300px)] pr-2 text-sm break-all py-[15px] ${message.deletedAt && 'text-[#77858F]'}`}
+                      dangerouslySetInnerHTML={{
+                        __html: formatWithParagraphTags(
+                          message.deletedAt
+                            ? 'サンクスメッセージは、管理者によって削除されました。 この履歴は、30日後に自動で削除されます。'
+                            : message.message,
+                        ),
+                      }}></p>
                   </div>
                 </>
               );

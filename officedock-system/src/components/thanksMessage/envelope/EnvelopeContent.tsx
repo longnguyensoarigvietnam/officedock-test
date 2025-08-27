@@ -7,6 +7,7 @@ import ImageRound from '@components/common/ImageRound';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
+import { formatWithParagraphTags } from '@utils';
 
 export const EnvelopeContent = ({
   userInfo,
@@ -73,9 +74,11 @@ export const EnvelopeContent = ({
           </p>
         </div>
       </p>
-      <p className="overflow-y-auto max-h-[96px] break-all max-w-full text-sm">
-        {content}
-      </p>
+      <p
+        className="overflow-y-auto max-h-[96px] break-all max-w-full text-sm"
+        dangerouslySetInnerHTML={{
+          __html: formatWithParagraphTags(content),
+        }}></p>
     </div>
   );
 };

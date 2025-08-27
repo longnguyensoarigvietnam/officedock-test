@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
 
@@ -9,12 +9,15 @@ import ImageRound from '@components/common/ImageRound';
 import { SkillMapProgressBar } from '@components/common/ProgressBar/SkillMapProgressBar';
 import { MyPageMenu } from '@components/myPage/Menu';
 import { TwinklingIcon } from '@components/common/TwinklingIcon';
+import SendEnvelopeAnimationOverlay from '@components/thanksMessage/SendEnvelopeAnimationOverlay';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import { getLastChar } from '@utils';
 
+import useRemainingQuota from '@hooks/useRemainingQuota';
 import useSetSkillList from '@hooks/useSetSkillList';
 
 import { ServerStatusCode } from '@constants/enums';
@@ -24,11 +27,26 @@ import { ERROR_COMMON_MESSAGE } from '@constants/message';
 const RoomDetail = () => {
   const router = useRouter();
   const { showToast } = useToast();
+  const { data: session } = useSessionCache();
 
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+  const [openSendThanksMessageForm, setOpenSendThanksMessageForm] = useState<{
+    status: boolean;
+    userInfo: {
+      id: number;
+      fullName: string;
+      avatarColor: string;
+      avatar: string;
+    } | null;
+  }>({
+    status: false,
+    userInfo: null,
+  });
 
   // Params
   const params = useParams();
+
+  const { remainingQuota, refetchRemainingQuota } = useRemainingQuota();
 
   // Get set skill list
   const { myPageSkillList } = useSetSkillList({
@@ -200,32 +218,32 @@ const RoomDetail = () => {
                     <TwinklingIcon
                       className="absolute top-[-10px] left-[-10px]"
                       delay={0}
-                      iconUrl='/icons/blue-star.svg'
+                      iconUrl="/icons/blue-star.svg"
                     />
                     <TwinklingIcon
                       className="absolute top-[5px] right-[-15px]"
                       delay={0.5}
-                      iconUrl='/icons/blue-star.svg'
+                      iconUrl="/icons/blue-star.svg"
                     />
                     <TwinklingIcon
                       className="absolute top-[-15px] right-[5px]"
                       delay={0.8}
-                      iconUrl='/icons/blue-star.svg'
+                      iconUrl="/icons/blue-star.svg"
                     />
                     <TwinklingIcon
                       className="absolute bottom-[5px] left-[-15px]"
                       delay={1}
-                      iconUrl='/icons/blue-star.svg'
+                      iconUrl="/icons/blue-star.svg"
                     />
                     <TwinklingIcon
                       className="absolute bottom-[-15px] left-[5px]"
                       delay={1.2}
-                      iconUrl='/icons/blue-star.svg'
+                      iconUrl="/icons/blue-star.svg"
                     />
                     <TwinklingIcon
                       className="absolute bottom-[-10px] right-[-10px]"
                       delay={1.5}
-                      iconUrl='/icons/blue-star.svg'
+                      iconUrl="/icons/blue-star.svg"
                     />
                   </div>
                 )}
@@ -256,7 +274,26 @@ const RoomDetail = () => {
           })}
         </div>
         <div className="mt-[120px] ml-[30px]">
-          <MyPageMenu onClickSettingSurvey={() => {}} isVisitRoom={true} />
+          <MyPageMenu
+            onClickSettingSurvey={() => {}}
+            isVisitRoom={true}
+            onOpenSendThanksMessageForm={() => {
+              const memberInfo = dashboardMembersWithAvatars.find(
+                (member) => member.id == params.id,
+              );
+              if (memberInfo && memberInfo.id != session?.user.id) {
+                setOpenSendThanksMessageForm({
+                  status: true,
+                  userInfo: {
+                    id: memberInfo.id as number,
+                    fullName: memberInfo.fullName,
+                    avatarColor: memberInfo?.avatarColor,
+                    avatar: memberInfo?.avatar || '',
+                  },
+                });
+              }
+            }}
+          />
         </div>
         <div className="absolute bottom-[50px] left-[200px]">
           <div className="flex-grow">
@@ -266,6 +303,21 @@ const RoomDetail = () => {
           </div>
         </div>
       </div>
+
+      {openSendThanksMessageForm.status &&
+        openSendThanksMessageForm.userInfo && (
+          <SendEnvelopeAnimationOverlay
+            userInfo={openSendThanksMessageForm.userInfo}
+            remainingQuota={remainingQuota}
+            refetchRemainingQuota={refetchRemainingQuota}
+            onFinish={() => {
+              setOpenSendThanksMessageForm({
+                status: false,
+                userInfo: null,
+              });
+            }}
+          />
+        )}
     </div>
   );
 };

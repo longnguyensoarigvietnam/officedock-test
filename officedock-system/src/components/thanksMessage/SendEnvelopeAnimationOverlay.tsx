@@ -230,11 +230,11 @@ export default function SendEnvelopeAnimationOverlay({
       </div>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
         {showFinishMessage && (
-          <div className="w-[400px] h-[168px] bg-white rounded-[20px] flex flex-col gap-3 items-center justify-center">
-            <p className="text-sm">サンクスメッセージを送りました</p>
+          <div className="w-[400px] h-[130px] bg-white rounded-[20px]  flex flex-col gap-[30px] items-center justify-center">
+            <p className="text-sm !leading-none">サンクスメッセージを送りました</p>
             <Button
               variant="text"
-              className={`w-[100px] rounded-[8px] h-[36px]`}
+              className={`w-[100px] rounded-[8px] !p-0`}
               onClick={onFinish}>
               閉じる
             </Button>

@@ -317,5 +317,6 @@ export const VISIT_PAGE_MENU: MyPageMenuItem[] = [
     href: '#',
     iconSrc: '/icons/heart.svg',
     iconName: 'Heart icon',
+    openSendThanksMessageForm: true,
   },
 ];

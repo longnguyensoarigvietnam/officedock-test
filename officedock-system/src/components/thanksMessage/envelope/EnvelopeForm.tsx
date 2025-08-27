@@ -1,6 +1,6 @@
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Button from '@components/common/Button';
-import TextArea from '@components/common/TextArea';
+import TextAreaLink from '@components/common/TextAreaLink';
 
 export const EnvelopeForm = ({
   userInfo,
@@ -28,6 +28,11 @@ export const EnvelopeForm = ({
   setShowConfirmMessage: React.Dispatch<React.SetStateAction<boolean>>;
   onClose: () => void;
 }) => {
+  const doc = new DOMParser().parseFromString(envelopeMessage, 'text/html');
+  const envelopeMessageNumOfChars = doc.body.textContent
+    ? doc.body.textContent.trim().length
+    : 0;
+
   return (
     <div className="w-[500px] h-[366px] bg-white rounded-[20px] shadow py-[50px] px-[60px] text-sm">
       <div className="flex items-center justify-center gap-2 w-full">
@@ -43,12 +48,10 @@ export const EnvelopeForm = ({
       </div>
       <div className="my-3">
         <p className="text-sm font-medium mb-2">メッセージ</p>
-        <TextArea
-          className="w-[380px] h-[130px] rounded-[6px] !border-[1px] !border-[#77858F] resize-none"
-          onChange={(e) => {
-            const target = e.target as HTMLInputElement;
-            setEnvelopeMessage(target.value);
-          }}
+        <TextAreaLink
+          className="w-[380px] h-[130px] rounded-[6px] tweet-form"
+          onChange={(data) => setEnvelopeMessage && setEnvelopeMessage(data)}
+          initialValue={envelopeMessage}
         />
       </div>
 
@@ -63,7 +66,7 @@ export const EnvelopeForm = ({
           variant="post"
           className={`w-[100px] rounded-[8px] h-[36px]`}
           disabled={
-            envelopeMessage.trim() == '' || !remainingQuota?.remainingQuota
+            envelopeMessageNumOfChars == 0 || !remainingQuota?.remainingQuota
           }
           onClick={() => {
             setShowEnvelopeContent(true);
