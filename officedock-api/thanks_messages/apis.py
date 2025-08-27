@@ -232,6 +232,7 @@ class ThanksMessageManagementViewSet(
             .exclude(type=OrganizationTypes.CALENDAR.value)
             .order_by("-created_at")
         )
+        full_orgs = queryset.values("id", "name")
         queryset = self.filter_queryset(queryset)
         search = request.query_params.get("search")
         organization_id = request.query_params.get("organization_id")
@@ -245,7 +246,10 @@ class ThanksMessageManagementViewSet(
             queryset = queryset.filter(id=organization_id)
 
         return self.response_ok(
-            self.get_serializer(
-                queryset, many=True, context={"search": search}
-            ).data
+            {
+                "full_organizations": full_orgs,
+                "results": self.get_serializer(
+                    queryset.distinct(), many=True, context={"search": search}
+                ).data,
+            }
         )

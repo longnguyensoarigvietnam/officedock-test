@@ -381,7 +381,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         return self.response_ok(
             self.get_serializer(
-                queryset, many=True, context={"search": search}
+                queryset.distinct(), many=True, context={"search": search}
             ).data
         )
 
