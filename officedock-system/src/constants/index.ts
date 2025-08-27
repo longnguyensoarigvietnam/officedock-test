@@ -182,6 +182,16 @@ export const SCREEN_LIST = [
     value: 'skillMap',
     show: true,
   },
+  {
+    name: 'サンクスメッセージ管理',
+    value: 'thanksMessageManagement',
+    show: true,
+  },
+  {
+    name: 'MVP投票管理',
+    value: 'mvpVotingManagement',
+    show: true,
+  },
 ];
 
 export const PERMISSION_OPTIONS = [
@@ -504,4 +514,5 @@ export const MAXIMUM_VISIBLE_COUNT = 99;
 
 export const VOTING_TITLE_MAX_LENGTH = 18;
 
-export const SYSTEM_TWEET_NAME = 'OFFICE DOCK'
+export const SYSTEM_TWEET_NAME = 'OFFICE DOCK';
+export const VOTING_BONUS_POINT = 200;

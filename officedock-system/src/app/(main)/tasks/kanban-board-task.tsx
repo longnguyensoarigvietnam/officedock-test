@@ -2001,7 +2001,6 @@ const KanbanBoardTask = () => {
 
   // Edit task
   const handleGetDataDetailTask = async (id: number) => {
-    setIsLoading(true);
     const { data: response } = await api.get(apiRouters.TASK_DETAIL(`${id}`));
     return response;
   };
@@ -2031,11 +2030,6 @@ const KanbanBoardTask = () => {
       },
       onError: () => {
         handleRemoveParam();
-      },
-      onSettled: () => {
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 200);
       },
     },
   );

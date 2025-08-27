@@ -132,10 +132,13 @@ export const ReceiveAndSendThanksMessageTable = ({
       {/* Table */}
       <div
         ref={resultsContainerRef}
-        className={`overflow-y-auto overflow-x-hidden customized-scrollbar h-fit max-h-[calc(100%_-_105px)] w-full mt-3 flex flex-col gap-[2px] ${!isLoadingList && !thanksMessageList.length ? 'bg-white h-full' : ''}`}>
+        className={`overflow-y-auto overflow-x-hidden customized-scrollbar h-fit rounded-[14px] max-h-[calc(100%_-_105px)] w-full mt-3 flex flex-col gap-[2px] ${!isLoadingList && !thanksMessageList.length ? 'bg-white h-full' : ''}`}>
         {isLoadingList ? (
           <div>
-            <RowSkeleton numberOfRows={6} className="h-[90px]" />
+            <RowSkeleton
+              numberOfRows={6}
+              className="h-[125px] !rounded-[14px] w-[calc(100%_-_10px)]"
+            />
           </div>
         ) : (
           <div className="pr-[10px]">
@@ -144,7 +147,7 @@ export const ReceiveAndSendThanksMessageTable = ({
                 <>
                   <div
                     key={index}
-                    className={`relative mb-[2px] ${index == 0 && 'rounded-tr-[14px] rounded-tl-[14px]'} ${index == thanksMessageList.length - 1 && 'rounded-br-[14px] rounded-bl-[14px]'} flex items-start ${activeTab == ThanksMessageType.RECEIVED && !message.readAt ? 'bg-[#FFF3F9]' : 'bg-white'} text-black font-normal gap-[14px] py-[14px]`}>
+                    className={`relative mb-[2px] ${index == 0 && 'rounded-t-[14px]'} ${index == thanksMessageList.length - 1 && 'rounded-b-[14px]'} flex items-start ${activeTab == ThanksMessageType.RECEIVED && !message.readAt ? 'bg-[#FFF3F9]' : 'bg-white'} text-black font-normal gap-[14px] py-[14px]`}>
                     {activeTab == ThanksMessageType.RECEIVED &&
                     !message.readAt ? (
                       <div
@@ -168,7 +171,7 @@ export const ReceiveAndSendThanksMessageTable = ({
                     <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
                     <div className="w-[154px] flex flex-col gap-2 -ml-1 py-[15px]">
                       <p
-                        className={`${message.readAt ? 'bg-[#EBF1F7] text-primary' : 'bg-[#FFDAEC] text-[#D85A9D]'} text-[11px] font-medium w-fit rounded-[2px] py-[4px] px-[5px] leading-none`}>
+                        className={`${activeTab == ThanksMessageType.RECEIVED && !message.readAt ? 'bg-[#FFDAEC] text-[#D85A9D]' : 'bg-[#EBF1F7] text-primary'} text-[11px] font-medium w-fit rounded-[2px] py-[4px] px-[5px] leading-none`}>
                         {activeTab == ThanksMessageType.RECEIVED
                           ? 'From'
                           : 'To'}
@@ -219,7 +222,10 @@ export const ReceiveAndSendThanksMessageTable = ({
         )}
         {isFetchingNextPage && (
           <div className="mt-2">
-            <RowSkeleton numberOfRows={2} className="h-[90px]" />
+            <RowSkeleton
+              numberOfRows={2}
+              className="h-[125px] !rounded-[14px] w-[calc(100%_-_10px)]"
+            />
           </div>
         )}
       </div>

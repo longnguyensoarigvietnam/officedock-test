@@ -2342,7 +2342,6 @@ const ChatDetail = ({
 
   // Get task info
   const handleGetDataDetailTask = async (id: number) => {
-    setIsLoading(true);
     const { data: response } = await api.get(apiRouters.TASK_DETAIL(`${id}`));
     return response;
   };
@@ -2361,11 +2360,6 @@ const ChatDetail = ({
           variant: 'error',
           description: ERROR_NOT_FOUND_TASK,
         });
-      },
-      onSettled: () => {
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 200);
       },
     },
   );

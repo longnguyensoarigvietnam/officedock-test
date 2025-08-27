@@ -1,13 +1,13 @@
 'use client';
-import { useContext } from 'react';
 import { useQuery } from 'react-query';
-import { useSessionCache } from '@providers/SessionCacheProvider';
-
 import { AxiosError } from 'axios';
 
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { OrganizationSkillMapDetail } from '@interfaces/skills';
-import { LoadingContext } from '@providers/LoadingProvider';
+
 import { apiRouters } from '@constants/routers';
+
 import api from '@base/api';
 
 interface UseOrganizationSkillMapDetailHooksProps {
@@ -26,12 +26,9 @@ const useSkillMapUserDetail = ({
   const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
-  const { setIsLoading } = useContext(LoadingContext);
-
   // Handle call API get organization skill detail
   const getOrganizationSkillMapDetail = async () => {
     if (!skillId) return;
-    setIsLoading(true);
     const apiUrl = `${apiRouters.SKILL_MAPS_DETAIL_SKILL}?skill_id=${skillId}`;
 
     const { data } = await api.get<OrganizationSkillMapDetail[]>(apiUrl);
@@ -58,7 +55,6 @@ const useSkillMapUserDetail = ({
     },
     onSettled: () => {
       onSettled && onSettled();
-      setIsLoading(false);
     },
   });
 

@@ -391,6 +391,18 @@ export enum PermissionsSystem {
   DAILY_REPORT_ADD = 'daily_report_add',
   DAILY_REPORT_UPDATE = 'daily_report_update',
   DAILY_REPORT_DELETE = 'daily_report_delete',
+
+  // MVP Voting Management Permissions
+  MVP_VOTING_MANAGEMENT_VIEW = 'mvp_voting_management_view',
+  MVP_VOTING_MANAGEMENT_ADD = 'mvp_voting_management_add',
+  MVP_VOTING_MANAGEMENT_UPDATE = 'mvp_voting_management_update',
+  MVP_VOTING_MANAGEMENT_DELETE = 'mvp_voting_management_delete',
+
+  // Thanks Message Management Permissions
+  THANKS_MESSAGE_MANAGEMENT_VIEW = 'thanks_message_management_view',
+  THANKS_MESSAGE_MANAGEMENT_ADD = 'thanks_message_management_add',
+  THANKS_MESSAGE_MANAGEMENT_UPDATE = 'thanks_message_management_update',
+  THANKS_MESSAGE_MANAGEMENT_DELETE = 'thanks_message_management_delete',
 }
 
 export enum ScreenAction {
@@ -425,7 +437,9 @@ export enum ScreenName {
   MY_TASK_SKILL_MAP = 'my_task_skill_map',
   TEAM_DOCK_SKILL_MAP = 'team_dock_skill_map',
   SKILL_MAP_MANAGEMENT = 'skill_map_management',
-  THANKS_MESSAGE = 'thanks_message'
+  THANKS_MESSAGE = 'thanks_message',
+  THANKS_MESSAGE_MANAGEMENT = 'thanksMessageManagement',
+  MVP_VOTING_MANAGEMENT = 'mvpVotingManagement'
 }
 
 export enum PermissionType {
