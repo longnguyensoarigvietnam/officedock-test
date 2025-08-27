@@ -1,20 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useMutation } from 'react-query';
+import { useQueryClient } from '@tanstack/react-query';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import Modal from '@components/common/Modal';
-import useThankMsgDetailUserList from '@hooks/useThankMsgDetailUserList';
-import { formatShowDateJapanese } from '@utils/date';
-import { useQueryClient } from '@tanstack/react-query';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
-import { NO_DATA_AVAILABLE } from '@constants';
+
+import useThankMsgDetailUserList from '@hooks/useThankMsgDetailUserList';
+import { useUpdateThankMsgHistoryCache } from '@hooks/CacheQuery/useUpdateThankMsgHistory';
+
+import { formatShowDateJapanese } from '@utils/date';
 import { useToast } from '@providers/ToastProvider';
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
-import { useMutation } from 'react-query';
 import { ERROR_DELETE_MESSAGE } from '@constants/message';
-import { useUpdateThankMsgHistoryCache } from '@hooks/CacheQuery/useUpdateThankMsgHistory';
 import { formatWithParagraphTags } from '@utils';
 
 type Props = {
@@ -299,9 +300,7 @@ const ThanksMsgMemberDetailModal = ({ open, userDetailId, onClose }: Props) => {
                 </div>
               );
             })}
-          {!isLoadingList && thankDetailList.length === 0 && (
-            <p className="text-center text-[#77858F]">{NO_DATA_AVAILABLE}</p>
-          )}
+
           {isFetchingNextPage && (
             <div className="mt-2">
               <RowSkeleton numberOfRows={2} className="h-[60px]" />

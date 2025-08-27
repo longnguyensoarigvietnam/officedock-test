@@ -1,4 +1,4 @@
-export interface ThankListMemberMsgType {
+export interface ThanksListResultItem {
   icon: string | null;
   iconColor: string;
   id: number;
@@ -11,6 +11,13 @@ export interface ThankListMemberMsgType {
     id: number;
   }[];
   uuid: string;
+}
+export interface ThankListMemberMsgType {
+  results: ThanksListResultItem[];
+  fullOrganizations: {
+    id: number;
+    name: string;
+  }[];
 }
 export interface ThankListDetailMsgType {
   id: number;

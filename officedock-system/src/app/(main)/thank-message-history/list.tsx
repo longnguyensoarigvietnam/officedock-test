@@ -8,6 +8,7 @@ import ThanksMsgMemberDetailModal from '@components/modals/ThanksMsgMemberDetail
 import { OptionDropdownType } from '@interfaces/common';
 import useMemberThankMsg from '@hooks/useMemberThankMsg';
 import GroupMemberThank from './group';
+import useDebounceText from '@hooks/useDebounceText';
 
 const ThankMsgHistoryList = () => {
   const [search, setSearch] = useState<string>('');
@@ -28,9 +29,10 @@ const ThankMsgHistoryList = () => {
     id: number;
     orgName: string;
   }>();
+  const debouncedFilterByName = useDebounceText(search, 1000);
 
   const { memberThankMsgList } = useMemberThankMsg({
-    search: search,
+    search: debouncedFilterByName,
     organization_id: selectedOrganization?.value as string,
     onSuccess: (data) => {
       setOrganizationUserOptions([
@@ -38,7 +40,7 @@ const ThankMsgHistoryList = () => {
           label: '選択',
           value: '',
         },
-        ...data.map((org) => ({
+        ...data.fullOrganizations.map((org) => ({
           label: org.name,
           value: org.id,
         })),
@@ -92,7 +94,7 @@ const ThankMsgHistoryList = () => {
         </div>
         <div className="mt-[30px] flex flex-col gap-[30px] mb-[30px]">
           {memberThankMsgList &&
-            memberThankMsgList.map((item) => {
+            memberThankMsgList?.results?.map((item) => {
               return (
                 <GroupMemberThank
                   key={item.id}
