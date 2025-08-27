@@ -9,7 +9,7 @@ from rest_framework.viewsets import ModelViewSet
 from base.apis import BaseAPIViewSet
 from base.messages import ERROR_MESSAGES
 from base.paginations import CustomCursorPagination
-from mvp_votes.constants import Timeline
+from mvp_votes.constants import DEFAULT_BONUS_POINT, Timeline
 from mvp_votes.filters import MVPVoteFilter
 from mvp_votes.models import MVPVote, MVPVoteManagement
 from mvp_votes.payloads import build_list_mvp_vote_manage_payload
@@ -44,6 +44,7 @@ class MVPVoteManagementViewSet(BaseAPIViewSet, ModelViewSet):
         company = user.company
         serializer_data["company"] = company
         serializer_data["created_by"] = user
+        serializer_data["bonus_point"] = DEFAULT_BONUS_POINT
         mvp_vote = serializer.save()
         for candidate in candidates:
             mvp_vote.candidates.add(
@@ -57,6 +58,7 @@ class MVPVoteManagementViewSet(BaseAPIViewSet, ModelViewSet):
         """
         serializer_data = serializer.validated_data
         new_candidates = set(serializer_data.pop("candidates", []))
+        serializer_data.pop("bonus_point")
         user = self.request.user
         company = user.company
         mvp_vote = serializer.save(updated_by=user, company=company)
