@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
 import Dropdown from '@components/common/Dropdown';
+import ThanksMsgMemberDetailModal from '@components/modals/ThanksMsgMemberDetailModal';
+
 import { OptionDropdownType } from '@interfaces/common';
 import useMemberThankMsg from '@hooks/useMemberThankMsg';
 import GroupMemberThank from './group';
-import ThanksMsgMemberDetailModal from '@components/modals/ThanksMsgMemberDetailModal';
 
 const ThankMsgHistoryList = () => {
   const [search, setSearch] = useState<string>('');

@@ -362,7 +362,7 @@ export const pageRouters = {
     href: `/location`,
   },
   THANK_MESSAGE_MANAGEMENT: {
-    name: 'サンクスメッセージ履歴',
+    name: 'サンクスメッセージ管理',
     href: `/thank-message-history`,
   },
   // MY PAGE

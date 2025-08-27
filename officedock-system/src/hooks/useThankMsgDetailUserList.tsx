@@ -78,13 +78,13 @@ const useThankMsgDetailUserList = ({
     queryKey: ['getDetailThankMsgList', [type, user_id]],
     queryFn: ({ pageParam, signal }) =>
       getDetailThankMsgList({ pageParam, signal }),
-    enabled: !!token && !!user_id,
+    enabled: !!token,
     retry: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     getNextPageParam: (lastPage) => {
       return lastPage?.next
-        ? `/${apiRouters.LIST_THANKS_DETAIL_HISTORY}/${lastPage?.next}`
+        ? `${apiRouters.LIST_THANKS_DETAIL_HISTORY}${lastPage?.next}`
         : undefined;
     },
     onSuccess: (allPages) => {

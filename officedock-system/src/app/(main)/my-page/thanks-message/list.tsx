@@ -61,7 +61,13 @@ const ThanksMessageListPage = () => {
     },
   });
 
-  const { thanksMessageList, fetchNextPage, hasNextPage, isFetchingNextPage, isLoadingList } = useThanksMessageInfiniteList({
+  const {
+    thanksMessageList,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoadingList,
+  } = useThanksMessageInfiniteList({
     filter: {
       type: activeTab,
     },
@@ -91,7 +97,10 @@ const ThanksMessageListPage = () => {
   );
 
   useEffect(() => {
-    if (activeTab == ThanksMessageType.RECEIVED && !hasReadAllMessages.current) {
+    if (
+      activeTab == ThanksMessageType.RECEIVED &&
+      !hasReadAllMessages.current
+    ) {
       hasReadAllMessages.current = true;
       readAllThanksMessage();
     }

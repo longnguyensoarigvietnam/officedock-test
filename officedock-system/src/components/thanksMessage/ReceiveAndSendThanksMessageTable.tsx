@@ -131,42 +131,37 @@ export const ReceiveAndSendThanksMessageTable = ({
       {/* Table */}
       <div
         ref={resultsContainerRef}
-        className={`overflow-y-auto overflow-x-hidden customized-scrollbar h-fit max-h-[calc(100%_-_105px)] w-full mt-3 rounded-[14px] flex flex-col gap-[2px] ${!isLoadingList && !thanksMessageList.length ? 'bg-white h-full' : ''}`}>
+        className={`overflow-y-auto overflow-x-hidden customized-scrollbar h-fit max-h-[calc(100%_-_105px)] w-full mt-3  flex flex-col gap-[2px] ${!isLoadingList && !thanksMessageList.length ? 'bg-white h-full' : ''}`}>
         {isLoadingList ? (
           <div>
             <RowSkeleton numberOfRows={6} className="h-[90px]" />
           </div>
         ) : (
-          thanksMessageList.map((message, index) => {
-            return (
-              <>
-                <div
-                  key={index}
-                  className={`relative flex items-start ${!message.readAt ? 'bg-[#FFF3F9]' : 'bg-white'} text-black font-normal gap-5 py-[14px]`}>
-                  {!message.readAt ? (
-                    <div
-                      className="absolute w-[10px] h-[10px] rounded-full top-3 right-3"
-                      style={{
-                        background:
-                          'linear-gradient(157.85deg, #FF4D50 15%, #FF6E90 85.72%)',
-                      }}></div>
-                  ) : (
-                    <></>
-                  )}
-                  {/* Date column */}
-                  <p className="w-[105px] text-xs pl-5 pr-2 flex items-center text-nowrap py-[15px]">
-                    {activeTab == ThanksMessageType.RECEIVED
-                      ? message.readAt
-                        ? formatShowDateJapanese(message.readAt)
-                        : formatShowDateJapanese(new Date())
-                      : message.createdAt &&
-                        formatShowDateJapanese(message.createdAt)}
-                  </p>
-                  <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
-                  <div className="w-[140px] flex flex-col gap-2 py-[15px]">
-                    <p
-                      className={`${message.readAt ? 'bg-[#EBF1F7] text-primary' : 'bg-[#FFDAEC] text-[#D85A9D]'} text-[11px] font-medium w-fit rounded-[2px] py-[4px] px-[5px] leading-none`}>
-                      {activeTab == ThanksMessageType.RECEIVED ? 'From' : 'To'}
+          <div className="pr-[10px]">
+            {thanksMessageList.map((message, index) => {
+              return (
+                <>
+                  <div
+                    key={index}
+                    className={`relative ${index == 0 && 'rounded-tr-[14px] rounded-tl-[14px]'} ${index == thanksMessageList.length - 1 && 'rounded-br-[14px] rounded-bl-[14px]'} flex items-start ${!message.readAt ? 'bg-[#FFF3F9]' : 'bg-white'} text-black font-normal gap-5 py-[14px]`}>
+                    {!message.readAt ? (
+                      <div
+                        className="absolute w-[10px] h-[10px] rounded-full top-3 right-3"
+                        style={{
+                          background:
+                            'linear-gradient(157.85deg, #FF4D50 15%, #FF6E90 85.72%)',
+                        }}></div>
+                    ) : (
+                      <></>
+                    )}
+                    {/* Date column */}
+                    <p className="w-[105px] text-xs pl-5 pr-2 flex items-center text-nowrap py-[15px]">
+                      {activeTab == ThanksMessageType.RECEIVED
+                        ? message.readAt
+                          ? formatShowDateJapanese(message.readAt)
+                          : formatShowDateJapanese(new Date())
+                        : message.createdAt &&
+                          formatShowDateJapanese(message.createdAt)}
                     </p>
                     <div className="flex items-start justify-center gap-2">
                       <CustomUserAvatar
@@ -195,15 +190,15 @@ export const ReceiveAndSendThanksMessageTable = ({
                         </p>
                       </div>
                     </div>
+                    <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
+                    <p className="w-[calc(100%_-_300px)] max-w-[calc(100%_-_300px)] pr-2 text-sm break-all py-[15px]">
+                      {message.message}
+                    </p>
                   </div>
-                  <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
-                  <p className="w-[calc(100%_-_300px)] max-w-[calc(100%_-_300px)] pr-2 text-sm break-all py-[15px]">
-                    {message.message}
-                  </p>
-                </div>
-              </>
-            );
-          })
+                </>
+              );
+            })}
+          </div>
         )}
         {isFetchingNextPage && (
           <div className="mt-2">

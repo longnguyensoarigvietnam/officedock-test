@@ -129,17 +129,17 @@ const ThanksMsgMemberDetailModal = ({ open, userDetailId, onClose }: Props) => {
       contentClass="!rounded-[24px]"
       onClose={onClose}
       title="">
-      <header className="flex items-center justify-between bg-[#EBF1F7] !py-6 !px-[30px]  !rounded-tl-[24px]  !rounded-tr-[24px] ">
+      <header className="flex items-center gap-5 justify-between bg-[#EBF1F7] !py-6 !px-[30px]  !rounded-tl-[24px]  !rounded-tr-[24px] ">
         <div className="flex items-center text-base font-medium gap-[10px]">
           <CustomUserAvatar
             avatarUrl={userDetailId?.avatar || ''}
             avatarColor={userDetailId?.avatarColor || ''}
             size={63}
           />
-          <span className="text-[#77858F] break-all line-clamp-2  max-w-[150px] ">
+          <span className="text-[#77858F] break-all flex-shrink-0 line-clamp-2  max-w-[150px] ">
             {userDetailId?.orgName}
           </span>
-          <span className="text-black break-all line-clamp-2 ml-[10px] max-w-[150px]">
+          <span className="text-black break-all line-clamp-2 ml-[10px] flex-grow">
             {userDetailId?.fullName}
           </span>
         </div>
@@ -269,7 +269,7 @@ const ThanksMsgMemberDetailModal = ({ open, userDetailId, onClose }: Props) => {
                     </div>
                   </div>
                   {openDeleteIds.includes(item.id) && (
-                    <div className="flex justify-center items-center gap-20 bg-[#EBF1F7] py-5">
+                    <div className="flex justify-center items-center gap-20 rounded-lg bg-[#EBF1F7] py-5">
                       <div className="font-normal">
                         <p className="text-sm text-black">
                           本当に削除しますか？
