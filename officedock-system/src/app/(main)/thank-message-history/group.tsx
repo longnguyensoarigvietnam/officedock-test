@@ -1,9 +1,10 @@
-import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
-import { ThankListMemberMsgType } from '@interfaces/thank';
 import React from 'react';
 
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import { ThanksListResultItem } from '@interfaces/thank';
+
 type Props = {
-  item: ThankListMemberMsgType;
+  item: ThanksListResultItem;
   onUserClick: (id: {
     avatar: string;
     avatarColor: string;

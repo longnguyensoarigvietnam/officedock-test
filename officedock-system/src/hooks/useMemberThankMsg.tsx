@@ -11,7 +11,7 @@ import { ThankListMemberMsgType } from '@interfaces/thank';
 interface useMemberThankMsgHooksProps {
   search: string;
   organization_id?: string;
-  onSuccess?: (success: ThankListMemberMsgType[]) => void;
+  onSuccess?: (success: ThankListMemberMsgType) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
 }
@@ -30,7 +30,7 @@ const useMemberThankMsg = ({
   const getMemberThankList = async () => {
     const apiUrl = `${apiRouters.LIST_MEMBER_THANKS_MSG}?search=${encodeURIComponent(search)}${organization_id ? `&organization_id=${organization_id}` : ''}`;
 
-    const { data } = await api.get<ThankListMemberMsgType[]>(apiUrl);
+    const { data } = await api.get<ThankListMemberMsgType>(apiUrl);
     return data;
   };
 
@@ -46,7 +46,7 @@ const useMemberThankMsg = ({
     enabled: !!token,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onSuccess: (response: ThankListMemberMsgType[]) => {
+    onSuccess: (response: ThankListMemberMsgType) => {
       onSuccess && onSuccess(response);
     },
     onError: (error: AxiosError) => {
