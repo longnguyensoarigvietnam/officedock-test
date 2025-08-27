@@ -10,6 +10,7 @@ import { MAXIMUM_VISIBLE_COUNT } from '@constants';
 
 interface PropMenuMyPage {
   onClickSettingSurvey: () => void;
+  onOpenSendThanksMessageForm?: () => void;
   unAnsweredSurveyCount?: number;
   isVisitRoom?: boolean;
 }
@@ -18,6 +19,7 @@ export const MyPageMenu = ({
   isVisitRoom = false,
   unAnsweredSurveyCount,
   onClickSettingSurvey,
+  onOpenSendThanksMessageForm,
 }: PropMenuMyPage) => {
   const menuItemsClone: MyPageMenuItem[] = isVisitRoom
     ? lodash.cloneDeep(VISIT_PAGE_MENU)
@@ -27,7 +29,14 @@ export const MyPageMenu = ({
     <div className="flex flex-col gap-[35px]">
       {menuItemsClone.map((page: MyPageMenuItem, index) => {
         return (
-          <div key={index} className="relative group">
+          <div
+            key={index}
+            className="relative group"
+            onClick={() =>
+              page.openSendThanksMessageForm &&
+              onOpenSendThanksMessageForm &&
+              onOpenSendThanksMessageForm()
+            }>
             <Link
               key={index}
               href={page.href}

@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useMutation } from 'react-query';
 import { useRouter } from 'next/navigation';
 
@@ -71,6 +71,16 @@ const ThanksMessageListPage = () => {
     filter: {
       type: activeTab,
     },
+    onSuccess: (data) => {
+      if (
+        activeTab == ThanksMessageType.RECEIVED &&
+        !hasReadAllMessages.current &&
+        data.previous == null
+      ) {
+        hasReadAllMessages.current = true;
+        readAllThanksMessage();
+      }
+    },
   });
 
   const { remainingQuota, refetchRemainingQuota } = useRemainingQuota();
@@ -95,17 +105,6 @@ const ThanksMessageListPage = () => {
       },
     },
   );
-
-  useEffect(() => {
-    if (
-      activeTab == ThanksMessageType.RECEIVED &&
-      !hasReadAllMessages.current
-    ) {
-      hasReadAllMessages.current = true;
-      readAllThanksMessage();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
 
   return (
     <>
