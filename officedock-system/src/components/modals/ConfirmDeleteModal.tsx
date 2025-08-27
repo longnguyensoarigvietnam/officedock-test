@@ -29,7 +29,7 @@ const ConfirmDeleteModal = memo(
     return (
       <Modal
         open={open}
-        className="font-primary bg-white w-[500px] !rounded-[14px] py-[30px]"
+        className="font-primary bg-white w-[500px] !rounded-[20px] py-[30px]"
         isOutSideAction={false}
         onClose={onClose}>
         {name && (

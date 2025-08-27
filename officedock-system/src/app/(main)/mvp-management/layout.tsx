@@ -1,6 +1,6 @@
-import { MVPManagementStateProvider } from "@providers/MVPManagementProvider";
+import { MVPManagementStateProvider } from '@providers/MVPManagementProvider';
 
-export default async function RootLayout({
+export default async function MVPManagementLayout({
   children,
 }: {
   children: React.ReactNode;
