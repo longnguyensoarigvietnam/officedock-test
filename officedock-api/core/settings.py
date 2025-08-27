@@ -142,15 +142,18 @@ INSTALLED_APPS = [
     "surveys",
     "tweets",
     "thanks_messages",
+    "mvp_votes",
 ]
 
 # Define constants
 SECRET_KEY_FOR_CRONJOB = os.getenv("SECRET_KEY_FOR_CRONJOB", None)
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
-MONTHLY_QUOTA_THANKS_MESSAGES = os.getenv("MONTHLY_QUOTA_THANKS_MESSAGES", 5)
-THANKS_MESSAGE_SOFT_DELETE_RETENTION_DAYS = os.getenv(
-    "THANKS_MESSAGE_SOFT_DELETE_RETENTION_DAYS", 30
+MONTHLY_QUOTA_THANKS_MESSAGES = int(
+    os.getenv("MONTHLY_QUOTA_THANKS_MESSAGES", 5)
+)
+THANKS_MESSAGE_SOFT_DELETE_RETENTION_DAYS = int(
+    os.getenv("THANKS_MESSAGE_SOFT_DELETE_RETENTION_DAYS", 30)
 )
 
 # Get REDIS_URL from environment variable or install directly

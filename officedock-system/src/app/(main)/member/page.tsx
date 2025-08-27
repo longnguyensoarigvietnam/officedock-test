@@ -3,7 +3,7 @@ import ListMember from './list';
 import { pageRouters } from '@constants/routers';
 import { PermissionsSystem } from '@constants/enums';
 
-const ResetPasswordPage = () => {
+const MemberListPage = () => {
   return (
     <MainLayout
       title={pageRouters.MEMBER_MANAGEMENT.name}
@@ -14,4 +14,4 @@ const ResetPasswordPage = () => {
   );
 };
 
-export default ResetPasswordPage;
+export default MemberListPage;

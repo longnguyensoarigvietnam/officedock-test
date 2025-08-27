@@ -361,6 +361,10 @@ export const pageRouters = {
     name: 'カレンダー設定',
     href: `/location`,
   },
+  THANK_MESSAGE_MANAGEMENT: {
+    name: 'サンクスメッセージ管理',
+    href: `/thank-message-history`,
+  },
   // MY PAGE
   MY_PAGE: {
     name: 'マイページ',
@@ -377,6 +381,15 @@ export const pageRouters = {
   SURVEY: {
     name: 'アンケート',
     href: `/my-page/survey`,
+  },
+  THANKS_MESSAGE: {
+    name: 'サンクスメッセージ',
+    href: `/my-page/thanks-message`,
+  },
+  // MVP
+  MVP_MANAGEMENT: {
+    name: 'MVP投票管理',
+    href: `/mvp-management`,
   },
 };
 
@@ -602,4 +615,19 @@ export const apiRouters = {
   SURVEY_DETAIL: (id: string) => `/surveys/${id}/`,
   ANSWER_QUESTION: (id: string) => `/surveys/${id}/answer/`,
   UNANSWERED_COUNT: '/surveys/unanswered-count/',
+
+  // THANKS MESSAGES
+  THANKS_MESSAGES_LIST: '/thanks-messages/',
+  REMAINING_QUOTA: '/thanks-messages/remaining-quota',
+  READ_THANKS_MESSAGE: '/thanks-messages/read/',
+
+  // THANK MANAGEMENT
+  LIST_MEMBER_THANKS_MSG: '/thanks-messages-management/members/',
+  LIST_THANKS_DETAIL_HISTORY: '/thanks-messages-management/',
+  DETAIL_THANK_MSG_HISTORY: (id: string) =>
+    `/thanks-messages-management/${id} /`,
+  
+  // MVP
+  MVP_VOTING_LIST: '/mvp-vote-management/',
+  MVP_VOTING_DETAIL: (id: string) => `/mvp-vote-management/${id}/`,
 };

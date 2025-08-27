@@ -44,6 +44,22 @@ const config: Config = {
             backgroundPositionX: '-10%',
           },
         },
+        slideToLeft: {
+          from: {
+            right: '-100%',
+          },
+          to: {
+            right: '0%',
+          },
+        },
+        slideToRight: {
+          from: {
+            right: '0%',
+          },
+          to: {
+            right: '-100%',
+          },
+        },
       },
     },
   },

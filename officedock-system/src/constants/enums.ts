@@ -425,6 +425,7 @@ export enum ScreenName {
   MY_TASK_SKILL_MAP = 'my_task_skill_map',
   TEAM_DOCK_SKILL_MAP = 'team_dock_skill_map',
   SKILL_MAP_MANAGEMENT = 'skill_map_management',
+  THANKS_MESSAGE = 'thanks_message'
 }
 
 export enum PermissionType {
@@ -628,4 +629,17 @@ export enum ChatParticipantType {
 export enum TemplateVariant {
   EMPTY = 'EMPTY',
   DATA = 'DATA',
+}
+export enum ThanksMessageTab {
+  RECEIVED_THANKS_MESSAGES = '受け取ったサンクスメッセージ',
+  SENT_THANKS_MESSAGES = '送ったサンクスメッセージ',
+}
+export enum ThanksMessageType {
+  RECEIVED = 'received',
+  SENT = 'sent',
+}
+export enum VotingManagementType {
+  PRESENT = 'PRESENT',
+  PAST = 'PAST',
+  FUTURE = 'FUTURE',
 }

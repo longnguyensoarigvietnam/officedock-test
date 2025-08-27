@@ -1,25 +1,24 @@
 from datetime import datetime, timedelta, time
 
 from django.db.models import (
-    OuterRef,
-    Subquery,
     Q,
-    Value,
-    DateTimeField,
+    Max,
+    F,
 )
-from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.timezone import now
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from base.messages import ERROR_MESSAGES
-from base.constants import REPLACE_NULL_DATE, REPLACE_NULL_DATE_WITH_FUTURE
 from calendars.constants import CalendarTypes, ScheduleCategoryTypes
 from chat.constants import ChatMessageTypes
 from common.constants import BASE_DATETIME_FORMAT
 from common.serializers import CreationDataUserSerializer
-from common.utils import get_common_categories, split_id_from_string
+from common.utils import (
+    get_common_categories,
+    get_large_statistic_category_color,
+)
 from organizations.models import Organization
 from organizations.serializers import OrganizationSerializer
 from skills.models import StatisticCategory
@@ -47,6 +46,11 @@ from users.serializers import (
     BaseUserSerializer,
 )
 from users.models import User
+from tasks.utils import (
+    annotate_and_order_tasks_by_pin_and_index,
+    apply_filters_to_tasks,
+    apply_ordering_to_tasks,
+)
 
 
 class TaskDurationSerializer(serializers.ModelSerializer):
@@ -494,6 +498,7 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         """
         Return index of task
         """
+        # Get index from annotate the queryset if exists
         if hasattr(instance, "index"):
             return instance.index
 
@@ -509,6 +514,10 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         """
         Return pin time of task
         """
+        # Get pin_at from annotate the queryset if exists
+        if hasattr(instance, "pin_at"):
+            return instance.pin_at
+
         last_task = get_task_index(
             instance,
             self.context.get("request"),
@@ -537,7 +546,6 @@ class TaskBoardSerializer(TaskCommonSerializer):
             "title",
             "status",
             "is_start",
-            "is_my_task",
             "is_important",
             "deadline",
             "is_schedule_in_today",
@@ -571,13 +579,14 @@ class TaskBoardSerializer(TaskCommonSerializer):
         return representation
 
     def get_categories(self, obj):
-        """Handle retrieving categories of a Task."""
-        return get_common_categories(obj.categories.first(), obj)
+        """Handle retrieving only color large categorie of a Task."""
+        return get_large_statistic_category_color(obj)
 
     def get_index(self, instance):
         """
         Return index of task
         """
+        # Get index from annotate the queryset if exists
         if hasattr(instance, "index"):
             return instance.index
 
@@ -593,6 +602,10 @@ class TaskBoardSerializer(TaskCommonSerializer):
         """
         Return pin time of task
         """
+        # Get pin_at from annotate the queryset if exists
+        if hasattr(instance, "pin_at"):
+            return instance.pin_at
+
         last_task = get_task_index(
             instance,
             self.context.get("request"),
@@ -698,8 +711,8 @@ class TaskCalendarSerializer(TaskCommonSerializer):
         )
 
     def get_categories(self, obj):
-        """Handle retrieving categories of a Task."""
-        return get_common_categories(obj.categories.first(), obj)
+        """Handle retrieving only color large categorie of a Task."""
+        return get_large_statistic_category_color(obj)
 
 
 class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
@@ -908,46 +921,6 @@ class TaskTeamdockSerializer(BaseUserSerializer):
             obj.organizations.all().values_list("id", flat=True)
         )
 
-        def _apply_filters(tasks):
-            # Filter by tag, category, organization, search
-            if tag_ids := params.get("tag_ids"):
-                if ids := split_id_from_string(tag_ids):
-                    tasks = tasks.filter(tags__id__in=ids)
-            if category_ids := params.get("category_ids"):
-                if ids := split_id_from_string(category_ids):
-                    tasks = tasks.filter(
-                        categories__large_statistic_category__in=ids
-                    )
-            if organization_ids := params.get("organization_ids"):
-                if ids := split_id_from_string(organization_ids):
-                    tasks = tasks.filter(organization_id__in=ids)
-            if search := params.get("search"):
-                tasks = tasks.filter(title__icontains=search)
-            return tasks
-
-        def _apply_ordering(tasks, ordering):
-            # Ordering by deadline, important
-            tasks = tasks.annotate(
-                coalesced_deadline=Coalesce(
-                    "deadline",
-                    Value(
-                        REPLACE_NULL_DATE_WITH_FUTURE,
-                        output_field=DateTimeField(),
-                    ),
-                )
-            )
-
-            if "deadline" in ordering:
-                tasks = tasks.order_by(
-                    "coalesced_deadline", "-is_important", "-updated_at"
-                )
-
-            if "is_important" in ordering:
-                tasks = tasks.order_by(
-                    "-is_important", "coalesced_deadline", "-updated_at"
-                )
-            return tasks
-
         results = []
         all_tasks = obj.in_charge_tasks.filter(
             organization_id__in=user_org_ids,
@@ -957,30 +930,11 @@ class TaskTeamdockSerializer(BaseUserSerializer):
             tasks = all_tasks.filter(status=status)
 
             # Filter data
-            tasks = _apply_filters(tasks)
+            tasks = apply_filters_to_tasks(tasks, params)
 
-            # Validate ordering before applying it
             if ordering:
-                if ordering in ordering_fields:
-                    # Ordering data
-                    tasks = _apply_ordering(tasks, ordering)
-
-                    # Update team task index only if sorting by deadline or importance
-                    for idx, task in enumerate(tasks):
-                        team_task_index = task.team_task_index.filter(
-                            team_id=organization_id, user=user
-                        ).first()
-                        if team_task_index:
-                            if team_task_index.pin_at:
-                                team_task_index.pin_at = (
-                                    timezone.now()
-                                    - timedelta(
-                                        minutes=INITIAL_INDEX_VALUE + idx
-                                    )
-                                )
-                            team_task_index.index = INITIAL_INDEX_VALUE - idx
-                            team_task_index.save()
-                else:
+                # Validate ordering before applying it
+                if ordering not in ordering_fields:
                     raise ValidationError(
                         {
                             "detail": ERROR_MESSAGES[
@@ -988,100 +942,84 @@ class TaskTeamdockSerializer(BaseUserSerializer):
                             ].format(field_name=ordering)
                         }
                     )
+
+                # Ordering by deadline, important for tasks queryset
+                tasks = apply_ordering_to_tasks(tasks, ordering)
+
+                # Update team task index only if sorting by deadline or importance
+                update_team_task_indexes = []
+                for idx, task in enumerate(tasks):
+                    team_task_index = task.team_task_index.filter(
+                        team_id=organization_id, user=user
+                    ).first()
+                    if team_task_index:
+                        if team_task_index.pin_at:
+                            team_task_index.pin_at = timezone.now() - timedelta(
+                                minutes=INITIAL_INDEX_VALUE + idx
+                            )
+                        team_task_index.index = INITIAL_INDEX_VALUE - idx
+                        update_team_task_indexes.append(team_task_index)
+
+                if update_team_task_indexes:
+                    TeamTaskIndex.objects.bulk_update(
+                        update_team_task_indexes, fields=["index", "pin_at"]
+                    )
+
             # If the current user has no team task index, reindex tasks
-            if (
-                not ordering
-                and not TeamTaskIndex.objects.filter(
+            if not ordering or is_cross_team_task:
+                tasks_had_index = TeamTaskIndex.objects.filter(
                     team_id=organization_id,
                     user=user,
                     task__status=status,
                     task__people_in_charge=obj,
-                ).exists()
-            ):
-                tasks = tasks.annotate(
-                    coalesced_deadline=Coalesce(
-                        "deadline",
-                        Value(
-                            REPLACE_NULL_DATE_WITH_FUTURE,
-                            output_field=DateTimeField(),
-                        ),
+                ).values("task_id")
+                tasks_without_index = tasks.exclude(id__in=tasks_had_index)
+
+                if tasks_without_index.exists():
+                    # Get max index task not assigned user of user logged in team
+                    max_index = (
+                        TeamTaskIndex.objects.filter(
+                            team_id=organization_id,
+                            user=user,
+                            task__status=status,
+                            task__people_in_charge=obj,
+                        )
+                        .aggregate(max_idx=Max("index"))
+                        .get("max_idx")
                     )
-                ).order_by("coalesced_deadline", "-updated_at")
 
-                # Update team task index only if sorting by deadline or importance
-                for idx, task in enumerate(tasks):
-                    TeamTaskIndex.objects.create(
-                        task=task,
-                        team_id=organization_id,
-                        user=user,
-                        index=INITIAL_INDEX_VALUE - idx,
+                    if max_index is None:
+                        max_index = INITIAL_INDEX_VALUE
+
+                    tasks = tasks.order_by(
+                        F("deadline").asc(nulls_last=True),
+                        F("is_important").desc(),
+                        F("updated_at").desc(),
                     )
-            else:
-                # Fetch task index and pinned status for the user
-                team_task_index_obj = TeamTaskIndex.objects.filter(
-                    task=OuterRef("pk"), team_id=organization_id, user=user
-                )
-                task_pin = team_task_index_obj.values("pin_at")[:1]
-                task_index = team_task_index_obj.values("index")[:1]
 
-                # Annotate tasks with task index and pin timestamp
-                tasks = tasks.annotate(
-                    index=Subquery(task_index),
-                    coalesced_pin_at=Coalesce(
-                        Subquery(task_pin),
-                        Value(REPLACE_NULL_DATE),
-                        output_field=DateTimeField(),
-                    ),
-                ).order_by("-coalesced_pin_at", "-index", "-created_at")
-
-                if is_cross_team_task:
-                    # Check if any tasks don't have team task index and create them
-                    current_min_index = INITIAL_INDEX_VALUE
-
-                    # Get existing team task indexes for this status to find the minimum index
-                    existing_indexes = TeamTaskIndex.objects.filter(
-                        team_id=organization_id,
-                        user=user,
-                        task__status=status,
-                        task__people_in_charge=obj,
-                    ).values_list("index", flat=True)
-
-                    if existing_indexes:
-                        current_min_index = min(existing_indexes) - 1
-
-                    # Check each task and create index if missing
-                    for task in tasks:
-                        team_task_index = TeamTaskIndex.objects.filter(
-                            task=task, team_id=organization_id, user=user
-                        ).first()
-
-                        if not team_task_index:
-                            # Create new team task index with index smaller than the previous one
-                            TeamTaskIndex.objects.create(
+                    # Add index start to max_index - 1, max_index - 2, ...
+                    create_team_task_indexes = []
+                    for idx, task in enumerate(tasks_without_index, start=1):
+                        create_team_task_indexes.append(
+                            TeamTaskIndex(
                                 task=task,
                                 team_id=organization_id,
                                 user=user,
-                                index=current_min_index,
+                                company_id=user.company_id,
+                                index=max_index - idx,
                             )
-                            current_min_index -= 1
+                        )
+                    if create_team_task_indexes:
+                        TeamTaskIndex.objects.bulk_create(
+                            create_team_task_indexes, ignore_conflicts=True
+                        )
 
-                    # Re-fetch tasks with updated indexes
-                    team_task_index_obj = TeamTaskIndex.objects.filter(
-                        task=OuterRef("pk"), team_id=organization_id, user=user
-                    )
-                    task_pin = team_task_index_obj.values("pin_at")[:1]
-                    task_index = team_task_index_obj.values("index")[:1]
+            # Fetch task index and pinned status for the user
+            tasks = annotate_and_order_tasks_by_pin_and_index(
+                tasks, user, True, organization_id
+            )
 
-                    # Re-annotate tasks with updated task index and pin timestamp
-                    tasks = tasks.annotate(
-                        index=Subquery(task_index),
-                        coalesced_pin_at=Coalesce(
-                            Subquery(task_pin),
-                            Value(REPLACE_NULL_DATE),
-                            output_field=DateTimeField(),
-                        ),
-                    ).order_by("-coalesced_pin_at", "-index", "-created_at")
-
+            # Get only data in seleted organization
             if not is_cross_team_task:
                 tasks = tasks.filter(organization_id=organization_id)
 

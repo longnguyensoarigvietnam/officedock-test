@@ -55,6 +55,7 @@ from thanks_messages.apis import (
     ThanksMessageManagementViewSet,
     ThanksMessageViewSet,
 )
+from mvp_votes.apis import MVPVoteManagementViewSet, MVPVoteViewSet
 
 # Routers provide an easy way of automatically determining the URL conf.
 api_router = routers.SimpleRouter()
@@ -156,7 +157,12 @@ api_router.register(
     ThanksMessageManagementViewSet,
     basename="thanks_messages_management",
 )
-
+api_router.register(
+    "mvp-vote-management",
+    MVPVoteManagementViewSet,
+    basename="mvp_vote_management",
+)
+api_router.register("mvp-vote", MVPVoteViewSet, basename="mvp_vote")
 # Add api router urls
 urlpatterns = []
 urlpatterns += api_router.urls

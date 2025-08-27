@@ -29,6 +29,7 @@ export interface MyPageMenuItem {
     name: string;
     href: string;
     onClick?: () => void;
-    displayCount?: boolean
+    displayCount?: boolean;
   }[];
+  openSendThanksMessageForm?: boolean;
 }

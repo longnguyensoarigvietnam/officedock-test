@@ -13,6 +13,7 @@ import { PERMISSION_OPTIONS, SCREEN_LIST } from '@constants';
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ERROR_CREATE_MESSAGE,
+  ERROR_LONG_FIELD_MESSAGE,
   ROLE_NAME_REQUIRED_MESSAGE,
   SUCCESS_SAVE_MESSAGE,
 } from '@constants/message';
@@ -120,6 +121,10 @@ const CreateRoleForm = () => {
     if (isCreatingRef.current) return;
     if (roleName?.trim() == '') {
       setError(ROLE_NAME_REQUIRED_MESSAGE);
+      return;
+    }
+    if (roleName?.trim().length > 255) {
+      setError(ERROR_LONG_FIELD_MESSAGE);
       return;
     }
     setError('');

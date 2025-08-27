@@ -1,4 +1,4 @@
-import { UserStateProvider } from '@providers/UserProvider';
+import { MVPManagementStateProvider } from "@providers/MVPManagementProvider";
 
 export default async function RootLayout({
   children,
@@ -7,7 +7,7 @@ export default async function RootLayout({
 }) {
   return (
     <div>
-      <UserStateProvider>{children}</UserStateProvider>
+      <MVPManagementStateProvider>{children}</MVPManagementStateProvider>
     </div>
   );
 }

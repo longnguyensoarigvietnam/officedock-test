@@ -13,6 +13,7 @@ import { PERMISSION_OPTIONS, SCREEN_LIST } from '@constants';
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ERROR_COMMON_MESSAGE,
+  ERROR_LONG_FIELD_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   ROLE_NAME_REQUIRED_MESSAGE,
   SUCCESS_SAVE_MESSAGE,
@@ -176,6 +177,10 @@ const EditRoleForm = () => {
     if (isEditingRef.current) return;
     if (roleName?.trim() == '') {
       setError(ROLE_NAME_REQUIRED_MESSAGE);
+      return;
+    }
+    if (roleName?.trim().length > 255) {
+      setError(ERROR_LONG_FIELD_MESSAGE);
       return;
     }
     setError('');

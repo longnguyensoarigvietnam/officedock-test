@@ -23,6 +23,7 @@ import {
   hasPermissionInArray,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
+import { ERROR_LONG_FIELD_MESSAGE } from '@constants/message';
 
 export type ActionsTagModalProps = {
   open: boolean;
@@ -172,6 +173,10 @@ const ActionsTagModal = ({
               className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
               register={register('name', {
                 required: watch('name') !== null ? true : false,
+                maxLength: {
+                  value: 255,
+                  message: ERROR_LONG_FIELD_MESSAGE,
+                },
               })}
               placeholder="新規タグ"
               error={errors.name?.message}

@@ -42,9 +42,9 @@ const WarningDeadlineTaskModal = memo(
             閉じる
           </Button>
           <Button
-            variant="primary"
+            variant="secondary"
             onClick={onConfirm}
-            className={`w-[100px] !text-[#5B6770] bg-white rounded-md h-9`}>
+            className={`w-[100px] !text-[#5B6770] hover:opacity-80 !bg-white rounded-md h-9`}>
             確認する
           </Button>
         </div>

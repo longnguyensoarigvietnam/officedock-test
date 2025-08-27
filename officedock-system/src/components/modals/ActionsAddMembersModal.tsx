@@ -26,6 +26,7 @@ import {
 } from '@interfaces/chat';
 
 import { checkIsParticipantSelected, sortChatParticipants } from '@utils';
+import { ERROR_LONG_FIELD_MESSAGE } from '@constants/message';
 
 export type ActionsAddMembersModalProps = {
   open: boolean;
@@ -327,6 +328,10 @@ const ActionsAddMembersModal = memo(
                     className="!py-1.5 !pl-1.5 !w-full !border-[#77858F] text-sm"
                     placeholder="グループ名を入力してください"
                     register={register('groupName', {
+                      maxLength: {
+                        value: 255,
+                        message: ERROR_LONG_FIELD_MESSAGE,
+                      },
                       onBlur: (e) => {
                         if (e.target.value === '') {
                           setValue('groupName', '');

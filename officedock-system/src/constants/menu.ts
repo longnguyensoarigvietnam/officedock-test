@@ -172,7 +172,17 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     },
     current: false,
     companyMenu: true,
-    requiredPermission: PermissionsSystem.CALENDAR_MANAGEMENT_VIEW,
+    requiredPermission: PermissionsSystem.VIEW_ALL,
+  },
+  {
+    ...pageRouters.THANK_MESSAGE_MANAGEMENT,
+    name: pageRouters.THANK_MESSAGE_MANAGEMENT.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/team-active.svg' : '/icons/team.svg';
+    },
+    current: false,
+    companyMenu: true,
+    requiredPermission: PermissionsSystem.VIEW_ALL,
   },
   {
     ...pageRouters.MY_PAGE,
@@ -182,6 +192,13 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     },
     current: false,
     companyMenu: false,
+    requiredPermission: PermissionsSystem.VIEW_ALL,
+  },
+  {
+    ...pageRouters.MVP_MANAGEMENT,
+    name: pageRouters.MVP_MANAGEMENT.name,
+    current: false,
+    companyMenu: true,
     requiredPermission: PermissionsSystem.VIEW_ALL,
   },
 ];
@@ -243,7 +260,7 @@ export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
 export const MY_PAGE_MENU: MyPageMenuItem[] = [
   {
     name: 'サンクス メッセージ',
-    href: '#',
+    href: pageRouters.THANKS_MESSAGE.href,
     iconSrc: '/icons/heart.svg',
     iconName: 'Heart icon',
   },
@@ -262,7 +279,7 @@ export const MY_PAGE_MENU: MyPageMenuItem[] = [
       {
         name: 'アンケートを見る',
         href: pageRouters.SURVEY.href,
-        displayCount: true
+        displayCount: true,
       },
       {
         name: 'アンケートを作る',
@@ -300,5 +317,6 @@ export const VISIT_PAGE_MENU: MyPageMenuItem[] = [
     href: '#',
     iconSrc: '/icons/heart.svg',
     iconName: 'Heart icon',
+    openSendThanksMessageForm: true,
   },
 ];

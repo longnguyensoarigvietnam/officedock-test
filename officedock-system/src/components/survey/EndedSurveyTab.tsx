@@ -93,7 +93,7 @@ const EndedSurveyTab = ({ handleAnswer }: EndedSurveyTabProp) => {
                 <>
                   <div
                     key={index}
-                    className="flex items-stretch bg-white text-black text-xs font-normal py-[14px]">
+                    className={`flex ${index == surveyList.length - 1 && 'rounded-br-[14px] rounded-bl-[14px]'} items-stretch  bg-white text-black text-xs font-normal py-[14px]`}>
                     {/* Date column */}
                     <div className="w-[125px] pl-5 pr-2 py-[15px] flex items-center">
                       {item.createdAt && formatShowDateJapanese(item.createdAt)}

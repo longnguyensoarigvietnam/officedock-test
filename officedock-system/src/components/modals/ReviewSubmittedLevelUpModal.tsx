@@ -4,7 +4,7 @@ import { memo } from 'react';
 import Modal from '@components/common/Modal';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
-import { TwinklingStar } from '@components/common/TwinklingStar';
+import { TwinklingIcon } from '@components/common/TwinklingIcon';
 import Checkbox from '@components/common/Checkbox';
 
 import { SubmitLevel } from '@interfaces/skills';
@@ -133,21 +133,25 @@ const ReviewSubmittedLevelUpModal = memo(
               <div className="relative bg-[#EBF1F7] rounded-[6px] w-[62px] h-[62px] flex flex-col items-center justify-center">
                 {submitLevelUpDetail.status == SubmitLevelStatus.APPROVAL && (
                   <div>
-                    <TwinklingStar
+                    <TwinklingIcon
                       className="absolute top-[5px] right-[-15px]"
                       delay={0.5}
+                      iconUrl='/icons/blue-star.svg'
                     />
-                    <TwinklingStar
+                    <TwinklingIcon
                       className="absolute top-[-15px] right-[5px]"
                       delay={0.8}
+                      iconUrl='/icons/blue-star.svg'
                     />
-                    <TwinklingStar
+                    <TwinklingIcon
                       className="absolute bottom-[5px] left-[-15px]"
                       delay={1}
+                      iconUrl='/icons/blue-star.svg'
                     />
-                    <TwinklingStar
+                    <TwinklingIcon
                       className="absolute bottom-[-15px] left-[5px]"
                       delay={1.2}
+                      iconUrl='/icons/blue-star.svg'
                     />
                   </div>
                 )}

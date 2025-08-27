@@ -745,6 +745,7 @@ const ListTags = () => {
         open={openConfirmDeleteModal}
         name={selectedTagToDelete?.name || ''}
         type="タグ"
+        message="紐づいているタスクからも削除されます。"
         onConfirm={handleConfirmDeleteTag}
         onClose={() => setOpenConfirmDeleteModal(false)}
       />

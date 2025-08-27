@@ -10,7 +10,7 @@ export type ConfirmDeleteModalProps = {
   type: string;
   message?: string;
   userColor?: string;
-  userAvatarUrl?: string | undefined
+  userAvatarUrl?: string | undefined;
   onConfirm: () => void;
   onClose: () => void;
 };
@@ -29,7 +29,7 @@ const ConfirmDeleteModal = memo(
     return (
       <Modal
         open={open}
-        className="font-primary bg-white w-[500px] !rounded-lg py-[30px]"
+        className="font-primary bg-white w-[500px] !rounded-[20px] py-[30px]"
         isOutSideAction={false}
         onClose={onClose}>
         {name && (

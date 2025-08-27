@@ -52,8 +52,7 @@ instance.interceptors.response.use(
 
     if (
       status === ServerStatusCode.UNAUTHORIZED ||
-      status === ServerStatusCode.LOCKED || 
-      status === ServerStatusCode.FORBIDDEN
+      status === ServerStatusCode.LOCKED 
     ) {
       const session = await getCachedSession();
       if (session) {

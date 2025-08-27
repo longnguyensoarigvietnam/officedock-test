@@ -25,12 +25,12 @@ const ViewProfileModal = memo(
       <Modal
         open={open}
         isOutSideAction={false}
-        className="font-primary !rounded-xl text-gray-700 !p-0 w-[700px] "
+        className="font-primary !rounded-[20px] text-gray-700 !p-0 w-[700px] "
         titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
-        headerClassName="bg-[#EBF1F7] !rounded-t-xl !rounded-b-none px-6 py-4"
+        headerClassName="bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-6 py-4"
         closeIconClassName="!bg-white !rounded-full !p-2 !hover:cursor-pointer !shadow-sm"
         closeClassName="!mt-0 opacity-70 !w-4 !h-4 !hover:cursor-pointer"
-        contentClass="!w-[700px]"
+        contentClass="!w-[700px] !rounded-[20px]"
         onClose={() => {
           onClose();
         }}
@@ -102,7 +102,7 @@ const ViewProfileModal = memo(
                 ?.name || ''}
             </p>
           </div>
-          <div className="flex gap-3 items-center pb-3 mb-3 border-b-[1px] border-b-[#D2DBE1]">
+          <div className="flex gap-3 items-center pb-3">
             <p className="text-[#77858F] text-sm font-medium w-[130px] text-left">
               サブチーム
             </p>
@@ -111,15 +111,6 @@ const ViewProfileModal = memo(
                 ?.filter((org) => !org.isMain)
                 ?.map((org) => org.name)
                 ?.join('/ ') || ''}
-            </p>
-          </div>
-          <div className="flex gap-3 items-center">
-            <p className="text-[#77858F] text-sm font-medium w-[130px] text-left">
-              権限
-            </p>
-            <p className="text-black text-[16px] text-justify font-medium break-all max-w-[calc(100%_-_142px)]">
-              {authenticatedUser?.roles?.map((role) => role.name)?.join('/ ') ||
-                ''}
             </p>
           </div>
         </div>
