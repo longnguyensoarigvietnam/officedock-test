@@ -543,7 +543,7 @@ const ActionsUserModal = ({
                   メールアドレス{' '}
                   <span className="text-error font-bold">{`*`}</span>
                 </div>
-                <div className="flex flex-col w-full h-[50px]">
+                <div className="flex flex-col w-full h-fit">
                   <Input
                     name="email"
                     required
@@ -580,7 +580,7 @@ const ActionsUserModal = ({
                   <br />
                   メールアドレス
                 </div>
-                <div className="flex flex-col w-full h-[50px]">
+                <div className="flex flex-col w-full h-fit">
                   <Input
                     required
                     placeholder="入力してください"
@@ -630,7 +630,7 @@ const ActionsUserModal = ({
                   <div className="w-full max-w-[110px] text-[14px] mt-1 font-medium">
                     パスワード
                   </div>
-                  <div className="flex flex-col w-full h-[50px]">
+                  <div className="flex flex-col w-full fit">
                     <Input
                       type={isTypePassword === '' ? 'text' : 'password'}
                       placeholder="パスワードを入力"
