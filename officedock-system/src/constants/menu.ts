@@ -182,7 +182,7 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     },
     current: false,
     companyMenu: true,
-    requiredPermission: PermissionsSystem.VIEW_ALL,
+    requiredPermission: PermissionsSystem.THANKS_MESSAGE_MANAGEMENT_VIEW,
   },
   {
     ...pageRouters.MY_PAGE,
@@ -199,7 +199,7 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     name: pageRouters.MVP_MANAGEMENT.name,
     current: false,
     companyMenu: true,
-    requiredPermission: PermissionsSystem.VIEW_ALL,
+    requiredPermission: PermissionsSystem.MVP_VOTING_MANAGEMENT_VIEW,
   },
 ];
 export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [

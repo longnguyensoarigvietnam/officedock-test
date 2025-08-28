@@ -92,8 +92,7 @@ export const CurrentVotingList = () => {
           <p className="text-lg font-semibold">現在実施中の投票</p>
         </div>
         <Button
-          className="w-[100px] h-[34px] !text-sm !font-medium !text-nowrap !text-white"
-          disabled={!currentVotingDetail}
+          className={`w-[100px] h-[34px] !text-sm !font-medium !text-nowrap !text-white ${!currentVotingDetail && 'hidden'}`}
           onClick={() =>
             currentVotingDetail?.id &&
             terminateCurrentVote(Number(currentVotingDetail?.id))

@@ -1235,7 +1235,6 @@ const KanbanBoardTaskTeam = () => {
 
   // Get detail task
   const handleGetDataDetailTask = async (id: number) => {
-    setIsLoading(true);
     const { data: response } = await api.get(
       `${apiRouters.TASK_DETAIL(`${id}`)}?current_screen=teamdock
 `,
@@ -1253,9 +1252,6 @@ const KanbanBoardTaskTeam = () => {
       },
       onError: () => {
         handleRemoveParam();
-      },
-      onSettled: () => {
-        setIsLoading(false);
       },
     },
   );

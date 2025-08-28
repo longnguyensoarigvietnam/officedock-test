@@ -536,7 +536,6 @@ const BookmarkList = ({
 
   // Get task info
   const handleGetDataDetailTask = async (id: number) => {
-    setIsLoading(true);
     const { data: response } = await api.get(apiRouters.TASK_DETAIL(`${id}`));
     return response;
   };
@@ -551,11 +550,6 @@ const BookmarkList = ({
       },
       onError: () => {
         handleRemoveParam();
-      },
-      onSettled: () => {
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 200);
       },
     },
   );

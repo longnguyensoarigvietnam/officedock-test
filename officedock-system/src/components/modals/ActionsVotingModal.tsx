@@ -14,7 +14,11 @@ import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import { ActionsModal, EventParticipantType } from '@constants/enums';
 import { PLEASE_SELECT_AT_LEAST_ONE_CANDIDATE } from '@constants/message';
-import { NO_OPTIONS, VOTING_TITLE_MAX_LENGTH } from '@constants';
+import {
+  NO_OPTIONS,
+  VOTING_BONUS_POINT,
+  VOTING_TITLE_MAX_LENGTH,
+} from '@constants';
 
 import {
   convertDateToStartDate,
@@ -31,10 +35,10 @@ import { EventParticipant } from '@interfaces/calendar';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
-import { useToast } from '@providers/ToastProvider';
 
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
+import ErrorMessage from '@components/common/ErrorMessage';
 
 export type ActionsVotingModalProps = {
   open: boolean;
@@ -55,10 +59,12 @@ const ActionsVotingModal = ({
   onDelete,
   onCreate,
 }: ActionsVotingModalProps) => {
-  const { showToast } = useToast();
   const { data: session } = useSessionCache();
   const { creationDataEventCalendar } = useCreationDataEventCalendar({});
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+  const [showMembersErrorMessage, setShowMembersErrorMessage] = useState<
+    string | null
+  >('');
 
   // Date
   const [time, setTime] = useState<string>('');
@@ -183,10 +189,7 @@ const ActionsVotingModal = ({
       data.candidateIds.length == 0 &&
       data.selectedOrganizations.length == 0
     ) {
-      showToast({
-        variant: 'error',
-        description: PLEASE_SELECT_AT_LEAST_ONE_CANDIDATE,
-      });
+      setShowMembersErrorMessage(PLEASE_SELECT_AT_LEAST_ONE_CANDIDATE);
       return;
     }
     if (action === ActionsModal.CREATE) {
@@ -229,6 +232,7 @@ const ActionsVotingModal = ({
   };
 
   const handleSelectEventParticipant = (member: EventParticipant) => {
+    setShowMembersErrorMessage(null);
     const isUser = member.type === EventParticipantType.USER;
     const isOrganization = member.type === EventParticipantType.ORGANIZATION;
     const currentParticipantList = watch('candidateIds') || [];
@@ -362,11 +366,11 @@ const ActionsVotingModal = ({
       </header>
       <form
         onSubmit={handleSubmit(onSubmitData)}
-        className="px-8 pb-8 max-h-[calc(100vh)] overflow-y-auto">
-        <header className="flex sticky z-[100] top-[0px] py-5 items-start gap-2 justify-between bg-white">
-          <div>
+        className="px-8 pb-8 !h-[calc(100vh_-_150px)] overflow-y-auto">
+        <header className="flex sticky z-[100] top-[0px] py-5 items-start gap-2 justify-between bg-white !w-full">
+          <div className="w-full">
             <Input
-              className={`shadow-none text-2xl leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border ${errors.title ? '!border-error' : '!border-[#77858F]'}  !border-[1px] rounded-md`}
+              className={`shadow-none !w-[calc(100%)] text-2xl leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border ${errors.title ? '!border-error' : '!border-[#77858F]'}  !border-[1px] rounded-md`}
               register={register('title', {
                 maxLength: VOTING_TITLE_MAX_LENGTH,
               })}
@@ -414,6 +418,7 @@ const ActionsVotingModal = ({
               <p
                 className="text-[#77858F] font-medium text-xs hover:cursor-pointer"
                 onClick={() => {
+                  setShowMembersErrorMessage(null);
                   const updatedParticipantList =
                     dataOptionsParticipants?.filter((member) =>
                       member.fullName
@@ -458,6 +463,7 @@ const ActionsVotingModal = ({
               <p
                 className="text-[#77858F] font-medium text-xs hover:cursor-pointer"
                 onClick={() => {
+                  setShowMembersErrorMessage(null);
                   const matchingParticipantList =
                     dataOptionsParticipants?.filter((member) =>
                       member.fullName
@@ -606,6 +612,14 @@ const ActionsVotingModal = ({
                   );
                 })}
             </div>
+            {showMembersErrorMessage ? (
+              <ErrorMessage
+                error={showMembersErrorMessage}
+                className="text-xs mt-3"
+              />
+            ) : (
+              <></>
+            )}
           </div>
         </div>
 
@@ -613,13 +627,7 @@ const ActionsVotingModal = ({
         <div className="flex justify-between items-center mb-[30px]">
           <p className="w-fit font-medium text-[14px]">贈呈コイン</p>
           <div className="w-[513px]">
-            <Input
-              className="shadow-none text-sm !pl-[10px] flex items-center !py-0 h-[34px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
-              register={register('bonusPoint')}
-              placeholder="100"
-              type="number"
-              error={errors.bonusPoint?.message}
-            />
+            <p className="text-sm">{VOTING_BONUS_POINT}</p>
           </div>
         </div>
 
