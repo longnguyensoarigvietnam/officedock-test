@@ -9,7 +9,12 @@ from rest_framework.viewsets import ModelViewSet
 from base.apis import BaseAPIViewSet
 from base.messages import ERROR_MESSAGES
 from base.paginations import CustomCursorPagination
-from mvp_votes.constants import DEFAULT_BONUS_POINT, Timeline
+from mvp_votes.constants import (
+    DEFAULT_BONUS_POINT,
+    DEFAULT_CONTENT_TWEET_END_VOTE,
+    DEFAULT_CONTENT_TWEET_START_VOTE,
+    Timeline,
+)
 from mvp_votes.filters import MVPVoteFilter
 from mvp_votes.models import MVPVote, MVPVoteManagement
 from mvp_votes.payloads import build_list_mvp_vote_manage_payload
@@ -17,6 +22,7 @@ from mvp_votes.serializers import (
     MvpVoteManagementSerializer,
     MvpVoteCandidateSerializer,
 )
+from tweets.models import Tweet
 
 
 @extend_schema(tags=["System > MVP Vote Management"])
@@ -56,12 +62,27 @@ class MVPVoteManagementViewSet(BaseAPIViewSet, ModelViewSet):
         """
         Handle update mvp vote
         """
+        old_mvp_vote = self.get_object()
         serializer_data = serializer.validated_data
         new_candidates = set(serializer_data.pop("candidates", []))
-        serializer_data.pop("bonus_point")
+        serializer_data.pop("bonus_point", None)
         user = self.request.user
         company = user.company
         mvp_vote = serializer.save(updated_by=user, company=company)
+        # Create tweet when start vote
+        if mvp_vote.is_start:
+            Tweet.objects.create(
+                company=mvp_vote.company,
+                is_system=True,
+                content=DEFAULT_CONTENT_TWEET_START_VOTE,
+            )
+        # Create tweet when end vote
+        elif old_mvp_vote.is_start and not mvp_vote.is_start:
+            Tweet.objects.create(
+                company=mvp_vote.company,
+                is_system=True,
+                content=DEFAULT_CONTENT_TWEET_END_VOTE,
+            )
         if new_candidates:
             current_candidates = set(mvp_vote.candidates.all())
             to_remove = current_candidates - new_candidates
