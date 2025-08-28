@@ -41,7 +41,11 @@ from organizations.apis import (
     OrganizationCategoryHierarchyViewSet,
     TeamViewSet,
 )
-from common.apis import SystemCreationDataViewSet, CronJobViewSet
+from common.apis import (
+    DotMoneyViewSet,
+    SystemCreationDataViewSet,
+    CronJobViewSet,
+)
 from tags.apis import TagViewSet
 from dashboard.apis import (
     ActualDurationViewSet,
@@ -163,6 +167,8 @@ api_router.register(
     basename="mvp_vote_management",
 )
 api_router.register("mvp-vote", MVPVoteViewSet, basename="mvp_vote")
+api_router.register("dotmoney", DotMoneyViewSet, basename="dotmoney")
+
 # Add api router urls
 urlpatterns = []
 urlpatterns += api_router.urls
