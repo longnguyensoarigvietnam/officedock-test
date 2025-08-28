@@ -8,7 +8,7 @@ const ThankMsgHistoryPage = () => {
     <MainLayout
       title={pageRouters.THANK_MESSAGE_MANAGEMENT.name}
       className="bg-[#EBF1F7] !px-10 !py-[30px]"
-      permission={PermissionsSystem.VIEW_ALL}>
+      permission={PermissionsSystem.THANKS_MESSAGE_MANAGEMENT_VIEW}>
       <ThankMsgHistoryList />
     </MainLayout>
   );

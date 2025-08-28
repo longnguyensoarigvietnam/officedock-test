@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
-import { Table, TableBody, TableHeader } from '@components/common/Table';
 import ActionsVotingModal from '@components/modals/ActionsVotingModal';
 import ViewVotingMemberListModal from '@components/modals/ViewVotingMemberList';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
@@ -17,7 +16,7 @@ import {
   VotingManagementType,
 } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
-import { NO_SETTING } from '@constants';
+import { NO_SETTING, VOTING_BONUS_POINT } from '@constants';
 import {
   ERROR_COMMON_MESSAGE,
   ERROR_CREATE_MESSAGE,
@@ -25,7 +24,6 @@ import {
   ERROR_UPDATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
-  SUCCESS_SAVE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 
@@ -40,7 +38,6 @@ import { VotingDetail, VotingFormData, VotingRequest } from '@interfaces/mvp';
 import {
   addTimeToDate,
   formatLocalDate,
-  getCategoryFormattedDate,
   getFullFormattedDate,
 } from '@utils/date';
 
@@ -78,9 +75,13 @@ export const FutureVotingSettings = () => {
   const [openViewVotingMemberList, setOpenViewVotingMemberList] =
     useState(false);
   const [selectedVotingId, setSelectedVotingId] = useState<number | null>(null);
-  const [selectedVotingIdToDelete, setSelectedVotingIdToDelete] = useState<
-    number | null
-  >(null);
+  const [selectedVotingToDelete, setSelectedVotingToDelete] = useState<{
+    id: number;
+    title: string;
+  } | null>({
+    id: 0,
+    title: '',
+  });
   const [selectedVotingIdToUpdate, setSelectedVotingIdToUpdate] = useState<
     number | null
   >(null);
@@ -175,7 +176,7 @@ export const FutureVotingSettings = () => {
 
   const { mutate: deleteVote } = useMutation('deleteVote', handleDeleteVote, {
     onSuccess: (_data, variables) => {
-      setSelectedVotingIdToDelete(null);
+      setSelectedVotingToDelete(null);
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
       });
@@ -221,7 +222,7 @@ export const FutureVotingSettings = () => {
       title: data.title || '',
       selectedOrganizations: data.selectedOrganizations.join(',') || '',
       candidateIds: data.candidateIds || [],
-      bonusPoint: data.bonusPoint || 0,
+      bonusPoint: VOTING_BONUS_POINT,
       endDate:
         data.endDate && data.endTime
           ? addTimeToDate(data.endDate as Date, data.endTime)
@@ -299,9 +300,6 @@ export const FutureVotingSettings = () => {
     handleStartVoting,
     {
       onSuccess: (_data, variables) => {
-        showToast({
-          description: SUCCESS_SAVE_MESSAGE,
-        });
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getCurrentVotingDetail',
         });
@@ -381,153 +379,116 @@ export const FutureVotingSettings = () => {
           <Spinner className="!h-fit py-3" iconClassName="h-6 w-6" />
         ) : votingList.length > 0 ? (
           <div
-            className="max-h-[500px] overflow-y-auto"
-            ref={resultsContainerRef}>
-            <Table
-              classCustom="!px-0 !py-0"
-              className="bg-white text-xs font-medium !text-[#77858F] !rounded-[10px] relative !py-0 !px-0">
-              <TableHeader classCustom="sticky top-0 z-10 [&>th]:text-xs [&>th]:border-r [&>th]:border-b [&>th]:border-[#D2DBE1] [&>th:last-child]:border-r-0 !bg-white">
-                <th className="w-[320px] !text-[#77858F] text-left">
-                  <span>テーマ</span>
-                </th>
-                <th className="w-[154px] !text-[#77858F] text-left">
-                  <span>候補メンバー</span>
-                </th>
-                <th className="text-left !text-[#77858F] w-[108px] max-w-[108px]">
-                  <span>贈呈コイン</span>
-                </th>
-                <th className="text-left !text-[#77858F] w-[294px] max-w-[294px]">
-                  <span>投票期間</span>
-                </th>
-                <th className="text-left !text-[#77858F] w-[108px] max-w-[108px]">
-                  <span>設定者</span>
-                </th>
-                <th className="text-left !text-[#77858F] w-[108px] max-w-[108px]">
-                  <span>最終更新者</span>
-                </th>
-              </TableHeader>
-              <TableBody className="[&>tr>td]:pr-[14px] [&>tr>td]:pl-[18px] [&>tr>td]:border-r [&>tr>td]:border-gray-300 [&>tr>td:last-child]:border-r-0">
-                {votingList.map((element, index) => (
-                  <tr key={index} className="text-sm text-black font-medium">
-                    <td className="w-[320px] break-all text-left">
-                      <div className="flex items-center w-full justify-between">
-                        <p
-                          className={`text-sm font-medium w-[calc(100%_-_50px)] max-w-[calc(100%_-_50px)] break-all ${element.title ? '' : 'text-primary'}`}>
-                          {element.title || NO_SETTING}
-                        </p>
-                        <div className="flex items-center gap-2 w-10">
-                          <ImageRound
-                            name="Edit"
-                            src={`/icons/edit.svg`}
-                            className={`w-[14px] h-[14px] hover:cursor-pointer`}
-                            onClick={() => {
-                              setSelectedVotingIdToUpdate(Number(element.id));
-                            }}
-                          />
-                          <ImageRound
-                            name="Delete"
-                            src={'/icons/delete.svg'}
-                            className={`w-[13px] h-[15px] hover:cursor-pointer`}
-                            onClick={() =>
-                              setSelectedVotingIdToDelete(element.id)
-                            }
-                          />
-                        </div>
-                      </div>
-                    </td>
-                    <td className="w-[154px] break-all text-left !pt-4">
-                      <div className="flex items-center gap-3">
-                        <p className="text-xs font-medium text-nowrap">
-                          {element.isAllUsers ? '全員' : '選択メンバー'}
-                        </p>
-                        {!element.isAllUsers ? (
-                          <Button
-                            className="w-[42px] h-[25px] !rounded-[8px] !text-xs !text-nowrap !text-white"
-                            onClick={() => {
-                              setSelectedVotingId(element.id);
-                              setOpenViewVotingMemberList(true);
-                            }}>
-                            詳細
-                          </Button>
-                        ) : (
-                          <></>
-                        )}
-                      </div>
-                    </td>
-                    <td className="text-left w-[108px] max-w-[108px] break-all !pt-4">
+            ref={resultsContainerRef}
+            className="max-h-[500px] overflow-y-auto bg-white text-xs font-medium !text-[#77858F] !rounded-[10px] relative !py-0 !px-0">
+            <div className="flex sticky top-0 z-10 [&>p]:text-xs [&>p]:text-left [&>p]:px-[14px] [&>p]:py-[16px] [&>p]:border-l [&>p]:border-b [&>p]:border-t [&>p]:border-[#D2DBE1] [&>p:last-child]:border-r [&>p:first-child]:rounded-tl-[14px] [&>p:last-child]:rounded-tr-[14px] !bg-white">
+              <p className="w-[30%]">テーマ</p>
+              <p className="w-[14%]">候補メンバー</p>
+              <p className="w-[10%]">贈呈コイン</p>
+              <p className="w-[26%]">終了日時</p>
+              <p className="w-[10%]">設定者</p>
+              <p className="w-[10%]">最終更新者</p>
+            </div>
+            <div
+              className={`border-[1px] border-[#D2DBE1] border-t-0 ${isFetchingNextPage && 'border-b-0'} rounded-b-[14px]`}>
+              {votingList.map((element, index) => (
+                <div
+                  key={index}
+                  className={`flex text-sm text-black font-medium [&>div]:border-l rounded-b-[14px] ${votingList.length - 1 != index && '[&>div]:border-b'} [&>div:first-child]:border-l-0 [&>div]:border-[#D2DBE1]`}>
+                  <div className="px-[14px] py-[17px] w-[30%] break-all text-left flex items-center">
+                    <div className="flex items-center w-full justify-between">
                       <p
-                        className={`text-xs font-medium ${element.bonusPoint ? '' : 'text-primary'}`}>
-                        {element.bonusPoint || NO_SETTING}
+                        className={`text-sm font-medium w-[calc(100%_-_50px)] max-w-[calc(100%_-_50px)] break-all ${element.title ? '' : 'text-primary'}`}>
+                        {element.title || NO_SETTING}
                       </p>
-                    </td>
-                    <td className="text-left w-[294px] max-w-[294px] break-all !pt-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-[10px] text-xs">
-                          <div>
-                            <p className="text-[11px] text-[#77858F] font-medium">
-                              開始日
-                            </p>
-                            <p
-                              className={
-                                element.startDate ? '' : 'text-primary'
-                              }>
-                              {element.startDate
-                                ? getCategoryFormattedDate(
-                                    new Date(element.startDate),
-                                  )
-                                : NO_SETTING}
-                            </p>
-                          </div>
-                          <p className="text-sm text-[#77858F]">~</p>
-                          <div>
-                            <p className="text-[11px] text-[#77858F] font-medium">
-                              終了日時
-                            </p>
-                            <p
-                              className={element.endDate ? '' : 'text-primary'}>
-                              {element.endDate
-                                ? getFullFormattedDate(
-                                    new Date(element.endDate),
-                                  )
-                                : NO_SETTING}
-                            </p>
-                          </div>
-                        </div>
+                      <div className="flex items-center gap-2 w-10">
+                        <ImageRound
+                          name="Edit"
+                          src={`/icons/edit.svg`}
+                          className={`w-[14px] h-[14px] hover:cursor-pointer`}
+                          onClick={() => {
+                            setSelectedVotingIdToUpdate(Number(element.id));
+                          }}
+                        />
+                        <ImageRound
+                          name="Delete"
+                          src={'/icons/delete.svg'}
+                          className={`w-[13px] h-[15px] hover:cursor-pointer`}
+                          onClick={() =>
+                            setSelectedVotingToDelete({
+                              id: element.id as number,
+                              title: element.title as string,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="px-[14px] py-[17px] w-[14%] break-all text-left !pt-4 flex items-center">
+                    <div className="flex justify-between items-center w-full">
+                      <p className="text-xs font-medium text-nowrap">
+                        {element.isAllUsers ? '全員' : '選択メンバー'}
+                      </p>
+                      {!element.isAllUsers ? (
                         <Button
                           className="w-[42px] h-[25px] !rounded-[8px] !text-xs !text-nowrap !text-white"
-                          disabled={
-                            !element.title ||
-                            !element.bonusPoint ||
-                            !element.endDate ||
-                            !element.createdBy ||
-                            Boolean(currentVoting)
-                          }
-                          onClick={() => startVoting(element.id)}>
-                          開始
+                          onClick={() => {
+                            setSelectedVotingId(element.id);
+                            setOpenViewVotingMemberList(true);
+                          }}>
+                          詳細
                         </Button>
-                      </div>
-                    </td>
-                    <td className="w-[108px] max-w-[108px] text-left break-all !pt-4">
-                      <p className="text-xs font-medium">
-                        {(element.createdBy as UserProfile)?.fullName || ''}
+                      ) : (
+                        <></>
+                      )}
+                    </div>
+                  </div>
+                  <div className="px-[14px] py-[17px] text-left w-[10%] break-all !pt-4 flex items-center">
+                    <p
+                      className={`text-xs font-medium ${element.bonusPoint ? '' : 'text-primary'}`}>
+                      {element.bonusPoint || NO_SETTING}
+                    </p>
+                  </div>
+                  <div className="px-[14px] py-[17px] text-left w-[26%] break-all !pt-4 flex items-center">
+                    <div className="flex justify-between items-center w-full">
+                      <p
+                        className={`${element.endDate ? '' : 'text-primary'} text-xs font-medium`}>
+                        {element.endDate
+                          ? getFullFormattedDate(new Date(element.endDate))
+                          : NO_SETTING}
                       </p>
-                    </td>
-                    <td className="w-[108px] max-w-[108px] text-left break-all !pt-4">
-                      <p className="text-xs font-medium">
-                        {(element.updatedBy as UserProfile)?.fullName || ''}
-                      </p>
-                    </td>
-                  </tr>
-                ))}
-                {isFetchingNextPage && (
-                  <tr className="py-5 text-center text-sm leading-6">
-                    <td colSpan={6} className="py-5">
-                      <Spinner className="!h-fit" iconClassName="h-6 w-6" />
-                    </td>
-                  </tr>
-                )}
-              </TableBody>
-            </Table>
+                      <Button
+                        className="w-[42px] h-[25px] !rounded-[8px] !text-xs !text-nowrap !text-white"
+                        disabled={
+                          !element.title ||
+                          !element.bonusPoint ||
+                          !element.endDate ||
+                          !element.createdBy ||
+                          Boolean(currentVoting)
+                        }
+                        onClick={() => startVoting(element.id)}>
+                        開始
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="px-[14px] py-[17px] w-[10%] text-left break-all !pt-4 flex items-center">
+                    <p className="text-xs font-medium">
+                      {(element.createdBy as UserProfile)?.fullName || ''}
+                    </p>
+                  </div>
+                  <div className="px-[14px] py-[17px] w-[10%] text-left break-all !pt-4 flex items-center">
+                    <p className="text-xs font-medium">
+                      {(element.updatedBy as UserProfile)?.fullName || ''}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              {isFetchingNextPage && (
+                <div className="py-5 text-center text-sm leading-6 w-full">
+                  <Spinner className="!h-fit" iconClassName="h-6 w-6" />
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <p className="text-sm font-medium">今後実施中の投票はありません。</p>
@@ -543,13 +504,13 @@ export const FutureVotingSettings = () => {
           }}
         />
       )}
-      {selectedVotingIdToDelete && (
+      {selectedVotingToDelete && (
         <ConfirmDeleteModal
-          open={Boolean(selectedVotingIdToDelete)}
+          open={Boolean(selectedVotingToDelete?.id)}
           type="投票"
-          name="営業を一番頑張ったで賞"
-          onConfirm={() => deleteVote(Number(selectedVotingIdToDelete))}
-          onClose={() => setSelectedVotingIdToDelete(null)}
+          name={selectedVotingToDelete.title}
+          onConfirm={() => deleteVote(Number(selectedVotingToDelete?.id))}
+          onClose={() => setSelectedVotingToDelete(null)}
         />
       )}
       {openActionsVotingModal && actionTypeParam && (
@@ -570,7 +531,10 @@ export const FutureVotingSettings = () => {
             handleConfirmUpdateVoting(data.id as number, data);
           }}
           onDelete={(data) => {
-            setSelectedVotingIdToDelete(data.id as number);
+            setSelectedVotingToDelete({
+              id: data.id as number,
+              title: data.title as string,
+            });
             setDataVotingEdit(null);
             setOpenActionsVotingModal(false);
             handleRemoveParam();

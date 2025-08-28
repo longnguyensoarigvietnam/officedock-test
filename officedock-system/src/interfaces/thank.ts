@@ -33,7 +33,7 @@ export interface ThankListDetailMsgType {
       icon: string | null;
       iconColor: string;
       type: string;
-    };
+    } | null;
   };
   recipient: {
     id: number;
@@ -47,7 +47,7 @@ export interface ThankListDetailMsgType {
       icon: string | null;
       iconColor: string;
       type: string;
-    };
+    } | null;
   };
   message: string;
   readAt: string | null;

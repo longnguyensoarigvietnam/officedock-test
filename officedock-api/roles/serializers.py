@@ -49,6 +49,9 @@ class PermissionForCreateSerializer(serializers.Serializer):
     teamdock = BaseActionsSerializer()
     team_daily_report = BaseActionsSerializer()
 
+    thanks_message_management = BaseActionsSerializer()
+    mvp_voting_management = BaseActionsSerializer()
+
 
 class RolePermissionForCreateSerializer(serializers.ModelSerializer):
     """

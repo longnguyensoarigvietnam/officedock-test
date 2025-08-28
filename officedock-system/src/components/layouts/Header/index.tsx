@@ -286,7 +286,6 @@ const Header = ({ className }: HeaderProps) => {
 
   // Edit task
   const handleGetDataDetailTask = async (id: number) => {
-    setIsLoading(true);
     const { data: response } = await api.get(apiRouters.TASK_DETAIL(`${id}`));
     return response;
   };
@@ -305,11 +304,6 @@ const Header = ({ className }: HeaderProps) => {
           variant: 'error',
           description: ERROR_NOT_FOUND_TASK,
         });
-      },
-      onSettled: () => {
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 200);
       },
     },
   );

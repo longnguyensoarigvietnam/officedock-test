@@ -20,6 +20,8 @@ from calendars.models import Schedule
 from calendars.serializers import EventLocationSerializer
 from chat.constants import WebSocketEventType
 from dashboard.utils import separate_duration_while_keep_running
+from mvp_votes.constants import DEFAULT_CONTENT_TWEET_END_VOTE
+from mvp_votes.models import MVPVoteManagement
 from skills.models import StatisticCategory, Skill, SkillMapSkillLevel
 from organizations.serializers import (
     BaseStatisticCategorySerializer,
@@ -27,8 +29,11 @@ from organizations.serializers import (
 )
 from skills.serializers import SkillSerializer
 from stat_data.constants import ALL_TEAM
+from surveys.constants import DEFAULT_CONTENT_TWEET_END_SURVEY
+from surveys.models import Survey
 from tags.serializers import BaseTagSerializer
 
+from tweets.models import Tweet
 from users.serializers import RoleSerializer
 from users.models import Role, RoleDetail, User
 from tasks.models import TaskStatus, Task, TaskDuration
@@ -638,6 +643,31 @@ class CronJobViewSet(BaseAPIViewSet):
         """
         Get remind notify of task
         """
+        # Check end date of MVP vote and create tweet if have MVP vote finish.
+        mvp_votes = MVPVoteManagement.objects.filter(
+            end_date__lt=now(), is_start=True
+        ).all()
+        if mvp_votes:
+            for mvp_vote in mvp_votes:
+                mvp_vote.is_start = False
+                mvp_vote.save()
+                Tweet.objects.create(
+                    company=mvp_vote.company,
+                    is_system=True,
+                    content=DEFAULT_CONTENT_TWEET_END_VOTE,
+                )
+        # Check end date of Survey and create tweet if finish survey
+        one_minute_ago = now() - timedelta(minutes=1)
+        surveys = Survey.objects.filter(
+            end_at__lt=now(), end_at__gte=one_minute_ago
+        ).all()
+        if surveys:
+            for survey in surveys:
+                Tweet.objects.create(
+                    company=survey.company,
+                    is_system=True,
+                    content=DEFAULT_CONTENT_TWEET_END_SURVEY,
+                )
         # Check time process of skill map
         skill_map_levels = SkillMapSkillLevel.objects.filter(
             skill_map__is_valid=True, popup=True, is_complete=False
@@ -794,3 +824,23 @@ class CronJobViewSet(BaseAPIViewSet):
         ).delete()
 
         return self.response_ok({"deleted": deleted_count})
+
+
+@extend_schema(tags=["System > DotMoney"])
+class DotMoneyViewSet(BaseAPIViewSet):
+    """API endpoint of DotMoney"""
+
+    permission_classes = [AllowAny]
+
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="exchange",
+    )
+    @transaction.atomic()
+    def exchange(self, request):
+        """
+        Exchange entrypoint (DotMoney callback)
+        """
+        # TODO: implement actual exchange request to DotMoney API
+        return self.response_ok()

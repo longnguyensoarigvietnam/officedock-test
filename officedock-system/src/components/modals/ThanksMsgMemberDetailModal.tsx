@@ -16,7 +16,9 @@ import { useToast } from '@providers/ToastProvider';
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
 import { ERROR_DELETE_MESSAGE } from '@constants/message';
-import { formatWithParagraphTags } from '@utils';
+import { formatWithParagraphTags, hasPermissionInArray } from '@utils';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+import { PermissionsSystem } from '@constants/enums';
 
 type Props = {
   open: boolean;
@@ -33,6 +35,7 @@ type Props = {
 const ThanksMsgMemberDetailModal = ({ open, userDetailId, onClose }: Props) => {
   const [isSended, setIsSended] = useState(false);
   const { showToast } = useToast();
+  const { data: session } = useSessionCache();
 
   const [openDeleteIds, setOpenDeleteIds] = useState<number[]>([]);
 
@@ -123,6 +126,13 @@ const ThanksMsgMemberDetailModal = ({ open, userDetailId, onClose }: Props) => {
   const handleCancel = (id: number) => {
     setOpenDeleteIds((prev) => prev.filter((x) => x !== id));
   };
+
+  const isPermissionUpdate =
+    session?.user.permissions &&
+    hasPermissionInArray(
+      session?.user.permissions,
+      PermissionsSystem.THANKS_MESSAGE_MANAGEMENT_UPDATE,
+    );
 
   return (
     <Modal
@@ -235,8 +245,8 @@ const ThanksMsgMemberDetailModal = ({ open, userDetailId, onClose }: Props) => {
                           <div className="flex-grow">
                             <p className="text-xs  text-[#77858F] max-w-[100px] line-clamp-2 break-all ">
                               {isSended
-                                ? item.recipient.organizations.name
-                                : item.sender?.organizations.name}
+                                ? item.recipient?.organizations?.name
+                                : item.sender?.organizations?.name}
                             </p>
                             <p className="text-sm text-black  max-w-[100px] break-all line-clamp-2  mt-1">
                               {' '}
@@ -256,7 +266,7 @@ const ThanksMsgMemberDetailModal = ({ open, userDetailId, onClose }: Props) => {
                           }}></p>
                         {item.deletedAt ? (
                           <></>
-                        ) : (
+                        ) : isPermissionUpdate ? (
                           <ImageRound
                             onClick={() => {
                               if (!openDeleteIds.includes(item.id)) {
@@ -267,6 +277,8 @@ const ThanksMsgMemberDetailModal = ({ open, userDetailId, onClose }: Props) => {
                             src={'/icons/delete.svg'}
                             className="w-fit h-fit flex-shrink-0 relative top-[5px] cursor-pointer"
                           />
+                        ) : (
+                          <></>
                         )}
                       </div>
                     </div>
