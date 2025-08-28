@@ -9,7 +9,7 @@ export interface TweetDetail {
     fullName: string;
     avatarColor: string;
     avatar: string | null;
-  };
+  } | null;
   content: string;
   isSystem: boolean;
   createdAt?: Date | string;

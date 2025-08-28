@@ -453,7 +453,6 @@ export const apiRouters = {
   // TASK
   TASK_BOARD_LIST: '/tasks/board/',
   TASK_ME_LIST: '/tasks/me/',
-  FREQUENT_TASKS: '/tasks/frequent/',
   DASHBOARD_HEADER_TASK_LIST: '/dashboard/cards/',
   DASHBOARD_TAG_LIST: '/dashboard/tags/',
   DASHBOARD_UNREAD_MESSAGES: '/dashboard/unread-messages/',

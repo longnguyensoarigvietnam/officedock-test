@@ -3,8 +3,11 @@ import { useEffect, useRef } from 'react';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Spinner from '@components/common/Spinner';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
+import ImageRound from '@components/common/ImageRound';
 
 import { TweetDetail } from '@interfaces/tweet';
+
+import { SYSTEM_TWEET_NAME } from '@constants';
 
 import {
   convertToCurrentTimezone,
@@ -49,7 +52,7 @@ export const TimeLine = ({
         ) {
           fetchNextPage();
         }
-      }, 200); 
+      }, 200);
     };
 
     const resultsContainer = resultsContainerRef.current;
@@ -113,12 +116,25 @@ export const TimeLine = ({
             return (
               <div key={tweet.id} className="space-y-2 text-white !w-full pr-3">
                 <div className="flex items-center justify-between">
-                  <div className={`flex gap-3 items-center`}>
+                  <div className={`flex gap-[9px] items-center`}>
                     <div className="h-[30px]">
-                      {renderAvatar(tweet.user.avatar, tweet.user.avatarColor)}
+                      {tweet.isSystem ? (
+                        <ImageRound
+                          name="Blue company"
+                          src={'/icons/blue-company.svg'}
+                          className={`w-[30px] h-[30px] hover:cursor-pointer`}
+                        />
+                      ) : (
+                        renderAvatar(
+                          tweet?.user?.avatar || '',
+                          tweet?.user?.avatarColor || '',
+                        )
+                      )}
                     </div>
                     <p className="text-[16px] font-medium !break-all !max-w-full">
-                      {tweet.user.fullName}
+                      {tweet.isSystem
+                        ? SYSTEM_TWEET_NAME
+                        : tweet?.user?.fullName || ''}
                     </p>
                   </div>
                   {/* TODO: Show delete icon */}
