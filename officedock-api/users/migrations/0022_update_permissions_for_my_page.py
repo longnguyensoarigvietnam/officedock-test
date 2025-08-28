@@ -11,6 +11,7 @@ def update_data_permissions_my_page_to_roles(apps, schema_editor):
     """Seed data role permissions"""
     Permission = apps.get_model("users", "Permission")
     RoleDetail = apps.get_model("users", "RoleDetail")
+    LoginToken = apps.get_model("users", "LoginToken")
     Role = apps.get_model("users", "Role")
 
     # Update new permission to role default
@@ -49,6 +50,9 @@ def update_data_permissions_my_page_to_roles(apps, schema_editor):
                         permission=permission_obj,
                         defaults={"selection_result": selection_result},
                     )
+
+    # Block all access tokens, force all users to log in again to update permissions
+    LoginToken.objects.all().delete()
 
 
 class Migration(migrations.Migration):

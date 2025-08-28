@@ -213,9 +213,7 @@ class User(AbstractBaseUser, BaseModel, PermissionsMixin):
         """
         Verify the logged in user's token if the role has been changed.
         """
-        if LoginToken.objects.filter(
-            user=self, token=token, is_block=True
-        ).exists():
+        if not LoginToken.objects.filter(user=self, token=token).exists():
             raise LockedError()
 
         return True
