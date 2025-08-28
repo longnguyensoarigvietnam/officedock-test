@@ -5,10 +5,13 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins
 from rest_framework.exceptions import ValidationError
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import IsAuthenticated
 
 from base.apis import BaseAPIViewSet
 from base.messages import ERROR_MESSAGES
 from base.paginations import CustomCursorPagination
+from base.filters import FilterByPermission
+from base.permissions import ActionPermission
 from mvp_votes.constants import (
     DEFAULT_BONUS_POINT,
     DEFAULT_CONTENT_TWEET_END_VOTE,
@@ -23,6 +26,7 @@ from mvp_votes.serializers import (
     MvpVoteCandidateSerializer,
 )
 from tweets.models import Tweet
+from roles.constants import Screens
 
 
 @extend_schema(tags=["System > MVP Vote Management"])
@@ -34,6 +38,9 @@ class MVPVoteManagementViewSet(BaseAPIViewSet, ModelViewSet):
     queryset = MVPVoteManagement.objects.all()
     serializer_class = MvpVoteManagementSerializer
     pagination_class = CustomCursorPagination
+    permission_classes = [ActionPermission]
+    filter_backends = [FilterByPermission]
+    screen_name = Screens.MVP_VOTING_MANAGEMENT.value
 
     def get_queryset(self):
         user = self.request.user
@@ -164,6 +171,7 @@ class MVPVoteViewSet(
 ):
     queryset = MVPVote.objects.all()
     serializer_class = MvpVoteCandidateSerializer
+    permission_classes = [IsAuthenticated]
     filterset_class = MVPVoteFilter
 
     def get_queryset(self):
