@@ -245,8 +245,8 @@ const ThanksMsgMemberDetailModal = ({ open, userDetailId, onClose }: Props) => {
                           <div className="flex-grow">
                             <p className="text-xs  text-[#77858F] max-w-[100px] line-clamp-2 break-all ">
                               {isSended
-                                ? item.recipient.organizations.name
-                                : item.sender?.organizations.name}
+                                ? item.recipient?.organizations?.name
+                                : item.sender?.organizations?.name}
                             </p>
                             <p className="text-sm text-black  max-w-[100px] break-all line-clamp-2  mt-1">
                               {' '}
