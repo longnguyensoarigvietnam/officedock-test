@@ -953,7 +953,7 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
             # Compare roles (ignoring order)
             if sorted(existing_role_ids) != sorted(new_role_ids):
-                LoginToken.objects.filter(user=instance).update(is_block=True)
+                LoginToken.objects.filter(user=instance).delete()
                 # Check difference of current roles and new roles, if change send socket for logout
                 send_web_socket_event(
                     {
@@ -1053,7 +1053,7 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             ],
         ).delete()
         # Block access token for logged user
-        LoginToken.objects.filter(user=instance).update(is_block=True)
+        LoginToken.objects.filter(user=instance).delete()
         # Send socket for logout user deleted
         send_web_socket_event(
             {

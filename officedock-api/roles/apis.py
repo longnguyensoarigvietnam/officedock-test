@@ -144,7 +144,7 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if before_role_details != after_role_details:
             for user in role.users.all():
                 # Block access token for logged user
-                LoginToken.objects.filter(user=user).update(is_block=True)
+                LoginToken.objects.filter(user=user).delete()
                 send_web_socket_event(
                     {
                         "is_change_role": True,
@@ -173,7 +173,7 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         through_defaults={"company_id": user.company_id},
                     )
                 # Block access token for logged user
-                LoginToken.objects.filter(user=user).update(is_block=True)
+                LoginToken.objects.filter(user=user).delete()
                 send_web_socket_event(
                     {
                         "is_change_role": True,
