@@ -824,3 +824,23 @@ class CronJobViewSet(BaseAPIViewSet):
         ).delete()
 
         return self.response_ok({"deleted": deleted_count})
+
+
+@extend_schema(tags=["System > DotMoney"])
+class DotMoneyViewSet(BaseAPIViewSet):
+    """API endpoint of DotMoney"""
+
+    permission_classes = [AllowAny]
+
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="exchange",
+    )
+    @transaction.atomic()
+    def exchange(self, request):
+        """
+        Exchange entrypoint (DotMoney callback)
+        """
+        # TODO: implement actual exchange request to DotMoney API
+        return self.response_ok()
