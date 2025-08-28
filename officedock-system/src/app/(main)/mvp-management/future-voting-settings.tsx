@@ -24,7 +24,6 @@ import {
   ERROR_UPDATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
-  SUCCESS_SAVE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 
@@ -76,9 +75,13 @@ export const FutureVotingSettings = () => {
   const [openViewVotingMemberList, setOpenViewVotingMemberList] =
     useState(false);
   const [selectedVotingId, setSelectedVotingId] = useState<number | null>(null);
-  const [selectedVotingIdToDelete, setSelectedVotingIdToDelete] = useState<
-    number | null
-  >(null);
+  const [selectedVotingToDelete, setSelectedVotingToDelete] = useState<{
+    id: number;
+    title: string;
+  } | null>({
+    id: 0,
+    title: '',
+  });
   const [selectedVotingIdToUpdate, setSelectedVotingIdToUpdate] = useState<
     number | null
   >(null);
@@ -173,7 +176,7 @@ export const FutureVotingSettings = () => {
 
   const { mutate: deleteVote } = useMutation('deleteVote', handleDeleteVote, {
     onSuccess: (_data, variables) => {
-      setSelectedVotingIdToDelete(null);
+      setSelectedVotingToDelete(null);
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
       });
@@ -297,9 +300,6 @@ export const FutureVotingSettings = () => {
     handleStartVoting,
     {
       onSuccess: (_data, variables) => {
-        showToast({
-          description: SUCCESS_SAVE_MESSAGE,
-        });
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getCurrentVotingDetail',
         });
@@ -389,7 +389,8 @@ export const FutureVotingSettings = () => {
               <p className="w-[10%]">設定者</p>
               <p className="w-[10%]">最終更新者</p>
             </div>
-            <div className={`border-[1px] border-[#D2DBE1] border-t-0 ${isFetchingNextPage && 'border-b-0'} rounded-b-[14px]`}>
+            <div
+              className={`border-[1px] border-[#D2DBE1] border-t-0 ${isFetchingNextPage && 'border-b-0'} rounded-b-[14px]`}>
               {votingList.map((element, index) => (
                 <div
                   key={index}
@@ -414,7 +415,10 @@ export const FutureVotingSettings = () => {
                           src={'/icons/delete.svg'}
                           className={`w-[13px] h-[15px] hover:cursor-pointer`}
                           onClick={() =>
-                            setSelectedVotingIdToDelete(element.id)
+                            setSelectedVotingToDelete({
+                              id: element.id as number,
+                              title: element.title as string,
+                            })
                           }
                         />
                       </div>
@@ -500,13 +504,13 @@ export const FutureVotingSettings = () => {
           }}
         />
       )}
-      {selectedVotingIdToDelete && (
+      {selectedVotingToDelete && (
         <ConfirmDeleteModal
-          open={Boolean(selectedVotingIdToDelete)}
+          open={Boolean(selectedVotingToDelete?.id)}
           type="投票"
-          name="営業を一番頑張ったで賞"
-          onConfirm={() => deleteVote(Number(selectedVotingIdToDelete))}
-          onClose={() => setSelectedVotingIdToDelete(null)}
+          name={selectedVotingToDelete.title}
+          onConfirm={() => deleteVote(Number(selectedVotingToDelete?.id))}
+          onClose={() => setSelectedVotingToDelete(null)}
         />
       )}
       {openActionsVotingModal && actionTypeParam && (
@@ -527,7 +531,10 @@ export const FutureVotingSettings = () => {
             handleConfirmUpdateVoting(data.id as number, data);
           }}
           onDelete={(data) => {
-            setSelectedVotingIdToDelete(data.id as number);
+            setSelectedVotingToDelete({
+              id: data.id as number,
+              title: data.title as string,
+            });
             setDataVotingEdit(null);
             setOpenActionsVotingModal(false);
             handleRemoveParam();
