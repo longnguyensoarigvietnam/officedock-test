@@ -44,7 +44,6 @@ import ConfirmDragModalTask from '@components/modals/ConfirmDropModalTask';
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useTaskBoardList from '@hooks/useTaskBoardList';
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
-import useFrequentlyTasks from '@hooks/useFrequentlyTasks';
 import useTemplateList from '@hooks/useTemplateList';
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import { useErrorToast } from '@hooks/useErrorToast';
@@ -284,7 +283,6 @@ const KanbanBoardTask = () => {
   const [isReadyToFetch, setIsReadyToFetch] = useState(false);
 
   const { dashboardMemberList } = useDashboardMemberList();
-  const { frequentlyTasks: frequentlyTasksList } = useFrequentlyTasks();
   const { templates: templateList } = useTemplateList();
   const [loggedInUser, setLoggedInUser] = useState<User>();
   const [openWarningCloseModal, setOpenWarningCloseModal] =
@@ -461,12 +459,6 @@ const KanbanBoardTask = () => {
     }
     setTaskAddEmpty(null);
   }, [taskAddEmpty]);
-
-  useEffect(() => {
-    if (frequentlyTasksList) {
-      setFrequentlyTasks(frequentlyTasksList.data);
-    }
-  }, [frequentlyTasksList]);
 
   useEffect(() => {
     if (templateList) {
