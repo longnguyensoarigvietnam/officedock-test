@@ -33,6 +33,10 @@ class Screens(EnumChoices):
     SKILL_MAP_MANAGEMENT = "skill_map_management"
     SKILL_MAP_OTHER = "skill_map_other"
 
+    # Define screens for new UI
+    THANKS_MESSAGE_MANAGEMENT = "thanks_message_management"
+    MVP_VOTING_MANAGEMENT = "mvp_voting_management"
+
 
 class Actions(EnumChoices):
     """Enum for defining available actions."""
@@ -138,6 +142,9 @@ SYSTEM_ADMIN_AND_MANAGER_PERMISSIONS = {
     Screens.TEAM_DOCK_SKILL_MAP.value: ALLOWED_FULL_ACTIONS,
     Screens.SKILL_MAP_MANAGEMENT.value: ALLOWED_FULL_ACTIONS,
     Screens.SKILL_MAP_OTHER.value: ALLOWED_FULL_ACTIONS,
+    # Define permission new UI
+    Screens.THANKS_MESSAGE_MANAGEMENT.value: ALLOWED_FULL_ACTIONS,
+    Screens.MVP_VOTING_MANAGEMENT.value: ALLOWED_FULL_ACTIONS,
 }
 
 # Define permissions for role DEPARTMENT MANAGER
@@ -168,6 +175,9 @@ DEPARTMENT_MANAGER_PERMISSIONS = {
     Screens.TEAM_DOCK_SKILL_MAP.value: ONLY_DATA_ORGANIZATION_ACTIONS,
     Screens.SKILL_MAP_MANAGEMENT.value: ONLY_DATA_ORGANIZATION_ACTIONS,
     Screens.SKILL_MAP_OTHER.value: ONLY_DATA_ORGANIZATION_ACTIONS,
+    # Define permission new UI
+    Screens.THANKS_MESSAGE_MANAGEMENT.value: ONLY_DATA_ORGANIZATION_ACTIONS,
+    Screens.MVP_VOTING_MANAGEMENT.value: NOT_ALLOWED_ACTIONS,
 }
 
 # Define permissions for role GENERAL
@@ -198,6 +208,9 @@ GENERAL_PERMISSIONS = {
     Screens.TEAM_DOCK_SKILL_MAP.value: NOT_ALLOWED_ACTIONS,
     Screens.SKILL_MAP_MANAGEMENT.value: NOT_ALLOWED_ACTIONS,
     Screens.SKILL_MAP_OTHER.value: NOT_ALLOWED_ACTIONS,
+    # Define permission new UI
+    Screens.THANKS_MESSAGE_MANAGEMENT.value: NOT_ALLOWED_ACTIONS,
+    Screens.MVP_VOTING_MANAGEMENT.value: NOT_ALLOWED_ACTIONS,
 }
 
 # Define base role permissions

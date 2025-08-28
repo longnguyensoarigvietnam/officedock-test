@@ -6,6 +6,9 @@ from rest_framework.permissions import IsAuthenticated
 
 from base.apis import BaseAPIViewSet
 from base.paginations import CustomCursorPagination
+from base.filters import FilterByPermission
+from base.permissions import ActionPermission
+from roles.constants import Screens
 
 from organizations.models import Organization
 from organizations.serializers import OrganizationMemberSerializer
@@ -159,8 +162,10 @@ class ThanksMessageManagementViewSet(
 
     queryset = ThanksMessage.objects.order_by("-created_at")
     serializer_class = ThanksMessageSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [ActionPermission]
     pagination_class = CustomCursorPagination
+    filter_backends = [FilterByPermission]
+    screen_name = Screens.THANKS_MESSAGE_MANAGEMENT.value
     ordering = "-created_at"
 
     def get_queryset(self):
@@ -232,8 +237,8 @@ class ThanksMessageManagementViewSet(
             .exclude(type=OrganizationTypes.CALENDAR.value)
             .order_by("-created_at")
         )
-        full_orgs = queryset.values("id", "name")
         queryset = self.filter_queryset(queryset)
+        full_orgs = queryset.values("id", "name")
         search = request.query_params.get("search")
         organization_id = request.query_params.get("organization_id")
 
