@@ -12,6 +12,28 @@ export interface VotingListItem {
   isStart: boolean;
   isAllUsers: boolean;
   totalVoters?: number;
+  candidates: {
+    id: number;
+    fullName: string;
+    avatar: string | null;
+    avatarColor: string;
+    mainOrganization: {
+      id: number;
+      name: string;
+      uuid: string;
+    };
+    voteCount: number | null;
+    mvpCandidateId: number | null;
+  }[];
+  organizations: {
+    id: number;
+    name: string;
+    uuid: string;
+    icon: string | null;
+    iconColor: string;
+    type: string;
+  }[];
+  createdAt: string | Date | null;
 }
 
 export interface VotingDetail {
@@ -37,6 +59,14 @@ export interface VotingDetail {
     };
     voteCount: number | null;
     mvpCandidateId: number | null;
+  }[];
+  organizations: {
+    id: number;
+    name: string;
+    uuid: string;
+    icon: string | null;
+    iconColor: string;
+    type: string;
   }[];
   totalVoters?: number;
   createdAt: string | Date | null;
