@@ -4,6 +4,7 @@ from rest_framework.exceptions import ValidationError
 
 from base.messages import ERROR_MESSAGES
 from common.serializers import CreationDataUserSerializer
+from mvp_votes.constants import MVPVoteTypes
 from users.models import User
 from mvp_votes.models import MVPVote, MVPVoteManagement
 
@@ -23,6 +24,7 @@ class MvpVoteManagementSerializer(serializers.ModelSerializer):
     )
     created_by = CreationDataUserSerializer(read_only=True)
     updated_by = CreationDataUserSerializer(read_only=True)
+    is_start = serializers.BooleanField(required=False)
 
     class Meta:
         model = MVPVoteManagement
@@ -36,18 +38,30 @@ class MvpVoteManagementSerializer(serializers.ModelSerializer):
             "end_date",
             "created_by",
             "updated_by",
-            "is_start",
+            "type",
             "created_at",
+            "is_start",
         ]
 
     def validate(self, attrs):
         candidates = attrs.get("candidates")
         is_start = attrs.get("is_start")
+        end_date = attrs.get("end_date", None)
         instance = self.instance
-
+        if end_date and (
+            (
+                instance
+                and instance.type == MVPVoteTypes.UPCOMING.value
+                and end_date <= now()
+            )
+            or (not instance and end_date <= now())
+        ):
+            raise ValidationError(
+                {"end_date": ERROR_MESSAGES["end_time_in_future"]}
+            )
         if is_start is True and instance:
             is_exists_voting = MVPVoteManagement.objects.filter(
-                end_date__gte=now(), is_start=True, company=instance.company
+                type=MVPVoteTypes.PRESENT.value, company=instance.company
             ).exclude(id=instance.id)
             if is_exists_voting.exists() or instance.end_date < now():
                 raise ValidationError(
@@ -83,6 +97,7 @@ class MvpVoteCandidateSerializer(serializers.ModelSerializer):
         model = MVPVote
         fields = [
             "id",
+            "mvp_vote_management",
             "mvp_candidate",
             "comment",
         ]
