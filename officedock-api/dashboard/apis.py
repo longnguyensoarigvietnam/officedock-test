@@ -23,7 +23,6 @@ from calendars.models import Schedule, RepeatSchedule
 from calendars.serializers import BaseScheduleSerializer
 from common.constants import BASE_DATETIME_FORMAT
 from common.serializers import (
-    CreationDataTagSerializer,
     CreationDataUserWithMainOrganizationSerializer,
 )
 from common.utils import (
@@ -76,23 +75,6 @@ class DashboardViewSet(BaseAPIViewSet):
         user_logged = request.user
         users = user_logged.company.users.order_by("created_at")
         return self.response_ok(self.get_serializer(users, many=True).data)
-
-    @action(
-        methods=["GET"],
-        detail=False,
-        url_path="tags",
-        serializer_class=CreationDataTagSerializer,
-    )
-    def tags(self, request):
-        """
-        Get all tags of the logged in user company
-        """
-        tags = request.user.company.tags.order_by("created_at")
-        return self.response_ok(
-            self.get_serializer(
-                tags, many=True, context={"user": request.user}
-            ).data
-        )
 
     @action(
         methods=["GET"],

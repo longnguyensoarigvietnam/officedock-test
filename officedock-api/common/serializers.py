@@ -1,4 +1,3 @@
-from django.db.models import Q
 from rest_framework import serializers
 
 from common.utils import transform_statistic_categories
@@ -74,35 +73,6 @@ class CreationDataOrganizationWithUserSerializer(
         ]
 
 
-class OrganizationWithUserNotHaveSkillMapSerializer(
-    CreationDataOrganizationSerializer
-):
-    """
-    Serializer for Creation data Organization with User
-    """
-
-    users = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Organization
-        fields = [
-            "id",
-            "uuid",
-            "name",
-            "superior",
-            "users",
-            "icon",
-            "icon_color",
-            "type",
-        ]
-
-    def get_users(self, obj):
-        """Get user have not skill map"""
-        users = obj.users.filter(~Q(skill_maps__organization=obj)).all()
-
-        return CreationDataUserSerializer(users, many=True).data
-
-
 class CreationDataTagSerializer(serializers.ModelSerializer):
     """
     Serializer for Creation data Tag
@@ -111,29 +81,6 @@ class CreationDataTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ["id", "name"]
-
-
-class CreationDataOrganizationWithTagSerializer(
-    CreationDataOrganizationSerializer
-):
-    """
-    Serializer for Creation data Organization with User
-    """
-
-    tags = CreationDataTagSerializer(many=True)
-
-    class Meta:
-        model = Organization
-        fields = [
-            "id",
-            "uuid",
-            "name",
-            "superior",
-            "tags",
-            "icon",
-            "icon_color",
-            "type",
-        ]
 
 
 class CreationDataTaskListSerializer(serializers.ModelSerializer):
@@ -156,33 +103,10 @@ class CreationDataTaskStatusSerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
 
-class CreationDataTaskSerializer(serializers.Serializer):
-    """
-    Serializer for Creation data Task
-    """
-
-    tags = CreationDataTagSerializer(many=True)
-    status = CreationDataTaskStatusSerializer(many=True)
-    types = serializers.ListField(child=serializers.CharField())
-    priorities = serializers.ListField(child=serializers.CharField())
-
-
 class EmptySerializer(serializers.Serializer):
     """
     Empty serializers.
     """
-
-
-class CreationDataUserWithOrganizationSerializer(CreationDataUserSerializer):
-    """Creation date user with organization"""
-
-    organizations = CreationDataOrganizationSerializer(
-        many=True, read_only=True
-    )
-
-    class Meta:
-        model = User
-        fields = ["id", "full_name", "organizations"]
 
 
 class CreationDataUserWithMainOrganizationSerializer(
@@ -249,3 +173,22 @@ class CreationDataOrganizationWithStructCategorySerializer(
         from tags.serializers import BaseTagSerializer
 
         return BaseTagSerializer(obj.tags.all(), many=True).data
+
+
+class CreationDataOrganizationWithMainSerializer(OrganizationForUserSerializer):
+    """
+    Serializer for creation data organization with main
+    """
+
+    class Meta:
+        model = Organization
+        fields = [
+            "id",
+            "uuid",
+            "name",
+            "superior",
+            "icon",
+            "icon_color",
+            "type",
+            "is_main",
+        ]

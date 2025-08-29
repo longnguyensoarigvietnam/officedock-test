@@ -2,7 +2,7 @@ from datetime import timedelta, datetime, time
 
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Count, Q, F
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.timezone import now
@@ -19,30 +19,40 @@ from calendars.constants import (
 from calendars.models import Schedule
 from calendars.serializers import EventLocationSerializer
 from chat.constants import WebSocketEventType
+from common.helpers import (
+    get_all_organizations,
+    get_data_organization_my_statistic,
+    get_data_organization_team_statistic,
+    get_event_locations,
+    get_filter_organization_categories,
+    get_members,
+    get_organization_skills,
+    get_organization_with_categories,
+    get_organization_with_users,
+    get_organizations_of_user_by_screen_role,
+    get_roles,
+    get_statistic_categories,
+    get_tags,
+    get_task_status,
+    get_user_setting,
+)
+from companies.serializers import CompanySerializer
 from dashboard.utils import separate_duration_while_keep_running
 from mvp_votes.constants import DEFAULT_CONTENT_TWEET_END_VOTE, MVPVoteTypes
 from mvp_votes.models import MVPVoteManagement
-from skills.models import StatisticCategory, Skill, SkillMapSkillLevel
-from organizations.serializers import (
-    BaseStatisticCategorySerializer,
-    OrganizationDetailSerializer,
-)
-from skills.serializers import SkillSerializer
+from skills.models import SkillMapSkillLevel
 from stat_data.constants import ALL_TEAM
 from surveys.constants import DEFAULT_CONTENT_TWEET_END_SURVEY
 from surveys.models import Survey
 from tags.serializers import BaseTagSerializer
 
 from tweets.models import Tweet
-from users.serializers import RoleSerializer
-from users.models import Role, RoleDetail, User
-from tasks.models import TaskStatus, Task, TaskDuration
+from users.models import User
+from tasks.models import Task, TaskDuration
 from tasks.constants import (
     TaskTypes,
-    TaskCategoryTypes,
 )
-from organizations.models import Organization
-from roles.constants import Actions, Screens, SelectionResultOptions
+from roles.constants import Actions, Screens
 from chat.models import ChatRoom
 from thanks_messages.models import ThanksMessage
 from .serializers import (
@@ -50,20 +60,13 @@ from .serializers import (
     CreationDataTaskListSerializer,
     CreationDataUserSerializer,
     CreationDataTagSerializer,
-    CreationDataTaskSerializer,
-    CreationDataTaskStatusSerializer,
-    CreationDataUserWithOrganizationSerializer,
-    OrganizationWithUserNotHaveSkillMapSerializer,
-    CreationDataOrganizationWithTagSerializer,
     CreationDataOrganizationWithStructCategorySerializer,
     CreationDataOrganizationWithUserSerializer,
 )
 from .utils import (
     check_task_overtime,
-    get_organizations_of_user_by_screen_role,
     send_web_socket_event,
     to_snake_case,
-    transform_statistic_categories,
     validate_company_organization,
 )
 
@@ -76,217 +79,147 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
 
     permission_classes = [IsAuthenticated]
 
-    @action(
-        methods=["GET"],
-        detail=False,
-        url_path="role",
-        serializer_class=RoleSerializer,
-    )
-    def role(self, request):
-        """
-        Get creation data for Role
-        """
-
-        roles = (
-            Role.objects.filter(
-                Q(system_role=True) | Q(company_id=request.user.company_id)
-            )
-            .order_by("id")
-            .all()
-        )
-        return self.response_ok(self.get_serializer(roles, many=True).data)
-
     @extend_schema(
         parameters=[
-            OpenApiParameter(
-                "current_screen",
-                type=str,
-                enum=[
-                    Screens.CATEGORY_HIERARCHY.value,
-                    Screens.MY_TASK_SKILL_MAP.value,
-                    Screens.TEAM_DOCK_SKILL_MAP.value,
-                    Screens.SKILL_MAP_MANAGEMENT.value,
-                    Screens.USER.value,
-                    Screens.TEAMDOCK.value,
-                ],
-            ),
-            OpenApiParameter("is_with_staff", type=bool),
-            OpenApiParameter("is_hierarchy", type=bool),
-            OpenApiParameter("user_id", type=str, required=False),
-        ],
+            OpenApiParameter("organization_id", type=int),
+            OpenApiParameter("user_id", type=int),
+            OpenApiParameter("get_roles", type=bool),
+            OpenApiParameter("get_all_members", type=bool),
+            OpenApiParameter("get_all_organizations", type=bool),
+            OpenApiParameter("get_organization_members", type=bool),
+            OpenApiParameter("get_tags", type=bool),
+            OpenApiParameter("get_tags_of_organization", type=bool),
+            OpenApiParameter("get_task_status", type=bool),
+            OpenApiParameter("get_event_types", type=bool),
+            OpenApiParameter("get_event_locations", type=bool),
+            OpenApiParameter("get_organization_skills", type=bool),
+            OpenApiParameter("get_statistic_categories", type=bool),
+            OpenApiParameter("is_organization_calendar", type=bool),
+            OpenApiParameter("get_organizations_of_user_by_screen", type=str),
+            OpenApiParameter("get_organization_with_categories", type=bool),
+            OpenApiParameter("get_organization_for_team_statistic", type=bool),
+            OpenApiParameter("get_user_setting", type=bool),
+            OpenApiParameter("get_filter_organization_categories", type=bool),
+            OpenApiParameter("get_organization_with_users", type=bool),
+            OpenApiParameter("get_organization_for_my_statistic", type=bool),
+            OpenApiParameter("get_company", type=bool),
+        ]
     )
-    @action(
-        methods=["GET"],
-        detail=False,
-        url_path="organization",
-        serializer_class=CreationDataOrganizationSerializer,
-    )
-    def organization(self, request):
+    @action(methods=["GET"], detail=False, url_path="common")
+    def common_data(self, request):
         """
-        Get creation data for Organization
-        """
-        is_with_staff = request.query_params.get("is_with_staff")
-        is_hierarchy = request.query_params.get("is_hierarchy")
-        screen = request.query_params.get("current_screen")
-        user_id = request.query_params.get("user_id")
-        organizations = request.user.company.organizations.order_by(
-            "-created_at"
-        )
-
-        # Filter organizations by role permissions
-        if screen:
-            screen = to_snake_case(screen)
-            if screen == Screens.TEAMDOCK.value:
-                user = (
-                    get_object_or_404(User, id=user_id)
-                    if user_id
-                    else request.user
-                )
-                organizations = Organization.all_objects.filter(
-                    users=user
-                ).all()
-                data = {
-                    "organizations": CreationDataOrganizationWithStructCategorySerializer(
-                        organizations, many=True, context={"user": user}
-                    ).data,
-                }
-                return self.response_ok(data)
-            action = Actions.ADD.value
-            permission_name = f"{screen}_{action}"
-
-            # Retrieve the role permission
-            role_permissions = RoleDetail.objects.filter(
-                role__users=request.user, permission__name=permission_name
-            ).all()
-            if role_permissions:
-                selection_results = [
-                    item.selection_result for item in role_permissions
-                ]
-                if SelectionResultOptions.ALLOWED.value in selection_results:
-                    organizations = organizations
-                elif (
-                    SelectionResultOptions.ONLY_DATA_ORGANIZATION.value
-                    in selection_results
-                ):
-                    org_ids = list(
-                        request.user.organizations.values_list("id", flat=True)
-                    )
-                    # Handle get hierarchy
-                    def _get_children(instance):
-                        children = instance.organizations.all()
-                        for child in children:
-                            org_ids.append(child.id)
-                            _get_children(child)
-
-                    _get_children(request.user)
-                    org_ids = set(org_ids)
-                    organizations = organizations.filter(id__in=org_ids)
-
-        if is_with_staff:  # Get organization have staff not create skill map
-            organizations = (
-                organizations.annotate(
-                    total_users=Count(
-                        "users", distinct=True
-                    ),  # Total number of Users in each Organization
-                    users_with_skill_maps=Count(
-                        "users",
-                        filter=Q(users__skill_maps__organization=F("id")),
-                        # Count Users with SkillMap linked to the current Organization
-                        distinct=True,
-                    ),
-                )
-                .filter(
-                    total_users__gt=0
-                )  # Exclude Organizations with no Users
-                .filter(users_with_skill_maps__lt=F("total_users"))
-                # Only select Organizations where not all Users have a SkillMap linked to that Organization
-            )
-            return self.response_ok(
-                OrganizationWithUserNotHaveSkillMapSerializer(
-                    organizations, many=True
-                ).data
-            )
-
-        if is_hierarchy:
-            organizations = (
-                organizations.filter(
-                    organizations_statistic_categories__isnull=True
-                )
-                .distinct()
-                .all()
-            )
-        else:
-            organizations = organizations.all()
-
-        return self.response_ok(
-            self.get_serializer(organizations, many=True).data
-        )
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter("organization_id", type=str, required=False),
-        ],
-    )
-    @action(
-        methods=["GET"],
-        detail=False,
-        url_path="task",
-        serializer_class=CreationDataTaskSerializer,
-    )
-    def task(self, request):
-        """
-        Get creation data for Tag
+        Handle and response data base on query params
         """
         user = request.user
         company = user.company
         organization_id = request.query_params.get("organization_id")
-        validate_company_organization(company, organization_id)
-        status = TaskStatus.objects.order_by("created_at").all()
-        organizations = Organization.objects.filter(
-            Q(users=user) | Q(id=organization_id)
-        ).order_by("-created_at")
-        list_cats = []
-        for organization in organizations:
-            organization_categories = OrganizationDetailSerializer(
-                organization
-            ).data["statistic_categories"]
-            categories = transform_statistic_categories(organization_categories)
-            list_cats.append(
-                {
-                    "organization": CreationDataOrganizationSerializer(
-                        organization
-                    ).data,
-                    "categories": [
-                        cat[TaskCategoryTypes.LARGE.value]
-                        for cat in categories
-                        if cat.get(TaskCategoryTypes.LARGE.value) is not None
-                    ],
-                }
+        organization = None
+        if organization_id:
+            organization = validate_company_organization(
+                company, organization_id
             )
-        tags = (
-            company.tags.filter(
-                is_hidden=False,
-                organizations__id__in=[organization_id]
-                if organization_id
-                else organizations,
-            )
-            .order_by("created_at")
-            .distinct()
-        )
 
-        data = {
-            "tags": CreationDataTagSerializer(
-                tags, many=True, context={"user": user}
-            ).data,
-            "status": CreationDataTaskStatusSerializer(status, many=True).data,
-            "types": [item.value for item in TaskTypes],
-            "organizations": CreationDataOrganizationWithTagSerializer(
+        if "is_organization_calendar" in request.query_params:
+            organization = company.get_calendar_organization()
+        user_id = request.query_params.get("user_id")
+        if user_id:
+            user = get_object_or_404(User, id=user_id)
+        response_data = {}
+        organizations = None
+        if "get_company" in request.query_params:
+            response_data["company"] = CompanySerializer(company).data
+        if "get_all_organizations" in request.query_params:
+            organizations = get_all_organizations(company, organizations)
+            response_data[
+                "all_organizations"
+            ] = CreationDataOrganizationSerializer(
                 organizations, many=True
-            ).data,
-            "organization_categories": list_cats,
-        }
+            ).data
+        if "get_roles" in request.query_params:
+            response_data["roles"] = get_roles(company)
+        if "get_all_members" in request.query_params:
+            response_data["all_members"] = get_members(company)
+        if "get_organization_members" in request.query_params:
+            response_data["organization_members"] = get_members(
+                company, organization
+            )
+        if "get_tags" in request.query_params:
+            response_data["tags"] = get_tags(company, organization)
+        if "get_task_status" in request.query_params:
+            response_data["task_status"] = get_task_status()
+        if "get_event_types" in request.query_params:
+            response_data["event_types"] = [
+                item.value for item in ScheduleTypes
+            ]
+        if "get_event_locations" in request.query_params:
+            response_data["event_locations"] = get_event_locations(company)
+        if "get_organization_skills" in request.query_params:
+            organizations = get_all_organizations(company, organizations)
+            response_data["organization_skills"] = get_organization_skills(
+                organizations, organization
+            )
+        if "get_statistic_categories" in request.query_params:
+            response_data["statistic_categories"] = get_statistic_categories(
+                company
+            )
+        if (
+            "get_organizations_of_user_by_screen" in request.query_params
+            and to_snake_case(
+                request.query_params.get("get_organizations_of_user_by_screen")
+            )
+            in Screens.values()
+        ):
+            screen_name = to_snake_case(
+                request.query_params.get("get_organizations_of_user_by_screen")
+            )
+            action = Actions.ADD.value
+            response_data[
+                "organizations"
+            ] = get_organizations_of_user_by_screen_role(
+                user, screen_name, action
+            )
+        if "get_organization_with_categories" in request.query_params:
+            organizations = get_all_organizations(
+                company, organizations
+            ).filter(users=user)
+            response_data[
+                "organization_categories"
+            ] = get_organization_with_categories(
+                organizations, organization, user
+            )
+        if "get_organization_for_team_statistic" in request.query_params:
+            response_data[
+                "organization_statistics"
+            ] = get_data_organization_team_statistic(
+                user, company, organization
+            )
+        if "get_organization_for_my_statistic" in request.query_params:
+            organizations = get_all_organizations(company, organizations)
+            response_data["my_statistics"] = get_data_organization_my_statistic(
+                user, organizations, company
+            )
+        if "get_user_setting" in request.query_params:
+            response_data["user_setting"] = get_user_setting(user)
+        if "get_filter_organization_categories" in request.query_params:
+            organizations = (
+                get_all_organizations(company, organizations)
+                .filter(Q(users=user) | Q(id=organization))
+                .order_by("-created_at")
+                .all()
+            )
+            response_data[
+                "filter_organizations_categories"
+            ] = get_filter_organization_categories(organizations)
+            response_data["user_setting"] = get_user_setting(user)
+        if "get_organization_with_users" in request.query_params:
+            organizations = get_all_organizations(
+                company, organizations
+            ).filter(users=user)
+            response_data["organization_users"] = get_organization_with_users(
+                organizations
+            )
 
-        return self.response_ok(data)
+        return self.response_ok(response_data)
 
     @extend_schema(
         parameters=[
@@ -352,129 +285,6 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             request, tasks.distinct(), CreationDataTaskListSerializer
         )
 
-    @action(methods=["GET"], detail=False, url_path="schedule")
-    def schedule(self, request):
-        """
-        Get creation data for Schedule
-        """
-        company = request.user.company
-        users = company.users.order_by("created_at").all()
-        calendar_org = company.get_calendar_organization()
-        event_locations = company.event_locations.order_by("created_at").all()
-        tags = (
-            company.tags.filter(
-                is_hidden=False,
-                organizations=calendar_org,
-            )
-            .order_by("created_at")
-            .all()
-            .distinct()
-        )
-
-        organization_categories = OrganizationDetailSerializer(
-            calendar_org
-        ).data["statistic_categories"]
-        categories = transform_statistic_categories(organization_categories)
-
-        data = {
-            "members": CreationDataUserWithOrganizationSerializer(
-                users, many=True
-            ).data,
-            "tags": BaseTagSerializer(tags, many=True).data,
-            "types": [item.value for item in ScheduleTypes],
-            "event_locations": EventLocationSerializer(
-                event_locations, many=True
-            ).data,
-            "categories": categories,
-            "organization": CreationDataOrganizationSerializer(
-                calendar_org
-            ).data,
-        }
-
-        return self.response_ok(data)
-
-    @action(
-        methods=["GET"],
-        detail=False,
-        url_path="statistic-categories",
-        serializer_class=BaseStatisticCategorySerializer,
-    )
-    def statistic_categories(self, request):
-        """
-        Get all statistic categories
-        """
-        objs = StatisticCategory.objects.filter(
-            company_id=request.user.company_id
-        ).order_by("created_at")
-
-        return self.response_ok(self.get_serializer(objs, many=True).data)
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter("organization_id", type=int, required=False),
-        ],
-    )
-    @action(
-        methods=["GET"],
-        detail=False,
-        url_path="organization-skills",
-        serializer_class=SkillSerializer,
-    )
-    def organization_skills(self, request):
-        """
-        Get all organization skills
-        """
-        organization_id = request.query_params.get("organization_id", None)
-        company_id = request.user.company_id
-        orgs = Organization.objects.filter(company_id=company_id)
-
-        if organization_id:
-            orgs = orgs.filter(id=organization_id)
-        results = []
-        for org in orgs:
-            skills = Skill.objects.filter(
-                company_id=company_id, organization_id=org.id
-            ).order_by("id")
-
-            results.append(
-                {
-                    "organization": {
-                        "id": org.id,
-                        "name": org.name,
-                    },
-                    "skills": [
-                        {"id": skill.id, "name": skill.name} for skill in skills
-                    ],
-                }
-            )
-
-        return self.response_ok(results)
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter("organization_id", type=int, required=False),
-        ],
-    )
-    @action(methods=["GET"], detail=False, url_path="tags")
-    def tags(self, request):
-        """
-        Get tags by company
-        """
-
-        tags = request.user.company.tags.order_by("created_at").all()
-
-        return self.response_ok(BaseTagSerializer(tags, many=True).data)
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter("organization_id", type=int, required=False),
-            OpenApiParameter("is_statistic", type=bool, required=False),
-            OpenApiParameter("is_calendar_page", type=bool, required=False),
-            OpenApiParameter("is_chat_page", type=bool, required=False),
-        ],
-    )
-    @action(methods=["GET"], detail=False, url_path="statistics")
-    def statistics(self, request):
         """
         Returns organization creation data and necessary metadata for initializing Task, Calendar, Statistics, and Chat modules
         """

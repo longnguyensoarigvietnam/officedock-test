@@ -14,7 +14,6 @@ from common.constants import (
     AVATAR_GCS_EXPIRATION_SECONDS,
     USER_AVATAR_UPLOAD_MAX_SIZE,
 )
-from calendars.constants import CalendarTypes
 from companies.serializers import CompanySerializer
 from organizations.models import UsersOrganizations, Organization
 from organizations.serializers import (
@@ -383,7 +382,6 @@ class UserSerializer(BaseUserSerializer):
     setting = SettingSerializer(read_only=True)
     unread_terms = serializers.SerializerMethodField(read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
-    current_event = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
@@ -401,7 +399,6 @@ class UserSerializer(BaseUserSerializer):
             "login_type",
             "setting",
             "unread_terms",
-            "current_event",
             "avatar_color",
             "avatar",
             "created_at",
@@ -470,24 +467,6 @@ class UserSerializer(BaseUserSerializer):
                 data.append({"id": privacy_policy.id})
 
             return data
-
-    def get_current_event(self, obj):
-        """Get current event starting"""
-        if task := obj.in_charge_tasks.filter(is_start=True).first():
-            return {
-                "type": CalendarTypes.TASK.value,
-                "id": task.id,
-                "title": task.title,
-            }
-
-        if schedule := obj.schedules.filter(is_start=True).first():
-            return {
-                "type": CalendarTypes.SCHEDULE.value,
-                "id": schedule.id,
-                "title": schedule.title,
-            }
-
-        return None
 
 
 class UserLoginSerializer(BaseUserSerializer):
