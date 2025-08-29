@@ -1,11 +1,10 @@
 from django.db import transaction
-from django.db.models import Q
-from django.utils.timezone import now
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins
 from rest_framework.exceptions import ValidationError
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
 
 from base.apis import BaseAPIViewSet
 from base.messages import ERROR_MESSAGES
@@ -16,11 +15,14 @@ from mvp_votes.constants import (
     DEFAULT_BONUS_POINT,
     DEFAULT_CONTENT_TWEET_END_VOTE,
     DEFAULT_CONTENT_TWEET_START_VOTE,
-    Timeline,
+    MVPVoteTypes,
 )
 from mvp_votes.filters import MVPVoteFilter
 from mvp_votes.models import MVPVote, MVPVoteManagement
-from mvp_votes.payloads import build_list_mvp_vote_manage_payload
+from mvp_votes.payloads import (
+    build_list_mvp_vote_manage_payload,
+    build_present_mvp_vote_with_organization_list,
+)
 from mvp_votes.serializers import (
     MvpVoteManagementSerializer,
     MvpVoteCandidateSerializer,
@@ -53,11 +55,13 @@ class MVPVoteManagementViewSet(BaseAPIViewSet, ModelViewSet):
         """
         serializer_data = serializer.validated_data
         candidates = serializer_data.pop("candidates", [])
+        serializer_data.pop("is_start")
         user = self.request.user
         company = user.company
         serializer_data["company"] = company
         serializer_data["created_by"] = user
         serializer_data["bonus_point"] = DEFAULT_BONUS_POINT
+        serializer_data["type"] = MVPVoteTypes.UPCOMING.value
         mvp_vote = serializer.save()
         for candidate in candidates:
             mvp_vote.candidates.add(
@@ -71,25 +75,28 @@ class MVPVoteManagementViewSet(BaseAPIViewSet, ModelViewSet):
         """
         old_mvp_vote = self.get_object()
         serializer_data = serializer.validated_data
+        is_start = serializer_data.pop("is_start")
         new_candidates = set(serializer_data.pop("candidates", []))
         serializer_data.pop("bonus_point", None)
         user = self.request.user
         company = user.company
-        mvp_vote = serializer.save(updated_by=user, company=company)
         # Create tweet when start vote
-        if mvp_vote.is_start:
+        if is_start:
+            serializer_data["type"] = MVPVoteTypes.PRESENT.value
             Tweet.objects.create(
-                company=mvp_vote.company,
+                company=old_mvp_vote.company,
                 is_system=True,
                 content=DEFAULT_CONTENT_TWEET_START_VOTE,
             )
         # Create tweet when end vote
-        elif old_mvp_vote.is_start and not mvp_vote.is_start:
+        elif old_mvp_vote.type == MVPVoteTypes.PRESENT.value and not is_start:
+            serializer_data["type"] = MVPVoteTypes.PAST.value
             Tweet.objects.create(
-                company=mvp_vote.company,
+                company=old_mvp_vote.company,
                 is_system=True,
                 content=DEFAULT_CONTENT_TWEET_END_VOTE,
             )
+        mvp_vote = serializer.save(updated_by=user, company=company)
         if new_candidates:
             current_candidates = set(mvp_vote.candidates.all())
             to_remove = current_candidates - new_candidates
@@ -108,9 +115,9 @@ class MVPVoteManagementViewSet(BaseAPIViewSet, ModelViewSet):
                 "timeline",
                 type=str,
                 enum=[
-                    Timeline.FUTURE.value,
-                    Timeline.PRESENT.value,
-                    Timeline.PAST.value,
+                    MVPVoteTypes.UPCOMING.value,
+                    MVPVoteTypes.PRESENT.value,
+                    MVPVoteTypes.PAST.value,
                 ],
             ),
             OpenApiParameter("ordering", type=str),
@@ -127,25 +134,17 @@ class MVPVoteManagementViewSet(BaseAPIViewSet, ModelViewSet):
             .filter(company=user.company)
             .prefetch_related("mvp_candidates", "candidates")
         )
-        if timeline == Timeline.FUTURE.value:
-            mvp_votes = mvp_votes.filter(
-                Q(Q(end_date__gte=now()) | Q(end_date__isnull=True))
-                & Q(is_start=False)
-            ).all()
-        elif timeline == Timeline.PRESENT.value:
-            mvp_vote = mvp_votes.filter(
-                end_date__gte=now(), is_start=True
-            ).first()
-
+        if timeline == MVPVoteTypes.UPCOMING.value:
+            mvp_votes = mvp_votes.filter(type=MVPVoteTypes.UPCOMING.value).all()
+        elif timeline == MVPVoteTypes.PRESENT.value:
+            mvp_vote = mvp_votes.filter(type=MVPVoteTypes.PRESENT.value).first()
             return self.response_ok(
                 build_list_mvp_vote_manage_payload(mvp_vote)
                 if mvp_vote
                 else None
             )
-        elif timeline == Timeline.PAST.value:
-            mvp_votes = mvp_votes.filter(
-                end_date__lt=now(),
-            ).all()
+        elif timeline == MVPVoteTypes.PAST.value:
+            mvp_votes = mvp_votes.filter(type=MVPVoteTypes.PAST.value).all()
 
         return self.response_pagination(
             request,
@@ -194,3 +193,40 @@ class MVPVoteViewSet(
         ):
             raise ValidationError({"detail": ERROR_MESSAGES["unique_vote"]})
         serializer.save(voter=user, company=user.company)
+
+    @action(
+        url_path="announcements",
+        detail=False,
+    )
+    def get_announcements(self, request):
+        """
+        Get announcement of MVP vote
+        """
+        company = request.user.company
+        mvp_votes = MVPVoteManagement.objects.filter(
+            type=MVPVoteTypes.PAST.value, company=company
+        ).order_by(
+            "end_date"
+        )  # FIXME: Use ordering in CustomCursorPagination
+
+        return self.response_pagination(
+            request,
+            mvp_votes,
+            MvpVoteManagementSerializer,
+            CustomCursorPagination,
+        )
+
+    @action(url_path="voting", detail=False)
+    def get_current_mvp_vote(self, request):
+        """
+        Get present MVP vote
+        """
+        company = request.user.company
+        mvp_vote = MVPVoteManagement.objects.filter(
+            type=MVPVoteTypes.PRESENT.value, company=company
+        ).first()
+        mvp_vote_payload = build_present_mvp_vote_with_organization_list(
+            mvp_vote, request.user
+        )
+
+        return self.response_ok(mvp_vote_payload)

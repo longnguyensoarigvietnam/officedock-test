@@ -203,7 +203,7 @@ _ERROR_MESSAGES = {
         "password_not_same": _("現在のパスワードと同じパスワードは使用できません。"),
         "organization_linked_to_task": _("この組織はタスクに紐づいているため、削除できません。"),
         # Survey
-        "end_time_in_future": _("未来の日時を設定してください。"),
+        "end_time_in_future": _("現時刻より後の時刻に設定してください。"),
         "cannot_view_open_survey": _("受付中のアンケートの詳細を見ることはできません。"),
         "cannot_answer_closed_survey": _("受付終了したアンケートに回答できません。"),
         "cannot_delete_other_survey": _("他人のアンケートを削除することはできません。"),

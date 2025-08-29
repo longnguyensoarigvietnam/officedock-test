@@ -5,11 +5,11 @@ DEFAULT_CONTENT_TWEET_START_VOTE = "MVPの投票を受け付けています！ �
 DEFAULT_CONTENT_TWEET_END_VOTE = "MVP投票の結果が公開されました。"
 
 
-class Timeline(EnumChoices):
+class MVPVoteTypes(EnumChoices):
     """
     Timeline constants.
     """
 
-    FUTURE = "FUTURE"
+    UPCOMING = "UPCOMING"
     PAST = "PAST"
     PRESENT = "PRESENT"
