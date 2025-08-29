@@ -22,6 +22,7 @@ import {
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
+  ERROR_WRONG_DATE_VOTING,
   SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
@@ -61,6 +62,9 @@ export const FutureVotingSettings = () => {
   const queryClient = useQueryClient();
 
   const [openActionsVotingModal, setOpenActionsVotingModal] = useState(false);
+  const [votingDateTimeErrorMsg, setVotingDateTimeErrorMsg] = useState<
+    string | null
+  >(null);
 
   const [votingIdParam, setVotingIdParam] = useState<string | null>(
     searchParams.get('votingId'),
@@ -93,7 +97,7 @@ export const FutureVotingSettings = () => {
     isFetchingNextPage,
     fetchNextPage,
   } = useMVPVotingList({
-    timeline: VotingManagementType.FUTURE,
+    timeline: VotingManagementType.UPCOMING,
   });
   const { createVotingLocal, updateVotingLocal, deleteVotingLocal } =
     useUpdateVotingCache();
@@ -180,7 +184,7 @@ export const FutureVotingSettings = () => {
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
       });
-      deleteVotingLocal(variables, VotingManagementType.FUTURE);
+      deleteVotingLocal(variables, VotingManagementType.UPCOMING);
     },
     onError: (error: AxiosError) => {
       showErrorToast(error, ERROR_DELETE_MESSAGE);
@@ -205,11 +209,20 @@ export const FutureVotingSettings = () => {
           description: SUCCESS_CREATE_MESSAGE,
         });
         setOpenActionsVotingModal(false);
-        createVotingLocal(data, VotingManagementType.FUTURE);
+        createVotingLocal(data, VotingManagementType.UPCOMING);
+        setVotingDateTimeErrorMsg(null)
         handleRemoveParam();
       },
-      onError: (error: AxiosError<any>) => {
-        showErrorToast(error, ERROR_CREATE_MESSAGE);
+      onError: (data: any) => {
+        const error = data.response.data;
+        if (error && error.endDate) {
+          setVotingDateTimeErrorMsg(ERROR_WRONG_DATE_VOTING)
+        } else {
+          showToast({
+            variant: 'error',
+            description: ERROR_CREATE_MESSAGE,
+          });
+        }
       },
       onSettled: () => {
         setIsLoading(false);
@@ -252,12 +265,22 @@ export const FutureVotingSettings = () => {
           description: SUCCESS_UPDATE_MESSAGE,
         });
         setOpenActionsVotingModal(false);
-        updateVotingLocal(data, VotingManagementType.FUTURE);
+        updateVotingLocal(data, VotingManagementType.UPCOMING);
         handleRemoveParam();
         setSelectedVotingIdToUpdate(null);
+        setVotingDateTimeErrorMsg(null)
+        setDataVotingEdit(null);
       },
-      onError: (error: AxiosError<any>) => {
-        showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      onError: (data: any) => {
+        const error = data.response.data;
+        if (error && error.endDate) {
+          setVotingDateTimeErrorMsg(ERROR_WRONG_DATE_VOTING)
+        } else {
+          showToast({
+            variant: 'error',
+            description: ERROR_UPDATE_MESSAGE,
+          });
+        }
       },
       onSettled: () => {
         setIsLoading(false);
@@ -304,7 +327,7 @@ export const FutureVotingSettings = () => {
           predicate: (query) => query.queryKey[0] === 'getCurrentVotingDetail',
         });
 
-        deleteVotingLocal(variables, VotingManagementType.FUTURE);
+        deleteVotingLocal(variables, VotingManagementType.UPCOMING);
       },
       onError: (error: AxiosError) => {
         showErrorToast(error, ERROR_COMMON_MESSAGE);
@@ -497,6 +520,7 @@ export const FutureVotingSettings = () => {
       {openViewVotingMemberList && votingDetail && (
         <ViewVotingMemberListModal
           candidateList={votingDetail.candidates}
+          organizationList={votingDetail.organizations}
           open={openViewVotingMemberList}
           onClose={() => {
             setSelectedVotingId(null);
@@ -518,11 +542,14 @@ export const FutureVotingSettings = () => {
           open={true}
           action={actionTypeParam}
           dataVoting={dataVotingEdit}
+          votingDateTimeErrorMsg={votingDateTimeErrorMsg}
+          setVotingDateTimeErrorMsg={setVotingDateTimeErrorMsg}
           onClose={() => {
             setOpenActionsVotingModal(false);
             handleRemoveParam();
             setDataVotingEdit(null);
             setSelectedVotingIdToUpdate(null);
+            setVotingDateTimeErrorMsg(null)
           }}
           onCreate={(data) => {
             handleConfirmCreateVoting(data);
@@ -537,6 +564,7 @@ export const FutureVotingSettings = () => {
             });
             setDataVotingEdit(null);
             setOpenActionsVotingModal(false);
+            setVotingDateTimeErrorMsg(null)
             handleRemoveParam();
           }}
         />

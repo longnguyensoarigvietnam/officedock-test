@@ -28,7 +28,7 @@
 }
 
 .react-datepicker__day.saturday {
-  color: #0068b6 !important;
+  color: #3CABF3 !important;
 }
 
 .saturday.react-datepicker__day--selected {
@@ -153,11 +153,9 @@
 
 .react-datepicker__day--today {
   border-radius: 9999px;
-  background-color: #7fb3db !important;
+  background-color: #3CABF3 !important;
 }
-.react-datepicker__day--today:hover {
-  background-color: #7fb3db !important;
-}
+
 .react-datepicker__navigation {
   top: 30px !important;
 }
@@ -287,17 +285,21 @@
 
 .react-datepicker__today-button {
   color: white;
-  background-color: theme('colors.primary') !important;
-  padding: 3px 10px !important;
-  border-radius: 5px;
-  font-size: 16px;
-  font-weight: 700;
+  background-color: #3CABF3 !important;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
   font-family: theme('fontFamily.primary');
   line-height: 22px;
   border-top: 0px !important;
+  width: 34px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: absolute;
-  top: 37px;
-  right: 30px;
+  top: 42px;
+  right: 42px;
 }
 
 /* Scroll */
@@ -319,4 +321,8 @@
 .react-datepicker__month-dropdown::-webkit-scrollbar-thumb:hover,
 .react-datepicker__year-dropdown::-webkit-scrollbar-thumb:hover {
   background: theme('colors.gray.500');
+}
+
+.react-datepicker__day--today:hover {
+  background-color: #3CABF3 !important;
 }
