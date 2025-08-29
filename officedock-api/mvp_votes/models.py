@@ -1,6 +1,7 @@
 from django.db import models
 
 from base.models import BaseModel
+from mvp_votes.constants import MVPVoteTypes
 
 
 class MVPVoteManagement(BaseModel):
@@ -39,7 +40,11 @@ class MVPVoteManagement(BaseModel):
         null=True,
         blank=True,
     )
-    is_start = models.BooleanField(default=False)
+    type = models.CharField(
+        choices=MVPVoteTypes.choices,
+        default=MVPVoteTypes.UPCOMING.value,
+        max_length=30,
+    )
 
 
 class MVPVoteCandidate(BaseModel):
@@ -69,6 +74,13 @@ class MVPVote(BaseModel):
     MVP vote model
     """
 
+    mvp_vote_management = models.ForeignKey(
+        MVPVoteManagement,
+        related_name="votes",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
     company = models.ForeignKey(
         "companies.Company",
         related_name="mvp_votes",

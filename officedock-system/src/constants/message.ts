@@ -114,3 +114,5 @@ export const ERROR_MESSAGE_OVERLAP_TASK = '実施予定日時が重複してい�
 
 export const RESEND_OTP_SUCCESS = '認証コードを再送しました。';
 export const PLEASE_SELECT_AT_LEAST_ONE_CANDIDATE = '候補メンバーを選択してください。'
+
+export const ERROR_WRONG_DATE_VOTING = '現時刻より後の時刻に設定してください。';

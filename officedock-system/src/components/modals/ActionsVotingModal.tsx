@@ -1,5 +1,5 @@
 'use client';
-import { ChangeEvent, useContext, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, Dispatch, SetStateAction, useContext, useEffect, useMemo, useState } from 'react';
 
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 
@@ -11,6 +11,7 @@ import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
 import Checkbox from '@components/common/Checkbox';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import ErrorMessage from '@components/common/ErrorMessage';
 
 import { ActionsModal, EventParticipantType } from '@constants/enums';
 import { PLEASE_SELECT_AT_LEAST_ONE_CANDIDATE } from '@constants/message';
@@ -24,8 +25,8 @@ import {
   convertDateToStartDate,
   convertToTimeString,
   formatShowDateJapanese,
-  formatTimeInput,
-  generateTimeOptionsAsObjects,
+  formatTimeInputCustom,
+  getFilteredTimeOptions,
 } from '@utils/date';
 import { showModalHeaderBackgroundColorByTime } from '@utils';
 
@@ -36,13 +37,13 @@ import { EventParticipant } from '@interfaces/calendar';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
-import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
-import ErrorMessage from '@components/common/ErrorMessage';
 
 export type ActionsVotingModalProps = {
   open: boolean;
   dataVoting?: VotingDetail | null;
+  votingDateTimeErrorMsg: string | null;
+  setVotingDateTimeErrorMsg: Dispatch<SetStateAction<string | null>>
   action?: string | null;
   onDelete?: (values: VotingDetail) => void;
   onClose: () => void;
@@ -53,6 +54,8 @@ export type ActionsVotingModalProps = {
 const ActionsVotingModal = ({
   open,
   dataVoting,
+  votingDateTimeErrorMsg,
+  setVotingDateTimeErrorMsg,
   action = ActionsModal.CREATE,
   onClose,
   onEdit,
@@ -60,15 +63,10 @@ const ActionsVotingModal = ({
   onCreate,
 }: ActionsVotingModalProps) => {
   const { data: session } = useSessionCache();
-  const { creationDataEventCalendar } = useCreationDataEventCalendar({});
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
   const [showMembersErrorMessage, setShowMembersErrorMessage] = useState<
     string | null
   >('');
-
-  // Date
-  const [time, setTime] = useState<string>('');
-  const optionTimeInput = generateTimeOptionsAsObjects();
 
   // Member tab
   const [activeTab, setActiveTab] = useState<EventParticipantType>(
@@ -93,7 +91,7 @@ const ActionsVotingModal = ({
       setDataOptionsOrganizations([
         ...data.organizations.map((org) => ({
           value: org.id || '',
-          label: org.name,
+          label: `${org.name}の全員を選択`,
           userIds: org.users ? org.users.map((user) => user.id) : [],
           iconColor: org.iconColor || '#0068B6',
         })),
@@ -106,7 +104,6 @@ const ActionsVotingModal = ({
     control,
     watch,
     setValue,
-    getValues,
     handleSubmit,
     reset,
     formState: { errors },
@@ -158,11 +155,14 @@ const ActionsVotingModal = ({
 
   // Get option list for event types, participants
   useEffect(() => {
-    if (creationDataEventCalendar) {
-      const eventMembers = creationDataEventCalendar.members.map((org) => ({
-        id: `${EventParticipantType.USER}-${org.id}`,
-        fullName: org.fullName,
+    if (dashboardMembersWithAvatars) {
+      const eventMembers = dashboardMembersWithAvatars.map((member) => ({
+        id: `${EventParticipantType.USER}-${member.id}`,
+        fullName: member.fullName,
         type: EventParticipantType.USER,
+        mainOrganization: member.mainOrganization || '',
+        color: member?.avatarColor || '',
+        avatarUrl: member?.avatar || '',
       }));
       if (isFetchedCreationDataStatistic) {
         const eventOrganizations = dataOptionsOrganizations
@@ -179,7 +179,7 @@ const ActionsVotingModal = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    creationDataEventCalendar,
+    dashboardMembersWithAvatars,
     dataOptionsOrganizations,
     isFetchedCreationDataStatistic,
   ]);
@@ -216,7 +216,6 @@ const ActionsVotingModal = ({
     if (value.length > 4) {
       value = value.substring(0, 4);
     }
-    setTime(value);
     setValue(field, value);
   };
 
@@ -230,7 +229,6 @@ const ActionsVotingModal = ({
       return selectedOrgIds.includes(memberId);
     }
   };
-
   const handleSelectEventParticipant = (member: EventParticipant) => {
     setShowMembersErrorMessage(null);
     const isUser = member.type === EventParticipantType.USER;
@@ -400,7 +398,7 @@ const ActionsVotingModal = ({
         {/* Candidate */}
         <div className="flex justify-between items-start mb-[30px]">
           <p className="w-fit font-medium text-[14px] mt-3">候補メンバー</p>
-          <div>
+          <div className="w-[513px]">
             <div className="relative">
               <Input
                 placeholder="名前を検索"
@@ -505,7 +503,7 @@ const ActionsVotingModal = ({
                 全てのチェックをクリア
               </p>
             </div>
-            <div className="flex gap-2 bg-[#EBF1F7] w-fit px-[6px] py-[4px] rounded-[20px] mb-[10px]">
+            <div className="w-[513px] flex gap-2 bg-[#EBF1F7] px-[6px] py-[4px] rounded-[20px] mb-[10px]">
               <Button
                 type="button"
                 variant={`${activeTab == EventParticipantType.ORGANIZATION ? 'secondary' : 'outline'}`}
@@ -604,10 +602,14 @@ const ActionsVotingModal = ({
                           />
                         </div>
                       )}
-                      <p
-                        className={`text-[15px] truncate max-w-[350px] text-black leading-normal ${member.type == EventParticipantType.ORGANIZATION && 'ml-1'}`}>
-                        {member.fullName}
-                      </p>
+                      <div className="!w-full">
+                        <p className="line-clamp-3 break-all font-medium text-[15px] text-black">
+                          {member.fullName}
+                          <span className="text-[#77858F] text-xs ml-1">
+                            {member.mainOrganization}
+                          </span>
+                        </p>
+                      </div>
                     </div>
                   );
                 })}
@@ -634,75 +636,66 @@ const ActionsVotingModal = ({
         {/* End date */}
         <div className="flex justify-between items-center mb-[44px]">
           <p className="w-fit font-medium text-[14px]">終了日時</p>
-          <div className="flex items-center gap-2 w-[513px]">
-            <div className="w-[156px]">
-              <Controller
-                control={control}
-                name="endDate"
-                rules={{
-                  required: watch('endTime') ? true : false,
-                }}
-                render={({ field: { value, onChange } }) => (
-                  <DatePickerCustom
-                    className="h-[34px] !px-2 !pl-[30px] !border-[1px] !border-[#77858F] rounded-md !text-xs !pt-2 text-center"
-                    selected={value ? new Date(value) : null}
-                    onChange={(e) => {
-                      onChange(e);
-                    }}
-                  />
-                )}
-              />
-            </div>
+          <div className="w-[513px]">
+            <div className="flex items-center gap-2 w-[513px]">
+              <div className="w-[156px]">
+                <Controller
+                  control={control}
+                  name="endDate"
+                  rules={{
+                    required: watch('endTime') ? true : false,
+                  }}
+                  render={({ field: { value, onChange } }) => (
+                    <DatePickerCustom
+                      minDate={new Date()}
+                      className="h-[34px] !px-2 !pl-[30px] !border-[1px] !border-[#77858F] rounded-md !text-xs !pt-2 text-center"
+                      selected={value ? new Date(value) : null}
+                      onChange={(e) => {
+                        setVotingDateTimeErrorMsg(null)
+                        onChange(e);
+                      }}
+                    />
+                  )}
+                />
+              </div>
 
-            <div className="w-[77px] z-40">
-              <Input
-                isShowClockIcon={true}
-                register={register('endTime', {
-                  required: watch('endDate') !== null ? true : false,
-                  onChange: (e) => {
-                    handleChange(e, 'endTime');
-                    if (getValues('endDate') === null) {
-                      setValue(
-                        'endDate',
-                        (() => {
-                          const today: Date = new Date();
-                          today.setHours(0, 0, 0, 0);
-                          return today;
-                        })(),
-                        { shouldDirty: true },
+              <div className="w-[77px] z-40">
+                <Input
+                  isShowClockIcon={true}
+                  register={register('endTime', {
+                    required: watch('endDate') !== null ? true : false,
+                    onChange: (e) => {
+                      setVotingDateTimeErrorMsg(null)
+                      handleChange(e, 'endTime');
+                    },
+                    onBlur: (time) => {
+                      const formatted = formatTimeInputCustom(
+                        time.target.value,
                       );
-                    }
-                  },
-                  onBlur: () => {
-                    if (time) {
-                      setValue('endTime', formatTimeInput(time), {
-                        shouldDirty: true,
-                      });
-                    }
-                    setTime('');
-                  },
-                })}
-                type="text"
-                className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
-                options={optionTimeInput}
-                onChangeDropdown={(e) => {
-                  setValue('endTime', e.label, {
-                    shouldDirty: true,
-                  });
-                  if (getValues('endDate') === null) {
-                    setValue(
-                      'endDate',
-                      (() => {
-                        const today: Date = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        return today;
-                      })(),
-                      { shouldDirty: true },
-                    );
-                  }
-                }}
-              />
+
+                      setValue('endTime', formatted);
+                    },
+                  })}
+                  type="text"
+                  className={`h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] ${votingDateTimeErrorMsg ? '!border-error' : '!border-[#77858F]'}  rounded-md`}
+                  options={getFilteredTimeOptions(
+                    new Date(watch('endDate') ?? new Date()),
+                  )}
+                  onChangeDropdown={(e) => {
+                    setVotingDateTimeErrorMsg(null)
+                    setValue('endTime', e.label, {
+                      shouldDirty: true,
+                    });
+                  }}
+                />
+              </div>
             </div>
+            {votingDateTimeErrorMsg && (
+              <ErrorMessage
+                error={votingDateTimeErrorMsg}
+                className="text-xs mt-1"
+              />
+            )}
           </div>
         </div>
 

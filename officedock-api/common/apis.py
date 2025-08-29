@@ -20,7 +20,7 @@ from calendars.models import Schedule
 from calendars.serializers import EventLocationSerializer
 from chat.constants import WebSocketEventType
 from dashboard.utils import separate_duration_while_keep_running
-from mvp_votes.constants import DEFAULT_CONTENT_TWEET_END_VOTE
+from mvp_votes.constants import DEFAULT_CONTENT_TWEET_END_VOTE, MVPVoteTypes
 from mvp_votes.models import MVPVoteManagement
 from skills.models import StatisticCategory, Skill, SkillMapSkillLevel
 from organizations.serializers import (
@@ -645,11 +645,11 @@ class CronJobViewSet(BaseAPIViewSet):
         """
         # Check end date of MVP vote and create tweet if have MVP vote finish.
         mvp_votes = MVPVoteManagement.objects.filter(
-            end_date__lt=now(), is_start=True
+            end_date__lt=now(), type=MVPVoteTypes.PRESENT.value
         ).all()
         if mvp_votes:
             for mvp_vote in mvp_votes:
-                mvp_vote.is_start = False
+                mvp_vote.type = MVPVoteTypes.PAST.value
                 mvp_vote.save()
                 Tweet.objects.create(
                     company=mvp_vote.company,

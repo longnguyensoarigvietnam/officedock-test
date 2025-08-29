@@ -5,6 +5,7 @@ import { memo } from 'react';
 import Modal from '../common/Modal';
 import Button from '@components/common/Button';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 export type ViewVotingMemberListProps = {
   candidateList: {
@@ -20,12 +21,25 @@ export type ViewVotingMemberListProps = {
     voteCount: number | null;
     mvpCandidateId: number | null;
   }[];
+  organizationList: {
+    id: number;
+    name: string;
+    uuid: string;
+    icon: string | null;
+    iconColor: string;
+    type: string;
+  }[];
   open: boolean;
   onClose: () => void;
 };
 
 const ViewVotingMemberListModal = memo(
-  ({ candidateList, open, onClose }: ViewVotingMemberListProps) => {
+  ({
+    candidateList,
+    organizationList,
+    open,
+    onClose,
+  }: ViewVotingMemberListProps) => {
     return (
       <Modal
         open={open}
@@ -41,9 +55,32 @@ const ViewVotingMemberListModal = memo(
         }}
         title="選択メンバー">
         <div className="pt-5 pb-[30px] px-5 w-full">
-          {candidateList.length > 0 ? (
-            <div className="max-h-[346px] overflow-y-auto border-[1px] border-[#D2DBE1] rounded-[6px]">
-              {candidateList.map((candidate) => (
+          <div className="max-h-[346px] overflow-y-auto border-[1px] border-[#D2DBE1] rounded-[6px]">
+            {organizationList?.length > 0 ? (
+              organizationList.map((organization) => (
+                <div
+                  key={organization.id}
+                  className="flex items-center justify-between border-b-[1px] border-[#D2DBE1] last:border-b-[0px]">
+                  <div className="flex items-center px-5 py-2 gap-[10px] w-full">
+                    <div className="scale-110">
+                      <GroupIconWithDynamicColor
+                        color={organization.iconColor || '#0068B6'}
+                      />
+                    </div>
+                    <div className="w-[calc(100%_-_50px)]">
+                      <p className="text-black text-[15px] font-medium break-all line-clamp-3">
+                        {organization.name}の全員
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <></>
+            )}
+
+            {candidateList?.length > 0 ? (
+              candidateList.map((candidate) => (
                 <div
                   key={candidate.id}
                   className="flex items-center justify-between border-b-[1px] border-[#D2DBE1] last:border-b-[0px]">
@@ -53,16 +90,21 @@ const ViewVotingMemberListModal = memo(
                       avatarColor={candidate?.avatarColor || ''}
                       size={30}
                     />
-                    <p className="text-black text-[15px] font-medium max-w-[calc(100%_-_80px)] truncate text-nowrap">
-                      {candidate.fullName}
-                    </p>
+                    <div className="w-[calc(100%_-_50px)]">
+                      <p className="text-black text-[15px] font-medium break-all line-clamp-3">
+                        {candidate.fullName}{' '}
+                        <span className="text-xs font-medium text-[#77858F] ml-[6px]">
+                          {candidate?.mainOrganization?.name || ''}
+                        </span>
+                      </p>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p></p>
-          )}
+              ))
+            ) : (
+              <></>
+            )}
+          </div>
           <div className="flex justify-center mt-[30px]">
             <Button
               variant="text"

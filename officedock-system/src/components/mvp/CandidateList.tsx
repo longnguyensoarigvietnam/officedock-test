@@ -38,7 +38,7 @@ export default function CandidateList({
   const hasMore = candidates.length > visibleCount;
 
   const handleShowMore = () => {
-    setVisibleCount((prev) => prev + 3);
+    setVisibleCount(candidates.length);
   };
 
   return (

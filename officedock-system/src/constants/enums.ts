@@ -655,5 +655,5 @@ export enum ThanksMessageType {
 export enum VotingManagementType {
   PRESENT = 'PRESENT',
   PAST = 'PAST',
-  FUTURE = 'FUTURE',
+  UPCOMING = 'UPCOMING',
 }
