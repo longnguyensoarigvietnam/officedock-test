@@ -598,7 +598,9 @@ const MyPage = () => {
                 className="absolute top-[13px] left-[555px] p-[10px] rounded-[14px] w-[258px] h-fit] ">
                 <p className="text-white text-[13px] font-bold">マイルくん</p>
                 <div className="mt-[10px] w-full bg-white rounded-[5px] p-4 text-[13px] font-semibold text-black">
-                  ポイントが貯まると、素敵な商品と交換できるよ！
+                  {receivedThanksMessageList?.length
+                    ? '新しいサンクスメッセージが届いているよ！'
+                    : 'ポイントが貯まると、素敵な商品と交換できるよ！'}
                 </div>
               </div>
               <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[25px] w-[22px] top-[128px] left-[585px]"></div>
