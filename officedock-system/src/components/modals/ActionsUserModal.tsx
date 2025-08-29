@@ -635,7 +635,7 @@ const ActionsUserModal = ({
                       type={isTypePassword === '' ? 'text' : 'password'}
                       placeholder="パスワードを入力"
                       autoCompleteInput={false}
-                      autoComplete="off"
+                      autoComplete="new-password"
                       register={register('password', {
                         ...passwordRegisterRules(false),
                         maxLength: {
