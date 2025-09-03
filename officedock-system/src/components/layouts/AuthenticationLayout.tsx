@@ -8,7 +8,6 @@ import Metadata from '@components/common/Metadata';
 
 import { SessionStatus } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
-import { SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 type AuthenticationLayoutProps = {
@@ -45,15 +44,7 @@ const AuthenticationLayout = ({
         session.user.permissions &&
         session.user.permissions.length > 0
       ) {
-        // Get url with permission view first
-        const firstViewPath = SYSTEM_PERMISSIONS_MENU.filter((menu) =>
-          session.user.permissions.includes(menu.requiredPermission),
-        ).map((menu) => menu.href)[0];
-        if (firstViewPath) {
-          router.push(firstViewPath);
-        } else {
-          router.push(pageRouters.DEFAULT.href);
-        }
+        router.push(pageRouters.MY_PAGE.href);
       }
     }
     if (

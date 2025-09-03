@@ -2,7 +2,7 @@
 import { useContext, useState } from 'react';
 import Link from 'next/link';
 import { useMutation } from 'react-query';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getSession, signIn } from 'next-auth/react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
@@ -16,13 +16,12 @@ import {
   ERROR_LOGIN_MESSAGE,
   USER_NAME_REQUIRED_MESSAGE,
 } from '@constants/message';
-import { ServerStatusCode } from '@constants/enums';
-import { SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import { passwordLoginRules } from '@utils/validators';
 import api from '@base/api';
+import { ServerStatusCode } from '@constants/enums';
 
 type LoginFormInputs = {
   username: string;
@@ -33,6 +32,9 @@ type LoginFormInputs = {
 const LoginForm = () => {
   const { setIsLoading } = useContext(LoadingContext);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callback = searchParams.get('callback');
+
   const { showToast } = useToast();
   const [isRememberMe, setIsRememberMe] = useState(false);
   const [isSubmit, setIsSubmit] = useState(false);
@@ -56,16 +58,20 @@ const LoginForm = () => {
       onSuccess: async (data) => {
         if (data?.status === ServerStatusCode.OK) {
           const session = await getSession();
-          const firstViewPath = SYSTEM_PERMISSIONS_MENU.filter(
-            (menu) =>
-              session &&
-              session.user.permissions.length > 0 &&
-              session.user.permissions.includes(menu.requiredPermission),
-          ).map((menu) => menu.href)[0];
-          if (firstViewPath) {
-            router.push(firstViewPath);
+          if (callback) {
+            const { data: me } = await api.get(
+              `${apiRouters.LOGIN_EXCHANGE}?callback=${callback}&is_login=true`,
+              {
+                headers: {
+                  Authorization: `Bearer ${session?.accessToken}`,
+                },
+              },
+            );
+            if (me.exchangeUrl) {
+              router.push(me.exchangeUrl);
+            }
           } else {
-            router.push(pageRouters.DEFAULT.href);
+            router.push(pageRouters.MY_PAGE.href);
           }
         }
       },
