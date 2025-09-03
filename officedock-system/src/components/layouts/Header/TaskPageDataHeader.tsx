@@ -144,6 +144,10 @@ const TaskPageDataHeader = () => {
       } else {
         setDataOverTimeWarning(null);
       }
+      setDataRunning({
+        id: String(data.id),
+        type: data.type,
+      });
     },
   });
 

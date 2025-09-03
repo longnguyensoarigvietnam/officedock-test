@@ -13,6 +13,8 @@ import LineChartByTeamTagsCompare from '@components/statisticTeam/tag/compare/Li
 import AllocationTagTeamCompare from '@components/statisticTeam/tag/compare/AllocationTagTeamCompare';
 import AllocationTeamTag from '@components/statisticTeam/tag/AllocationTeamTag';
 import StackedAreaTeamTagChart from '@components/statisticTeam/tag/StackedAreaTeamTagChart';
+import FilterTagUserTeam from '@components/statisticTeam/tag/filter/FilterTagUserTeam';
+import FilterTagTeam from '@components/statisticTeam/tag/filter/FilterTagTeam';
 
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
@@ -33,8 +35,6 @@ import { OptionDropdownType } from '@interfaces/common';
 
 import { formatDateToYMD, sumDurations } from '@utils/date';
 import { removeDuplicateOptions } from '@utils';
-import FilterTagTeam from '@components/statisticTeam/tag/filter/FilterTagTeam';
-import FilterTagUserTeam from '@components/statisticTeam/tag/filter/FilterTagUserTeam';
 
 const StatisticTeamTagBoard = () => {
   const {
@@ -203,7 +203,13 @@ const StatisticTeamTagBoard = () => {
         if (selectedOrganization?.value === ALL_TEAM_STATISTIC) {
           setLargeOptions([]);
         } else {
-          setLargeOptions(largeCategories);
+          setLargeOptions([
+            {
+              label: '-',
+              value: '',
+            },
+            ...largeCategories,
+          ]);
         }
       } else {
         setLargeOptions([]);
@@ -386,9 +392,18 @@ const StatisticTeamTagBoard = () => {
       setDataMediumCalendar(undefined);
     }
     setSelectedOrganization(data);
-    setSelectedLarge(null);
-    setSelectedMedium(null);
-    setSelectedSmall(null);
+    setSelectedLarge({
+      label: '-',
+      value: '',
+    });
+    setSelectedMedium({
+      label: '-',
+      value: '',
+    });
+    setSelectedSmall({
+      label: '-',
+      value: '',
+    });
 
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === data.value,
@@ -427,7 +442,13 @@ const StatisticTeamTagBoard = () => {
       if (data?.value === ALL_TEAM_STATISTIC) {
         setLargeOptions([]);
       } else {
-        setLargeOptions(largeCategories);
+        setLargeOptions([
+          {
+            label: '-',
+            value: '',
+          },
+          ...removeDuplicateOptions(largeCategories),
+        ]);
       }
     } else {
       setLargeOptions([]);
@@ -449,8 +470,14 @@ const StatisticTeamTagBoard = () => {
       setDataMediumCalendar(undefined);
     }
     setSelectedLarge(data);
-    setSelectedMedium(null);
-    setSelectedSmall(null);
+    setSelectedMedium({
+      label: '-',
+      value: '',
+    });
+    setSelectedSmall({
+      label: '-',
+      value: '',
+    });
 
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === selectedOrganization?.value,
@@ -464,7 +491,13 @@ const StatisticTeamTagBoard = () => {
         label: medium.MEDIUM?.name || '',
       }));
 
-      setMediumOptions(removeDuplicateOptions(mediumCategories));
+      setMediumOptions([
+        {
+          label: '-',
+          value: '',
+        },
+        ...removeDuplicateOptions(mediumCategories),
+      ]);
     } else {
       setMediumOptions([]);
     }
@@ -486,7 +519,10 @@ const StatisticTeamTagBoard = () => {
     setCurrentPage(1);
 
     setSelectedMedium(data);
-    setSelectedSmall(null);
+    setSelectedSmall({
+      label: '-',
+      value: '',
+    });
 
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === selectedOrganization?.value,
@@ -506,7 +542,13 @@ const StatisticTeamTagBoard = () => {
           value: small.id,
           label: small.name,
         }));
-      setSmallOptions(removeDuplicateOptions(smallCategories));
+      setSmallOptions([
+        {
+          label: '-',
+          value: '',
+        },
+        ...removeDuplicateOptions(smallCategories),
+      ]);
     } else {
       setSmallOptions([]);
     }

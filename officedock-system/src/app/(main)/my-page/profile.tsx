@@ -580,6 +580,7 @@ const MyPage = () => {
           {/* Menu */}
           <MyPageMenu
             onClickSettingSurvey={() => setOpenSettingSurvey(true)}
+            isOpenSurveys={unansweredSurveyCount?.isOpenSurveys || false}
             unAnsweredSurveyCount={unansweredSurveyCount?.count || 0}
           />
           <div className="flex-grow">
