@@ -212,7 +212,9 @@ class MVPVoteViewSet(
         if (
             self.get_queryset()
             .filter(
-                mvp_candidate=serializer.validated_data.get("mvp_candidate"),
+                mvp_candidate=serializer.validated_data.get(
+                    "mvp_vote_management"
+                ),
                 voter=user,
             )
             .exists()
@@ -225,10 +227,7 @@ class MVPVoteViewSet(
             OpenApiParameter("ordering", type=str),
         ]
     )
-    @action(
-        url_path="announcements",
-        detail=False,
-    )
+    @action(url_path="announcements", detail=False, methods=["GET"])
     def get_announcements(self, request):
         """
         Get announcement of MVP vote
@@ -245,7 +244,7 @@ class MVPVoteViewSet(
             CustomCursorPagination,
         )
 
-    @action(url_path="voting", detail=False)
+    @action(url_path="voting", detail=False, methods=["GET"])
     def get_current_mvp_vote(self, request):
         """
         Get present MVP vote
@@ -265,3 +264,47 @@ class MVPVoteViewSet(
         Handle soft delete mvp vote comment
         """
         instance.soft_delete()
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("mvp_candidate_id", type=int),
+        ]
+    )
+    @action(url_path="comment", detail=False, methods=["GET"])
+    def get_vote_commment(self, request, *args, **kwargs):
+        """
+        Handle get vote comment of mvp candidate by user
+        """
+        user = request.user
+        mvp_candidate_id = request.query_params.get("mvp_candidate_id")
+        candidate = get_object_or_404(MVPVoteCandidate, id=mvp_candidate_id)
+        mvp_vote = (
+            self.get_queryset()
+            .filter(mvp_candidate=candidate, voter=user)
+            .first()
+        )
+        return self.response_ok(self.get_serializer(mvp_vote).data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("mvp_vote_id", type=int),
+        ]
+    )
+    @action(methods=["GET"], detail=False, url_path="announcement-detail")
+    def get_announcement_detail(self, request):
+        """
+        Handle get detail MVP Vote
+        """
+        company = request.user.company
+        mvp_vote_id = request.query_params.get("mvp_vote_id")
+        if mvp_vote_id:
+            mvp_vote = get_object_or_404(MVPVoteManagement, id=mvp_vote_id)
+        else:
+            mvp_vote = (
+                MVPVoteManagement.objects.filter(
+                    type=MVPVoteTypes.PAST.value, company=company
+                )
+                .order_by("-end_date")
+                .first()
+            )
+        return self.response_ok(build_list_mvp_vote_manage_payload(mvp_vote))
