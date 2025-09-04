@@ -926,7 +926,7 @@ class OrganizationCategoryHierarchyViewSet(
 
                 else:
                     # Handle to update organization_statistic_category
-                    if large_statistic_category and medium_statistic_category:
+                    if large_statistic_category:
                         organization_statistic_category = OrganizationsStatisticCategories.objects.create(
                             **item,
                             large_statistic_category=large_statistic_category,
