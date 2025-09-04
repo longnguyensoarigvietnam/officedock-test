@@ -170,18 +170,19 @@ class SurveyViewSet(
         open_surveys = Survey.objects.filter(
             company_id=company_id,
             end_at__gt=now(),  # Open surveys
-        ).exclude(
+        )
+        other_open_surveys = open_surveys.exclude(
             created_by=current_user  # Exclude user's own surveys
         )
 
         # Get open surveys that the user has already answered
-        answered_open_surveys = open_surveys.filter(
+        answered_open_surveys = other_open_surveys.filter(
             answers__respondent=current_user
         ).distinct()
 
         # Calculate unanswered open surveys
         unanswered_open_count = (
-            open_surveys.count() - answered_open_surveys.count()
+            other_open_surveys.count() - answered_open_surveys.count()
         )
 
         # 2. Count closed surveys that haven't been viewed (including user's own surveys)
@@ -203,7 +204,9 @@ class SurveyViewSet(
         # Total count
         total_count = unanswered_open_count + unviewed_closed_count
 
-        return self.response_ok({"count": total_count})
+        return self.response_ok(
+            {"count": total_count, "is_open_surveys": open_surveys.count() > 0}
+        )
 
     def perform_destroy(self, instance):
         """Cannot delete surveys created by others."""
