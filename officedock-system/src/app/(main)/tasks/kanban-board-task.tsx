@@ -3194,7 +3194,7 @@ const KanbanBoardTask = () => {
           setDataItemChangeInline={setDataItemChangeInline}
           handleEditShowClockItem={handleEditShowClockItem}
         />
-        <div className="flex-1 pl-10 ">
+        <div className="flex-1 pl-10 relative ">
           <DragDropContext
             onDragStart={() => {
               setIsInteracting(true);
@@ -3242,7 +3242,7 @@ const KanbanBoardTask = () => {
                 handleActionEditTemplate={handleActionEditTemplate}
                 handleCreateTaskFromTemplate={handleCreateTaskFromTemplate}
               />
-              <div className="flex-grow flex flex-col gap-2  mb-6">
+              <div className="flex-grow flex flex-col gap-2  mb-6 ">
                 <div
                   className={`flex gap-7 mb-4 w-full min-w-[300px]  justify-between items-center`}>
                   <div className="flex items-center gap-2">
@@ -3338,7 +3338,8 @@ const KanbanBoardTask = () => {
                       placeholder="タスク、キーワードを検索"
                     />
                   </div>
-                  <div>
+                  <div
+                    className={`absolute ${showFrequentlyTasks ? 'top-[131px]' : 'top-[54px]'} right-0`}>
                     <div className="w-fit flex items-center gap-5">
                       <div>
                         <DynamicTooltip
