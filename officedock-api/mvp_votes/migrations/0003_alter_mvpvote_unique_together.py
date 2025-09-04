@@ -4,6 +4,21 @@ from django.conf import settings
 from django.db import migrations
 
 
+def unique_mvp_vote_management(apps, schema_editor):
+    """
+    Seed task duration by user
+    """
+    mvp_votes = apps.get_model("mvp_votes", "MVPVote")
+    # unique mvp vote management by voter
+    seen = set()
+    for vote in mvp_votes.objects.all():
+        key = (vote.mvp_vote_management_id, vote.voter_id)
+        if key in seen:
+            vote.delete()
+        else:
+            seen.add(key)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -12,6 +27,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(
+            unique_mvp_vote_management, migrations.RunPython.noop
+        ),
         migrations.AlterUniqueTogether(
             name="mvpvote",
             unique_together={("mvp_vote_management", "voter")},

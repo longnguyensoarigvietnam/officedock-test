@@ -142,9 +142,10 @@ def build_present_mvp_vote_with_organization_list(mvp_vote, user):
         )
     }
     unique_candidate_ids = set()
-    data["is_voted"] = user.mvp_votes.filter(
-        mvp_vote_management=mvp_vote
-    ).exists()
+    votes = user.mvp_votes.filter(mvp_vote_management=mvp_vote).values_list(
+        "mvp_candidate", flat=True
+    )
+    data["is_voted"] = bool(votes)
     if mvp_vote.selected_organizations:
         data["organizations"] = []
         org_ids = list(map(int, mvp_vote.selected_organizations.split(",")))
@@ -171,6 +172,7 @@ def build_present_mvp_vote_with_organization_list(mvp_vote, user):
             organization["candidates"] = []
             for candidate in org_candidates:
                 candidate_map = deepcopy(candidates_map[candidate.user.id])
+                candidate_map["is_voted"] = candidate.id in votes
                 candidate_map["mvp_candidate_id"] = candidate.id
                 organization["candidates"].append(candidate_map)
             data["organizations"].append(organization)
@@ -181,6 +183,7 @@ def build_present_mvp_vote_with_organization_list(mvp_vote, user):
     )
     for candidate in remaining_candidates:
         candidate_map = deepcopy(candidates_map[candidate.user.id])
+        candidate_map["is_voted"] = candidate.id in votes
         candidate_map["mvp_candidate_id"] = candidate.id
         data["remaining_candidates"].append(candidate_map)
 
