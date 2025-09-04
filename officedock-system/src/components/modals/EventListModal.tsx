@@ -20,6 +20,7 @@ import {
   EventCalendarType,
   PermissionsSystem,
 } from '@constants/enums';
+import { JAPANESE_TIME_ZONE } from '@constants';
 
 import { CalendarPopoverInfo, EventParticipant } from '@interfaces/calendar';
 
@@ -231,12 +232,28 @@ export const EventListModal = ({
           {eventListModalInfo &&
             eventListModalInfo?.events
               ?.sort((preEvent, nextEvent) => {
-                // Put allDay: true first
-                return preEvent.allDay == nextEvent.allDay
-                  ? 0
-                  : preEvent.allDay
-                    ? -1
-                    : 1;
+                // Prioritize all-day events first
+                if (preEvent.allDay != nextEvent.allDay) {
+                  return preEvent.allDay ? -1 : 1;
+                }
+
+                // Safely convert start dates to Japanese time (if undefined, fallback to 0)
+                const preTime = preEvent.start
+                  ? new Date(
+                      new Date(preEvent.start).toLocaleString('ja-JP', {
+                        timeZone: JAPANESE_TIME_ZONE,
+                      }),
+                    ).getTime()
+                  : 0;
+                const nextTime = nextEvent.start
+                  ? new Date(
+                      new Date(nextEvent.start).toLocaleString('ja-JP', {
+                        timeZone: JAPANESE_TIME_ZONE,
+                      }),
+                    ).getTime()
+                  : 0;
+                // Ascending order (earliest first)
+                return preTime - nextTime;
               })
               .map((event) => {
                 return (

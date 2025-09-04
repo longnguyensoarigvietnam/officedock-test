@@ -5,6 +5,7 @@ import { useMutation } from 'react-query';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
+import ConfirmTerminateVotingModal from '@components/modals/ConfirmTerminateVotingModal';
 import Spinner from '@components/common/Spinner';
 import ViewVotingMemberListModal from '@components/modals/ViewVotingMemberList';
 
@@ -40,6 +41,13 @@ export const CurrentVotingList = () => {
   const [openViewVotingMemberList, setOpenViewVotingMemberList] =
     useState(false);
 
+  // Terminate voting modal
+  const [openConfirmTerminateModal, setOpenConfirmTerminateModal] =
+    useState(false);
+  const [selectedVotingToTerminate, setSelectedVotingToTerminate] = useState<
+    number | null
+  >(null);
+
   const {
     currentVotingDetail,
     isLoadingCurrentVotingDetail,
@@ -74,6 +82,8 @@ export const CurrentVotingList = () => {
         refetchCurrentVotingDetail();
         createVotingLocal(data, VotingManagementType.PAST);
         setCurrentVoting(null);
+        setOpenConfirmTerminateModal(false);
+        setSelectedVotingToTerminate(null);
       },
       onError: (error: AxiosError) => {
         showErrorToast(error, ERROR_COMMON_MESSAGE);
@@ -100,10 +110,10 @@ export const CurrentVotingList = () => {
           </div>
           <Button
             className={`w-[100px] h-[34px] !text-sm !font-medium !text-nowrap !text-white ${!currentVotingDetail && 'hidden'}`}
-            onClick={() =>
-              currentVotingDetail?.id &&
-              terminateCurrentVote(Number(currentVotingDetail?.id))
-            }>
+            onClick={() => {
+              setSelectedVotingToTerminate(Number(currentVotingDetail?.id));
+              setOpenConfirmTerminateModal(true);
+            }}>
             投票終了
           </Button>
         </div>
@@ -205,6 +215,19 @@ export const CurrentVotingList = () => {
           open={openViewVotingMemberList}
           onClose={() => {
             setOpenViewVotingMemberList(false);
+          }}
+        />
+      )}
+      {openConfirmTerminateModal && selectedVotingToTerminate && (
+        <ConfirmTerminateVotingModal
+          open={openConfirmTerminateModal}
+          message="本当に投票を終了しますか？"
+          onConfirm={() =>
+            terminateCurrentVote(Number(selectedVotingToTerminate))
+          }
+          onClose={() => {
+            setOpenConfirmTerminateModal(false);
+            setSelectedVotingToTerminate(null);
           }}
         />
       )}
