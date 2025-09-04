@@ -3244,7 +3244,7 @@ const KanbanBoardTask = () => {
               />
               <div className="flex-grow flex flex-col gap-2  mb-6 ">
                 <div
-                  className={`flex gap-7 mb-4 w-full min-w-[300px]  justify-between items-center`}>
+                  className={`flex mb-4 w-full min-w-[300px] gap-[46px] items-center`}>
                   <div className="flex items-center gap-2">
                     {/* Filter option modal */}
                     <Popover className="relative">
@@ -3338,68 +3338,63 @@ const KanbanBoardTask = () => {
                       placeholder="タスク、キーワードを検索"
                     />
                   </div>
-                  <div
-                    className={`absolute ${showFrequentlyTasks ? 'top-[131px]' : 'top-[54px]'} right-0`}>
-                    <div className="w-fit flex items-center gap-5">
-                      <div>
-                        <DynamicTooltip
-                          content="タスクを新規作成"
-                          placement="top">
-                          <Button
-                            onClick={() => {
-                              setColumnId(String(StatusValueTask.NOT_STARTED));
-                              setShowEditTaskModal(true);
-                              handleSetParam({
-                                id: null,
-                                action: ActionTask.CREATE,
-                                type: ItemStartType.TASK,
-                              });
+                  <div className="w-fit min-w-[200px] flex items-center gap-5">
+                    <div>
+                      <DynamicTooltip
+                        content="タスクを新規作成"
+                        placement="top">
+                        <Button
+                          onClick={() => {
+                            setColumnId(String(StatusValueTask.NOT_STARTED));
+                            setShowEditTaskModal(true);
+                            handleSetParam({
+                              id: null,
+                              action: ActionTask.CREATE,
+                              type: ItemStartType.TASK,
+                            });
+                          }}
+                          className="flex gap-2 !h-[34px] !rounded-lg !p-[10px]">
+                          <div
+                            style={{
+                              padding: '4px',
                             }}
-                            className="flex gap-2 !h-[34px] !rounded-lg !p-[10px]">
-                            <div
+                            className={`rounded-full cursor-pointer w-fit  bg-white `}>
+                            <ImageRound
+                              src={`/icons/add-blue.svg`}
+                              name="Add"
                               style={{
-                                padding: '4px',
+                                width: `8px`,
+                                height: `8px`,
                               }}
-                              className={`rounded-full cursor-pointer w-fit  bg-white `}>
-                              <ImageRound
-                                src={`/icons/add-blue.svg`}
-                                name="Add"
-                                style={{
-                                  width: `8px`,
-                                  height: `8px`,
-                                }}
-                              />
-                            </div>
-                            <p> 新規作成</p>
-                          </Button>
-                        </DynamicTooltip>
-                      </div>
+                            />
+                          </div>
+                          <p className='text-nowrap'> 新規作成</p>
+                        </Button>
+                      </DynamicTooltip>
+                    </div>
 
-                      <div className={` hover:cursor-pointer  z-20`}>
-                        <DynamicTooltip
-                          content={
-                            isListView
-                              ? 'タスクを看板表示'
-                              : 'タスクをリスト表示'
-                          }
-                          placement="left"
-                          customOffset={{
-                            left: -135,
-                          }}>
-                          <ImageRound
-                            src={`${!isListView ? '/icons/list-view.svg' : '/icons/card-view.svg'}`}
-                            name="List view icon"
-                            className="w-12 h-12 hover:cursor-pointer"
-                            onClick={() => {
-                              if (isFetchingTaskBoards) return;
-                              setIsListView(!isListView);
-                              saveZoomKanban({
-                                isShowListKanban: !isListView,
-                              });
-                            }}
-                          />
-                        </DynamicTooltip>
-                      </div>
+                    <div className={` hover:cursor-pointer  z-20`}>
+                      <DynamicTooltip
+                        content={
+                          isListView ? 'タスクを看板表示' : 'タスクをリスト表示'
+                        }
+                        placement="left"
+                        customOffset={{
+                          left: -135,
+                        }}>
+                        <ImageRound
+                          src={`${!isListView ? '/icons/list-view.svg' : '/icons/card-view.svg'}`}
+                          name="List view icon"
+                          className="w-12 h-12 hover:cursor-pointer"
+                          onClick={() => {
+                            if (isFetchingTaskBoards) return;
+                            setIsListView(!isListView);
+                            saveZoomKanban({
+                              isShowListKanban: !isListView,
+                            });
+                          }}
+                        />
+                      </DynamicTooltip>
                     </div>
                   </div>
                 </div>
