@@ -223,12 +223,21 @@ export const StatisticStateProvider = ({
       value: '',
     });
   const [selectedLarge, setSelectedLarge] = useState<OptionDropdownType | null>(
-    null,
+    {
+      label: '-',
+      value: '',
+    },
   );
   const [selectedMedium, setSelectedMedium] =
-    useState<OptionDropdownType | null>(null);
+    useState<OptionDropdownType | null>({
+      label: '-',
+      value: '',
+    });
   const [selectedSmall, setSelectedSmall] = useState<OptionDropdownType | null>(
-    null,
+    {
+      label: '-',
+      value: '',
+    },
   );
 
   // Total

@@ -209,7 +209,7 @@ const ActionAnswerSurveyModal = ({
       )}
       <div className="flex justify-center gap-3  items-center">
         <Button variant="text" onClick={onClose} className="">
-          閉じる
+          {surveyDetail?.status.open ? '投票する' : '閉じる'}
         </Button>
       </div>
     </Modal>

@@ -10,8 +10,13 @@ import { apiRouters } from '@constants/routers';
 
 import api from '@base/api';
 
+interface UseUnansweredSurveyDataType {
+  count: number;
+  isOpenSurveys: boolean;
+}
+
 interface UseUnansweredSurveyHooksProps {
-  onSuccess?: (success: { count: number }) => void;
+  onSuccess?: (success: UseUnansweredSurveyDataType) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
 }
@@ -29,7 +34,9 @@ const useUnansweredSurveyCount = ({
   const getUnansweredSurveyCount = async () => {
     setIsLoading(true);
 
-    const { data } = await api.get<{ count: number }>(apiRouters.UNANSWERED_COUNT);
+    const { data } = await api.get<UseUnansweredSurveyDataType>(
+      apiRouters.UNANSWERED_COUNT,
+    );
     return data;
   };
 
@@ -45,7 +52,7 @@ const useUnansweredSurveyCount = ({
     enabled: !!token,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onSuccess: (response: { count: number }) => {
+    onSuccess: (response: UseUnansweredSurveyDataType) => {
       onSuccess && onSuccess(response);
     },
     onError: (error: AxiosError) => {
@@ -56,7 +63,11 @@ const useUnansweredSurveyCount = ({
     },
   });
 
-  return { unansweredSurveyCount, refetchUnansweredSurveyCount, isFetchedUnansweredSurveyCount };
+  return {
+    unansweredSurveyCount,
+    refetchUnansweredSurveyCount,
+    isFetchedUnansweredSurveyCount,
+  };
 };
 
 export default useUnansweredSurveyCount;
