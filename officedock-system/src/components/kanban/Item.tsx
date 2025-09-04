@@ -485,20 +485,18 @@ const Item = ({
                             onClick={(e) => {
                               e.stopPropagation();
                             }}>
-                            {content.isMyTask && (
-                              <ImageRound
-                                src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
-                                name="Start task"
-                                className={`hover:cursor-pointer ${content.isStart ? '!w-[20px] !h-[20px]' : '!w-[30px] !h-[30px]'}  ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
-                                onClick={async () => {
-                                  await new Promise<void>((resolve) => {
-                                    setTaskSelectedToStart(content);
-                                    resolve();
-                                  });
-                                  handleConfirmCheckStartTask(`${content.id}`);
-                                }}
-                              />
-                            )}
+                            <ImageRound
+                              src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
+                              name="Start task"
+                              className={`hover:cursor-pointer ${content.isStart ? '!w-[20px] !h-[20px]' : '!w-[30px] !h-[30px]'}  ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
+                              onClick={async () => {
+                                await new Promise<void>((resolve) => {
+                                  setTaskSelectedToStart(content);
+                                  resolve();
+                                });
+                                handleConfirmCheckStartTask(`${content.id}`);
+                              }}
+                            />
                           </div>
                         </DynamicTooltip>
                       )}
@@ -585,20 +583,18 @@ const Item = ({
                         onClick={(e) => {
                           e.stopPropagation();
                         }}>
-                        {content.isMyTask && (
-                          <ImageRound
-                            src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
-                            name="Start task"
-                            className={`hover:cursor-pointer ${content.isStart ? '!w-[20px] !h-[20px]' : '!w-[30px] !h-[30px]'} ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
-                            onClick={async () => {
-                              await new Promise<void>((resolve) => {
-                                setTaskSelectedToStart(content);
-                                resolve();
-                              });
-                              handleConfirmCheckStartTask(`${content.id}`);
-                            }}
-                          />
-                        )}
+                        <ImageRound
+                          src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
+                          name="Start task"
+                          className={`hover:cursor-pointer ${content.isStart ? '!w-[20px] !h-[20px]' : '!w-[30px] !h-[30px]'} ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
+                          onClick={async () => {
+                            await new Promise<void>((resolve) => {
+                              setTaskSelectedToStart(content);
+                              resolve();
+                            });
+                            handleConfirmCheckStartTask(`${content.id}`);
+                          }}
+                        />
                       </div>
                     </DynamicTooltip>
                   </div>
@@ -669,20 +665,18 @@ const Item = ({
                       onClick={(e) => {
                         e.stopPropagation();
                       }}>
-                      {content.isMyTask && (
-                        <ImageRound
-                          src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
-                          name="Start task"
-                          className={`hover:cursor-pointer ${content.isStart ? '!w-[20px] !h-[20px]' : '!w-[30px] !h-[30px]'} ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
-                          onClick={async () => {
-                            await new Promise<void>((resolve) => {
-                              setTaskSelectedToStart(content);
-                              resolve();
-                            });
-                            handleConfirmCheckStartTask(`${content.id}`);
-                          }}
-                        />
-                      )}
+                      <ImageRound
+                        src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
+                        name="Start task"
+                        className={`hover:cursor-pointer ${content.isStart ? '!w-[20px] !h-[20px]' : '!w-[30px] !h-[30px]'} ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
+                        onClick={async () => {
+                          await new Promise<void>((resolve) => {
+                            setTaskSelectedToStart(content);
+                            resolve();
+                          });
+                          handleConfirmCheckStartTask(`${content.id}`);
+                        }}
+                      />
                     </div>
                   </DynamicTooltip>
                 </div>

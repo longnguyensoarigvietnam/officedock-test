@@ -3194,7 +3194,7 @@ const KanbanBoardTask = () => {
           setDataItemChangeInline={setDataItemChangeInline}
           handleEditShowClockItem={handleEditShowClockItem}
         />
-        <div className="flex-1 pl-10 ">
+        <div className="flex-1 pl-10 relative ">
           <DragDropContext
             onDragStart={() => {
               setIsInteracting(true);
@@ -3242,9 +3242,9 @@ const KanbanBoardTask = () => {
                 handleActionEditTemplate={handleActionEditTemplate}
                 handleCreateTaskFromTemplate={handleCreateTaskFromTemplate}
               />
-              <div className="flex-grow flex flex-col gap-2  mb-6">
+              <div className="flex-grow flex flex-col gap-2  mb-6 ">
                 <div
-                  className={`flex gap-7 mb-4 w-full min-w-[300px]  justify-between items-center`}>
+                  className={`flex mb-4 w-full min-w-[300px] gap-[46px] items-center`}>
                   <div className="flex items-center gap-2">
                     {/* Filter option modal */}
                     <Popover className="relative">
@@ -3338,96 +3338,133 @@ const KanbanBoardTask = () => {
                       placeholder="タスク、キーワードを検索"
                     />
                   </div>
+                  <div className="w-fit min-w-[200px] flex items-center gap-5">
+                    <div>
+                      <DynamicTooltip
+                        content="タスクを新規作成"
+                        placement="top">
+                        <Button
+                          onClick={() => {
+                            setColumnId(String(StatusValueTask.NOT_STARTED));
+                            setShowEditTaskModal(true);
+                            handleSetParam({
+                              id: null,
+                              action: ActionTask.CREATE,
+                              type: ItemStartType.TASK,
+                            });
+                          }}
+                          className="flex gap-2 !h-[34px] !rounded-lg !p-[10px]">
+                          <div
+                            style={{
+                              padding: '4px',
+                            }}
+                            className={`rounded-full cursor-pointer w-fit  bg-white `}>
+                            <ImageRound
+                              src={`/icons/add-blue.svg`}
+                              name="Add"
+                              style={{
+                                width: `8px`,
+                                height: `8px`,
+                              }}
+                            />
+                          </div>
+                          <p className='text-nowrap'> 新規作成</p>
+                        </Button>
+                      </DynamicTooltip>
+                    </div>
 
-                  <div className={` hover:cursor-pointer  z-20`}>
-                    <DynamicTooltip
-                      content={
-                        isListView ? 'タスクを看板表示' : 'タスクをリスト表示'
-                      }
-                      placement="left"
-                      customOffset={{
-                        left: -135,
-                      }}>
-                      <ImageRound
-                        src={`${!isListView ? '/icons/list-view.svg' : '/icons/card-view.svg'}`}
-                        name="List view icon"
-                        className="w-12 h-12 hover:cursor-pointer"
-                        onClick={() => {
-                          if (isFetchingTaskBoards) return;
-                          setIsListView(!isListView);
-                          saveZoomKanban({
-                            isShowListKanban: !isListView,
-                          });
-                        }}
-                      />
-                    </DynamicTooltip>
+                    <div className={` hover:cursor-pointer  z-20`}>
+                      <DynamicTooltip
+                        content={
+                          isListView ? 'タスクを看板表示' : 'タスクをリスト表示'
+                        }
+                        placement="left"
+                        customOffset={{
+                          left: -135,
+                        }}>
+                        <ImageRound
+                          src={`${!isListView ? '/icons/list-view.svg' : '/icons/card-view.svg'}`}
+                          name="List view icon"
+                          className="w-12 h-12 hover:cursor-pointer"
+                          onClick={() => {
+                            if (isFetchingTaskBoards) return;
+                            setIsListView(!isListView);
+                            saveZoomKanban({
+                              isShowListKanban: !isListView,
+                            });
+                          }}
+                        />
+                      </DynamicTooltip>
+                    </div>
                   </div>
                 </div>
                 {/* Data filter */}
-                <div className="flex items-center gap-2 mb-6">
-                  {allLabels.length > 6 ? (
-                    <>
-                      {firstSix.slice(0, 6).map((item, index) => (
-                        <div
-                          key={index}
-                          onClick={() =>
-                            handleRemoveItem(
-                              item.category as
-                                | 'organization_ids'
-                                | 'tag_ids'
-                                | 'category_ids',
-                              item.value,
-                            )
-                          }
-                          className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
-                          <span className="w-[71px] truncate">
-                            {item.label}
-                          </span>
-                          {!isFetchingTaskBoards && (
-                            <ImageRound
-                              src={`/icons/close.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
-                          )}
-                        </div>
-                      ))}
-                      <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
-                        +{remainingCount}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      {allLabels.map((item, index) => (
-                        <div
-                          key={index}
-                          onClick={() => {
-                            setIsReadyToFetch(true);
+                {allLabels.length > 0 && (
+                  <div className="flex items-center gap-2 mb-6">
+                    {allLabels.length > 6 ? (
+                      <>
+                        {firstSix.slice(0, 6).map((item, index) => (
+                          <div
+                            key={index}
+                            onClick={() =>
+                              handleRemoveItem(
+                                item.category as
+                                  | 'organization_ids'
+                                  | 'tag_ids'
+                                  | 'category_ids',
+                                item.value,
+                              )
+                            }
+                            className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
+                            <span className="w-[71px] truncate">
+                              {item.label}
+                            </span>
+                            {!isFetchingTaskBoards && (
+                              <ImageRound
+                                src={`/icons/close.svg`}
+                                name="close"
+                                className="w-fit h-fit cursor-pointer"
+                              />
+                            )}
+                          </div>
+                        ))}
+                        <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
+                          +{remainingCount}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        {allLabels.map((item, index) => (
+                          <div
+                            key={index}
+                            onClick={() => {
+                              setIsReadyToFetch(true);
 
-                            handleRemoveItem(
-                              item.category as
-                                | 'organization_ids'
-                                | 'tag_ids'
-                                | 'category_ids',
-                              item.value,
-                            );
-                          }}
-                          className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
-                          <span className="w-[71px] truncate">
-                            {item.label}
-                          </span>
-                          {!isFetchingTaskBoards && (
-                            <ImageRound
-                              src={`/icons/close.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </div>
+                              handleRemoveItem(
+                                item.category as
+                                  | 'organization_ids'
+                                  | 'tag_ids'
+                                  | 'category_ids',
+                                item.value,
+                              );
+                            }}
+                            className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
+                            <span className="w-[71px] truncate">
+                              {item.label}
+                            </span>
+                            {!isFetchingTaskBoards && (
+                              <ImageRound
+                                src={`/icons/close.svg`}
+                                name="close"
+                                className="w-fit h-fit cursor-pointer"
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                )}
                 {!isListView ? (
                   <div
                     style={{

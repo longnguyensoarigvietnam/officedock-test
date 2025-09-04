@@ -120,6 +120,8 @@ def build_present_mvp_vote_with_organization_list(mvp_vote, user):
     """
     Handle build payload for present MVP vote with organization list candidate
     """
+    if not mvp_vote:
+        return None
     data = MvpVoteManagementSerializer(mvp_vote).data
     unique_user_ids = set(
         User.objects.filter(mvp_vote_managements=mvp_vote).values_list(
@@ -139,26 +141,50 @@ def build_present_mvp_vote_with_organization_list(mvp_vote, user):
             "id", "profile__full_name", "avatar", "avatar_color"
         )
     }
+    unique_candidate_ids = set()
+    votes = user.mvp_votes.filter(mvp_vote_management=mvp_vote).values_list(
+        "mvp_candidate", flat=True
+    )
+    data["is_voted"] = bool(votes)
     if mvp_vote.selected_organizations:
         data["organizations"] = []
         org_ids = list(map(int, mvp_vote.selected_organizations.split(",")))
         orgs = Organization.objects.filter(id__in=org_ids).all()
-        votes = user.mvp_votes.filter(mvp_vote_management=mvp_vote).values_list(
-            "mvp_candidate", flat=True
+
+        # Filter all users belonging to the selected organizations
+        users_in_orgs = UsersOrganizations.objects.filter(
+            organization__in=orgs
+        ).values_list("user_id", flat=True)
+        # Filter candidates belonging to the selected organizations
+        candidates_in_orgs = mvp_vote.mvp_candidates.filter(
+            user__id__in=users_in_orgs
         )
-        candidates = mvp_vote.mvp_candidates.all()
+        # Add the IDs of these candidates to unique_candidate_ids
+        unique_candidate_ids.update(
+            candidates_in_orgs.values_list("id", flat=True)
+        )
+        # Process data for each organization
         for org in orgs:
             organization = BaseOrganizationSerializer(org).data
-            candidate_in_organization = UsersOrganizations.objects.filter(
-                user__id__in=unique_user_ids, organization=org
-            ).values_list("user_id", flat=True)
+            # Filter candidates belonging only to the current organization
+            org_candidates = candidates_in_orgs.filter(user__in=org.users.all())
+            # Process data for each candidate in the current organization
             organization["candidates"] = []
-            for candidate in candidates:
-                if candidate.user.id in candidate_in_organization:
-                    candidate_map = deepcopy(candidates_map[candidate.user.id])
-                    candidate_map["is_voted"] = candidate.id in votes
-                    candidate_map["mvp_candidate_id"] = candidate.id
-                    organization["candidates"].append(candidate_map)
+            for candidate in org_candidates:
+                candidate_map = deepcopy(candidates_map[candidate.user.id])
+                candidate_map["is_voted"] = candidate.id in votes
+                candidate_map["mvp_candidate_id"] = candidate.id
+                organization["candidates"].append(candidate_map)
             data["organizations"].append(organization)
+    data["remaining_candidates"] = []
+    # Get candidates who don't belong to any of the selected organizations
+    remaining_candidates = mvp_vote.mvp_candidates.exclude(
+        id__in=unique_candidate_ids
+    )
+    for candidate in remaining_candidates:
+        candidate_map = deepcopy(candidates_map[candidate.user.id])
+        candidate_map["is_voted"] = candidate.id in votes
+        candidate_map["mvp_candidate_id"] = candidate.id
+        data["remaining_candidates"].append(candidate_map)
 
     return data

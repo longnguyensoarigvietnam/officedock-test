@@ -107,7 +107,13 @@ const StatisticBoard = () => {
             label: stat.LARGE.name,
           }),
         );
-        setLargeOptions(largeCategories);
+        setLargeOptions([
+          {
+            label: '-',
+            value: '',
+          },
+          ...largeCategories,
+        ]);
       } else {
         setLargeOptions([]);
       }
@@ -361,9 +367,18 @@ const StatisticBoard = () => {
     setTotalDurationTask('');
     setCurrentPage(1);
     setSelectedOrganization(data);
-    setSelectedLarge(null);
-    setSelectedMedium(null);
-    setSelectedSmall(null);
+    setSelectedLarge({
+      label: '-',
+      value: '',
+    });
+    setSelectedMedium({
+      label: '-',
+      value: '',
+    });
+    setSelectedSmall({
+      label: '-',
+      value: '',
+    });
 
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === data.value,
@@ -390,7 +405,13 @@ const StatisticBoard = () => {
       if (data?.value === ALL_TEAM_STATISTIC) {
         setLargeOptions([]);
       } else {
-        setLargeOptions(largeCategories);
+        setLargeOptions([
+          {
+            label: '-',
+            value: '',
+          },
+          ...largeCategories,
+        ]);
       }
     } else {
       setLargeOptions([]);
@@ -399,9 +420,18 @@ const StatisticBoard = () => {
   // Handle Choose organization with setup options medium
   const handleSelectOrganizationCustom = (data: OptionDropdownType) => {
     setSelectedOrganization(data);
-    setSelectedLarge(null);
-    setSelectedMedium(null);
-    setSelectedSmall(null);
+    setSelectedLarge({
+      label: '-',
+      value: '',
+    });
+    setSelectedMedium({
+      label: '-',
+      value: '',
+    });
+    setSelectedSmall({
+      label: '-',
+      value: '',
+    });
     if (data.type === OrganizationStatisticType.CALENDAR) {
       setDataMediumCalendar(undefined);
     }
@@ -427,7 +457,13 @@ const StatisticBoard = () => {
       if (data?.value === ALL_TEAM_STATISTIC) {
         setLargeOptions([]);
       } else {
-        setLargeOptions(removeDuplicateOptions(largeCategories));
+        setLargeOptions([
+          {
+            label: '-',
+            value: '',
+          },
+          ...removeDuplicateOptions(largeCategories),
+        ]);
       }
     } else {
       setLargeOptions([]);
@@ -449,8 +485,14 @@ const StatisticBoard = () => {
 
     setSelectedLarge(data);
 
-    setSelectedMedium(null);
-    setSelectedSmall(null);
+    setSelectedMedium({
+      label: '-',
+      value: '',
+    });
+    setSelectedSmall({
+      label: '-',
+      value: '',
+    });
     if (selectedOrganization?.type === OrganizationStatisticType.CALENDAR) {
       setDataMediumCalendar(undefined);
     }
@@ -467,7 +509,13 @@ const StatisticBoard = () => {
         value: medium.MEDIUM?.id || '',
         label: medium.MEDIUM?.name || '',
       }));
-      setMediumOptions(removeDuplicateOptions(mediumCategories));
+      setMediumOptions([
+        {
+          label: '-',
+          value: '',
+        },
+        ...removeDuplicateOptions(mediumCategories),
+      ]);
     } else {
       setMediumOptions([]);
     }
@@ -490,7 +538,10 @@ const StatisticBoard = () => {
     setCurrentPage(1);
 
     setSelectedMedium(data);
-    setSelectedSmall(null);
+    setSelectedSmall({
+      label: '-',
+      value: '',
+    });
 
     const organization = creationDataStatisticData?.organizations.find(
       (org) => org.id === selectedOrganization?.value,
@@ -510,7 +561,13 @@ const StatisticBoard = () => {
           value: small.id,
           label: small.name,
         }));
-      setSmallOptions(removeDuplicateOptions(smallCategories));
+      setSmallOptions([
+        {
+          label: '-',
+          value: '',
+        },
+        ...removeDuplicateOptions(smallCategories),
+      ]);
     } else {
       setSmallOptions([]);
     }

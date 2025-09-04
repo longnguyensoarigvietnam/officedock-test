@@ -450,6 +450,7 @@ const TaskCard = ({
   }, [isShiftPressed]);
 
   const [isTooSmall, setIsTooSmall] = useState(false);
+  const [isShowSmallData, setIsShowSmallData] = useState(false);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -457,6 +458,11 @@ const TaskCard = ({
       if (width > 70) {
         setIsTooSmall(false);
       } else {
+        if (width < 40) {
+          setIsShowSmallData(false);
+        } else {
+          setIsShowSmallData(true);
+        }
         setIsTooSmall(true);
       }
     }
@@ -603,33 +609,37 @@ const TaskCard = ({
               </div>
             </div>
             {isTooSmall && (
-              <div>
+              <div className="w-full">
                 <div className="flex items-center gap-[6px] w-full">
-                  {!isEvent && resourcePlan && (
+                  {!isEvent && resourcePlan && isShowSmallData && (
                     <div
                       style={{ backgroundColor: largeColor || 'white' }}
                       className="w-2 h-2 rounded-full mt-[5px] flex-shrink-0"></div>
                   )}
-                  <p
-                    style={{
-                      width: extendedPropsData.isAllDay
-                        ? view === ViewOptions.WEEK
-                          ? '100%'
-                          : '100px'
-                        : '100%',
-                      paddingRight: extendedPropsData.isAllDay
-                        ? view === ViewOptions.WEEK
-                          ? '44px'
-                          : '0'
-                        : '0',
-                    }}
-                    className="font-bold  text-sm break-all truncate  w-full   ">
-                    {event?.event instanceof Error
-                      ? ''
-                      : event?.event?.title
-                        ? event.event.title
-                        : NO_SETTING}
-                  </p>
+                  {!isShowSmallData ? (
+                    <p>...</p>
+                  ) : (
+                    <p
+                      style={{
+                        width: extendedPropsData.isAllDay
+                          ? view === ViewOptions.WEEK
+                            ? '100%'
+                            : '100px'
+                          : '100%',
+                        paddingRight: extendedPropsData.isAllDay
+                          ? view === ViewOptions.WEEK
+                            ? '44px'
+                            : '0'
+                          : '0',
+                      }}
+                      className="font-bold  text-sm break-all truncate  w-full   ">
+                      {event?.event instanceof Error
+                        ? ''
+                        : event?.event?.title
+                          ? event.event.title
+                          : NO_SETTING}
+                    </p>
+                  )}
                 </div>
                 {/* TODO: UPDATE UI if item too small */}
                 {/* <div className="text-[11px] flex gap-2">

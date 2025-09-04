@@ -103,7 +103,13 @@ const StatisticTagBoard = () => {
             label: stat.LARGE.name,
           }),
         );
-        setLargeOptions(largeCategories);
+        setLargeOptions([
+          {
+            label: '-',
+            value: '',
+          },
+          ...largeCategories,
+        ]);
       } else {
         setLargeOptions([]);
       }
@@ -348,9 +354,18 @@ const StatisticTagBoard = () => {
     }
 
     setSelectedOrganization(data);
-    setSelectedLarge(null);
-    setSelectedMedium(null);
-    setSelectedSmall(null);
+    setSelectedLarge({
+      label: '-',
+      value: '',
+    });
+    setSelectedMedium({
+      label: '-',
+      value: '',
+    });
+    setSelectedSmall({
+      label: '-',
+      value: '',
+    });
 
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === data.value,
@@ -374,7 +389,13 @@ const StatisticTagBoard = () => {
       if (data?.value === ALL_TEAM_STATISTIC) {
         setLargeOptions([]);
       } else {
-        setLargeOptions(removeDuplicateOptions(largeCategories));
+        setLargeOptions([
+          {
+            label: '-',
+            value: '',
+          },
+          ...removeDuplicateOptions(largeCategories),
+        ]);
       }
     } else {
       setLargeOptions([]);
@@ -395,8 +416,14 @@ const StatisticTagBoard = () => {
     setCurrentPage(1);
 
     setSelectedLarge(data);
-    setSelectedMedium(null);
-    setSelectedSmall(null);
+    setSelectedMedium({
+      label: '-',
+      value: '',
+    });
+    setSelectedSmall({
+      label: '-',
+      value: '',
+    });
 
     const organization = creationDataStatisticData?.organizations.find(
       (org) => org.id === selectedOrganization?.value,
@@ -411,7 +438,13 @@ const StatisticTagBoard = () => {
         label: medium.MEDIUM?.name || '',
       }));
 
-      setMediumOptions(removeDuplicateOptions(mediumCategories));
+      setMediumOptions([
+        {
+          label: '-',
+          value: '',
+        },
+        ...removeDuplicateOptions(mediumCategories),
+      ]);
     } else {
       setMediumOptions([]);
     }
@@ -431,7 +464,10 @@ const StatisticTagBoard = () => {
     }
 
     setSelectedMedium(data);
-    setSelectedSmall(null);
+    setSelectedSmall({
+      label: '-',
+      value: '',
+    });
 
     const organization = creationDataStatisticData?.organizations.find(
       (org) => org.id === selectedOrganization?.value,
@@ -450,7 +486,13 @@ const StatisticTagBoard = () => {
           value: small.id,
           label: small.name,
         }));
-      setSmallOptions(removeDuplicateOptions(smallCategories));
+      setSmallOptions([
+        {
+          label: '-',
+          value: '',
+        },
+        ...removeDuplicateOptions(smallCategories),
+      ]);
     } else {
       setSmallOptions([]);
     }

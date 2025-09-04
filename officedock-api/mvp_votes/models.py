@@ -102,4 +102,4 @@ class MVPVote(BaseModel):
     )
 
     class Meta:
-        unique_together = ("mvp_candidate", "voter")
+        unique_together = ("mvp_vote_management", "voter")

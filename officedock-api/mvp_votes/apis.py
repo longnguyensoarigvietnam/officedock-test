@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins
 from rest_framework.exceptions import ValidationError
@@ -18,7 +19,7 @@ from mvp_votes.constants import (
     MVPVoteTypes,
 )
 from mvp_votes.filters import MVPVoteFilter
-from mvp_votes.models import MVPVote, MVPVoteManagement
+from mvp_votes.models import MVPVote, MVPVoteCandidate, MVPVoteManagement
 from mvp_votes.payloads import (
     build_list_mvp_vote_manage_payload,
     build_present_mvp_vote_with_organization_list,
@@ -160,6 +161,27 @@ class MVPVoteManagementViewSet(BaseAPIViewSet, ModelViewSet):
         instance = self.get_object()
         return self.response_ok(build_list_mvp_vote_manage_payload(instance))
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("mvp_candidate_id", type=int),
+            OpenApiParameter("ordering", type=str),
+        ]
+    )
+    @action(detail=False, methods=["GET"], url_path="vote-comments")
+    def get_vote_comments(self, request):
+        """
+        Get vote comments of mvp vote
+        """
+        mvp_candidate_id = request.query_params.get("mvp_candidate_id")
+        candidate = get_object_or_404(MVPVoteCandidate, id=mvp_candidate_id)
+        vote_comments = candidate.votes_received.all()
+        return self.response_pagination(
+            request,
+            vote_comments,
+            MvpVoteCandidateSerializer,
+            CustomCursorPagination,
+        )
+
 
 @extend_schema(tags=["System > MVP Vote"])
 class MVPVoteViewSet(
@@ -175,7 +197,11 @@ class MVPVoteViewSet(
 
     def get_queryset(self):
         user = self.request.user
-        return super().get_queryset().filter(company=user.company)
+        return (
+            super()
+            .get_queryset()
+            .filter(company=user.company, deleted_at__isnull=True)
+        )
 
     @transaction.atomic()
     def perform_create(self, serializer):
@@ -186,7 +212,9 @@ class MVPVoteViewSet(
         if (
             self.get_queryset()
             .filter(
-                mvp_candidate=serializer.validated_data.get("mvp_candidate"),
+                mvp_candidate=serializer.validated_data.get(
+                    "mvp_vote_management"
+                ),
                 voter=user,
             )
             .exists()
@@ -194,10 +222,12 @@ class MVPVoteViewSet(
             raise ValidationError({"detail": ERROR_MESSAGES["unique_vote"]})
         serializer.save(voter=user, company=user.company)
 
-    @action(
-        url_path="announcements",
-        detail=False,
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("ordering", type=str),
+        ]
     )
+    @action(url_path="announcements", detail=False, methods=["GET"])
     def get_announcements(self, request):
         """
         Get announcement of MVP vote
@@ -205,9 +235,7 @@ class MVPVoteViewSet(
         company = request.user.company
         mvp_votes = MVPVoteManagement.objects.filter(
             type=MVPVoteTypes.PAST.value, company=company
-        ).order_by(
-            "end_date"
-        )  # FIXME: Use ordering in CustomCursorPagination
+        )
 
         return self.response_pagination(
             request,
@@ -216,7 +244,7 @@ class MVPVoteViewSet(
             CustomCursorPagination,
         )
 
-    @action(url_path="voting", detail=False)
+    @action(url_path="voting", detail=False, methods=["GET"])
     def get_current_mvp_vote(self, request):
         """
         Get present MVP vote
@@ -230,3 +258,53 @@ class MVPVoteViewSet(
         )
 
         return self.response_ok(mvp_vote_payload)
+
+    def perform_destroy(self, instance):
+        """
+        Handle soft delete mvp vote comment
+        """
+        instance.soft_delete()
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("mvp_candidate_id", type=int),
+        ]
+    )
+    @action(url_path="comment", detail=False, methods=["GET"])
+    def get_vote_commment(self, request, *args, **kwargs):
+        """
+        Handle get vote comment of mvp candidate by user
+        """
+        user = request.user
+        mvp_candidate_id = request.query_params.get("mvp_candidate_id")
+        candidate = get_object_or_404(MVPVoteCandidate, id=mvp_candidate_id)
+        mvp_vote = (
+            self.get_queryset()
+            .filter(mvp_candidate=candidate, voter=user)
+            .first()
+        )
+        return self.response_ok(self.get_serializer(mvp_vote).data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("mvp_vote_id", type=int),
+        ]
+    )
+    @action(methods=["GET"], detail=False, url_path="announcement-detail")
+    def get_announcement_detail(self, request):
+        """
+        Handle get detail MVP Vote
+        """
+        company = request.user.company
+        mvp_vote_id = request.query_params.get("mvp_vote_id")
+        if mvp_vote_id:
+            mvp_vote = get_object_or_404(MVPVoteManagement, id=mvp_vote_id)
+        else:
+            mvp_vote = (
+                MVPVoteManagement.objects.filter(
+                    type=MVPVoteTypes.PAST.value, company=company
+                )
+                .order_by("-end_date")
+                .first()
+            )
+        return self.response_ok(build_list_mvp_vote_manage_payload(mvp_vote))

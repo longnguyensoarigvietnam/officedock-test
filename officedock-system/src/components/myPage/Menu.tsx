@@ -12,11 +12,13 @@ interface PropMenuMyPage {
   onClickSettingSurvey: () => void;
   onOpenSendThanksMessageForm?: () => void;
   unAnsweredSurveyCount?: number;
+  isOpenSurveys?: boolean;
   isVisitRoom?: boolean;
 }
 
 export const MyPageMenu = ({
   isVisitRoom = false,
+  isOpenSurveys = false,
   unAnsweredSurveyCount,
   onClickSettingSurvey,
   onOpenSendThanksMessageForm,
@@ -51,7 +53,7 @@ export const MyPageMenu = ({
                 ))}
               </div>
               {/* Child */}
-              {page.child && (
+              {page.child && isOpenSurveys && (
                 <>
                   <p className="text-[10px]  bg-[#FFEE6F] mt-[3px] text-black rounded-full w-[70px] h-5 flex items-center justify-center">
                     {' '}

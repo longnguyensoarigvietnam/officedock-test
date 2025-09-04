@@ -926,13 +926,14 @@ class OrganizationCategoryHierarchyViewSet(
 
                 else:
                     # Handle to update organization_statistic_category
-                    if large_statistic_category and medium_statistic_category:
-                        organization_statistic_category = OrganizationsStatisticCategories.objects.create(
+                    organization_statistic_category = (
+                        OrganizationsStatisticCategories.objects.create(
                             **item,
                             large_statistic_category=large_statistic_category,
                             medium_statistic_category=medium_statistic_category,
                             small_statistic_category=small_statistic_category,
                         )
+                    )
 
                 # Remove duplicate record
                 records = OrganizationsStatisticCategories.objects.filter(
