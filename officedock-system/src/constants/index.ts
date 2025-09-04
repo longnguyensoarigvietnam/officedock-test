@@ -516,3 +516,5 @@ export const VOTING_TITLE_MAX_LENGTH = 18;
 
 export const SYSTEM_TWEET_NAME = 'OFFICE DOCK';
 export const VOTING_BONUS_POINT = 200;
+
+export const JAPANESE_TIME_ZONE = 'Asia/Tokyo'

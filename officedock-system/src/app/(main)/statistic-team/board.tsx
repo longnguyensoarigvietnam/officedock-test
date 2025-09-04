@@ -450,13 +450,13 @@ const StatisticTeamBoard = () => {
       if (data?.value === ALL_TEAM_STATISTIC) {
         setLargeOptions([]);
       } else {
-        [
+        setLargeOptions([
           {
             label: '-',
             value: '',
           },
           ...removeDuplicateOptions(largeCategories),
-        ];
+        ]);
       }
     } else {
       setLargeOptions([]);
