@@ -12,7 +12,7 @@ interface PropMenuMyPage {
   onClickSettingSurvey: () => void;
   onOpenSendThanksMessageForm?: () => void;
   unAnsweredSurveyCount?: number;
-  isOpenSurveys: boolean;
+  isOpenSurveys?: boolean;
   isVisitRoom?: boolean;
 }
 
