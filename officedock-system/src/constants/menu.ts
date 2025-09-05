@@ -20,6 +20,16 @@ export const SETTING_MENU: SettingMenuItem[] = [
 
 export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
   {
+    ...pageRouters.MY_PAGE,
+    name: pageRouters.MY_PAGE.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/skills-map-active.svg' : '/icons/skills-map.svg';
+    },
+    current: false,
+    companyMenu: false,
+    requiredPermission: PermissionsSystem.VIEW_ALL,
+  },
+  {
     ...pageRouters.USERS_MANAGEMENT,
     name: pageRouters.USERS_MANAGEMENT.name,
     iconUrl: (active: boolean) => {
@@ -183,16 +193,6 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     current: false,
     companyMenu: true,
     requiredPermission: PermissionsSystem.THANKS_MESSAGE_MANAGEMENT_VIEW,
-  },
-  {
-    ...pageRouters.MY_PAGE,
-    name: pageRouters.MY_PAGE.name,
-    iconUrl: (active: boolean) => {
-      return active ? '/icons/skills-map-active.svg' : '/icons/skills-map.svg';
-    },
-    current: false,
-    companyMenu: false,
-    requiredPermission: PermissionsSystem.VIEW_ALL,
   },
   {
     ...pageRouters.MVP_MANAGEMENT,

@@ -1056,6 +1056,7 @@ const Header = ({ className }: HeaderProps) => {
         <div className="flex gap-8 justify-between w-full">
           <div className="flex flex-grow items-center gap-8">
             <ImageRound
+              onClick={() => router.push(pageRouters.MY_PAGE.href)}
               className="h-[50px] w-48 object-fill"
               src="/images/logo-full.svg"
               name="Logo full"
