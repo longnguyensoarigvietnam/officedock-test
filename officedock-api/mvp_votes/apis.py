@@ -194,6 +194,7 @@ class MVPVoteViewSet(
     serializer_class = MvpVoteCandidateSerializer
     permission_classes = [IsAuthenticated]
     filterset_class = MVPVoteFilter
+    pagination_class = CustomCursorPagination
 
     def get_queryset(self):
         user = self.request.user
