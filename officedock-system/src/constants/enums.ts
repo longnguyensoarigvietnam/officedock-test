@@ -439,7 +439,7 @@ export enum ScreenName {
   SKILL_MAP_MANAGEMENT = 'skill_map_management',
   THANKS_MESSAGE = 'thanks_message',
   THANKS_MESSAGE_MANAGEMENT = 'thanksMessageManagement',
-  MVP_VOTING_MANAGEMENT = 'mvpVotingManagement'
+  MVP_VOTING_MANAGEMENT = 'mvpVotingManagement',
 }
 
 export enum PermissionType {
@@ -656,4 +656,11 @@ export enum VotingManagementType {
   PRESENT = 'PRESENT',
   PAST = 'PAST',
   UPCOMING = 'UPCOMING',
+}
+export enum TabTypeShopItem {
+  ALL = '全て',
+  HAT = '帽子',
+  CLOTHES = '服装',
+  SHOES = '靴',
+  BACKGROUND = '背景',
 }

@@ -210,7 +210,8 @@ const EndedSurveyTab = ({ handleAnswer }: EndedSurveyTabProp) => {
                       </div>
                     )}
                   </div>
-                  {index !== surveyList.length - 1 && (
+                  {(index !== surveyList.length - 1 ||
+                    surveyList.length == 1) && (
                     <div className="bg-[#409EDE] w-full h-[2px]"></div>
                   )}
                 </>

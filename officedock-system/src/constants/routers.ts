@@ -386,6 +386,14 @@ export const pageRouters = {
     name: 'サンクスメッセージ',
     href: `/my-page/thanks-message`,
   },
+  SHOP_ITEM: {
+    name: 'アイテムショップ',
+    href: `/my-page/shop`,
+  },
+  CUSTOMIZE_ITEM: {
+    name: '所持アイテムをカスタマイズ',
+    href: `/my-page/customize`,
+  },
   // MVP
   MVP_MANAGEMENT: {
     name: 'MVP投票管理',
@@ -625,8 +633,11 @@ export const apiRouters = {
   LIST_THANKS_DETAIL_HISTORY: '/thanks-messages-management/',
   DETAIL_THANK_MSG_HISTORY: (id: string) =>
     `/thanks-messages-management/${id} /`,
-  
+
   // MVP
   MVP_VOTING_LIST: '/mvp-vote-management/',
   MVP_VOTING_DETAIL: (id: string) => `/mvp-vote-management/${id}/`,
+
+  // DOT MONEY
+  LOGIN_EXCHANGE: '/dotmoney/exchange-url/',
 };
