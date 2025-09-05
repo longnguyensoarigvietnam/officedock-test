@@ -26,7 +26,7 @@ from mvp_votes.payloads import (
 )
 from mvp_votes.serializers import (
     MvpVoteManagementSerializer,
-    MvpVoteCandidateSerializer,
+    MvpVoteSerializer,
 )
 from tweets.models import Tweet
 from roles.constants import Screens
@@ -97,6 +97,11 @@ class MVPVoteManagementViewSet(BaseAPIViewSet, ModelViewSet):
                 is_system=True,
                 content=DEFAULT_CONTENT_TWEET_END_VOTE,
             )
+            # TODO: Add coin to top users here
+            # users = get_users_in_top_mvp(self.get_object())
+            # for user in users:
+            #     continue
+
         mvp_vote = serializer.save(updated_by=user, company=company)
         if new_candidates:
             current_candidates = set(mvp_vote.candidates.all())
@@ -178,7 +183,7 @@ class MVPVoteManagementViewSet(BaseAPIViewSet, ModelViewSet):
         return self.response_pagination(
             request,
             vote_comments,
-            MvpVoteCandidateSerializer,
+            MvpVoteSerializer,
             CustomCursorPagination,
         )
 
@@ -191,7 +196,7 @@ class MVPVoteViewSet(
     mixins.ListModelMixin,
 ):
     queryset = MVPVote.objects.all()
-    serializer_class = MvpVoteCandidateSerializer
+    serializer_class = MvpVoteSerializer
     permission_classes = [IsAuthenticated]
     filterset_class = MVPVoteFilter
     pagination_class = CustomCursorPagination
