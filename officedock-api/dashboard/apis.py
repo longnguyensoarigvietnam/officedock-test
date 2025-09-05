@@ -15,7 +15,6 @@ from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from base.apis import BaseAPIViewSet
-from base.decorators import user_cache_page
 from base.filters import FilterByPermission
 from base.messages import ERROR_MESSAGES
 from base.paginations import BasePagination
@@ -70,7 +69,6 @@ class DashboardViewSet(BaseAPIViewSet):
         url_path="members",
         serializer_class=CreationDataUserWithMainOrganizationSerializer,
     )
-    @user_cache_page(key_prefix="dashboard_members")
     def members(self, request):
         """
         Get all members of the logged in user company
