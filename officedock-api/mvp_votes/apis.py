@@ -210,16 +210,13 @@ class MVPVoteViewSet(
         Handle create mvp vote
         """
         user = self.request.user
-        if (
-            self.get_queryset()
-            .filter(
-                mvp_candidate=serializer.validated_data.get(
-                    "mvp_vote_management"
-                ),
-                voter=user,
-            )
-            .exists()
-        ):
+        mvp_vote_management = serializer.validated_data.get(
+            "mvp_vote_management"
+        )
+        if MVPVote.objects.filter(
+            mvp_vote_management=mvp_vote_management,
+            voter=user,
+        ).exists():
             raise ValidationError({"detail": ERROR_MESSAGES["unique_vote"]})
         serializer.save(voter=user, company=user.company)
 
