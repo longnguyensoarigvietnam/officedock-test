@@ -510,16 +510,20 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             or old_recurring["end_date"] != end_date
         )
         if recurring_event_option == ScheduleRepeatOption.ALL_EVENTS.value:
-            start_date = (
+            start_time = start_date.timetz()
+            end_time = end_date.timetz()
+            original_start_date = (
                 instance.repeat_schedules.first().plan_start_date
                 if instance.repeat_schedules.exists()
                 else start_date
             )
-            end_date = (
+            original_end_date = (
                 instance.repeat_schedules.first().plan_end_date
                 if instance.repeat_schedules.exists()
                 else end_date
             )
+            start_date = datetime.combine(original_start_date, start_time)
+            end_date = datetime.combine(original_end_date, end_time)
         if repeat_type and is_change_recurring:
             recurring = {
                 "repeat_type": repeat_type,
@@ -678,7 +682,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             repeat_schedule.schedule = instance
             repeat_schedule.save()
         # Update recurring time
-        if not is_change_recurring and is_change_time_recurring:
+        if is_change_time_recurring:
             self._update_time_recurring(instance, start_date, end_date)
 
         # Create repeat schedule base on repeat type

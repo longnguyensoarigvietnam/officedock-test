@@ -74,6 +74,12 @@ const SurveyListPage = () => {
 
   const listAvatar = ['body', 'head-full', 'shoes', 'hat'];
 
+  const handleSetTabParam = (tab: string) => {
+    params.set('tab', tab);
+
+    router.push(`?${params.toString()}`);
+  };
+
   // Set param
   const handleSetParam = (id: string, isMySurvey?: boolean) => {
     if (id) {
@@ -335,7 +341,10 @@ const SurveyListPage = () => {
                     return (
                       <Button
                         key={tab.value}
-                        onClick={() => setActiveTab(tab.value)}
+                        onClick={() => {
+                          handleSetTabParam(tab.value);
+                          setActiveTab(tab.value);
+                        }}
                         style={{
                           background: isActive
                             ? 'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)'

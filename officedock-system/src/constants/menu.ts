@@ -300,7 +300,7 @@ export const MY_PAGE_MENU: MyPageMenuItem[] = [
   },
   {
     name: 'アイテム',
-    href: '#',
+    href: pageRouters.SHOP_ITEM.href,
     iconSrc: '/icons/shop.svg',
     iconName: 'Shop icon',
   },

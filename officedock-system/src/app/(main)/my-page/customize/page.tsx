@@ -1,19 +1,19 @@
 import MainLayout from '@components/layouts/MainLayout';
-import SurveyListPage from './list';
 
 import { pageRouters } from '@constants/routers';
 import { PermissionsSystem } from '@constants/enums';
+import CustomizeItemPage from './list';
 
-const SurveyPage = () => {
+const ShopPage = () => {
   return (
     <MainLayout
-      title={pageRouters.SURVEY.name}
+      title={pageRouters.CUSTOMIZE_ITEM.name}
       permission={PermissionsSystem.VIEW_ALL}
       className="pl-8 pt-8 !overflow-x-auto"
       showFooter={false}>
-      <SurveyListPage />
+      <CustomizeItemPage />
     </MainLayout>
   );
 };
 
-export default SurveyPage;
+export default ShopPage;

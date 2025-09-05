@@ -20,7 +20,6 @@ import {
   RESEND_OTP_SUCCESS,
   TOKEN_INVALID,
 } from '@constants/message';
-import { SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
@@ -38,6 +37,7 @@ const LoginForm2FA = () => {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const rememberMe = searchParams.get('rememberMe');
+  const callback = searchParams.get('callback');
 
   const sendOTPAtRef = useRef<string>('');
 
@@ -119,16 +119,20 @@ const LoginForm2FA = () => {
       onSuccess: async (data) => {
         if (data?.status === ServerStatusCode.OK) {
           const session = await getSession();
-          const firstViewPath = SYSTEM_PERMISSIONS_MENU.filter(
-            (menu) =>
-              session &&
-              session.user.permissions.length > 0 &&
-              session.user.permissions.includes(menu.requiredPermission),
-          ).map((menu) => menu.href)[0];
-          if (firstViewPath) {
-            router.push(firstViewPath);
+          if (callback) {
+            const { data: me } = await api.get(
+              `${apiRouters.LOGIN_EXCHANGE}?callback=${callback}&is_login=true`,
+              {
+                headers: {
+                  Authorization: `Bearer ${session?.accessToken}`,
+                },
+              },
+            );
+            if (me.exchangeUrl) {
+              router.push(me.exchangeUrl);
+            }
           } else {
-            router.push(pageRouters.DEFAULT.href);
+            router.push(pageRouters.MY_PAGE.href);
           }
         }
         if (data?.status === ServerStatusCode.UNAUTHORIZED) {
@@ -220,7 +224,7 @@ const LoginForm2FA = () => {
             name="otpCode"
             type="text"
             maxLength={6}
-            labelClassName='text-[#77858F] font-medium'
+            labelClassName="text-[#77858F] font-medium"
             error={errors.otpCode?.message}
             register={register('otpCode', {
               required: OTP_CODE_REQUIRED_MESSAGE,
