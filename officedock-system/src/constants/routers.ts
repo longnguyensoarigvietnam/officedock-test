@@ -394,6 +394,10 @@ export const pageRouters = {
     name: '所持アイテムをカスタマイズ',
     href: `/my-page/customize`,
   },
+  HISTORY_POINT: {
+    name: 'ポイント履歴 / 交換',
+    href: `/my-page/history`,
+  },
   // MVP
   MVP_MANAGEMENT: {
     name: 'MVP投票管理',
