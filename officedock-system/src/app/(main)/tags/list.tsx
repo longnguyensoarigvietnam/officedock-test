@@ -38,7 +38,6 @@ import {
 import {
   ActionsModal,
   PermissionsSystem,
-  ScreenName,
   ServerStatusCode,
 } from '@constants/enums';
 
