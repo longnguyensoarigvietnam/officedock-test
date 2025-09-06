@@ -24,7 +24,7 @@ import {
 } from '@utils/date';
 import api from '@base/api';
 import { OptionDropdownType } from '@interfaces/common';
-import useTeamList from '@hooks/useListTeam';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const ListData = () => {
   const { setIsLoading } = useContext(LoadingContext);
@@ -46,15 +46,19 @@ const ListData = () => {
       value: 'ALL',
     });
 
-  useTeamList({
-    screenName: 'team_daily_report',
+  useCreationDataCommon({
+    options: {
+      get_all_organizations: true,
+    },
     onSuccess: (data) => {
-      setOrganizationList([
-        ...data.map((item) => ({
-          label: item.name,
-          value: item.id as number,
-        })),
-      ]);
+      if (data.allOrganizations) {
+        setOrganizationList([
+          ...data.allOrganizations.map((item) => ({
+            label: item.name,
+            value: item.id as number,
+          })),
+        ]);
+      }
     },
   });
 

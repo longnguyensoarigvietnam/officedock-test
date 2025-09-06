@@ -233,6 +233,8 @@ export interface DataUserDetailDailyType {
   isConfirmed: boolean;
   totalDuration: string;
   organizationName?: string;
+  avatar?: string | null;
+  avatarColor: string;
 }
 export interface DataListDailyType {
   organization: {
@@ -698,15 +700,15 @@ export interface CategoryLineChartDatasetInfo {
     anotherStartDate?: any;
     anotherEndDate?: any;
     anotherDuration?: string;
-    avatarColor?: string,
-    avatar?: string,
-    userId?: number,
+    avatarColor?: string;
+    avatar?: string;
+    userId?: number;
     user?: {
-      avatar: string | null,
-      avatarColor: string,
-      fullName: string,
-      id: number
-    }
+      avatar: string | null;
+      avatarColor: string;
+      fullName: string;
+      id: number;
+    };
   }[];
   borderColor: string;
   backgroundColor: string;
@@ -761,10 +763,10 @@ export interface TeamDockAllTeamTableRowDetail {
 }
 
 export interface TeamDockMergedTable {
-  categoryId?: string | number
+  categoryId?: string | number;
   categoryName?: string;
   tagId?: string | number;
-  tagName?: string
+  tagName?: string;
   organizationId?: string | number;
   standardInfo?: {
     duration: string;

@@ -11,12 +11,10 @@ import {
   dataRequestConfirmType,
   DataUserDetailDailyType,
 } from '@interfaces/statistic';
-import { Profile } from '@interfaces/user';
 
 import { convertToJapaneseTime } from '@utils/date';
 
 import { useDebounceCallback } from '@hooks/useDebounceCallback';
-import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 type Props = {
   userData: DataUserDetailDailyType;
@@ -28,7 +26,6 @@ type Props = {
 };
 
 const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
-  const [dashboardMemberList, setDashboardMemberList] = useState<Profile[]>([]);
   const [isConfirm, setIsConfirm] = useState(userData.isConfirmed);
 
   useEffect(() => {
@@ -38,21 +35,6 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
   }, [userData]);
 
   const router = useRouter();
-
-  useCreationDataCommon({
-    options: {
-      get_all_members: true,
-    },
-    onSuccess: (data) => {
-      if (data.allMembers) {
-        setDashboardMemberList(data.allMembers);
-      }
-    },
-  });
-
-  const memberInfo = dashboardMemberList.find(
-    (member) => String(member.id) == String(userData.id),
-  );
 
   const handleSaveData = (e: boolean) => {
     handleConfirm({
@@ -94,8 +76,8 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
 
         <div className="flex items-center gap-[10px]">
           <CustomUserAvatar
-            avatarUrl={memberInfo?.avatar || ''}
-            avatarColor={memberInfo?.avatarColor || ''}
+            avatarUrl={userData?.avatar || ''}
+            avatarColor={userData?.avatarColor || ''}
             size={33}
           />
           <span className="text-black break-all line-clamp-2 ">
