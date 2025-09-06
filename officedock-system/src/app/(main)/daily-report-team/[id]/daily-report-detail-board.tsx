@@ -347,6 +347,8 @@ const DailyReportDetailBoard = () => {
         isConfirmed: dataStatistic?.remark.isConfirmed,
         totalDuration: dataStatistic.totalDuration,
         organizationName: dataStatistic?.remark.organizationName,
+        avatarColor: dataStatistic?.remark.user.avatarColor,
+        avatar: dataStatistic?.remark.user?.avatar || '',
       });
 
       setChartData({
