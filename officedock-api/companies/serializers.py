@@ -56,6 +56,7 @@ class CompanySerializer(serializers.ModelSerializer):
     email = serializers.CharField(
         write_only=True, max_length=255, required=False
     )
+    total_users = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Company
@@ -66,6 +67,7 @@ class CompanySerializer(serializers.ModelSerializer):
             "fullname",
             "email",
             "is_show_holidays_calendar",
+            "total_users",
         ]
         read_only_fields = ["is_show_holidays_calendar"]
 
@@ -77,6 +79,9 @@ class CompanySerializer(serializers.ModelSerializer):
             instance=self.instance, email=value, is_admin_site=False
         )
         return super().validate(value)
+
+    def get_total_users(self, obj):
+        return obj.users.count()
 
     @transaction.atomic
     def update(self, instance, validated_data):

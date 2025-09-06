@@ -669,7 +669,7 @@ class SystemAuthViewSet(BaseAPIViewSet):
         detail=False,
         methods=["GET"],
         url_path="me",
-        serializer_class=UserSerializer,
+        serializer_class=UserListSerializer,
         permission_classes=[IsAuthenticated],
     )
     def get_user_profile(self, request):
