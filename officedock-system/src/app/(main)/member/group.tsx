@@ -18,24 +18,10 @@ type DataGroupMemberProps = {
 };
 
 const GroupMember = ({ item, onClickMember }: DataGroupMemberProps) => {
-  const { dashboardMembersWithAvatars, expanded } =
-    useContext(GlobalStateContext);
+  const { expanded } = useContext(GlobalStateContext);
 
   const [isExpandedGroup, setIsExpandedGroup] = useState(true);
 
-  const renderBoxUser = (userId: string) => {
-    const memberInfo = dashboardMembersWithAvatars.find(
-      (member) => member.id == userId,
-    );
-
-    return (
-      <CustomUserAvatar
-        avatarUrl={memberInfo?.avatar || ''}
-        avatarColor={memberInfo?.avatarColor || ''}
-        size={36}
-      />
-    );
-  };
   const getRandomColor = () => {
     const hue = Math.floor(Math.random() * 360);
     const saturation = Math.floor(Math.random() * (80 - 40) + 40);
@@ -88,7 +74,11 @@ const GroupMember = ({ item, onClickMember }: DataGroupMemberProps) => {
                 );
               }}
               className=" h-[76px] bg-white flex items-center gap-[10px]  p-5 justify-start cursor-pointer  rounded-lg">
-              {renderBoxUser(`${user.id}`)}
+              <CustomUserAvatar
+                avatarUrl={user?.avatar || ''}
+                avatarColor={user?.avatarColor || ''}
+                size={36}
+              />
               <p className="text-[18px] break-all line-clamp-2">
                 {user.fullName}
               </p>

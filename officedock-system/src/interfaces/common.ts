@@ -1,4 +1,14 @@
-import { StatisticCategoryInfo } from './statistic';
+import { CreationDataStatisticCategory } from './category';
+import { Company } from './company';
+import { Organizations } from './organization';
+import {
+  CreationStatisticType,
+  LargeCategory,
+  StatisticCategoryInfo,
+} from './statistic';
+import { TagCreationStatisticType } from './tag';
+import { StatusTask, Team } from './task';
+import { Profile, RoleUser } from './user';
 
 export interface OptionDropdownType {
   value: string | number;
@@ -73,4 +83,70 @@ export interface DateInfo {
 export type ChangeTextAreaProps = {
   editorRef: React.RefObject<HTMLDivElement>;
   onChange?: (html: string) => void;
+};
+
+export type CreationDataCommon = {
+  userSetting?: {
+    isCheckSelfTask?: boolean;
+    isCheckSelfSchedule?: boolean;
+    isCheckCompanySchedule?: boolean;
+    isEnterSendMessage?: boolean;
+    isSortingTaskByDeadline?: boolean;
+    isSortingTaskByImportant?: boolean;
+    scheduleZoom?: number;
+    kanbanZoom?: number;
+    tabVisibility?: Record<string, boolean>;
+    isShowMyTemplate?: boolean;
+    isShowListKanban?: boolean;
+    dateFilterScheduleFrom?: string;
+    dateFilterScheduleTo?: string;
+    isShowWeekSchedule?: boolean;
+    taskFilter?: {
+      category: OptionDropdownType[];
+      organization: OptionDropdownType[];
+      tag: OptionDropdownType[];
+    };
+  };
+  organizations?: Organizations[];
+  tags?: TagCreationStatisticType[];
+  taskStatus?: StatusTask[];
+  organizationCategories: CreationStatisticType[];
+  filterOrganizationsCategories?: Team[];
+  allMembers?: Profile[];
+  organizationUsers?: Omit<Organizations, 'isMain'>[];
+  roles?: RoleUser[];
+  organizationMembers?: {
+    id: number;
+    fullName: string;
+    avatarColor: string;
+    avatar: string;
+  }[];
+  organizationSkills?: {
+    organization: Organizations;
+    skills: {
+      id: number;
+      name: string;
+    }[];
+  }[];
+  eventLocations?: {
+    id: number;
+    uuid: string;
+    name: string;
+  }[];
+  calendarOrganization?: {
+    icon: string | null;
+    iconColor: string;
+    id: number;
+    isMain: boolean;
+    name: string;
+    statisticCategories: LargeCategory[];
+    tags: TagCreationStatisticType[];
+    uuid: string;
+  };
+  eventTypes?: string[];
+  myStatistics?: CreationStatisticType[];
+  organizationStatistics?: CreationStatisticType[];
+  company?: Company;
+  allOrganizations?: Organizations[];
+  statisticCategories?: CreationDataStatisticCategory[];
 };

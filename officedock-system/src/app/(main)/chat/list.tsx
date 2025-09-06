@@ -51,7 +51,6 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 
 import {
-  ChatDashboardMember,
   ChatMessageResponse,
   ChatParticipant,
   ChatRoomItem,
@@ -71,7 +70,6 @@ interface dataProps {
   chatRoomCode: string | null;
   roomNameSearchResults: ChatRoomItem[];
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
-  dashboardMembers: ChatDashboardMember[];
   dataOptionsParticipants: ChatParticipant[];
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   setFilteredChatList: Dispatch<SetStateAction<ChatRoomItem[]>>;
@@ -93,7 +91,6 @@ const ListChatUsers = ({
   filteredChatList,
   roomNameSearchResults,
   dashboardMemberList,
-  dashboardMembers,
   dataOptionsParticipants,
   setFilteredChatList,
   setLastItemId,
@@ -904,7 +901,7 @@ const ListChatUsers = ({
       );
     }
 
-    const memberInfo = dashboardMembers.find((member) => {
+    const memberInfo = dashboardMemberList.find((member) => {
       if (item.type === AvatarChat.PRIVATE) {
         return (
           member.id ===
@@ -919,7 +916,7 @@ const ListChatUsers = ({
     return (
       <div className="h-6">
         <CustomUserAvatar
-          avatarUrl={memberInfo?.avatarUrl || ''}
+          avatarUrl={memberInfo?.avatar || ''}
           avatarColor={memberInfo?.avatarColor || ''}
           size={33}
         />
@@ -1432,7 +1429,6 @@ const ListChatUsers = ({
         <ActionsAddMembersModal
           open={isModalOpen}
           dashboardMemberList={dashboardMemberList}
-          dashboardMembers={dashboardMembers}
           dataOptionsParticipants={dataOptionsParticipants}
           onClose={() => setIsModalOpen(false)}
           createChatMutation={createChatMutation}
@@ -1444,7 +1440,6 @@ const ListChatUsers = ({
           open={true}
           isSearchingMessagesRef={isSearchingMessagesRef}
           dashboardMemberList={dashboardMemberList}
-          dashboardMembers={dashboardMembers}
           searchMessageResults={searchMessageResults}
           allRoomChatMsgSearch={allRoomChatMsgSearch}
           setAllRoomChatMsgSearch={setAllRoomChatMsgSearch}

@@ -32,11 +32,9 @@ import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ErrorUploadFileValidationModal from '@components/modals/ErrorUploadFileValidationModal';
 import ConfirmDragModalTask from '@components/modals/ConfirmDropModalTask';
 import CompletionRewardModal from '@components/modals/CompletionRewardModal';
+import EventActionTypeModal from '@components/modals/EventActionTypeModal';
 
-import useDashboardMemberList from '@hooks/useDashBoardMemberList';
-import useCreationDataTask from '@hooks/useCreationDataTask';
 import { useErrorToast } from '@hooks/useErrorToast';
-import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 import {
@@ -84,7 +82,6 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import TaskPageDataHeader from './TaskPageDataHeader';
 import { addTimeToDate } from '@utils/date';
 import api from '@base/api';
-import EventActionTypeModal from '@components/modals/EventActionTypeModal';
 
 type HeaderProps = {
   className?: string;
@@ -129,10 +126,9 @@ const Header = ({ className }: HeaderProps) => {
   const idEvent = searchParams.get('event');
 
   const actionType = searchParams.get('action');
-  const { creationDataEventCalendar } = useCreationDataEventCalendar({});
 
   const isDailyReportPage = pathname.startsWith('/daily-report');
-  const teamId = params.id; // '300'
+  const teamId = params.id;
 
   const isDailyReportTeamPage = pathname.startsWith('/daily-report-team');
 
@@ -186,18 +182,13 @@ const Header = ({ className }: HeaderProps) => {
     useState<boolean>(false);
 
   const { setIsLoading } = useContext(LoadingContext);
-  const { dashboardMemberList = [] } = useDashboardMemberList();
-  const {
-    setDashboardMembersWithAvatars,
-    isChatFilesUploading,
-    cancelUploadChatFiles,
-  } = useContext(GlobalStateContext);
+  const { isChatFilesUploading, cancelUploadChatFiles } =
+    useContext(GlobalStateContext);
   const [pendingPageChange, setPendingPageChange] = useState<string | null>(
     null,
   );
   const [showWarningChatUploadingModal, setShowWarningChatUploadingModal] =
     useState(false);
-  const { creationDataTaskData } = useCreationDataTask({});
   const [actionsEventMessage, setActionsEventMessage] = useState<string>('');
   const [openWarningCloseModal, setOpenWarningCloseModal] =
     useState<boolean>(false);
@@ -244,20 +235,6 @@ const Header = ({ className }: HeaderProps) => {
   );
   const companyItems = updateCurrent(companySettingItemsClone, pathname);
 
-  useEffect(() => {
-    if (dashboardMemberList?.length) {
-      const membersWithAvatars = dashboardMemberList.map((member) => {
-        return {
-          id: member.id,
-          fullName: member.fullName,
-          avatarColor: member?.avatarColor || '',
-          avatar: member?.avatar || '',
-          mainOrganization: member.organizations?.name || '',
-        };
-      });
-      setDashboardMembersWithAvatars(membersWithAvatars);
-    }
-  }, [dashboardMemberList, setDashboardMembersWithAvatars]);
   // Socket
   useEffect(() => {
     const handleSocketMessage = (data: WebSocketMessageData) => {
@@ -1218,7 +1195,6 @@ const Header = ({ className }: HeaderProps) => {
             setOpenViewProfileModal(false);
             setOpenEditProfileModal(true);
           }}
-          authenticatedUser={authenticatedUser}
         />
       )}
       {openEditProfileModal && (
@@ -1254,7 +1230,6 @@ const Header = ({ className }: HeaderProps) => {
           dataTask={dataTaskEdit}
           columnId={`${StatusValueTask.NOT_STARTED}`}
           action={actionType || ActionTask.CREATE}
-          peopleDefaultId={`${session?.user.id}`}
           onClose={() => {
             handleRemoveParam();
           }}
@@ -1288,8 +1263,6 @@ const Header = ({ className }: HeaderProps) => {
               handleConfirmEditTask(values);
             }
           }}
-          dashboardMemberList={dashboardMemberList}
-          creationDataTaskData={creationDataTaskData}
           onDelete={() => {
             setOpenConfirmDeleteModal(true);
           }}
@@ -1367,7 +1340,6 @@ const Header = ({ className }: HeaderProps) => {
               setOpenConfirmDeleteEventModal(true);
             }
           }}
-          creationDataEventCalendar={creationDataEventCalendar}
           backToEditing={backToEditing}
         />
       )}

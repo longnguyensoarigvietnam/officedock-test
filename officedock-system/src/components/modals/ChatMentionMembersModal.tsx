@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
-import { useSessionCache } from '@providers/SessionCacheProvider';
-
 import { Editor } from '@tiptap/react';
+
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import Checkbox from '@components/common/Checkbox';
 import ImageRound from '@components/common/ImageRound';
@@ -10,14 +10,16 @@ import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import { MENTION_ALL_MEMBERS, NO_OPTIONS } from '@constants';
-import { ChatDashboardMember, ChatParticipant } from '@interfaces/chat';
+
+import { ChatParticipant } from '@interfaces/chat';
+import { Profile } from '@interfaces/user';
 
 interface ChatMentionMembersListProps {
   editor: Editor | null;
   mentionMembers: ChatParticipant[];
   mentionMemberOptions: ChatParticipant[];
   searchMentionMembers: string;
-  dashboardMembers: ChatDashboardMember[];
+  dashboardMemberList: Omit<Profile, "birthday" | "gender">[]
   customModalPosition: string;
   customArrowPosition: string;
   setMentionMembers: Dispatch<SetStateAction<ChatParticipant[]>>;
@@ -34,7 +36,7 @@ export const ChatMentionMembersList = ({
   mentionMemberOptions,
   searchMentionMembers,
   mentionMembers,
-  dashboardMembers,
+  dashboardMemberList,
   customModalPosition,
   customArrowPosition,
   setMentionMembers,
@@ -66,14 +68,14 @@ export const ChatMentionMembersList = ({
   }, [handleClosePopover]);
 
   const renderAvatar = (participantId: number) => {
-    const memberInfo = dashboardMembers.find(
+    const memberInfo = dashboardMemberList.find(
       (memberWithAvatar) => memberWithAvatar.id === participantId,
     );
 
     return (
       <div className="h-6">
         <CustomUserAvatar
-          avatarUrl={memberInfo?.avatarUrl || ''}
+          avatarUrl={memberInfo?.avatar || ''}
           avatarColor={memberInfo?.avatarColor || ''}
           size={33}
         />
@@ -184,8 +186,8 @@ export const ChatMentionMembersList = ({
                           border="full"
                           name="Avatar user"
                         />
-                      ) : dashboardMembers &&
-                        dashboardMembers.find(
+                      ) : dashboardMemberList &&
+                        dashboardMemberList.find(
                           (memberWithAvatar) =>
                             memberWithAvatar.id === participant.id,
                         ) ? (

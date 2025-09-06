@@ -28,6 +28,7 @@ const useAuthenticatedUser = ({
     data: authenticatedUser,
     refetch: refetchAuthenticatedUser,
     isFetched: isFetchedAuthenticatedUser,
+    isFetching: isFetchingAuthenticatedUser,
   } = useQuery({
     queryKey: ['getAuthenticatedUser'],
     queryFn: getAuthenticatedUser,
@@ -47,6 +48,7 @@ const useAuthenticatedUser = ({
     authenticatedUser,
     refetchAuthenticatedUser,
     isFetchedAuthenticatedUser,
+    isFetchingAuthenticatedUser,
   };
 };
 

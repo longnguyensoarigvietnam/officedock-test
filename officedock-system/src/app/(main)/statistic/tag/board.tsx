@@ -14,7 +14,6 @@ import LineChartCompare from '@components/statistic/tag/compare/LineChartCompare
 import FilterTag from '@components/statistic/tag/filter/FilterTag';
 import StackedAreaChart from '@components/statistic/tag/StackedAreaChart';
 
-import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 import useStatisticTagsCompare from '@hooks/useStatisticTagsCompare';
 import useStatisticsTags from '@hooks/useStatisticTags';
 import useStatisticAllTeamCategories from '@hooks/useStatisticAllTeamCategories';
@@ -23,6 +22,7 @@ import useStatisticAllTeamTaskDurations from '@hooks/useStatisticAllTeamTaskDura
 import useStatisticTaskDurationsTag from '@hooks/useStatisticTaskDurationsTag';
 import useStatisticAllTeamTaskDurationsCompare from '@hooks/useStatisticAllTeamTaskDurationsCompare';
 import useStatisticTagTaskDurationsCompare from '@hooks/useStatisticTagTaskDurationsCompare';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
 import { pageRouters } from '@constants/routers';
@@ -93,7 +93,7 @@ const StatisticTagBoard = () => {
     },
     condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
     onSuccess: (data) => {
-      const organization = creationDataStatisticData?.organizations?.find(
+      const organization = creationDataCommonData?.myStatistics?.find(
         (org) => org.id === selectedOrganization?.value,
       );
       if (organization) {
@@ -305,38 +305,41 @@ const StatisticTagBoard = () => {
   });
 
   // Get data creation
-  const { creationDataStatisticData } = useCreationDataStatistic({
-    is_statistic: true,
-
+  const { creationDataCommonData } = useCreationDataCommon({
+    options: {
+      get_organization_for_my_statistic: true,
+    },
     onSuccess: (data) => {
-      const result = (() => {
-        if (data.organizations.length === 0) {
-          return { label: '', value: '' };
-        }
+      if (data.myStatistics) {
+        const result = (() => {
+          if (data.myStatistics.length === 0) {
+            return { label: '', value: '' };
+          }
 
-        const mainItem =
-          data.organizations.find((item) => item.isMain) ||
-          data.organizations[0];
-        const optionsTagList = mainItem.tags.map((item) => ({
-          label: item.name,
-          value: item.id,
-        }));
-        setTagsOptions(optionsTagList);
-        setSelectedTags(optionsTagList);
+          const mainItem =
+            data.myStatistics.find((item) => item.isMain) ||
+            data.myStatistics[0];
+          const optionsTagList = mainItem.tags.map((item) => ({
+            label: item.name,
+            value: item.id,
+          }));
+          setTagsOptions(optionsTagList);
+          setSelectedTags(optionsTagList);
 
-        return {
-          label: mainItem.name,
-          value: mainItem.id,
-        };
-      })();
-      setSelectedOrganization(result);
-      setListOptionsOrganization([
-        ...data.organizations.map((org) => ({
-          value: org.id || '',
-          label: org.name,
-          type: org.type,
-        })),
-      ]);
+          return {
+            label: mainItem.name,
+            value: mainItem.id,
+          };
+        })();
+        setSelectedOrganization(result);
+        setListOptionsOrganization([
+          ...data.myStatistics.map((org) => ({
+            value: org.id || '',
+            label: org.name,
+            type: org.type,
+          })),
+        ]);
+      }
     },
   });
 
@@ -367,7 +370,7 @@ const StatisticTagBoard = () => {
       value: '',
     });
 
-    const organization = creationDataStatisticData?.organizations?.find(
+    const organization = creationDataCommonData?.myStatistics?.find(
       (org) => org.id === data.value,
     );
 
@@ -425,7 +428,7 @@ const StatisticTagBoard = () => {
       value: '',
     });
 
-    const organization = creationDataStatisticData?.organizations.find(
+    const organization = creationDataCommonData?.myStatistics?.find(
       (org) => org.id === selectedOrganization?.value,
     );
     const largeCategory = organization?.statisticCategories.find(
@@ -469,7 +472,7 @@ const StatisticTagBoard = () => {
       value: '',
     });
 
-    const organization = creationDataStatisticData?.organizations.find(
+    const organization = creationDataCommonData?.myStatistics?.find(
       (org) => org.id === selectedOrganization?.value,
     );
     const largeCategory = organization?.statisticCategories.find(
@@ -702,9 +705,7 @@ const StatisticTagBoard = () => {
         handleSelectLarge={handleSelectLarge}
         handleSelectMedium={handleSelectMedium}
         handleSelectSmall={handleSelectSmall}
-        creationDataStatisticData={
-          creationDataStatisticData?.organizations || []
-        }
+        creationDataStatisticData={creationDataCommonData?.myStatistics || []}
       />
     </div>
   );

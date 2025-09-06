@@ -14,14 +14,13 @@ import ImageRound from '@components/common/ImageRound';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
-
 import { apiRouters } from '@constants/routers';
 import { REACTION_LIST_SMALL } from '@constants';
 
 import { ChatMessageResponse } from '@interfaces/chat';
 
 import api from '@base/api';
+import { ChatContext } from '@providers/ChatProvider';
 
 type Props = {
   dataMsgDetail: ChatMessageResponse;
@@ -36,7 +35,7 @@ const DetailReactionChat = ({
   handleReactionClick,
   handleRemoveReactionClick,
 }: Props) => {
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+  const { listAllMember } = useContext(ChatContext);
 
   const optionRef = useRef<HTMLDivElement | null>(null);
 
@@ -253,13 +252,13 @@ const DetailReactionChat = ({
                   <div className="mt-[14px] flex flex-col overflow-y-auto h-[130px] gap-[10px]">
                     {selectedUsers.length > 0 &&
                       selectedUsers.map((id) => {
-                        const memberInfo = dashboardMembersWithAvatars.find(
+                        const memberInfo = listAllMember.find(
                           (member) => member.id == id,
                         );
+
                         const name =
-                          dashboardMembersWithAvatars.find(
-                            (member) => member.id == id,
-                          )?.fullName || '';
+                          listAllMember.find((member) => member.id == id)
+                            ?.fullName || '';
                         return (
                           <div key={id} className="flex items-center gap-2">
                             <CustomUserAvatar

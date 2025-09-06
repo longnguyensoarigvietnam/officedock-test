@@ -1,7 +1,5 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { UseMutateFunction, useMutation } from 'react-query';
-import { useSessionCache } from '@providers/SessionCacheProvider';
-
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 
 import Column from '@components/kanban/Column';
@@ -11,18 +9,21 @@ import { ERROR_EXTEND_COLUMN } from '@constants/message';
 import { INITIAL_INDEX_VALUE } from '@constants';
 
 import { convertDateStringFull, getRandomDateTimeBetween } from '@utils/date';
+
 import { ResponseError } from '@interfaces/response';
 import {
   Columns,
   ColumnType,
-  CreationDataTask,
   Task,
   TaskErrorPerson,
   TaskRequest,
 } from '@interfaces/task';
-import { OptionDropdownType } from '@interfaces/common';
-import api from '@base/api';
+import { CreationDataCommon, OptionDropdownType } from '@interfaces/common';
+
+import { useSessionCache } from '@providers/SessionCacheProvider';
 import { useToast } from '@providers/ToastProvider';
+
+import api from '@base/api';
 
 interface PropsDataFixedTask {
   data: ColumnType;
@@ -62,7 +63,7 @@ interface PropsDataFixedTask {
     TaskRequest,
     unknown
   >;
-  creationDataTaskData: CreationDataTask | undefined;
+  creationDataCommonData: CreationDataCommon | undefined;
   handleConfirmDrop: (result: DropResult) => void;
   selectedOptionZoom: OptionDropdownType;
 }
@@ -85,7 +86,7 @@ const FixedTaskData = ({
   handleConfirmCopyTask,
   handleUpdateItemInline,
   editTaskInline,
-  creationDataTaskData,
+  creationDataCommonData,
   handleConfirmDrop,
 }: PropsDataFixedTask) => {
   const { data: session } = useSessionCache();
@@ -266,7 +267,7 @@ const FixedTaskData = ({
               editTask={editTaskInline}
               setNumberPagesData={setNumberPagesData}
               pinItemToTop={pinItemToTop}
-              creationDataTaskData={creationDataTaskData}
+              creationDataCommonData={creationDataCommonData}
               selectedOptionZoom={selectedOptionZoom}
               saveExtendColumn={(data: Record<string, boolean>) => {
                 saveExtendColumn(data);

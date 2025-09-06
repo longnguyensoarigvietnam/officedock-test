@@ -34,9 +34,6 @@ import DatePicker from '@components/common/DatePicker';
 import RangeSlider from '@components/common/RangeSlider';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
-import useCreationDataTask from '@hooks/useCreationDataTask';
-import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
-
 import {
   CalendarViewOptions,
   EventWorkCategory,
@@ -75,12 +72,14 @@ import {
 import { OptionDropdownType } from '@interfaces/common';
 import { NO_SETTING } from '@constants';
 import { generateVerticalGradient } from '@utils';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const ScheduleTeamBoard = () => {
+  const hasFetched = useRef<boolean>(false);
+
   // Context
   const {
     isLoadingDataTask,
-    setCreationDataTaskData,
     orderingOptions,
     setIsLoadingDataTask,
     setOrderingOptions,
@@ -145,37 +144,35 @@ const ScheduleTeamBoard = () => {
     params.set('organization', id);
     router.push(`?${params.toString()}`);
   };
-  useCreationDataStatisticTeam({
-    organization_id:
+
+  useCreationDataCommon({
+    organizationId:
       (selectedOrganization?.value as string) || organizationId || '',
-    isTeam: true,
+    options: {
+      get_organization_members: true,
+    },
     onSuccess: (data) => {
-      if (!data) return;
-      setListMemberTeam(
-        data.members.map((member) => ({
-          id: member.id,
-          fullName: member.fullName,
-          color: member.avatarColor,
-          avatarUrl: member?.avatar || '',
-        })),
-      );
-      setCurrentResources(
-        data.members.map((member) => ({
-          id: String(member.id),
-          title: member.fullName,
-        })),
-      );
+      if (data.organizationMembers) {
+        setListMemberTeam(
+          data.organizationMembers.map((member) => ({
+            id: member.id,
+            fullName: member.fullName,
+            color: member.avatarColor,
+            avatarUrl: member?.avatar || '',
+          })),
+        );
+        setCurrentResources(
+          data.organizationMembers.map((member) => ({
+            id: String(member.id),
+            title: member.fullName,
+          })),
+        );
+      }
     },
   });
-
-  const { creationDataTaskData } = useCreationDataTask({
-    onSuccess: (data) => {
-      setCreationDataTaskData(data);
-    },
-  });
-
   useEffect(() => {
-    if (organizationId) {
+    if (organizationId && !hasFetched.current) {
+      hasFetched.current = true;
       if (calendarRef.current) {
         const calendarApi = calendarRef.current.getApi();
         const startDateISOString = formatQueryStartDateForCalendar(
@@ -205,6 +202,7 @@ const ScheduleTeamBoard = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId]);
+
   useEffect(() => {
     if (
       dataActualAddSchedule &&
@@ -661,6 +659,7 @@ const ScheduleTeamBoard = () => {
       onSettled: () => {
         setIsLoadingDataTask(false);
         setIsLoading(false);
+        hasFetched.current = false;
       },
     },
   );
@@ -761,6 +760,7 @@ const ScheduleTeamBoard = () => {
       onSettled: () => {
         setIsLoadingDataTask(false);
         setIsLoading(false);
+        hasFetched.current = false;
       },
     },
   );
@@ -1207,7 +1207,6 @@ const ScheduleTeamBoard = () => {
                     leaveTo="opacity-0 translate-y-1">
                     <PopoverPanel className="absolute left-0 top-5 z-[30] w-[400px] transform">
                       <ActionFilterTaskTeam
-                        creationDataTaskData={creationDataTaskData}
                         handleClose={() => setIsOpenModalFilter(false)}
                         listMemberTeam={listMemberTeam}
                         handleReadyToFetch={() => {}}

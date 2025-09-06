@@ -1,13 +1,13 @@
 'use client';
 
-import { useContext } from 'react';
-
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
 
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { formatWithParagraphTags } from '@utils';
+
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 export const EnvelopeContent = ({
   userInfo,
@@ -23,23 +23,9 @@ export const EnvelopeContent = ({
   content: string;
   isSendThanksMessage?: boolean;
 }) => {
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+  const { authenticatedUser } = useAuthenticatedUser({});
+
   const { data: session } = useSessionCache();
-
-  // Render user's avatar
-  const renderUserAvatar = (userId: number) => {
-    const memberInfo = dashboardMembersWithAvatars.find(
-      (member) => member.id == userId,
-    );
-
-    return (
-      <CustomUserAvatar
-        avatarUrl={memberInfo?.avatar || ''}
-        avatarColor={memberInfo?.avatarColor || ''}
-        size={24}
-      />
-    );
-  };
 
   return (
     <div className="w-[500px] h-[282px] bg-white rounded-[20px] pt-[50px] pb-[10px] px-[60px] text-sm space-y-5">
@@ -55,7 +41,11 @@ export const EnvelopeContent = ({
       <p>
         <div className="flex items-center justify-center gap-2 w-full">
           {isSendThanksMessage ? (
-            renderUserAvatar(session?.user.id as number)
+            <CustomUserAvatar
+              avatarUrl={authenticatedUser?.avatar || ''}
+              avatarColor={authenticatedUser?.avatarColor || ''}
+              size={24}
+            />
           ) : (
             <CustomUserAvatar
               avatarUrl={userInfo?.avatar || ''}

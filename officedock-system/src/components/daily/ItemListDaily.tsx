@@ -1,16 +1,19 @@
 import { useRouter } from 'next/navigation';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Button from '@components/common/Button';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Checkbox from '@components/common/Checkbox';
+
 import { pageRouters } from '@constants/routers';
+
 import {
   dataRequestConfirmType,
   DataUserDetailDailyType,
 } from '@interfaces/statistic';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
+
 import { convertToJapaneseTime } from '@utils/date';
+
 import { useDebounceCallback } from '@hooks/useDebounceCallback';
 
 type Props = {
@@ -23,8 +26,6 @@ type Props = {
 };
 
 const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
-
   const [isConfirm, setIsConfirm] = useState(userData.isConfirmed);
 
   useEffect(() => {
@@ -34,10 +35,6 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
   }, [userData]);
 
   const router = useRouter();
-
-  const memberInfo = dashboardMembersWithAvatars.find(
-    (member) => member.id == userData.id,
-  );
 
   const handleSaveData = (e: boolean) => {
     handleConfirm({
@@ -79,8 +76,8 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
 
         <div className="flex items-center gap-[10px]">
           <CustomUserAvatar
-            avatarUrl={memberInfo?.avatar || ''}
-            avatarColor={memberInfo?.avatarColor || ''}
+            avatarUrl={userData?.avatar || ''}
+            avatarColor={userData?.avatarColor || ''}
             size={33}
           />
           <span className="text-black break-all line-clamp-2 ">

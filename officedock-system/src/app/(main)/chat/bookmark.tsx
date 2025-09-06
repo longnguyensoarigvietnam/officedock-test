@@ -2,11 +2,9 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useMutation, useQueryClient } from 'react-query';
+import { useMutation } from 'react-query';
 import { AxiosError } from 'axios';
 
-import ActionsTaskModal from '@components/modals/ActionsTaskModal';
-import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModal';
 import InputSearch from '@components/common/InputSearch';
 import ImageRound from '@components/common/ImageRound';
@@ -25,7 +23,6 @@ import {
   ItemStartType,
   PermissionsSystem,
   ServerStatusCode,
-  StatusValueTask,
   TaskRepetitiveValue,
 } from '@constants/enums';
 import {
@@ -36,7 +33,6 @@ import {
 } from '@constants';
 import {
   ERROR_DELETE_MESSAGE,
-  ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_NOT_FOUND_EVENT,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
@@ -45,19 +41,11 @@ import {
 
 import { useErrorToast } from '@hooks/useErrorToast';
 import useBookMarkList from '@hooks/useBookMarkList';
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
-import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 
-import { ChatDashboardMember, ChatMessageResponse } from '@interfaces/chat';
+import { ChatMessageResponse } from '@interfaces/chat';
 import { Profile } from '@interfaces/user';
 import { BasePagination, OptionDropdownType } from '@interfaces/common';
 import { EventEditFormData, EventRequest } from '@interfaces/calendar';
-import {
-  CreationDataTask,
-  Task,
-  TaskFormData,
-  TaskRequest,
-} from '@interfaces/task';
 
 import { hasPermissionInArray } from '@utils';
 import { addTimeToDate } from '@utils/date';
@@ -70,18 +58,14 @@ import EventActionTypeModal from '@components/modals/EventActionTypeModal';
 
 interface BookmarkListProps {
   searchChatMsg: string;
-  dashboardMembers: ChatDashboardMember[];
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
-  creationDataTaskData: CreationDataTask | undefined;
 }
 
 const BookmarkList = ({
   searchChatMsg,
-  dashboardMembers,
   dashboardMemberList,
   setSearchChatMsg,
-  creationDataTaskData,
 }: BookmarkListProps) => {
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -91,7 +75,6 @@ const BookmarkList = ({
   const router = useRouter();
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
-  const { creationDataEventCalendar } = useCreationDataEventCalendar({});
 
   const [page, setPage] = useState<number>(1);
 
@@ -103,14 +86,9 @@ const BookmarkList = ({
     ChatMessageResponse[]
   >([]);
 
-  const queryClient = useQueryClient();
-
   // Params
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
-
-  // User info
-  const { authenticatedUser } = useAuthenticatedUser({});
 
   // Event
   const [dataEventEdit, setDataEventEdit] = useState<EventEditFormData>();
@@ -136,21 +114,6 @@ const BookmarkList = ({
     useState<EventActionType | null>(null);
   const [isEditingRepetitiveFields, setIsEditingRepetitiveFields] =
     useState<boolean>(false);
-
-  //Task
-  const [isShowModalTask, setShowModalTask] = useState<boolean>(false);
-  const [dataTaskEdit, setDataTaskEdit] = useState<Task | null>(null);
-  const [openWarningCloseModal, setOpenWarningCloseModal] =
-    useState<boolean>(false);
-  const [resetFunctions, setResetFunctions] = useState<{
-    resetDataCategoryOptions?: () => void;
-    reset?: () => void;
-  }>({});
-  const [pendingTaskData, setPendingTaskData] = useState<TaskFormData | null>();
-  const [closeAction, setCloseAction] = useState<ActionTask | null>();
-  const actionType = searchParams.get('action');
-  const typeDetail = searchParams.get('type');
-  const taskDetailId = searchParams.get('task');
 
   // Search
   const [openSearchMessagesModal, setOpenSearchMessagesModal] = useState(false);
@@ -515,188 +478,11 @@ const BookmarkList = ({
     router.push(`?${params.toString()}`);
   };
 
-  // Remove param
-  const handleRemoveParam = () => {
-    const params = new URLSearchParams(searchParams);
-    params.delete('task');
-    params.delete('action');
-    params.delete('type');
-
-    router.replace(`?${params.toString()}`);
-    setShowModalTask(false);
-  };
-
   // Edit task
   const handleActionEditTask = (id: number) => {
     handleSetParam({
       id: `${id}`,
       action: ActionTask.EDIT,
-    });
-  };
-
-  // Get task info
-  const handleGetDataDetailTask = async (id: number) => {
-    const { data: response } = await api.get(apiRouters.TASK_DETAIL(`${id}`));
-    return response;
-  };
-
-  const { mutate: getDataDetailTask } = useMutation(
-    'getDetailTask',
-    handleGetDataDetailTask,
-    {
-      onSuccess: async (data) => {
-        setDataTaskEdit(data);
-        setShowModalTask(true);
-      },
-      onError: () => {
-        handleRemoveParam();
-      },
-    },
-  );
-
-  useEffect(() => {
-    if (
-      actionType &&
-      (typeDetail === ItemStartType.TASK ||
-        typeDetail === ItemStartType.FIXED_TASK) &&
-      dataTaskEdit != null
-    ) {
-      if (taskDetailId) {
-        setShowModalTask(true);
-        getDataDetailTask(parseInt(taskDetailId));
-      } else {
-        setShowModalTask(true);
-      }
-    } else {
-      setShowModalTask(false);
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getDataDetailTask, taskDetailId, actionType, typeDetail]);
-
-  // Edit task
-  const handleEditTask = async (data: TaskRequest) => {
-    setIsLoading(true);
-    return await api.patch(apiRouters.TASK_DETAIL(`${data.id}`), data);
-  };
-  const { mutate: editTask } = useMutation('postEditTask', handleEditTask, {
-    onSuccess: async () => {
-      handleRemoveParam();
-      queryClient.refetchQueries(['getTaskHeaderStart']);
-      queryClient.refetchQueries(['getDataStatistic']);
-
-      showToast({
-        description: SUCCESS_UPDATE_MESSAGE,
-      });
-      setDataTaskEdit(null);
-      setShowModalTask(false);
-      setPendingTaskData(null);
-      setCloseAction(null);
-    },
-    onError: (error: AxiosError<any>) => {
-      if (error.response?.data.taskSchedules) {
-        showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
-      } else showErrorToast(error, ERROR_UPDATE_MESSAGE);
-    },
-    onSettled: () => {
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 500);
-    },
-  });
-
-  const handleConfirmEditTask = (data: TaskFormData) => {
-    const tagIds = data.tagIds
-      ? data.tagIds
-          .filter((item) => item.value !== '')
-          .map((item) => ({ tagId: item.value }))
-      : [];
-
-    const peopleInChargeIds =
-      data.peopleInChargeIds &&
-      data.peopleInChargeIds
-        .filter((item) => item.value !== '')
-        .map((item) => ({ peopleInChargeId: item.value }));
-
-    const planList = data.plans
-      ? data.plans
-          .filter((item) => item.planStartDate !== null)
-          .map((item) => {
-            return {
-              scheduleId: item.scheduleId || null,
-              planStartDate:
-                item.planStartDate && item.planStartTime
-                  ? addTimeToDate(
-                      item.planStartDate as Date,
-                      item.planStartTime,
-                    )
-                  : null,
-              planEndDate:
-                item.planEndDate && item.planEndTime
-                  ? addTimeToDate(item.planEndDate as Date, item.planEndTime)
-                  : null,
-            };
-          })
-      : null;
-    const todoListData =
-      data.todoList && data.todoList.filter((item) => item.content !== '');
-
-    const newWorkCategories = [];
-    if (data.categories.LARGE?.value) {
-      newWorkCategories.push({
-        categoryId:
-          `${data.categories.LARGE.value}` == NO_SETTING
-            ? null
-            : `${data.categories.LARGE.value}`,
-        type: EventWorkCategory.LARGE,
-      });
-    }
-    if (data.categories.MEDIUM.value) {
-      newWorkCategories.push({
-        categoryId:
-          `${data.categories.MEDIUM.value}` == NO_SETTING
-            ? null
-            : `${data.categories.MEDIUM.value}`,
-        type: EventWorkCategory.MEDIUM,
-      });
-    }
-    if (data.categories.SMALL.value) {
-      newWorkCategories.push({
-        categoryId:
-          `${data.categories.SMALL.value}` == NO_SETTING
-            ? null
-            : `${data.categories.SMALL.value}`,
-        type: EventWorkCategory.SMALL,
-      });
-    }
-
-    editTask({
-      id: data.id,
-      title: data.title,
-      statusId: data.statusId ? (data.statusId.value as number) : null,
-      priority: data.priority ? data.priority.value.toString() : '',
-      deadline:
-        data.deadlineDate && data.deadlineTime
-          ? addTimeToDate(data.deadlineDate as Date, data.deadlineTime)
-          : null,
-      description: data.description,
-      tagIds: tagIds,
-      categoryIds: newWorkCategories,
-      isImportant: data.isImportant,
-      todoList: todoListData,
-      taskSchedules: planList && planList.length ? planList : [],
-      oldIdStatus: data.oldIdStatus,
-      sendToChat: true,
-      peopleInChargeIds: peopleInChargeIds,
-      organizationId: data.organization
-        ? Number(data.organization.value)
-        : null,
-      remindCountdown: data.deadlineRemindCountdown?.value
-        ? `${data.deadlineRemindCountdown?.value}`
-        : null,
-      remindType: data.deadlineRemindType?.value
-        ? `${data.deadlineRemindType?.value}`
-        : null,
     });
   };
 
@@ -780,7 +566,6 @@ const BookmarkList = ({
               <MessageDetailBookmark
                 isLastItem={dataMessageDetail.length - 1 === index}
                 messageDetail={item}
-                dashboardMembers={dashboardMembers}
                 dashboardMemberList={dashboardMemberList}
                 chatRoomInfo={item.chatRoom}
                 handleConfirmGetDataDetailEvent={
@@ -799,69 +584,7 @@ const BookmarkList = ({
           ))}
         </div>
       </div>
-      {isShowModalTask && (
-        <ActionsTaskModal
-          open={isShowModalTask}
-          columnId={`${StatusValueTask.NOT_STARTED}`}
-          type={typeDetail || ItemStartType.TASK}
-          action={ActionTask.CREATE}
-          dataTask={dataTaskEdit}
-          authenticatedUser={authenticatedUser}
-          peopleDefaultId={`${session?.user.id}`}
-          disableDeleteAction={true}
-          onClose={() => {
-            setDataTaskEdit(null);
-            handleRemoveParam();
-          }}
-          onWarning={({
-            reset,
-            resetDataCategoryOptions,
-            taskData,
-            action,
-          }: {
-            reset: () => void;
-            resetDataCategoryOptions: () => void;
-            taskData: TaskFormData;
-            action: ActionTask;
-          }) => {
-            setResetFunctions({
-              resetDataCategoryOptions,
-              reset,
-            });
-            setPendingTaskData(taskData);
-            setCloseAction(action);
-            setOpenWarningCloseModal(true);
-          }}
-          onEdit={handleConfirmEditTask}
-          onSubmit={handleConfirmEditTask}
-          dashboardMemberList={dashboardMemberList}
-          creationDataTaskData={creationDataTaskData}
-        />
-      )}
 
-      {openWarningCloseModal && (
-        <WarningCloseTaskModal
-          open={openWarningCloseModal}
-          onCloseByIcon={() => {
-            setOpenWarningCloseModal(false);
-          }}
-          onClose={() => {
-            setShowModalTask(false);
-            setOpenWarningCloseModal(false);
-            handleRemoveParam();
-            setDataTaskEdit(null);
-            setIsLoading(false);
-            resetFunctions.resetDataCategoryOptions?.();
-            resetFunctions.reset?.();
-          }}
-          onConfirm={() => {
-            setOpenWarningCloseModal(false);
-            if (closeAction == ActionTask.EDIT) {
-              handleConfirmEditTask(pendingTaskData as TaskFormData);
-            }
-          }}
-        />
-      )}
       {openEditEventModal && (
         <ActionsEventModal
           open={openEditEventModal}
@@ -910,7 +633,6 @@ const BookmarkList = ({
               setOpenConfirmDeleteEventModal(true);
             }
           }}
-          creationDataEventCalendar={creationDataEventCalendar}
           backToEditing={backToEditing}
         />
       )}
@@ -1014,7 +736,7 @@ const BookmarkList = ({
           open={true}
           isSearchingMessagesRef={isSearchingMessagesRef}
           chatRoomType={ChatRoomType.BOOKMARK}
-          dashboardMembers={dashboardMembers}
+          dashboardMemberList={dashboardMemberList}
           searchMessageResults={searchMessageResults}
           searchChatMsg={searchChatMsg}
           setSearchChatMsg={setSearchChatMsg}

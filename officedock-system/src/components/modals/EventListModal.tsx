@@ -3,7 +3,6 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import {
   Dispatch,
   SetStateAction,
-  useContext,
   useEffect,
   useRef,
   useState,
@@ -23,6 +22,7 @@ import {
 import { JAPANESE_TIME_ZONE } from '@constants';
 
 import { CalendarPopoverInfo, EventParticipant } from '@interfaces/calendar';
+import { Profile } from '@interfaces/user';
 
 import { calculatePopupPosition, hasPermissionInArray } from '@utils';
 import {
@@ -31,10 +31,9 @@ import {
   getDateInfo,
 } from '@utils/date';
 
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
-
 interface EventListModalProps {
   eventListModalInfo: CalendarPopoverInfo | null;
+  dashboardMemberList: Profile[]
   popoverInfoLoading: boolean;
   setEventListModalInfo: Dispatch<SetStateAction<CalendarPopoverInfo | null>>;
   setDefaultCreateStartDate: Dispatch<SetStateAction<Date | undefined>>;
@@ -49,6 +48,7 @@ interface EventListModalProps {
 
 export const EventListModal = ({
   eventListModalInfo,
+  dashboardMemberList,
   popoverInfoLoading,
   setEventListModalInfo,
   setDefaultCreateStartDate,
@@ -59,7 +59,6 @@ export const EventListModal = ({
 }: EventListModalProps) => {
   const popoverRef = useRef<HTMLDivElement | null>(null);
   const { data: session } = useSessionCache();
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
   const [popupPosition, setPopupPosition] = useState<{
     top: number;
     left: number;
@@ -106,7 +105,7 @@ export const EventListModal = ({
   const showUserAvatars = (participantList: EventParticipant[]) => {
     if (participantList && participantList.length > 0) {
       if (participantList.length == 1) {
-        const memberInfo = dashboardMembersWithAvatars.find(
+        const memberInfo = dashboardMemberList.find(
           (member) => member.id == participantList[0].id,
         );
         return (
@@ -126,7 +125,7 @@ export const EventListModal = ({
         return (
           <div className="mt-[-7px] mr-1 flex items-center">
             {participantList.map((participant, index) => {
-              const memberInfo = dashboardMembersWithAvatars.find(
+              const memberInfo = dashboardMemberList.find(
                 (member) => member.id === participant.id,
               );
 
@@ -152,7 +151,7 @@ export const EventListModal = ({
         return (
           <div className="mt-[-7px] mr-1 flex items-center">
             {participantList.slice(0, 1).map((participant, index) => {
-              const memberInfo = dashboardMembersWithAvatars.find(
+              const memberInfo = dashboardMemberList.find(
                 (member) => member.id === participant.id,
               );
 

@@ -34,13 +34,11 @@ import {
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 
-import useCreationRoleUser from '@hooks/useCreationRoleUser';
 import useUserList from '@hooks/useUserList';
 import { useErrorToast } from '@hooks/useErrorToast';
-import useCreationOrganization from '@hooks/useCreationOrganization';
 import useDebounceText from '@hooks/useDebounceText';
 import useUserDetail from '@hooks/useUserDetail';
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
@@ -67,7 +65,6 @@ const ListUsers = () => {
 
   const { showToast } = useToast();
   const router = useRouter();
-  const { authenticatedUser } = useAuthenticatedUser({});
 
   // State
   const [dataUsers, setDataUsers] = useState<User[]>([]);
@@ -118,7 +115,6 @@ const ListUsers = () => {
     searchParams.get('action'),
   );
 
-  const { creationRoleUserData } = useCreationRoleUser({});
   const debouncedSearch = useDebounceText(search, 1000);
 
   const [debouncedParams, setDebouncedParams] = useState({
@@ -137,17 +133,32 @@ const ListUsers = () => {
     }));
   }, [debouncedSearch]);
 
-  useCreationOrganization({
+  const { creationDataCommonData } = useCreationDataCommon({
+    options: {
+      get_roles: true,
+      get_all_organizations: true,
+      get_company: true,
+    },
     onSuccess: (data) => {
+      setRoleUserOptions([
+        {
+          label: '選択',
+          value: '',
+        },
+        ...(data.roles?.map((org) => ({
+          label: org.name,
+          value: org.id,
+        })) || []),
+      ]);
       setOrganizationUserOptions([
         {
           label: '選択',
           value: '',
         },
-        ...data.map((item) => ({
+        ...(data.allOrganizations?.map((item) => ({
           label: item.name,
           value: Number(item.id),
-        })),
+        })) || []),
       ]);
     },
   });
@@ -164,21 +175,6 @@ const ListUsers = () => {
       role: debouncedParams.role,
     },
   );
-
-  useEffect(() => {
-    if (creationRoleUserData) {
-      setRoleUserOptions([
-        {
-          label: '選択',
-          value: '',
-        },
-        ...creationRoleUserData.map((org) => ({
-          label: org.name,
-          value: org.id,
-        })),
-      ]);
-    }
-  }, [creationRoleUserData]);
 
   useEffect(() => {
     if (userList) {
@@ -569,8 +565,8 @@ const ListUsers = () => {
         <div className="font-medium text-sm text-[#77858F] flex items-center gap-5 ">
           <div className=" flex items-center  gap-5">
             <p className="text-black text-[26px]">ユーザー管理</p>
-            <span>{authenticatedUser?.company.name || ''}</span>
-            <span>全メンバー30人 / 50</span>
+            <span>{creationDataCommonData?.company?.name || ''}</span>
+            <span>全メンバー{userList?.count}人 / 50</span>
           </div>
           <div className="flex gap-[10px] font-medium items-center">
             <p className="text-xs ">現在のプラン</p>

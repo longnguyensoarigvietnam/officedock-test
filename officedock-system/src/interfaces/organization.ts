@@ -21,6 +21,8 @@ export interface Organizations {
   uuid?: string;
   createdAt?: Date | string;
   updatedAt?: Date | string;
+  icon?: null | string;
+  iconColor?: string;
 }
 
 export interface statisticCategories {

@@ -68,6 +68,7 @@ import RangeSlider from '@components/common/RangeSlider';
 import DetailPlanItemModal from '@components/modals/DetailPlanItemModal';
 import DetailEventPlanModal from '@components/modals/DetailEventPlanModal';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import EventActionTypeModal from '@components/modals/EventActionTypeModal';
 
 import TaskCard from './TaskCard';
 
@@ -109,8 +110,6 @@ import {
 } from '@constants/message';
 
 import { useErrorToast } from '@hooks/useErrorToast';
-import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import { useDebounceCallback } from '@hooks/useDebounceCallback';
 
 import api from '@base/api';
@@ -124,12 +123,8 @@ import {
   TaskRequest,
   TaskTimeSchedule,
 } from '@interfaces/task';
-import {
-  EventEditFormData,
-  EventParticipant,
-  EventRequest,
-} from '@interfaces/calendar';
-import { OptionDropdownType } from '@interfaces/common';
+import { EventEditFormData, EventRequest } from '@interfaces/calendar';
+import { CreationDataCommon, OptionDropdownType } from '@interfaces/common';
 import {
   addTimeDifference,
   addTimeToDate,
@@ -154,11 +149,7 @@ import {
 import './styles/schedule.css';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
-import {
-  adjustPositionForViewportSchedule,
-  hasPermissionInArray,
-} from '@utils';
-import EventActionTypeModal from '@components/modals/EventActionTypeModal';
+import { hasPermissionInArray } from '@utils';
 
 const formatDateJp = (date: Date) => {
   return format(date, DATE_SCHEDULE_FORMAT, {
@@ -167,6 +158,7 @@ const formatDateJp = (date: Date) => {
 };
 
 interface TypeDateTimeSchedule {
+  creationDataCommonData: CreationDataCommon | undefined;
   dataItemUpdateSchedule: Task | undefined;
   dataItemChangeInline: Task | undefined;
   dataItemAddSchedule: Task | undefined;
@@ -196,6 +188,7 @@ interface TypeDateTimeSchedule {
 const TimeSchedule = memo(
   ({
     exEvents,
+    creationDataCommonData,
     idTaskDelete,
     dataItemAddSchedule,
     dataItemUpdateSchedule,
@@ -2884,80 +2877,6 @@ const TimeSchedule = memo(
       return true;
     };
 
-    const _handleShowTaskInModal = (data: {
-      id: string;
-      taskId: string | number;
-      uuid: string;
-      isImportant?: boolean | null;
-      isRunning?: boolean;
-      deadline?: string;
-      largeColor?: string;
-      resource: string;
-      start: string;
-      end: string;
-      title: string;
-      eventList: any[];
-      statusId: number;
-      clientX: number;
-      clientY: number;
-    }) => {
-      setPopoverInfo({
-        id: data.id,
-        taskId: data.taskId,
-        resource: data.resource,
-        largeColor: data.largeColor ? data.largeColor : '',
-        title: data.title,
-        end: data.end,
-        isImportant: data.isImportant,
-        uuid: data.uuid,
-        deadline: data.deadline,
-        start: data.start,
-        isRunning: data.isRunning,
-        statusId: data.statusId,
-        left: adjustPositionForViewportSchedule({
-          top: Number(data.clientY),
-          left: Number(data.clientX),
-        }).left,
-        top: adjustPositionForViewportSchedule({
-          top: Number(data.clientY),
-          left: Number(data.clientX),
-        }).top,
-      });
-    };
-    const _handleShowEventInModal = (data: {
-      id: string;
-      start: string;
-      end: string;
-      title: string;
-      address?: string;
-      isAllDay: boolean;
-      participants: EventParticipant[];
-      clientX: number;
-      clientY: number;
-      type: OptionDropdownType;
-    }) => {
-      setEventInfo({
-        id: data.id,
-        start: data.start,
-        end: data.end,
-        left: adjustPositionForViewportSchedule({
-          top: Number(data.clientY),
-          left: Number(data.clientX),
-        }).left,
-        top: adjustPositionForViewportSchedule({
-          top: Number(data.clientY),
-          left: Number(data.clientX),
-        }).top,
-        title: data.title,
-        address: data.address,
-        isAllDay: data.isAllDay,
-        participants: data.participants,
-        type: data.type,
-        scheduleId: '',
-        eventSchedule: '',
-      });
-    };
-
     // Event click card
     const handleEventClick = (clickInfo?: any) => {
       const resourcePlan =
@@ -2977,58 +2896,6 @@ const TimeSchedule = memo(
             : [...prev, uuid],
         );
       }
-      // TODO: Click event  schedule
-      // else {
-      //   setIsStartPopupDetail(clickInfo.event.extendedProps.isStart);
-      //   if (
-      //     clickInfo.event.extendedProps.type === ItemStartType.TASK ||
-      //     !resourcePlan
-      //   ) {
-      //     handleShowTaskInModal({
-      //       title: clickInfo.event.title,
-      //       id: clickInfo.event.id,
-      //       taskId: clickInfo.event.extendedProps.taskId,
-      //       isImportant: clickInfo.event.extendedProps.isImportant,
-      //       isRunning: clickInfo.event.extendedProps.isCalculation,
-      //       deadline: clickInfo.event.extendedProps.deadline,
-      //       uuid: clickInfo.event.extendedProps.uuid,
-      //       resource: resourcePlan
-      //         ? ItemScheduleType.PLANS
-      //         : ItemScheduleType.ACTUAL,
-      //       largeColor: clickInfo.event.extendedProps.largeColor
-      //         ? clickInfo.event.extendedProps.largeColor
-      //         : '',
-      //       start: clickInfo.event.extendedProps.planStartDate,
-      //       end: clickInfo.event.extendedProps.planEndDate,
-      //       eventList: taskTimeScheduleList,
-      //       statusId: resourcePlan
-      //         ? clickInfo.event.extendedProps.statusId ||
-      //           clickInfo.event.extendedProps.status.id
-      //         : 0,
-      //       clientX: clickInfo.jsEvent.clientX,
-      //       clientY: clickInfo.jsEvent.clientY,
-      //     });
-      //   } else {
-      //     setIdBackToEvent(clickInfo.event.extendedProps.scheduleId);
-      //     handleShowEventInModal({
-      //       title: clickInfo.event.title,
-      //       id: clickInfo.event.extendedProps.scheduleId,
-      //       start: clickInfo.event.extendedProps.planStartDate,
-      //       end: clickInfo.event.extendedProps.isAllDay
-      //         ? clickInfo.event.extendedProps.endDate
-      //         : clickInfo.event.extendedProps.planEndDate,
-      //       clientX: clickInfo.jsEvent.clientX,
-      //       clientY: clickInfo.jsEvent.clientY,
-      //       isAllDay: clickInfo.event.extendedProps.isAllDay,
-      //       address: clickInfo.event.extendedProps.address,
-      //       participants: clickInfo.event.extendedProps.participants,
-      //       type: {
-      //         label: clickInfo.event.extendedProps.eventType,
-      //         value: clickInfo.event.extendedProps.eventType,
-      //       },
-      //     });
-      //   }
-      // }
     };
 
     // Event action
@@ -3083,8 +2950,6 @@ const TimeSchedule = memo(
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [getDataDetailEvent, idEvent, actionType]);
-
-    const { creationDataEventCalendar } = useCreationDataEventCalendar({});
 
     const handleSetEventParam = ({
       id,
@@ -3784,27 +3649,25 @@ const TimeSchedule = memo(
       return '00:15:00';
     };
     // Get data zoom
-    const { authenticatedUser } = useAuthenticatedUser({
-      onSuccess: (data) => {
-        if (data.setting?.isShowWeekSchedule) {
-          handleViewChangeDefault(CalendarViewOptions.VIEW_BY_WEEK);
-        } else {
-          handleViewChangeDefault(CalendarViewOptions.VIEW_BY_DAY);
-        }
-        handleChooseDay(displayHeaderDateStart || new Date());
-      },
-    });
 
     useEffect(() => {
-      if (authenticatedUser) {
-        const value = authenticatedUser.setting?.scheduleZoom as number;
+      if (creationDataCommonData) {
+        const value = creationDataCommonData.userSetting
+          ?.scheduleZoom as number;
         setSliderValue(value);
         const calculatedHeight = calculateSlotHeight(value);
         const calculatedDuration = calculateSlotDuration(value);
         setSlotHeight(calculatedHeight);
         setIsOptionZoomSchedule(calculatedDuration);
+        if (creationDataCommonData.userSetting?.isShowWeekSchedule) {
+          handleViewChangeDefault(CalendarViewOptions.VIEW_BY_WEEK);
+        } else {
+          handleViewChangeDefault(CalendarViewOptions.VIEW_BY_DAY);
+        }
+        handleChooseDay(displayHeaderDateStart || new Date());
       }
-    }, [authenticatedUser]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [creationDataCommonData]);
 
     // Handle save zoom
     const handleSaveZoomSchedule = async (data: {
@@ -4322,7 +4185,6 @@ const TimeSchedule = memo(
                 setOpenConfirmDeleteEventModal(true);
               }
             }}
-            creationDataEventCalendar={creationDataEventCalendar}
             backToEditing={backToEditing}
           />
         )}

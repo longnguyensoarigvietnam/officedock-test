@@ -436,6 +436,8 @@ export const apiRouters = {
   ORGANIZATION_CREATION: '/creation-data/organization/',
   ROLE_CREATION: '/creation-data/role/',
   TASK_CREATION: '/creation-data/task/',
+  COMMON_CREATION: '/creation-data/common/',
+
   SCHEDULE_CREATION: '/creation-data/schedule/',
   PEOPLE_IN_CHARGE_CREATION: '/creation-data/people-in-charge/',
   STATISTIC_ORGANIZATION_CREATION: '/creation-data/statistic-categories/',

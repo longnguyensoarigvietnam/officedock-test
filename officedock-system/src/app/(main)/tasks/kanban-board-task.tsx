@@ -41,13 +41,10 @@ import ActionFilterTask from '@components/modals/ActionFilterTask';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import ConfirmDragModalTask from '@components/modals/ConfirmDropModalTask';
 
-import useCreationDataTask from '@hooks/useCreationDataTask';
 import useTaskBoardList from '@hooks/useTaskBoardList';
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import useTemplateList from '@hooks/useTemplateList';
-import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import { useErrorToast } from '@hooks/useErrorToast';
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -57,6 +54,7 @@ import {
   ItemScheduleType,
   ItemStartType,
   KanbanType,
+  ScreenName,
   SocketActions,
   StatusValueTask,
   TaskRepetitiveType,
@@ -99,7 +97,6 @@ import {
   TemplateFormData,
   TemplateRequest,
 } from '@interfaces/template';
-import { User } from '@interfaces/user';
 
 import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
@@ -114,6 +111,7 @@ import {
 } from '@utils/date';
 import { compareItems } from '@utils';
 import api from '@base/api';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const createStatusTaskObjectFromArray = (
   array: StatusTask[],
@@ -282,9 +280,7 @@ const KanbanBoardTask = () => {
   // Fixed task
   const [isReadyToFetch, setIsReadyToFetch] = useState(false);
 
-  const { dashboardMemberList } = useDashboardMemberList();
   const { templates: templateList } = useTemplateList();
-  const [loggedInUser, setLoggedInUser] = useState<User>();
   const [openWarningCloseModal, setOpenWarningCloseModal] =
     useState<boolean>(false);
 
@@ -323,47 +319,57 @@ const KanbanBoardTask = () => {
   }, [numberPages]);
 
   // Call api (hook) get creation data task. Data such as: tags, status, types, priorities
-  const { creationDataTaskData } = useCreationDataTask({});
-  useAuthenticatedUser({
+
+  const { creationDataCommonData } = useCreationDataCommon({
+    options: {
+      get_user_setting: true,
+      get_organizations_of_user_by_screen: ScreenName.MY_TASK,
+      get_task_status: true,
+    },
     onSuccess: (data) => {
-      setLoggedInUser(data);
-      if (data.setting?.kanbanZoom) {
+      if (data.taskStatus) {
+        setStatusTask(data.taskStatus);
+      }
+      if (data.userSetting?.kanbanZoom) {
         setSelectedOptionZoom({
-          label: `${data.setting?.kanbanZoom}%`,
-          value: data.setting?.kanbanZoom,
+          label: `${data.userSetting?.kanbanZoom}%`,
+          value: data.userSetting?.kanbanZoom,
         });
-        if (data.setting?.kanbanZoom === 25) {
+        if (data.userSetting?.kanbanZoom === 25) {
           setColumnWidth(calculateWidth(247, 50));
         } else {
           setColumnWidth(
-            calculateWidth(247, data.setting?.kanbanZoom as number),
+            calculateWidth(247, data.userSetting?.kanbanZoom as number),
           );
         }
       }
-      if (data.setting?.tabVisibility) {
+      if (data.userSetting?.tabVisibility) {
         setExtendByStatus((prev) =>
           prev.map((item) => ({
             ...item,
-            status: data.setting?.tabVisibility?.[item.id] ?? true,
+            status: data.userSetting?.tabVisibility?.[item.id] ?? true,
           })),
         );
       }
-      if (data.setting?.isSortingTaskByImportant) {
+      if (data.userSetting?.isSortingTaskByImportant) {
         setDataOrderRing(FilterTypeKanban.IMPORTANT);
-      } else if (data.setting?.isSortingTaskByDeadline) {
+      } else if (data.userSetting?.isSortingTaskByDeadline) {
         setDataOrderRing(FilterTypeKanban.DEADLINE);
       } else {
         setDataOrderRing('');
       }
-      if (data.setting?.taskFilter && data.setting?.taskFilter !== null) {
+      if (
+        data.userSetting?.taskFilter &&
+        data.userSetting?.taskFilter !== null
+      ) {
         setOrderingOptions({
-          category_ids: data.setting?.taskFilter.category || [],
-          organization_ids: data.setting?.taskFilter.organization || [],
-          tag_ids: data.setting?.taskFilter.tag || [],
+          category_ids: data.userSetting?.taskFilter.category || [],
+          organization_ids: data.userSetting?.taskFilter.organization || [],
+          tag_ids: data.userSetting?.taskFilter.tag || [],
         });
       }
-      setIsListView(data.setting?.isShowListKanban || false);
-      setShowFrequentlyTasks(data.setting?.isShowMyTemplate || false);
+      setIsListView(data.userSetting?.isShowListKanban || false);
+      setShowFrequentlyTasks(data.userSetting?.isShowMyTemplate || false);
       setIsReadyToFetch(true);
     },
   });
@@ -484,13 +490,6 @@ const KanbanBoardTask = () => {
     };
   }, [setMemberSelected, setOrderingRequest, setTagSelected, setSearchValue]);
 
-  // If there is a status, the status will be re-set
-  useEffect(() => {
-    if (creationDataTaskData) {
-      setStatusTask(creationDataTaskData.status);
-    }
-  }, [creationDataTaskData]);
-
   // If there is dataTask and status, it will map to create data for kanban based on the Columns interface
   useEffect(() => {
     if (taskBoardList && statusTask && statusTask.length) {
@@ -508,6 +507,7 @@ const KanbanBoardTask = () => {
       setColumnsKanbanData(initialColumn);
     }
   }, [statusTask, taskBoardList]);
+
   // Update date task
   const updateTaskDates = ({
     taskId,
@@ -3182,6 +3182,7 @@ const KanbanBoardTask = () => {
       <div className="flex flex-row flex-grow h-[calc(100vh_-_76px)] gap-0 bg-[#F8FAFC] ">
         <TimeSchedule
           exEvents={exEvents}
+          creationDataCommonData={creationDataCommonData}
           idTaskDelete={parseInt(idTaskDeleteKanban)}
           dataItemChangeInline={dataItemChangeInline}
           dataItemAddSchedule={dataItemAddSchedule}
@@ -3274,7 +3275,11 @@ const KanbanBoardTask = () => {
                             leaveTo="opacity-0 translate-y-1">
                             <PopoverPanel className="absolute left-0 top-5 z-[1] w-[400px] transform">
                               <ActionFilterTask
-                                creationDataTaskData={creationDataTaskData}
+                                userId={
+                                  session?.user.id
+                                    ? (session?.user.id as number)
+                                    : undefined
+                                }
                                 saveZoomKanban={saveZoomKanban}
                                 isLoadingDataTask={isFetchingTaskBoards}
                                 handleClose={() => setIsOpenModalFilter(false)}
@@ -3368,7 +3373,7 @@ const KanbanBoardTask = () => {
                               }}
                             />
                           </div>
-                          <p className='text-nowrap'> 新規作成</p>
+                          <p className="text-nowrap"> 新規作成</p>
                         </Button>
                       </DynamicTooltip>
                     </div>
@@ -3477,7 +3482,7 @@ const KanbanBoardTask = () => {
                         showFrequentlyTasks={showFrequentlyTasks}
                         numberPagesData={numberPagesData}
                         orderTaskSave={orderTaskSave}
-                        creationDataTaskData={creationDataTaskData}
+                        creationDataCommonData={creationDataCommonData}
                         setColumnsKanbanData={setColumnsKanbanData}
                         setNumberPagesData={setNumberPagesData}
                         isFetchingTaskBoards={isFetchingTaskBoards}
@@ -3524,7 +3529,7 @@ const KanbanBoardTask = () => {
                     handleActionEditTask={handleActionEditTask}
                     handleConfirmCopyTask={handleActionCopyTask}
                     handleUpdateItemInline={handleUpdateItemInline}
-                    creationDataTaskData={creationDataTaskData}
+                    creationDataCommonData={creationDataCommonData}
                     pinItemToTop={pinItemToTop}
                     editTaskInline={(data: DataStatusChangeInline) => {
                       if (
@@ -3549,12 +3554,9 @@ const KanbanBoardTask = () => {
                   columnId={columnId}
                   type={typeDetail || ItemStartType.TASK}
                   action={actionType || ActionTask.CREATE}
-                  peopleDefaultId={peopleDefaultId || `${session?.user.id}`}
                   setDataErrorTask={setDataErrorTask}
-                  authenticatedUser={loggedInUser}
+                  orgUserList={creationDataCommonData?.organizations}
                   errorPerson={dataErrorTask}
-                  dashboardMemberList={dashboardMemberList}
-                  creationDataTaskData={creationDataTaskData}
                   onClose={() => {
                     setShowEditTaskModal(false);
                     setColumnId('');
@@ -3635,9 +3637,9 @@ const KanbanBoardTask = () => {
                   open={showTemplateModal}
                   dataTemplate={dataTemplateEdit}
                   action={actionType || TemplateAction.CREATE}
+                  orgUserList={creationDataCommonData?.organizations}
                   peopleDefaultId={peopleDefaultId || `${session?.user.id}`}
                   setDataErrorTask={setDataErrorTask}
-                  creationDataTaskData={creationDataTaskData}
                   onClose={() => {
                     handleRemoveTemplateParam();
                     setShowTemplateModal(false);

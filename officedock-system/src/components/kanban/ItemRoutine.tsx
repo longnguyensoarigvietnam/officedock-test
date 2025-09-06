@@ -9,6 +9,7 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import ImageRound from '@components/common/ImageRound';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import ClockIconColor from '@components/custom/ClockIconColor';
 
 import {
   EventWorkCategory,
@@ -18,12 +19,9 @@ import {
   TaskRepetitiveType,
   TaskRepetitiveValue,
 } from '@constants/enums';
-import {
-  CreationDataTask,
-  DataStatusChangeInline,
-  Task,
-  TaskFormData,
-} from '@interfaces/task';
+import { TASK_REPETITIVE_OPTIONS } from '@constants';
+
+import { DataStatusChangeInline, Task, TaskFormData } from '@interfaces/task';
 
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 
@@ -36,14 +34,11 @@ import {
   getJapaneseWeekDay,
 } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
-import { TASK_REPETITIVE_OPTIONS } from '@constants';
-import ClockIconColor from '@components/custom/ClockIconColor';
 
 interface ItemProps {
   id: string;
   index: number;
   content: Task;
-  creationDataTaskData?: CreationDataTask;
   handleActionEditTask: (id: number, type?: string) => void;
   handleConfirmCopyTask: (id: number, type?: string) => void;
   handleUpdateItemInline: (data: Task) => void;

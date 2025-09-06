@@ -19,7 +19,7 @@ import { MessageDetailBookmark } from '@components/chat/MessageDetailBookmark';
 
 import { NO_DATA_AVAILABLE } from '@constants';
 
-import { ChatDashboardMember, ChatMessageResponse } from '@interfaces/chat';
+import { ChatMessageResponse } from '@interfaces/chat';
 import { Profile } from '@interfaces/user';
 
 import { LoadingContext } from '@providers/LoadingProvider';
@@ -29,7 +29,6 @@ interface AllChatRoomSearchMessagesModalProps {
   isSearchingMessagesRef?: MutableRefObject<boolean>;
   allRoomChatMsgSearch: string;
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
-  dashboardMembers: ChatDashboardMember[];
   hasMoreSearchResultDetail: boolean;
   searchResultsPage: number;
   searchMessageResults:
@@ -68,7 +67,6 @@ export const AllChatRoomSearchMessagesModal = ({
   hasMoreSearchResultDetail,
   searchResultsPage,
   dashboardMemberList,
-  dashboardMembers,
   setRoomNameSearch,
   handleConfirmGetDataDetailEvent,
   setSearchMessageResults,
@@ -200,7 +198,6 @@ export const AllChatRoomSearchMessagesModal = ({
                     isSearchingMessages={true}
                     allRoomChatMsgSearch={allRoomChatMsgSearch}
                     messageDetail={messageDetail}
-                    dashboardMembers={dashboardMembers}
                     dashboardMemberList={dashboardMemberList}
                     chatRoomInfo={messageDetail.chatRoom}
                     handleConfirmGetDataDetailEvent={

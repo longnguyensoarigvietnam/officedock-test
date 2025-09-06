@@ -65,6 +65,8 @@ import {
 } from '@utils/date';
 
 import api from '@base/api';
+import { Profile } from '@interfaces/user';
+import { DELETED_EVENT_TITLE } from '@constants/message';
 
 export type MessageDetailProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
@@ -77,7 +79,7 @@ export type MessageDetailProps = {
   >;
   messageDetail: ChatMessageResponse;
   msgEditing?: string;
-  dashboardMembers: ChatDashboardMember[];
+  dashboardMemberList: Omit<Profile, "birthday" | "gender">[]
   editor: Editor | null;
   highlightedMessageId: string | null;
   handleReplyMsg: ({
@@ -138,7 +140,7 @@ export const MessageDetail = ({
   chatRoomDetail,
   uploadFileStatus,
   messageDetail,
-  dashboardMembers,
+  dashboardMemberList,
   editor,
   chatContainerRef,
   highlightedMessageId,
@@ -185,7 +187,7 @@ export const MessageDetail = ({
         return {
           id: Number(mentionId),
           fullName:
-            dashboardMembers.find((member) => member.id == mentionId)
+            dashboardMemberList.find((member) => member.id == mentionId)
               ?.fullName || '',
         };
       });
@@ -245,20 +247,22 @@ export const MessageDetail = ({
 
   // Render avatar
   const renderAvatar = (senderId: number) => {
-    const memberInfo = dashboardMembers.find(
+    const memberInfo = dashboardMemberList.find(
       (member) => member.id === senderId,
     );
 
     return (
       <div className="h-6">
         <CustomUserAvatar
-          avatarUrl={memberInfo?.avatarUrl || ''}
+          avatarUrl={memberInfo?.avatar || ''}
           avatarColor={memberInfo?.avatarColor || ''}
           size={30}
         />
       </div>
     );
   };
+
+  // console.log('22222');
 
   // Convert icon to image content
   const parseReactionsToImages = (message: string): string => {
@@ -304,7 +308,7 @@ export const MessageDetail = ({
         mentionName = mentionName.slice(1);
       }
 
-      const matchedUser = dashboardMembers.find(
+      const matchedUser = dashboardMemberList.find(
         (member) => member.fullName === mentionName,
       );
 
@@ -386,7 +390,7 @@ export const MessageDetail = ({
                     chatRoomDetail={chatRoomDetail}
                     messageDetail={foundQuote}
                     uuidQuote={foundQuote.uuid}
-                    dashboardMembers={dashboardMembers}
+                    dashboardMemberList={dashboardMemberList}
                     highlightedMessageId={highlightedMessageId}
                     setDataPreviewFile={setDataPreviewFile}
                     handleActionEditTask={handleActionEditTask}
@@ -408,7 +412,7 @@ export const MessageDetail = ({
                   <MessageDetailQuoteText
                     key={`${index}-${i}-textquote`}
                     messageDetail={foundQuote}
-                    dashboardMembers={dashboardMembers}
+                    dashboardMemberList={dashboardMemberList}
                     title={dataTitle}
                     uuidQuote={foundQuote.uuid}
                   />
@@ -738,7 +742,7 @@ export const MessageDetail = ({
                                               <Button
                                                 onClick={() => {
                                                   const memberInfo =
-                                                    dashboardMembers.find(
+                                                    dashboardMemberList.find(
                                                       (member) =>
                                                         member.id ===
                                                         messageDetail.sender.id,
@@ -758,7 +762,7 @@ export const MessageDetail = ({
                                                         memberInfo?.avatarColor ||
                                                         '',
                                                       avatarUrl:
-                                                        memberInfo?.avatarUrl ||
+                                                        memberInfo?.avatar ||
                                                         '',
                                                       fullName:
                                                         messageDetail.sender
@@ -1423,7 +1427,7 @@ export const MessageDetail = ({
                       <div
                         className="flex items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer"
                         onClick={() => {
-                          handleConfirmGetDataDetailEvent(
+                          messageDetail.schedule?.id && handleConfirmGetDataDetailEvent(
                             `${messageDetail.schedule?.id}`,
                           );
                         }}>
@@ -1432,8 +1436,8 @@ export const MessageDetail = ({
                           name="Calendar icon"
                           src="/icons/calendar-time.svg"
                         />
-                        <p className="text-primary text-sm font-medium">
-                          {messageDetail.schedule?.title}
+                        <p className={`${messageDetail.schedule ? 'text-primary' : 'text-gray-300'} text-sm font-medium`}>
+                          {messageDetail.schedule ? messageDetail.schedule?.title : DELETED_EVENT_TITLE}
                         </p>
                       </div>
                       <div className="flex gap-1 text-sm font-medium">

@@ -48,6 +48,7 @@ const useCreationDataStatisticTeam = ({
     data: creationDataStatisticData,
     refetch: refetchCreationDataStatistic,
     isFetched: isFetchedCreationDataStatistic,
+    isFetching: isFetchingCreationDataStatistic,
   } = useQuery({
     queryKey: [
       'getCreationDataStatisticTeam',
@@ -127,6 +128,7 @@ const useCreationDataStatisticTeam = ({
 
   return {
     creationDataStatisticData,
+    isFetchingCreationDataStatistic,
     refetchCreationDataStatistic,
     isFetchedCreationDataStatistic,
   };

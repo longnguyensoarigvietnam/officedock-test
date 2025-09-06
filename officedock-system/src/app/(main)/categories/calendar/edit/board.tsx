@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  Dispatch,
-  SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import { Dispatch, SetStateAction, useContext, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation } from 'react-query';
 import Link from 'next/link';
@@ -16,7 +10,6 @@ import { AxiosError } from 'axios';
 
 import Button from '@components/common/Button';
 
-import useCreationDataStatisticOrganization from '@hooks/useCreationDataStatisticOrganization';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useCalendarCategoryHierarchyDetail from '@hooks/useCalendarCategoryDetail';
 
@@ -30,7 +23,7 @@ import {
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 
-  import { useSessionCache } from '@providers/SessionCacheProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
@@ -39,6 +32,7 @@ import { hasPermissionInArray } from '@utils';
 import TableComponent from './form';
 
 import api from '@base/api';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 interface HierarchyDetail {
   id: number | string;
@@ -81,7 +75,24 @@ const EditHierarchyBoard = () => {
   const [isTyping, setIsTyping] = useState<boolean>(false);
 
   // Hooks
-  const { creationDataCategoryData } = useCreationDataStatisticOrganization({});
+  useCreationDataCommon({
+    options: {
+      get_statistic_categories: true,
+    },
+    onSuccess: (data) => {
+      if (data.statisticCategories) {
+        const options = data.statisticCategories.map((category) => {
+          return {
+            value: category.uuid,
+            label: category.name,
+            teamId: category.team,
+          };
+        });
+        setCategoryList([...options]);
+      }
+    },
+  });
+
   useCalendarCategoryHierarchyDetail({
     onSuccess: (data) => {
       const calendarCategoryHierarchy = data[0];
@@ -108,19 +119,6 @@ const EditHierarchyBoard = () => {
     },
     onSettled: () => setIsLoading(false),
   });
-
-  useEffect(() => {
-    if (creationDataCategoryData && creationDataCategoryData?.length > 0) {
-      const options = creationDataCategoryData.map((category) => {
-        return {
-          value: category.uuid,
-          label: category.name,
-          teamId: category.team,
-        };
-      });
-      setCategoryList([...options]);
-    }
-  }, [creationDataCategoryData]);
 
   const handleConfirmUpdateCalendarCategoryHierarchy = () => {
     const tempSelectedHierarchiesToUpdate = selectedHierarchiesToUpdate.map(

@@ -53,27 +53,9 @@ export interface User {
   isTwoFactorAuth: boolean;
   isEnterSendMessage?: boolean;
   avatar?: string;
-  setting?: {
-    isCheckSelfTask?: boolean;
-    isCheckSelfSchedule?: boolean;
-    isCheckCompanySchedule?: boolean;
-    isEnterSendMessage?: boolean;
-    isSortingTaskByDeadline?: boolean;
-    isSortingTaskByImportant?: boolean;
-    scheduleZoom?: number;
-    kanbanZoom?: number;
-    tabVisibility?: Record<string, boolean>;
-    isShowMyTemplate?: boolean;
-    isShowListKanban?: boolean;
-    dateFilterScheduleFrom?: string;
-    dateFilterScheduleTo?: string;
-    isShowWeekSchedule?: boolean;
-    taskFilter?: {
-      category: OptionDropdownType[];
-      organization: OptionDropdownType[];
-      tag: OptionDropdownType[];
-    };
-  };
+
+  permissions: PermissionsSystem[];
+
   actions?: {
     update: boolean;
     delete: boolean;

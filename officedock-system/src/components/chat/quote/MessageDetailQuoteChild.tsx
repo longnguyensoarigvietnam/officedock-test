@@ -37,6 +37,7 @@ import {
   ChatMessageResponse,
   ChatRoomDetail,
 } from '@interfaces/chat';
+import { Profile } from '@interfaces/user';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
@@ -54,12 +55,13 @@ import {
 } from '@utils/date';
 import { MessageDetailQuote } from './MessageDetailQuote';
 import MessageDetailQuoteText from './MessageDetailQuoteText';
+import { DELETED_EVENT_TITLE } from '@constants/message';
 
 export type MessageDetailProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
   messageDetail: ChatMessageResponse;
   msgEditing?: string;
-  dashboardMembers: ChatDashboardMember[];
+  dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   highlightedMessageId: string | null;
   uuidQuote: string;
   setDataPreviewFile: Dispatch<
@@ -78,7 +80,7 @@ export const MessageDetailQuoteChild = ({
   uuidQuote,
   chatRoomDetail,
   messageDetail,
-  dashboardMembers,
+  dashboardMemberList,
   highlightedMessageId,
   setDataPreviewFile,
   handleActionEditTask,
@@ -88,7 +90,7 @@ export const MessageDetailQuoteChild = ({
 
   // Render avatar
   const renderAvatar = (senderId: number) => {
-    const memberInfo = dashboardMembers.find(
+    const memberInfo = dashboardMemberList.find(
       (member) => member.id === senderId,
     );
 
@@ -100,7 +102,7 @@ export const MessageDetailQuoteChild = ({
           src="/icons/quotation.svg"
         />
         <CustomUserAvatar
-          avatarUrl={memberInfo?.avatarUrl || ''}
+          avatarUrl={memberInfo?.avatar || ''}
           avatarColor={memberInfo?.avatarColor || ''}
           size={22}
         />
@@ -152,7 +154,7 @@ export const MessageDetailQuoteChild = ({
         mentionName = mentionName.slice(1);
       }
 
-      const matchedUser = dashboardMembers.find(
+      const matchedUser = dashboardMemberList.find(
         (member) => member.fullName === mentionName,
       );
 
@@ -234,7 +236,7 @@ export const MessageDetailQuoteChild = ({
                     chatRoomDetail={chatRoomDetail}
                     messageDetail={foundQuote}
                     uuidQuote={uuidQuote}
-                    dashboardMembers={dashboardMembers}
+                    dashboardMemberList={dashboardMemberList}
                     highlightedMessageId={highlightedMessageId}
                     setDataPreviewFile={setDataPreviewFile}
                     handleActionEditTask={handleActionEditTask}
@@ -257,7 +259,7 @@ export const MessageDetailQuoteChild = ({
                     key={`${index}-${i}-textquote`}
                     messageDetail={foundQuote}
                     uuidQuote={uuidQuote}
-                    dashboardMembers={dashboardMembers}
+                    dashboardMemberList={dashboardMemberList}
                     title={dataTitle}
                   />
                 </div>,
@@ -528,7 +530,7 @@ export const MessageDetailQuoteChild = ({
                                             <Button
                                               onClick={() => {
                                                 const memberInfo =
-                                                  dashboardMembers.find(
+                                                  dashboardMemberList.find(
                                                     (member) =>
                                                       member.id ===
                                                       messageDetail.sender.id,
@@ -547,8 +549,7 @@ export const MessageDetailQuoteChild = ({
                                                       memberInfo?.avatarColor ||
                                                       '',
                                                     avatarUrl:
-                                                      memberInfo?.avatarUrl ||
-                                                      '',
+                                                      memberInfo?.avatar || '',
                                                     fullName:
                                                       messageDetail.sender
                                                         ?.fullName,
@@ -1057,8 +1058,11 @@ export const MessageDetailQuoteChild = ({
                           name="Calendar icon"
                           src="/icons/calendar-time.svg"
                         />
-                        <p className="text-primary text-sm font-medium">
-                          {messageDetail.schedule?.title}
+                        <p
+                          className={`${messageDetail.schedule ? 'text-primary' : 'text-gray-300'} text-sm font-medium`}>
+                          {messageDetail.schedule
+                            ? messageDetail.schedule?.title
+                            : DELETED_EVENT_TITLE}
                         </p>
                       </div>
                       <div className="flex gap-1 text-sm font-medium">

@@ -1,11 +1,6 @@
 'use client';
 import { OptionDropdownType } from '@interfaces/common';
-import {
-  CreationDataTask,
-  Task,
-  TransformedUser,
-  UserTotalStatus,
-} from '@interfaces/task';
+import { Task, TransformedUser, UserTotalStatus } from '@interfaces/task';
 import {
   ReactNode,
   createContext,
@@ -15,7 +10,6 @@ import {
 } from 'react';
 
 interface ContextValue {
-  creationDataTaskData: CreationDataTask | undefined;
   orderingRequest: string;
   orderingOptions: {
     category_ids: OptionDropdownType[];
@@ -23,9 +17,6 @@ interface ContextValue {
     organization_ids: OptionDropdownType[];
     user_ids: OptionDropdownType[];
   } | null;
-  setCreationDataTaskData: Dispatch<
-    SetStateAction<CreationDataTask | undefined>
-  >;
   setOrderingOptions: Dispatch<
     SetStateAction<{
       category_ids: OptionDropdownType[];
@@ -71,10 +62,11 @@ interface ContextValue {
       | undefined
     >
   >;
+  dataOptionsStatus: OptionDropdownType[];
+  setDataOptionsStatus: Dispatch<SetStateAction<OptionDropdownType[]>>;
 }
 
 const defaultValue: ContextValue = {
-  creationDataTaskData: undefined,
   orderingRequest: '',
   orderingOptions: null,
   columnWidth: 213,
@@ -92,7 +84,6 @@ const defaultValue: ContextValue = {
   handleZoomInKanban: () => {},
   handleZoomOutKanban: () => {},
   setColumnWidth: () => {},
-  setCreationDataTaskData: () => {},
   setOrderingRequest: () => {},
   setOrderingOptions: () => {},
   showWarningStartTaskModalTeam: false,
@@ -103,6 +94,8 @@ const defaultValue: ContextValue = {
   setIsConcurrently: () => {},
   oldUserAction: undefined,
   setOldUserAction: () => {},
+  dataOptionsStatus: [],
+  setDataOptionsStatus: () => {},
 };
 
 export const TaskTeamStateContext = createContext<ContextValue>(defaultValue);
@@ -112,8 +105,6 @@ export const TaskTeamStateProvider = ({
 }: {
   children: ReactNode;
 }) => {
-  const [creationDataTaskData, setCreationDataTaskData] =
-    useState<CreationDataTask>();
   // Loading
   const [isLoadingDataTask, setIsLoadingDataTask] = useState(false);
 
@@ -149,6 +140,9 @@ export const TaskTeamStateProvider = ({
   const [dataTotalStatus, setDataTotalStatus] = useState<UserTotalStatus[]>([]);
 
   // Team task list
+  const [dataOptionsStatus, setDataOptionsStatus] = useState<
+    OptionDropdownType[]
+  >([]);
 
   const [listDataKanbanTeam, setListDataKanbanTeam] = useState<
     TransformedUser[]
@@ -166,11 +160,9 @@ export const TaskTeamStateProvider = ({
 
   const contextValue: ContextValue = {
     orderingOptions,
-    creationDataTaskData,
     orderingRequest,
     setOrderingRequest,
     setOrderingOptions,
-    setCreationDataTaskData,
     columnWidth,
     setColumnWidth,
     selectedOptionZoom,
@@ -191,6 +183,8 @@ export const TaskTeamStateProvider = ({
     setIsConcurrently,
     oldUserAction,
     setOldUserAction,
+    dataOptionsStatus,
+    setDataOptionsStatus,
   };
 
   return (

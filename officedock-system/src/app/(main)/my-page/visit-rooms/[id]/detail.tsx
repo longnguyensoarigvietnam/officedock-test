@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useState } from 'react';
+import React, {useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
 
@@ -11,7 +11,6 @@ import { MyPageMenu } from '@components/myPage/Menu';
 import { TwinklingIcon } from '@components/common/TwinklingIcon';
 import SendEnvelopeAnimationOverlay from '@components/thanksMessage/SendEnvelopeAnimationOverlay';
 
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 import { useToast } from '@providers/ToastProvider';
 
@@ -19,17 +18,19 @@ import { getLastChar } from '@utils';
 
 import useRemainingQuota from '@hooks/useRemainingQuota';
 import useSetSkillList from '@hooks/useSetSkillList';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { ServerStatusCode } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
+
+import { Profile } from '@interfaces/user';
 
 const RoomDetail = () => {
   const router = useRouter();
   const { showToast } = useToast();
   const { data: session } = useSessionCache();
 
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
   const [openSendThanksMessageForm, setOpenSendThanksMessageForm] = useState<{
     status: boolean;
     userInfo: {
@@ -47,6 +48,18 @@ const RoomDetail = () => {
   const params = useParams();
 
   const { remainingQuota, refetchRemainingQuota } = useRemainingQuota();
+
+  const [dashboardMemberList, setDashboardMemberList] = useState<Profile[]>([]);
+  useCreationDataCommon({
+    options: {
+      get_all_members: true,
+    },
+    onSuccess: (data) => {
+      if (data.allMembers) {
+        setDashboardMemberList(data.allMembers);
+      }
+    },
+  });
 
   // Get set skill list
   const { myPageSkillList } = useSetSkillList({
@@ -66,8 +79,8 @@ const RoomDetail = () => {
 
   // Render user's avatar
   const renderBoxUser = (userId: string) => {
-    const memberInfo = dashboardMembersWithAvatars.find(
-      (member) => member.id == userId,
+    const memberInfo = dashboardMemberList.find(
+      (member) => String(member.id) == userId,
     );
 
     return (
@@ -140,12 +153,12 @@ const RoomDetail = () => {
         className="h-[calc(100vh-120px)] w-full rounded-bl-[30px]  rounded-tr-[30px] rounded-br-[30px]">
         <div className="flex ">
           <div className="h-20 bg-white w-fit px-5 py-4 text-[#77858F] font-medium flex items-center gap-5 rounded-br-[30px]">
-            <div>{params.id && renderBoxUser(params.id as string)}</div>
+            <div>{params.id && renderBoxUser(String(params.id))}</div>
             <p className="break-all max-w-[100px] line-clamp-2">名前</p>
             <p className="break-all text-[22px] text-black max-w-[100px] line-clamp-2">
               {
-                dashboardMembersWithAvatars.find(
-                  (member) => member.id == params.id,
+                dashboardMemberList.find(
+                  (member) => String(member.id) == String(params.id),
                 )?.fullName
               }
             </p>
@@ -154,8 +167,8 @@ const RoomDetail = () => {
               <p>ID</p>
               <p className="text-base text-black">
                 {
-                  dashboardMembersWithAvatars.find(
-                    (member) => member.id == params.id,
+                  dashboardMemberList.find(
+                    (member) => String(member.id) == String(params.id),
                   )?.id
                 }
               </p>
@@ -278,8 +291,8 @@ const RoomDetail = () => {
             onClickSettingSurvey={() => {}}
             isVisitRoom={true}
             onOpenSendThanksMessageForm={() => {
-              const memberInfo = dashboardMembersWithAvatars.find(
-                (member) => member.id == params.id,
+              const memberInfo = dashboardMemberList.find(
+                (member) => String(member.id) == String(params.id),
               );
               if (memberInfo && memberInfo.id != session?.user.id) {
                 setOpenSendThanksMessageForm({

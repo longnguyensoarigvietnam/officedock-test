@@ -1,30 +1,33 @@
 import React from 'react';
 
-import { ChatDashboardMember, ChatMessageResponse } from '@interfaces/chat';
 import ImageRound from '@components/common/ImageRound';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+
 import {
   convertToCurrentTimezone,
   formatCheckDate,
   getFormattedDateTime,
 } from '@utils/date';
 
+import { Profile } from '@interfaces/user';
+import { ChatMessageResponse } from '@interfaces/chat';
+
 type Props = {
   messageDetail: ChatMessageResponse;
-  dashboardMembers: ChatDashboardMember[];
+  dashboardMemberList: Omit<Profile, "birthday" | "gender">[]
   title: string;
   uuidQuote: string;
 };
 
 const MessageDetailQuoteText = ({
   messageDetail,
-  dashboardMembers,
+  dashboardMemberList,
   title,
   uuidQuote,
 }: Props) => {
   // Render avatar
   const renderAvatar = (senderId: number) => {
-    const memberInfo = dashboardMembers.find(
+    const memberInfo = dashboardMemberList.find(
       (member) => member.id === senderId,
     );
 
@@ -36,7 +39,7 @@ const MessageDetailQuoteText = ({
           src="/icons/quotation.svg"
         />
         <CustomUserAvatar
-          avatarUrl={memberInfo?.avatarUrl || ''}
+          avatarUrl={memberInfo?.avatar || ''}
           avatarColor={memberInfo?.avatarColor || ''}
           size={22}
         />

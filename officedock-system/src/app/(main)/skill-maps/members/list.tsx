@@ -12,11 +12,11 @@ import { ScreenName } from '@constants/enums';
 import { SkillMapByMembers, SkillMapSkill } from '@interfaces/skills';
 import { OptionDropdownType } from '@interfaces/common';
 
-import useOrganizationOptions from '@hooks/useFullOrganizationList';
 import useSkillMapByMembers from '@hooks/useSkillMapByMembers';
 import useOrganizationSkillList from '@hooks/useOrganizationSkillList';
 
 import { SkillMapByMembersDetail } from './form';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const ListSkillsMapByMembers = () => {
   const [dataSkillMapsByMembers, setDataSkillMapsByMembers] = useState<
@@ -35,8 +35,27 @@ const ListSkillsMapByMembers = () => {
     OptionDropdownType[]
   >([]);
 
-  const { organizationOptions } = useOrganizationOptions({
-    current_screen: ScreenName.SKILL_MAP_MANAGEMENT,
+  // Get organization options for pulldown
+  useCreationDataCommon({
+    options: {
+      get_all_organizations: true,
+    },
+    onSuccess: (data) => {
+      const organizationList =
+        data.allOrganizations?.map((org) => {
+          return {
+            value: Number(org.id),
+            label: org.name,
+          };
+        }) || [];
+      setOrganizationList([
+        {
+          label: ALL_TEAMS_OPTION,
+          value: '',
+        },
+        ...organizationList,
+      ]);
+    },
   });
 
   // Fetch organization skills
@@ -63,25 +82,6 @@ const ListSkillsMapByMembers = () => {
       setDataSkillMapList(organizationSkillList as SkillMapSkill[]);
     }
   }, [organizationSkillList]);
-
-  // Get organization options for pulldown
-  useEffect(() => {
-    if (organizationOptions) {
-      const organizationList = organizationOptions.map((org) => {
-        return {
-          value: Number(org.id),
-          label: org.name,
-        };
-      });
-      setOrganizationList([
-        {
-          label: ALL_TEAMS_OPTION,
-          value: '',
-        },
-        ...organizationList,
-      ]);
-    }
-  }, [organizationOptions]);
 
   return (
     <Fragment>

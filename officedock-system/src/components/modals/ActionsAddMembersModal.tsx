@@ -20,7 +20,6 @@ import { NO_OPTIONS } from '@constants';
 
 import { Profile } from '@interfaces/user';
 import {
-  ChatDashboardMember,
   ChatParticipant,
   ChatRoomItem,
 } from '@interfaces/chat';
@@ -31,7 +30,6 @@ import { ERROR_LONG_FIELD_MESSAGE } from '@constants/message';
 export type ActionsAddMembersModalProps = {
   open: boolean;
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
-  dashboardMembers: ChatDashboardMember[];
   dataOptionsParticipants: ChatParticipant[];
   onClose: () => void;
   createChatMutation: UseMutationResult<
@@ -50,7 +48,6 @@ const ActionsAddMembersModal = memo(
   ({
     open,
     dashboardMemberList,
-    dashboardMembers,
     dataOptionsParticipants,
     onClose,
     createChatMutation,
@@ -128,14 +125,14 @@ const ActionsAddMembersModal = memo(
 
     const renderAvatar = (memberId: string) => {
       const actualMemberId = Number(memberId.split('-')[1]);
-      const memberInfo = dashboardMembers.find(
+      const memberInfo = dashboardMemberList.find(
         (memberWithAvatar) => memberWithAvatar.id == actualMemberId,
       );
 
       return (
         <div>
           <CustomUserAvatar
-            avatarUrl={memberInfo?.avatarUrl || ''}
+            avatarUrl={memberInfo?.avatar || ''}
             avatarColor={memberInfo?.avatarColor || ''}
             size={33}
           />

@@ -17,11 +17,11 @@ import ListViewItem from './ListViewItem';
 
 import {
   Columns,
-  CreationDataTask,
   DataStatusChangeInline,
   KanbanDataResponse,
   Task,
 } from '@interfaces/task';
+import { CreationDataCommon } from '@interfaces/common';
 
 import { TaskContext } from '@providers/TaskProvider';
 
@@ -45,7 +45,7 @@ interface ListViewByStatusProps {
   handleConfirmCopyTask: (id: number) => void;
   handleUpdateItemInline: (data: Task) => void;
   editTaskInline: (data: DataStatusChangeInline) => void;
-  creationDataTaskData?: CreationDataTask;
+  creationDataCommonData: CreationDataCommon | undefined;
   columnsKanbanData: Columns;
   setColumnsKanbanData: Dispatch<SetStateAction<Columns | undefined>>;
   setNumberPagesData: Dispatch<
@@ -74,7 +74,7 @@ const ListViewByStatus = ({
   handleConfirmCopyTask,
   handleUpdateItemInline,
   editTaskInline,
-  creationDataTaskData,
+  creationDataCommonData,
   columnsKanbanData,
   setColumnsKanbanData,
   setNumberPagesData,
@@ -297,7 +297,7 @@ const ListViewByStatus = ({
                   content={item}
                   editTaskInline={editTaskInline}
                   handlePinItem={handlePinItem}
-                  creationDataTaskData={creationDataTaskData}
+                  creationDataCommonData={creationDataCommonData}
                   handleActionEditTask={handleActionEditTask}
                   handleConfirmCopyTask={handleConfirmCopyTask}
                   handleUpdateItemInline={handleUpdateItemInline}

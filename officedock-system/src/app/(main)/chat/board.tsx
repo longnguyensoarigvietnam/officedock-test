@@ -4,34 +4,27 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import socketEventEmitter from '@components/socket/socketEventEmitter';
-import Metadata from '@components/common/Metadata';
 
 import {
   ChatParticipantType,
   ChatRoomType,
   SocketActions,
 } from '@constants/enums';
-import { pageRouters } from '@constants/routers';
-import { BOOKMARK_ROUTER_NAME, DEFAULT_TIME_TEXT } from '@constants';
+import { BOOKMARK_ROUTER_NAME } from '@constants';
 
 import {
-  ChatDashboardMember,
   ChatParticipant,
   ChatRoomItem,
   WebSocketMessageData,
 } from '@interfaces/chat';
+import { Profile } from '@interfaces/user';
+import { Organizations } from '@interfaces/organization';
 
-import useDashboardMemberList from '@hooks/useDashBoardMemberList';
-import useCreationDataTask from '@hooks/useCreationDataTask';
-import useTaskDurationDetail from '@hooks/useTaskDurationDetail';
-import useContinueCounterTime from '@hooks/useContinueCounterTime';
-import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { generateUniqueId } from '@utils';
 
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { ChatContext } from '@providers/ChatProvider';
-import { TaskContext } from '@providers/TaskProvider';
 
 import ListChatUsers from './list';
 import ChatDetail from './detail';
@@ -48,14 +41,8 @@ const BoardChat = () => {
   const chatRoomCode = searchParams.get('room');
 
   // Context
-  const { setChatRoomNotifications } = useContext(ChatContext);
-  const { totalNotifications, dashboardMembersWithAvatars } =
-    useContext(GlobalStateContext);
-  const { dataRunning } = useContext(TaskContext);
-
-  // Custom hooks
-  const { dashboardMemberList = [] } = useDashboardMemberList();
-  const { creationDataTaskData } = useCreationDataTask({});
+  const { setChatRoomNotifications, setListAllMember } =
+    useContext(ChatContext);
 
   const [lastItemId, setLastItemId] = useState<number | null>();
   const [hasMoreDetail, setHasMoreDetail] = useState<boolean>(true);
@@ -69,79 +56,62 @@ const BoardChat = () => {
   >([]);
   const [searchChatMsg, setSearchChatMsg] = useState('');
   const { data: session } = useSessionCache();
-  const [dashboardMembers, setDashboardMembers] = useState<
-    ChatDashboardMember[]
-  >([]);
+  const [dashboardMemberList, setDashboardMemberList] = useState<Profile[]>([]);
   const [clientId] = useState(() => generateUniqueId());
 
   // Chat member options
   const [dataOptionsParticipants, setDataOptionsParticipants] = useState<
     ChatParticipant[]
   >([]);
-  const [dataOptionsOrganizations, setDataOptionsOrganizations] = useState<
-    {
-      id: string | number;
-      fullName: string;
-      color: string;
-      userIds: number[];
-    }[]
-  >([]);
-  const { isFetchedCreationDataStatistic } = useCreationDataStatistic({
-    is_chat_page: true,
+  const [organizationMain, setOrganizationMain] =
+    useState<Organizations | null>(null);
 
+  // Custom hooks
+  useCreationDataCommon({
+    options: {
+      get_all_members: true,
+      get_organization_with_users: true,
+    },
     onSuccess: (data) => {
-      setDataOptionsOrganizations([
-        ...data.organizations.map((org) => ({
-          id: org.id || '',
-          fullName: org.name,
-          userIds: org.users ? org.users.map((user) => user.id) : [],
-          color: org.iconColor || '#0068B6',
-        })),
-      ]);
+      let chatMembers: ChatParticipant[] = [];
+      let chatOrganizations: ChatParticipant[] = [];
+
+      if (data.allMembers) {
+        setDashboardMemberList(data.allMembers);
+        setListAllMember(data.allMembers);
+        chatMembers = data.allMembers?.map((member) => ({
+          id: `${ChatParticipantType.USER}-${member.id}`,
+          fullName: member.fullName,
+          type: ChatParticipantType.USER,
+          mainOrganization: member.organizations
+            ? member.organizations.name
+            : '',
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
+        }));
+
+        // Set my main organization
+        const myMainOrganization =
+          data.allMembers?.find((member) => member.id == session?.user.id)
+            ?.organizations || null;
+        setOrganizationMain(myMainOrganization);
+      }
+
+      if (data.organizationUsers) {
+        chatOrganizations = data.organizationUsers
+          ? data.organizationUsers.map((org) => ({
+              id: `${ChatParticipantType.ORGANIZATION}-${org.id}`,
+              fullName: `${org.name}の全員を選択`,
+              type: ChatParticipantType.ORGANIZATION,
+              userIds: org.users ? org.users.map((user) => user.id) : [],
+              color: org.iconColor || '#0068B6',
+            }))
+          : [];
+      }
+
+      setDataOptionsParticipants([...chatOrganizations, ...chatMembers]);
     },
   });
-
-  useEffect(() => {
-    if (dashboardMembersWithAvatars && isFetchedCreationDataStatistic) {
-      const eventMembers = dashboardMembersWithAvatars.map((member) => ({
-        id: `${ChatParticipantType.USER}-${member.id}`,
-        fullName: member.fullName,
-        type: ChatParticipantType.USER,
-        mainOrganization: member.mainOrganization || '',
-        color: member?.avatarColor || '',
-        avatarUrl: member?.avatar || '',
-      }));
-      const eventOrganizations = dataOptionsOrganizations
-        ? dataOptionsOrganizations.map((org) => ({
-            id: `${ChatParticipantType.ORGANIZATION}-${org.id}`,
-            fullName: `${org.fullName}の全員を選択`,
-            type: ChatParticipantType.ORGANIZATION,
-            userIds: org.userIds,
-            color: org.color,
-          }))
-        : [];
-      setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    dashboardMembersWithAvatars,
-    dataOptionsOrganizations,
-    isFetchedCreationDataStatistic,
-  ]);
-
-  // Running task info
-  const { taskDurationDetail } = useTaskDurationDetail({
-    item: {
-      id: `${dataRunning.id}`.replace('event', ''),
-      type: `${dataRunning.type}`,
-    },
-  });
-
-  const elapsedTime = useContinueCounterTime(
-    taskDurationDetail?.taskDuration
-      ? taskDurationDetail
-      : { taskDuration: DEFAULT_TIME_TEXT, isStart: false },
-  );
 
   // Update last item when change param
   useEffect(() => {
@@ -153,20 +123,6 @@ const BoardChat = () => {
       setHasMoreDetail(true);
     }
   }, [chatRoomCode]);
-
-  useEffect(() => {
-    if (dashboardMemberList?.length) {
-      const membersWithAvatars = dashboardMemberList.map((member) => {
-        return {
-          id: member.id,
-          fullName: member.fullName,
-          avatarColor: member?.avatarColor || '',
-          avatarUrl: member?.avatar || '',
-        };
-      });
-      setDashboardMembers(membersWithAvatars);
-    }
-  }, [dashboardMemberList]);
 
   // Socket Board
   useEffect(() => {
@@ -437,12 +393,9 @@ const BoardChat = () => {
       );
     });
   };
+
   return (
     <>
-      <Metadata
-        metadata={`${pageRouters.CHAT_MANAGEMENT.name}${totalNotifications > 0 ? `(${totalNotifications})` : ''}`}
-        taskDurationText={`${taskDurationDetail?.taskDuration && taskDurationDetail.isStart ? `${elapsedTime} - ${taskDurationDetail.title}` : ''}`}
-      />
       <ListChatUsers
         hasMore={hasMore}
         dataChatList={dataChatList}
@@ -450,7 +403,6 @@ const BoardChat = () => {
         roomNameSearchResults={roomNameSearchResults}
         chatRoomCode={chatRoomCode}
         dashboardMemberList={dashboardMemberList}
-        dashboardMembers={dashboardMembers}
         dataOptionsParticipants={dataOptionsParticipants}
         setLastItemId={setLastItemId}
         setDataChatList={setDataChatList}
@@ -468,10 +420,9 @@ const BoardChat = () => {
           dataChatList={dataChatList}
           hasMoreDetail={hasMoreDetail}
           chatRoomCode={chatRoomCode}
+          organizationMain={organizationMain}
           dashboardMemberList={dashboardMemberList}
-          dashboardMembers={dashboardMembers}
           dataOptionsParticipants={dataOptionsParticipants}
-          creationDataTaskData={creationDataTaskData}
           searchChatMsg={searchChatMsg}
           hasMoreDetailOnScrollDown={hasMoreDetailOnScrollDown}
           setHasMoreDetailOnScrollDown={setHasMoreDetailOnScrollDown}
@@ -486,9 +437,7 @@ const BoardChat = () => {
       {chatRoomCode && chatRoomCode === BOOKMARK_ROUTER_NAME && (
         <BookmarkList
           searchChatMsg={searchChatMsg}
-          dashboardMembers={dashboardMembers}
           dashboardMemberList={dashboardMemberList}
-          creationDataTaskData={creationDataTaskData}
           setSearchChatMsg={setSearchChatMsg}
         />
       )}

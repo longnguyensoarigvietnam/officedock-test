@@ -2,6 +2,7 @@
 
 import { ChatRoomItem } from '@interfaces/chat';
 import { BasePagination } from '@interfaces/common';
+import { Profile } from '@interfaces/user';
 import {
   createContext,
   Dispatch,
@@ -11,6 +12,7 @@ import {
 } from 'react';
 
 interface ContextValue {
+  listAllMember: Profile[];
   chatList: BasePagination<ChatRoomItem[]> | undefined;
   isReload: boolean;
   chatRoomNameEditing: {
@@ -56,9 +58,11 @@ interface ContextValue {
       | undefined
     >
   >;
+  setListAllMember: Dispatch<SetStateAction<Profile[]>>;
 }
 
 const defaultValue: ContextValue = {
+  listAllMember: [],
   chatList: {
     count: 0,
     numPages: 0,
@@ -86,6 +90,7 @@ const defaultValue: ContextValue = {
   setChatRoomNameEditing: () => {},
   setChatRoomParticipantsEditing: () => {},
   setChatRoomNotifications: () => {},
+  setListAllMember: () => {},
 };
 
 export const ChatContext = createContext<ContextValue>(defaultValue);
@@ -99,6 +104,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       roomCode: string;
     }[]
   >([]);
+  const [listAllMember, setListAllMember] = useState<Profile[]>([]);
   const [chatRoomParticipantsEditing, setChatRoomParticipantsEditing] =
     useState<
       {
@@ -117,6 +123,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     chatRoomNameEditing,
     chatRoomParticipantsEditing,
     chatRoomNotifications,
+    listAllMember,
+    setListAllMember,
     setChatList,
     setIsReload,
     setChatRoomNameEditing,

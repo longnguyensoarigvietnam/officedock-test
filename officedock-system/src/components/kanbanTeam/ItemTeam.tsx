@@ -14,7 +14,6 @@ import {
   TaskRepetitiveValue,
 } from '@constants/enums';
 import { Task, TaskFormData } from '@interfaces/task';
-import { OptionDropdownType } from '@interfaces/common';
 
 import {
   compareWithCurrentDate,
@@ -53,15 +52,11 @@ const ItemTeam = ({
   handleActionEditTask,
 }: ItemProps) => {
   const {
-    creationDataTaskData,
     columnWidth,
     selectedOptionZoom,
+    dataOptionsStatus,
     setOldUserAction,
   } = useContext(TaskTeamStateContext);
-
-  const [dataOptionsStatus, setDataOptionsStatus] = useState<
-    OptionDropdownType[]
-  >([]);
 
   let statusStyle = '';
 
@@ -151,18 +146,6 @@ const ItemTeam = ({
       setCheckDeadline(compareWithCurrentDate(content.deadline));
     }
   }, [content]);
-
-  // Save data from create task
-  useEffect(() => {
-    if (creationDataTaskData) {
-      setDataOptionsStatus(
-        creationDataTaskData.status.map((org) => ({
-          label: org.name,
-          value: org.id || '',
-        })),
-      );
-    }
-  }, [creationDataTaskData]);
 
   const isShowSchedule = content.isScheduleInToday || false;
 

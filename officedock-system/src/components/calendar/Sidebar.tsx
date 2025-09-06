@@ -1,11 +1,4 @@
-import {
-  Dispatch,
-  MutableRefObject,
-  SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import { Dispatch, MutableRefObject, SetStateAction } from 'react';
 
 import { UseMutateAsyncFunction } from 'react-query';
 import FullCalendar from '@fullcalendar/react';
@@ -16,12 +9,9 @@ import InputSearch from '@components/common/InputSearch';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { EventParticipant } from '@interfaces/calendar';
-
-import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 
 import { EventParticipantType } from '@constants/enums';
 import { NO_DATA_AVAILABLE } from '@constants';
@@ -30,6 +20,7 @@ import {
   formatQueryEndDateForCalendar,
   formatQueryStartDateForCalendar,
 } from '@utils/date';
+import { Profile } from '@interfaces/user';
 
 export type CalendarSidebarProps = {
   calendarRef: MutableRefObject<FullCalendar | null>;
@@ -37,6 +28,14 @@ export type CalendarSidebarProps = {
   selectedScheduleOrgIds: string;
   removeMyselfOption: boolean;
   searchName: string;
+  dataOptionsOrganizations: {
+    id: string | number;
+    fullName: string;
+    color: string;
+    userIds: number[];
+  }[];
+  dataOptionsParticipants: EventParticipant[];
+  dashboardMemberList: Profile[];
   setShowSidebar: Dispatch<SetStateAction<boolean>>;
   setSearchName: Dispatch<SetStateAction<string>>;
   setSelectedScheduleUserIds: Dispatch<SetStateAction<string>>;
@@ -86,6 +85,9 @@ export const CalendarSidebar = ({
   selectedScheduleOrgIds,
   searchName,
   keySearch,
+  dataOptionsOrganizations,
+  dataOptionsParticipants,
+  dashboardMemberList,
   setSearchName,
   setShowSidebar,
   setRemoveMyselfOption,
@@ -98,62 +100,6 @@ export const CalendarSidebar = ({
   getEventCalendarByUsers,
 }: CalendarSidebarProps) => {
   const { data: session } = useSessionCache();
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
-
-  const [dataOptionsParticipants, setDataOptionsParticipants] = useState<
-    EventParticipant[]
-  >([]);
-  const [dataOptionsOrganizations, setDataOptionsOrganizations] = useState<
-    {
-      id: string | number;
-      fullName: string;
-      color: string;
-      userIds: number[];
-    }[]
-  >([]);
-
-  const { isFetchedCreationDataStatistic } = useCreationDataStatistic({
-    is_calendar_page: true,
-
-    onSuccess: (data) => {
-      setDataOptionsOrganizations([
-        ...data.organizations.map((org) => ({
-          id: org.id || '',
-          fullName: org.name,
-          userIds: org.users ? org.users.map((user) => user.id) : [],
-          color: org.iconColor || '#0068B6',
-        })),
-      ]);
-    },
-  });
-
-  useEffect(() => {
-    if (dashboardMembersWithAvatars && isFetchedCreationDataStatistic) {
-      const eventMembers = dashboardMembersWithAvatars.map((member) => ({
-        id: `${EventParticipantType.USER}-${member.id}`,
-        fullName: member.fullName,
-        type: EventParticipantType.USER,
-        mainOrganization: member.mainOrganization || '',
-        color: member?.avatarColor || '',
-        avatarUrl: member?.avatar || '',
-      }));
-      const eventOrganizations = dataOptionsOrganizations
-        ? dataOptionsOrganizations.map((org) => ({
-            id: `${EventParticipantType.ORGANIZATION}-${org.id}`,
-            fullName: org.fullName,
-            type: EventParticipantType.ORGANIZATION,
-            userIds: org.userIds,
-            color: org.color,
-          }))
-        : [];
-      setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    dashboardMembersWithAvatars,
-    dataOptionsOrganizations,
-    isFetchedCreationDataStatistic,
-  ]);
 
   // Check is participant selected
   const checkIsParticipantSelected = (member: EventParticipant) => {
@@ -170,7 +116,7 @@ export const CalendarSidebar = ({
   // Render user's avatar
   const renderAvatar = (memberId: string) => {
     const actualMemberId = Number(memberId.split('-')[1]);
-    const memberInfo = dashboardMembersWithAvatars.find(
+    const memberInfo = dashboardMemberList.find(
       (memberWithAvatar) => memberWithAvatar.id == actualMemberId,
     );
 
@@ -410,7 +356,7 @@ export const CalendarSidebar = ({
                 return {
                   id: String(userId),
                   title:
-                    dashboardMembersWithAvatars?.find(
+                    dashboardMemberList?.find(
                       (member) => String(member.id) == String(userId),
                     )?.fullName || '',
                 };

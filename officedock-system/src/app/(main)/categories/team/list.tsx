@@ -1,13 +1,12 @@
 'use client';
-import React, { Fragment, useContext, useEffect, useState } from 'react';
+import React, { Fragment, useContext, useState } from 'react';
 
-import { useMutation } from 'react-query';
 import Link from 'next/link';
 
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
 
-import { apiRouters, pageRouters } from '@constants/routers';
+import { pageRouters } from '@constants/routers';
 import { ALL_TEAMS_OPTION } from '@constants';
 import { AddCategoryHierarchyType, PermissionsSystem } from '@constants/enums';
 
@@ -15,19 +14,18 @@ import { hasPermissionInArray } from '@utils';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
-  OrganizationCategoryHierarchyDetail,
   OrganizationCategoryRow,
   StatisticCategory,
 } from '@interfaces/hierarchy';
-
-import useCreationOrganization from '@hooks/useCreationOrganization';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import HierarchyTable from './table';
 
-import api from '@base/api';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+import useOrganizationCategoryHierarchyDetail from '@hooks/useOrganizationCategoryHierarchyDetail';
+import useOrganizationCategoryHierarchyList from '@hooks/useOrganizationCategoryHierarchyList';
 
 interface HierarchyDetail {
   id: number | string;
@@ -51,53 +49,29 @@ const ListHierarchy = () => {
       label: ALL_TEAMS_OPTION,
       value: '',
     });
-  const { creationOrganization } = useCreationOrganization({});
 
-  useEffect(() => {
-    if (creationOrganization) {
-      const organizationList = creationOrganization.map((org) => {
-        return {
-          value: Number(org.id),
-          label: org.name,
-        };
-      });
-      setOrganizationList([
-        {
-          label: ALL_TEAMS_OPTION,
-          value: '',
-        },
-        ...organizationList,
-      ]);
-    }
-  }, [creationOrganization]);
-
-  const handleGetOrganizationCategoryHierarchyList = async () => {
-    setIsLoading(true);
-    const apiUrl = `${apiRouters.ORGANIZATION_CATEGORY_HIERARCHY_LIST}?current_screen=all`;
-
-    const { data } =
-      await api.get<OrganizationCategoryHierarchyDetail[]>(apiUrl);
-    return data;
-  };
-
-  const { mutate: getOrganizationCategoryHierarchyList } = useMutation(
-    'getOrganizationCategoryHierarchyList',
-    handleGetOrganizationCategoryHierarchyList,
-    {
-      onSuccess: async (data) => {
-        const receivedHierarchyList = data.map((result) => ({
-          id: result.id,
-          name: result.name,
-          statisticCategories: mapStatisticCategories(
-            result.statisticCategories,
-          ),
-        }));
-
-        setHierarchyList(receivedHierarchyList);
-      },
-      onSettled: () => setIsLoading(false),
+  useCreationDataCommon({
+    options: {
+      get_all_organizations: true,
     },
-  );
+    onSuccess: (data) => {
+      if (data.allOrganizations) {
+        const organizationList = data.allOrganizations.map((org) => {
+          return {
+            value: Number(org.id),
+            label: org.name,
+          };
+        });
+        setOrganizationList([
+          {
+            label: ALL_TEAMS_OPTION,
+            value: '',
+          },
+          ...organizationList,
+        ]);
+      }
+    },
+  });
 
   const mapStatisticCategories = (categories: StatisticCategory[]) => {
     return categories.map((org) => ({
@@ -127,73 +101,61 @@ const ListHierarchy = () => {
     }));
   };
 
-  const handleGetOrganizationCategoryHierarchyDetail = async (
-    organizationId: number,
-  ) => {
-    setIsLoading(true);
-    const apiUrl = `${apiRouters.ORGANIZATION_CATEGORY_HIERARCHY_DETAIL(organizationId)}`;
-
-    const { data } = await api.get<OrganizationCategoryHierarchyDetail>(apiUrl);
-    return data;
-  };
-
-  const { mutate: getOrganizationCategoryHierarchyDetail } = useMutation(
-    'getOrganizationCategoryHierarchyDetail',
-    handleGetOrganizationCategoryHierarchyDetail,
-    {
-      onSuccess: async (data) => {
-        const statisticCategories = data.statisticCategories.map((org) => ({
-          id: org.id,
-          large: {
-            label: org.largeStatisticCategory?.name || '',
-            value: org.largeStatisticCategory?.uuid || '',
-            showBy: AddCategoryHierarchyType.PULLDOWN,
-          },
-          medium: {
-            label: org.mediumStatisticCategory?.name || '',
-            value: org.mediumStatisticCategory?.uuid || '',
-            showBy: AddCategoryHierarchyType.PULLDOWN,
-          },
-          small: {
-            label: org.smallStatisticCategory?.name || '',
-            value: org.smallStatisticCategory?.uuid || '',
-            showBy: AddCategoryHierarchyType.PULLDOWN,
-          },
-          skills: org.skills.map((skill) => {
-            return {
-              label: skill.name,
-              value: skill.id,
-            };
-          }),
-          color: org.color,
-        }));
-        setHierarchyList([
-          {
-            id: data.id,
-            name: data.name,
-            statisticCategories,
-          },
-        ]);
-      },
-      onSettled: () => {
-        setIsLoading(false);
-      },
+  useOrganizationCategoryHierarchyDetail({
+    organizationId: Number(selectedOrganizationOption.value),
+    conditions: [Boolean(selectedOrganizationOption.value)],
+    onSuccess: async (data) => {
+      const statisticCategories = data.statisticCategories.map((org) => ({
+        id: org.id,
+        large: {
+          label: org.largeStatisticCategory?.name || '',
+          value: org.largeStatisticCategory?.uuid || '',
+          showBy: AddCategoryHierarchyType.PULLDOWN,
+        },
+        medium: {
+          label: org.mediumStatisticCategory?.name || '',
+          value: org.mediumStatisticCategory?.uuid || '',
+          showBy: AddCategoryHierarchyType.PULLDOWN,
+        },
+        small: {
+          label: org.smallStatisticCategory?.name || '',
+          value: org.smallStatisticCategory?.uuid || '',
+          showBy: AddCategoryHierarchyType.PULLDOWN,
+        },
+        skills: org.skills.map((skill) => {
+          return {
+            label: skill.name,
+            value: skill.id,
+          };
+        }),
+        color: org.color,
+      }));
+      setHierarchyList([
+        {
+          id: data.id,
+          name: data.name,
+          statisticCategories,
+        },
+      ]);
     },
-  );
+    onSettled: () => {
+      setIsLoading(false);
+    },
+  });
 
-  useEffect(() => {
-    if (selectedOrganizationOption.value == '') {
-      getOrganizationCategoryHierarchyList();
-    } else {
-      getOrganizationCategoryHierarchyDetail(
-        Number(selectedOrganizationOption.value),
-      );
-    }
-  }, [
-    getOrganizationCategoryHierarchyDetail,
-    getOrganizationCategoryHierarchyList,
-    selectedOrganizationOption.value,
-  ]);
+  useOrganizationCategoryHierarchyList({
+    conditions: [Boolean(selectedOrganizationOption.value == '')],
+    onSuccess: async (data) => {
+      const receivedHierarchyList = data.map((result) => ({
+        id: result.id,
+        name: result.name,
+        statisticCategories: mapStatisticCategories(result.statisticCategories),
+      }));
+
+      setHierarchyList(receivedHierarchyList);
+    },
+    onSettled: () => setIsLoading(false),
+  });
 
   return (
     <Fragment>

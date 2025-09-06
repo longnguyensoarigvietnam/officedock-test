@@ -37,17 +37,10 @@ import {
   TemplateAction,
 } from '@constants/enums';
 
-import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
-
 import { CategoryStructure } from '@interfaces/skills';
 import { Template, TemplateFormData } from '@interfaces/template';
 import { OptionDropdownType } from '@interfaces/common';
-import {
-  CreationDataTask,
-  TaskErrorPerson,
-  TaskFormData,
-  TodoItem,
-} from '@interfaces/task';
+import { TaskErrorPerson, TaskFormData, TodoItem } from '@interfaces/task';
 
 import { formatShowDateJapanese } from '@utils/date';
 import {
@@ -55,14 +48,17 @@ import {
   removeDuplicateOptions,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+import { Organizations } from '@interfaces/organization';
 
 export type ActionTemplateModalProps = {
   open: boolean;
   dataTemplate?: Template | null;
   action?: string;
   peopleDefaultId?: string;
-  creationDataTaskData: CreationDataTask | undefined;
   disableDeleteAction?: boolean;
+  orgUserList?: Organizations[] | undefined;
+
   onDelete?: () => void;
   onClose: () => void;
   onSubmit?: (values: TaskFormData) => void;
@@ -73,9 +69,9 @@ export type ActionTemplateModalProps = {
 
 const ActionsTemplateModal = ({
   open,
+  orgUserList,
   action = ActionTask.CREATE,
   dataTemplate,
-  creationDataTaskData,
   disableDeleteAction,
   onEdit,
   onSubmit,
@@ -155,81 +151,6 @@ const ActionsTemplateModal = ({
     control,
     name: 'organization.value',
   });
-
-  const { refetchCreationDataStatistic } = useCreationDataStatisticTeam({
-    organization_id: organizationValue ? String(organizationValue) : '',
-    isTeam: true,
-    onSuccess: (data) => {
-      if (!data) return;
-      const mainItem =
-        data.organizations.find(
-          (item) => String(item.id) === String(organizationValue),
-        ) || data.organizations[0];
-      const organizationCategories = mainItem.statisticCategories.map(
-        (category) => {
-          const largeCategory = category.LARGE || {
-            id: NO_SETTING,
-            name: NO_SETTING,
-            uuid: '',
-          };
-
-          const mediumCategories = (category.MEDIUM || []).map(
-            (mediumCategory) => {
-              const mediumCategoryField = mediumCategory.MEDIUM || {
-                id: NO_SETTING,
-                name: NO_SETTING,
-                uuid: '',
-              };
-              const smallCategories = mediumCategory.SMALL || [
-                { id: NO_SETTING, name: NO_SETTING, uuid: '' },
-              ];
-
-              return {
-                MEDIUM: mediumCategoryField,
-                SMALL: smallCategories,
-              };
-            },
-          );
-
-          return {
-            LARGE: largeCategory,
-            MEDIUM: mediumCategories,
-          };
-        },
-      );
-
-      setDataOrganizationCategories(organizationCategories);
-      setDataOptionsCategoryLarge(() => {
-        const largeCategories: OptionDropdownType[] = [
-          {
-            label: NO_SETTING,
-            value: NO_SETTING,
-          },
-        ];
-        mainItem.statisticCategories.map((category) => {
-          if (category.LARGE) {
-            largeCategories.push({
-              label: category.LARGE.name,
-              value: category.LARGE.id,
-            });
-          }
-        });
-        return largeCategories;
-      });
-      setDataOptionsTagIds(
-        data.tags.map((org) => ({
-          label: String(org.name),
-          value: String(org.id),
-        })),
-      );
-    },
-  });
-
-  useEffect(() => {
-    if (organizationValue) {
-      refetchCreationDataStatistic();
-    }
-  }, [organizationValue, refetchCreationDataStatistic]);
 
   const defaultValues = useMemo<TemplateFormData>(() => {
     const value: TemplateFormData = {
@@ -324,12 +245,116 @@ const ActionsTemplateModal = ({
           });
       }
     }
+    if (orgUserList && action == ActionTask.CREATE) {
+      value.organization = orgUserList.find(
+        (organization) => organization.isMain,
+      )
+        ? {
+            label:
+              orgUserList.find((organization) => organization.isMain)?.name ||
+              '',
+            value:
+              orgUserList.find((organization) => organization.isMain)?.id || '',
+          }
+        : null;
+    }
     return value;
-  }, [action, dataTemplate, session?.user.id, session?.user.profile.fullName]);
+  }, [
+    action,
+    dataTemplate,
+    orgUserList,
+    session?.user.id,
+    session?.user.profile.fullName,
+  ]);
 
   useEffect(() => {
     reset(defaultValues);
   }, [defaultValues, reset]);
+
+  useCreationDataCommon({
+    condition: [!!organizationValue],
+    organizationId: organizationValue
+      ? String(organizationValue)
+      : orgUserList &&
+          orgUserList?.find((organization) => organization.isMain)?.id
+        ? String(orgUserList?.find((organization) => organization.isMain)?.id)
+        : '',
+    options: {
+      get_tags: true,
+      get_organization_with_categories: true,
+    },
+    onSuccess: (data) => {
+      const listTag =
+        data?.tags?.map((tag) => ({
+          label: tag.name,
+          value: tag.id,
+        })) || [];
+
+      setDataOptionsTagIds(listTag);
+      const mainItem =
+        data.organizationCategories.find(
+          (item) => String(item.id) === String(organizationValue),
+        ) || data.organizationCategories[0];
+
+      const organizationCategories = mainItem.statisticCategories.map(
+        (category) => {
+          const largeCategory = category.LARGE || {
+            id: NO_SETTING,
+            name: NO_SETTING,
+            uuid: '',
+          };
+
+          const mediumCategories = (category.MEDIUM || []).map(
+            (mediumCategory) => {
+              const mediumCategoryField = mediumCategory.MEDIUM || {
+                id: NO_SETTING,
+                name: NO_SETTING,
+                uuid: '',
+              };
+              const smallCategories = mediumCategory.SMALL || [
+                { id: NO_SETTING, name: NO_SETTING, uuid: '' },
+              ];
+
+              return {
+                MEDIUM: mediumCategoryField,
+                SMALL: smallCategories,
+              };
+            },
+          );
+
+          return {
+            LARGE: largeCategory,
+            MEDIUM: mediumCategories,
+          };
+        },
+      );
+
+      setDataOrganizationCategories(organizationCategories);
+      setDataOptionsCategoryLarge(() => {
+        const largeCategories: OptionDropdownType[] = [];
+        mainItem.statisticCategories.map((category) => {
+          if (category.LARGE) {
+            largeCategories.push({
+              label: category.LARGE.name,
+              value: category.LARGE.id,
+            });
+          }
+        });
+        return largeCategories;
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (orgUserList) {
+      setDataOptionsOrganizations(
+        orgUserList.map((org) => ({
+          label: org.name,
+          value: org.id as number,
+        })) || [],
+      );
+    }
+  }, [orgUserList]);
 
   // Watch the form fields dynamically
   const largeCategoryValue = useWatch({
@@ -430,36 +455,6 @@ const ActionsTemplateModal = ({
     mediumCategoryValue,
     watch,
   ]);
-
-  // Save data from create task
-  useEffect(() => {
-    if (creationDataTaskData) {
-      setDataOptionsOrganizations(
-        creationDataTaskData.organizations.map((org) => ({
-          label: org.name,
-          value: org.id as number,
-        })),
-      );
-    }
-  }, [creationDataTaskData]);
-
-  const selectedOrganization = watch('organization');
-
-  useEffect(() => {
-    if (selectedOrganization && creationDataTaskData) {
-      const organizationTags =
-        creationDataTaskData.organizations.find(
-          (org) => org.id === selectedOrganization.value,
-        )?.tags || [];
-
-      setDataOptionsTagIds(
-        organizationTags.map((tag) => ({
-          label: tag.name,
-          value: tag.id,
-        })),
-      );
-    }
-  }, [selectedOrganization, creationDataTaskData, setValue]);
 
   useEffect(() => {
     if (open === false) {

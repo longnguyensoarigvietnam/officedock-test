@@ -2,14 +2,12 @@ import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
-
-import { CreationDataTask, Team } from '@interfaces/task';
-import { OptionDropdownType } from '@interfaces/common';
-import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 import MultiSelectUserDropdown from '@components/common/MultiSelectDropdown/MultiSelectUserDropdown';
 
+import { OptionDropdownType } from '@interfaces/common';
+import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
+
 type ActionTaskFilterProp = {
-  creationDataTaskData: CreationDataTask | undefined;
   isLoadingDataTask?: boolean;
   listMemberTeam: {
     id: number;
@@ -22,7 +20,6 @@ type ActionTaskFilterProp = {
 };
 
 const ActionFilterTaskTeam = ({
-  creationDataTaskData,
   listMemberTeam,
   isLoadingDataTask,
   handleClose,
@@ -33,13 +30,6 @@ const ActionFilterTaskTeam = ({
   const { orderingOptions, setOrderingOptions } =
     useContext(TaskTeamStateContext);
   const [_isOpen, setIsOpen] = useState(false);
-  const [
-    _dataOptionsOrganizationsCategory,
-    setDataOptionsOrganizationsCategory,
-  ] = useState<Team[]>([]);
-  const [_dataOptionsTagIds, setDataOptionsTagIds] = useState<
-    OptionDropdownType[]
-  >([]);
   const [dataOptionsUserIds, setDataOptionsUserIds] = useState<
     OptionDropdownType[]
   >([]);
@@ -89,19 +79,6 @@ const ActionFilterTaskTeam = ({
     reset(defaultValues);
   }, [defaultValues, reset]);
 
-  useEffect(() => {
-    if (creationDataTaskData) {
-      setDataOptionsOrganizationsCategory(
-        creationDataTaskData.organizationCategories,
-      );
-      setDataOptionsTagIds(
-        creationDataTaskData.tags.map((org) => ({
-          label: String(org.name),
-          value: String(org.id),
-        })),
-      );
-    }
-  }, [creationDataTaskData]);
   useEffect(() => {
     if (listMemberTeam) {
       setDataOptionsUserIds(

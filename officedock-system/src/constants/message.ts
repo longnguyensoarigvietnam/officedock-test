@@ -35,6 +35,7 @@ export const QUESTION_VALUE_REQUIRED_MESSAGE = '質問の内容を入力して�
 export const ANSWER_VALUE_REQUIRED_MESSAGE = '回答の内容を入力してください。';
 export const DATE_STOP_SURVEY_REQUIRED_MESSAGE =
   '受付終了時間を指定してください。';
+export const DELETED_EVENT_TITLE = '予定が削除されました。'
 
 //Validate message
 export const PASSWORD_MIN_LENGTH_MESSAGE =

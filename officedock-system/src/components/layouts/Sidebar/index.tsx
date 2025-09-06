@@ -271,6 +271,7 @@ const Sidebar = ({ className }: Props) => {
       });
     } else {
       params.delete('view');
+      params.delete('room'); // Delete the 'room' parameter when moving from the chat page to another page. When navigating to the chat page, the 'room' parameter is already added to the URL.
       router.push(`${href}?${params.toString()}`);
       setLastVisitedByTab((prev) => {
         return {
