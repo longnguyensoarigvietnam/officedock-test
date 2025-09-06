@@ -3,7 +3,6 @@ import {
   ChangeEvent,
   Dispatch,
   SetStateAction,
-  useContext,
   useEffect,
   useMemo,
   useState,
@@ -28,14 +27,13 @@ import Drawer from '@components/common/Drawers';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
-  CreationDataEventCalendar,
   EventEditFormData,
   EventFormData,
   EventParticipant,
 } from '@interfaces/calendar';
 import { CategoryStructure } from '@interfaces/skills';
 import { LocationEventType } from '@interfaces/location';
-import { User } from '@interfaces/user';
+import { Profile, User } from '@interfaces/user';
 
 import {
   ActionsEvent,
@@ -82,16 +80,13 @@ import {
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
 
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
-
-import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import api from '@base/api';
 
 export type ActionsEventModalProps = {
   open: boolean;
   dataEvent?: EventEditFormData;
-  creationDataEventCalendar: CreationDataEventCalendar | undefined;
   action?: string;
   authenticatedUser?: User | undefined;
   defaultStartDate?: Date | undefined;
@@ -110,7 +105,6 @@ const ActionsEventModal = ({
   dataEvent,
   action = ActionsEvent.CREATE,
   authenticatedUser,
-  creationDataEventCalendar,
   defaultStartDate,
   calendarView,
   backToEditing,
@@ -157,8 +151,124 @@ const ActionsEventModal = ({
   // Session
   const { data: session } = useSessionCache();
 
-  // Context
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+  // Creation data
+  const [dashboardMemberList, setDashboardMemberList] = useState<Profile[]>([]);
+  useCreationDataCommon({
+    options: {
+      get_all_members: true,
+      get_organization_with_users: true,
+      get_event_locations: true,
+      get_tags: true,
+      get_organization_with_categories: true,
+      is_organization_calendar: true,
+    },
+    onSuccess: (data) => {
+      let eventMembers: EventParticipant[] = [];
+      let eventOrganizations: EventParticipant[] = [];
+      if (data.allMembers) {
+        eventMembers = data.allMembers?.map((member) => ({
+          id: `${EventParticipantType.USER}-${member.id}`,
+          fullName: member.fullName,
+          type: EventParticipantType.USER,
+          mainOrganization: member.organizations
+            ? member.organizations.name
+            : '',
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
+        }));
+        setDashboardMemberList(data.allMembers);
+      }
+
+      if (data.organizationUsers) {
+        eventOrganizations = data.organizationUsers
+          ? data.organizationUsers.map((org) => ({
+              id: `${EventParticipantType.ORGANIZATION}-${org.id}`,
+              fullName: org.name,
+              type: EventParticipantType.ORGANIZATION,
+              userIds: org.users ? org.users.map((user) => user.id) : [],
+              color: org.iconColor || '#0068B6',
+            }))
+          : [];
+        setDataOptionsOrganizations([
+          ...data.organizationUsers.map((org) => ({
+            value: org.id || '',
+            label: org.name,
+            userIds: org.users ? org.users.map((user) => user.id) : [],
+            iconColor: org.iconColor || '#0068B6',
+          })),
+        ]);
+      }
+      setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
+
+      if (data?.eventLocations) {
+        setDataOptionsEventLocation(
+          data?.eventLocations?.map((org) => ({
+            label: org.name,
+            value: org.id || '',
+          })),
+        );
+      }
+      if (data?.tags) {
+        setDataOptionsTags(
+          data?.tags.map((org) => ({
+            label: org.name as string,
+            value: org.id || '',
+          })),
+        );
+      }
+
+      if (data?.organizationCategories) {
+        const calendarOrganizationCategories =
+          data.organizationCategories[0].statisticCategories;
+        const organizationCategories = calendarOrganizationCategories.map(
+          (category) => {
+            const largeCategory = category.LARGE || {
+              id: NO_SETTING,
+              name: NO_SETTING,
+              uuid: '',
+            };
+
+            const mediumCategories = (category.MEDIUM || []).map(
+              (mediumCategory) => {
+                const mediumCategoryField = mediumCategory.MEDIUM || {
+                  id: NO_SETTING,
+                  name: NO_SETTING,
+                  uuid: '',
+                };
+                const smallCategories = mediumCategory.SMALL || [
+                  { id: NO_SETTING, name: NO_SETTING, uuid: '' },
+                ];
+
+                return {
+                  MEDIUM: mediumCategoryField,
+                  SMALL: smallCategories,
+                };
+              },
+            );
+
+            return {
+              LARGE: largeCategory,
+              MEDIUM: mediumCategories,
+            };
+          },
+        );
+
+        setDataOrganizationCategories(organizationCategories);
+        setDataOptionsCategoryLarge(() => {
+          const largeCategories: OptionDropdownType[] = [];
+          calendarOrganizationCategories.map((category) => {
+            if (category.LARGE) {
+              largeCategories.push({
+                label: category.LARGE.name,
+                value: category.LARGE.id,
+              });
+            }
+          });
+          return largeCategories;
+        });
+      }
+    },
+  });
 
   // React hook form
   const {
@@ -176,83 +286,6 @@ const ActionsEventModal = ({
     defaultValues: {
       startDate: defaultStartDate,
       endDate: defaultStartDate,
-    },
-  });
-
-  // Get creation data for organizations, tags, locations, categories
-  const { isFetchedCreationDataStatistic } = useCreationDataStatistic({
-    is_calendar_page: true,
-    onSuccess: (data) => {
-      if (!data) return;
-
-      setDataOptionsOrganizations([
-        ...data.organizations.map((org) => ({
-          value: org.id || '',
-          label: org.name,
-          userIds: org.users ? org.users.map((user) => user.id) : [],
-          iconColor: org.iconColor || '#0068B6',
-        })),
-      ]);
-
-      setDataOptionsTags(
-        data.calendarOrganization?.tags.map((org) => ({
-          label: org.name as string,
-          value: org.id || '',
-        })),
-      );
-
-      setDataOptionsEventLocation(
-        data?.locations?.map((org) => ({
-          label: org.name,
-          value: org.id || '',
-        })),
-      );
-
-      const organizationCategories =
-        data.calendarOrganization?.statisticCategories.map((category) => {
-          const largeCategory = category.LARGE || {
-            id: NO_SETTING,
-            name: NO_SETTING,
-            uuid: '',
-          };
-
-          const mediumCategories = (category.MEDIUM || []).map(
-            (mediumCategory) => {
-              const mediumCategoryField = mediumCategory.MEDIUM || {
-                id: NO_SETTING,
-                name: NO_SETTING,
-                uuid: '',
-              };
-              const smallCategories = mediumCategory.SMALL || [
-                { id: NO_SETTING, name: NO_SETTING, uuid: '' },
-              ];
-
-              return {
-                MEDIUM: mediumCategoryField,
-                SMALL: smallCategories,
-              };
-            },
-          );
-
-          return {
-            LARGE: largeCategory,
-            MEDIUM: mediumCategories,
-          };
-        });
-
-      setDataOrganizationCategories(organizationCategories);
-      setDataOptionsCategoryLarge(() => {
-        const largeCategories: OptionDropdownType[] = [];
-        data.calendarOrganization.statisticCategories.map((category) => {
-          if (category.LARGE) {
-            largeCategories.push({
-              label: category.LARGE.name,
-              value: category.LARGE.id,
-            });
-          }
-        });
-        return largeCategories;
-      });
     },
   });
 
@@ -494,34 +527,6 @@ const ActionsEventModal = ({
   useEffect(() => {
     reset(defaultValues);
   }, [defaultValues, reset]);
-
-  // Get option list for event types, participants
-  useEffect(() => {
-    if (creationDataEventCalendar) {
-      const eventMembers = creationDataEventCalendar.members.map((org) => ({
-        id: `${EventParticipantType.USER}-${org.id}`,
-        fullName: org.fullName,
-        type: EventParticipantType.USER,
-      }));
-      if (isFetchedCreationDataStatistic) {
-        const eventOrganizations = dataOptionsOrganizations
-          ? dataOptionsOrganizations.map((org) => ({
-              id: `${EventParticipantType.ORGANIZATION}-${org.value}`,
-              fullName: org.label,
-              type: EventParticipantType.ORGANIZATION,
-              userIds: org.userIds,
-              color: org.iconColor,
-            }))
-          : [];
-        setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    creationDataEventCalendar,
-    dataOptionsOrganizations,
-    isFetchedCreationDataStatistic,
-  ]);
 
   // Check overlapping location
   const handleConfirmCheckOverlappingLocation = () => {
@@ -772,7 +777,7 @@ const ActionsEventModal = ({
   // Render avatar for users and organizations
   const renderAvatar = (memberId: string) => {
     const actualMemberId = Number(memberId.split('-')[1]);
-    const memberInfo = dashboardMembersWithAvatars.find(
+    const memberInfo = dashboardMemberList.find(
       (memberWithAvatar) => memberWithAvatar.id == actualMemberId,
     );
 
@@ -2172,6 +2177,7 @@ const ActionsEventModal = ({
         <div className="flex justify-center mt-8">
           {session?.user.permissions &&
             ((action === ActionsEvent.EDIT &&
+              !isEditDisabled &&
               hasPermissionInArray(
                 session?.user.permissions,
                 PermissionsSystem.CALENDAR_UPDATE,

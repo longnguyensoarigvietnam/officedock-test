@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import Image from 'next/image';
 
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
@@ -42,7 +43,8 @@ import {
 } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 
-import { ChatDashboardMember, ChatMessageResponse } from '@interfaces/chat';
+import { ChatMessageResponse } from '@interfaces/chat';
+import { Profile } from '@interfaces/user';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
@@ -59,13 +61,13 @@ import {
   renderEventDatetimeInChat,
   renderScheduleChangeInCalendarRoom,
 } from '@utils';
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import { DELETED_EVENT_TITLE } from '@constants/message';
 
 interface SearchMessagesModalProps {
   open: boolean;
   isSearchingMessagesRef?: MutableRefObject<boolean>;
   searchChatMsg: string;
-  dashboardMembers: ChatDashboardMember[];
+  dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   hasMoreSearchResultDetail: boolean;
   searchResultsPage: number;
   searchMessageResults:
@@ -108,7 +110,7 @@ export const SearchMessagesModal = ({
   hasMoreSearchResultDetail,
   searchResultsPage,
   chatRoomType,
-  dashboardMembers,
+  dashboardMemberList,
   handleConfirmGetDataDetailEvent,
   setSearchMessageResults,
   setSearchResultsPage,
@@ -132,14 +134,14 @@ export const SearchMessagesModal = ({
   }, [searchMessageResults]);
 
   const renderAvatar = (senderId: number) => {
-    const memberInfo = dashboardMembers.find(
+    const memberInfo = dashboardMemberList.find(
       (member) => member.id === senderId,
     );
 
     return (
       <div className="h-6">
         <CustomUserAvatar
-          avatarUrl={memberInfo?.avatarUrl || ''}
+          avatarUrl={memberInfo?.avatar || ''}
           avatarColor={memberInfo?.avatarColor || ''}
           size={33}
         />
@@ -327,7 +329,7 @@ export const SearchMessagesModal = ({
         mentionName = mentionName.slice(1);
       }
 
-      const matchedUser = dashboardMembers.find(
+      const matchedUser = dashboardMemberList.find(
         (member) => member.fullName === mentionName,
       );
 
@@ -1025,18 +1027,22 @@ export const SearchMessagesModal = ({
                           <div
                             className="flex items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer"
                             onClick={() => {
-                              handleConfirmGetDataDetailEvent(
-                                `${messageDetail.schedule?.id}`,
-                              );
+                              messageDetail.schedule?.id &&
+                                handleConfirmGetDataDetailEvent(
+                                  `${messageDetail.schedule?.id}`,
+                                );
                             }}>
                             <ImageRound
                               className={`w-[15px] h-[14px]`}
                               name="Calendar icon"
                               src="/icons/calendar-time.svg"
                             />
-                            <p className="text-primary text-sm font-medium">
+                            <p
+                              className={`${messageDetail.schedule ? 'text-primary' : 'text-gray-300'} text-sm font-medium`}>
                               {highlightTitleBySearchTerm(
-                                messageDetail.schedule?.title || '',
+                                messageDetail.schedule
+                                  ? messageDetail.schedule?.title
+                                  : DELETED_EVENT_TITLE,
                                 searchChatMsg,
                               )}
                             </p>

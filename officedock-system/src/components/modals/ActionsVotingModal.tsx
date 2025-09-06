@@ -1,5 +1,12 @@
 'use client';
-import { ChangeEvent, Dispatch, SetStateAction, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  ChangeEvent,
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 
@@ -10,8 +17,8 @@ import Drawer from '@components/common/Drawers';
 import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
 import Checkbox from '@components/common/Checkbox';
-import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ErrorMessage from '@components/common/ErrorMessage';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import { ActionsModal, EventParticipantType } from '@constants/enums';
 import { PLEASE_SELECT_AT_LEAST_ONE_CANDIDATE } from '@constants/message';
@@ -30,20 +37,19 @@ import {
 } from '@utils/date';
 import { showModalHeaderBackgroundColorByTime } from '@utils';
 
-import { OptionDropdownType } from '@interfaces/common';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+
 import { VotingDetail, VotingFormData } from '@interfaces/mvp';
 import { EventParticipant } from '@interfaces/calendar';
+import { Profile } from '@interfaces/user';
 
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
-
-import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 
 export type ActionsVotingModalProps = {
   open: boolean;
   dataVoting?: VotingDetail | null;
   votingDateTimeErrorMsg: string | null;
-  setVotingDateTimeErrorMsg: Dispatch<SetStateAction<string | null>>
+  setVotingDateTimeErrorMsg: Dispatch<SetStateAction<string | null>>;
   action?: string | null;
   onDelete?: (values: VotingDetail) => void;
   onClose: () => void;
@@ -63,7 +69,6 @@ const ActionsVotingModal = ({
   onCreate,
 }: ActionsVotingModalProps) => {
   const { data: session } = useSessionCache();
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
   const [showMembersErrorMessage, setShowMembersErrorMessage] = useState<
     string | null
   >('');
@@ -76,26 +81,47 @@ const ActionsVotingModal = ({
   // Search and filter
   const [searchName, setSearchName] = useState<string>('');
 
+  // Get creation data for organizations, members
+  const [dashboardMemberList, setDashboardMemberList] = useState<Profile[]>([]);
   const [dataOptionsParticipants, setDataOptionsParticipants] = useState<
     EventParticipant[]
   >([]);
-  const [dataOptionsOrganizations, setDataOptionsOrganizations] = useState<
-    OptionDropdownType[]
-  >([]);
-  // Get creation data for organizations, tags, locations, categories
-  const { isFetchedCreationDataStatistic } = useCreationDataStatistic({
-    is_calendar_page: true,
-    onSuccess: (data) => {
-      if (!data) return;
 
-      setDataOptionsOrganizations([
-        ...data.organizations.map((org) => ({
-          value: org.id || '',
-          label: `${org.name}の全員を選択`,
-          userIds: org.users ? org.users.map((user) => user.id) : [],
-          iconColor: org.iconColor || '#0068B6',
-        })),
-      ]);
+  useCreationDataCommon({
+    options: {
+      get_all_members: true,
+      get_organization_with_users: true,
+    },
+    onSuccess: (data) => {
+      let eventMembers: EventParticipant[] = [];
+      let eventOrganizations: EventParticipant[] = [];
+      if (data.allMembers) {
+        eventMembers = data.allMembers?.map((member) => ({
+          id: `${EventParticipantType.USER}-${member.id}`,
+          fullName: member.fullName,
+          type: EventParticipantType.USER,
+          mainOrganization: member.organizations
+            ? member.organizations.name
+            : '',
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
+        }));
+
+        setDashboardMemberList(data.allMembers);
+      }
+
+      if (data.organizationUsers) {
+        eventOrganizations = data.organizationUsers
+          ? data.organizationUsers.map((org) => ({
+              id: `${EventParticipantType.ORGANIZATION}-${org.id}`,
+              fullName: org.name,
+              type: EventParticipantType.ORGANIZATION,
+              userIds: org.users ? org.users.map((user) => user.id) : [],
+              color: org.iconColor || '#0068B6',
+            }))
+          : [];
+      }
+      setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
     },
   });
 
@@ -152,37 +178,6 @@ const ActionsVotingModal = ({
   useEffect(() => {
     reset(defaultValues);
   }, [defaultValues, reset]);
-
-  // Get option list for event types, participants
-  useEffect(() => {
-    if (dashboardMembersWithAvatars) {
-      const eventMembers = dashboardMembersWithAvatars.map((member) => ({
-        id: `${EventParticipantType.USER}-${member.id}`,
-        fullName: member.fullName,
-        type: EventParticipantType.USER,
-        mainOrganization: member.mainOrganization || '',
-        color: member?.avatarColor || '',
-        avatarUrl: member?.avatar || '',
-      }));
-      if (isFetchedCreationDataStatistic) {
-        const eventOrganizations = dataOptionsOrganizations
-          ? dataOptionsOrganizations.map((org) => ({
-              id: `${EventParticipantType.ORGANIZATION}-${org.value}`,
-              fullName: org.label,
-              type: EventParticipantType.ORGANIZATION,
-              userIds: org.userIds,
-              color: org.iconColor,
-            }))
-          : [];
-        setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    dashboardMembersWithAvatars,
-    dataOptionsOrganizations,
-    isFetchedCreationDataStatistic,
-  ]);
 
   const onSubmitData: SubmitHandler<VotingFormData> = async (data) => {
     if (
@@ -310,7 +305,7 @@ const ActionsVotingModal = ({
   // Render avatar for users and organizations
   const renderAvatar = (memberId: string) => {
     const actualMemberId = Number(memberId.split('-')[1]);
-    const memberInfo = dashboardMembersWithAvatars.find(
+    const memberInfo = dashboardMemberList.find(
       (memberWithAvatar) => memberWithAvatar.id == actualMemberId,
     );
 
@@ -651,7 +646,7 @@ const ActionsVotingModal = ({
                       className="h-[34px] !px-2 !pl-[30px] !border-[1px] !border-[#77858F] rounded-md !text-xs !pt-2 text-center"
                       selected={value ? new Date(value) : null}
                       onChange={(e) => {
-                        setVotingDateTimeErrorMsg(null)
+                        setVotingDateTimeErrorMsg(null);
                         onChange(e);
                       }}
                     />
@@ -665,7 +660,7 @@ const ActionsVotingModal = ({
                   register={register('endTime', {
                     required: watch('endDate') !== null ? true : false,
                     onChange: (e) => {
-                      setVotingDateTimeErrorMsg(null)
+                      setVotingDateTimeErrorMsg(null);
                       handleChange(e, 'endTime');
                     },
                     onBlur: (time) => {
@@ -682,7 +677,7 @@ const ActionsVotingModal = ({
                     new Date(watch('endDate') ?? new Date()),
                   )}
                   onChangeDropdown={(e) => {
-                    setVotingDateTimeErrorMsg(null)
+                    setVotingDateTimeErrorMsg(null);
                     setValue('endTime', e.label, {
                       shouldDirty: true,
                     });

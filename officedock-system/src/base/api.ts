@@ -15,10 +15,7 @@ let isFetching = false;
 let waiting: ((value: Awaited<ReturnType<typeof getSession>>) => void)[] = [];
 
 const getCachedSession = async () => {
-  if (
-    !cachedSession ||
-    new Date(cachedSession.expires) <= new Date()
-  ) {
+  if (!cachedSession || new Date(cachedSession.expires) <= new Date()) {
     if (isFetching) {
       return new Promise((resolve) => waiting.push(resolve));
     }
@@ -52,7 +49,7 @@ instance.interceptors.response.use(
 
     if (
       status === ServerStatusCode.UNAUTHORIZED ||
-      status === ServerStatusCode.LOCKED 
+      status === ServerStatusCode.LOCKED
     ) {
       const session = await getCachedSession();
       if (session) {

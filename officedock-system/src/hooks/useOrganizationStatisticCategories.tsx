@@ -48,6 +48,7 @@ const useOrganizationStatisticCategories = ({
     data: organizationStatisticCategories,
     refetch: refetchOrganizationStatisticCategories,
     isFetched: isFetchedOrganizationStatisticCategories,
+    isFetching: isFetchingOrganizationStatisticCategories,
   } = useQuery({
     queryKey: ['getOrganizationStatisticCategories'],
     queryFn: getOrganizationStatisticCategories,
@@ -117,8 +118,9 @@ const useOrganizationStatisticCategories = ({
 
   return {
     organizationStatisticCategories,
-    refetchOrganizationStatisticCategories,
     isFetchedOrganizationStatisticCategories,
+    isFetchingOrganizationStatisticCategories,
+    refetchOrganizationStatisticCategories,
   };
 };
 

@@ -32,11 +32,10 @@ import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 import NoSettingColumn from '@components/kanbanTeam/NoSettingColumn';
 import Checkbox from '@components/common/Checkbox';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import { useErrorToast } from '@hooks/useErrorToast';
 import useTaskNoSettingTeam from '@hooks/useTaskNoSettingTeam';
-import useCreationDataTask from '@hooks/useCreationDataTask';
-import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useTaskBoardTeam from '@hooks/useTaskBoardTeam';
 
 import { pageRouters, apiRouters } from '@constants/routers';
@@ -98,7 +97,7 @@ import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import api from '@base/api';
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const KanbanBoardTaskTeam = () => {
   // Context
@@ -108,7 +107,6 @@ const KanbanBoardTaskTeam = () => {
     selectedOptionZoom,
     setSelectedOptionZoom,
     setColumnWidth,
-    setCreationDataTaskData,
     orderingOptions,
     setOrderingOptions,
     setDataTotalStatus,
@@ -118,6 +116,7 @@ const KanbanBoardTaskTeam = () => {
     setListTaskNoSetting,
     isConcurrently,
     setIsConcurrently,
+    setDataOptionsStatus,
   } = useContext(TaskTeamStateContext);
 
   const { setIsLoading } = useContext(LoadingContext);
@@ -185,20 +184,35 @@ const KanbanBoardTaskTeam = () => {
 
   const { selectedOrganization } = useContext(GlobalStateContext);
 
-  useCreationDataStatisticTeam({
-    organization_id: organizationId || '',
-    isTeam: true,
+  useCreationDataCommon({
+    condition: [!!organizationId],
+    organizationId: selectedOrganizationSideBar?.value
+      ? String(selectedOrganizationSideBar?.value)
+      : organizationId || '',
+    options: {
+      get_organization_with_users: true,
+      get_organization_members: true,
+      get_task_status: true,
+    },
     onSuccess: (data) => {
-      if (!data) return;
-
-      setListMemberTeam(
-        data.members.map((member) => ({
-          id: member.id,
-          fullName: member.fullName,
-          color: member.avatarColor,
-          avatarUrl: member?.avatar || '',
-        })),
-      );
+      if (data.organizationMembers) {
+        setListMemberTeam(
+          data.organizationMembers.map((member) => ({
+            id: member.id,
+            fullName: member.fullName,
+            color: member.avatarColor,
+            avatarUrl: member?.avatar || '',
+          })),
+        );
+      }
+      if (data.taskStatus) {
+        setDataOptionsStatus(
+          data.taskStatus.map((status) => ({
+            label: status.name || '',
+            value: status.id as number,
+          })),
+        );
+      }
     },
   });
 
@@ -207,12 +221,6 @@ const KanbanBoardTaskTeam = () => {
     router.push(`?${params.toString()}`);
   };
 
-  const { creationDataTaskData } = useCreationDataTask({
-    organizationId: organizationId as string,
-    onSuccess: (data) => {
-      setCreationDataTaskData(data);
-    },
-  });
   useEffect(() => {
     if (organizationId) {
       setIsReadyToFetch(true);
@@ -2584,9 +2592,8 @@ const KanbanBoardTaskTeam = () => {
                     leaveTo="opacity-0 translate-y-1">
                     <PopoverPanel className="absolute left-0 top-5 z-[1] w-[400px] transform">
                       <ActionFilterTaskTeam
-                        creationDataTaskData={creationDataTaskData}
-                        isLoadingDataTask={isLoadingDataTask}
                         listMemberTeam={listMemberTeam}
+                        isLoadingDataTask={isLoadingDataTask}
                         handleClose={() => setIsOpenModalFilter(false)}
                         handleReadyToFetch={() => setIsReadyToFetch(true)}
                       />
@@ -2808,7 +2815,6 @@ const KanbanBoardTaskTeam = () => {
           errorPerson={dataErrorTask}
           listMemberTeam={listMemberTeam}
           organizationTeamList={organizationTeamList}
-          creationDataTaskData={creationDataTaskData}
           onClose={() => {
             setIsShowModalEditTeam(false);
             handleRemoveParam();

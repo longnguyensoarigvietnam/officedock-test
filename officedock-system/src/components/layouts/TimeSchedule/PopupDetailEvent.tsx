@@ -2,11 +2,12 @@ import { isSameDay } from 'date-fns';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { useRouter } from 'next/navigation';
-import React, { useContext } from 'react';
+import React, { useState } from 'react';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+
 import { NO_SETTING } from '@constants';
 import {
   ActionsEvent,
@@ -18,13 +19,16 @@ import { pageRouters } from '@constants/routers';
 
 import { EventEditFormData, EventParticipant } from '@interfaces/calendar';
 import { DataDetailEventType } from '@interfaces/task';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { Profile } from '@interfaces/user';
+
 import { hasPermissionInArray } from '@utils';
 import {
   formatHoursAndMinutesForDateTime,
   formatShowDeadline,
   getJapaneseWeekDay,
 } from '@utils/date';
+
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 type Props = {
   dataEvent: DataDetailEventType;
@@ -34,8 +38,19 @@ type Props = {
 const PopupDetailEvent = ({ dataEvent, onDelete }: Props) => {
   const { data: session } = useSessionCache();
   const router = useRouter();
+  const [dashboardMemberList, setDashboardMemberList] = useState<Profile[]>([]);
 
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+  useCreationDataCommon({
+    options: {
+      get_all_members: true,
+    },
+    onSuccess: (data) => {
+      if (data.allMembers) {
+        setDashboardMemberList(data.allMembers);
+      }
+    },
+  });
+
   const checkShowUserAvatar = () => {
     return !(
       dataEvent.participants?.length == 1 &&
@@ -207,7 +222,7 @@ const PopupDetailEvent = ({ dataEvent, onDelete }: Props) => {
                     <CustomUserAvatar
                       avatarUrl={
                         (dataEvent.participants?.[0] &&
-                          dashboardMembersWithAvatars?.find(
+                          dashboardMemberList?.find(
                             (member) =>
                               member.id === dataEvent.participants?.[0]?.id,
                           )?.avatar) ||
@@ -215,7 +230,7 @@ const PopupDetailEvent = ({ dataEvent, onDelete }: Props) => {
                       }
                       avatarColor={
                         (dataEvent.participants?.[0] &&
-                          dashboardMembersWithAvatars?.find(
+                          dashboardMemberList?.find(
                             (member) =>
                               member.id === dataEvent.participants?.[0]?.id,
                           )?.avatarColor) ||
@@ -224,7 +239,7 @@ const PopupDetailEvent = ({ dataEvent, onDelete }: Props) => {
                       size={36}
                       customClassName={`${
                         !dataEvent.participants?.[0] &&
-                        dashboardMembersWithAvatars?.find(
+                        dashboardMemberList?.find(
                           (member) =>
                             member.id === dataEvent.participants?.[0]?.id,
                         )?.avatar &&
@@ -250,7 +265,7 @@ const PopupDetailEvent = ({ dataEvent, onDelete }: Props) => {
                   return a.fullName.localeCompare(b.fullName);
                 })
                 ?.map((participant, index) => {
-                  const memberInfo = dashboardMembersWithAvatars?.find(
+                  const memberInfo = dashboardMemberList?.find(
                     (member) => member.id == participant.id,
                   );
                   return (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation } from 'react-query';
 import Link from 'next/link';
@@ -11,24 +11,19 @@ import { AxiosError } from 'axios';
 import Dropdown from '@components/common/Dropdown';
 import Button from '@components/common/Button';
 
-import useCreationDataStatisticOrganization from '@hooks/useCreationDataStatisticOrganization';
-import useCreationDataSkill from '@hooks/useCreationDataSkill';
-import useTeamList from '@hooks/useListTeam';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import { useErrorToast } from '@hooks/useErrorToast';
+import useOrganizationCategoryHierarchyDetail from '@hooks/useOrganizationCategoryHierarchyDetail';
+import useOrganizationCategoryHierarchyList from '@hooks/useOrganizationCategoryHierarchyList';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
-  OrganizationCategoryHierarchyDetail,
   OrganizationCategoryRow,
   StatisticCategory,
 } from '@interfaces/hierarchy';
 import { CreationDataSkill, Skill } from '@interfaces/skills';
 
-import {
-  AddCategoryHierarchyType,
-  PermissionsSystem,
-  ScreenName,
-} from '@constants/enums';
+import { AddCategoryHierarchyType, PermissionsSystem } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ALL_TEAMS_OPTION } from '@constants';
 import {
@@ -96,117 +91,83 @@ const EditHierarchyForm = () => {
       label: ALL_TEAMS_OPTION,
       value: '',
     });
-  const { creationDataCategoryData } = useCreationDataStatisticOrganization({});
-  const { creationDataSkillData } = useCreationDataSkill({
-    organizationId: String(selectedOrganizationOption.value),
-    current_screen: ScreenName.CATEGORY_HIERARCHY,
-  });
-  const { teamList } = useTeamList({
-    screenName: ScreenName.CATEGORY_HIERARCHY,
-  });
+
   const { setIsLoading } = useContext(LoadingContext);
   const router = useRouter();
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
   const [isTyping, setIsTyping] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (creationDataCategoryData && creationDataCategoryData?.length > 0) {
-      const options = creationDataCategoryData.map((category) => {
-        return {
-          value: category.uuid,
-          label: category.name,
-          teamId: category.team,
-        };
-      });
-      setCategoryList([...options]);
-    }
-  }, [creationDataCategoryData]);
-
-  useEffect(() => {
-    if (creationDataSkillData) {
-      if (selectedOrganizationOption.label == ALL_TEAMS_OPTION) {
-        setDataOptionsSkill(
-          (creationDataSkillData as CreationDataSkill[]).map((item) => {
-            return {
-              organizationId: item.organization.id,
-              skills: item.skills.map((skill: Skill) => {
-                return {
-                  value: skill.id,
-                  label: skill.name,
-                };
-              }),
-            };
-          }),
-        );
-      } else {
-        const foundCreationData = (
-          creationDataSkillData as CreationDataSkill[]
-        ).find(
-          (data) => data.organization.id == selectedOrganizationOption.value,
-        );
-        setDataOptionsSkill([
-          {
-            organizationId: selectedOrganizationOption.value,
-            skills: foundCreationData?.skills
-              ? foundCreationData?.skills.map((skill: Skill) => {
+  useCreationDataCommon({
+    options: {
+      get_statistic_categories: true,
+      get_organization_skills: true,
+      get_all_organizations: true,
+    },
+    onSuccess: (data) => {
+      if (data.statisticCategories) {
+        const options = data.statisticCategories.map((category) => {
+          return {
+            value: category.uuid,
+            label: category.name,
+            teamId: category.team,
+          };
+        });
+        setCategoryList([...options]);
+      }
+      if (data.organizationSkills) {
+        if (selectedOrganizationOption.label == ALL_TEAMS_OPTION) {
+          setDataOptionsSkill(
+            data.organizationSkills.map((item) => {
+              return {
+                organizationId: item.organization.id as number,
+                skills: item.skills?.map((skill: Skill) => {
                   return {
                     value: skill.id,
                     label: skill.name,
                   };
-                })
-              : [],
+                }),
+              };
+            }),
+          );
+        } else {
+          const foundCreationData = (
+            data.organizationSkills as CreationDataSkill[]
+          ).find(
+            (data) => data.organization.id == selectedOrganizationOption.value,
+          );
+          setDataOptionsSkill([
+            {
+              organizationId: selectedOrganizationOption.value,
+              skills: foundCreationData?.skills
+                ? foundCreationData?.skills.map((skill: Skill) => {
+                    return {
+                      value: skill.id,
+                      label: skill.name,
+                    };
+                  })
+                : [],
+            },
+          ]);
+        }
+      }
+      if (data.allOrganizations) {
+        const organizationList = data.allOrganizations.map((org) => {
+          return {
+            value: Number(org.id),
+            label: org.name,
+          };
+        });
+        setOrganizationList([
+          {
+            label: ALL_TEAMS_OPTION,
+            value: '',
           },
+          ...organizationList,
         ]);
       }
-    }
-  }, [creationDataSkillData, selectedOrganizationOption]);
-
-  useEffect(() => {
-    if (teamList) {
-      const organizationList = teamList.map((org) => {
-        return {
-          value: Number(org.id),
-          label: org.name,
-        };
-      });
-      setOrganizationList([
-        {
-          label: ALL_TEAMS_OPTION,
-          value: '',
-        },
-        ...organizationList,
-      ]);
-    }
-  }, [teamList]);
-
-  const handleGetOrganizationCategoryHierarchyList = async () => {
-    setIsLoading(true);
-    const apiUrl = `${apiRouters.ORGANIZATION_CATEGORY_HIERARCHY_LIST}`;
-
-    const { data } =
-      await api.get<OrganizationCategoryHierarchyDetail[]>(apiUrl);
-    return data;
-  };
-
-  const { mutate: getOrganizationCategoryHierarchyList } = useMutation(
-    'getOrganizationCategoryHierarchyList',
-    handleGetOrganizationCategoryHierarchyList,
-    {
-      onSuccess: async (data) => {
-        const receivedHierarchyList = data.map((result) => ({
-          id: result.id,
-          name: result.name,
-          statisticCategories: mapStatisticCategories(
-            result.statisticCategories,
-          ),
-        }));
-
-        setHierarchyList(receivedHierarchyList);
-      },
-      onSettled: () => setIsLoading(false),
     },
-  );
+  });
 
   const handleConfirmUpdateOrganizationCategoryHierarchy = () => {
     const tempSelectedHierarchiesToUpdate = selectedHierarchiesToUpdate.map(
@@ -325,73 +286,61 @@ const EditHierarchyForm = () => {
     }));
   };
 
-  const handleGetOrganizationCategoryHierarchyDetail = async (
-    organizationId: number,
-  ) => {
-    setIsLoading(true);
-    const apiUrl = `${apiRouters.ORGANIZATION_CATEGORY_HIERARCHY_DETAIL(organizationId)}`;
-
-    const { data } = await api.get<OrganizationCategoryHierarchyDetail>(apiUrl);
-    return data;
-  };
-
-  const { mutate: getOrganizationCategoryHierarchyDetail } = useMutation(
-    'getOrganizationCategoryHierarchyDetail',
-    handleGetOrganizationCategoryHierarchyDetail,
-    {
-      onSuccess: async (data) => {
-        const statisticCategories = data.statisticCategories.map((org) => ({
-          id: org.id,
-          large: {
-            label: org.largeStatisticCategory?.name || '',
-            value: org.largeStatisticCategory?.uuid || '',
-            showBy: AddCategoryHierarchyType.PULLDOWN,
-          },
-          medium: {
-            label: org.mediumStatisticCategory?.name || '',
-            value: org.mediumStatisticCategory?.uuid || '',
-            showBy: AddCategoryHierarchyType.PULLDOWN,
-          },
-          small: {
-            label: org.smallStatisticCategory?.name || '',
-            value: org.smallStatisticCategory?.uuid || '',
-            showBy: AddCategoryHierarchyType.PULLDOWN,
-          },
-          skills: org.skills.map((skill) => {
-            return {
-              label: skill.name,
-              value: skill.id,
-            };
-          }),
-          color: org.color,
-        }));
-        setHierarchyList([
-          {
-            id: data.id,
-            name: data.name,
-            statisticCategories,
-          },
-        ]);
-      },
-      onSettled: () => {
-        setIsLoading(false);
-      },
+  useOrganizationCategoryHierarchyDetail({
+    organizationId: Number(selectedOrganizationOption.value),
+    conditions: [Boolean(selectedOrganizationOption.value)],
+    onSuccess: async (data) => {
+      const statisticCategories = data.statisticCategories.map((org) => ({
+        id: org.id,
+        large: {
+          label: org.largeStatisticCategory?.name || '',
+          value: org.largeStatisticCategory?.uuid || '',
+          showBy: AddCategoryHierarchyType.PULLDOWN,
+        },
+        medium: {
+          label: org.mediumStatisticCategory?.name || '',
+          value: org.mediumStatisticCategory?.uuid || '',
+          showBy: AddCategoryHierarchyType.PULLDOWN,
+        },
+        small: {
+          label: org.smallStatisticCategory?.name || '',
+          value: org.smallStatisticCategory?.uuid || '',
+          showBy: AddCategoryHierarchyType.PULLDOWN,
+        },
+        skills: org.skills.map((skill) => {
+          return {
+            label: skill.name,
+            value: skill.id,
+          };
+        }),
+        color: org.color,
+      }));
+      setHierarchyList([
+        {
+          id: data.id,
+          name: data.name,
+          statisticCategories,
+        },
+      ]);
     },
-  );
+    onSettled: () => {
+      setIsLoading(false);
+    },
+  });
 
-  useEffect(() => {
-    if (selectedOrganizationOption.value == '') {
-      getOrganizationCategoryHierarchyList();
-    } else {
-      getOrganizationCategoryHierarchyDetail(
-        Number(selectedOrganizationOption.value),
-      );
-    }
-  }, [
-    getOrganizationCategoryHierarchyDetail,
-    getOrganizationCategoryHierarchyList,
-    selectedOrganizationOption.value,
-  ]);
+  useOrganizationCategoryHierarchyList({
+    conditions: [Boolean(selectedOrganizationOption.value == '')],
+    onSuccess: async (data) => {
+      const receivedHierarchyList = data.map((result) => ({
+        id: result.id,
+        name: result.name,
+        statisticCategories: mapStatisticCategories(result.statisticCategories),
+      }));
+
+      setHierarchyList(receivedHierarchyList);
+    },
+    onSettled: () => setIsLoading(false),
+  });
 
   return (
     <div className="flex flex-col h-full">

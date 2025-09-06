@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
@@ -11,19 +11,16 @@ import { ScreenName } from '@constants/enums';
 
 import useMemberOrganizationList from '@hooks/userMemberOrganizationList';
 import useDebounceText from '@hooks/useDebounceText';
-
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const ListMember = () => {
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
-
   const [searchData, setSearchData] = useState<string>('');
 
   const searchTermDebounce = useDebounceText(searchData, 1000);
 
   const { listMemberOrganization } = useMemberOrganizationList({
     search: searchTermDebounce,
-    currentScreen: ScreenName.CALENDAR
+    currentScreen: ScreenName.CALENDAR,
   });
 
   const [isShowModalDetail, setIsShowModalDetail] = useState(false);
@@ -35,6 +32,12 @@ const ListMember = () => {
   }>();
   const [organizationId, setOrganizationId] = useState<string>('');
 
+  const { creationDataCommonData } = useCreationDataCommon({
+    options: {
+      get_company: true,
+    },
+  });
+
   return (
     <div className="px-6 py-[14px] text-black font-medium text-[26px] ">
       <div className="flex justify-between">
@@ -44,9 +47,9 @@ const ListMember = () => {
             name="Company icon"
             className="w-[34px] h-[34px]"
           />
-          <p className="">会社名</p>
+          <p className="">{creationDataCommonData?.company?.name}</p>
           <div className="text-[#77858F] text-[13px] ml-[10px]">
-            全メンバー{dashboardMembersWithAvatars.length}人
+            全メンバー{creationDataCommonData?.company?.totalUsers}人
           </div>
         </div>
         <div className="flex items-center">

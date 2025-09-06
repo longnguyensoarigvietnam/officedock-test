@@ -11,10 +11,10 @@ import ListViewByStatus from './ListViewByStatus';
 import {
   Columns,
   ColumnType,
-  CreationDataTask,
   DataStatusChangeInline,
   Task,
 } from '@interfaces/task';
+import { CreationDataCommon } from '@interfaces/common';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useToast } from '@providers/ToastProvider';
@@ -28,7 +28,7 @@ import { COLOR_BY_TASK_STATUS } from '@constants';
 import api from '@base/api';
 
 interface CardListViewProps {
-  creationDataTaskData?: CreationDataTask;
+  creationDataCommonData: CreationDataCommon | undefined;
   isFetchingTaskBoards: boolean;
   numberPagesData: {
     id: string;
@@ -61,7 +61,7 @@ const CardListView = ({
   columnsKanbanData,
   orderTaskSave,
   numberPagesData,
-  creationDataTaskData,
+  creationDataCommonData,
   setColumnsKanbanData,
   handleActionEditTask,
   handleConfirmCopyTask,
@@ -181,7 +181,7 @@ const CardListView = ({
                     listTitle={listByStatus.title}
                     hasNext={hasNext}
                     handlePinItem={handlePinItem}
-                    creationDataTaskData={creationDataTaskData}
+                    creationDataCommonData={creationDataCommonData}
                     handleActionEditTask={handleActionEditTask}
                     handleConfirmCopyTask={handleConfirmCopyTask}
                     handleUpdateItemInline={handleUpdateItemInline}

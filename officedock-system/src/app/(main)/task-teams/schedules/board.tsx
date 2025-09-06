@@ -34,7 +34,6 @@ import DatePicker from '@components/common/DatePicker';
 import RangeSlider from '@components/common/RangeSlider';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
-import useCreationDataTask from '@hooks/useCreationDataTask';
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 
 import {
@@ -80,7 +79,6 @@ const ScheduleTeamBoard = () => {
   // Context
   const {
     isLoadingDataTask,
-    setCreationDataTaskData,
     orderingOptions,
     setIsLoadingDataTask,
     setOrderingOptions,
@@ -167,13 +165,6 @@ const ScheduleTeamBoard = () => {
       );
     },
   });
-
-  const { creationDataTaskData } = useCreationDataTask({
-    onSuccess: (data) => {
-      setCreationDataTaskData(data);
-    },
-  });
-
   useEffect(() => {
     if (organizationId) {
       if (calendarRef.current) {
@@ -1207,7 +1198,6 @@ const ScheduleTeamBoard = () => {
                     leaveTo="opacity-0 translate-y-1">
                     <PopoverPanel className="absolute left-0 top-5 z-[30] w-[400px] transform">
                       <ActionFilterTaskTeam
-                        creationDataTaskData={creationDataTaskData}
                         handleClose={() => setIsOpenModalFilter(false)}
                         listMemberTeam={listMemberTeam}
                         handleReadyToFetch={() => {}}

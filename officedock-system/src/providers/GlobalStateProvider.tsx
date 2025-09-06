@@ -10,14 +10,12 @@ import {
   createRef,
 } from 'react';
 
-import { CalendarDashboardMember } from '@interfaces/calendar';
 import { OptionDropdownType } from '@interfaces/common';
 
 interface ContextValue {
   isExtendCalendar: boolean;
   totalNotifications: number;
   expanded: boolean;
-  dashboardMembersWithAvatars: CalendarDashboardMember[];
   selectedOrganization: OptionDropdownType | undefined;
   isChatFilesUploading: boolean;
   abortChatSendingMessageControllerRef: MutableRefObject<AbortController | null>;
@@ -28,9 +26,7 @@ interface ContextValue {
   setIsExtendCalendar: Dispatch<SetStateAction<boolean>>;
   setTotalNotifications: Dispatch<SetStateAction<number>>;
   setExpanded: Dispatch<SetStateAction<boolean>>;
-  setDashboardMembersWithAvatars: Dispatch<
-    SetStateAction<CalendarDashboardMember[]>
-  >;
+
   setSelectedOrganization: Dispatch<
     SetStateAction<OptionDropdownType | undefined>
   >;
@@ -54,7 +50,6 @@ const defaultValue: ContextValue = {
   isExtendCalendar: false,
   totalNotifications: 0,
   expanded: true,
-  dashboardMembersWithAvatars: [],
   selectedOrganization: {
     label: '',
     value: '',
@@ -68,7 +63,6 @@ const defaultValue: ContextValue = {
   setIsExtendCalendar: () => {},
   setTotalNotifications: () => {},
   setExpanded: () => {},
-  setDashboardMembersWithAvatars: () => {},
   setSelectedOrganization: () => {},
   setIsChatFilesUploading: () => {},
   cancelUploadChatFiles: () => {},
@@ -85,8 +79,7 @@ export const GlobalStateContext = createContext<ContextValue>(defaultValue);
 
 export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   const [isExtendCalendar, setIsExtendCalendar] = useState(false);
-  const [dashboardMembersWithAvatars, setDashboardMembersWithAvatars] =
-    useState<CalendarDashboardMember[]>([]);
+
   const [expanded, setExpanded] = useState(true);
   const [totalNotifications, setTotalNotifications] = useState(0);
   const [selectedOrganization, setSelectedOrganization] =
@@ -139,7 +132,6 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     isExtendCalendar,
     totalNotifications,
     expanded,
-    dashboardMembersWithAvatars,
     selectedOrganization,
     isChatFilesUploading,
     abortChatSendingMessageControllerRef,
@@ -147,7 +139,6 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     lastVisitedByTab,
     setOrganizationTeamList,
     setSelectedOrganization,
-    setDashboardMembersWithAvatars,
     setExpanded,
     setIsExtendCalendar,
     setTotalNotifications,

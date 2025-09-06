@@ -18,7 +18,6 @@ const FilterStatisticModal = ({ open, close }: Props) => {
     isHasLoading,
     tagsOptions,
     selectedTags,
-
     isCheckCompare,
     setSelectedTags,
     setIsLoadingLarge,

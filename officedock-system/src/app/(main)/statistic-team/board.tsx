@@ -25,7 +25,6 @@ import useStatisticAllTeamCategories from '@hooks/useStatisticAllTeamCategories'
 import useStatisticAllTeamCategoriesCompare from '@hooks/useStatisticAllTeamCategoriesCompare';
 import useStatisticCategoriesTeam from '@hooks/useStatisticCategoriesTeam';
 import useStatisticCategoriesTeamCompare from '@hooks/useStatisticCategoriesTeamCompare';
-import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 
 import { OptionDropdownType } from '@interfaces/common';
 
@@ -35,6 +34,7 @@ import { removeDuplicateOptions } from '@utils';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const StatisticTeamBoard = () => {
   const {
@@ -118,18 +118,21 @@ const StatisticTeamBoard = () => {
     },
     condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
     onSuccess: (data) => {
-      if (creationDataStatisticData?.organizations.length === 0) {
+      if (
+        !creationDataCommonData?.organizationStatistics ||
+        creationDataCommonData?.organizationStatistics?.length === 0
+      ) {
         return;
       }
 
       const organization =
         selectedOrganization && selectedOrganization.value
-          ? creationDataStatisticData?.organizations.find(
+          ? creationDataCommonData?.organizationStatistics?.find(
               (item) => item.id === selectedOrganization?.value,
             )
-          : creationDataStatisticData?.organizations.find(
+          : creationDataCommonData?.organizationStatistics?.find(
               (item) => item.isMain === true,
-            ) || creationDataStatisticData?.organizations[0];
+            ) || creationDataCommonData?.organizationStatistics[0];
 
       if (organization) {
         const largeCategories = organization.statisticCategories?.map(
@@ -327,60 +330,61 @@ const StatisticTeamBoard = () => {
       },
     });
 
-  const { creationDataStatisticData } = useCreationDataStatisticTeam({
-    organization_id: selectedOrganizationSideBar
+  const { creationDataCommonData } = useCreationDataCommon({
+    organizationId: selectedOrganizationSideBar
       ? (selectedOrganizationSideBar?.value as string)
       : organizationId || '',
-    isTeam: true,
-    is_statistic: true,
+    options: {
+      get_organization_for_team_statistic: true,
+    },
     onSuccess: (data) => {
-      if (!data) return;
+      if (data.organizationStatistics) {
+        const result = (() => {
+          if (data.organizationStatistics.length === 0) {
+            return { label: '', value: '' };
+          }
 
-      const result = (() => {
-        if (data.organizations.length === 0) {
-          return { label: '', value: '' };
-        }
+          const mainItem =
+            data.organizationStatistics.find((item) => item.isMain) ||
+            data.organizationStatistics[1];
+          const optionsTagList = mainItem.tags.map((item) => ({
+            label: item.name,
+            value: item.id,
+          }));
+          setTagsOptions(optionsTagList);
+          setListMemberTeam(
+            mainItem.members.map((member) => ({
+              id: member.id,
+              fullName: member.fullName,
+              color: member?.avatarColor || '',
+              avatarUrl: member?.avatar || '',
+            })),
+          );
+          setOrderingOptions({
+            tag_ids: [],
+            user_ids: mainItem.members.map((member) => ({
+              value: member.id,
+              label: member.fullName,
+              color: member?.avatarColor || '',
+              avatarUrl: member?.avatar || '',
+            })),
+          });
 
-        const mainItem =
-          data.organizations.find((item) => item.isMain) ||
-          data.organizations[1];
-        const optionsTagList = mainItem.tags.map((item) => ({
-          label: item.name,
-          value: item.id,
-        }));
-        setTagsOptions(optionsTagList);
-        setListMemberTeam(
-          mainItem.members.map((member) => ({
-            id: member.id,
-            fullName: member.fullName,
-            color: member?.avatarColor || '',
-            avatarUrl: member?.avatar || '',
+          return {
+            label: mainItem.name,
+            value: mainItem.id,
+          };
+        })();
+
+        handleSelectOrganization(result);
+        setListOptionsOrganization([
+          ...data.organizationStatistics.map((org) => ({
+            value: org.id || '',
+            label: org.name,
+            type: org.type,
           })),
-        );
-        setOrderingOptions({
-          tag_ids: [],
-          user_ids: mainItem.members.map((member) => ({
-            value: member.id,
-            label: member.fullName,
-            color: member?.avatarColor || '',
-            avatarUrl: member?.avatar || '',
-          })),
-        });
-
-        return {
-          label: mainItem.name,
-          value: mainItem.id,
-        };
-      })();
-
-      handleSelectOrganization(result);
-      setListOptionsOrganization([
-        ...data.organizations.map((org) => ({
-          value: org.id || '',
-          label: org.name,
-          type: org.type,
-        })),
-      ]);
+        ]);
+      }
     },
   });
 
@@ -411,7 +415,7 @@ const StatisticTeamBoard = () => {
       value: '',
     });
 
-    const organization = creationDataStatisticData?.organizations?.find(
+    const organization = creationDataCommonData?.organizationStatistics?.find(
       (org) => org.id === selectedOrganizationSideBar?.value,
     );
 
@@ -486,7 +490,7 @@ const StatisticTeamBoard = () => {
       setDataMediumCalendar(undefined);
     }
 
-    const organization = creationDataStatisticData?.organizations?.find(
+    const organization = creationDataCommonData?.organizationStatistics?.find(
       (org) => org.id === data.value,
     );
     if (organization) {
@@ -551,7 +555,7 @@ const StatisticTeamBoard = () => {
       value: '',
     });
 
-    const organization = creationDataStatisticData?.organizations?.find(
+    const organization = creationDataCommonData?.organizationStatistics?.find(
       (org) => org.id === selectedOrganization?.value,
     );
     const largeCategory = organization?.statisticCategories.find(
@@ -598,7 +602,7 @@ const StatisticTeamBoard = () => {
       value: '',
     });
 
-    const organization = creationDataStatisticData?.organizations?.find(
+    const organization = creationDataCommonData?.organizationStatistics?.find(
       (org) => org.id === selectedOrganization?.value,
     );
 
@@ -839,7 +843,7 @@ const StatisticTeamBoard = () => {
         </>
       )}
       {/* Task list */}
-      {creationDataStatisticData && (
+      {creationDataCommonData?.organizationStatistics && (
         <TaskListTeamStatistic
           startDate={startDate}
           endDate={endDate}
@@ -851,7 +855,7 @@ const StatisticTeamBoard = () => {
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
           handleSelectSmall={handleSelectSmall}
-          creationDataStatisticData={creationDataStatisticData?.organizations?.find(
+          creationDataStatisticData={creationDataCommonData?.organizationStatistics?.find(
             (org) => org.id === selectedOrganization?.value,
           )}
         />

@@ -44,23 +44,18 @@ import {
 } from '@interfaces/durations';
 
 import useActualDurationList from '@hooks/useActualDurationList';
+import useActualDurationListByStaff from '@hooks/useActualDurationListByStaff';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import {
   calculateActualDuration,
   getSubmitLevelFormattedDate,
 } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
 
-import useDashboardMemberList from '@hooks/useDashBoardMemberList';
-import useCreationDataTag from '@hooks/useCreationDataTag';
-import useCreationDataStatisticOrganization from '@hooks/useCreationDataStatisticOrganization';
-import useActualDurationListByStaff from '@hooks/useActualDurationListByStaff';
-
 import api from '@base/api';
 
 const ListActualDurations = () => {
   const { setIsLoading } = useContext(LoadingContext);
-  const { creationDataTagData } = useCreationDataTag({});
-  const { creationDataCategoryData } = useCreationDataStatisticOrganization({});
   const { setIdEventDelete, setIdTaskDelete } = useContext(TaskContext);
 
   const { showToast } = useToast();
@@ -140,53 +135,50 @@ const ListActualDurations = () => {
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [pageNumber, setPageNumber] = useState<number>(1);
 
-  const { dashboardMemberList } = useDashboardMemberList();
-
-  useEffect(() => {
-    if (dashboardMemberList?.length) {
-      const memberList = dashboardMemberList.map((member) => {
-        return {
-          label: member.fullName,
-          value: member.id,
-        };
-      });
+  // Get organization options for pulldown
+  useCreationDataCommon({
+    options: {
+      get_all_members: true,
+      get_tags: true,
+      get_statistic_categories: true,
+    },
+    onSuccess: (data) => {
+      const memberList =
+        data.allMembers?.map((member) => {
+          return {
+            label: member.fullName,
+            value: member.id,
+          };
+        }) || [];
       setDataOptionsStaff(memberList);
-    }
-  }, [dashboardMemberList]);
-
-  useEffect(() => {
-    if (creationDataTagData) {
       setDataOptionsTags(
-        creationDataTagData.map((org) => ({
+        data.tags?.map((org) => ({
           label: org.name,
           value: org.id,
-        })),
+        })) || [],
       );
-    }
-  }, [creationDataTagData]);
-
-  useEffect(() => {
-    if (creationDataCategoryData) {
-      setDataOptionsLargeCategories(
-        creationDataCategoryData.map((org) => ({
-          label: org.name,
-          value: org.name,
-        })),
-      );
-      setDataOptionsMediumCategories(
-        creationDataCategoryData.map((org) => ({
-          label: org.name,
-          value: org.name,
-        })),
-      );
-      setDataOptionsSmallCategories(
-        creationDataCategoryData.map((org) => ({
-          label: org.name,
-          value: org.name,
-        })),
-      );
-    }
-  }, [creationDataCategoryData]);
+      if (data.statisticCategories) {
+        setDataOptionsLargeCategories(
+          data.statisticCategories.map((org) => ({
+            label: org.name,
+            value: org.name,
+          })),
+        );
+        setDataOptionsMediumCategories(
+          data.statisticCategories.map((org) => ({
+            label: org.name,
+            value: org.name,
+          })),
+        );
+        setDataOptionsSmallCategories(
+          data.statisticCategories.map((org) => ({
+            label: org.name,
+            value: org.name,
+          })),
+        );
+      }
+    },
+  });
 
   const { actualDurationList, refetchActualDurationList } =
     useActualDurationList(

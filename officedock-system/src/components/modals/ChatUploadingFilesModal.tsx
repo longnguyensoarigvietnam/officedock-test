@@ -19,20 +19,19 @@ import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import { CustomReaction } from '@components/chat/CustomIcon';
+import { ChatMentionMembersList } from './ChatMentionMembersModal';
+import Modal from '../common/Modal';
 
 import { ChatRoomType, ReactionIconValue } from '@constants/enums';
 import { REACTION_LIST } from '@constants';
 
 import {
-  ChatDashboardMember,
   ChatParticipant,
   ChatRoomDetail,
 } from '@interfaces/chat';
+import { Profile } from '@interfaces/user';
 
 import { trimUnnecessaryLineBreaks } from '@utils';
-
-import { ChatMentionMembersList } from './ChatMentionMembersModal';
-import Modal from '../common/Modal';
 
 export type ChatUploadingFilesModalProps = {
   message: string;
@@ -56,7 +55,7 @@ export type ChatUploadingFilesModalProps = {
   )[];
   searchMentionMembers: string;
   mentionMembers: ChatParticipant[];
-  dashboardMembers: ChatDashboardMember[];
+  dashboardMemberList: Omit<Profile, "birthday" | "gender">[]
   setMentionMembers: Dispatch<SetStateAction<ChatParticipant[]>>;
   handleCheckboxClick: (
     editor: Editor,
@@ -98,7 +97,7 @@ const ChatUploadingFilesModal = memo(
     mentionMemberOptions,
     searchMentionMembers,
     mentionMembers,
-    dashboardMembers,
+    dashboardMemberList,
     setMentionMembers,
     handleCheckboxClick,
     setSearchMentionMembers,
@@ -195,7 +194,7 @@ const ChatUploadingFilesModal = memo(
                   mentionMemberOptions={mentionMemberOptions}
                   searchMentionMembers={searchMentionMembers}
                   mentionMembers={mentionMembers}
-                  dashboardMembers={dashboardMembers}
+                  dashboardMemberList={dashboardMemberList}
                   customModalPosition={'left-[-110px] top-[35px]'}
                   customArrowPosition={'after:bottom-full after:border-b-white'}
                   setMentionMembers={setMentionMembers}
@@ -252,7 +251,7 @@ const ChatUploadingFilesModal = memo(
             </DynamicTooltip>
           </div>
           <div className="mb-3">
-            <EditorContent editor={editor} />
+            <EditorContent editor={editor} className="w-full break-all whitespace-pre-wrap chat"/>
           </div>
           <input
             type="file"

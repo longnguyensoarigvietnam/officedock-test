@@ -20,11 +20,8 @@ import ImageRound from '@components/common/ImageRound';
 import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
 import Dropdown from '@components/common/Dropdown';
 
-import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
 import useActualDurationDetail from '@hooks/useActualDurationDetail';
-import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
-import useCreationDataTaskActualDuration from '@hooks/useCreationDataTaskActualDuration';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { CategoryStructure } from '@interfaces/skills';
@@ -63,9 +60,10 @@ import {
   generateTimeOptionsAsObjects,
   getTimeDifference,
 } from '@utils/date';
+import { removeDuplicateOptions } from '@utils';
 
 import api from '@base/api';
-import { removeDuplicateOptions } from '@utils';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const EditActualDurationsForm = () => {
   const { statusTaskSelected, setStatusTaskSelected } = useContext(TaskContext);
@@ -118,9 +116,6 @@ const EditActualDurationsForm = () => {
   const [dataOptionsEventTypes, setDataOptionsEventTypes] = useState<
     OptionDropdownType[]
   >([]);
-  const { creationDataEventCalendar } = useCreationDataEventCalendar({
-    condition: [searchParams.get('type') == EventCalendarType.SCHEDULE],
-  });
 
   // Task schedule data
   const [defaultTaskScheduleData, setDefaultTaskScheduleData] =
@@ -141,39 +136,6 @@ const EditActualDurationsForm = () => {
   const [minDatePlan, setMinDatePlan] = useState<Date | null>();
   const currentDate = new Date();
   const optionTimeInput = generateTimeOptionsAsObjects();
-
-  useCreationDataStatistic({
-    is_calendar_page: true,
-    condition: [searchParams.get('type') == EventCalendarType.SCHEDULE],
-
-    onSuccess: (data) => {
-      if (!data) return;
-      setDataOptionsTagIds(
-        data?.calendarOrganization?.tags.map((org) => ({
-          label: org.name as string,
-          value: org.id || '',
-        })),
-      );
-    },
-  });
-
-  useCreationDataTaskActualDuration({
-    organization_id: defaultTaskScheduleData?.organization,
-    condition: [
-      searchParams.get('type') != EventCalendarType.SCHEDULE,
-      Boolean(defaultTaskScheduleData?.organization),
-    ],
-
-    onSuccess: (data) => {
-      if (!data) return;
-      setDataOptionsTagIds(
-        data?.tags.map((org) => ({
-          label: org.name as string,
-          value: org.id || '',
-        })),
-      );
-    },
-  });
 
   const { actualDurationDetail } = useActualDurationDetail({
     actualDurationId: Number(params.id),
@@ -295,17 +257,6 @@ const EditActualDurationsForm = () => {
     }
   };
 
-  useEffect(() => {
-    if (creationDataEventCalendar) {
-      setDataOptionsEventTypes(
-        creationDataEventCalendar.types.map((org) => ({
-          label: org,
-          value: org,
-        })),
-      );
-    }
-  }, [creationDataEventCalendar]);
-
   const { refetchOrganizationStatisticCategories } =
     useOrganizationStatisticCategories({
       organizationId: Number(defaultTaskScheduleData?.organization),
@@ -362,6 +313,39 @@ const EditActualDurationsForm = () => {
         });
       },
     });
+  // Event types and tags - creation data
+  useCreationDataCommon({
+    organizationId: defaultTaskScheduleData?.organization
+      ? String(defaultTaskScheduleData?.organization)
+      : '',
+    condition: [Boolean(defaultTaskScheduleData?.organization)],
+
+    options: {
+      get_event_types: true,
+      get_tags: true,
+      is_organization_calendar:
+        searchParams.get('type') == EventCalendarType.SCHEDULE,
+    },
+    onSuccess: (data) => {
+      if (data?.eventTypes) {
+        setDataOptionsEventTypes(
+          data?.eventTypes.map((org) => ({
+            label: org,
+            value: org,
+          })),
+        );
+      }
+
+      if (data?.tags) {
+        setDataOptionsTagIds(
+          data?.tags.map((org) => ({
+            label: org.name as string,
+            value: org.id || '',
+          })),
+        );
+      }
+    },
+  });
 
   useEffect(() => {
     if (defaultTaskScheduleData) {

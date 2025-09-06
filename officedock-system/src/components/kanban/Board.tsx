@@ -10,13 +10,8 @@ import { ERROR_EXTEND_COLUMN } from '@constants/message';
 import { KanbanType } from '@constants/enums';
 import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import {
-  Columns,
-  CreationDataTask,
-  DataStatusChangeInline,
-  Task,
-} from '@interfaces/task';
-import { OptionDropdownType } from '@interfaces/common';
+import { Columns, DataStatusChangeInline, Task } from '@interfaces/task';
+import { CreationDataCommon, OptionDropdownType } from '@interfaces/common';
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
 import { useToast } from '@providers/ToastProvider';
@@ -32,7 +27,7 @@ interface BoardKanbanProps {
     hasMores: boolean;
   }[];
   orderTaskSave: Task[];
-  creationDataTaskData: CreationDataTask | undefined;
+  creationDataCommonData: CreationDataCommon | undefined;
   setColumnsKanbanData: Dispatch<SetStateAction<Columns | undefined>>;
   setNumberPagesData: Dispatch<
     SetStateAction<
@@ -59,7 +54,7 @@ const BoardKanban = ({
   showFrequentlyTasks,
   numberPagesData,
   orderTaskSave,
-  creationDataTaskData,
+  creationDataCommonData,
   setColumnsKanbanData,
   setNumberPagesData,
   editTaskInline,
@@ -167,7 +162,7 @@ const BoardKanban = ({
                           matchingTaskIds={matchingTaskIds}
                           searchValue={searchValue}
                           columnsKanbanData={columnsKanbanData}
-                          creationDataTaskData={creationDataTaskData}
+                          creationDataCommonData={creationDataCommonData}
                           editTask={editTaskInline}
                           handleActionEditTask={handleActionEditTask}
                           handleConfirmCopyTask={handleConfirmCopyTask}

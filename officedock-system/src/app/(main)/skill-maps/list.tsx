@@ -24,7 +24,6 @@ import {
 import {
   ActionsModal,
   PermissionsSystem,
-  ScreenName,
   ServerStatusCode,
   SkillMapStep,
 } from '@constants/enums';
@@ -46,7 +45,7 @@ import { OptionDropdownType } from '@interfaces/common';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useOrganizationSkillList from '@hooks/useOrganizationSkillList';
 import useOrganizationSkillMapDetail from '@hooks/useOrganizationSkillDetail';
-import useOrganizationOptions from '@hooks/useFullOrganizationList';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { hasPermissionInArray } from '@utils';
 
@@ -94,10 +93,6 @@ const ListSkillsMap = () => {
     OptionDropdownType[]
   >([]);
 
-  const { organizationOptions } = useOrganizationOptions({
-    current_screen: ScreenName.SKILL_MAP_MANAGEMENT,
-  });
-
   // Skill map actions
   const [openSkillMapActionsModal, setOpenSkillMapActionsModal] =
     useState(false);
@@ -120,7 +115,7 @@ const ListSkillsMap = () => {
           ? Number(selectedFilterStepDetail.filterOrganizationId)
           : undefined,
       },
-      showLoadingIndicator: true
+      showLoadingIndicator: true,
     });
 
   // Get skill map detail
@@ -149,14 +144,18 @@ const ListSkillsMap = () => {
   }, [organizationSkillList]);
 
   // Get organization options for pulldown
-  useEffect(() => {
-    if (organizationOptions) {
-      const organizationList = organizationOptions.map((org) => {
-        return {
-          value: Number(org.id),
-          label: org.name,
-        };
-      });
+  useCreationDataCommon({
+    options: {
+      get_all_organizations: true,
+    },
+    onSuccess: (data) => {
+      const organizationList =
+        data.allOrganizations?.map((org) => {
+          return {
+            value: Number(org.id),
+            label: org.name,
+          };
+        }) || [];
       setOrganizationList([
         {
           label: ALL_TEAMS_OPTION,
@@ -164,8 +163,8 @@ const ListSkillsMap = () => {
         },
         ...organizationList,
       ]);
-    }
-  }, [organizationOptions]);
+    },
+  });
 
   const convertFormDataToCreationRequestData = (
     formData: Partial<SkillMapFormData>,

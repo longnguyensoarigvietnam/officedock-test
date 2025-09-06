@@ -265,7 +265,7 @@ const SurveyListPage = () => {
             height: '100%',
           }}
           className="rounded-bl-[30px] relative rounded-tr-[30px] rounded-br-[30px] h-[calc(100vh-120px)] w-full">
-          <div className="flex absolute top-0 left-0 ">
+          <div className="flex absolute top-0 left-0 shadow-common rounded-br-[30px] ">
             <div className="h-20 z-[30] bg-white w-fit px-10 py-4 text-[#77858F] font-medium flex items-center gap-[10px] rounded-br-[30px]">
               <div
                 onClick={() => router.push(pageRouters.MY_PAGE.href)}
@@ -282,7 +282,9 @@ const SurveyListPage = () => {
                 src={'/icons/room-profile.svg'}
                 className={`w-fit h-fit ml-[10px]`}
               />
-              <span className="text-[22px] text-black ml-1">アンケート</span>
+              <span className="text-[22px] text-black ml-1">
+                {pageRouters.SURVEY.name}
+              </span>
             </div>
           </div>
           <div className="relative  pr-[30px] flex w-full justify-between items-center h-full">

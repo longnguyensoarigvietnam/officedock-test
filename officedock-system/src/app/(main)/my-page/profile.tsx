@@ -27,7 +27,6 @@ import ActionSettingSurvey from '@components/modals/ActionSettingSurvey';
 import SuccessSurveyActionModal from '@components/modals/SuccessSurveyActionModal';
 import ReceiveEnvelopeAnimationOverlay from '@components/thanksMessage/ReceiveEnvelopeAnimationOverlay';
 
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
@@ -53,6 +52,7 @@ import useTweetList from '@hooks/useTweetList';
 import useSetSkillList from '@hooks/useSetSkillList';
 import { useErrorToast } from '@hooks/useErrorToast';
 import { useUpdateTweetCache } from '@hooks/CacheQuery/useUpdateTweetCache';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 import { getLastChar } from '@utils';
 
@@ -64,7 +64,6 @@ const MyPage = () => {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
 
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
   const { setIsLoading } = useContext(LoadingContext);
   const router = useRouter();
 
@@ -136,17 +135,16 @@ const MyPage = () => {
       }
     },
   });
+  const { authenticatedUser } = useAuthenticatedUser({});
 
   // Render user's avatar
-  const renderBoxUser = (userId: string) => {
-    const memberInfo = dashboardMembersWithAvatars.find(
-      (member) => member.id == userId,
-    );
+  const renderBoxUser = () => {
+    if (!authenticatedUser) return;
 
     return (
       <CustomUserAvatar
-        avatarUrl={memberInfo?.avatar || ''}
-        avatarColor={memberInfo?.avatarColor || ''}
+        avatarUrl={authenticatedUser?.avatar || ''}
+        avatarColor={authenticatedUser?.avatarColor || ''}
         size={36}
       />
     );
@@ -377,10 +375,8 @@ const MyPage = () => {
         }}
         className="h-[calc(100vh-120px)] w-full">
         <div className="flex ">
-          <div className="h-20 bg-white w-fit px-5 py-4 text-[#77858F] font-medium flex items-center gap-5 rounded-br-[30px]">
-            <div>
-              {session?.user.id && renderBoxUser(`${session?.user.id}`)}
-            </div>
+          <div className="h-20 bg-white w-fit px-5 py-4 text-[#77858F] font-medium flex items-center gap-5  shadow-common rounded-br-[30px]">
+            <div>{session?.user.id && renderBoxUser()}</div>
             <p className="break-all max-w-[100px] line-clamp-2">名前</p>
             <p className="break-all text-[22px] text-black max-w-[100px] line-clamp-2">
               {session?.user.profile.fullName}
@@ -391,7 +387,7 @@ const MyPage = () => {
               <p className="text-base text-black">{session?.user.id}</p>
             </div>
           </div>
-          <div className="w-[303px] mt-5 ml-5 font-bold text-base bg-white rounded-full h-10 flex items-center justify-center gap-[9px]">
+          <div className="w-[303px] shadow-common mt-5 ml-5 font-bold text-base bg-white rounded-full h-10 flex items-center justify-center gap-[9px]">
             <ImageRound
               name="Badge icon"
               src={'/icons/badge.svg'}

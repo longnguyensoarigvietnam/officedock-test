@@ -86,6 +86,7 @@ import {
 } from '@interfaces/statistic';
 import { WebSocketMessageData } from '@interfaces/chat';
 import { OptionDropdownType } from '@interfaces/common';
+import { Profile } from '@interfaces/user';
 import {
   calculateActualDurationDaily,
   combineDateAndTime,
@@ -115,16 +116,16 @@ import { useWebSocket } from '@providers/WebSocketProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import { TeamDailyStateContext } from '@providers/TeamDailyReportProvider';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { TaskContext } from '@providers/TaskProvider';
 import api from '@base/api';
 import { useDebounceCallback } from '@hooks/useDebounceCallback';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const DailyReportDetailBoard = () => {
   const { statusTaskSelected, setStatusTaskSelected } = useContext(TaskContext);
   const queryClient = useQueryClient();
 
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+  const [dashboardMemberList, setDashboardMemberList] = useState<Profile[]>([]);
 
   const calendarRef = useRef<FullCalendar | null>(null);
   const popoverRef = useRef<HTMLDivElement | null>(null);
@@ -211,8 +212,19 @@ const DailyReportDetailBoard = () => {
     actualValue: string[];
   }>();
 
-  const memberInfo = dashboardMembersWithAvatars.find(
-    (member) => member.id == userId,
+  useCreationDataCommon({
+    options: {
+      get_all_members: true,
+    },
+    onSuccess: (data) => {
+      if (data.allMembers) {
+        setDashboardMemberList(data.allMembers);
+      }
+    },
+  });
+
+  const memberInfo = dashboardMemberList.find(
+    (member) => String(member.id) == userId,
   );
 
   const handleShowEventsInModal = (data: {

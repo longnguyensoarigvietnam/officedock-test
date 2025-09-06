@@ -1,6 +1,6 @@
 'use client';
 import { AxiosError } from 'axios';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import Link from 'next/link';
@@ -24,13 +24,13 @@ import { OptionDropdownType } from '@interfaces/common';
 
 import useSkillMapUserDetail from '@hooks/useSkillMapUserDetail';
 import useListSkillsInSkillMap from '@hooks/useListSkillsInSkillMap';
-import useCreationDataTask from '@hooks/useCreationDataTask';
 
 import { useToast } from '@providers/ToastProvider';
 
 import { hasPermissionInArray } from '@utils';
 
 import { SkillListByOrganizationPanel } from './skill-list-by-organization-panel';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const SkillList = () => {
   const { showToast } = useToast();
@@ -58,9 +58,6 @@ const SkillList = () => {
     OrganizationSkillMapDetail[] | null
   >([]);
 
-  // Hooks
-  const { creationDataTaskData } = useCreationDataTask({});
-
   // Get skill list
   useListSkillsInSkillMap({
     organizationId: String(selectedOrganizationOption.value),
@@ -69,15 +66,18 @@ const SkillList = () => {
     },
   });
 
-  // Get organization options for pulldown
-  useEffect(() => {
-    if (creationDataTaskData) {
-      const organizationList = creationDataTaskData.organizations.map((org) => {
-        return {
-          value: Number(org.id),
-          label: org.name,
-        };
-      });
+  useCreationDataCommon({
+    options: {
+      get_organization_skills: true,
+    },
+    onSuccess: (data) => {
+      const organizationList =
+        data.organizationSkills?.map((org) => {
+          return {
+            value: Number(org.organization.id),
+            label: org.organization.name,
+          };
+        }) || [];
       setOrganizationList([
         {
           label: ALL_TEAMS_OPTION,
@@ -85,8 +85,8 @@ const SkillList = () => {
         },
         ...organizationList,
       ]);
-    }
-  }, [creationDataTaskData]);
+    },
+  });
 
   // Get skill map detail
   useSkillMapUserDetail({

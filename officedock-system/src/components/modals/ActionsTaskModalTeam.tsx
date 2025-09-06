@@ -64,14 +64,12 @@ import {
   ActionTask,
   EventWorkCategory,
   PermissionsSystem,
-  ScreenName,
   StatusValueTask,
   TaskRepetitiveType,
   TimeType,
 } from '@constants/enums';
 import { OptionDropdownType } from '@interfaces/common';
 import {
-  CreationDataTask,
   Task,
   TaskErrorPerson,
   TaskFormData,
@@ -93,7 +91,7 @@ import {
   hasPermissionInArray,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
-import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 export type ActionTaskModalProps = {
   open: boolean;
@@ -108,7 +106,6 @@ export type ActionTaskModalProps = {
     avatarUrl: string;
   }[];
   organizationId: string | null;
-  creationDataTaskData: CreationDataTask | undefined;
   organizationTeamList: OptionDropdownType[];
   disableDeleteAction?: boolean;
   onDelete?: () => void;
@@ -128,7 +125,6 @@ const ActionsTaskModalTeam = ({
   organizationId,
   peopleDefaultId,
   listMemberTeam,
-  creationDataTaskData,
   organizationTeamList,
   disableDeleteAction = false,
   onEdit,
@@ -247,65 +243,6 @@ const ActionsTaskModalTeam = ({
     control,
     name: 'organization.value',
   });
-
-  const { refetchOrganizationStatisticCategories } =
-    useOrganizationStatisticCategories({
-      organizationId: Number(organizationValue),
-      condition: [Boolean(organizationValue)],
-      currentScreen: ScreenName.MY_TASK,
-      onSuccess: (data) => {
-        const organizationCategories = data.map((category) => {
-          const largeCategory = category.LARGE || {
-            id: NO_SETTING,
-            name: NO_SETTING,
-            uuid: '',
-          };
-
-          const mediumCategories = (category.MEDIUM || []).map(
-            (mediumCategory) => {
-              const mediumCategoryField = mediumCategory.MEDIUM || {
-                id: NO_SETTING,
-                name: NO_SETTING,
-                uuid: '',
-              };
-              const smallCategories = mediumCategory.SMALL || [
-                { id: NO_SETTING, name: NO_SETTING, uuid: '' },
-              ];
-
-              return {
-                MEDIUM: mediumCategoryField,
-                SMALL: smallCategories,
-              };
-            },
-          );
-
-          return {
-            LARGE: largeCategory,
-            MEDIUM: mediumCategories,
-          };
-        });
-
-        setDataOrganizationCategories(organizationCategories);
-        setDataOptionsCategoryLarge(() => {
-          const largeCategories: OptionDropdownType[] = [];
-          data.map((category) => {
-            if (category.LARGE) {
-              largeCategories.push({
-                label: category.LARGE.name,
-                value: category.LARGE.id,
-              });
-            }
-          });
-          return largeCategories;
-        });
-      },
-    });
-
-  useEffect(() => {
-    if (organizationValue) {
-      refetchOrganizationStatisticCategories();
-    }
-  }, [organizationValue, refetchOrganizationStatisticCategories]);
 
   const defaultValues = useMemo<TaskFormData>(() => {
     const value: TaskFormData = {
@@ -694,29 +631,6 @@ const ActionsTaskModalTeam = ({
     }
   }, [peopleDefaultId, dataOptionsPeopleInCharge, setValue]);
 
-  // Save data from create task
-  useEffect(() => {
-    if (creationDataTaskData) {
-      setDataOptionsOrganizations(
-        creationDataTaskData.organizations.map((org) => ({
-          label: org.name,
-          value: org.id as number,
-        })),
-      );
-      setDataOptionsStatus(
-        creationDataTaskData.status.map((org) => ({
-          label: org.name,
-          value: org.id as number,
-        })),
-      );
-      setDataOptionsTagIds(
-        creationDataTaskData.tags.map((org) => ({
-          label: String(org.name),
-          value: String(org.id),
-        })),
-      );
-    }
-  }, [creationDataTaskData]);
   useEffect(() => {
     if (organizationTeamList) {
       setDataOptionsOrganizations(
@@ -727,24 +641,6 @@ const ActionsTaskModalTeam = ({
       );
     }
   }, [organizationTeamList]);
-
-  const selectedOrganization = watch('organization');
-
-  useEffect(() => {
-    if (selectedOrganization && creationDataTaskData) {
-      const organizationTags =
-        creationDataTaskData.organizations.find(
-          (org) => org.id === selectedOrganization.value,
-        )?.tags || [];
-
-      setDataOptionsTagIds(
-        organizationTags.map((tag) => ({
-          label: tag.name,
-          value: tag.id,
-        })),
-      );
-    }
-  }, [selectedOrganization, creationDataTaskData, setValue]);
 
   useEffect(() => {
     if (dataTask) {
@@ -800,6 +696,85 @@ const ActionsTaskModalTeam = ({
     }
   }, [append, appendPlanField, dataTask]);
 
+  const { isFetchingCreationDataCommon } = useCreationDataCommon({
+    condition: [!!organizationValue],
+    organizationId: organizationValue
+      ? String(organizationValue)
+      : organizationId || '',
+    options: {
+      get_task_status: true,
+      get_organization_with_categories: true,
+      get_tags: true,
+    },
+    onSuccess: (data) => {
+      const listTag =
+        data?.tags?.map((tag) => ({
+          label: tag.name,
+          value: tag.id,
+        })) || [];
+
+      setDataOptionsTagIds(listTag);
+      setDataOptionsStatus(
+        data.taskStatus?.map((org) => ({
+          label: org.name,
+          value: org.id as number,
+        })) || [],
+      );
+
+      const mainItem =
+        data.organizationCategories.find(
+          (item) => String(item.id) === String(organizationValue),
+        ) || data.organizationCategories[0];
+
+      const organizationCategories = mainItem.statisticCategories.map(
+        (category) => {
+          const largeCategory = category.LARGE || {
+            id: NO_SETTING,
+            name: NO_SETTING,
+            uuid: '',
+          };
+
+          const mediumCategories = (category.MEDIUM || []).map(
+            (mediumCategory) => {
+              const mediumCategoryField = mediumCategory.MEDIUM || {
+                id: NO_SETTING,
+                name: NO_SETTING,
+                uuid: '',
+              };
+              const smallCategories = mediumCategory.SMALL || [
+                { id: NO_SETTING, name: NO_SETTING, uuid: '' },
+              ];
+
+              return {
+                MEDIUM: mediumCategoryField,
+                SMALL: smallCategories,
+              };
+            },
+          );
+
+          return {
+            LARGE: largeCategory,
+            MEDIUM: mediumCategories,
+          };
+        },
+      );
+
+      setDataOrganizationCategories(organizationCategories);
+      setDataOptionsCategoryLarge(() => {
+        const largeCategories: OptionDropdownType[] = [];
+        mainItem.statisticCategories.map((category) => {
+          if (category.LARGE) {
+            largeCategories.push({
+              label: category.LARGE.name,
+              value: category.LARGE.id,
+            });
+          }
+        });
+        return largeCategories;
+      });
+    },
+  });
+
   //Update option data people in charge when default data
   useEffect(() => {
     if (dataTask?.peopleInCharge) {
@@ -810,7 +785,7 @@ const ActionsTaskModalTeam = ({
         })),
       );
     }
-  }, [creationDataTaskData?.tags, dataTask, dataTask?.tags]);
+  }, [dataTask, dataTask?.tags]);
 
   useEffect(() => {
     if (open === false) {
@@ -1369,6 +1344,7 @@ const ActionsTaskModalTeam = ({
                       classNameTextData="!text-xs"
                       classNameOption="!text-xs !z-[998]"
                       classNameError="!text-xs"
+                      isLoading={isFetchingCreationDataCommon}
                       disabled={isCheckActionPermission}
                       options={dataOptionsCategoryLarge}
                       selectedOption={dataOptionsCategoryLarge.find(
@@ -1407,6 +1383,7 @@ const ActionsTaskModalTeam = ({
                           classNameTextData="!text-xs"
                           classNameOption="!text-xs !z-[998]"
                           classNameError="!text-xs"
+                          isLoading={isFetchingCreationDataCommon}
                           disabled={isCheckActionPermission}
                           options={dataOptionsCategoryMedium}
                           selectedOption={dataOptionsCategoryMedium.find(
@@ -1441,6 +1418,7 @@ const ActionsTaskModalTeam = ({
                         classNameTextData="!text-xs"
                         classNameOption="!text-xs !z-[998]"
                         classNameError="!text-xs"
+                        isLoading={isFetchingCreationDataCommon}
                         disabled={isCheckActionPermission}
                         options={dataOptionsCategorySmall}
                         selectedOption={dataOptionsCategorySmall.find(
@@ -1472,6 +1450,7 @@ const ActionsTaskModalTeam = ({
                     valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"
                     optionClassName="!border-[1px] !border-[#77858F]"
                     disabled={isCheckActionPermission}
+                    isLoading={isFetchingCreationDataCommon}
                     options={dataOptionsTagIds}
                     customLabel={
                       (watch('tagIds') ?? []).filter((tag) => tag.value)

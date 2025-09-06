@@ -33,11 +33,7 @@ import {
 } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 
-import {
-  ChatDashboardMember,
-  ChatMessageResponse,
-  ChatParticipant,
-} from '@interfaces/chat';
+import { ChatMessageResponse, ChatParticipant } from '@interfaces/chat';
 import { Profile } from '@interfaces/user';
 
 import {
@@ -54,13 +50,13 @@ import {
   getFormattedDateTime,
 } from '@utils/date';
 import { MessageHoverAllRoomsSearch } from './MessageHoverAllRoomsSearch';
+import { DELETED_EVENT_TITLE } from '@constants/message';
 
 export type MessageDetailProps = {
   isLastItem: boolean;
   isSearchingMessages?: boolean;
   allRoomChatMsgSearch?: string;
   messageDetail: ChatMessageResponse;
-  dashboardMembers: ChatDashboardMember[];
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   chatRoomInfo?:
     | {
@@ -83,7 +79,7 @@ export const MessageDetailBookmark = ({
   isSearchingMessages = false,
   allRoomChatMsgSearch,
   messageDetail,
-  dashboardMembers,
+  dashboardMemberList,
   chatRoomInfo,
   handleActionEditTask,
   handleConfirmGetDataDetailEvent,
@@ -96,14 +92,14 @@ export const MessageDetailBookmark = ({
 
   // Render user avatar
   const renderAvatar = (senderId: number) => {
-    const memberInfo = dashboardMembers.find(
+    const memberInfo = dashboardMemberList.find(
       (member) => member.id === senderId,
     );
 
     return (
       <div className="h-6 relative top-[-8px]">
         <CustomUserAvatar
-          avatarUrl={memberInfo?.avatarUrl || ''}
+          avatarUrl={memberInfo?.avatar || ''}
           avatarColor={memberInfo?.avatarColor || ''}
           size={36}
         />
@@ -174,7 +170,7 @@ export const MessageDetailBookmark = ({
         mentionName = mentionName.slice(1);
       }
 
-      const matchedUser = dashboardMembers.find(
+      const matchedUser = dashboardMemberList.find(
         (member) => member.fullName === mentionName,
       );
 
@@ -994,17 +990,21 @@ export const MessageDetailBookmark = ({
                     <div
                       className="flex items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer"
                       onClick={() => {
-                        handleConfirmGetDataDetailEvent(
-                          `${messageDetail.schedule?.id}`,
-                        );
+                        messageDetail.schedule?.id &&
+                          handleConfirmGetDataDetailEvent(
+                            `${messageDetail.schedule?.id}`,
+                          );
                       }}>
                       <ImageRound
                         className={`w-[15px] h-[14px]`}
                         name="Calendar icon"
                         src="/icons/calendar-time.svg"
                       />
-                      <p className="text-primary text-sm font-medium">
-                        {messageDetail.schedule?.title}
+                      <p
+                        className={`${messageDetail.schedule ? 'text-primary' : 'text-gray-300'} text-sm font-medium`}>
+                        {messageDetail.schedule
+                          ? messageDetail.schedule?.title
+                          : DELETED_EVENT_TITLE}
                       </p>
                     </div>
                     <div className="flex gap-3 w-full">

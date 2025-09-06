@@ -20,13 +20,8 @@ import {
   TaskRepetitiveValue,
 } from '@constants/enums';
 
-import {
-  CreationDataTask,
-  DataStatusChangeInline,
-  Task,
-  TaskFormData,
-} from '@interfaces/task';
-import { OptionDropdownType } from '@interfaces/common';
+import { DataStatusChangeInline, Task, TaskFormData } from '@interfaces/task';
+import { CreationDataCommon, OptionDropdownType } from '@interfaces/common';
 
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 
@@ -47,7 +42,7 @@ interface ListViewItemProps {
   id: string;
   index: number;
   content: Task;
-  creationDataTaskData?: CreationDataTask;
+  creationDataCommonData: CreationDataCommon | undefined;
   handleActionEditTask: (id: number, type?: string) => void;
   handleConfirmCopyTask: (id: number, type?: string) => void;
   handleUpdateItemInline: (data: Task) => void;
@@ -59,7 +54,7 @@ const ListViewItem = ({
   id,
   index,
   content,
-  creationDataTaskData,
+  creationDataCommonData,
   editTaskInline,
   handlePinItem,
   handleUpdateItemInline,
@@ -150,15 +145,15 @@ const ListViewItem = ({
 
   // Save data from create task
   useEffect(() => {
-    if (creationDataTaskData) {
+    if (creationDataCommonData) {
       setDataOptionsStatus(
-        creationDataTaskData.status.map((org) => ({
+        creationDataCommonData.taskStatus?.map((org) => ({
           label: org.name,
           value: org.id || '',
-        })),
+        })) || [],
       );
     }
-  }, [creationDataTaskData]);
+  }, [creationDataCommonData]);
   //  Handle call api delete task
   const { calculateDurationTask } = useCalculateDurationTask({
     onSuccess: (response, task) => {

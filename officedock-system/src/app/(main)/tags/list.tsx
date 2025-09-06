@@ -45,7 +45,6 @@ import {
 import useTagList from '@hooks/useTagList';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useDebounceText from '@hooks/useDebounceText';
-import useTeamList from '@hooks/useListTeam';
 import useTagDetail from '@hooks/useTagDetail';
 
 import { LoadingContext } from '@providers/LoadingProvider';
@@ -58,6 +57,7 @@ import { Organizations } from '@interfaces/organization';
 import { hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const FilterOrganizationComponent = ({
   dataOrganizationList,
@@ -170,15 +170,16 @@ const ListTags = () => {
       organizationIds: [],
     },
   });
-
-  useTeamList({
-    screenName: ScreenName.TAG,
+  useCreationDataCommon({
+    options: {
+      get_all_organizations: true,
+    },
     onSuccess: (data) => {
       setDataOrganizationList(
-        data.map((org) => ({
+        data.allOrganizations?.map((org) => ({
           label: org.name,
           value: org.id as number,
-        })),
+        })) || [],
       );
     },
   });

@@ -1,17 +1,22 @@
 import { useRouter } from 'next/navigation';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Button from '@components/common/Button';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Checkbox from '@components/common/Checkbox';
+
 import { pageRouters } from '@constants/routers';
+
 import {
   dataRequestConfirmType,
   DataUserDetailDailyType,
 } from '@interfaces/statistic';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { Profile } from '@interfaces/user';
+
 import { convertToJapaneseTime } from '@utils/date';
+
 import { useDebounceCallback } from '@hooks/useDebounceCallback';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 type Props = {
   userData: DataUserDetailDailyType;
@@ -23,8 +28,7 @@ type Props = {
 };
 
 const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
-
+  const [dashboardMemberList, setDashboardMemberList] = useState<Profile[]>([]);
   const [isConfirm, setIsConfirm] = useState(userData.isConfirmed);
 
   useEffect(() => {
@@ -35,8 +39,19 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
 
   const router = useRouter();
 
-  const memberInfo = dashboardMembersWithAvatars.find(
-    (member) => member.id == userData.id,
+  useCreationDataCommon({
+    options: {
+      get_all_members: true,
+    },
+    onSuccess: (data) => {
+      if (data.allMembers) {
+        setDashboardMemberList(data.allMembers);
+      }
+    },
+  });
+
+  const memberInfo = dashboardMemberList.find(
+    (member) => String(member.id) == String(userData.id),
   );
 
   const handleSaveData = (e: boolean) => {

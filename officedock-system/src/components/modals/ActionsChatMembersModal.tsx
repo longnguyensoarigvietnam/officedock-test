@@ -38,17 +38,17 @@ import {
 } from '@utils';
 
 import {
-  ChatDashboardMember,
   ChatParticipant,
   ChatRoomDetail,
 } from '@interfaces/chat';
+import { Profile } from '@interfaces/user';
 
 import api from '@base/api';
 
 export type ActionsChatMembersModalProps = {
   open: boolean;
   participantsList: number[] | undefined;
-  dashboardMembers: ChatDashboardMember[];
+  dashboardMemberList: Omit<Profile, "birthday" | "gender">[]
   dataOptionsParticipants: ChatParticipant[];
   code: string;
   selectedOrganizations: number[];
@@ -64,7 +64,7 @@ const ActionsChatMembersModal = memo(
     participantsList,
     dataOptionsParticipants,
     code,
-    dashboardMembers,
+    dashboardMemberList,
     selectedOrganizations,
     onClose,
     refetchChatRoomDetail,
@@ -134,14 +134,14 @@ const ActionsChatMembersModal = memo(
 
     const renderAvatar = (memberId: string) => {
       const actualMemberId = Number(memberId.split('-')[1]);
-      const memberInfo = dashboardMembers.find(
+      const memberInfo = dashboardMemberList.find(
         (memberWithAvatar) => memberWithAvatar.id == actualMemberId,
       );
 
       return (
         <div>
           <CustomUserAvatar
-            avatarUrl={memberInfo?.avatarUrl || ''}
+            avatarUrl={memberInfo?.avatar || ''}
             avatarColor={memberInfo?.avatarColor || ''}
             size={33}
           />

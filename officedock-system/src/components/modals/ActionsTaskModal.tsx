@@ -42,7 +42,6 @@ import {
   DEFAULT_VALUE_TODO_LIST,
   END_DATE_WRONG_SELECTED,
   ERROR_LONG_FIELD_MESSAGE,
-  ERROR_PERSON_IN_CHART_START,
   ORGANIZATION_REQUIRED_MESSAGE,
   START_DATE_REQUIRED_SELECTED,
   STATUS_REQUIRED_MESSAGE,
@@ -62,6 +61,7 @@ import {
   EventWorkCategory,
   ItemStartType,
   PermissionsSystem,
+  ScreenName,
   StatusValueTask,
   TaskRepetitiveType,
   TimeType,
@@ -69,13 +69,11 @@ import {
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
-  CreationDataTask,
   Task,
   TaskErrorPerson,
   TaskFormData,
   TodoItem,
 } from '@interfaces/task';
-import { Profile, User } from '@interfaces/user';
 import { CategoryStructure } from '@interfaces/skills';
 
 import {
@@ -93,7 +91,8 @@ import {
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
 
-import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+import { Organizations } from '@interfaces/organization';
 
 export type ActionTaskModalProps = {
   open: boolean;
@@ -102,11 +101,8 @@ export type ActionTaskModalProps = {
   type: string;
   action?: string;
   columnId?: string;
-  peopleDefaultId?: string;
-  dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[] | undefined;
-  creationDataTaskData: CreationDataTask | undefined;
   disableDeleteAction?: boolean;
-  authenticatedUser?: User | undefined;
+  orgUserList?: Organizations[] | undefined;
   onDelete?: () => void;
   onClose: () => void;
   onWarning?: any;
@@ -120,13 +116,9 @@ const ActionsTaskModal = ({
   open,
   action = ActionTask.CREATE,
   type = ItemStartType.TASK,
-  authenticatedUser,
+  orgUserList,
   dataTask,
-  errorPerson,
   columnId,
-  peopleDefaultId,
-  dashboardMemberList,
-  creationDataTaskData,
   disableDeleteAction = false,
   onEdit,
   onSubmit,
@@ -179,15 +171,6 @@ const ActionsTaskModal = ({
       value: NO_SETTING,
     },
   ]);
-
-  const [dataOptionsPeopleInCharge, setDataOptionsPeopleInCharge] = useState<
-    OptionDropdownType[]
-  >([]);
-
-  const [selectedPersonInChargeOptions, setSelectedPersonInChargeOptions] =
-    useState<OptionDropdownType[]>([]);
-  const [_unSelectedPersonInChargeOptions, setUnSelectedPersonInChargeOptions] =
-    useState<OptionDropdownType[]>([]);
 
   const [showDescriptionSection, setShowDescriptionSection] =
     useState<boolean>(false);
@@ -248,77 +231,6 @@ const ActionsTaskModal = ({
     name: 'organization.value',
   });
 
-  const { refetchCreationDataStatistic } = useCreationDataStatisticTeam({
-    organization_id: organizationValue ? String(organizationValue) : '',
-    isTeam: true,
-    onSuccess: (data) => {
-      if (!data) return;
-      const mainItem =
-        data.organizations.find(
-          (item) => String(item.id) === String(organizationValue),
-        ) || data.organizations[0];
-
-      const organizationCategories = mainItem.statisticCategories.map(
-        (category) => {
-          const largeCategory = category.LARGE || {
-            id: NO_SETTING,
-            name: NO_SETTING,
-            uuid: '',
-          };
-
-          const mediumCategories = (category.MEDIUM || []).map(
-            (mediumCategory) => {
-              const mediumCategoryField = mediumCategory.MEDIUM || {
-                id: NO_SETTING,
-                name: NO_SETTING,
-                uuid: '',
-              };
-              const smallCategories = mediumCategory.SMALL || [
-                { id: NO_SETTING, name: NO_SETTING, uuid: '' },
-              ];
-
-              return {
-                MEDIUM: mediumCategoryField,
-                SMALL: smallCategories,
-              };
-            },
-          );
-
-          return {
-            LARGE: largeCategory,
-            MEDIUM: mediumCategories,
-          };
-        },
-      );
-
-      setDataOrganizationCategories(organizationCategories);
-      setDataOptionsCategoryLarge(() => {
-        const largeCategories: OptionDropdownType[] = [];
-        mainItem.statisticCategories.map((category) => {
-          if (category.LARGE) {
-            largeCategories.push({
-              label: category.LARGE.name,
-              value: category.LARGE.id,
-            });
-          }
-        });
-        return largeCategories;
-      });
-      setDataOptionsTagIds(
-        data.tags.map((org) => ({
-          label: String(org.name),
-          value: String(org.id),
-        })),
-      );
-    },
-  });
-
-  useEffect(() => {
-    if (organizationValue) {
-      refetchCreationDataStatistic();
-    }
-  }, [organizationValue, refetchCreationDataStatistic]);
-
   const defaultValues = useMemo<TaskFormData>(() => {
     const value: TaskFormData = {
       peopleInChargeIds: dataTask
@@ -373,18 +285,7 @@ const ActionsTaskModal = ({
       },
       isImportant: false,
       plans: [],
-      organization: authenticatedUser?.organizations
-        ? {
-            label:
-              authenticatedUser?.organizations.find(
-                (organization) => organization.isMain,
-              )?.name || '',
-            value:
-              authenticatedUser?.organizations.find(
-                (organization) => organization.isMain,
-              )?.id || '',
-          }
-        : null,
+      organization: null,
       repeatType: {
         label: TaskRepetitiveType.ONCE,
         value: String(
@@ -400,19 +301,16 @@ const ActionsTaskModal = ({
       monthDay: undefined,
       weekDay: undefined,
     };
-    if (authenticatedUser) {
-      value.organization = authenticatedUser?.organizations.find(
+    if (orgUserList && action == ActionTask.CREATE) {
+      value.organization = orgUserList.find(
         (organization) => organization.isMain,
       )
         ? {
             label:
-              authenticatedUser?.organizations.find(
-                (organization) => organization.isMain,
-              )?.name || '',
+              orgUserList.find((organization) => organization.isMain)?.name ||
+              '',
             value:
-              authenticatedUser?.organizations.find(
-                (organization) => organization.isMain,
-              )?.id || '',
+              orgUserList.find((organization) => organization.isMain)?.id || '',
           }
         : null;
     }
@@ -570,13 +468,118 @@ const ActionsTaskModal = ({
     dataTask,
     session?.user.id,
     session?.user.profile.fullName,
-    authenticatedUser,
+    orgUserList,
   ]);
 
   useEffect(() => {
     reset(defaultValues);
   }, [defaultValues, reset]);
   // Update columnId when create in column
+
+  const { isFetchingCreationDataCommon } = useCreationDataCommon({
+    condition: [!!organizationValue],
+    organizationId: organizationValue
+      ? String(organizationValue)
+      : dataTask && dataTask.organization
+        ? String(dataTask.organization?.id)
+        : orgUserList &&
+            orgUserList?.find((organization) => organization.isMain)?.id
+          ? String(orgUserList?.find((organization) => organization.isMain)?.id)
+          : '',
+    options: {
+      get_task_status: true,
+      get_organization_with_categories: true,
+      get_tags: true,
+      get_organizations_of_user_by_screen: orgUserList
+        ? ''
+        : ScreenName.MY_TASK,
+    },
+    onSuccess: (data) => {
+      if (data.organizations) {
+        setDataOptionsOrganizations(
+          data.organizations.map((org) => ({
+            label: org.name,
+            value: org.id as number,
+          })),
+        );
+      }
+      const listTag =
+        data?.tags?.map((tag) => ({
+          label: tag.name,
+          value: tag.id,
+        })) || [];
+
+      setDataOptionsTagIds(listTag);
+      setDataOptionsStatus(
+        data.taskStatus?.map((org) => ({
+          label: org.name,
+          value: org.id as number,
+        })) || [],
+      );
+
+      const mainItem =
+        data.organizationCategories.find(
+          (item) => String(item.id) === String(organizationValue),
+        ) || data.organizationCategories[0];
+
+      const organizationCategories = mainItem.statisticCategories.map(
+        (category) => {
+          const largeCategory = category.LARGE || {
+            id: NO_SETTING,
+            name: NO_SETTING,
+            uuid: '',
+          };
+
+          const mediumCategories = (category.MEDIUM || []).map(
+            (mediumCategory) => {
+              const mediumCategoryField = mediumCategory.MEDIUM || {
+                id: NO_SETTING,
+                name: NO_SETTING,
+                uuid: '',
+              };
+              const smallCategories = mediumCategory.SMALL || [
+                { id: NO_SETTING, name: NO_SETTING, uuid: '' },
+              ];
+
+              return {
+                MEDIUM: mediumCategoryField,
+                SMALL: smallCategories,
+              };
+            },
+          );
+
+          return {
+            LARGE: largeCategory,
+            MEDIUM: mediumCategories,
+          };
+        },
+      );
+
+      setDataOrganizationCategories(organizationCategories);
+      setDataOptionsCategoryLarge(() => {
+        const largeCategories: OptionDropdownType[] = [];
+        mainItem.statisticCategories.map((category) => {
+          if (category.LARGE) {
+            largeCategories.push({
+              label: category.LARGE.name,
+              value: category.LARGE.id,
+            });
+          }
+        });
+        return largeCategories;
+      });
+    },
+  });
+  useEffect(() => {
+    if (orgUserList) {
+      setDataOptionsOrganizations(
+        orgUserList.map((org) => ({
+          label: org.name,
+          value: org.id as number,
+        })),
+      );
+    }
+  }, [orgUserList]);
 
   useEffect(() => {
     if (columnId) {
@@ -681,10 +684,6 @@ const ActionsTaskModal = ({
     watch,
   ]);
 
-  const { fields, append } = useFieldArray({
-    control,
-    name: 'peopleInChargeIds',
-  });
   const {
     fields: planFields,
     append: appendPlanField,
@@ -693,66 +692,6 @@ const ActionsTaskModal = ({
     control,
     name: 'plans',
   });
-
-  // If have option selected or remove option selected, update option for unselected options people in charge
-  useEffect(() => {
-    const selectedValues = selectedPersonInChargeOptions.map(
-      (element) => element.value,
-    );
-    const unSelectedOptions = dataOptionsPeopleInCharge.filter(
-      (option) => !selectedValues.includes(option.value),
-    );
-    setUnSelectedPersonInChargeOptions(unSelectedOptions);
-  }, [dataOptionsPeopleInCharge, selectedPersonInChargeOptions]);
-
-  // Save data people in charge from list member
-
-  useEffect(() => {
-    if (dashboardMemberList) {
-      setDataOptionsPeopleInCharge(
-        dashboardMemberList.map((org) => ({
-          label: org.fullName,
-          value: org.id,
-        })),
-      );
-    }
-  }, [dashboardMemberList]);
-
-  // Save data from create task
-  useEffect(() => {
-    if (creationDataTaskData) {
-      setDataOptionsOrganizations(
-        creationDataTaskData.organizations.map((org) => ({
-          label: org.name,
-          value: org.id as number,
-        })),
-      );
-      setDataOptionsStatus(
-        creationDataTaskData.status.map((org) => ({
-          label: org.name,
-          value: org.id as number,
-        })),
-      );
-    }
-  }, [creationDataTaskData]);
-
-  const selectedOrganization = watch('organization');
-
-  useEffect(() => {
-    if (selectedOrganization && creationDataTaskData) {
-      const organizationTags =
-        creationDataTaskData.organizations.find(
-          (org) => org.id === selectedOrganization.value,
-        )?.tags || [];
-
-      setDataOptionsTagIds(
-        organizationTags.map((tag) => ({
-          label: tag.name,
-          value: tag.id,
-        })),
-      );
-    }
-  }, [selectedOrganization, creationDataTaskData, setValue]);
 
   useEffect(() => {
     if (dataTask) {
@@ -789,22 +728,6 @@ const ActionsTaskModal = ({
       if (dataTask.showDeadlineTime) {
         setShowDeadlineTimeSetting(true);
       }
-      // Default focus input fake
-      if (dataTask.peopleInCharge.length) {
-        dataTask.peopleInCharge.map((element) =>
-          append({
-            label: element.fullName,
-            value: element.id,
-          }),
-        );
-      } else {
-        if (!peopleDefaultId) {
-          append({
-            label: '',
-            value: '',
-          });
-        }
-      }
     } else {
       appendPlanField({
         planStartDate: null,
@@ -813,30 +736,7 @@ const ActionsTaskModal = ({
         planStartTime: '',
       });
     }
-  }, [append, appendPlanField, dataTask, peopleDefaultId]);
-
-  useEffect(() => {
-    if (peopleDefaultId && session) {
-      setSelectedPersonInChargeOptions([
-        {
-          label: session?.user.profile.fullName,
-          value: session?.user.id,
-        },
-      ]);
-    }
-  }, [peopleDefaultId, session]);
-
-  //Update option data people in charge when default data
-  useEffect(() => {
-    if (dataTask?.peopleInCharge) {
-      setSelectedPersonInChargeOptions(
-        dataTask.peopleInCharge.map((org) => ({
-          label: org.fullName,
-          value: org.id,
-        })),
-      );
-    }
-  }, [creationDataTaskData?.tags, dataTask, dataTask?.tags]);
+  }, [action, appendPlanField, dataTask]);
 
   useEffect(() => {
     if (open === false) {
@@ -866,21 +766,6 @@ const ActionsTaskModal = ({
       }
     }, 0);
   }, [open]);
-
-  //Update error when error person
-  useEffect(() => {
-    if (errorPerson) {
-      const index = selectedPersonInChargeOptions.findIndex(
-        (field) => field.value == errorPerson.id,
-      );
-      if (index !== -1) {
-        setError(`peopleInChargeIds.${index}.value`, {
-          type: 'manual',
-          message: ERROR_PERSON_IN_CHART_START,
-        });
-      }
-    }
-  }, [errorPerson, fields, selectedPersonInChargeOptions, setError]);
 
   const [time, setTime] = useState<string>('');
 
@@ -1305,6 +1190,7 @@ const ActionsTaskModal = ({
                       classNameTextData="!text-xs"
                       classNameOption="!text-xs !z-[998]"
                       classNameError="!text-xs"
+                      isLoading={isFetchingCreationDataCommon}
                       disabled={isCheckActionPermission}
                       options={dataOptionsCategoryLarge}
                       selectedOption={dataOptionsCategoryLarge.find(
@@ -1343,6 +1229,7 @@ const ActionsTaskModal = ({
                           classNameTextData="!text-xs"
                           classNameOption="!text-xs !z-[998]"
                           classNameError="!text-xs"
+                          isLoading={isFetchingCreationDataCommon}
                           disabled={isCheckActionPermission}
                           options={dataOptionsCategoryMedium}
                           selectedOption={dataOptionsCategoryMedium.find(
@@ -1377,6 +1264,7 @@ const ActionsTaskModal = ({
                         classNameTextData="!text-xs"
                         classNameOption="!text-xs !z-[998]"
                         classNameError="!text-xs"
+                        isLoading={isFetchingCreationDataCommon}
                         disabled={isCheckActionPermission}
                         options={dataOptionsCategorySmall}
                         selectedOption={dataOptionsCategorySmall.find(
@@ -1409,6 +1297,7 @@ const ActionsTaskModal = ({
                     optionClassName="!border-[1px] !border-[#77858F] z-[998]"
                     disabled={isCheckActionPermission}
                     options={dataOptionsTagIds}
+                    isLoading={isFetchingCreationDataCommon}
                     customLabel={
                       (watch('tagIds') ?? []).filter((tag) => tag.value)
                         .length > 0

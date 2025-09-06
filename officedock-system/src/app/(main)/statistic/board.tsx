@@ -19,8 +19,6 @@ import LineChart from '@components/statistic/category/LineChart';
 import { OrganizationStatisticType } from '@constants/enums';
 import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
 import { pageRouters } from '@constants/routers';
-
-import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 import useStatisticCategoriesCompare from '@hooks/useStatisticCategoriesCompare';
 import useStatisticCategories from '@hooks/useStatisticCategories';
 import useStatisticAllTeamCategories from '@hooks/useStatisticAllTeamCategories';
@@ -29,6 +27,7 @@ import useStatisticTaskDurations from '@hooks/useStatisticTaskDurations';
 import useStatisticAllTeamTaskDurations from '@hooks/useStatisticAllTeamTaskDurations';
 import useStatisticTaskDurationsCompare from '@hooks/useStatisticTaskDurationsCompare';
 import useStatisticAllTeamTaskDurationsCompare from '@hooks/useStatisticAllTeamTaskDurationsCompare';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
@@ -97,7 +96,7 @@ const StatisticBoard = () => {
     },
     condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
     onSuccess: (data) => {
-      const organization = creationDataStatisticData?.organizations?.find(
+      const organization = creationDataCommonData?.myStatistics?.find(
         (org) => org.id === selectedOrganization?.value,
       );
       if (organization && organization.statisticCategories) {
@@ -322,37 +321,41 @@ const StatisticBoard = () => {
     condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
   });
 
-  const { creationDataStatisticData } = useCreationDataStatistic({
-    is_statistic: true,
+  const { creationDataCommonData } = useCreationDataCommon({
+    options: {
+      get_organization_for_my_statistic: true,
+    },
     onSuccess: (data) => {
-      const result = (() => {
-        if (data.organizations.length === 0) {
-          return { label: '', value: '' };
-        }
+      if (data.myStatistics) {
+        const result = (() => {
+          if (data.myStatistics.length === 0) {
+            return { label: '', value: '' };
+          }
 
-        const mainItem =
-          data.organizations.find((item) => item.isMain) ||
-          data.organizations[0];
-        const optionsTagList = mainItem.tags.map((item) => ({
-          label: item.name,
-          value: item.id,
-        }));
-        setTagsOptions(optionsTagList);
-        return {
-          label: mainItem.name,
-          value: mainItem.id,
-        };
-      })();
+          const mainItem =
+            data.myStatistics.find((item) => item.isMain) ||
+            data.myStatistics[0];
+          const optionsTagList = mainItem.tags.map((item) => ({
+            label: item.name,
+            value: item.id,
+          }));
+          setTagsOptions(optionsTagList);
+          return {
+            label: mainItem.name,
+            value: mainItem.id,
+          };
+        })();
 
-      setSelectedOrganization(result);
+        setSelectedOrganization(result);
 
-      setListOptionsOrganization([
-        ...data.organizations.map((org) => ({
-          value: org.id || '',
-          label: org.name,
-          type: org.type,
-        })),
-      ]);
+        setListOptionsOrganization([
+          ...data.myStatistics.map((org) => ({
+            value: org.id || '',
+            label: org.name,
+            type: org.type,
+          })),
+        ]);
+      }
     },
   });
 
@@ -380,7 +383,7 @@ const StatisticBoard = () => {
       value: '',
     });
 
-    const organization = creationDataStatisticData?.organizations?.find(
+    const organization = creationDataCommonData?.myStatistics?.find(
       (org) => org.id === data.value,
     );
     if (data.type === OrganizationStatisticType.CALENDAR) {
@@ -436,7 +439,7 @@ const StatisticBoard = () => {
       setDataMediumCalendar(undefined);
     }
 
-    const organization = creationDataStatisticData?.organizations?.find(
+    const organization = creationDataCommonData?.myStatistics?.find(
       (org) => org.id === data.value,
     );
 
@@ -497,7 +500,7 @@ const StatisticBoard = () => {
       setDataMediumCalendar(undefined);
     }
 
-    const organization = creationDataStatisticData?.organizations.find(
+    const organization = creationDataCommonData?.myStatistics?.find(
       (org) => org.id === selectedOrganization?.value,
     );
     const largeCategory = organization?.statisticCategories.find(
@@ -543,7 +546,7 @@ const StatisticBoard = () => {
       value: '',
     });
 
-    const organization = creationDataStatisticData?.organizations.find(
+    const organization = creationDataCommonData?.myStatistics?.find(
       (org) => org.id === selectedOrganization?.value,
     );
     const largeCategory = organization?.statisticCategories.find(
@@ -829,9 +832,7 @@ const StatisticBoard = () => {
         handleSelectLarge={handleSelectLarge}
         handleSelectMedium={handleSelectMedium}
         handleSelectSmall={handleSelectSmall}
-        creationDataStatisticData={
-          creationDataStatisticData?.organizations || []
-        }
+        creationDataStatisticData={creationDataCommonData?.myStatistics || []}
       />
     </div>
   );

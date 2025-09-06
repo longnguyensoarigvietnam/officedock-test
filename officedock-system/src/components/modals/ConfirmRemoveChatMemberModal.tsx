@@ -2,15 +2,17 @@ import { memo } from 'react';
 
 import Modal from '../common/Modal';
 import Button from '../common/Button';
-import { ChatDashboardMember } from '@interfaces/chat';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+
 import useChatRoomDetail from '@hooks/useChatRoomDetail';
+
+import { Profile } from '@interfaces/user';
 
 export type ConfirmDeleteModalProps = {
   open: boolean;
   onConfirm: (memberIds: number[]) => void;
   onClose: () => void;
-  dashboardMembers: ChatDashboardMember[];
+  dashboardMemberList: Omit<Profile, "birthday" | "gender">[]
   selectedRemoveMemberId: number | undefined;
   code: string;
 };
@@ -20,7 +22,7 @@ const ConfirmRemoveChatMemberModal = memo(
     open,
     onConfirm,
     onClose,
-    dashboardMembers,
+    dashboardMemberList,
     selectedRemoveMemberId,
     code,
   }: ConfirmDeleteModalProps) => {
@@ -29,14 +31,14 @@ const ConfirmRemoveChatMemberModal = memo(
     });
 
     const renderAvatar = (memberId: number) => {
-      const memberInfo = dashboardMembers.find((member) => {
+      const memberInfo = dashboardMemberList.find((member) => {
         return member.id == memberId;
       });
 
       return (
         <div className="flex justify-center">
           <CustomUserAvatar
-            avatarUrl={memberInfo?.avatarUrl || ''}
+            avatarUrl={memberInfo?.avatar || ''}
             avatarColor={memberInfo?.avatarColor || ''}
             size={36}
           />
@@ -54,7 +56,7 @@ const ConfirmRemoveChatMemberModal = memo(
           {selectedRemoveMemberId && renderAvatar(selectedRemoveMemberId)}
           <p className="text-black text-[15px] font-medium max-w-full break-all">
             {
-              dashboardMembers.find((member) => {
+              dashboardMemberList.find((member) => {
                 return member.id == selectedRemoveMemberId;
               })?.fullName
             }

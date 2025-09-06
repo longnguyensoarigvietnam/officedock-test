@@ -25,13 +25,13 @@ import {
 import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
 
 import useEventLocationList from '@hooks/useEventLocationList';
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 
 import { LocationEventType } from '@interfaces/location';
 import api from '@base/api';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const ListLocation = () => {
   const { showToast } = useToast();
@@ -57,10 +57,12 @@ const ListLocation = () => {
     page: 1,
   });
 
-  // Get authenticated user
-  useAuthenticatedUser({
+  useCreationDataCommon({
+    options: {
+      get_company: true,
+    },
     onSuccess: (data) => {
-      setShowHolidaysInCalendar(data.company.isShowHolidaysCalendar);
+      setShowHolidaysInCalendar(data.company?.isShowHolidaysCalendar || false);
     },
   });
 

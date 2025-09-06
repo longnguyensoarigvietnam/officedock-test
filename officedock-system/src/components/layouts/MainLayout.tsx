@@ -8,15 +8,11 @@ import Metadata from '@components/common/Metadata';
 import { pageRouters } from '@constants/routers';
 import { PermissionsSystem, SessionStatus } from '@constants/enums';
 import { SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
-import { DEFAULT_TIME_TEXT } from '@constants';
 
 import { hasPermissionInArray } from '@utils';
 
-import useTaskDurationDetail from '@hooks/useTaskDurationDetail';
-import useContinueCounterTime from '@hooks/useContinueCounterTime';
-
-import { TaskContext } from '@providers/TaskProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import Footer from './Footer';
 
@@ -35,20 +31,10 @@ const MainLayout = ({
   permission,
   showFooter = true,
 }: MainLayoutProps) => {
-  const { dataRunning } = useContext(TaskContext);
+  const { totalNotifications } = useContext(GlobalStateContext);
   const { data: session, status, update } = useSessionCache();
   const router = useRouter();
-  const { taskDurationDetail } = useTaskDurationDetail({
-    item: {
-      id: `${dataRunning.id}`.replace('event', ''),
-      type: `${dataRunning.type}`,
-    },
-  });
-  const elapsedTime = useContinueCounterTime(
-    taskDurationDetail?.taskDuration
-      ? taskDurationDetail
-      : { taskDuration: DEFAULT_TIME_TEXT, isStart: false },
-  );
+  
 
   const [isShow, setIsShow] = useState(false);
 
@@ -101,8 +87,11 @@ const MainLayout = ({
   return (
     <div className="h-[calc(100vh_-_76px)]">
       <Metadata
-        metadata={title}
-        taskDurationText={`${taskDurationDetail?.taskDuration && taskDurationDetail.isStart ? `${elapsedTime} - ${taskDurationDetail.title}` : ''}`}
+        metadata={
+          title == pageRouters.CHAT_MANAGEMENT.name
+            ? `${pageRouters.CHAT_MANAGEMENT.name}${totalNotifications > 0 ? `(${totalNotifications})` : ''}`
+            : title
+        }
       />
       <div
         className={`overflow-x-hidden overflow-y-auto h-full flex-grow flex flex-col gap-10 bg-[#E6F3FB] custom-scrollbar p-4 ${className}`}>

@@ -3,12 +3,12 @@ export interface Category {
   name: string;
   uuid?: string;
   color?: string;
-  createdAt?: Date | string,
-  updatedAt?: Date | string
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
   organizations?: {
-    id: number, 
-    name: string
-  }[]
+    id: number;
+    name: string;
+  }[];
 }
 export interface CreateCategoryFormRequest {
   name?: string;
@@ -16,4 +16,10 @@ export interface CreateCategoryFormRequest {
 }
 export interface CreateCategoryFormData {
   name?: string;
+}
+export interface CreationDataStatisticCategory {
+  id: number;
+  name: string;
+  uuid: string;
+  team?: number | null;
 }

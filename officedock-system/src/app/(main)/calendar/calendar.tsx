@@ -46,8 +46,7 @@ import EventActionTypeModal from '@components/modals/EventActionTypeModal';
 import useDebounceText from '@hooks/useDebounceText';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import { useErrorToast } from '@hooks/useErrorToast';
-import useDashboardMemberList from '@hooks/useDashBoardMemberList';
-import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { hasPermissionInArray } from '@utils';
 import {
@@ -80,7 +79,6 @@ import { Profile } from '@interfaces/user';
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { TaskContext } from '@providers/TaskProvider';
 
 import {
@@ -178,15 +176,12 @@ const EventCalendar = () => {
   const [displayDay, setDisplayDay] = useState<number>();
 
   const [showSidebar, setShowSidebar] = useState(false);
-  const { creationDataEventCalendar } = useCreationDataEventCalendar({});
-  const { dashboardMemberList } = useDashboardMemberList();
 
   // Toasts
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
 
   // Context
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
   const { setIdEventDelete } = useContext(TaskContext);
 
   // Loading
@@ -277,6 +272,65 @@ const EventCalendar = () => {
         default:
           handleViewChange(CalendarViewOptions.VIEW_BY_MONTH);
       }
+    },
+  });
+
+  // Creation data
+  const [dashboardMemberList, setDashboardMemberList] = useState<Profile[]>([]);
+  const [dataOptionsParticipants, setDataOptionsParticipants] = useState<
+    EventParticipant[]
+  >([]);
+  const [dataOptionsOrganizations, setDataOptionsOrganizations] = useState<
+    {
+      id: string | number;
+      fullName: string;
+      color: string;
+      userIds: number[];
+    }[]
+  >([]);
+  useCreationDataCommon({
+    options: {
+      get_all_members: true,
+      get_organization_with_users: true,
+    },
+    onSuccess: (data) => {
+      let eventMembers: EventParticipant[] = [];
+      let eventOrganizations: EventParticipant[] = [];
+      if (data.allMembers) {
+        eventMembers = data.allMembers?.map((member) => ({
+          id: `${EventParticipantType.USER}-${member.id}`,
+          fullName: member.fullName,
+          type: EventParticipantType.USER,
+          mainOrganization: member.organizations
+            ? member.organizations.name
+            : '',
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
+        }));
+
+        setDashboardMemberList(data.allMembers);
+      }
+
+      if (data.organizationUsers) {
+        eventOrganizations = data.organizationUsers
+          ? data.organizationUsers.map((org) => ({
+              id: `${EventParticipantType.ORGANIZATION}-${org.id}`,
+              fullName: org.name,
+              type: EventParticipantType.ORGANIZATION,
+              userIds: org.users ? org.users.map((user) => user.id) : [],
+              color: org.iconColor || '#0068B6',
+            }))
+          : [];
+        setDataOptionsOrganizations([
+          ...data.organizationUsers.map((org) => ({
+            id: org.id || '',
+            fullName: org.name,
+            userIds: org.users ? org.users.map((user) => user.id) : [],
+            color: org.iconColor || '#0068B6',
+          })),
+        ]);
+      }
+      setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
     },
   });
 
@@ -616,7 +670,7 @@ const EventCalendar = () => {
   ) => {
     if (participantList && participantList.length > 0) {
       if (participantList.length == 1) {
-        const memberInfo = dashboardMembersWithAvatars.find(
+        const memberInfo = dashboardMemberList.find(
           (member) => member.id == participantList[0].id,
         );
         return (
@@ -638,7 +692,7 @@ const EventCalendar = () => {
         return (
           <div className="mr-1 flex items-center">
             {participantList.map((participant, index) => {
-              const memberInfo = dashboardMembersWithAvatars.find(
+              const memberInfo = dashboardMemberList.find(
                 (member) => member.id === participant.id,
               );
 
@@ -667,7 +721,7 @@ const EventCalendar = () => {
             {participantList
               .slice(0, isWeekView ? 5 : 1)
               .map((participant, index) => {
-                const memberInfo = dashboardMembersWithAvatars.find(
+                const memberInfo = dashboardMemberList.find(
                   (member) => member.id === participant.id,
                 );
 
@@ -1162,7 +1216,7 @@ const EventCalendar = () => {
             allDay: true,
             id: `holiday-${holiday.month}-${holiday.date}`,
             type: EventCalendarType.HOLIDAY,
-            participants: dashboardMembersWithAvatars.map((member) => {
+            participants: dashboardMemberList.map((member) => {
               return {
                 id: member.id,
                 fullName: member.fullName,
@@ -1171,9 +1225,7 @@ const EventCalendar = () => {
               };
             }),
             address: '',
-            resourceIds: dashboardMembersWithAvatars.map((member) =>
-              String(member.id),
-            ),
+            resourceIds: dashboardMemberList.map((member) => String(member.id)),
           };
         });
 
@@ -2579,8 +2631,8 @@ const EventCalendar = () => {
                 return a.title.localeCompare(b.title);
               }}
               resourceLabelContent={(resource) => {
-                const memberInfo = dashboardMembersWithAvatars.find(
-                  (member) => member.id == resource.resource.id,
+                const memberInfo = dashboardMemberList.find(
+                  (member) => member.id == Number(resource.resource.id),
                 );
                 return (
                   <div className="flex items-center justify-start gap-2">
@@ -2768,6 +2820,9 @@ const EventCalendar = () => {
           <CalendarSidebar
             calendarRef={calendarRef}
             keySearch={keySearch}
+            dataOptionsOrganizations={dataOptionsOrganizations}
+            dataOptionsParticipants={dataOptionsParticipants}
+            dashboardMemberList={dashboardMemberList}
             getEventCalendarByUsers={getEventCalendarByUsers}
             handleFilterScheduleByUserIds={handleFilterScheduleByUserIds}
             handleGetAllMemberSchedules={handleGetAllMemberSchedules}
@@ -2788,6 +2843,7 @@ const EventCalendar = () => {
       {eventListModalInfo && (
         <EventListModal
           checkShowUserAvatar={checkShowUserAvatar}
+          dashboardMemberList={dashboardMemberList}
           handleCreateNewEventFromPopup={handleCreateNewEventFromPopup}
           handleEventClickInPopup={handleEventClickInPopup}
           eventListModalInfo={eventListModalInfo}
@@ -2865,7 +2921,6 @@ const EventCalendar = () => {
               setOpenConfirmDeleteEventModal(true);
             }
           }}
-          creationDataEventCalendar={creationDataEventCalendar}
           backToEditing={backToEditing}
         />
       )}
@@ -3035,6 +3090,7 @@ const EventCalendar = () => {
           top={infoModalPosition?.top}
           left={infoModalPosition?.left}
           checkShowUserAvatar={checkShowUserAvatar}
+          dashboardMemberList={dashboardMemberList}
           selectedScheduleUserIds={selectedScheduleUserIds}
           onClose={() => {
             setDataEventEdit(undefined);

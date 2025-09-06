@@ -7,15 +7,17 @@ import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
-import { CreationDataTask, Team } from '@interfaces/task';
+import { Team } from '@interfaces/task';
 import { OptionDropdownType } from '@interfaces/common';
 import { TaskContext } from '@providers/TaskProvider';
 import { UseMutateFunction } from 'react-query';
 import { AxiosError } from 'axios';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 type ActionTaskFilterProp = {
-  creationDataTaskData: CreationDataTask | undefined;
   isLoadingDataTask?: boolean;
+  userId?: number;
   handleClose: () => void;
   saveZoomKanban: UseMutateFunction<
     any,
@@ -35,7 +37,7 @@ type ActionTaskFilterProp = {
 };
 
 const ActionFilterTask = ({
-  creationDataTaskData,
+  userId,
   isLoadingDataTask,
   saveZoomKanban,
   handleClose,
@@ -85,19 +87,25 @@ const ActionFilterTask = ({
     reset(defaultValues);
   }, [defaultValues, reset]);
 
-  useEffect(() => {
-    if (creationDataTaskData) {
+  const { isFetchingCreationDataCommon } = useCreationDataCommon({
+    userId: userId,
+
+    options: {
+      get_filter_organization_categories: true,
+      get_tags: true,
+    },
+    onSuccess: (data) => {
       setDataOptionsOrganizationsCategory(
-        creationDataTaskData.organizationCategories,
+        data.filterOrganizationsCategories || [],
       );
       setDataOptionsTagIds(
-        creationDataTaskData.tags.map((org) => ({
+        data?.tags?.map((org) => ({
           label: String(org.name),
           value: String(org.id),
-        })),
+        })) || [],
       );
-    }
-  }, [creationDataTaskData]);
+    },
+  });
 
   const [selectedTeams, setSelectedTeams] = useState<{
     [key: number]: { id: number; name: string; selected: boolean };
@@ -275,7 +283,7 @@ const ActionFilterTask = ({
           {/* Organization */}
           <div ref={boxListRef} className="relative">
             <div
-              onClick={() => setIsOpen(true)}
+              onClick={() => setIsOpen(!isOpen)}
               className="relative rounded-md flex items-center pl-3 text-sm font-medium text-black border border-[#77858F] h-[34px]">
               <span>チーム&カテゴリー</span>
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
@@ -290,81 +298,89 @@ const ActionFilterTask = ({
             </div>
             {isOpen && (
               <div className="w-[370px] h-fit max-h-[calc(100vh_-_400px)] overflow-y-auto absolute top-10 z-20 right-0 rounded-md p-1  border border-[#77858F] bg-white">
-                {dataOptionsOrganizationsCategory.map((team) => (
-                  <div
-                    key={team.organization.id}
-                    className="border-b last:border-none">
+                {!isFetchingCreationDataCommon &&
+                  dataOptionsOrganizationsCategory.map((team) => (
                     <div
-                      className={`flex items-center relative  justify-between p-2 border-b border-transparent cursor-pointer  ${selectedTeams[Number(team.organization.id)] ? 'bg-[#F6F9FA] border-b border-[#EBF1F4]  rounded' : ''}`}
-                      onClick={() =>
-                        toggleTeam(
-                          Number(team.organization.id),
-                          team.organization.name,
-                        )
-                      }>
-                      <div onClick={() => {}} className="w-full">
-                        <Checkbox
-                          isChecked={
-                            !!selectedTeams[Number(team.organization.id)]
-                              ?.selected
-                          }
-                          onChange={() => {}}
-                          label={team.organization.name}
-                          classLabel="break-words  line-clamp-2 max-w-[300px]"
-                        />
+                      key={team.organization.id}
+                      className="border-b last:border-none">
+                      <div
+                        className={`flex items-center relative  justify-between p-2 border-b border-transparent cursor-pointer  ${selectedTeams[Number(team.organization.id)] ? 'bg-[#F6F9FA] border-b border-[#EBF1F4]  rounded' : ''}`}
+                        onClick={() =>
+                          toggleTeam(
+                            Number(team.organization.id),
+                            team.organization.name,
+                          )
+                        }>
+                        <div onClick={() => {}} className="w-full">
+                          <Checkbox
+                            isChecked={
+                              !!selectedTeams[Number(team.organization.id)]
+                                ?.selected
+                            }
+                            onChange={() => {}}
+                            label={team.organization.name}
+                            classLabel="break-words  line-clamp-2 max-w-[300px]"
+                          />
+                        </div>
+                        <div className="absolute z-30  inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                          <Image
+                            onClick={() => {}}
+                            src="/icons/arrow-down.svg"
+                            alt="Arrow down"
+                            width={16}
+                            height={16}
+                            className={`${selectedTeams[Number(team.organization.id)] && selectedTeams[Number(team.organization.id)].selected ? 'rotate-180' : 'rotate-0'}`}
+                          />
+                        </div>
                       </div>
-                      <div className="absolute z-30  inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                        <Image
-                          onClick={() => {}}
-                          src="/icons/arrow-down.svg"
-                          alt="Arrow down"
-                          width={16}
-                          height={16}
-                          className={`${selectedTeams[Number(team.organization.id)] && selectedTeams[Number(team.organization.id)].selected ? 'rotate-180' : 'rotate-0'}`}
-                        />
-                      </div>
-                    </div>
-                    {selectedTeams[Number(team.organization.id)] &&
-                      selectedTeams[Number(team.organization.id)].selected && (
-                        <div
-                          style={{
-                            display:
-                              team.categories.length > 0 ? 'flex' : 'none',
-                          }}
-                          className="pl-10 py-1 flex-col gap-2">
-                          {team.categories.map((category) => (
-                            <div
-                              key={category.id}
-                              className="flex items-start   py-1  pr-3 ">
-                              <div className="w-full">
-                                <Checkbox
-                                  isChecked={
-                                    !!selectedCategories[
-                                      Number(team.organization.id)
-                                    ]?.[category.id as number]?.selected
-                                  }
-                                  onChange={() =>
-                                    toggleCategory(
-                                      Number(team.organization.id),
-                                      category as { id: number; name: string },
-                                    )
-                                  }
-                                  label={category.name}
-                                  classLabel="break-words  line-clamp-2 max-w-[260px]"
+                      {selectedTeams[Number(team.organization.id)] &&
+                        selectedTeams[Number(team.organization.id)]
+                          .selected && (
+                          <div
+                            style={{
+                              display:
+                                team.categories.length > 0 ? 'flex' : 'none',
+                            }}
+                            className="pl-10 py-1 flex-col gap-2">
+                            {team.categories.map((category) => (
+                              <div
+                                key={category.id}
+                                className="flex items-start   py-1  pr-3 ">
+                                <div className="w-full">
+                                  <Checkbox
+                                    isChecked={
+                                      !!selectedCategories[
+                                        Number(team.organization.id)
+                                      ]?.[category.id as number]?.selected
+                                    }
+                                    onChange={() =>
+                                      toggleCategory(
+                                        Number(team.organization.id),
+                                        category as {
+                                          id: number;
+                                          name: string;
+                                        },
+                                      )
+                                    }
+                                    label={category.name}
+                                    classLabel="break-words  line-clamp-2 max-w-[260px]"
+                                  />
+                                </div>
+                                <span
+                                  className="w-3 h-3 rounded-full relative top-2"
+                                  style={{
+                                    backgroundColor: category.color || '',
+                                  }}
                                 />
                               </div>
-                              <span
-                                className="w-3 h-3 rounded-full relative top-2"
-                                style={{
-                                  backgroundColor: category.color || '',
-                                }}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                  </div>
-                ))}
+                            ))}
+                          </div>
+                        )}
+                    </div>
+                  ))}
+                {isFetchingCreationDataCommon && (
+                  <RowSkeleton numberOfRows={4} className="h-10" />
+                )}
               </div>
             )}
           </div>

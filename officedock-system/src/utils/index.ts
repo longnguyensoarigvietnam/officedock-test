@@ -477,7 +477,13 @@ export const getPermissionOptionDropdown = (
       PermissionType.NOT_ALLOWED,
     ]);
   }
-  if ([ScreenName.ROLE, ScreenName.CALENDAR_MANAGEMENT, ScreenName.MVP_VOTING_MANAGEMENT].includes(screen)) {
+  if (
+    [
+      ScreenName.ROLE,
+      ScreenName.CALENDAR_MANAGEMENT,
+      ScreenName.MVP_VOTING_MANAGEMENT,
+    ].includes(screen)
+  ) {
     return includePermissions([
       PermissionType.EDITABLE,
       PermissionType.NOT_ALLOWED,
@@ -504,7 +510,11 @@ export const getPermissionOptionDropdown = (
       PermissionType.TEAM_AND_SUB,
     ]);
   }
-  if ([ScreenName.SKILL_MAP, ScreenName.THANKS_MESSAGE_MANAGEMENT].includes(screen)) {
+  if (
+    [ScreenName.SKILL_MAP, ScreenName.THANKS_MESSAGE_MANAGEMENT].includes(
+      screen,
+    )
+  ) {
     return includePermissions([
       PermissionType.EDITABLE,
       PermissionType.TEAM_AND_SUB_EDIT,
@@ -2243,6 +2253,7 @@ export const highlightTextSafely = (
     /\[\[HIGHLIGHT\]\](.*?)\[\[\/HIGHLIGHT\]\]/g,
     `<mark class="bg-[#0068B633]">$1</mark>`,
   );
+  if (doc.body.innerHTML == 'null') return '';
   return processedHTML;
 };
 

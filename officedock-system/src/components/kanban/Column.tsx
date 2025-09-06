@@ -28,12 +28,11 @@ import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 
 import {
   Columns,
-  CreationDataTask,
   DataStatusChangeInline,
   KanbanDataResponse,
   Task,
 } from '@interfaces/task';
-import { OptionDropdownType } from '@interfaces/common';
+import { CreationDataCommon, OptionDropdownType } from '@interfaces/common';
 
 import api from '@base/api';
 import { hasPermissionInArray } from '@utils';
@@ -53,7 +52,7 @@ interface ColumnProps {
   orderingRequest: string;
   columnsKanbanData: Columns;
   addTask: (columnId: string) => void;
-  creationDataTaskData?: CreationDataTask;
+  creationDataCommonData: CreationDataCommon | undefined;
   showFrequentlyTasks: boolean;
   handleActionEditTask: (id: number, type?: string) => void;
   handleConfirmCopyTask: (id: number) => void;
@@ -84,7 +83,7 @@ const Column = ({
   totalCount,
   matchingTaskIds,
   columnsKanbanData,
-  creationDataTaskData,
+  creationDataCommonData,
   showFrequentlyTasks,
 
   pinItemToTop,
@@ -464,7 +463,6 @@ const Column = ({
                         content={item}
                         editTask={editTask}
                         handlePinItem={handlePinItem}
-                        creationDataTaskData={creationDataTaskData}
                         handleActionEditTask={handleActionEditTask}
                         handleConfirmCopyTask={handleConfirmCopyTask}
                         handleUpdateItemInline={handleUpdateItemInline}
@@ -477,7 +475,7 @@ const Column = ({
                         content={item}
                         editTask={editTask}
                         handlePinItem={handlePinItem}
-                        creationDataTaskData={creationDataTaskData}
+                        creationDataCommonData={creationDataCommonData}
                         handleActionEditTask={handleActionEditTask}
                         handleConfirmCopyTask={handleConfirmCopyTask}
                         handleUpdateItemInline={handleUpdateItemInline}

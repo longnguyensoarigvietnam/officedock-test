@@ -22,10 +22,8 @@ import Dropdown from '@components/common/Dropdown';
 
 import useTaskDetail from '@hooks/useTaskDetail';
 import useEventDetail from '@hooks/useEventDetail';
-import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
-import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
-import useCreationDataTaskActualDuration from '@hooks/useCreationDataTaskActualDuration';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
@@ -124,9 +122,6 @@ const CreateActualDurationsForm = () => {
   const [calculatedActualDuration, setCalculatedActualDuration] = useState(
     DEFAULT_TASK_SCHEDULE_DURATION,
   );
-  const { creationDataEventCalendar } = useCreationDataEventCalendar({
-    condition: [searchParams.get('type') == EventCalendarType.SCHEDULE],
-  });
 
   // Task schedule data
   const [isSubmit, setIsSubmit] = useState(false);
@@ -145,36 +140,36 @@ const CreateActualDurationsForm = () => {
   const currentDate = new Date();
   const optionTimeInput = generateTimeOptionsAsObjects();
 
-  useCreationDataStatistic({
-    is_calendar_page: true,
-    condition: [searchParams.get('type') == EventCalendarType.SCHEDULE],
-
-    onSuccess: (data) => {
-      if (!data) return;
-      setDataOptionsTagIds(
-        data?.calendarOrganization?.tags.map((org) => ({
-          label: org.name as string,
-          value: org.id || '',
-        })),
-      );
+  // Event types and tags - creation data
+  useCreationDataCommon({
+    organizationId: defaultTaskScheduleData?.organization
+      ? String(defaultTaskScheduleData?.organization)
+      : '',
+    condition: [Boolean(defaultTaskScheduleData?.organization)],
+    options: {
+      get_event_types: true,
+      get_tags: true,
+      is_organization_calendar:
+        searchParams.get('type') == EventCalendarType.SCHEDULE,
     },
-  });
-
-  useCreationDataTaskActualDuration({
-    organization_id: defaultTaskScheduleData?.organization,
-    condition: [
-      searchParams.get('type') != EventCalendarType.SCHEDULE,
-      Boolean(defaultTaskScheduleData?.organization),
-    ],
-
     onSuccess: (data) => {
-      if (!data) return;
-      setDataOptionsTagIds(
-        data?.tags.map((org) => ({
-          label: org.name as string,
-          value: org.id || '',
-        })),
-      );
+      if (data?.eventTypes) {
+        setDataOptionsEventTypes(
+          data?.eventTypes.map((org) => ({
+            label: org,
+            value: org,
+          })),
+        );
+      }
+
+      if (data?.tags) {
+        setDataOptionsTagIds(
+          data?.tags.map((org) => ({
+            label: org.name as string,
+            value: org.id || '',
+          })),
+        );
+      }
     },
   });
 
@@ -338,17 +333,6 @@ const CreateActualDurationsForm = () => {
     );
     setUnSelectedTagIdsOptions(unSelectedOptions);
   }, [dataOptionsTagIds, selectedTagIdsOptions]);
-
-  useEffect(() => {
-    if (creationDataEventCalendar) {
-      setDataOptionsEventTypes(
-        creationDataEventCalendar.types.map((org) => ({
-          label: org,
-          value: org,
-        })),
-      );
-    }
-  }, [creationDataEventCalendar]);
 
   const { refetchOrganizationStatisticCategories } =
     useOrganizationStatisticCategories({

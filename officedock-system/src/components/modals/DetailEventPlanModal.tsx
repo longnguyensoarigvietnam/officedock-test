@@ -1,4 +1,4 @@
-import React, { MutableRefObject, useContext, useEffect } from 'react';
+import React, { MutableRefObject, useEffect, useState } from 'react';
 import { isSameDay } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useSessionCache } from '@providers/SessionCacheProvider';
@@ -16,12 +16,13 @@ import {
 } from '@constants/enums';
 import { DataDetailEventType } from '@interfaces/task';
 import { EventEditFormData, EventParticipant } from '@interfaces/calendar';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import {
   formatHoursAndMinutesForDateTime,
   formatShowDeadline,
 } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+import { Profile } from '@interfaces/user';
 
 type Props = {
   dataEvent: DataDetailEventType;
@@ -38,11 +39,20 @@ const DetailEventPlanModal = ({
   onClose,
   onDelete,
 }: Props) => {
+  const [dashboardMemberList, setDashboardMemberList] = useState<Profile[]>([]);
+  useCreationDataCommon({
+    options: {
+      get_all_members: true,
+    },
+    onSuccess: (data) => {
+      if (data.allMembers) {
+        setDashboardMemberList(data.allMembers);
+      }
+    },
+  });
   const { data: session } = useSessionCache();
 
   const router = useRouter();
-
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
 
   const checkShowUserAvatar = () => {
     return !(
@@ -201,7 +211,7 @@ const DetailEventPlanModal = ({
                           <CustomUserAvatar
                             avatarUrl={
                               (dataEvent.participants?.[0] &&
-                                dashboardMembersWithAvatars?.find(
+                                dashboardMemberList?.find(
                                   (member) =>
                                     member.id ===
                                     dataEvent.participants?.[0]?.id,
@@ -210,7 +220,7 @@ const DetailEventPlanModal = ({
                             }
                             avatarColor={
                               (dataEvent.participants?.[0] &&
-                                dashboardMembersWithAvatars?.find(
+                                dashboardMemberList?.find(
                                   (member) =>
                                     member.id ===
                                     dataEvent.participants?.[0]?.id,
@@ -220,7 +230,7 @@ const DetailEventPlanModal = ({
                             size={36}
                             customClassName={`${
                               !dataEvent.participants?.[0] &&
-                              dashboardMembersWithAvatars?.find(
+                              dashboardMemberList?.find(
                                 (member) =>
                                   member.id === dataEvent.participants?.[0]?.id,
                               )?.avatar &&
@@ -250,7 +260,7 @@ const DetailEventPlanModal = ({
                         return a.fullName.localeCompare(b.fullName);
                       })
                       ?.map((participant, index) => {
-                        const memberInfo = dashboardMembersWithAvatars?.find(
+                        const memberInfo = dashboardMemberList?.find(
                           (member) => member.id == participant.id,
                         );
                         return (
