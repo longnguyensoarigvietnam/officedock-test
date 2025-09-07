@@ -1,0 +1,76 @@
+from django.db import transaction
+
+
+class UserService:
+    def update_balance(
+        self, amount, transaction_type, user, memo, currency, operation="use"
+    ):
+        """
+        Update user balance (coin or pearl) with transaction history
+
+        Args:
+            amount: Amount to add/use
+            transaction_type: Type of transaction
+            user: User instance
+            memo: Transaction memo
+            currency: CurrencyEnums.COIN or CurrencyEnums.PEARL
+            operation: 'use' to subtract, 'receive' to add
+        """
+        from users.models import TransactionHistory, UserBalance
+
+        with transaction.atomic():
+            # Get or create user balance
+            user_balance, created = UserBalance.objects.get_or_create(
+                user=user,
+                company=user.company,
+                defaults={"coin": 0, "pearl": 0},
+            )
+
+            # Determine field name and current balance
+            field_name = currency.lower()  # 'coin' or 'pearl'
+            current_balance = getattr(user_balance, field_name)
+
+            # Check sufficient balance for 'use' operation
+            if operation == "use" and current_balance < amount:
+                raise ValueError(f"Inufficient {field_name} balance")
+
+            # Update balance
+            if operation == "use":
+                new_balance = current_balance - amount
+                amount_used = amount
+                amount_received = 0
+            else:  # 'receive'
+                new_balance = current_balance + amount
+                amount_used = 0
+                amount_received = amount
+
+            # Set new balance
+            setattr(user_balance, field_name, new_balance)
+            user_balance.save()
+
+            # Create transaction history
+            TransactionHistory.objects.create(
+                currency=currency,
+                amount_used=amount_used,
+                amount_received=amount_received,
+                balance_after=new_balance,
+                transaction_type=transaction_type,
+                memo=memo,
+                user=user,
+                company_id=user.company_id,
+            )
+
+            return new_balance
+
+    def get_user_balance(self, user):
+        """
+        Get user's current balance
+        """
+        from users.models import UserBalance
+
+        user_balance, created = UserBalance.objects.get_or_create(
+            user=user,
+            company_id=user.company_id,
+            defaults={"coin": 0, "pearl": 0},
+        )
+        return user_balance

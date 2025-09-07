@@ -37,6 +37,19 @@ class Company(BaseModel):
         )
         return calendar_org
 
+    # TODO: Fix after when implement logic plan contract
+    @property
+    def exchangeable_amount(self):
+        return 6000
+
+    @property
+    def max_exchange_per_user(self):
+        return 300
+
+    @property
+    def min_exchange_per_user(self):
+        return 300
+
 
 class Contract(BaseModel):
     """

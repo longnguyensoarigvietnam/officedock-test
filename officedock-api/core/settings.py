@@ -155,6 +155,8 @@ MONTHLY_QUOTA_THANKS_MESSAGES = int(
 THANKS_MESSAGE_SOFT_DELETE_RETENTION_DAYS = int(
     os.getenv("THANKS_MESSAGE_SOFT_DELETE_RETENTION_DAYS", 30)
 )
+CLOSING_DATE = int(os.getenv("CLOSING_DATE", 1))
+EDITABLE_AFTER_CLOSING = int(os.getenv("EDITABLE_AFTER_CLOSING", 10))
 
 # Get REDIS_URL from environment variable or install directly
 REDIS_URL = os.getenv("REDIS_URL", None)

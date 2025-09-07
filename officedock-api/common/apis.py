@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime, time
+from datetime import datetime, time, timedelta
 
 from django.conf import settings
 from django.db import transaction
@@ -47,7 +47,7 @@ from surveys.models import Survey
 from tags.serializers import BaseTagSerializer
 
 from tweets.models import Tweet
-from users.models import User
+from users.models import User, UserBalance
 from tasks.models import Task, TaskDuration
 from tasks.constants import (
     TaskTypes,
@@ -55,6 +55,9 @@ from tasks.constants import (
 from roles.constants import Actions, Screens
 from chat.models import ChatRoom
 from thanks_messages.models import ThanksMessage
+from companies.models import Company
+from thanks_messages.models import ThanksMessage
+from common.services import TransactionService
 from .serializers import (
     CreationDataOrganizationSerializer,
     CreationDataTaskListSerializer,
@@ -64,6 +67,7 @@ from .serializers import (
     CreationDataOrganizationWithUserSerializer,
 )
 from .utils import (
+    calculate_company_dates,
     check_task_overtime,
     send_web_socket_event,
     to_snake_case,
@@ -461,11 +465,17 @@ class CronJobViewSet(BaseAPIViewSet):
             for mvp_vote in mvp_votes:
                 mvp_vote.type = MVPVoteTypes.PAST.value
                 mvp_vote.save()
+
+                # Handle add coin for users with most votes
+                transaction_service = TransactionService()
+                transaction_service.reward_mvp_vote_winners(mvp_vote)
+
                 Tweet.objects.create(
                     company=mvp_vote.company,
                     is_system=True,
                     content=DEFAULT_CONTENT_TWEET_END_VOTE,
                 )
+
         # Check end date of Survey and create tweet if finish survey
         one_minute_ago = now() - timedelta(minutes=1)
         surveys = Survey.objects.filter(
@@ -478,6 +488,7 @@ class CronJobViewSet(BaseAPIViewSet):
                     is_system=True,
                     content=DEFAULT_CONTENT_TWEET_END_SURVEY,
                 )
+
         # Check time process of skill map
         skill_map_levels = SkillMapSkillLevel.objects.filter(
             skill_map__is_valid=True, popup=True, is_complete=False
@@ -634,6 +645,91 @@ class CronJobViewSet(BaseAPIViewSet):
         ).delete()
 
         return self.response_ok({"deleted": deleted_count})
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("cronjob_key", type=str, required=True),
+        ]
+    )
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="run-every-day",
+    )
+    @transaction.atomic
+    def cronjob_run_every_day(self, request):
+        """
+        Daily cronjob endpoint.
+        - Clean up soft-deleted thanks messages after retention period
+        - Handle company closing and deadline logic
+        - Reward users with coins/pearls based on activities
+        """
+        today = now().date()
+        transaction_service = TransactionService()
+
+        # 1. Cleanup soft-deleted thanks messages after retention period
+        threshold_date = now() - timedelta(
+            days=settings.THANKS_MESSAGE_SOFT_DELETE_RETENTION_DAYS
+        )
+        deleted_count, _ = ThanksMessage.objects.filter(
+            deleted_at__isnull=False, deleted_at__lte=threshold_date
+        ).delete()
+
+        # 2. Iterate over all companies to handle closing logic
+        for company in Company.objects.all():
+            company_dates = calculate_company_dates(company)
+            close_date = company_dates["close_date"]
+            close_date_prev = company_dates["close_date_prev"]
+            deadline_date = company_dates["deadline_date"]
+
+            # --- Case 1: Closing day ---
+            if today.day == close_date.day:
+                company_users = company.users.all()
+                company_users_count = company_users.count()
+
+                user_exchangeable_amount = 0
+                if company_users_count > 0:
+                    user_exchangeable_amount = (
+                        company.exchangeable_amount // company_users_count
+                    )
+                    if user_exchangeable_amount < company.min_exchange_per_user:
+                        user_exchangeable_amount = company.min_exchange_per_user
+
+                for user in company_users:
+                    # Reward coins for thanks messages (top voted)
+                    transaction_service.reward_thanks_message(
+                        user, close_date, close_date_prev
+                    )
+
+                    # TODO: Reward coins for skill level up
+                    # transaction_service.reward_skill_level_up(user, close_date, close_date_prev)
+
+                    # Reward pearls
+                    transaction_service.reward_login_bonus(
+                        user, close_date, close_date_prev
+                    )
+                    transaction_service.reward_task_complete(
+                        user, close_date, close_date_prev
+                    )
+
+                # Update exchangeable coin for user
+                if company_users_count > 0:
+                    UserBalance.objects.filter(user__in=company_users).update(
+                        exchangeable_coin=user_exchangeable_amount
+                    )
+
+            # --- Case 2: Deadline day ---
+            elif today.day == deadline_date.day:
+                # TODO: implement logic for handling user points after deadline
+                # e.g., finalize points, lock editing, issue monthly report, etc.
+                pass
+
+        return self.response_ok(
+            {
+                "today": today.isoformat(),
+                "deleted_tks_msg_count": deleted_count,
+            }
+        )
 
 
 @extend_schema(tags=["System > DotMoney"])

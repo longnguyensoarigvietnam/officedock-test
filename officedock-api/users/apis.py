@@ -1,6 +1,6 @@
 import os
 import random
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist
@@ -8,8 +8,8 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils.crypto import get_random_string
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema
-from rest_framework import status, viewsets
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -40,6 +40,7 @@ from users.constants import (
     DEFAULT_OTP_ATTEMPTS,
     VerifyTokenTypes,
     LoginTypes,
+    CurrencyEnums,
 )
 from users.filters import AdminUserFilter, SystemUserFilter
 from users.models import (
@@ -52,6 +53,8 @@ from users.models import (
     UserVerification,
     DailyReport,
     ConfirmReport,
+    TransactionHistory,
+    LoginBonus,
 )
 from users.serializers import (
     AdminLoginSerializer,
@@ -73,6 +76,7 @@ from users.serializers import (
     SettingSerializer,
     DailyReportSerializer,
     UserLoginSerializer,
+    TransactionHistorySerializer,
 )
 from utils.mail import MailService
 from utils.jwt import JWTService
@@ -80,6 +84,7 @@ from common.filters import CustomOrderFilter
 from roles.constants import Screens
 from base.filters import FilterByPermission
 from tasks.models import TeamTaskIndex
+from base.paginations import CustomCursorPagination
 
 
 def _login(self, request, is_admin=True):
@@ -678,6 +683,27 @@ class SystemAuthViewSet(BaseAPIViewSet):
         """
         return self.response_ok(self.get_serializer(request.user).data)
 
+    @action(
+        detail=False,
+        methods=["GET"],
+        url_path="login-bonus",
+        permission_classes=[IsAuthenticated],
+    )
+    def login_bonus(self, request):
+        """
+        Daily login bonus pearl
+        """
+        today = datetime.now().date()
+
+        if not LoginBonus.objects.filter(
+            created_at__date=today, user=request.user
+        ).exists():
+            LoginBonus.objects.create(
+                user=request.user,
+                company_id=request.user.company_id,
+            )
+        return self.response_ok()
+
 
 @extend_schema(tags=["Admin > Auth"])
 class AdminAuthViewSet(BaseAPIViewSet):
@@ -1121,6 +1147,24 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
             return self.response_ok(self.get_serializer(daily).data)
 
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="current-point",
+        permission_classes=[IsAuthenticated],
+    )
+    def get_current_point(self, request):
+        """
+        Get current point of user
+        """
+        return self.response_ok(
+            {
+                "coin": request.user.coin,
+                "pearl": request.user.pearl,
+                "exchangeable_coin": request.user.exchangeable_coin,
+            }
+        )
+
 
 @extend_schema(tags=["System > Users"])
 class SystemUserMemoViewSet(BaseAPIViewSet):
@@ -1286,3 +1330,42 @@ class AdminUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         # Update data to User and Profile
         user = serializer.save()
         user.set_profile(profile_data)
+
+
+@extend_schema(tags=["System > Point History"])
+class SystemPointHistoryViewSet(BaseAPIViewSet, mixins.ListModelMixin):
+    """
+    API endpoint for point history for user.
+    """
+
+    queryset = TransactionHistory.objects.order_by("-created_at")
+    serializer_class = TransactionHistorySerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = CustomCursorPagination
+    ordering = "-created_at"
+
+    def get_queryset(self):
+        """
+        Filtering memos by company.
+        """
+
+        user = self.request.user
+        queryset = (
+            super().get_queryset().filter(user=user, company_id=user.company_id)
+        )
+
+        type_param = self.request.query_params.get("type")
+        if type_param:
+            queryset = queryset.filter(currency=type_param.upper())
+
+        return queryset
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "type", type=str, enum=CurrencyEnums.values(), required=False
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)

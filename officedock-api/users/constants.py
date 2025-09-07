@@ -84,3 +84,39 @@ class AvatarColors(EnumChoices):
     FRESH_MAROON = "#800000"  # Classic maroon
     FRESH_SAND = "#F4A460"  # Sandy brown
     FRESH_OLIVE = "#808000"  # Muted olive green
+
+
+class TransactionTypes(EnumChoices):
+    # Earn methods
+    TASK_COMPLETE = "タスク完了"  # Task Completed
+    LOGIN_BONUS = "ログインボーナス"  # Login Bonus
+    TUTORIAL = "チュートリアル"  # Tutorial
+
+    # Usage methods
+    WORK_TIME = "作業時間計測"  # Work Time Measurement
+    THANKS_MSG = "サンクスポイント"  # Thanks Message
+    VOTE_MVP = "MVP投票"  # Vote MVP
+    SKILL_UP = "スキルアップ"  # Skill Up
+
+    # Others
+    EXCHANGE = "ポイント交換"  # Point Exchange
+    OTHER = "その他"  # Other
+
+
+class CurrencyEnums(EnumChoices):
+    COIN = "COIN"
+    PEARL = "PEARL"
+
+
+# Define coin rewards
+COIN_VOTE_MVP = 200
+COIN_THANKS_MSG = 50
+COIN_WORK_TIME = 10
+COIN_SKILL_UP_STEP1 = 300
+COIN_SKILL_UP_STEP2 = 600
+COIN_SKILL_UP_STEP3 = 1000
+
+# Define pearl rewards
+PEARL_TASK_COMPLETE = 100
+PEARL_LOGIN_BONUS = 50
+PEARL_TUTORIAL = 5000
