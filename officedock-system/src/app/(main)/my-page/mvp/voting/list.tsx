@@ -23,8 +23,9 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { apiRouters } from '@constants/routers';
 import { ERROR_SAVE_MESSAGE, SUCCESS_SAVE_MESSAGE } from '@constants/message';
 
-import api from '@base/api';
 import { formatJapaneseDateRange } from '@utils/date';
+
+import api from '@base/api';
 
 export const VotingListPage = () => {
   const [memberListByOrganization, setMemberListByOrganization] = useState<
@@ -142,68 +143,72 @@ export const VotingListPage = () => {
   const listAvatar = ['podium', 'body', 'head-full', 'hat', 'shoes'];
 
   return (
-    <div className="relative w-full h-full">
-      <div className="absolute bottom-10 left-[123px]">
-        <div className="flex-grow">
-          <div className="h-[424px] w-[336px] relative">
-            <RenderAccessories images={listAvatar} />
-          </div>
-        </div>
-      </div>
-      {/* User's message */}
-      {currentMVPVotingDetail ? (
-        <>
-          <div
-            style={{
-              background: 'linear-gradient(180deg, #C59941 0%, #D0AA5A 100%)',
-              boxShadow: '0px 4px 0px 0px #355AC940',
-            }}
-            className="absolute bottom-[500px] left-[123px] p-[10px] rounded-[14px] w-[310px] h-fit] ">
-            <p className="text-white text-[13px] font-bold">マイルくん</p>
-            <div className="mt-[10px] w-full bg-white rounded-[5px] p-4 text-[13px] font-semibold text-black space-y-[3px]">
-              <p> 今回のMVPテーマは、</p>
-              <p className="text-lg text-[#B58F42]">
-                {currentMVPVotingDetail.title}{' '}
-                <span className="text-black text-sm">だよ！</span>
-              </p>
-              <p> 見事MVPに輝いた方には、</p>
-              <div className="flex items-center gap-1">
-                <ImageRound
-                  name="Coin"
-                  src={'/icons/golden-coin.svg'}
-                  className="w-5 h-5"
-                />
-                <p>
-                  {' '}
-                  <span className="text-base text-[#B58F42] font-bold">
-                    200
-                  </span>{' '}
-                  コインを贈呈するよ！
-                </p>
-              </div>
-              <p>
-                {' '}
-                投票期間は、
-                <span className="text-base text-[#B58F42] ">
-                  {formatJapaneseDateRange(
-                    currentMVPVotingDetail?.startDate,
-                    currentMVPVotingDetail?.endDate,
-                    false,
-                  )}
-                </span>
-                ！
-              </p>
+    <div className={`relative w-full h-full ${currentMVPVotingDetail && 'min-h-[800px]'}`}>
+      <div className="relative w-[calc(100%_-_800px)] h-full">
+        <div className="absolute bottom-10 left-[110px]">
+          <div className="flex-grow">
+            <div className="h-[424px] w-[336px] relative">
+              <RenderAccessories images={listAvatar} />
             </div>
           </div>
-          <div
-            className="bg-[#D0A95A] absolute h-[25px] w-[22px] bottom-[485px] left-[400px]"
-            style={{
-              clipPath: 'polygon(100% 0, 33% 0, 0 100%)',
-            }}></div>
-        </>
-      ) : (
-        <></>
-      )}
+        </div>
+        {/* User's message */}
+        {currentMVPVotingDetail ? (
+          <>
+            <div
+              style={{
+                background: 'linear-gradient(180deg, #C59941 0%, #D0AA5A 100%)',
+                boxShadow: '0px 4px 0px 0px #355AC940',
+              }}
+              className="absolute bottom-[485px] left-[110px] p-[10px] rounded-[14px] w-[310px] h-fit">
+              <div className="relative">
+                <p className="text-white text-[13px] font-bold">マイルくん</p>
+                <div className="mt-[10px] w-full bg-white rounded-[5px] p-4 text-[13px] font-semibold text-black space-y-[3px]">
+                  <p> 今回のMVPテーマは、</p>
+                  <p className="text-lg text-[#B58F42]">
+                    {currentMVPVotingDetail.title}{' '}
+                    <span className="text-black text-sm">だよ！</span>
+                  </p>
+                  <p> 見事MVPに輝いた方には、</p>
+                  <div className="flex items-center gap-1">
+                    <ImageRound
+                      name="Coin"
+                      src={'/icons/golden-coin.svg'}
+                      className="w-5 h-5"
+                    />
+                    <p>
+                      {' '}
+                      <span className="text-base text-[#B58F42] font-bold">
+                        200
+                      </span>{' '}
+                      コインを贈呈するよ！
+                    </p>
+                  </div>
+                  <p>
+                    {' '}
+                    投票期間は、
+                    <span className="text-base text-[#B58F42] ">
+                      {formatJapaneseDateRange(
+                        currentMVPVotingDetail?.startDate,
+                        currentMVPVotingDetail?.endDate,
+                        false,
+                      )}
+                    </span>
+                    ！
+                  </p>
+                </div>
+                <div
+                  className="bg-[#D0A95A] absolute h-[25px] w-[22px] -bottom-[25px] left-[270px]"
+                  style={{
+                    clipPath: 'polygon(100% 0, 33% 0, 0 100%)',
+                  }}></div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <></>
+        )}
+      </div>
 
       <VotingCandidateList
         memberListByOrganization={memberListByOrganization}

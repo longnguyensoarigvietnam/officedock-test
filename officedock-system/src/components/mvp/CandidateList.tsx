@@ -9,7 +9,9 @@ import { SkillMapProgressBar } from '@components/common/ProgressBar/SkillMapProg
 
 export default function CandidateList({
   detail,
+  isVotingStatusPage,
   isOpen,
+  onOpenViewVotingReasonList,
 }: {
   detail:
     | {
@@ -30,7 +32,9 @@ export default function CandidateList({
       }
     | null
     | undefined;
+  isVotingStatusPage?: boolean;
   isOpen: boolean | undefined;
+  onOpenViewVotingReasonList?: (mvpCandidateId: number) => void;
 }) {
   const [visibleCount, setVisibleCount] = useState(3);
 
@@ -43,9 +47,13 @@ export default function CandidateList({
 
   return (
     <div className={`${isOpen ? 'block' : 'hidden'}`}>
-      <p className="text-sm font-medium mb-2 mt-[30px]">投票結果</p>
+      {!isVotingStatusPage ? (
+        <p className="text-sm font-medium mb-2 mt-[30px]">投票結果</p>
+      ) : (
+        <></>
+      )}
       <div className="flex flex-col">
-        {candidates.slice(0, visibleCount).map((candidate: any) => (
+        {candidates.slice(0, visibleCount).map((candidate) => (
           <div
             key={candidate.id}
             className="flex items-center gap-[20px] w-full py-4 border-b-[1px] border-[#D2DBE1] last:border-none">
@@ -68,7 +76,8 @@ export default function CandidateList({
               <div className="w-full">
                 <SkillMapProgressBar
                   value={
-                    (100 * candidate.voteCount) / Number(detail?.totalVoters)
+                    (100 * (candidate?.voteCount ?? 0)) /
+                    Number(detail?.totalVoters)
                   }
                   strokeColor={'#F86683'}
                   trailColor={'#EBF1F7'}
@@ -83,7 +92,12 @@ export default function CandidateList({
             </div>
             <Button
               variant="primary"
-              className="!text-sm !font-medium !w-[100px] !h-[36px] !text-nowrap">
+              className="!text-sm !font-medium !w-[100px] !h-[36px] !text-nowrap"
+              onClick={() =>
+                candidate.mvpCandidateId &&
+                onOpenViewVotingReasonList &&
+                onOpenViewVotingReasonList(candidate.mvpCandidateId)
+              }>
               投票理由
             </Button>
           </div>

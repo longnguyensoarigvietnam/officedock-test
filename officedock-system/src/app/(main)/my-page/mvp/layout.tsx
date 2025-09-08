@@ -23,12 +23,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         : pathName == pageRouters.MVP_HISTORY.href
           ? pageRouters.MVP_HISTORY.name
           : '';
-
   return (
     <MainLayout
       title={pageTitle}
       permission={PermissionsSystem.VIEW_ALL}
-      className="pl-8 pt-8 pb-8 overflow-x-hidden overflow-y-hidden"
+      className={`pl-8 pt-8 pb-8 overflow-x-hidden ${pathName == pageRouters.MVP_VOTING.href ? 'overflow-y-auto' : 'overflow-y-hidden'}`}
       showFooter={false}>
       <div
         style={{
@@ -39,7 +38,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           width: '100%',
           height: '100%',
         }}
-        className={`relative overflow-hidden h-full w-full rounded-tr-[30px] rounded-b-[30px] ${pathName == pageRouters.MVP_VOTING.href && ''}`}>
+        className={`relative h-full w-full rounded-tr-[30px] rounded-b-[30px] ${pathName == pageRouters.MVP_VOTING.href ? 'overflow-y-auto' : 'overflow-hidden'}`}>
         {pathName == pageRouters.MVP_ANNOUNCEMENT.href ? (
           <Image
             src="/images/spotlight.svg"

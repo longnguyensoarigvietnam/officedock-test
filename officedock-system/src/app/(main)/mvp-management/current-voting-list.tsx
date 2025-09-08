@@ -7,7 +7,7 @@ import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import ConfirmTerminateVotingModal from '@components/modals/ConfirmTerminateVotingModal';
 import Spinner from '@components/common/Spinner';
-import ViewVotingMemberListModal from '@components/modals/ViewVotingMemberList';
+import ViewVotingMemberListModal from '@components/modals/ViewVotingMemberListModal';
 
 import { NO_SETTING } from '@constants';
 import { apiRouters } from '@constants/routers';

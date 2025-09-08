@@ -407,13 +407,17 @@ export const pageRouters = {
     name: 'MVP投票',
     href: `/my-page/mvp/voting`,
   },
-   MVP_ANNOUNCEMENT: {
+  MVP_ANNOUNCEMENT: {
     name: 'MVP発表',
     href: `/my-page/mvp/announcement`,
   },
-   MVP_HISTORY: {
+  MVP_HISTORY: {
     name: '過去のMVP履歴',
     href: `/my-page/mvp/history`,
+  },
+  MVP_VOTING_STATUS: {
+    name: 'MVP投票状況',
+    href: `/mvp-management/voting-status`,
   },
 };
 
@@ -657,9 +661,11 @@ export const apiRouters = {
   MVP_VOTING_DETAIL: (id: string) => `/mvp-vote-management/${id}/`,
   CURRENT_MVP_VOTING: '/mvp-vote/voting/',
   VOTE_MVP: '/mvp-vote/',
+  VOTE_MVP_DETAIL: (id: string) => `/mvp-vote/${id}/`,
   MVP_ANNOUNCEMENT_LIST: '/mvp-vote/announcements/',
   MVP_ANNOUNCEMENT_DETAIL: '/mvp-vote/announcement-detail/',
   CURRENT_VOTING_COMMENT: '/mvp-vote/comment/',
+  MVP_VOTE_COMMENTS: '/mvp-vote-management/vote-comments/',
 
   // DOT MONEY
   LOGIN_EXCHANGE: '/dotmoney/exchange-url/',
