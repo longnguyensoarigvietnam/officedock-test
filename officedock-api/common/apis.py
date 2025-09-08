@@ -17,7 +17,6 @@ from calendars.constants import (
     CalendarTypes,
 )
 from calendars.models import Schedule
-from calendars.serializers import EventLocationSerializer
 from chat.constants import WebSocketEventType
 from common.helpers import (
     get_all_organizations,
@@ -41,10 +40,8 @@ from dashboard.utils import separate_duration_while_keep_running
 from mvp_votes.constants import DEFAULT_CONTENT_TWEET_END_VOTE, MVPVoteTypes
 from mvp_votes.models import MVPVoteManagement
 from skills.models import SkillMapSkillLevel
-from stat_data.constants import ALL_TEAM
 from surveys.constants import DEFAULT_CONTENT_TWEET_END_SURVEY
 from surveys.models import Survey
-from tags.serializers import BaseTagSerializer
 
 from tweets.models import Tweet
 from users.models import User
@@ -58,10 +55,6 @@ from thanks_messages.models import ThanksMessage
 from .serializers import (
     CreationDataOrganizationSerializer,
     CreationDataTaskListSerializer,
-    CreationDataUserSerializer,
-    CreationDataTagSerializer,
-    CreationDataOrganizationWithStructCategorySerializer,
-    CreationDataOrganizationWithUserSerializer,
 )
 from .utils import (
     check_task_overtime,
@@ -284,154 +277,6 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         return self.response_pagination(
             request, tasks.distinct(), CreationDataTaskListSerializer
         )
-
-        """
-        Returns organization creation data and necessary metadata for initializing Task, Calendar, Statistics, and Chat modules
-        """
-        organization_id = request.query_params.get("organization_id")
-        is_statistic = request.query_params.get("is_statistic")
-        is_calendar_page = request.query_params.get("is_calendar_page")
-        is_chat_page = request.query_params.get("is_chat_page")
-        user = request.user
-        company = user.company
-        organizations = []
-        if not organization_id:
-            organizations = user.organizations.all()
-        else:
-            organization = validate_company_organization(
-                company, organization_id
-            )
-            organizations = [organization]
-        data = {}
-        calendar_org = company.get_calendar_organization()
-
-        def _get_tags_by_organizations(input_organizations):
-            return (
-                company.tags.filter(
-                    is_hidden=False,
-                    organizations__in=input_organizations,
-                )
-                .order_by("created_at")
-                .all()
-                .distinct()
-            )
-
-        def _handle_get_data_organization_of_task(data):
-            data[
-                "organizations"
-            ] = CreationDataOrganizationWithStructCategorySerializer(
-                organizations, many=True, context={"user": user}
-            ).data
-            data["members"] = CreationDataUserSerializer(
-                organizations[0].users.order_by("created_at"), many=True
-            ).data
-            tags = _get_tags_by_organizations(organizations)
-            data["tags"] = BaseTagSerializer(tags, many=True).data
-            return data
-
-        def _handle_get_data_organization_of_team_statistic(data):
-            # Return data for team dock statistic (response data of current organization and with calendar organization)
-            data[
-                "organizations"
-            ] = CreationDataOrganizationWithStructCategorySerializer(
-                [organization, calendar_org], many=True, context={"user": user}
-            ).data
-            members = {
-                organization.id: CreationDataUserSerializer(
-                    organization.users.order_by("created_at"), many=True
-                ).data,
-            }
-
-            for org in data["organizations"]:
-                org["members"] = members[organization.id]
-            organizations_by_role = get_organizations_of_user_by_screen_role(
-                user, Screens.TEAMDOCK.value, Actions.VIEW.value
-            )
-            # Insert option all team to pulldown choose organization for statistic to start of a list
-            tags = _get_tags_by_organizations(organizations_by_role)
-            data["organizations"].insert(
-                0,
-                {
-                    "id": ALL_TEAM,
-                    "name": ALL_TEAM,
-                    "statistic_categories": [],
-                    "tags": CreationDataTagSerializer(
-                        tags, many=True, context={"user": user}
-                    ).data,
-                    "members": members[
-                        organization.id
-                    ],  # Get list user of current organization for all team
-                },
-            )
-            return data
-
-        def _handle_get_data_organization_my_statistic(data):
-            data[
-                "organizations"
-            ] = CreationDataOrganizationWithStructCategorySerializer(
-                organizations, many=True, context={"user": user}
-            ).data
-            # Add calendar organization
-            data["organizations"].append(
-                CreationDataOrganizationWithStructCategorySerializer(
-                    calendar_org, context={"user": user}
-                ).data
-            )
-            tags = (
-                company.tags.filter(
-                    is_hidden=False, organizations__in=organizations
-                )
-                .all()
-                .distinct()
-            )
-            # Insert option all team to pulldown choose organization for statistic to start of a list
-            data["organizations"].insert(
-                0,
-                {
-                    "id": ALL_TEAM,
-                    "name": ALL_TEAM,
-                    "statistic_categories": [],
-                    "tags": CreationDataTagSerializer(
-                        tags, many=True, context={"user": user}
-                    ).data,
-                },
-            )
-
-            return data
-
-        if not is_calendar_page:
-            # Return organization data for creation task
-            if organization_id and not is_statistic:
-                data = _handle_get_data_organization_of_task(data)
-                return self.response_ok(data)
-            # Return organization data for statistic pulldown
-            if is_statistic:
-                if organization_id:
-                    data = _handle_get_data_organization_of_team_statistic(data)
-                    return self.response_ok(data)
-                else:
-                    data = _handle_get_data_organization_my_statistic(data)
-                    return self.response_ok(data)
-
-        if (is_calendar_page or is_chat_page) and not organization_id:
-            list_org = []
-            for organization in organizations:
-                list_org.append(
-                    CreationDataOrganizationWithUserSerializer(
-                        organization
-                    ).data
-                )
-            data["organizations"] = list_org
-            if is_calendar_page:
-                data[
-                    "calendar_organization"
-                ] = CreationDataOrganizationWithStructCategorySerializer(
-                    calendar_org, context={"user": user}
-                ).data
-                data["locations"] = EventLocationSerializer(
-                    company.event_locations.all(), many=True
-                ).data
-        return self.response_ok(data)
 
 
 @extend_schema(tags=["System > Cron Job"])
