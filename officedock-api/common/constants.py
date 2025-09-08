@@ -14,6 +14,10 @@ ORGANIZATION_ICON_FOLDER_UPLOAD = (
     "organizations/icons"  # Folder for organization icons
 )
 USER_AVATAR_FOLDER_UPLOAD = "users/avatars"  # Folder for user avatars
+CROP_ITEM_FOLDER_UPLOAD = (
+    "items/crop_items"  # Folder for crop item in shop items
+)
+ITEM_FOLDER_UPLOAD = "items/full_items"  # Folder for item in shop items
 ALLOW_IMAGE_FORMATS = [
     "jpg",
     "jpeg",

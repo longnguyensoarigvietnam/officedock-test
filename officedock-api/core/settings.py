@@ -143,6 +143,7 @@ INSTALLED_APPS = [
     "tweets",
     "thanks_messages",
     "mvp_votes",
+    "shop_items",
 ]
 
 # Define constants
