@@ -620,7 +620,7 @@ const ListTags = () => {
             {dataTags && dataTags.length ? (
               dataTags.map((element, index) => (
                 <tr key={index}>
-                  <td className="w-[500px] max-w-[500px] border-r-[1px] border-r-[#D2DBE1]">
+                  <td className="w-[500px] text-black max-w-[500px] border-r-[1px] border-r-[#D2DBE1]">
                     <div className="flex justify-between items-center">
                       <p className="text-left max-w-[350px] truncate text-[16px] font-medium">
                         {element.name}
@@ -671,7 +671,7 @@ const ListTags = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="!w-[calc(100%_-_600px)] !break-all text-left text-[14px] font-medium">
+                  <td className="!w-[calc(100%_-_600px)] text-black !break-all text-left text-[14px] font-medium">
                     {element?.organizations &&
                       element?.organizations
                         .map((org: Organizations) => org.name)

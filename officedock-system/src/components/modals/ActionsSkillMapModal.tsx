@@ -1045,6 +1045,7 @@ const ActionsSkillMapModal = ({
               {!isDisabled && (
                 <Button
                   type="submit"
+                  disabled={action == ActionsModal.EDIT && !isFormTouched}
                   className="w-[82px] h-[36px] !text-[12px] !px-2">
                   保存
                 </Button>
@@ -1111,7 +1112,10 @@ const ActionsSkillMapModal = ({
         })}
         {!isDisabled && (
           <div className="flex justify-center">
-            <Button type="submit" className="w-[200px] h-[46px] !text-[15px]">
+            <Button
+              type="submit"
+              disabled={action == ActionsModal.EDIT && !isFormTouched}
+              className="w-[200px] h-[46px] !text-[15px]">
               保存
             </Button>
           </div>

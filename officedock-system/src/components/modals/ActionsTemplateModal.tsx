@@ -720,16 +720,11 @@ const ActionsTemplateModal = ({
             />
           </div>
           <div className="flex gap-2 items-center">
-            {isPermissionAdd && action === TemplateAction.CREATE && (
+            {((isPermissionAdd && action === TemplateAction.CREATE) ||
+              (isPermissionUpdate && action === TemplateAction.EDIT)) && (
               <Button
                 type="submit"
-                className="w-[82px] h-[36px] !text-[12px] !px-2">
-                保存
-              </Button>
-            )}
-            {isPermissionUpdate && action === TemplateAction.EDIT && (
-              <Button
-                type="submit"
+                disabled={action === TemplateAction.EDIT && !isFormTouched}
                 className="w-[82px] h-[36px] !text-[12px] !px-2">
                 保存
               </Button>
@@ -1179,21 +1174,14 @@ const ActionsTemplateModal = ({
               </div>
             )}
           </div>
-          {isPermissionAdd &&
-            (action === ActionTask.COPY || action === ActionTask.CREATE) && (
-              <div className="flex justify-center">
-                <Button
-                  type="submit"
-                  className="w-[200px] !rounded-md h-[46] !text-[15px] !px-2">
-                  保存
-                </Button>
-              </div>
-            )}
-          {isPermissionUpdate && action === ActionTask.EDIT && (
+          {((isPermissionAdd &&
+            (action === ActionTask.COPY || action === ActionTask.CREATE)) ||
+            (isPermissionUpdate && action === ActionTask.EDIT)) && (
             <div className="flex justify-center">
               <Button
                 type="submit"
-                className="w-[200px] !rounded-md h-[46] !text-[15px] !px-2">
+                disabled={action === ActionTask.EDIT && !isFormTouched}
+                className="w-[200px] !rounded-md h-[46px] !text-[15px] !px-2">
                 保存
               </Button>
             </div>

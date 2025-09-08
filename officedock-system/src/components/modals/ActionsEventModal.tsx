@@ -870,6 +870,7 @@ const ActionsEventModal = ({
               ) && (
                 <Button
                   type="submit"
+                  disabled={!backToEditing && !isDirty}
                   className="w-[82px] h-[36px] !text-[12px] !px-2">
                   予定を編集
                 </Button>
@@ -2187,7 +2188,12 @@ const ActionsEventModal = ({
                   session?.user.permissions,
                   PermissionsSystem.CALENDAR_ADD,
                 ))) && (
-              <Button type="submit" className="w-[200px] h-[46px] !text-[15px]">
+              <Button
+                type="submit"
+                className="w-[200px] h-[46px] !text-[15px]"
+                disabled={
+                  action === ActionsEvent.EDIT && !backToEditing && !isDirty
+                }>
                 {action === ActionsEvent.EDIT ? '予定を編集' : '予定を作成'}
               </Button>
             )}
