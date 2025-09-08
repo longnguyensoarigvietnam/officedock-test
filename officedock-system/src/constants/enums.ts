@@ -664,3 +664,12 @@ export enum TabTypeShopItem {
   SHOES = '靴',
   BACKGROUND = '背景',
 }
+export enum VotingCandidateRanking {
+  FIRST = 'FIRST',
+  SECOND = 'SECOND',
+  THIRD = 'THIRD',
+}
+export enum HonoredUserInfoDirection {
+  HORIZONTAL = 'HORIZONTAL',
+  VERTICAL = 'VERTICAL'
+}
