@@ -143,7 +143,7 @@ export const VotingListPage = () => {
 
   return (
     <div className="relative w-full h-full">
-      <div className="absolute bottom-[50px] left-[123px]">
+      <div className="absolute bottom-10 left-[123px]">
         <div className="flex-grow">
           <div className="h-[424px] w-[336px] relative">
             <RenderAccessories images={listAvatar} />
@@ -188,7 +188,7 @@ export const VotingListPage = () => {
                   {formatJapaneseDateRange(
                     currentMVPVotingDetail?.startDate,
                     currentMVPVotingDetail?.endDate,
-                    false
+                    false,
                   )}
                 </span>
                 ！

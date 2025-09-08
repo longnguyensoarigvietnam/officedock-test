@@ -117,7 +117,7 @@ export const VotingCandidateList = ({
                 />
               </div>
 
-              <div className="flex gap-3 flex-wrap">
+              <div className="flex gap-[10px] flex-wrap">
                 {organization.collapseStatus &&
                   organization.orgInfo.candidates.map((candidate) => {
                     return (
