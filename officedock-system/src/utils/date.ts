@@ -1748,3 +1748,40 @@ export const generateShownLineChartDateLabels = (
 
   return result;
 };
+
+export const formatJapaneseDateRange = (
+  start: string | Date | null | undefined,
+  end: string | Date | null | undefined,
+  showYear: boolean,
+): string => {
+  if (!start || !end) {
+    return '';
+  }
+
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    return ''; // invalid dates
+  }
+
+  const startYear = startDate.getFullYear();
+  const startMonth = startDate.getMonth() + 1;
+  const startDay = startDate.getDate();
+
+  const endYear = endDate.getFullYear();
+  const endMonth = endDate.getMonth() + 1;
+  const endDay = endDate.getDate();
+
+  const startStr = showYear
+    ? `${startYear}年${startMonth}月${startDay}日`
+    : `${startMonth}月${startDay}日`;
+
+  // If same year and showYear = true, omit year from second part
+  const endStr =
+    startYear === endYear && showYear
+      ? `${endMonth}月${endDay}日`
+      : `${showYear ? `${endYear}年` : ''}${endMonth}月${endDay}日`;
+
+  return `${startStr}〜${endStr}`;
+};

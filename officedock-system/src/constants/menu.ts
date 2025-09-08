@@ -297,6 +297,20 @@ export const MY_PAGE_MENU: MyPageMenuItem[] = [
     href: '#',
     iconSrc: '/icons/mvp.svg',
     iconName: 'MVP icon',
+    child: [
+      {
+        name: 'MVP投票',
+        href: pageRouters.MVP_VOTING.href,
+      },
+      {
+        name: 'MVP発表',
+        href: pageRouters.MVP_ANNOUNCEMENT.href,
+      },
+      {
+        name: '過去のMVP履歴',
+        href: pageRouters.MVP_HISTORY.href,
+      },
+    ],
   },
   {
     name: 'アイテム',

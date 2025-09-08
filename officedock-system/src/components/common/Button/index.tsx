@@ -41,13 +41,11 @@ const Button = ({
       break;
     case 'option':
       variantClassNames = 'border bg-[#3CABF3] text-white hover:bg-opacity-90';
-
       break;
     case 'post':
       variantClassNames = 'border-none text-white hover:bg-opacity-90';
       backgroundStyle = 'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)';
       break;
-
     case 'text':
       variantClassNames = 'text-primary hover:text-opacity-70';
       break;

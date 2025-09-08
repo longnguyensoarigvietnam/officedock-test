@@ -80,7 +80,7 @@ const Modal = ({
         </TransitionChild>
 
         <div
-          className={`fixed inset-0 z-30 overflow-y-auto ${overlayClassName}`}>
+          className={`fixed inset-0 z-50 overflow-y-auto ${overlayClassName}`}>
           <div
             className={`flex min-h-full items-center justify-center text-center m-auto ${sizeClass} ${contentClass}`}>
             <TransitionChild

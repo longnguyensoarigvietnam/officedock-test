@@ -15,6 +15,7 @@ import {
   StatisticViewOptions,
   StatusTask,
   TaskRepetitiveValue,
+  VotingCandidateRanking,
 } from '@constants/enums';
 import {
   DATE_FORMAT,
@@ -61,6 +62,7 @@ import { ChangeTextAreaProps, OptionDropdownType } from '@interfaces/common';
 import { UserRoleType } from '@interfaces/user';
 import { ChatMessageResponse, ChatParticipant } from '@interfaces/chat';
 import { ConditionByMap } from '@interfaces/skill-map';
+import { Candidate } from '@interfaces/mvp';
 
 import {
   convertTimeToDecimal,
@@ -2344,3 +2346,54 @@ export function getDaysUntil(endAt: string): number {
   const diffMs = endDate.getTime() - now.getTime();
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 }
+
+export const assignRankingsToCandidateList = (
+  candidates: Candidate[],
+): {
+  firstUsers: Candidate[];
+  secondUsers: Candidate[];
+  thirdUsers: Candidate[];
+} => {
+  const sorted = candidates
+    .slice() // avoid mutating original
+    .sort(
+      (prevCandidate, nextCandidate) =>
+        (nextCandidate?.voteCount ?? 0) - (prevCandidate?.voteCount ?? 0),
+    ); // Sort descending by voteCount
+
+  const firstUsers: Candidate[] = [];
+  const secondUsers: Candidate[] = [];
+  const thirdUsers: Candidate[] = [];
+
+  // Declare uniqueVoteCounts before using it
+  const uniqueVoteCounts: number[] = [];
+
+  sorted.forEach((candidate) => {
+    const votes = candidate.voteCount ?? 0;
+    // Determine which rank this vote count belongs to
+    let rankIndex = uniqueVoteCounts.indexOf(votes);
+    if (rankIndex === -1) {
+      uniqueVoteCounts.push(votes);
+      rankIndex = uniqueVoteCounts.length - 1;
+    }
+
+    if (rankIndex === 0) {
+      firstUsers.push({
+        ...candidate,
+        ranking: VotingCandidateRanking.FIRST,
+      });
+    } else if (rankIndex === 1) {
+      secondUsers.push({
+        ...candidate,
+        ranking: VotingCandidateRanking.SECOND,
+      });
+    } else if (rankIndex === 2) {
+      thirdUsers.push({
+        ...candidate,
+        ranking: VotingCandidateRanking.THIRD,
+      });
+    }
+  });
+
+  return { firstUsers, secondUsers, thirdUsers };
+};

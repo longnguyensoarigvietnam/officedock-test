@@ -7,13 +7,13 @@ interface props {
 
 export const RenderAccessories = ({ images }: props) => {
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full w-full ">
       {images.map((name, index) => (
         <img
           key={name}
           src={`/images/users/${name}.png`}
           alt={name}
-          className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+          className={`absolute ${name == 'podium' ? 'top-[94%] left-[24px] !w-fit !h-fit' : 'bottom-0'} inset-0 w-full h-full object-contain pointer-events-none`}
           style={{ zIndex: index }}
         />
       ))}
