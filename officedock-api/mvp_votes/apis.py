@@ -12,6 +12,7 @@ from base.messages import ERROR_MESSAGES
 from base.paginations import CustomCursorPagination
 from base.filters import FilterByPermission
 from base.permissions import ActionPermission
+from common.services import TransactionService
 from mvp_votes.constants import (
     DEFAULT_BONUS_POINT,
     DEFAULT_CONTENT_TWEET_END_VOTE,
@@ -97,10 +98,9 @@ class MVPVoteManagementViewSet(BaseAPIViewSet, ModelViewSet):
                 is_system=True,
                 content=DEFAULT_CONTENT_TWEET_END_VOTE,
             )
-            # TODO: Add coin to top users here
-            # users = get_users_in_top_mvp(self.get_object())
-            # for user in users:
-            #     continue
+            # Handle add coin for users with most votes
+            transaction_service = TransactionService()
+            transaction_service.reward_mvp_vote_winners(self.get_object())
 
         mvp_vote = serializer.save(updated_by=user, company=company)
         if new_candidates:

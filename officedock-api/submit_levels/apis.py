@@ -26,6 +26,7 @@ from common.utils import send_web_socket_event
 from skills.constants import (
     DEFAULT_TIME,
     SkillLevel as SkillLevelEnum,
+    SkillStep,
 )
 from skills.models import SkillMap, SkillMapSkillLevel, Skill
 from skills.utils import get_lookback_time, get_next_progression
@@ -36,6 +37,12 @@ from submit_levels.serializers import (
     UpdateSubmitLevelSerializer,
     ListSubmitLevelSerializer,
     DetailSubmitLevelSerializer,
+)
+from users.constants import (
+    COIN_SKILL_UP_STEP1,
+    COIN_SKILL_UP_STEP2,
+    COIN_SKILL_UP_STEP3,
+    TransactionTypes,
 )
 
 
@@ -255,6 +262,30 @@ class SubmitLevelViewSet(
             instance.level_before_submit,
             skill=instance.skill,
         )
+        if (
+            step_after_submit == SkillStep.STEP_2.value
+            and level_after_submit == SkillLevelEnum.LEVEL_1.value
+        ):
+            instance.staff.received_coin(
+                COIN_SKILL_UP_STEP1,
+                transaction_type=TransactionTypes.SKILL_UP.value,
+            )
+        elif (
+            step_after_submit == SkillStep.STEP_3.value
+            and level_after_submit == SkillLevelEnum.LEVEL_1.value
+        ):
+            instance.staff.received_coin(
+                COIN_SKILL_UP_STEP2,
+                transaction_type=TransactionTypes.SKILL_UP.value,
+            )
+        elif (
+            instance.step_before_submit == SkillStep.STEP_3.value
+            and instance.level_before_submit == SkillLevelEnum.LEVEL_3.value
+        ):
+            instance.staff.received_coin(
+                COIN_SKILL_UP_STEP3,
+                transaction_type=TransactionTypes.SKILL_UP.value,
+            )
         return serializer.save(
             level_after_submit=level_after_submit,
             step_after_submit=step_after_submit,
