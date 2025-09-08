@@ -11,8 +11,18 @@ from common.constants import ALLOW_IMAGE_FORMATS, USER_AVATAR_FOLDER_UPLOAD
 from organizations.models import UsersOrganizations
 from utils.jwt import JWTService
 
-from .constants import GenderTypes, LoginTypes, RoleTypes, AvatarColors
+from .constants import (
+    AvatarColors,
+    CurrencyEnums,
+    GenderTypes,
+    LoginTypes,
+    PEARL_LOGIN_BONUS,
+    PEARL_TASK_COMPLETE,
+    RoleTypes,
+    TransactionTypes,
+)
 from .managers import ActiveUsersOnlyManager
+from .services import UserService
 
 
 class Permission(BaseModel):
@@ -300,6 +310,147 @@ class User(AbstractBaseUser, BaseModel, PermissionsMixin):
         ).first()
 
         return user_org.organization if user_org else None
+
+    def use_coin(self, amount, transaction_type):
+        """Use coins from user balance"""
+        return UserService().update_balance(
+            amount,
+            transaction_type,
+            self,
+            transaction_type,
+            CurrencyEnums.COIN.value,
+            "use",
+        )
+
+    def received_coin(self, amount, transaction_type):
+        """Add coins to user balance"""
+        return UserService().update_balance(
+            amount,
+            transaction_type,
+            self,
+            transaction_type,
+            CurrencyEnums.COIN.value,
+            "receive",
+        )
+
+    def use_pearl(self, amount, transaction_type):
+        """Use pearls from user balance"""
+        return UserService().update_balance(
+            amount,
+            transaction_type,
+            self,
+            transaction_type,
+            CurrencyEnums.PEARL.value,
+            "use",
+        )
+
+    def received_pearl(self, amount, transaction_type):
+        """Add pearls to user balance"""
+        return UserService().update_balance(
+            amount,
+            transaction_type,
+            self,
+            transaction_type,
+            CurrencyEnums.PEARL.value,
+            "receive",
+        )
+
+    @property
+    def coin(self):
+        return self.balances.coin if self.balances else 0
+
+    @property
+    def pearl(self):
+        return self.balances.pearl if self.balances else 0
+
+    @property
+    def exchangeable_coin(self):
+        return self.balances.exchangeable_coin if self.balances else 0
+
+
+class LoginBonus(BaseModel):
+    """
+    Login bonus tracking model
+    """
+
+    bonus_points = models.IntegerField(default=PEARL_LOGIN_BONUS)
+
+    user = models.ForeignKey(
+        User, related_name="login_bonuses", on_delete=models.CASCADE
+    )
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="login_bonuses",
+        on_delete=models.CASCADE,
+    )
+
+
+class TaskRewardLog(BaseModel):
+    """
+    Save log of which task Pearl was assigned to
+    """
+
+    task = models.ForeignKey(
+        "tasks.Task", related_name="task_reward_logs", on_delete=models.CASCADE
+    )
+    user = models.ForeignKey(
+        "users.User", related_name="task_reward_logs", on_delete=models.CASCADE
+    )
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="task_reward_logs",
+        on_delete=models.CASCADE,
+    )
+    pearl_amount = models.IntegerField(default=PEARL_TASK_COMPLETE)
+    rewarded_at = models.DateTimeField(null=True, blank=True)
+
+
+class UserBalance(BaseModel):
+    """
+    User balance model
+    """
+
+    coin = models.IntegerField(blank=True, null=True, default=0)
+    exchangeable_coin = models.IntegerField(blank=True, null=True, default=0)
+    pearl = models.IntegerField(blank=True, null=True, default=0)
+
+    user = models.OneToOneField(
+        User, related_name="balances", on_delete=models.CASCADE
+    )
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="user_balances",
+        on_delete=models.CASCADE,
+    )
+
+
+class TransactionHistory(BaseModel):
+    """
+    Transaction history model
+    """
+
+    currency = models.CharField(
+        max_length=10,
+        choices=CurrencyEnums.choices(),
+    )
+    amount_used = models.IntegerField(default=0, blank=True, null=True)
+    amount_received = models.IntegerField(default=0, blank=True, null=True)
+    balance_after = models.IntegerField(blank=True, null=True)
+    transaction_type = models.CharField(
+        max_length=50,
+        choices=TransactionTypes.choices(),
+        default=TransactionTypes.OTHER.value,
+    )
+    memo = models.CharField(max_length=255, blank=True, null=True)
+
+    user = models.ForeignKey(
+        User, related_name="transaction_histories", on_delete=models.CASCADE
+    )
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="transaction_histories",
+        on_delete=models.CASCADE,
+    )
 
 
 class Setting(BaseModel):

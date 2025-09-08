@@ -33,6 +33,7 @@ from users.models import (
     UserVerification,
     Setting,
     DailyReport,
+    TransactionHistory,
 )
 from users.constants import RoleTypes
 
@@ -828,4 +829,23 @@ class DailyReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = DailyReport
         fields = ["id", "date", "remark", "is_submit", "is_confirmed"]
+        read_only_fields = ["id"]
+
+
+class TransactionHistorySerializer(serializers.ModelSerializer):
+    """
+    Serializer for transaction history
+    """
+
+    class Meta:
+        model = TransactionHistory
+        fields = [
+            "id",
+            "currency",
+            "amount_used",
+            "amount_received",
+            "balance_after",
+            "transaction_type",
+            "memo",
+        ]
         read_only_fields = ["id"]

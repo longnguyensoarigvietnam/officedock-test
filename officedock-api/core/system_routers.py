@@ -34,6 +34,7 @@ from users.apis import (
     SystemAuthViewSet,
     SystemUserMemoViewSet,
     SystemUserViewSet,
+    SystemPointHistoryViewSet,
 )
 from organizations.apis import (
     OrganizationByIDViewSet,
@@ -168,6 +169,9 @@ api_router.register(
 )
 api_router.register("mvp-vote", MVPVoteViewSet, basename="mvp_vote")
 api_router.register("dotmoney", DotMoneyViewSet, basename="dotmoney")
+api_router.register(
+    "point-histories", SystemPointHistoryViewSet, basename="point_histories"
+)
 
 # Add api router urls
 urlpatterns = []

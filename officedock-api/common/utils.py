@@ -1,9 +1,11 @@
+from calendar import monthrange
 import io
-from datetime import datetime, timedelta, time
+from datetime import date, datetime, timedelta, time
 import random
 import re
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.files.storage import default_storage, FileSystemStorage
@@ -786,3 +788,52 @@ def get_user_organizations_with_descendants(user: User) -> list[int]:
     _get_children(user)
 
     return org_ids
+
+
+def calculate_company_dates(company, reference_date=None):
+    """
+    Calculate closing date and deadline date for a company.
+
+    Args:
+        company: Company instance
+
+    Returns:
+        dict: {
+            'close_date': date,
+            'deadline_date': date,
+            'close_date_prev': date,
+        }
+    """
+    if reference_date is None:
+        reference_date = timezone.now().date()
+
+    # Company-specific config (with fallback to global settings)
+    company_close_day = int(
+        getattr(company, "close_date", settings.CLOSING_DATE)
+    )
+    company_editable_after_closing = int(
+        getattr(
+            company,
+            "editable_after_closing",
+            settings.EDITABLE_AFTER_CLOSING,
+        )
+    )
+
+    # Last day of current month (avoid invalid date like Feb 30)
+    last_day_of_month = monthrange(reference_date.year, reference_date.month)[1]
+    close_day = min(company_close_day, last_day_of_month)
+
+    # Closing date for this month
+    close_date = date(reference_date.year, reference_date.month, close_day)
+
+    # Deadline date = closing date + editable days
+    deadline_date = close_date + timedelta(days=company_editable_after_closing)
+
+    # Previous month's closing date
+    close_date_prev = close_date - relativedelta(months=1)
+
+    return {
+        "close_date": close_date,
+        "deadline_date": deadline_date,
+        "close_date_prev": close_date_prev,
+    }
