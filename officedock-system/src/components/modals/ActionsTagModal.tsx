@@ -17,13 +17,13 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { ActionsEvent, ActionTask, PermissionsSystem } from '@constants/enums';
 import { UNREGISTERED } from '@constants';
+import { ERROR_LONG_FIELD_MESSAGE } from '@constants/message';
 
 import { formatShowDateJapanese } from '@utils/date';
 import {
   hasPermissionInArray,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
-import { ERROR_LONG_FIELD_MESSAGE } from '@constants/message';
 
 export type ActionsTagModalProps = {
   open: boolean;
@@ -170,7 +170,7 @@ const ActionsTagModal = ({
         <header className="flex sticky z-[100] top-[0px] py-5 items-center gap-2 justify-between bg-white">
           <div className="w-full">
             <Input
-              className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
+              className="shadow-none text-2xl leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
               register={register('name', {
                 required: watch('name') !== null ? true : false,
                 maxLength: {
@@ -197,6 +197,7 @@ const ActionsTagModal = ({
                   ))) && (
                 <Button
                   type="submit"
+                  disabled={action === ActionsEvent.EDIT && !isDirty}
                   className="w-[82px] h-[36px] !text-[12px] !px-2">
                   保存
                 </Button>
@@ -280,7 +281,10 @@ const ActionsTagModal = ({
                   session?.user.permissions,
                   PermissionsSystem.TAG_ADD,
                 ))) && (
-              <Button type="submit" className="w-[200px] h-[46px] !text-[15px]">
+              <Button
+                type="submit"
+                disabled={action === ActionsEvent.EDIT && !isDirty}
+                className="w-[200px] h-[46px] !text-[15px]">
                 保存
               </Button>
             )}

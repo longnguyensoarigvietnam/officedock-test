@@ -1116,6 +1116,7 @@ const ActionsTaskModal = ({
             {isPermissionUpdate && action === ActionTask.EDIT && (
               <Button
                 type="submit"
+                disabled={!isFormTouched}
                 className="w-[82px] h-[36px] !text-[12px] !px-2">
                 保存
               </Button>
@@ -3299,6 +3300,7 @@ const ActionsTaskModal = ({
                 <div className="flex justify-center">
                   <Button
                     type="submit"
+                    disabled={!isFormTouched}
                     className="w-[200px] !rounded-md h-[46] !text-[15px] !px-2">
                     保存
                   </Button>

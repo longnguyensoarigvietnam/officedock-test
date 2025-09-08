@@ -239,6 +239,9 @@ const EventCalendar = () => {
   // Abort controller
   const controllerRef = useRef<AbortController | null>(null);
 
+  // Initial ref - indicates whether the calendar is rendered at the first time, prevent calling API twice (due to useEffect for searching)
+  const hasInitializedCalendar = useRef(false);
+
   // Get authenticated user
   const { authenticatedUser } = useAuthenticatedUser({
     onSuccess: (data) => {
@@ -596,6 +599,8 @@ const EventCalendar = () => {
           keySearch: keySearch,
         });
       }
+
+      hasInitializedCalendar.current = true;
 
       setIsEventRendering(false);
       if (isDayOrWeekView()) scrollToCurrentTime();
@@ -2395,6 +2400,10 @@ const EventCalendar = () => {
   const debouncedSearch = useDebounceText(keySearch, 800);
 
   useEffect(() => {
+    // Skip if initialization (handleViewChange) hasn't completed yet
+    if (!hasInitializedCalendar.current) {
+      return;
+    }
     if (calendarRef.current) {
       setIsEventRendering(true);
       setEvents([]);

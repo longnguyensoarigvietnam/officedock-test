@@ -435,6 +435,7 @@ const ActionsUserModal = ({
             <div className="flex gap-2 items-center">
               <Button
                 type="submit"
+                disabled={action == ActionsEvent.EDIT && !isDirty}
                 className="w-[86px] h-[34px] !text-[12px] !px-2">
                 保存
               </Button>
@@ -914,6 +915,7 @@ const ActionsUserModal = ({
                   ))) && (
                 <Button
                   type="submit"
+                  disabled={action == ActionsEvent.EDIT && !isDirty}
                   className="w-[200px] h-[46px] !text-[15px]">
                   保存
                 </Button>

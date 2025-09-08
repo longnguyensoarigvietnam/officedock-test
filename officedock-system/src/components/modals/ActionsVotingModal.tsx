@@ -132,7 +132,7 @@ const ActionsVotingModal = ({
     setValue,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<VotingFormData>({
     mode: 'onSubmit',
   });
@@ -191,7 +191,7 @@ const ActionsVotingModal = ({
       onCreate && onCreate(data as VotingFormData);
     }
     if (action === ActionsModal.EDIT) {
-      onEdit && onEdit(data as VotingFormData);
+      !isDirty ? onClose() : onEdit && onEdit(data as VotingFormData);
     }
   };
 
@@ -378,6 +378,7 @@ const ActionsVotingModal = ({
           <div className="flex gap-2 items-center mt-[3px]">
             <Button
               type="submit"
+              disabled={action === ActionsModal.EDIT && !isDirty}
               className="w-[82px] h-[36px] !text-[12px] !px-2">
               保存
             </Button>
@@ -668,7 +669,9 @@ const ActionsVotingModal = ({
                         time.target.value,
                       );
 
-                      setValue('endTime', formatted);
+                      setValue('endTime', formatted, {
+                        shouldDirty: true,
+                      });
                     },
                   })}
                   type="text"
@@ -695,7 +698,10 @@ const ActionsVotingModal = ({
         </div>
 
         <div className="flex justify-center mb-[50px]">
-          <Button type="submit" className="w-[200px] h-[46px] !text-[15px]">
+          <Button
+            type="submit"
+            disabled={action === ActionsModal.EDIT && !isDirty}
+            className="w-[200px] h-[46px] !text-[15px]">
             保存
           </Button>
         </div>
