@@ -1,9 +1,10 @@
 from copy import deepcopy
 
-from django.db.models import Count
+from django.db.models import Count, Max
 
 from common.constants import AVATAR_GCS_EXPIRATION_SECONDS
 from common.utils import get_signed_url
+from mvp_votes.models import MVPVoteCandidate
 from organizations.models import Organization, UsersOrganizations
 from organizations.serializers import BaseOrganizationSerializer
 from users.models import User
@@ -113,6 +114,9 @@ def build_mvp_vote_payload(mvp_vote, candidates_map, org_map=None):
         candidate_map["vote_count"] = candidate_vote.vote_count
         candidate_map["mvp_candidate_id"] = candidate_vote.id
         data["candidates"].append(candidate_map)
+    data["candidates"] = sorted(
+        data["candidates"], key=lambda x: x["vote_count"], reverse=True
+    )
     return data
 
 
@@ -188,3 +192,29 @@ def build_present_mvp_vote_with_organization_list(mvp_vote, user):
         data["remaining_candidates"].append(candidate_map)
 
     return data
+
+
+def get_users_in_top_mvp(mvp_vote):
+    """
+    Handle get users in top mvp
+    """
+    # Find the highest vote count
+    max_votes = (
+        MVPVoteCandidate.objects.filter(
+            votes_received__mvp_vote_management=mvp_vote
+        )
+        .annotate(total_votes=Count("votes_received"))
+        .aggregate(max_votes=Max("total_votes"))["max_votes"]
+    )
+
+    # Get all candidates with that max vote count
+    top_candidate_ids = (
+        MVPVoteCandidate.objects.filter(
+            votes_received__mvp_vote_management=mvp_vote
+        )
+        .annotate(total_votes=Count("votes_received"))
+        .filter(total_votes=max_votes)
+        .values_list("user_id")
+    )
+    users = User.objects.filter(id__in=top_candidate_ids).all()
+    return users

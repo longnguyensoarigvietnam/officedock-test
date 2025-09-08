@@ -3,8 +3,12 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from base.messages import ERROR_MESSAGES
-from common.serializers import CreationDataUserSerializer
+from common.serializers import (
+    CreationDataUserSerializer,
+    CreationDataUserWithMainOrganizationSerializer,
+)
 from mvp_votes.constants import MVPVoteTypes
+from mvp_votes.payloads import get_users_in_top_mvp
 from users.models import User
 from mvp_votes.models import MVPVote, MVPVoteManagement
 
@@ -25,6 +29,7 @@ class MvpVoteManagementSerializer(serializers.ModelSerializer):
     created_by = CreationDataUserSerializer(read_only=True)
     updated_by = CreationDataUserSerializer(read_only=True)
     is_start = serializers.BooleanField(required=False)
+    top_candidates = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = MVPVoteManagement
@@ -41,6 +46,7 @@ class MvpVoteManagementSerializer(serializers.ModelSerializer):
             "type",
             "created_at",
             "is_start",
+            "top_candidates",
         ]
 
     def validate(self, attrs):
@@ -87,8 +93,17 @@ class MvpVoteManagementSerializer(serializers.ModelSerializer):
 
         return representation
 
+    def get_top_candidates(self, instance):
+        """
+        Handle get 1st Mvp
+        """
+        users = get_users_in_top_mvp(instance)
+        return CreationDataUserWithMainOrganizationSerializer(
+            users, many=True
+        ).data
 
-class MvpVoteCandidateSerializer(serializers.ModelSerializer):
+
+class MvpVoteSerializer(serializers.ModelSerializer):
     """
     Serializer for mvp vote candidate
     """
@@ -100,4 +115,5 @@ class MvpVoteCandidateSerializer(serializers.ModelSerializer):
             "mvp_vote_management",
             "mvp_candidate",
             "comment",
+            "deleted_at",
         ]
