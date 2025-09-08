@@ -2465,7 +2465,7 @@ const KanbanBoardTaskTeam = () => {
   return (
     <>
       <div
-        className={`pt-[30px] pr-10 h-[calc(100vh_-_76px)] ${isDragging ? 'overflow-hidden' : 'overflow-y-auto'}   font-medium  w-full pb-10`}>
+        className={`pt-[30px] pr-10 h-[calc(100vh_-_76px)] !overflow-hidden ${isDragging ? 'overflow-hidden' : 'overflow-y-auto'}   font-medium  w-full pb-10`}>
         <div className="mb-[30px] flex items-center justify-between">
           <div className="flex items-center gap-5 ">
             <div className="flex gap-1 items-center">
@@ -2706,7 +2706,7 @@ const KanbanBoardTaskTeam = () => {
               onDragEnd={onDragEnd}>
               <div
                 ref={listContainerRef}
-                className={`flex gap-4 h-fit overflow-x-auto items-stretch  ${expanded ? 'w-[calc(100vw_-_270px)]' : 'w-[calc(100vw_-_120px)]'}`}>
+                className={`flex gap-4  h-[calc(100vh_-_250px)] overflow-x-auto items-stretch  ${expanded ? 'w-[calc(100vw_-_270px)]' : 'w-[calc(100vw_-_120px)]'}`}>
                 <NoSettingColumn
                   totalNoSetting={totalNoSetting}
                   setTotalNoSetting={setTotalNoSetting}

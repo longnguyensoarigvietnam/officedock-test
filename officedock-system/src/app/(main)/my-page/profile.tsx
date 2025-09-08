@@ -400,7 +400,9 @@ const MyPage = () => {
               className={`w-fit h-fit ml-[10px]`}
             />
             <p>10</p>
-            <p className="text-sm text-primary underline ml-[11px] cursor-pointer hover:opacity-80">
+            <p
+              onClick={() => router.push(pageRouters.HISTORY_POINT.href)}
+              className="text-sm text-primary underline ml-[11px] cursor-pointer hover:opacity-80">
               ポイント履歴/交換
             </p>
           </div>

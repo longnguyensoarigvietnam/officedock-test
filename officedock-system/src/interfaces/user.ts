@@ -49,7 +49,7 @@ export interface User {
   profile: Profile;
   fullName: string;
   company: Company;
-  organizations: Organizations[];
+  organizations: Organizations[] | null;
   isTwoFactorAuth: boolean;
   isEnterSendMessage?: boolean;
   avatar?: string;

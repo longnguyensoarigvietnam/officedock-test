@@ -138,18 +138,18 @@ const StatisticTagBoard = () => {
           } else {
             if (
               selectedMedium &&
-              selectedMedium.value &&
+              selectedMedium.value != '' &&
               selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ) {
               setTotalDurationTask(DEFAULT_TIME_TEXT);
               return;
             }
-            if (selectedSmall && selectedSmall.value) return;
+            if (selectedSmall && selectedSmall.value != '') return;
 
             setTotalDurationTask(data.mediumTotalDuration);
           }
         } else {
-          if (selectedLarge && selectedLarge.value) return;
+          if (selectedLarge && selectedLarge.value != '') return;
           setTotalDurationTask(data.largeTotalDuration);
         }
       } else {
@@ -213,13 +213,13 @@ const StatisticTagBoard = () => {
           } else {
             if (
               selectedMedium &&
-              selectedMedium.value &&
+              selectedMedium.value != '' &&
               selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ) {
               setTotalDurationTaskCompare(DEFAULT_TIME_TEXT);
               return;
             }
-            if (selectedSmall && selectedSmall.value) return;
+            if (selectedSmall && selectedSmall.value != '') return;
 
             setTotalDurationTaskCompare(data.mediumTotalDuration);
           }

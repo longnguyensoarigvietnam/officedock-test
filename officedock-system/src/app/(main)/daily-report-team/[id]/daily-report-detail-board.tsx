@@ -1712,20 +1712,17 @@ const DailyReportDetailBoard = () => {
 
   const handleDownloadPDF = async () => {
     if (!divRef.current) return;
-
-    // Display div to render PDF
+    // Show div to render PDF
     divRef.current.style.visibility = 'visible';
     divRef.current.style.position = 'absolute';
     divRef.current.style.left = '-9999px';
     divRef.current.style.top = '0';
 
-    // Make sure layout is done before html2canvas starts (fix Safari)
     await new Promise((resolve) => {
-      requestAnimationFrame(() => {
-        setTimeout(resolve, 50); // 50ms delay ensures DOM stability
-      });
+      requestAnimationFrame(() => setTimeout(resolve, 50));
     });
 
+    // ---- Get chart as image ----
     const chartElem = document.getElementById('chart-to-pdf');
     let chartImgData = '';
     if (chartElem) {
@@ -1737,18 +1734,19 @@ const DailyReportDetailBoard = () => {
     }
 
     const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const pdfW = pdf.internal.pageSize.getWidth();
+    const pdfH = pdf.internal.pageSize.getHeight();
     const marginTop = 10;
     const marginBottom = 10;
-    const usableHeightMm = pdfHeight - marginTop - marginBottom;
-    const usableHeightPx = usableHeightMm / 0.264583;
+    const usableHpx = (pdfH - marginTop - marginBottom) / 0.264583;
 
+    // ---- Pagination table ----
     const headerElem = divRef.current.querySelector(
       '.pdf-header',
     ) as HTMLElement;
-    const headerHeightPx = headerElem?.getBoundingClientRect().height || 0;
-    const theadHeightPx = 50;
-    const headerHeight = headerHeightPx + theadHeightPx;
+    const headerHpx = headerElem?.getBoundingClientRect().height || 0;
+    const theadHpx = 50;
+    const headerHeight = headerHpx + theadHpx;
 
     let currentHeight = headerHeight;
     const currentRows: number[][] = [[]];
@@ -1757,35 +1755,37 @@ const DailyReportDetailBoard = () => {
     for (let i = 0; i < rowRefs.current.length; i++) {
       const row = rowRefs.current[i];
       if (!row) continue;
-      const rowHeight = row.getBoundingClientRect().height;
+      const rowH = row.getBoundingClientRect().height;
 
-      if (currentHeight + rowHeight > usableHeightPx) {
+      if (currentHeight + rowH > usableHpx) {
         page++;
         currentRows[page] = [i];
-        currentHeight = headerHeight + rowHeight;
+        currentHeight = headerHeight + rowH;
       } else {
         currentRows[page].push(i);
-        currentHeight += rowHeight;
+        currentHeight += rowH;
       }
     }
 
+    let pdfPageIndex = 0;
+
+    // ---- Render Table Pages ----
     for (let i = 0; i < currentRows.length; i++) {
       const clone = divRef.current.cloneNode(true) as HTMLElement;
       clone.style.position = 'static';
       clone.style.left = '0';
 
       const allTrs = clone.querySelectorAll('tr.custom-tr');
-      allTrs.forEach((tr, index) => {
-        if (!currentRows[i].includes(index)) {
-          tr.remove();
-        }
+      allTrs.forEach((tr, idx) => {
+        if (!currentRows[i].includes(idx)) tr.remove();
       });
 
       if (i > 0) {
-        const headerElem = clone.querySelector('.pdf-header');
-        if (headerElem) headerElem.remove();
+        const h = clone.querySelector('.pdf-header');
+        if (h) h.remove();
       }
 
+      // Replace chart = snapshotted image
       if (chartImgData) {
         const chartContainer = clone.querySelector('#chart-to-pdf');
         if (chartContainer) {
@@ -1798,33 +1798,197 @@ const DailyReportDetailBoard = () => {
         }
       }
 
+      // Remove remark when rendering table
+      const remarkBlock = clone.querySelector('.pdf-remark');
+      if (remarkBlock) remarkBlock.remove();
+
       document.body.appendChild(clone);
-
-      // 🛠️ A little delay for Safari to finish rendering the DOM clone
-      await new Promise((resolve) => {
-        requestAnimationFrame(() => {
-          setTimeout(resolve, 50);
-        });
-      });
-
-      const canvas = await html2canvas(clone, {
-        scale: 2,
-        useCORS: true,
-      });
-
+      await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 50)));
+      const canvas = await html2canvas(clone, { scale: 2, useCORS: true });
       document.body.removeChild(clone);
 
       const imgData = canvas.toDataURL('image/jpeg', 1.0);
-      const imgWidth = pdf.internal.pageSize.getWidth();
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const imgH = (canvas.height * pdfW) / canvas.width;
 
-      if (i > 0) pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, marginTop, imgWidth, imgHeight);
+      if (pdfPageIndex > 0) pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, marginTop, pdfW, imgH);
+      pdfPageIndex++;
+    }
+
+    const remainingHeight = usableHpx - currentHeight;
+
+    // Get the mark height
+    const remarkRoot = divRef.current.querySelector(
+      '.pdf-remark',
+    ) as HTMLElement;
+    const remarkHeight = remarkRoot?.getBoundingClientRect().height || 0;
+
+    // Determine long or short remark according to actual space
+    const isLongRemark = remarkHeight > remainingHeight;
+    if (!isLongRemark) {
+      // ==============================
+      // CASE 1: short remark, use original function
+      // ==============================
+      let currentHeight = headerHeight;
+      const currentRows: number[][] = [[]];
+      let page = 0;
+
+      for (let i = 0; i < rowRefs.current.length; i++) {
+        const row = rowRefs.current[i];
+        if (!row) continue;
+        const rowHeight = row.getBoundingClientRect().height;
+
+        if (currentHeight + rowHeight > usableHpx) {
+          page++;
+          currentRows[page] = [i];
+          currentHeight = headerHeight + rowHeight;
+        } else {
+          currentRows[page].push(i);
+          currentHeight += rowHeight;
+        }
+      }
+
+      for (let i = 0; i < currentRows.length; i++) {
+        const clone = divRef.current.cloneNode(true) as HTMLElement;
+        clone.style.position = 'static';
+        clone.style.left = '0';
+
+        const allTrs = clone.querySelectorAll('tr.custom-tr');
+        allTrs.forEach((tr, index) => {
+          if (!currentRows[i].includes(index)) {
+            tr.remove();
+          }
+        });
+
+        if (i > 0) {
+          const headerElem = clone.querySelector('.pdf-header');
+          if (headerElem) headerElem.remove();
+        }
+
+        if (chartImgData) {
+          const chartContainer = clone.querySelector('#chart-to-pdf');
+          if (chartContainer) {
+            const img = document.createElement('img');
+            img.src = chartImgData;
+            img.style.width = '180px';
+            img.style.height = '180px';
+            chartContainer.innerHTML = '';
+            chartContainer.appendChild(img);
+          }
+        }
+
+        document.body.appendChild(clone);
+
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => setTimeout(resolve, 50));
+        });
+
+        const canvas = await html2canvas(clone, { scale: 2, useCORS: true });
+        document.body.removeChild(clone);
+
+        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+        const imgH = (canvas.height * pdfW) / canvas.width;
+
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, marginTop, pdfW, imgH);
+      }
+    } else {
+      const remarkRoot = divRef.current.querySelector(
+        '.pdf-remark',
+      ) as HTMLElement;
+      const remarkTitle = remarkRoot?.querySelector(
+        '.remark-title',
+      ) as HTMLElement;
+      const remarkContent = remarkRoot?.querySelector(
+        '.remark-content',
+      ) as HTMLElement;
+
+      if (remarkRoot && remarkContent) {
+        const fullContent = remarkContent.cloneNode(true) as HTMLElement;
+        const fullContentHeight = remarkContent.scrollHeight;
+
+        let printed = 0;
+        let isFirstRemarkPage = true;
+        while (printed < fullContentHeight) {
+          const pageWrapper = document.createElement('div');
+          pageWrapper.style.width = divRef.current.clientWidth + 'px';
+          pageWrapper.style.margin = '0 auto';
+          pageWrapper.style.position = 'relative';
+          pageWrapper.style.padding = '10px';
+          pageWrapper.style.boxSizing = 'border-box';
+
+          const box = document.createElement('div');
+          box.style.border = '1px solid rgb(107,114,128)';
+          box.style.display = 'flex';
+          box.style.flexDirection = 'column';
+          box.style.boxSizing = 'border-box';
+          box.style.width = '100%';
+
+          if (!isFirstRemarkPage) {
+            box.style.marginTop = '10px';
+          }
+
+          if (isFirstRemarkPage && remarkTitle) {
+            const titleClone = remarkTitle.cloneNode(true) as HTMLElement;
+            titleClone.style.transform = 'none';
+            box.appendChild(titleClone);
+          }
+
+          const viewport = document.createElement('div');
+          viewport.style.overflow = 'hidden';
+          viewport.style.position = 'relative';
+          viewport.style.flex = '1';
+          viewport.style.padding = getComputedStyle(remarkContent).padding;
+
+          if (!isFirstRemarkPage) {
+            viewport.style.paddingTop = '20px';
+          }
+
+          const moving = fullContent.cloneNode(true) as HTMLElement;
+          moving.style.position = 'relative';
+          moving.style.transform = `translateY(-${printed}px)`;
+          viewport.appendChild(moving);
+
+          box.appendChild(viewport);
+          pageWrapper.appendChild(box);
+          document.body.appendChild(pageWrapper);
+
+          await new Promise((r) =>
+            requestAnimationFrame(() => setTimeout(r, 20)),
+          );
+
+          let viewportH =
+            usableHpx - (box.offsetHeight - viewport.offsetHeight);
+          if (printed + viewportH > fullContentHeight) {
+            viewportH = fullContentHeight - printed;
+          }
+          viewport.style.height = `${viewportH}px`;
+
+          await new Promise((r) =>
+            requestAnimationFrame(() => setTimeout(r, 20)),
+          );
+
+          const canvas = await html2canvas(pageWrapper, {
+            scale: 2,
+            useCORS: true,
+          });
+          document.body.removeChild(pageWrapper);
+
+          const imgData = canvas.toDataURL('image/jpeg', 1.0);
+          const imgH = (canvas.height * pdfW) / canvas.width;
+          if (pdfPageIndex > 0) pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, marginTop, pdfW, imgH);
+
+          pdfPageIndex++;
+          printed += viewportH;
+          isFirstRemarkPage = false;
+        }
+      }
     }
 
     pdf.save('集計.pdf');
 
-    // Reset initial state
+    // Reset
     divRef.current.style.visibility = 'hidden';
     divRef.current.style.position = 'absolute';
     divRef.current.style.left = '-9999px';
@@ -2538,7 +2702,7 @@ const DailyReportDetailBoard = () => {
               <p className="text-center py-2 border-b border-gray-500 -translate-y-[25%]">
                 備考
               </p>
-              <div className="py-1 pr-3">
+              <div className="py-1 px-3">
                 <div
                   className="rounded-sm break-all p-1"
                   dangerouslySetInnerHTML={{

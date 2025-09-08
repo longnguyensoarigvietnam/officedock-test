@@ -8,7 +8,6 @@ import { RenderAccessories } from '@components/custom/UserCustomize';
 import { pageRouters } from '@constants/routers';
 import { TabTypeShopItem } from '@constants/enums';
 import Button from '@components/common/Button';
-import TabShopItem from '@components/shopItem/tabShopItem';
 
 const CustomizeItemPage = () => {
   const router = useRouter();
@@ -24,7 +23,7 @@ const CustomizeItemPage = () => {
   const renderContent = () => {
     switch (activeTab) {
       case TabTypeShopItem.ALL:
-        return <TabShopItem />;
+        return <div></div>;
       case TabTypeShopItem.HAT:
         return <div>all</div>;
       case TabTypeShopItem.CLOTHES:

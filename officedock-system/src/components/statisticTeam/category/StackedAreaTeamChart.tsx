@@ -233,15 +233,21 @@ const StackedAreaTeamChart = ({
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
       largeCategoryId:
-        selectedOrganizationInTable && !selectedLarge && !selectedMedium
+        selectedOrganizationInTable &&
+        selectedLarge?.value == '' &&
+        selectedMedium?.value == ''
           ? selectedCategory?.id
           : selectedLarge?.value,
       mediumCategoryId:
-        selectedOrganizationInTable && selectedLarge && !selectedMedium
+        selectedOrganizationInTable &&
+        selectedLarge?.value != '' &&
+        selectedMedium?.value == ''
           ? selectedCategory?.id
           : selectedMedium?.value,
       smallCategoryId:
-        selectedOrganization && selectedLarge && selectedMedium
+        selectedOrganization &&
+        selectedLarge?.value != '' &&
+        selectedMedium?.value != ''
           ? selectedCategory?.id
           : selectedSmall?.value,
       statisticBy: `${lineChartViewBy?.value}`,
@@ -360,17 +366,29 @@ const StackedAreaTeamChart = ({
       selectedOrganization?.value != ALL_TEAM_STATISTIC
     ) {
       let tableDetail: CategoryTableRowDetail[] = [];
-      if (selectedOrganization && !selectedLarge && !selectedMedium) {
+      if (
+        selectedOrganization &&
+        selectedLarge?.value == '' &&
+        selectedMedium?.value == ''
+      ) {
         tableDetail = buildTableDetail(
           statisticTeamCategoryList.largeCategories,
         );
         handleCategorySelection(statisticTeamCategoryList.largeCategories);
-      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+      } else if (
+        selectedOrganization &&
+        selectedLarge?.value != '' &&
+        selectedMedium?.value == ''
+      ) {
         tableDetail = buildTableDetail(
           statisticTeamCategoryList.mediumCategories,
         );
         handleCategorySelection(statisticTeamCategoryList.mediumCategories);
-      } else if (selectedOrganization && selectedLarge && selectedMedium) {
+      } else if (
+        selectedOrganization &&
+        selectedLarge?.value != '' &&
+        selectedMedium?.value != ''
+      ) {
         tableDetail = buildTableDetail(
           statisticTeamCategoryList.smallCategories,
         );
@@ -1144,7 +1162,7 @@ const StackedAreaTeamChart = ({
               {/* Column Chart 1 */}
               <div className="w-[300px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && !selectedLarge && !selectedMedium ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && selectedLarge?.value == '' && selectedMedium?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   大カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -1170,7 +1188,7 @@ const StackedAreaTeamChart = ({
               {/* Column Chart 2 */}
               <div className="w-[300px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && !selectedMedium ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && selectedLarge?.value != '' && selectedMedium?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   中カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -1195,7 +1213,7 @@ const StackedAreaTeamChart = ({
               {/* Column Chart 3 */}
               <div className="w-[300px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && selectedMedium ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && selectedLarge?.value != '' && selectedMedium?.value != '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   小カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -1214,7 +1232,9 @@ const StackedAreaTeamChart = ({
                       handleSelectMedium(data);
                     }}
                     disabled={
-                      !selectedLarge || isHasLoading || isDisableCalendar
+                      selectedLarge?.value == '' ||
+                      isHasLoading ||
+                      isDisableCalendar
                     }
                   />
                 </div>

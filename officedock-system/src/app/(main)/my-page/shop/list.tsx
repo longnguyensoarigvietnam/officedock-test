@@ -1,14 +1,17 @@
 'use client';
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from 'react-query';
 
 import ImageRound from '@components/common/ImageRound';
 import { RenderAccessories } from '@components/custom/UserCustomize';
+import Button from '@components/common/Button';
+import ItemGroupCard from '@components/shopItem/ItemDetail';
+import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 import { pageRouters } from '@constants/routers';
 import { TabTypeShopItem } from '@constants/enums';
-import Button from '@components/common/Button';
-import TabShopItem from '@components/shopItem/tabShopItem';
+import useListShopItem from '@hooks/useListShopItem';
 
 const ShopItemPage = () => {
   const router = useRouter();
@@ -21,20 +24,7 @@ const ShopItemPage = () => {
     tabParam || TabTypeShopItem.ALL,
   );
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case TabTypeShopItem.ALL:
-        return <TabShopItem />;
-      case TabTypeShopItem.HAT:
-        return <div>all</div>;
-      case TabTypeShopItem.CLOTHES:
-        return <div>all</div>;
-      case TabTypeShopItem.SHOES:
-        return <div>all</div>;
-      default:
-        return null;
-    }
-  };
+  const queryClient = useQueryClient();
 
   const tabSideShop = [
     { name: TabTypeShopItem.ALL, value: TabTypeShopItem.ALL },
@@ -44,6 +34,50 @@ const ShopItemPage = () => {
     { name: TabTypeShopItem.BACKGROUND, value: TabTypeShopItem.BACKGROUND },
   ];
 
+  useEffect(() => {
+    return () => {
+      queryClient.removeQueries(['getListShopItem']);
+    };
+  }, [queryClient]);
+
+  const {
+    shopItemList,
+    fetchNextPage,
+    hasNextPage,
+    isLoadingList,
+    isFetchingNextPage,
+  } = useListShopItem({
+    type: activeTab === TabTypeShopItem.ALL ? '' : activeTab,
+  });
+
+  const resultsContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const surveyContainer = resultsContainerRef.current;
+      if (
+        surveyContainer &&
+        hasNextPage &&
+        !isFetchingNextPage &&
+        surveyContainer.clientHeight + Math.abs(surveyContainer.scrollTop) >=
+          surveyContainer.scrollHeight - 10
+      ) {
+        fetchNextPage();
+      }
+    };
+
+    const surveyContainer = resultsContainerRef.current;
+
+    if (surveyContainer) {
+      surveyContainer.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (surveyContainer) {
+        surveyContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
   return (
     <>
       <div className="h-full w-full">
@@ -73,7 +107,9 @@ const ShopItemPage = () => {
                 src={'/icons/shop.svg'}
                 className={`w-fit h-fit ml-[10px]`}
               />
-              <span className="text-[22px] text-black ml-1">
+              <span
+                onClick={() => router.push(pageRouters.HISTORY_POINT.href)}
+                className="text-[22px] text-black ml-1">
                 アイテムショップ
               </span>
             </div>
@@ -107,6 +143,7 @@ const ShopItemPage = () => {
                       <Button
                         key={tab.value}
                         onClick={() => setActiveTab(tab.value)}
+                        disabled={isLoadingList}
                         style={{
                           background: isActive
                             ? 'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)'
@@ -123,7 +160,24 @@ const ShopItemPage = () => {
                 </div>
               </div>
               <div className="h-full w-full px-[30px] mt-5">
-                {renderContent()}
+                <div className="h-full w-full">
+                  <div
+                    ref={resultsContainerRef}
+                    className="w-full h-full flex flex-col gap-[6px] overflow-y-auto">
+                    {!isLoadingList &&
+                      shopItemList.map((item, index) => (
+                        <ItemGroupCard
+                          key={`${index}${activeTab}`}
+                          group={item}
+                        />
+                      ))}
+                    {isLoadingList && (
+                      <div>
+                        <RowSkeleton numberOfRows={5} className="h-[90px]" />
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
             {/* User */}

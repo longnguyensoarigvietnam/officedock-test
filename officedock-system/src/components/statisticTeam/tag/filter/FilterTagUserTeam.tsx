@@ -20,7 +20,6 @@ type Props = {
 const FilterTagUserTeam = ({ className, classNameData }: Props) => {
   const {
     orderingOptions,
-    firstThreeUser,
     allLabelUser,
     isLoadingOrganization,
     isLoadingLarge,
@@ -28,7 +27,6 @@ const FilterTagUserTeam = ({ className, classNameData }: Props) => {
     isLoadingOrganizationCompare,
     isLoadingLargeCompare,
     isLoadingMediumCompare,
-    remainingCountUser,
 
     removeUser,
   } = useContext(StatisticTeamTagsStateContext);
@@ -72,7 +70,7 @@ const FilterTagUserTeam = ({ className, classNameData }: Props) => {
       <div className=" flex-grow flex-shrink-0">
         <div className={`flex gap-2 flex-wrap flex-shrink-0 ${classNameData} `}>
           <>
-            {firstThreeUser.map((item, index) => {
+            {allLabelUser.map((item, index) => {
               return (
                 <div key={item.value} className="flex gap-[6px] items-center">
                   {index === 0 && (
@@ -107,11 +105,6 @@ const FilterTagUserTeam = ({ className, classNameData }: Props) => {
                 </div>
               );
             })}
-            {allLabelUser.length > 3 && (
-              <p className=" h-6 px-1 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
-                +{remainingCountUser}
-              </p>
-            )}
           </>
         </div>
       </div>

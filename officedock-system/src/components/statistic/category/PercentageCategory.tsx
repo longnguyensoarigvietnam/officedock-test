@@ -678,7 +678,9 @@ const PercentageCategory = ({
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
                         disabled={
-                          !selectedLarge || isHasLoading || isDisableCalendar
+                          selectedLarge?.value == '' ||
+                          isHasLoading ||
+                          isDisableCalendar
                         }
                       />
                       <p className="text-sm text-black my-[26px]">

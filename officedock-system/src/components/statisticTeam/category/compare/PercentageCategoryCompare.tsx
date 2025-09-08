@@ -491,7 +491,9 @@ const PercentageTeamCategoryCompare = ({
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}
                       disabled={
-                        !selectedLarge || isHasLoading || isDisableCalendar
+                        selectedLarge?.value == '' ||
+                        isHasLoading ||
+                        isDisableCalendar
                       }
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">

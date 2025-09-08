@@ -737,16 +737,18 @@ const ListUsers = () => {
                     {element.id}
                   </td>
                   <td className="text-left w-[228px] max-w-[228px] break-all align-top !pt-4">
-                    {element.organizations
-                      .filter((data) => data.isMain)
-                      .map((item) => item.name)
-                      .join(' ／ ')}
+                    {element.organizations &&
+                      element.organizations
+                        .filter((data) => data.isMain)
+                        .map((item) => item.name)
+                        .join(' ／ ')}
                   </td>
                   <td className="text-left w-[328px] max-w-[328px] break-all align-top !pt-4">
-                    {element.organizations
-                      .filter((data) => !data.isMain)
-                      .map((item) => item.name)
-                      .join(' ／ ')}
+                    {element.organizations &&
+                      element.organizations
+                        .filter((data) => !data.isMain)
+                        .map((item) => item.name)
+                        .join(' ／ ')}
                   </td>
                   <td className="w-[232px] max-w-[232px] text-left break-all align-top !pt-4">
                     {element.roles.map((item) => item.name).join(' ／ ')}
