@@ -70,7 +70,7 @@ export const MVPHistoryList = () => {
 
   return (
     <div className="relative w-full h-full flex">
-      <div className="w-1/3 relative mt-[80px]">
+      <div className="w-[calc(100%_-_800px)] relative mt-[80px]">
         {/* Fixed background image */}
         <Image
           src={'/images/history-spotlight.svg'}
@@ -158,7 +158,7 @@ export const MVPHistoryList = () => {
           </div>
         </div>
       </div>
-      <div className="w-2/3 relative h-full">
+      <div className="w-[800px] relative h-full">
         <HistoryVotingTable
           historyList={mvpAnnouncementList}
           hasNextPage={hasNextPage}

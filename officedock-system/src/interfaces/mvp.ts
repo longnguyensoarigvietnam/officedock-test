@@ -173,4 +173,5 @@ export interface MVPVotingComment {
     avatarColor: string;
     organizationName: string | null;
   };
+  deletedAt?: string | Date | null;
 }

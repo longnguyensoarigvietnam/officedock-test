@@ -3,12 +3,14 @@ import { useEffect, useRef, useState } from 'react';
 import ImageRound from '@components/common/ImageRound';
 import CandidateList from '@components/mvp/CandidateList';
 import Spinner from '@components/common/Spinner';
+import ViewVotingReasonListModal from '@components/modals/ViewVotingReasonListModal';
 
 import { NO_SETTING } from '@constants';
 import { VotingManagementType } from '@constants/enums';
 
 import useMVPVotingList from '@hooks/useMVPVotingList';
 import useVotingDetail from '@hooks/useVotingDetail';
+import useVoteCommentList from '@hooks/useVoteCommentList';
 
 import { UserProfile } from '@interfaces/user';
 
@@ -16,6 +18,13 @@ import { getCategoryFormattedDate, getFullFormattedDate } from '@utils/date';
 
 export const PastVotingResults = () => {
   const [selectedVotingId, setSelectedVotingId] = useState<number | null>(null);
+  const [openViewVotingCommentList, setOpenViewVotingCommentList] = useState<{
+    status: boolean;
+    candidateId: number | null;
+  }>({
+    status: false,
+    candidateId: null,
+  });
 
   const [expandedVotingState, setExpandedVotingState] = useState<
     Record<
@@ -23,6 +32,16 @@ export const PastVotingResults = () => {
       { detail?: { candidates: any[]; totalVoters?: number }; isOpen?: boolean }
     >
   >({});
+
+  const {
+    voteCommentList,
+    fetchNextPage: fetchCommentNextPage,
+    hasNextPage: hasCommentNextPage,
+    isFetchingNextPage: isFetchingCommentNextPage,
+    isLoadingList: isLoadingCommentList,
+  } = useVoteCommentList({
+    mvpCandidateId: Number(openViewVotingCommentList.candidateId),
+  });
 
   const {
     votingList,
@@ -176,7 +195,16 @@ export const PastVotingResults = () => {
                   </div>
 
                   {/* Results */}
-                  <CandidateList detail={item.detail} isOpen={item.isOpen} />
+                  <CandidateList
+                    detail={item.detail}
+                    isOpen={item.isOpen}
+                    onOpenViewVotingReasonList={(mvpCandidateId: number) => {
+                      setOpenViewVotingCommentList({
+                        status: true,
+                        candidateId: mvpCandidateId,
+                      });
+                    }}
+                  />
                 </div>
               );
             })}
@@ -189,6 +217,24 @@ export const PastVotingResults = () => {
       ) : (
         <p className="text-sm font-medium">過去に実施した投票はありません。</p>
       )}
+
+      {openViewVotingCommentList.status &&
+        openViewVotingCommentList.candidateId && (
+          <ViewVotingReasonListModal
+            open={openViewVotingCommentList.status}
+            reasonList={voteCommentList}
+            hasNextPage={hasCommentNextPage}
+            isFetchingNextPage={isFetchingCommentNextPage}
+            isLoadingList={isLoadingCommentList}
+            fetchNextPage={fetchCommentNextPage}
+            onClose={() => {
+              setOpenViewVotingCommentList({
+                status: false,
+                candidateId: null,
+              });
+            }}
+          />
+        )}
     </div>
   );
 };

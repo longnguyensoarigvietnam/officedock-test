@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import ActionsVotingModal from '@components/modals/ActionsVotingModal';
-import ViewVotingMemberListModal from '@components/modals/ViewVotingMemberList';
+import ViewVotingMemberListModal from '@components/modals/ViewVotingMemberListModal';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import Spinner from '@components/common/Spinner';
 
