@@ -8,7 +8,6 @@ from common.serializers import (
     CreationDataUserWithMainOrganizationSerializer,
 )
 from mvp_votes.constants import MVPVoteTypes
-from mvp_votes.payloads import get_users_in_top_mvp
 from users.models import User
 from mvp_votes.models import MVPVote, MVPVoteManagement
 
@@ -97,6 +96,8 @@ class MvpVoteManagementSerializer(serializers.ModelSerializer):
         """
         Handle get 1st Mvp
         """
+        from mvp_votes.payloads import get_users_in_top_mvp
+
         users = get_users_in_top_mvp(instance)
         return CreationDataUserWithMainOrganizationSerializer(
             users, many=True
