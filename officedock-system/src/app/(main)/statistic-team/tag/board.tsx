@@ -18,7 +18,7 @@ import FilterTagTeam from '@components/statisticTeam/tag/filter/FilterTagTeam';
 
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
-import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
+import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT, NO_SETTING } from '@constants';
 import { OrganizationStatisticType } from '@constants/enums';
 
 import useStatisticTagsTeam from '@hooks/useStatisticTagsTeam';
@@ -167,9 +167,18 @@ const StatisticTeamTagBoard = () => {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value as number,
-      mediumCategoryId: selectedMedium?.value as number,
-      smallCategoryId: selectedSmall?.value as number,
+      largeCategoryId:
+        selectedLarge?.value == null
+          ? NO_SETTING
+          : (selectedLarge?.value as number),
+      mediumCategoryId:
+        selectedMedium?.value == null
+          ? NO_SETTING
+          : (selectedMedium?.value as number),
+      smallCategoryId:
+        selectedSmall?.value == null
+          ? NO_SETTING
+          : (selectedSmall?.value as number),
       orderingOptions: orderingOptions,
       organizationMemberId:
         selectedOrganization?.type === OrganizationStatisticType.CALENDAR
@@ -267,9 +276,18 @@ const StatisticTeamTagBoard = () => {
       fromDate: formatDateToYMD(startDateCompare) || '',
       endDate: formatDateToYMD(`${endDateCompare}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value as number,
-      mediumCategoryId: selectedMedium?.value as number,
-      smallCategoryId: selectedSmall?.value as number,
+      largeCategoryId:
+        selectedLarge?.value == null
+          ? NO_SETTING
+          : (selectedLarge?.value as number),
+      mediumCategoryId:
+        selectedMedium?.value == null
+          ? NO_SETTING
+          : (selectedMedium?.value as number),
+      smallCategoryId:
+        selectedSmall?.value == null
+          ? NO_SETTING
+          : (selectedSmall?.value as number),
       orderingOptions: orderingOptions,
       isCompare: isCheckCompare,
       organizationMemberId:
@@ -671,6 +689,8 @@ const StatisticTeamTagBoard = () => {
             endDate={endDate}
             startDateCompare={startDateCompare}
             endDateCompare={endDateCompare}
+            statisticTagsList={statisticTagsListTeam}
+            statisticTagsCompareList={statisticTagsListTeamCompare}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -705,6 +725,7 @@ const StatisticTeamTagBoard = () => {
           <LineChartByTeamTags
             startDate={startDate}
             endDate={endDate}
+            statisticTagsListTeam={statisticTagsListTeam}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}

@@ -51,6 +51,7 @@ import {
   ALL_TEAM_STATISTIC,
   DEFAULT_TIME_TEXT,
   EVERYONE_OPTION_LABEL,
+  NO_SETTING,
   STATISTIC_CHART_VIEW_OPTIONS,
 } from '@constants';
 
@@ -200,8 +201,6 @@ const LineChartByTeam = ({
   // Others
   const [isExtendData, setIsExtendData] = useState(true);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
-  const [shouldCallStatisticCategories, setShouldCallStatisticCategories] =
-    useState<boolean>(false);
 
   // Get initial member options
   useEffect(() => {
@@ -363,15 +362,21 @@ const LineChartByTeam = ({
     }
   };
 
-  // Get table info (statistic team categories)
+  // Get table info (statistic team categories) - Fetch table info first, then get selected category to call next API
   const { isFetchingStatisticTableInTeamLineChart } =
     useStatisticTableInTeamLineChart({
       filter: {
         fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
         endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
         organizationId: String(selectedOrganization?.value || ''),
-        largeCategoryId: selectedLarge?.value,
-        mediumCategoryId: selectedMedium?.value,
+        largeCategoryId:
+          selectedLarge?.value == null
+            ? NO_SETTING
+            : (selectedLarge?.value as number),
+        mediumCategoryId:
+          selectedMedium?.value == null
+            ? NO_SETTING
+            : (selectedMedium?.value as number),
         tagIds: orderingOptions?.tag_ids || [],
         organizationMemberId:
           selectedOrganization?.type === OrganizationStatisticType.CALENDAR
@@ -385,19 +390,32 @@ const LineChartByTeam = ({
       condition: [
         Boolean(
           selectedOrganization?.value != ALL_TEAM_STATISTIC &&
-            shouldCallStatisticCategories,
+            orderingOptions?.user_ids.length !=
+              selectedMembers.filter((member) => Boolean(member)).length,
         ),
       ],
       onSuccess: (data) => {
         if (!data) return;
         let tableDetail: TableRowDetail[] = [];
-        if (selectedOrganization && !selectedLarge && !selectedMedium) {
+        if (
+          selectedOrganization?.value != '' &&
+          selectedLarge?.value == '' &&
+          selectedMedium?.value == ''
+        ) {
           tableDetail = buildTableDetail(data.largeCategories);
           handleCategorySelection(data.largeCategories);
-        } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+        } else if (
+          selectedOrganization?.value != '' &&
+          selectedLarge?.value != '' &&
+          selectedMedium?.value == ''
+        ) {
           tableDetail = buildTableDetail(data.mediumCategories);
           handleCategorySelection(data.mediumCategories);
-        } else if (selectedOrganization && selectedLarge && selectedMedium) {
+        } else if (
+          selectedOrganization?.value != '' &&
+          selectedLarge?.value != '' &&
+          selectedMedium?.value != ''
+        ) {
           tableDetail = buildTableDetail(data.smallCategories);
           handleCategorySelection(data.smallCategories);
         }
@@ -418,7 +436,6 @@ const LineChartByTeam = ({
           .map((item) => item.categoryDuration)
           .filter(Boolean); // remove null, undefined, ''
         setTotalDuration(totalDurationsForStatistic(totalDurationList));
-        setShouldCallStatisticCategories(false);
       },
     });
 
@@ -427,21 +444,32 @@ const LineChartByTeam = ({
       selectedOrganization?.value != ALL_TEAM_STATISTIC &&
       orderingOptions?.user_ids.length ==
         selectedMembers.filter((member) => Boolean(member)).length &&
-      !shouldCallStatisticCategories &&
       statisticTeamCategoryList
     ) {
       let tableDetail: TableRowDetail[] = [];
-      if (selectedOrganization && !selectedLarge && !selectedMedium) {
+      if (
+        selectedOrganization?.value != '' &&
+        selectedLarge?.value == '' &&
+        selectedMedium?.value == ''
+      ) {
         tableDetail = buildTableDetail(
           statisticTeamCategoryList.largeCategories,
         );
         handleCategorySelection(statisticTeamCategoryList.largeCategories);
-      } else if (selectedOrganization && selectedLarge && !selectedMedium) {
+      } else if (
+        selectedOrganization?.value != '' &&
+        selectedLarge?.value != '' &&
+        selectedMedium?.value == ''
+      ) {
         tableDetail = buildTableDetail(
           statisticTeamCategoryList.mediumCategories,
         );
         handleCategorySelection(statisticTeamCategoryList.mediumCategories);
-      } else if (selectedOrganization && selectedLarge && selectedMedium) {
+      } else if (
+        selectedOrganization?.value != '' &&
+        selectedLarge?.value != '' &&
+        selectedMedium?.value != ''
+      ) {
         tableDetail = buildTableDetail(
           statisticTeamCategoryList.smallCategories,
         );
@@ -473,10 +501,9 @@ const LineChartByTeam = ({
     selectedOrganization,
     selectedMembers,
     orderingOptions?.user_ids.length,
-    shouldCallStatisticCategories,
   ]);
 
-  // Get user task durations
+  // Get user task durations after fetching table data (to get selected category)
   const {
     statisticUserTaskDurationsList,
     isFetchingStatisticUserTaskDurationsList,
@@ -485,17 +512,29 @@ const LineChartByTeam = ({
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
       largeCategoryId:
-        selectedOrganizationInTable && !selectedLarge && !selectedMedium
+        selectedOrganizationInTable &&
+        selectedLarge?.value == '' &&
+        selectedMedium?.value == ''
           ? selectedCategory?.id
-          : selectedLarge?.value,
+          : selectedLarge?.value == null
+            ? NO_SETTING
+            : (selectedLarge?.value as number),
       mediumCategoryId:
-        selectedOrganizationInTable && selectedLarge && !selectedMedium
+        selectedOrganizationInTable &&
+        selectedLarge?.value != '' &&
+        selectedMedium?.value == ''
           ? selectedCategory?.id
-          : selectedMedium?.value,
+          : selectedMedium?.value == null
+            ? NO_SETTING
+            : (selectedMedium?.value as number),
       smallCategoryId:
-        selectedOrganizationInTable && selectedLarge && selectedMedium
+        selectedOrganizationInTable &&
+        selectedLarge?.value != '' &&
+        selectedMedium?.value != ''
           ? selectedCategory?.id
-          : selectedSmall?.value,
+          : selectedSmall?.value == null
+            ? NO_SETTING
+            : (selectedSmall?.value as number),
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: selectedOrganizationInTable,
       tagIds: orderingOptions?.tag_ids || [],
@@ -1086,6 +1125,7 @@ const LineChartByTeam = ({
         setTotalDuration(DEFAULT_TIME_TEXT);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     statisticTeamDockAllTeamLineChartTaskDurationsList,
     selectedOrganizationOptionInTable,
@@ -1493,7 +1533,7 @@ const LineChartByTeam = ({
               {/* Column Chart 1 */}
               <div className="w-[300px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && !selectedLarge && !selectedMedium ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization?.value != '' && selectedLarge?.value == '' && selectedMedium?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   大カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -1510,11 +1550,6 @@ const LineChartByTeam = ({
                     onChange={(data) => {
                       setSelectedCategory(null);
                       setLineChartTableData([]);
-                      setShouldCallStatisticCategories(
-                        orderingOptions?.user_ids.length !=
-                          selectedMembers.filter((member) => Boolean(member))
-                            .length,
-                      );
                       handleSelectOrganization(data);
                     }}
                   />
@@ -1523,7 +1558,7 @@ const LineChartByTeam = ({
               {/* Column Chart 2 */}
               <div className="w-[300px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && !selectedMedium ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization?.value != '' && selectedLarge?.value != '' && selectedMedium?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   中カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -1539,21 +1574,16 @@ const LineChartByTeam = ({
                     onChange={(data) => {
                       setLineChartTableData([]);
                       setSelectedCategory(null);
-                      setShouldCallStatisticCategories(
-                        orderingOptions?.user_ids.length !=
-                          selectedMembers.filter((member) => Boolean(member))
-                            .length,
-                      );
                       handleSelectLarge(data);
                     }}
-                    disabled={!selectedOrganization || isHasLoading}
+                    disabled={selectedOrganization?.value == '' || isHasLoading}
                   />
                 </div>
               </div>
               {/* Column Chart 3 */}
               <div className="w-[300px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && selectedMedium ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization?.value != '' && selectedLarge?.value != '' && selectedMedium?.value != '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   小カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -1569,15 +1599,12 @@ const LineChartByTeam = ({
                     onChange={(data) => {
                       setLineChartTableData([]);
                       setSelectedCategory(null);
-                      setShouldCallStatisticCategories(
-                        orderingOptions?.user_ids.length !=
-                          selectedMembers.filter((member) => Boolean(member))
-                            .length,
-                      );
                       handleSelectMedium(data);
                     }}
                     disabled={
-                      !selectedLarge || isHasLoading || isDisableCalendar
+                      selectedLarge?.value == '' ||
+                      isHasLoading ||
+                      isDisableCalendar
                     }
                   />
                 </div>
@@ -1615,11 +1642,6 @@ const LineChartByTeam = ({
                   onChange={(e) => {
                     setLineChartTableData([]);
                     setSelectedCategory(null);
-                    setShouldCallStatisticCategories(
-                      orderingOptions?.user_ids.length !=
-                        selectedMembers.filter((member) => Boolean(member))
-                          .length,
-                    );
                     setLineChartViewBy({
                       label: e.label,
                       value: e.value,
@@ -1683,11 +1705,6 @@ const LineChartByTeam = ({
                           }
                           setSelectedMembers(updatedMembers);
                           setSelectedCategory(null);
-                          setShouldCallStatisticCategories(
-                            orderingOptions?.user_ids.length !=
-                              updatedMembers.filter((member) => Boolean(member))
-                                .length,
-                          );
                         }}
                       />
                     </div>
