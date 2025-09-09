@@ -88,7 +88,7 @@ export const HistoryVotingTable = ({
         background: '#DFAEAECC',
         boxShadow: '0px 4px 10px 0px #0000000D',
       }}
-      className="w-[720px] h-[90%] p-[30px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
+      className="w-[720px] h-[90%] pl-[30px] py-[30px] pr-[13px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
       {/* Header */}
       <div className="h-fit flex items-center text-white text-xs font-medium gap-[14px] mb-[14px]">
         <p className="w-[121px]">投票期間</p>
@@ -109,7 +109,7 @@ export const HistoryVotingTable = ({
             />
           </div>
         ) : (
-          <div className="pr-[10px]">
+          <div className="pr-[12px]">
             {historyList.map((history, index) => {
               return (
                 <>

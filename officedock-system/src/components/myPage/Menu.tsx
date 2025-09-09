@@ -7,6 +7,7 @@ import { MyPageMenuItem } from '@interfaces/menu';
 
 import { MY_PAGE_MENU, VISIT_PAGE_MENU } from '@constants/menu';
 import { MAXIMUM_VISIBLE_COUNT } from '@constants';
+import { pageRouters } from '@constants/routers';
 
 interface PropMenuMyPage {
   onClickSettingSurvey: () => void;
@@ -14,9 +15,11 @@ interface PropMenuMyPage {
   unAnsweredSurveyCount?: number;
   isOpenSurveys?: boolean;
   isVisitRoom?: boolean;
+  isHasMvpVoting?: boolean;
 }
 
 export const MyPageMenu = ({
+  isHasMvpVoting = false,
   isVisitRoom = false,
   isOpenSurveys = false,
   unAnsweredSurveyCount,
@@ -53,14 +56,16 @@ export const MyPageMenu = ({
                 ))}
               </div>
               {/* Child */}
-              {page.child && isOpenSurveys && (
-                <>
-                  <p className="text-[10px]  bg-[#FFEE6F] mt-[3px] text-black rounded-full w-[70px] h-5 flex items-center justify-center">
-                    {' '}
-                    投票受付中
-                  </p>
-                </>
-              )}
+              {page.child &&
+                ((page.name == pageRouters.SURVEY.name && isOpenSurveys) ||
+                  (page.name == pageRouters.MVP.name && isHasMvpVoting)) && (
+                  <>
+                    <p className="text-[10px]  bg-[#FFEE6F] mt-[3px] text-black rounded-full w-[70px] h-5 flex items-center justify-center">
+                      {' '}
+                      投票受付中
+                    </p>
+                  </>
+                )}
               <div className="w-fit h-fit absolute top-[-30%] left-1/2 transform -translate-x-1/2">
                 <ImageRound
                   name={page.iconName}

@@ -2194,11 +2194,7 @@ const KanbanBoardTask = () => {
           .map((item) => ({ tagId: item.value }))
       : [];
 
-    const peopleInChargeIds =
-      data.peopleInChargeIds &&
-      data.peopleInChargeIds
-        .filter((item) => item.value !== '')
-        .map((item) => ({ peopleInChargeId: item.value }));
+
 
     const planList =
       data.plans &&
@@ -2273,7 +2269,6 @@ const KanbanBoardTask = () => {
       taskSchedules: planList && planList.length ? planList : null,
       oldIdStatus: data.oldIdStatus,
       sendToChat: false,
-      peopleInChargeIds: peopleInChargeIds,
       organizationId: data.organization
         ? Number(data.organization.value)
         : null,
@@ -2385,11 +2380,6 @@ const KanbanBoardTask = () => {
           .filter((item) => item.value !== '')
           .map((item) => ({ tagId: item.value }))
       : [];
-    const peopleInChargeIds =
-      data.peopleInChargeIds &&
-      data.peopleInChargeIds
-        .filter((item) => item.value !== '')
-        .map((item) => ({ peopleInChargeId: item.value }));
     const todoListData =
       data.todoList && data.todoList.filter((item) => item.content !== '');
 
@@ -2429,7 +2419,6 @@ const KanbanBoardTask = () => {
       isImportant: data.isImportant,
       todoList: todoListData,
       categoryIds: newWorkCategories,
-      peopleInChargeIds: peopleInChargeIds,
       type: MY_TEMPLATE,
       organizationId: data.organization
         ? Number(data.organization.value)
@@ -2483,11 +2472,6 @@ const KanbanBoardTask = () => {
           .map((item) => ({ tagId: item.value }))
       : [];
 
-    const peopleInChargeIds =
-      data.peopleInChargeIds &&
-      data.peopleInChargeIds
-        .filter((item) => item.value !== '')
-        .map((item) => ({ peopleInChargeId: item.value }));
 
     const todoListData =
       data.todoList && data.todoList.filter((item) => item.content !== '');
@@ -2529,7 +2513,6 @@ const KanbanBoardTask = () => {
       categoryIds: newWorkCategories,
       isImportant: data.isImportant,
       todoList: todoListData,
-      peopleInChargeIds: peopleInChargeIds,
       organizationId: data.organization
         ? Number(data.organization.value)
         : null,
@@ -2573,11 +2556,7 @@ const KanbanBoardTask = () => {
   // Action create
   // Function create  tasks
   const handleConfirmCreateTask = (data: TaskFormData) => {
-    const peopleInChargeIds =
-      data.peopleInChargeIds &&
-      data.peopleInChargeIds
-        .filter((item) => item.value !== '')
-        .map((item) => ({ peopleInChargeId: item.value }));
+
     const tagIds = data.tagIds
       ? data.tagIds
           .filter((item) => item.value !== '')
@@ -2653,7 +2632,6 @@ const KanbanBoardTask = () => {
             : null,
       description: data.description || '',
       tagIds: tagIds,
-      peopleInChargeIds: peopleInChargeIds,
       isImportant: data.isImportant,
       todoList: todoListData,
       taskSchedules: planList && planList.length ? planList : null,

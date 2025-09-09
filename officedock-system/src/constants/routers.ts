@@ -399,6 +399,10 @@ export const pageRouters = {
     href: `/my-page/history`,
   },
   // MVP
+  MVP: {
+    name: 'MVP',
+    href: '#',
+  },
   MVP_MANAGEMENT: {
     name: 'MVP投票管理',
     href: `/mvp-management`,

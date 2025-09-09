@@ -68,7 +68,7 @@ export const VotingCandidateList = ({
         background: '#DFAEAECC',
         boxShadow: '0px 4px 10px 0px #0000000D',
       }}
-      className="w-[720px] h-[90%] p-[30px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
+      className="w-[720px] h-[90%] pl-[30px] py-[30px] pr-[13px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
       <div className="space-y-[14px] mb-10">
         {currentMVPVotingDetail ? (
           <>
@@ -88,7 +88,7 @@ export const VotingCandidateList = ({
           <></>
         )}
       </div>
-      <div className={`flex flex-col max-h-[calc(100%_-_130px)] gap-5 overflow-y-auto customized-scrollbar`}>
+      <div className={`flex flex-col max-h-[calc(100%_-_130px)] pr-[12px] gap-5 overflow-y-auto customized-scrollbar`}>
         {memberListByOrganization?.map((organization) => {
           return (
             <div

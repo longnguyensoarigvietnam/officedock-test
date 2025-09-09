@@ -25,6 +25,8 @@ export interface MyPageMenuItem {
   href: string;
   iconSrc: string;
   iconName: string;
+  isOpenSurveys?: boolean;
+  isHasMvpVoting?: boolean;
   child?: {
     name: string;
     href: string;

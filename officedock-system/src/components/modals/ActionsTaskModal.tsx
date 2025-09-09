@@ -906,6 +906,8 @@ const ActionsTaskModal = ({
                 ? data.deadlineRemindCountdown
                 : null,
               showDeadlineTime: Boolean(watch('deadlineTime')),
+              peopleInChargeIds : undefined
+
             });
       }
       if (action === ActionTask.CREATE) {
@@ -922,6 +924,7 @@ const ActionsTaskModal = ({
               ? data.deadlineRemindCountdown
               : null,
             showDeadlineTime: Boolean(watch('deadlineTime')),
+            peopleInChargeIds : undefined
           });
       }
       if (action === ActionTask.COPY) {
@@ -938,6 +941,8 @@ const ActionsTaskModal = ({
               ? data.deadlineRemindCountdown
               : null,
             showDeadlineTime: Boolean(watch('deadlineTime')),
+                        peopleInChargeIds : undefined
+
           });
       }
     }
