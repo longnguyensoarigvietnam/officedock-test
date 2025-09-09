@@ -84,7 +84,7 @@ const AllocationCategory = memo(
       isLoadingMedium,
       isLoadingOrganization,
     } = useContext(StatisticStateContext);
-    
+
     useEffect(() => {
       if (
         statisticCategoryList &&
@@ -362,7 +362,9 @@ const AllocationCategory = memo(
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
-                        disabled={selectedOrganization?.value == '' || isHasLoading}
+                        disabled={
+                          selectedOrganization?.value == '' || isHasLoading
+                        }
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}
@@ -437,7 +439,9 @@ const AllocationCategory = memo(
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
                         disabled={
-                          selectedLarge?.value == '' || isHasLoading || isDisableCalendar
+                          selectedLarge?.value == '' ||
+                          isHasLoading ||
+                          isDisableCalendar
                         }
                       />
                       <p className="text-sm text-black my-[26px]">

@@ -401,33 +401,33 @@ const StackedAreaTeamTagChart = ({
 
       if (
         selectedOrganization &&
-        !selectedLarge &&
-        !selectedMedium &&
-        !selectedSmall
+        selectedLarge?.value == '' &&
+        selectedMedium?.value == '' &&
+        selectedSmall?.value == ''
       ) {
         tableDetail = buildTableDetail(statisticTagsListTeam.largeCategories);
         handleTagSelection(statisticTagsListTeam.largeCategories);
       } else if (
         selectedOrganization &&
-        selectedLarge &&
-        !selectedMedium &&
-        !selectedSmall
+        selectedLarge?.value !== '' &&
+        selectedMedium?.value == '' &&
+        selectedSmall?.value == ''
       ) {
         tableDetail = buildTableDetail(statisticTagsListTeam.mediumCategories);
         handleTagSelection(statisticTagsListTeam.mediumCategories);
       } else if (
         selectedOrganization &&
-        selectedLarge &&
-        selectedMedium &&
-        !selectedSmall
+        selectedLarge?.value != '' &&
+        selectedMedium?.value != '' &&
+        selectedSmall?.value == ''
       ) {
         tableDetail = buildTableDetail(statisticTagsListTeam.smallCategories);
         handleTagSelection(statisticTagsListTeam.smallCategories);
       } else if (
         selectedOrganization &&
-        selectedLarge &&
-        selectedMedium &&
-        selectedSmall
+        selectedLarge?.value != '' &&
+        selectedMedium?.value != '' &&
+        selectedSmall?.value != ''
       ) {
         tableDetail = buildTableDetail(statisticTagsListTeam.smallCategories);
         handleTagSelection(statisticTagsListTeam.category);
@@ -1241,7 +1241,7 @@ const StackedAreaTeamTagChart = ({
             {/* Column Chart 1 */}
             <div className="w-[220px] flex flex-col items-center">
               <div
-                className={`${selectedOrganization && !selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                className={`${selectedOrganization && selectedLarge?.value == '' && selectedMedium?.value == '' && selectedSmall?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                 チーム
               </div>
               <div className="mt-4 w-full">
@@ -1265,7 +1265,7 @@ const StackedAreaTeamTagChart = ({
                 />
               </div>
             </div>
-            {selectedLarge ? (
+            {selectedLarge?.value != '' ? (
               <div className="w-[18px]">
                 <ImageRound
                   className={`w-fit h-fit`}
@@ -1280,7 +1280,7 @@ const StackedAreaTeamTagChart = ({
             {/* Column Chart 2 */}
             <div className="w-[220px] flex flex-col items-center">
               <div
-                className={`${selectedOrganization && selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                className={`${selectedOrganization && selectedLarge?.value != '' && selectedMedium?.value == '' && selectedSmall?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                 大カテゴリー
               </div>
               <div className="mt-4 w-full">
@@ -1302,7 +1302,7 @@ const StackedAreaTeamTagChart = ({
                 />
               </div>
             </div>
-            {selectedMedium ? (
+            {selectedMedium?.value != '' ? (
               <div className="w-[18px]">
                 <ImageRound
                   className={`w-fit h-fit`}
@@ -1316,7 +1316,7 @@ const StackedAreaTeamTagChart = ({
             {/* Column Chart 3 */}
             <div className="w-[220px] flex flex-col items-center">
               <div
-                className={`${selectedOrganization && selectedLarge && selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                className={`${selectedOrganization && selectedLarge?.value != '' && selectedMedium?.value != '' && selectedSmall?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                 中カテゴリー
               </div>
               <div className="mt-4 w-full">
@@ -1334,11 +1334,15 @@ const StackedAreaTeamTagChart = ({
                     setSelectedTag(null);
                     handleSelectMedium(data);
                   }}
-                  disabled={!selectedLarge || isHasLoading || isDisableCalendar}
+                  disabled={
+                    selectedLarge?.value == '' ||
+                    isHasLoading ||
+                    isDisableCalendar
+                  }
                 />
               </div>
             </div>
-            {selectedSmall ? (
+            {selectedSmall?.value != '' ? (
               <div className="w-[18px]">
                 <ImageRound
                   className={`w-fit h-fit`}
@@ -1352,7 +1356,7 @@ const StackedAreaTeamTagChart = ({
             {/* Column Chart 4 */}
             <div className="w-[220px] flex flex-col items-center">
               <div
-                className={`${selectedOrganization && selectedLarge && selectedMedium && selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                className={`${selectedOrganization && selectedLarge?.value != '' && selectedMedium?.value != '' && selectedSmall?.value != '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                 小カテゴリー
               </div>
               <div className="mt-4 w-full">
@@ -1371,7 +1375,9 @@ const StackedAreaTeamTagChart = ({
                     handleSelectSmall(data);
                   }}
                   disabled={
-                    !selectedMedium || isHasLoading || isDisableCalendar
+                    selectedMedium?.value == '' ||
+                    isHasLoading ||
+                    isDisableCalendar
                   }
                 />
               </div>

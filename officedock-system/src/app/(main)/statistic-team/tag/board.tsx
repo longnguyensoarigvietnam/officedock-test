@@ -137,12 +137,7 @@ const StatisticTeamTagBoard = () => {
           );
           setOrderingOptions({
             tag_ids: optionsTagList,
-            user_ids: mainItem.members.map((member) => ({
-              value: member.id,
-              label: member.fullName,
-              color: member?.avatarColor || '',
-              avatarUrl: member?.avatar || '',
-            })),
+            user_ids: [],
           });
 
           return {
@@ -243,18 +238,18 @@ const StatisticTeamTagBoard = () => {
           } else {
             if (
               selectedMedium &&
-              selectedMedium.value &&
+              selectedMedium.value != '' &&
               selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ) {
               setTotalDurationTask(DEFAULT_TIME_TEXT);
               return;
             }
-            if (selectedSmall && selectedSmall.value) return;
+            if (selectedSmall && selectedSmall.value != '') return;
 
             setTotalDurationTask(data.mediumTotalDuration);
           }
         } else {
-          if (selectedLarge && selectedLarge.value) return;
+          if (selectedLarge && selectedLarge.value != '') return;
           setTotalDurationTask(data.largeTotalDuration);
         }
       } else {
@@ -315,18 +310,18 @@ const StatisticTeamTagBoard = () => {
           } else {
             if (
               selectedMedium &&
-              selectedMedium.value &&
+              selectedMedium.value != '' &&
               selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ) {
               setTotalDurationTaskCompare(DEFAULT_TIME_TEXT);
               return;
             }
-            if (selectedSmall && selectedSmall.value) return;
+            if (selectedSmall && selectedSmall.value != '') return;
 
             setTotalDurationTaskCompare(data.mediumTotalDuration);
           }
         } else {
-          if (selectedLarge && selectedLarge.value) return;
+          if (selectedLarge && selectedLarge.value != '') return;
           setTotalDurationTaskCompare(data.largeTotalDuration);
         }
       } else {

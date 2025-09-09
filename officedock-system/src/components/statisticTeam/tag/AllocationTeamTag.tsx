@@ -467,7 +467,9 @@ const AllocationTeamTag = memo(
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
                         disabled={
-                          !selectedLarge || isHasLoading || isDisableCalendar
+                          selectedLarge?.value == '' ||
+                          isHasLoading ||
+                          isDisableCalendar
                         }
                       />
                       {progressDataSmall.length > 0 && (
@@ -531,7 +533,9 @@ const AllocationTeamTag = memo(
                         selectedOption={selectedSmall || undefined}
                         onChange={(data) => handleSelectSmall(data)}
                         disabled={
-                          !selectedMedium || isHasLoading || isDisableCalendar
+                          selectedMedium?.value == '' ||
+                          isHasLoading ||
+                          isDisableCalendar
                         }
                       />
                       {progressDataCategory.length > 0 && (

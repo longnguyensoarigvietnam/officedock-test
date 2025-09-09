@@ -263,7 +263,10 @@ const StackedAreaChart = ({
         // Sort chart by order
         let sortSource = statisticTagsList?.largeCategories;
 
-        if (selectedLarge && statisticTagsList?.mediumCategories?.length) {
+        if (
+          selectedLarge?.value !== '' &&
+          statisticTagsList?.mediumCategories?.length
+        ) {
           sortSource = statisticTagsList.mediumCategories;
           if (selectedMedium && statisticTagsList?.smallCategories?.length) {
             sortSource = statisticTagsList.smallCategories;
@@ -846,7 +849,7 @@ const StackedAreaChart = ({
               {/* Column Chart 1 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && !selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && selectedLarge?.value == '' && selectedMedium?.value == '' && selectedSmall?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   チーム
                 </div>
                 <div className="mt-4 w-full">
@@ -864,7 +867,7 @@ const StackedAreaChart = ({
                   />
                 </div>
               </div>
-              {selectedLarge ? (
+              {selectedLarge?.value != '' ? (
                 <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit`}
@@ -879,7 +882,7 @@ const StackedAreaChart = ({
               {/* Column Chart 2 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && selectedLarge?.value !== '' && selectedMedium?.value == '' && selectedSmall?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   大カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -911,7 +914,7 @@ const StackedAreaChart = ({
               {/* Column Chart 3 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && selectedLarge?.value != '' && selectedMedium?.value != '' && selectedSmall?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   中カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -926,7 +929,9 @@ const StackedAreaChart = ({
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
                     disabled={
-                      !selectedLarge || isHasLoading || isDisableCalendar
+                      selectedLarge?.value == '' ||
+                      isHasLoading ||
+                      isDisableCalendar
                     }
                   />
                 </div>
@@ -945,7 +950,7 @@ const StackedAreaChart = ({
               {/* Column Chart 4 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && selectedMedium && selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && selectedLarge?.value != '' && selectedMedium?.value != '' && selectedSmall?.value != '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   小カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -960,7 +965,9 @@ const StackedAreaChart = ({
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
                     disabled={
-                      !selectedMedium || isHasLoading || isDisableCalendar
+                      selectedMedium?.value == '' ||
+                      isHasLoading ||
+                      isDisableCalendar
                     }
                   />
                 </div>

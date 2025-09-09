@@ -611,7 +611,9 @@ const PercentageTeamTags = ({
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}
                       disabled={
-                        !selectedLarge || isHasLoading || isDisableCalendar
+                        selectedLarge?.value == '' ||
+                        isHasLoading ||
+                        isDisableCalendar
                       }
                     />
                     {dataChartSmall.data.length > 0 ? (
@@ -669,7 +671,9 @@ const PercentageTeamTags = ({
                       selectedOption={selectedSmall || undefined}
                       onChange={(data) => handleSelectSmall(data)}
                       disabled={
-                        !selectedMedium || isHasLoading || isDisableCalendar
+                        selectedMedium?.value == '' ||
+                        isHasLoading ||
+                        isDisableCalendar
                       }
                     />
                     {dataChartCategory.data.length > 0 ? (

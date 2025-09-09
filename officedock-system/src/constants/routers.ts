@@ -669,4 +669,10 @@ export const apiRouters = {
 
   // DOT MONEY
   LOGIN_EXCHANGE: '/dotmoney/exchange-url/',
+
+  // POINT HISTORY
+  POINT_HISTORY: '/point-histories/',
+
+  // SHOP ITEM
+  SHOP_ITEMS: '/shop-items/',
 };

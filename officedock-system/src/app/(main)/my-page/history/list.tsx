@@ -1,14 +1,68 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from 'react-query';
+import { useRouter } from 'next/navigation';
 
 import ImageRound from '@components/common/ImageRound';
+import DataCountPointChangeModal from '@components/modals/DataCountPointChangeModal';
+import DataCompanyPointChangeModal from '@components/modals/DetailCompanyChangePoint';
+import Button from '@components/common/Button';
 
 import { pageRouters } from '@constants/routers';
-import { useRouter } from 'next/navigation';
-import Button from '@components/common/Button';
+import useHistoryPointList from '@hooks/useListHistoryPoint';
 
 const HistoryListPage = () => {
   const router = useRouter();
+  const [isShowTotalPointChangeModal, setIsShowTotalPointChangeModal] =
+    useState(false);
+  const [isShowDetailCompanyChangeCoin, setIsShowDetailCompanyChangeCoin] =
+    useState(false);
+
+  const resultsContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const queryClient = useQueryClient();
+  const {
+    historyPointList,
+    fetchNextPage,
+    hasNextPage,
+    isLoadingList,
+    isFetchingNextPage,
+  } = useHistoryPointList({
+    type: 'COIN',
+  });
+
+  useEffect(() => {
+    return () => {
+      queryClient.removeQueries(['getHistoryPontList']);
+    };
+  }, [queryClient]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const surveyContainer = resultsContainerRef.current;
+      if (
+        surveyContainer &&
+        hasNextPage &&
+        !isFetchingNextPage &&
+        surveyContainer.clientHeight + Math.abs(surveyContainer.scrollTop) >=
+          surveyContainer.scrollHeight - 10
+      ) {
+        fetchNextPage();
+      }
+    };
+
+    const surveyContainer = resultsContainerRef.current;
+
+    if (surveyContainer) {
+      surveyContainer.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (surveyContainer) {
+        surveyContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   return (
     <>
@@ -80,7 +134,9 @@ const HistoryListPage = () => {
                     </p>
                   </div>
                   <div className="flex items-center gap-[10px] justify-end mt-6 pr-3">
-                    <div className="flex items-center gap-3 py-[6px] px-3 rounded-lg bg-[#EBF1F7]">
+                    <div
+                      onClick={() => setIsShowTotalPointChangeModal(true)}
+                      className="flex items-center gap-3 py-[6px] px-3 rounded-lg bg-[#EBF1F7]">
                       <p className="text-[13px] font-normal">
                         今月交換可能なコイン数
                       </p>
@@ -99,6 +155,7 @@ const HistoryListPage = () => {
                   </div>
                   <div className="flex justify-center mt-[30px]">
                     <Button
+                      onClick={() => setIsShowDetailCompanyChangeCoin(true)}
                       variant="post"
                       className="w-[200px] h-[46px] text-sm font-medium rounded-md">
                       交換する
@@ -146,32 +203,43 @@ const HistoryListPage = () => {
                     <div className="flex-grow px-5">メモ</div>
                   </div>
                   {/* Table */}
-                  <div className="h-full max-h-[calc(100vh_-_415px)]  pr-[10px]  overflow-y-auto   mt-[14px]">
+                  <div
+                    ref={resultsContainerRef}
+                    className="h-full max-h-[calc(100vh_-_415px)]  pr-[10px]  overflow-y-auto   mt-[14px]">
                     <div className="w-full bg-white h-full py-[14px] rounded-[14px]">
-                      <div
-                        className={`flex rounded-br-[14px] text-xs rounded-bl-[14px] items-stretch  bg-white text-black  font-normal py-[14px]`}>
-                        {/* Date column */}
-                        <div className="w-[134px] pl-5 pr-2 flex items-center">
-                          2025年10月11日
-                        </div>
-                        <div className="w-[1px] border-l border-[#D2DBE1] -my-[10px]"></div>
-                        <div className="w-[129px] px-[15px] flex items-center justify-between">
-                          5
-                        </div>
-                        <div className="w-[1px] border-l border-[#D2DBE1] -my-[10px]"></div>
-                        <div className="w-[129px] px-[15px] flex items-center justify-between">
-                          5
-                        </div>
-                        <div className="w-[1px] border-l border-[#D2DBE1] -my-[10px]"></div>
-                        <div className="w-[129px] px-[15px] flex items-center justify-between">
-                          5
-                        </div>
-                        <div className="w-[1px] border-l border-[#D2DBE1] -my-[10px]"></div>
+                      {historyPointList.length &&
+                        !isLoadingList &&
+                        historyPointList.map((item, index) => {
+                          return (
+                            <div
+                              key={index}
+                              className={`flex rounded-br-[14px] text-xs rounded-bl-[14px] items-stretch  bg-white text-black  font-normal py-[14px]`}>
+                              {/* Date column */}
+                              <div className="w-[134px] pl-5 pr-2 flex items-center">
+                                {/* TODO: Format time  */}
+                                {/* {item. &&
+                                  formatShowDateJapanese(item.createdAt)} */}
+                              </div>
+                              <div className="w-[1px] border-l border-[#D2DBE1] -my-[10px]"></div>
+                              <div className="w-[129px] px-[15px] flex items-center justify-between">
+                                5
+                              </div>
+                              <div className="w-[1px] border-l border-[#D2DBE1] -my-[10px]"></div>
+                              <div className="w-[129px] px-[15px] flex items-center justify-between">
+                                5
+                              </div>
+                              <div className="w-[1px] border-l border-[#D2DBE1] -my-[10px]"></div>
+                              <div className="w-[129px] px-[15px] flex items-center justify-between">
+                                5
+                              </div>
+                              <div className="w-[1px] border-l border-[#D2DBE1] -my-[10px]"></div>
 
-                        <div className="flex-grow flex items-center justify-center text-sm">
-                          スキルアップ
-                        </div>
-                      </div>
+                              <div className="flex-grow flex items-center justify-center text-sm">
+                                スキルアップ
+                              </div>
+                            </div>
+                          );
+                        })}
                       <div className="bg-[#409EDE] w-full my-[14px] h-[2px]"></div>
                     </div>
                   </div>
@@ -181,6 +249,18 @@ const HistoryListPage = () => {
           </div>
         </div>
       </div>
+      {isShowTotalPointChangeModal && (
+        <DataCountPointChangeModal
+          open={isShowTotalPointChangeModal}
+          onClose={() => setIsShowTotalPointChangeModal(false)}
+        />
+      )}
+      {isShowDetailCompanyChangeCoin && (
+        <DataCompanyPointChangeModal
+          open={isShowDetailCompanyChangeCoin}
+          onClose={() => setIsShowDetailCompanyChangeCoin(false)}
+        />
+      )}
     </>
   );
 };

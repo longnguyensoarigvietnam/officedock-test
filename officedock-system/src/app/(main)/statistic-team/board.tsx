@@ -183,18 +183,18 @@ const StatisticTeamBoard = () => {
           } else {
             if (
               selectedMedium &&
-              selectedMedium.value &&
+              selectedMedium.value != '' &&
               selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ) {
               setTotalDurationTask(DEFAULT_TIME_TEXT);
               return;
             }
-            if (selectedSmall && selectedSmall.value) return;
+            if (selectedSmall && selectedSmall.value != '') return;
 
             setTotalDurationTask(data.mediumTotalDuration);
           }
         } else {
-          if (selectedLarge && selectedLarge.value) return;
+          if (selectedLarge && selectedLarge.value != '') return;
           setTotalDurationTask(data.largeTotalDuration);
         }
       } else {
@@ -318,19 +318,19 @@ const StatisticTeamBoard = () => {
             } else {
               if (
                 selectedMedium &&
-                selectedMedium.value &&
+                selectedMedium.value != '' &&
                 selectedOrganization?.type ===
                   OrganizationStatisticType.CALENDAR
               ) {
                 setTotalDurationTask(DEFAULT_TIME_TEXT);
                 return;
               }
-              if (selectedSmall && selectedSmall.value) return;
+              if (selectedSmall && selectedSmall.value != '') return;
 
               setTotalDurationTaskCompare(data.mediumTotalDuration);
             }
           } else {
-            if (selectedLarge && selectedLarge.value) return;
+            if (selectedLarge && selectedLarge.value != '') return;
             setTotalDurationTaskCompare(data.largeTotalDuration);
           }
         } else {
@@ -380,12 +380,7 @@ const StatisticTeamBoard = () => {
           );
           setOrderingOptions({
             tag_ids: [],
-            user_ids: mainItem.members.map((member) => ({
-              value: member.id,
-              label: member.fullName,
-              color: member?.avatarColor || '',
-              avatarUrl: member?.avatar || '',
-            })),
+            user_ids: [],
           });
 
           return {
@@ -758,7 +753,11 @@ const StatisticTeamBoard = () => {
                 options={mediumOptions}
                 selectedOption={selectedMedium || undefined}
                 onChange={(data) => handleSelectMedium(data)}
-                disabled={!selectedLarge || isHasLoading || isDisableCalendar}
+                disabled={
+                  selectedLarge?.value == '' ||
+                  isHasLoading ||
+                  isDisableCalendar
+                }
               />
             </div>
           </div>

@@ -969,7 +969,9 @@ const AllocationTeamCategoryCompare = memo(
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
                         disabled={
-                          !selectedLarge || isHasLoading || isDisableCalendar
+                          selectedLarge?.value == '' ||
+                          isHasLoading ||
+                          isDisableCalendar
                         }
                       />
 
