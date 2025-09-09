@@ -11,7 +11,9 @@ from users.models import User
 from mvp_votes.serializers import MvpVoteManagementSerializer
 
 
-def build_list_mvp_vote_manage_payload(mvp_votes, many=False):
+def build_list_mvp_vote_manage_payload(
+    mvp_votes, many=False, is_show_in_mypage=False
+):
     """
     Convert MVPVoteManagement queryset to flat JSON dict list, avoiding N+1 queries.
     """
@@ -82,14 +84,18 @@ def build_list_mvp_vote_manage_payload(mvp_votes, many=False):
         for mvp_vote in mvp_votes:
             result.append(build_mvp_vote_payload(mvp_vote, candidates_map))
     else:
-        result = build_mvp_vote_payload(mvp_votes, candidates_map, main_org_map)
+        result = build_mvp_vote_payload(
+            mvp_votes, candidates_map, main_org_map, is_show_in_mypage
+        )
         user_count = mvp_votes.company.users.count()
         result["total_voters"] = user_count
 
     return result
 
 
-def build_mvp_vote_payload(mvp_vote, candidates_map, org_map=None):
+def build_mvp_vote_payload(
+    mvp_vote, candidates_map, org_map=None, is_show_in_mypage=False
+):
     data = MvpVoteManagementSerializer(mvp_vote).data
     if org_map and mvp_vote.selected_organizations:
         org_ids = list(map(int, mvp_vote.selected_organizations.split(",")))
@@ -110,6 +116,8 @@ def build_mvp_vote_payload(mvp_vote, candidates_map, org_map=None):
         vote_count=Count("votes_received")
     )
     for candidate_vote in candidates:
+        if is_show_in_mypage and candidate_vote.vote_count <= 0:
+            continue
         candidate_map = deepcopy(candidates_map.get(candidate_vote.user.id))
         candidate_map["vote_count"] = candidate_vote.vote_count
         candidate_map["mvp_candidate_id"] = candidate_vote.id

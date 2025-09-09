@@ -310,4 +310,6 @@ class MVPVoteViewSet(
                 .order_by("-end_date")
                 .first()
             )
-        return self.response_ok(build_list_mvp_vote_manage_payload(mvp_vote))
+        return self.response_ok(
+            build_list_mvp_vote_manage_payload(mvp_vote, is_show_in_mypage=True)
+        )
