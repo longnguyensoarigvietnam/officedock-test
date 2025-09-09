@@ -520,7 +520,7 @@ const TaskPageDataHeader = () => {
   );
 
   const handleStartEmptyTask = () => {
-    const isMainOrg = authenticatedUser?.organizations.find(
+    const isMainOrg = authenticatedUser?.organizations?.find(
       (organization) => organization.isMain,
     );
     if (isMainOrg) {
