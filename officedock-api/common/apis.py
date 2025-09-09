@@ -25,6 +25,7 @@ from common.helpers import (
     get_data_organization_team_statistic,
     get_event_locations,
     get_filter_organization_categories,
+    get_is_have_mvp_vote,
     get_items_of_user,
     get_members,
     get_organization_skills,
@@ -35,6 +36,7 @@ from common.helpers import (
     get_statistic_categories,
     get_tags,
     get_task_status,
+    get_unanswered_count,
     get_user_setting,
 )
 from companies.serializers import CompanySerializer
@@ -104,6 +106,8 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             OpenApiParameter("get_company", type=bool),
             OpenApiParameter("get_items_of_user", type=bool),
             OpenApiParameter("get_balances_of_user", type=bool),
+            OpenApiParameter("get_unanswered_count_of_survey", type=bool),
+            OpenApiParameter("get_current_mvp_vote", type=bool),
         ]
     )
     @action(methods=["GET"], detail=False, url_path="common")
@@ -223,6 +227,11 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             response_data["items_of_user"] = get_items_of_user(user)
         if "get_balances_of_user" in request.query_params:
             response_data["balances_of_user"] = get_balances_of_user(user)
+            response_data["items_of_user"] = get_items_of_user(user)
+        if "get_unanswered_count_of_survey" in request.query_params:
+            response_data["unanswered_count"] = get_unanswered_count(user)
+        if "get_current_mvp_vote" in request.query_params:
+            response_data["is_has_mvp_voting"] = get_is_have_mvp_vote(company)
 
         return self.response_ok(response_data)
 
