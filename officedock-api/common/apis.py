@@ -20,10 +20,12 @@ from calendars.models import Schedule
 from chat.constants import WebSocketEventType
 from common.helpers import (
     get_all_organizations,
+    get_balances_of_user,
     get_data_organization_my_statistic,
     get_data_organization_team_statistic,
     get_event_locations,
     get_filter_organization_categories,
+    get_items_of_user,
     get_members,
     get_organization_skills,
     get_organization_with_categories,
@@ -100,6 +102,8 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             OpenApiParameter("get_organization_with_users", type=bool),
             OpenApiParameter("get_organization_for_my_statistic", type=bool),
             OpenApiParameter("get_company", type=bool),
+            OpenApiParameter("get_items_of_user", type=bool),
+            OpenApiParameter("get_balances_of_user", type=bool),
         ]
     )
     @action(methods=["GET"], detail=False, url_path="common")
@@ -215,6 +219,10 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             response_data["organization_users"] = get_organization_with_users(
                 organizations
             )
+        if "get_items_of_user" in request.query_params:
+            response_data["items_of_user"] = get_items_of_user(user)
+        if "get_balances_of_user" in request.query_params:
+            response_data["balances_of_user"] = get_balances_of_user(user)
 
         return self.response_ok(response_data)
 

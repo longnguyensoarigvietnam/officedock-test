@@ -357,11 +357,13 @@ class User(AbstractBaseUser, BaseModel, PermissionsMixin):
 
     @property
     def coin(self):
-        return self.balances.coin if self.balances else 0
+        user_balance = UserService().get_user_balance(self)
+        return user_balance.coin
 
     @property
     def pearl(self):
-        return self.balances.pearl if self.balances else 0
+        user_balance = UserService().get_user_balance(self)
+        return user_balance.pearl
 
     @property
     def exchangeable_coin(self):

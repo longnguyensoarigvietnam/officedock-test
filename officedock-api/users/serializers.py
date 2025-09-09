@@ -30,6 +30,7 @@ from users.models import (
     Profile,
     Role,
     User,
+    UserBalance,
     UserVerification,
     Setting,
     DailyReport,
@@ -849,3 +850,13 @@ class TransactionHistorySerializer(serializers.ModelSerializer):
             "memo",
         ]
         read_only_fields = ["id"]
+
+
+class UserBalanceSerializer(serializers.ModelSerializer):
+    """
+    Serializer for user balance
+    """
+
+    class Meta:
+        model = UserBalance
+        fields = ["id", "coin", "pearl", "exchangeable_coin"]

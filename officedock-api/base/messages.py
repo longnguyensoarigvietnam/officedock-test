@@ -127,6 +127,7 @@ _ERROR_MESSAGES = {
         ),
         "unique_vote": _("This candidate is voted"),
         "cannot_start_vote": _("Cannot start this MVP vote"),
+        "cannot_buy_item": _("Cannot buy this item"),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -212,6 +213,7 @@ _ERROR_MESSAGES = {
         "quota_exceeded": _("今月のサンクスメッセージ送信可能回数は上限に達しました。"),
         "unique_vote": _("この候補者に投票しました。"),
         "cannot_start_vote": _("この投票を開始できません。"),
+        "cannot_buy_item": _("このアイテムを購入するためのポイントが不足しています。"),
     },
 }
 

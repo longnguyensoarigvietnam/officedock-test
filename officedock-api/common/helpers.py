@@ -17,13 +17,19 @@ from organizations.serializers import (
     OrganizationDetailSerializer,
 )
 from roles.constants import Actions, Screens, SelectionResultOptions
+from shop_items.models import ShopItems
+from shop_items.serializers import ShopItemSerializer
 from skills.models import Skill, StatisticCategory
 from stat_data.constants import ALL_TEAM
 from tags.serializers import BaseTagSerializer
 from tasks.constants import TaskCategoryTypes
 from tasks.models import TaskStatus
 from users.models import Role, RoleDetail
-from users.serializers import RoleSerializer, SettingSerializer
+from users.serializers import (
+    RoleSerializer,
+    SettingSerializer,
+    UserBalanceSerializer,
+)
 
 
 def get_all_organizations(company, organizations):
@@ -295,3 +301,20 @@ def get_organization_with_users(organizations):
             CreationDataOrganizationWithUserSerializer(organization).data
         )
     return list_org
+
+
+def get_items_of_user(user):
+    """
+    Get list item is weared of given user
+    """
+    items = ShopItems.objects.filter(
+        user_items__user=user, user_items__is_weared=True
+    )
+    return ShopItemSerializer(items, many=True).data
+
+
+def get_balances_of_user(user):
+    """
+    Get current balances of user
+    """
+    return UserBalanceSerializer(user.balances).data

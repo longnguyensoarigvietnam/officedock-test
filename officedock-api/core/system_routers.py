@@ -7,6 +7,7 @@ from calendars.apis import (
     ScheduleTeamdockViewSet,
 )
 from companies.apis import SystemCompanyViewSet
+from shop_items.apis import ShopItemViewSet, UserItemViewSet
 from stat_data.apis import StatDataViewSet
 from skills.apis import (
     StatisticCategoryViewSet,
@@ -76,6 +77,7 @@ api_router.register(
 api_router.register(
     "organizations", OrganizationByIDViewSet, basename="organizations_by_id"
 )
+api_router.register("users", UserItemViewSet, basename="user_items")
 api_router.register("users", SystemUserMemoViewSet, basename="users_memos")
 api_router.register("users", SystemUserViewSet, basename="users")
 api_router.register("tags", TagViewSet, basename="tags")
@@ -172,6 +174,7 @@ api_router.register("dotmoney", DotMoneyViewSet, basename="dotmoney")
 api_router.register(
     "point-histories", SystemPointHistoryViewSet, basename="point_histories"
 )
+api_router.register("shop-items", ShopItemViewSet, basename="shop_items")
 
 # Add api router urls
 urlpatterns = []
