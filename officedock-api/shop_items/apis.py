@@ -11,7 +11,6 @@ from shop_items.filters import ShopItemFilter
 from shop_items.models import ShopItems, UserItems
 from shop_items.serializers import GroupedItemSerializer, UserItemSerializer
 from users.constants import CurrencyEnums
-from users.models import User
 from base.messages import ERROR_MESSAGES
 
 
@@ -71,12 +70,11 @@ class ShopItemViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
 
 @extend_schema(tags=["System > Users"])
-class UserItemViewSet(BaseAPIViewSet, mixins.ListModelMixin):
+class UserItemViewSet(BaseAPIViewSet):
     """
     API endpoint for shop items
     """
 
-    queryset = User.objects.all()
     permission_classes = [IsAuthenticated]
 
     @action(

@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.utils.timezone import now
 from calendars.serializers import EventLocationSerializer
 from common.serializers import (
     CreationDataOrganizationSerializer,
@@ -11,6 +12,8 @@ from common.serializers import (
     CreationDataUserWithMainOrganizationSerializer,
 )
 from common.utils import transform_statistic_categories
+from mvp_votes.constants import MVPVoteTypes
+from mvp_votes.models import MVPVoteManagement
 from organizations.models import Organization
 from organizations.serializers import (
     BaseStatisticCategorySerializer,
@@ -21,6 +24,7 @@ from shop_items.models import ShopItems
 from shop_items.serializers import ShopItemSerializer
 from skills.models import Skill, StatisticCategory
 from stat_data.constants import ALL_TEAM
+from surveys.models import Survey
 from tags.serializers import BaseTagSerializer
 from tasks.constants import TaskCategoryTypes
 from tasks.models import TaskStatus
@@ -318,3 +322,62 @@ def get_balances_of_user(user):
     Get current balances of user
     """
     return UserBalanceSerializer(user.balances).data
+
+
+def get_unanswered_count(user):
+    """
+    Returns the count of surveys that need user attention:
+    1. Open surveys that haven't been answered (excluding user's own surveys)
+    2. Closed surveys that haven't been viewed (including user's own surveys)
+    """
+    current_user = user
+    company_id = current_user.company_id
+
+    # 1. Count open surveys that haven't been answered (excluding user's own surveys)
+    open_surveys = Survey.objects.filter(
+        company_id=company_id,
+        end_at__gt=now(),  # Open surveys
+    )
+    other_open_surveys = open_surveys.exclude(
+        created_by=current_user  # Exclude user's own surveys
+    )
+
+    # Get open surveys that the user has already answered
+    answered_open_surveys = other_open_surveys.filter(
+        answers__respondent=current_user
+    ).distinct()
+
+    # Calculate unanswered open surveys
+    unanswered_open_count = (
+        other_open_surveys.count() - answered_open_surveys.count()
+    )
+
+    # 2. Count closed surveys that haven't been viewed (including user's own surveys)
+    closed_surveys = Survey.objects.filter(
+        company_id=company_id,
+        end_at__lte=now(),  # Closed surveys
+    )
+
+    # Get closed surveys that the user has already viewed
+    viewed_closed_surveys = closed_surveys.filter(
+        viewed_records__user=current_user
+    ).distinct()
+
+    # Calculate unviewed closed surveys
+    unviewed_closed_count = (
+        closed_surveys.count() - viewed_closed_surveys.count()
+    )
+
+    # Total count
+    total_count = unanswered_open_count + unviewed_closed_count
+
+    return {"count": total_count, "is_open_surveys": open_surveys.count() > 0}
+
+
+def get_is_have_mvp_vote(company):
+    """
+    Get present MVP vote by company
+    """
+    return MVPVoteManagement.objects.filter(
+        type=MVPVoteTypes.PRESENT.value, company=company
+    ).exists()
