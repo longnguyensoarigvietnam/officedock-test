@@ -877,7 +877,7 @@ const LineChart = ({
               {/* Column Chart 1 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && !selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization?.value != '' && selectedLarge?.value == '' && selectedMedium?.value == '' && selectedSmall?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   チーム
                 </div>
                 <div className="mt-4 w-full">
@@ -895,7 +895,7 @@ const LineChart = ({
                   />
                 </div>
               </div>
-              {selectedLarge ? (
+              {selectedLarge?.value != '' ? (
                 <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit`}
@@ -910,7 +910,7 @@ const LineChart = ({
               {/* Column Chart 2 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization?.value != '' && selectedLarge?.value != '' && selectedMedium?.value == '' && selectedSmall?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   大カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -924,11 +924,11 @@ const LineChart = ({
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => handleSelectLarge(data)}
-                    disabled={!selectedOrganization || isHasLoading}
+                    disabled={selectedOrganization?.value == '' || isHasLoading}
                   />
                 </div>
               </div>
-              {selectedMedium ? (
+              {selectedMedium?.value != '' ? (
                 <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit`}
@@ -942,7 +942,7 @@ const LineChart = ({
               {/* Column Chart 3 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization?.value != '' && selectedLarge?.value != '' && selectedMedium?.value != '' && selectedSmall?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   中カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -957,12 +957,12 @@ const LineChart = ({
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
                     disabled={
-                      !selectedLarge || isHasLoading || isDisableCalendar
+                      selectedLarge?.value == '' || isHasLoading || isDisableCalendar
                     }
                   />
                 </div>
               </div>
-              {selectedSmall ? (
+              {selectedSmall?.value != '' ? (
                 <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit`}
@@ -976,7 +976,7 @@ const LineChart = ({
               {/* Column Chart 4 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && selectedMedium && selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization?.value != '' && selectedLarge?.value != '' && selectedMedium?.value != '' && selectedSmall?.value != '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   小カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -991,7 +991,7 @@ const LineChart = ({
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
                     disabled={
-                      !selectedMedium || isHasLoading || isDisableCalendar
+                      selectedMedium?.value == '' || isHasLoading || isDisableCalendar
                     }
                   />
                 </div>

@@ -15,11 +15,11 @@ import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 interface FilterProps {
   endDate: string | Date;
   fromDate: string | Date;
-  largeCategoryId?: number;
-  mediumCategoryId?: number;
+  largeCategoryId?: number | string;
+  mediumCategoryId?: number | string;
+  smallCategoryId?: number | string;
   organizationIds?: string;
   tagIds?: OptionDropdownType[];
-  smallCategoryId?: number;
 }
 
 const useStatisticsTags = ({

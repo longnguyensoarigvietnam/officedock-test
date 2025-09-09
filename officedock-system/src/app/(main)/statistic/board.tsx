@@ -17,7 +17,7 @@ import FilterStatistic from '@components/statistic/category/filter/FilterStatist
 import LineChart from '@components/statistic/category/LineChart';
 
 import { OrganizationStatisticType } from '@constants/enums';
-import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
+import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT, NO_SETTING } from '@constants';
 import { pageRouters } from '@constants/routers';
 import useStatisticCategoriesCompare from '@hooks/useStatisticCategoriesCompare';
 import useStatisticCategories from '@hooks/useStatisticCategories';
@@ -89,9 +89,18 @@ const StatisticBoard = () => {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value as number,
-      mediumCategoryId: selectedMedium?.value as number,
-      smallCategoryId: selectedSmall?.value as number,
+      largeCategoryId:
+        selectedLarge?.value == null
+          ? NO_SETTING
+          : (selectedLarge?.value as number),
+      mediumCategoryId:
+        selectedMedium?.value == null
+          ? NO_SETTING
+          : (selectedMedium?.value as number),
+      smallCategoryId:
+        selectedSmall?.value == null
+          ? NO_SETTING
+          : (selectedSmall?.value as number),
       tagIds: selectedTags,
     },
     condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
@@ -184,9 +193,18 @@ const StatisticBoard = () => {
       fromDate: formatDateToYMD(startDateCompare) || '',
       endDate: formatDateToYMD(`${endDateCompare}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value as number,
-      mediumCategoryId: selectedMedium?.value as number,
-      smallCategoryId: selectedSmall?.value as number,
+      largeCategoryId:
+        selectedLarge?.value == null
+          ? NO_SETTING
+          : (selectedLarge?.value as number),
+      mediumCategoryId:
+        selectedMedium?.value == null
+          ? NO_SETTING
+          : (selectedMedium?.value as number),
+      smallCategoryId:
+        selectedSmall?.value == null
+          ? NO_SETTING
+          : (selectedSmall?.value as number),
       isCompare: isCheckCompare,
       tagIds: selectedTags,
     },
@@ -266,8 +284,14 @@ const StatisticBoard = () => {
         fromDate: formatDateToYMD(startDate) || '',
         endDate: formatDateToYMD(`${endDate}`) || '',
         organizationIds: String(selectedOrganization?.value || ''),
-        largeCategoryId: selectedLarge?.value || '',
-        mediumCategoryId: selectedMedium?.value || '',
+        largeCategoryId:
+          selectedLarge?.value == null
+            ? NO_SETTING
+            : (selectedLarge?.value as number),
+        mediumCategoryId:
+          selectedMedium?.value == null
+            ? NO_SETTING
+            : (selectedMedium?.value as number),
         tagIds: selectedTags,
         statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
       },
@@ -297,8 +321,14 @@ const StatisticBoard = () => {
       fromDate: formatDateToYMD(startDateCompare) || '',
       endDate: formatDateToYMD(`${endDateCompare}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value || '',
-      mediumCategoryId: selectedMedium?.value || '',
+      largeCategoryId:
+        selectedLarge?.value == null
+          ? NO_SETTING
+          : (selectedLarge?.value as number),
+      mediumCategoryId:
+        selectedMedium?.value == null
+          ? NO_SETTING
+          : (selectedMedium?.value as number),
       tagIds: selectedTags,
       statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
       isCompare: isCheckCompare,
