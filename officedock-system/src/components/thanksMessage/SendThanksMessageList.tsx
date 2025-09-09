@@ -86,7 +86,7 @@ export const SendThanksMessageList = ({
                   return (
                     <div
                       key={`${organization.orgInfo.id}-${user.id}`}
-                      className={`w-[157px] bg-white rounded-[14px] h-[50px] px-[20px] py-[10px] flex items-center gap-2 ${(!remainingQuota?.remainingQuota || session?.user.id == user.id) && 'hover:cursor-not-allowed'}`}
+                      className={`w-[157px] bg-white rounded-[14px] h-[50px] px-[20px] py-[10px] flex items-center gap-2 ${(!remainingQuota?.remainingQuota || session?.user.id == user.id) ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
                       onClick={() => {
                         remainingQuota?.remainingQuota &&
                           session?.user.id != user.id &&

@@ -149,4 +149,9 @@ export type CreationDataCommon = {
   company?: Company;
   allOrganizations?: Organizations[];
   statisticCategories?: CreationDataStatisticCategory[];
+  isHasMvpVoting?: boolean;
+  unansweredCount?: {
+    count: number;
+    isOpenSurveys: boolean;
+  };
 };

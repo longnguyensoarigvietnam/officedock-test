@@ -54,7 +54,7 @@ const TableComponent = ({
   }[];
   setIsTyping: Dispatch<SetStateAction<boolean>>;
   setHierarchyList: Dispatch<SetStateAction<HierarchyDetail[]>>;
-  setSelectedHierarchiesToDelete: Dispatch<SetStateAction<string[]>>
+  setSelectedHierarchiesToDelete: Dispatch<SetStateAction<string[]>>;
   setSelectedHierarchiesToUpdate: Dispatch<
     SetStateAction<
       {
@@ -105,14 +105,15 @@ const TableComponent = ({
   useEffect(() => {
     if (categoryList) {
       const categoryOptions = categoryList.filter(
-        (category) =>
-          category.teamId == null || category.teamId == hierarchyList.id,
+        (category) => category.teamId == null,
       );
       setCategoryDropdownOptions(categoryOptions);
     }
   }, [categoryList, hierarchyList.id]);
 
-  const findLastUniqueMediumIndexes = (data: OrganizationCategoryRow[]): number[] => {
+  const findLastUniqueMediumIndexes = (
+    data: OrganizationCategoryRow[],
+  ): number[] => {
     const lastIndexes: number[] = [];
     let currentLargeValue: number | string | null = null;
     let mediumIndexes: Record<number | string, number> = {}; // Tracks first occurrence of each medium value
@@ -142,7 +143,9 @@ const TableComponent = ({
     return lastIndexes;
   };
 
-  const findLastUniqueSmallIndexes = (data: OrganizationCategoryRow[]): number[] => {
+  const findLastUniqueSmallIndexes = (
+    data: OrganizationCategoryRow[],
+  ): number[] => {
     const lastIndexes: number[] = [];
     let currentLargeValue: number | string | null = null;
     let currentMediumValue: number | string | null = null;
@@ -290,7 +293,10 @@ const TableComponent = ({
     HierarchyType.MEDIUM,
   );
 
-  const handleAddSmallCategory = (option: string, rowInfo: OrganizationCategoryRow) => {
+  const handleAddSmallCategory = (
+    option: string,
+    rowInfo: OrganizationCategoryRow,
+  ) => {
     const newUuid = uuidv4();
     const newRow = {
       id: newUuid,
@@ -355,7 +361,10 @@ const TableComponent = ({
     });
   };
 
-  const handleAddMediumCategory = (option: string, rowInfo: OrganizationCategoryRow) => {
+  const handleAddMediumCategory = (
+    option: string,
+    rowInfo: OrganizationCategoryRow,
+  ) => {
     const newUuid = uuidv4();
     const newRow = {
       id: newUuid,
@@ -479,8 +488,7 @@ const TableComponent = ({
       const updatedHierarchiesToUpdate = [...prev];
 
       const existingIndex = updatedHierarchiesToUpdate.findIndex(
-        (item) =>
-          item.organizationStatisticCategoryId === variables.rowInfo.id,
+        (item) => item.organizationStatisticCategoryId === variables.rowInfo.id,
       );
 
       let newEntry: any = {};
@@ -512,8 +520,8 @@ const TableComponent = ({
                   uuid: variables.rowInfo.small.value as string,
                 },
           color: variables.rowInfo.color,
-          skillIds: variables.rowInfo.skills.map(
-            (skill: OptionDropdownType) => Number(skill.value),
+          skillIds: variables.rowInfo.skills.map((skill: OptionDropdownType) =>
+            Number(skill.value),
           ),
         };
       } else if (variables.type == HierarchyType.MEDIUM) {
@@ -544,8 +552,8 @@ const TableComponent = ({
                   uuid: variables.rowInfo.small.value as string,
                 },
           color: variables.rowInfo.color,
-          skillIds: variables.rowInfo.skills.map(
-            (skill: OptionDropdownType) => Number(skill.value),
+          skillIds: variables.rowInfo.skills.map((skill: OptionDropdownType) =>
+            Number(skill.value),
           ),
         };
       } else {
@@ -576,8 +584,8 @@ const TableComponent = ({
                   uuid: variables.uuid as string,
                 },
           color: variables.rowInfo.color,
-          skillIds: variables.rowInfo.skills.map(
-            (skill: OptionDropdownType) => Number(skill.value),
+          skillIds: variables.rowInfo.skills.map((skill: OptionDropdownType) =>
+            Number(skill.value),
           ),
         };
       }
@@ -1750,10 +1758,15 @@ const TableComponent = ({
                             className="h-full !rounded-[5px] w-full flex-grow"
                             valueClassName="!border-[#77858F]"
                             labelClass="w-[160px]"
-                            selectedOption={categoryDropdownOptions.find(
-                              (element) =>
-                                element.value === row.original.large.value,
-                            )}
+                            selectedOption={
+                              row.original.large &&
+                              !isUUID(row.original.large.label)
+                                ? {
+                                    label: row.original.large.label,
+                                    value: row.original.large.value,
+                                  }
+                                : undefined
+                            }
                             onPendingChange={(e) => {
                               const oldLargeOption = row.original.large;
                               if (e.value == oldLargeOption.value) return;
@@ -1864,10 +1877,15 @@ const TableComponent = ({
                                 className="h-full !rounded-[5px] w-full flex-grow"
                                 valueClassName="!border-[#77858F]"
                                 labelClass="w-[160px]"
-                                selectedOption={categoryDropdownOptions.find(
-                                  (element) =>
-                                    element.value === row.original.medium.value,
-                                )}
+                                selectedOption={
+                                  row.original.medium &&
+                                  !isUUID(row.original.medium.label)
+                                    ? {
+                                        label: row.original.medium.label,
+                                        value: row.original.medium.value,
+                                      }
+                                    : undefined
+                                }
                                 onPendingChange={(e) => {
                                   const oldMediumOption = row.original.medium;
                                   const oldLargeOption = row.original.large;
@@ -2007,10 +2025,15 @@ const TableComponent = ({
                               className="h-full !rounded-[5px]"
                               valueClassName="!border-[#77858F]"
                               labelClass="w-[160px]"
-                              selectedOption={categoryDropdownOptions.find(
-                                (element) =>
-                                  element.value == row.original.small.value,
-                              )}
+                              selectedOption={
+                                row.original.small &&
+                                !isUUID(row.original.small.label)
+                                  ? {
+                                      label: row.original.small.label,
+                                      value: row.original.small.value,
+                                    }
+                                  : undefined
+                              }
                               onPendingChange={(e) => {
                                 const oldMediumOption = row.original.medium;
                                 const oldLargeOption = row.original.large;

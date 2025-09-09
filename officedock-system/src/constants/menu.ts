@@ -275,6 +275,7 @@ export const MY_PAGE_MENU: MyPageMenuItem[] = [
     href: '',
     iconSrc: '/icons/question.svg',
     iconName: 'Question icon',
+    isOpenSurveys: false,
     child: [
       {
         name: 'アンケートを見る',
@@ -297,6 +298,7 @@ export const MY_PAGE_MENU: MyPageMenuItem[] = [
     href: '#',
     iconSrc: '/icons/mvp.svg',
     iconName: 'MVP icon',
+    isHasMvpVoting: false,
     child: [
       {
         name: 'MVP投票',

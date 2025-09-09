@@ -461,11 +461,6 @@ const Header = ({ className }: HeaderProps) => {
           .map((item) => ({ tagId: item.value }))
       : [];
 
-    const peopleInChargeIds =
-      data.peopleInChargeIds &&
-      data.peopleInChargeIds
-        .filter((item) => item.value !== '')
-        .map((item) => ({ peopleInChargeId: item.value }));
 
     const planList =
       data.plans &&
@@ -537,7 +532,6 @@ const Header = ({ className }: HeaderProps) => {
       taskSchedules: planList && planList.length ? planList : null,
       oldIdStatus: data.oldIdStatus,
       sendToChat: false,
-      peopleInChargeIds: peopleInChargeIds,
       organizationId: data.organization
         ? Number(data.organization.value)
         : null,

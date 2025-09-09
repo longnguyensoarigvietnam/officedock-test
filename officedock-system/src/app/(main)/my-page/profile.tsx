@@ -46,12 +46,12 @@ import { apiRouters, pageRouters } from '@constants/routers';
 import { MAX_MY_PAGE_SET_SKILLS } from '@constants';
 import { ActionsModal, ThanksMessageType } from '@constants/enums';
 
-import useUnansweredSurveyCount from '@hooks/useUnansweredSurveyCount';
 import useThanksMessageList from '@hooks/useThanksMessageList';
 import useTweetList from '@hooks/useTweetList';
 import useSetSkillList from '@hooks/useSetSkillList';
 import { useErrorToast } from '@hooks/useErrorToast';
 import { useUpdateTweetCache } from '@hooks/CacheQuery/useUpdateTweetCache';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 import { getLastChar } from '@utils';
@@ -151,7 +151,12 @@ const MyPage = () => {
   };
 
   // Unanswered survey count
-  const { unansweredSurveyCount } = useUnansweredSurveyCount({});
+  const { creationDataCommonData } = useCreationDataCommon({
+    options: {
+      get_unanswered_count_of_survey: true,
+      get_current_mvp_vote: true,
+    },
+  });
 
   useEffect(() => {
     return () => {
@@ -576,8 +581,9 @@ const MyPage = () => {
           {/* Menu */}
           <MyPageMenu
             onClickSettingSurvey={() => setOpenSettingSurvey(true)}
-            isOpenSurveys={unansweredSurveyCount?.isOpenSurveys || false}
-            unAnsweredSurveyCount={unansweredSurveyCount?.count || 0}
+            isOpenSurveys={creationDataCommonData?.unansweredCount?.isOpenSurveys || false}
+            unAnsweredSurveyCount={creationDataCommonData?.unansweredCount?.count || 0}
+            isHasMvpVoting={creationDataCommonData?.isHasMvpVoting || false}
           />
           <div className="flex-grow">
             <div className="h-[424px] w-[336px] ml-[200px] relative">
