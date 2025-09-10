@@ -825,15 +825,27 @@ def calculate_company_dates(company, reference_date=None):
 
     # Closing date for this month
     close_date = date(reference_date.year, reference_date.month, close_day)
+    start_close_date = close_date + timedelta(days=1)
 
     # Deadline date = closing date + editable days
-    deadline_date = close_date + timedelta(days=company_editable_after_closing)
+    deadline_date = close_date + timedelta(
+        days=company_editable_after_closing + 1
+    )
 
-    # Previous month's closing date
-    close_date_prev = close_date - relativedelta(months=1)
+    # Previous period start date logic
+    # - If close_date is not the last day of month: previous start = (close_date - 1 month) + 1 day
+    # - If close_date is the last day of month: previous start = first day of current month
+    is_end_of_month = close_date.day == last_day_of_month
+    if is_end_of_month:
+        close_date_prev = date(reference_date.year, reference_date.month, 1)
+    else:
+        close_date_prev = (close_date - relativedelta(months=1)) + timedelta(
+            days=1
+        )
 
     return {
         "close_date": close_date,
+        "start_close_date": start_close_date,
         "deadline_date": deadline_date,
         "close_date_prev": close_date_prev,
     }

@@ -267,6 +267,9 @@ def get_data_organization_my_statistic(user, organizations, company):
 
 
 def get_user_setting(user):
+    if not hasattr(user, "setting"):
+        user.set_setting()
+
     return SettingSerializer(user.setting).data
 
 
