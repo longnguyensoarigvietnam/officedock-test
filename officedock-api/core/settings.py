@@ -144,6 +144,7 @@ INSTALLED_APPS = [
     "thanks_messages",
     "mvp_votes",
     "shop_items",
+    "dotmoney",
 ]
 
 # Define constants

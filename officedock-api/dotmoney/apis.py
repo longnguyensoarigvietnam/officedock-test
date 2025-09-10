@@ -9,8 +9,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from base.apis import BaseAPIViewSet
 from dotmoney.service import DotMoneyService
-from users.models import User, UserBalance
+from users.models import User
 from dotmoney.constants import DOTMONEY_EXCHANGE_PATH, ExchangeStatus
+from users.constants import TransactionTypes
 
 
 @extend_schema(tags=["System > DotMoney"])
@@ -107,11 +108,8 @@ class DotMoneyViewSet(BaseAPIViewSet):
                 return redirect_complete(ExchangeStatus.NG.value, user_obj=user)
 
             # Deduct user's coin balance atomically
-            remaining_coin = user.coin - amount
-            remaining_exchangeable_coin = user.exchangeable_coin - amount
-            UserBalance.objects.filter(user=user).update(
-                coin=max(remaining_coin, 0),
-                exchangeable_coin=max(remaining_exchangeable_coin, 0),
+            user.use_coin(
+                amount=amount, transaction_type=TransactionTypes.EXCHANGE.value
             )
         except Exception:
             return redirect_complete(ExchangeStatus.NG.value)
