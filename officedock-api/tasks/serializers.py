@@ -443,6 +443,7 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         """
         Custom sorting by index for list people in charge
         """
+        action = self.context.get("action")
         task_schedule_from_date = self.context.get("task_schedule_from_date")
         task_schedule_end_date = self.context.get("task_schedule_end_date")
         representation = super().to_representation(instance)
@@ -463,6 +464,8 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
                     & Q(plan_end_date__date__lte=task_schedule_end_date.date())
                 )
             ).all()
+        elif action and action == "retrieve":
+            task_schedules = instance.task_schedules.all()
         else:
             task_schedules = instance.task_schedules.filter(
                 plan_start_date__date__gte=now().date()

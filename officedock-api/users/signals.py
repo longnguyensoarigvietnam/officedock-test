@@ -11,6 +11,9 @@ def create_chat_room_default(sender, instance, created, **kwargs):
     """
     Create chat room default
     """
+    if created:
+        instance.set_setting()
+
     company = instance.company
 
     for room_type, room_name in ROOM_TYPES:

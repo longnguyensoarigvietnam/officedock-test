@@ -44,7 +44,6 @@ from organizations.apis import (
     TeamViewSet,
 )
 from common.apis import (
-    DotMoneyViewSet,
     SystemCreationDataViewSet,
     CronJobViewSet,
 )
@@ -54,6 +53,7 @@ from dashboard.apis import (
     DashboardViewSet,
     DurationViewSet,
 )
+from dotmoney.apis import DotMoneyViewSet
 from chat.apis import ChatFileViewSet, ChatMessageViewSet, ChatRoomViewSet
 from roles.apis import RoleViewSet
 from surveys.apis import SurveyViewSet

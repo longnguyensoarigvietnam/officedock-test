@@ -489,26 +489,6 @@ class CronJobViewSet(BaseAPIViewSet):
         return False
 
     @extend_schema(
-        parameters=[OpenApiParameter("cronjob_key", type=str, required=True)]
-    )
-    @action(
-        methods=["POST"],
-        detail=False,
-        url_path="thanks-messages/remove-soft-deleted",
-    )
-    @transaction.atomic()
-    def delete_thanks_messages(self, request):
-        """Handle delete thanks messages if is soft delete after 30 days"""
-        threshold_date = now() - timedelta(
-            days=settings.THANKS_MESSAGE_SOFT_DELETE_RETENTION_DAYS
-        )
-        deleted_count, _ = ThanksMessage.objects.filter(
-            deleted_at__isnull=False, deleted_at__lte=threshold_date
-        ).delete()
-
-        return self.response_ok({"deleted": deleted_count})
-
-    @extend_schema(
         parameters=[
             OpenApiParameter("cronjob_key", type=str, required=True),
         ]
@@ -541,11 +521,12 @@ class CronJobViewSet(BaseAPIViewSet):
         for company in Company.objects.all():
             company_dates = calculate_company_dates(company)
             close_date = company_dates["close_date"]
+            start_close_date = company_dates["start_close_date"]
             close_date_prev = company_dates["close_date_prev"]
             deadline_date = company_dates["deadline_date"]
 
             # --- Case 1: Closing day ---
-            if today.day == close_date.day:
+            if today.day == start_close_date.day:
                 company_users = company.users.all()
                 company_users_count = company_users.count()
 
@@ -560,18 +541,15 @@ class CronJobViewSet(BaseAPIViewSet):
                 for user in company_users:
                     # Reward coins for thanks messages (top voted)
                     transaction_service.reward_thanks_message(
-                        user, close_date, close_date_prev
+                        user, start_close_date, close_date_prev
                     )
-
-                    # TODO: Reward coins for skill level up
-                    # transaction_service.reward_skill_level_up(user, close_date, close_date_prev)
 
                     # Reward pearls
                     transaction_service.reward_login_bonus(
-                        user, close_date, close_date_prev
+                        user, start_close_date, close_date_prev
                     )
                     transaction_service.reward_task_complete(
-                        user, close_date, close_date_prev
+                        user, start_close_date, close_date_prev
                     )
 
                 # Update exchangeable coin for user
@@ -582,9 +560,17 @@ class CronJobViewSet(BaseAPIViewSet):
 
             # --- Case 2: Deadline day ---
             elif today.day == deadline_date.day:
-                # TODO: implement logic for handling user points after deadline
-                # e.g., finalize points, lock editing, issue monthly report, etc.
-                pass
+                # Process working time rewards for all users in the company
+                # This runs at 00:00 of the day after the deadline
+                # Get all users in the company
+                company_users = User.objects.filter(company=company)
+
+                # Process working time rewards for each user for the entire month
+                for user in company_users:
+                    # Calculate total working time rewards for the entire month
+                    transaction_service.reward_actual_working_time(
+                        close_date_prev, close_date, user
+                    )
 
         return self.response_ok(
             {
@@ -592,23 +578,3 @@ class CronJobViewSet(BaseAPIViewSet):
                 "deleted_tks_msg_count": deleted_count,
             }
         )
-
-
-@extend_schema(tags=["System > DotMoney"])
-class DotMoneyViewSet(BaseAPIViewSet):
-    """API endpoint of DotMoney"""
-
-    permission_classes = [AllowAny]
-
-    @action(
-        methods=["GET"],
-        detail=False,
-        url_path="exchange",
-    )
-    @transaction.atomic()
-    def exchange(self, request):
-        """
-        Exchange entrypoint (DotMoney callback)
-        """
-        # TODO: implement actual exchange request to DotMoney API
-        return self.response_ok()

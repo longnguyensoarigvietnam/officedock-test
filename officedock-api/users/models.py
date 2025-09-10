@@ -159,6 +159,26 @@ class User(AbstractBaseUser, BaseModel, PermissionsMixin):
         blank=True,
     )
 
+    @property
+    def coin(self):
+        user_balance = UserService().get_user_balance(self)
+        return user_balance.coin
+
+    @property
+    def pearl(self):
+        user_balance = UserService().get_user_balance(self)
+        return user_balance.pearl
+
+    @property
+    def exchangeable_coin(self):
+        return (
+            self.balances.exchangeable_coin if hasattr(self, "balances") else 0
+        )
+
+    @property
+    def full_name(self):
+        return self.profile.full_name
+
     def save(self, *args, **kwargs):
         """
         Custom to set the password and username field
@@ -204,7 +224,7 @@ class User(AbstractBaseUser, BaseModel, PermissionsMixin):
             setattr(self.profile, attr, value)
         self.profile.save()
 
-    def set_setting(self, setting_data):
+    def set_setting(self, setting_data=None):
         """
         Set setting data.
         """
@@ -215,9 +235,10 @@ class User(AbstractBaseUser, BaseModel, PermissionsMixin):
                 company=self.company,
             )
 
-        for attr, value in setting_data.items():
-            setattr(self.setting, attr, value)
-        self.setting.save()
+        if setting_data:
+            for attr, value in setting_data.items():
+                setattr(self.setting, attr, value)
+            self.setting.save()
 
     def verify_login_token(self, token):
         """
@@ -354,20 +375,6 @@ class User(AbstractBaseUser, BaseModel, PermissionsMixin):
             CurrencyEnums.PEARL.value,
             "receive",
         )
-
-    @property
-    def coin(self):
-        user_balance = UserService().get_user_balance(self)
-        return user_balance.coin
-
-    @property
-    def pearl(self):
-        user_balance = UserService().get_user_balance(self)
-        return user_balance.pearl
-
-    @property
-    def exchangeable_coin(self):
-        return self.balances.exchangeable_coin if self.balances else 0
 
 
 class LoginBonus(BaseModel):

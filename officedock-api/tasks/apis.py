@@ -624,6 +624,7 @@ class TaskViewSet(
                 task,
                 context={
                     "request": request,
+                    "action": "retrieve",
                     "task_schedule_from_date": task_schedule_from_date,
                     "task_schedule_end_date": task_schedule_end_date,
                 },
@@ -1137,19 +1138,6 @@ class TaskViewSet(
         reset_sort_task(request.user)
 
         return self.response(status_code=status.HTTP_204_NO_CONTENT)
-
-    @action(
-        methods=["GET"],
-        detail=False,
-        url_path="frequent",
-        serializer_class=TaskBoardSerializer,
-    )
-    def frequent(self, request):
-        """
-        Get the top tasks with the highest counts for the logged-in user.
-        """
-        # TODO: Delete function when FE update
-        return self.response_ok([])
 
     @action(
         methods=["GET"],
