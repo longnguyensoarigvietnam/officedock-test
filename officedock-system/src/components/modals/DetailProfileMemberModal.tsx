@@ -65,11 +65,11 @@ const DetailProfileMemberModal = memo(
       },
     });
 
-    const mainOrganization = userDetail?.organizations.find(
+    const mainOrganization = userDetail?.organizations?.find(
       (org) => org.isMain,
     );
     const differentOrganization = userDetail?.organizations
-      .filter((org) => !org.isMain)
+      ?.filter((org) => !org.isMain)
       .map((org) => org.name);
 
     // Handle create chat

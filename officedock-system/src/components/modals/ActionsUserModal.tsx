@@ -224,25 +224,27 @@ const ActionsUserModal = ({
       value.isTwoFactorAuth = dataUserDetail.isTwoFactorAuth;
       value.name = dataUserDetail.profile.fullName;
       value.email = dataUserDetail.email;
-      value.organizations = dataUserDetail.organizations
-        .filter((organization) => !organization.isMain)
-        .map((element) => ({
-          label: element.name,
-          value: Number(element.id),
-          type: OrganizationType.SUB,
-        }));
-      value.mainOrganization = dataUserDetail.organizations.find(
-        (element) => element.isMain,
-      )
-        ? {
-            label: dataUserDetail.organizations.find(
-              (element) => element.isMain == true,
-            )?.name as string,
-            value: dataUserDetail.organizations.find(
-              (element) => element.isMain == true,
-            )?.id as number,
-            type: OrganizationType.MAIN as string,
-          }
+      value.organizations = dataUserDetail?.organizations
+        ? dataUserDetail?.organizations
+            .filter((organization) => !organization.isMain)
+            .map((element) => ({
+              label: element.name,
+              value: Number(element.id),
+              type: OrganizationType.SUB,
+            }))
+        : [];
+      value.mainOrganization = dataUserDetail?.organizations
+        ? dataUserDetail.organizations.find((element) => element.isMain)
+          ? {
+              label: dataUserDetail.organizations.find(
+                (element) => element.isMain == true,
+              )?.name as string,
+              value: dataUserDetail.organizations.find(
+                (element) => element.isMain == true,
+              )?.id as number,
+              type: OrganizationType.MAIN as string,
+            }
+          : { label: '', value: '', type: OrganizationType.MAIN as string }
         : { label: '', value: '', type: OrganizationType.MAIN as string };
 
       setOptionEmail(dataUserDetail.loginType === CreateUserType.EMAIL);
