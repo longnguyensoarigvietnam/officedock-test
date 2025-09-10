@@ -1,4 +1,5 @@
 from django.db import transaction
+from users.constants import TransactionTypes
 
 
 class UserService:
@@ -23,7 +24,6 @@ class UserService:
             user_balance, created = UserBalance.objects.get_or_create(
                 user=user,
                 company=user.company,
-                defaults={"coin": 0, "pearl": 0},
             )
 
             # Determine field name and current balance
@@ -36,7 +36,12 @@ class UserService:
 
             # Update balance
             if operation == "use":
-                new_balance = current_balance - amount
+                if transaction_type == TransactionTypes.EXCHANGE.value:
+                    user_balance.exchangeable_coin = max(
+                        user_balance.exchangeable_coin - amount, 0
+                    )
+
+                new_balance = max(current_balance - amount, 0)
                 amount_used = amount
                 amount_received = 0
             else:  # 'receive'
@@ -71,6 +76,5 @@ class UserService:
         user_balance, created = UserBalance.objects.get_or_create(
             user=user,
             company_id=user.company_id,
-            defaults={"coin": 0, "pearl": 0},
         )
         return user_balance
