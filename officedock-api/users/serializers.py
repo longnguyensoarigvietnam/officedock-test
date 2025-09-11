@@ -848,6 +848,7 @@ class TransactionHistorySerializer(serializers.ModelSerializer):
             "balance_after",
             "transaction_type",
             "memo",
+            "created_at",
         ]
         read_only_fields = ["id"]
 
