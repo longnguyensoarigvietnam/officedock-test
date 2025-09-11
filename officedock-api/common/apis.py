@@ -4,7 +4,6 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 from django.utils.timezone import now
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.decorators import action
@@ -307,106 +306,94 @@ class CronJobViewSet(BaseAPIViewSet):
     permission_classes = [AllowAny, IsCronJob]
 
     @extend_schema(
-        parameters=[OpenApiParameter("cronjob_key", type=str, required=True)]
+        parameters=[OpenApiParameter("cronjob_key", type=str, required=True)],
     )
-    @action(
-        methods=["POST"],
-        detail=False,
-        url_path="remind",
-    )
-    @transaction.atomic()
-    def remind(self, request):
-        """
-        Get remind notify of task
-        """
-        # Check end date of MVP vote and create tweet if have MVP vote finish.
+    @action(methods=["POST"], detail=False, url_path="run-every-minute")
+    @transaction.atomic
+    def cronjob_run_every_minute(self, request):
+        now_time = now()
+
+        # --- 1. Check MVP vote ended ---
         mvp_votes = MVPVoteManagement.objects.filter(
-            end_date__lt=now(), type=MVPVoteTypes.PRESENT.value
-        ).all()
-        if mvp_votes:
+            end_date__lt=now_time, type=MVPVoteTypes.PRESENT.value
+        ).select_related("company")
+        if mvp_votes.exists():
+            transaction_service = TransactionService()
             for mvp_vote in mvp_votes:
                 mvp_vote.type = MVPVoteTypes.PAST.value
-                mvp_vote.save()
+                mvp_vote.save(update_fields=["type"])
 
                 # Handle add coin for users with most votes
-                transaction_service = TransactionService()
                 transaction_service.reward_mvp_vote_winners(mvp_vote)
 
                 Tweet.objects.create(
-                    company=mvp_vote.company,
+                    company_id=mvp_vote.company_id,
                     is_system=True,
                     content=DEFAULT_CONTENT_TWEET_END_VOTE,
                 )
 
-        # Check end date of Survey and create tweet if finish survey
-        one_minute_ago = now() - timedelta(minutes=1)
+        # --- 2. Check Survey ended in the last 1 minute ---
+        one_minute_ago = now_time - timedelta(minutes=1)
         surveys = Survey.objects.filter(
-            end_at__lt=now(), end_at__gte=one_minute_ago
-        ).all()
-        if surveys:
-            for survey in surveys:
-                Tweet.objects.create(
-                    company=survey.company,
+            end_at__lt=now_time, end_at__gte=one_minute_ago
+        )
+        Tweet.objects.bulk_create(
+            [
+                Tweet(
+                    company_id=survey.company_id,
                     is_system=True,
                     content=DEFAULT_CONTENT_TWEET_END_SURVEY,
                 )
+                for survey in surveys
+            ]
+        )
 
-        # Check time process of skill map
+        # --- 3. Check Skill Map Levels ---
         skill_map_levels = SkillMapSkillLevel.objects.filter(
             skill_map__is_valid=True, popup=True, is_complete=False
-        ).all()
+        ).select_related("skill", "skill_map", "skill_map__staff")
         for skill_map_level in skill_map_levels:
             data = self._check_process_skill_map_level(skill_map_level)
             if data:
                 send_web_socket_event(
-                    data,
-                    user=skill_map_level.skill_map.staff,
+                    data, user=skill_map_level.skill_map.staff
                 )
-        # Check and separate duration
-        separate_task_duration = TaskDuration.objects.filter(
+
+        # --- 4. Separate Task Duration ---
+        separate_task_durations = TaskDuration.objects.filter(
             Q(paused_at__isnull=True)
             & Q(Q(task__is_start=True) | Q(schedule__is_start=True))
-            & Q(started_at__date__lt=now().date())
-        )
-        if separate_task_duration.exists():
-            for duration in separate_task_duration.all():
-                separate_duration_while_keep_running(
-                    duration, now(), user=duration.user
-                )
-        # Check and send notify remind of task
+            & Q(started_at__date__lt=now_time.date())
+        ).select_related("user")
+        for duration in separate_task_durations:
+            separate_duration_while_keep_running(
+                duration, now_time, user=duration.user
+            )
+
+        # --- 5. Remind Tasks ---
         tasks = Task.objects.filter(
-            remind_at__lte=timezone.now(), deadline__gt=timezone.now()
-        )
-        if tasks.exists():
-            for task in tasks.all():
-                if task.deadline and task.remind_at:
-                    reminds = task.reminds
-                    users = task.people_in_charge_tasks.all()
-                    for user in users:
-                        send_web_socket_event(
-                            {
-                                "id": task.id,
-                                "title": task.title,
-                                "remind_countdown": reminds["countdown"],
-                                "remind_type": reminds["type"],
-                                "action": WebSocketEventType.REMIND_TASK.value,
-                            },
-                            user=user,
-                        )
+            remind_at__lte=now_time, deadline__gt=now_time
+        ).prefetch_related("people_in_charge_tasks")
+        for task in tasks:
+            if task.deadline and task.remind_at:
+                reminds = task.reminds
+                for user in task.people_in_charge_tasks.all():
+                    send_web_socket_event(
+                        {
+                            "id": task.id,
+                            "title": task.title,
+                            "remind_countdown": reminds["countdown"],
+                            "remind_type": reminds["type"],
+                            "action": WebSocketEventType.REMIND_TASK.value,
+                        },
+                        user=user,
+                    )
 
-        return self.response_ok()
-
-    @extend_schema(
-        parameters=[OpenApiParameter("cronjob_key", type=str, required=True)]
-    )
-    @action(methods=["POST"], detail=False, url_path="duration-overtime")
-    @transaction.atomic()
-    def actual_duration_overtime(self, request):
-        """Handle check is task running overtime"""
-        start_of_today = datetime.combine(timezone.now().date(), time.min)
+        # --- 6. Check Task Durations overtime ---
+        start_of_today = datetime.combine(now_time.date(), time.min)
         task_durations = TaskDuration.objects.filter(
             started_at__gte=start_of_today, paused_at__isnull=True
-        ).all()
+        ).select_related("task", "schedule")
         for task_duration in task_durations:
             users = []
             related_obj = (
@@ -456,7 +443,7 @@ class CronJobViewSet(BaseAPIViewSet):
                 "id": skill_map_level.skill.id,
                 "name": skill_map_level.skill.name,
             },
-            "skill_map": skill_map_level.skill_map.id,
+            "skill_map": skill_map_level.skill_map_id,
             "skill_map_level": skill_map_level.id,
             "measure_count": None,
             "measure_time": None,
@@ -496,6 +483,21 @@ class CronJobViewSet(BaseAPIViewSet):
     @action(
         methods=["POST"],
         detail=False,
+        url_path="run-every-hour",
+    )
+    @transaction.atomic
+    def cronjob_run_every_hour(self, request):
+        # TODO: Implement logic cronjob run every hour
+        return self.response_ok()
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("cronjob_key", type=str, required=True),
+        ]
+    )
+    @action(
+        methods=["POST"],
+        detail=False,
         url_path="run-every-day",
     )
     @transaction.atomic
@@ -518,7 +520,7 @@ class CronJobViewSet(BaseAPIViewSet):
         ).delete()
 
         # 2. Iterate over all companies to handle closing logic
-        for company in Company.objects.all():
+        for company in Company.objects.all().prefetch_related("users"):
             company_dates = calculate_company_dates(company)
             close_date = company_dates["close_date"]
             start_close_date = company_dates["start_close_date"]
@@ -563,7 +565,7 @@ class CronJobViewSet(BaseAPIViewSet):
                 # Process working time rewards for all users in the company
                 # This runs at 00:00 of the day after the deadline
                 # Get all users in the company
-                company_users = User.objects.filter(company=company)
+                company_users = company.users.all()
 
                 # Process working time rewards for each user for the entire month
                 for user in company_users:
