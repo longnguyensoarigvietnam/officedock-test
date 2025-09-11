@@ -60,8 +60,8 @@ from chat.models import ChatRoom
 from thanks_messages.models import ThanksMessage
 from companies.models import Company
 from thanks_messages.models import ThanksMessage
-from common.services import TransactionService
 from base.messages import ERROR_MESSAGES
+from common.services.transaction_service import TransactionService
 from .serializers import (
     CreationDataOrganizationSerializer,
     CreationDataTaskListSerializer,

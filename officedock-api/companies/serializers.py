@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 from companies.models import Company, Contract
 from base.messages import ERROR_MESSAGES
+from plans.models import Plan
 from users.models import User
 
 
@@ -13,7 +14,19 @@ class ContractSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contract
-        fields = ["id", "start_date", "end_date", "status"]
+        fields = [
+            "id",
+            "start_date",
+            "end_date",
+            "next_renewal_at",
+            "system_main_purpose",
+            "implementation_main_issue",
+            "industry",
+            "address",
+            "phone",
+            "responsible_person_name",
+            "responsible_person_mail",
+        ]
 
     def validate(self, attrs):
         start_date = attrs.get("start_date")
@@ -110,3 +123,33 @@ class CompanySettingSerializer(serializers.Serializer):
     """
 
     is_show_holidays_calendar = serializers.BooleanField(default=False)
+
+
+class CreationCompanySerializer(serializers.Serializer):
+    """
+    Serializer for creation company
+    """
+
+    company_name = serializers.CharField()
+    payment_method = serializers.CharField()
+    address = serializers.CharField(required=False)
+    phone = serializers.CharField(required=False)
+    responsible_person_name = serializers.CharField(required=False)
+    responsible_person_mail = serializers.EmailField(required=False)
+    plan = serializers.SlugRelatedField(
+        slug_field="name",
+        queryset=Plan.objects.all(),
+        error_messages={
+            "does_not_exist": ERROR_MESSAGES["plan_does_not_exists"],
+            "invalid": ERROR_MESSAGES["plan_invalid"],
+        },
+    )
+    stripe_payment_method_id = serializers.CharField()
+    industry = serializers.CharField(required=False)
+    system_main_purpose = serializers.CharField(required=False)
+    implementation_main_issue = serializers.CharField(required=False)
+
+    def validate_responsible_person_mail(self, value):
+        if Contract.objects.filter(responsible_person_mail=value).exists():
+            raise serializers.ValidationError(ERROR_MESSAGES["email_exists"])
+        return value

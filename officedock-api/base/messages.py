@@ -132,6 +132,14 @@ _ERROR_MESSAGES = {
         # MVP vote
         "vote_ended": _("This MVP vote is ended"),
         "max_company_user": _("Cannot create more than 30 users."),
+        # Plan
+        "plan_does_not_exists": _(
+            "The selected subscription plan does not exist."
+        ),
+        "plan_invalid": _("The subscription plan is invalid."),
+        "card_already_exists": _("A payment card already exists."),
+        "stripe_customer_id_missing": _("Stripe customer ID not found."),
+        "card_declined": _("Payment card declined."),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -222,6 +230,12 @@ _ERROR_MESSAGES = {
         # MVP vote
         "vote_ended": _("この投票が終了しました。"),
         "max_company_user": _("30ユーザー以上を作成できません。"),
+        # Plan
+        "plan_does_not_exists": _("選択した契約プランが存在しません。"),
+        "plan_invalid": _("契約プランが無効です。"),
+        "card_already_exists": _("支払カードがすでに存在しています。"),
+        "stripe_customer_id_missing": _("StripeIDが見つかりません。"),
+        "card_declined": _("支払カードが拒否されました。"),
     },
 }
 
