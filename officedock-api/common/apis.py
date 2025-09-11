@@ -522,13 +522,16 @@ class CronJobViewSet(BaseAPIViewSet):
         # 2. Iterate over all companies to handle closing logic
         for company in Company.objects.all().prefetch_related("users"):
             company_dates = calculate_company_dates(company)
-            close_date = company_dates["close_date"]
-            start_close_date = company_dates["start_close_date"]
-            close_date_prev = company_dates["close_date_prev"]
-            deadline_date = company_dates["deadline_date"]
+            date_after_closing = company_dates["date_after_closing"]
+            start_date_calculation_deadline = company_dates[
+                "start_date_calculation_deadline"
+            ]
+            date_after_data_edit_deadline = company_dates[
+                "date_after_data_edit_deadline"
+            ]
 
             # --- Case 1: Closing day ---
-            if today.day == start_close_date.day:
+            if today.day == date_after_closing.day:
                 company_users = company.users.all()
                 company_users_count = company_users.count()
 
@@ -543,15 +546,21 @@ class CronJobViewSet(BaseAPIViewSet):
                 for user in company_users:
                     # Reward coins for thanks messages (top voted)
                     transaction_service.reward_thanks_message(
-                        user, start_close_date, close_date_prev
+                        user,
+                        date_after_closing,
+                        start_date_calculation_deadline,
                     )
 
                     # Reward pearls
                     transaction_service.reward_login_bonus(
-                        user, start_close_date, close_date_prev
+                        user,
+                        date_after_closing,
+                        start_date_calculation_deadline,
                     )
                     transaction_service.reward_task_complete(
-                        user, start_close_date, close_date_prev
+                        user,
+                        date_after_closing,
+                        start_date_calculation_deadline,
                     )
 
                 # Update exchangeable coin for user
@@ -561,7 +570,7 @@ class CronJobViewSet(BaseAPIViewSet):
                     )
 
             # --- Case 2: Deadline day ---
-            elif today.day == deadline_date.day:
+            elif today.day == date_after_data_edit_deadline.day:
                 # Process working time rewards for all users in the company
                 # This runs at 00:00 of the day after the deadline
                 # Get all users in the company
@@ -571,7 +580,9 @@ class CronJobViewSet(BaseAPIViewSet):
                 for user in company_users:
                     # Calculate total working time rewards for the entire month
                     transaction_service.reward_actual_working_time(
-                        close_date_prev, close_date, user
+                        start_date_calculation_deadline,
+                        date_after_closing,
+                        user,
                     )
 
         return self.response_ok(
