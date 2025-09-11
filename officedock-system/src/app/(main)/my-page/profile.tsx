@@ -220,8 +220,6 @@ const MyPage = () => {
     );
   };
 
-  const listAvatar = ['body', 'head-full', 'hat', 'shoes'];
-
   // Call API to send tweet message
   const handleSendTweetMessage = async (data: TweetFormData) => {
     setIsLoading(true);
@@ -599,8 +597,8 @@ const MyPage = () => {
             isHasMvpVoting={creationDataCommonData?.isHasMvpVoting || false}
           />
           <div className="flex-grow">
-            <div className="h-[calc(100vh_-_535px)] w-[336px] ml-[200px] relative">
-              <RenderAccessories images={listAvatar} />
+            <div className="h-[424px] w-[336px] ml-[200px] relative">
+              <RenderAccessories />
             </div>
 
             {/* Message user */}

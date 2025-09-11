@@ -1,5 +1,5 @@
 'use client';
-import React, {useState } from 'react';
+import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
 
@@ -137,8 +137,6 @@ const RoomDetail = () => {
       <div className="flex flex-col items-center">{renderLevelText()}</div>
     );
   };
-
-  const listAvatar = ['body', 'head-full', 'hat', 'shoes'];
 
   return (
     <div className="h-full w-full relative">
@@ -311,7 +309,7 @@ const RoomDetail = () => {
         <div className="absolute bottom-[50px] left-[200px]">
           <div className="flex-grow">
             <div className="h-[424px] w-[336px] ml-[200px] relative">
-              <RenderAccessories images={listAvatar} />
+              <RenderAccessories />
             </div>
           </div>
         </div>

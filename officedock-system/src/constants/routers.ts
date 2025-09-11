@@ -438,6 +438,7 @@ export const apiRouters = {
   FORGOT_PASSWORD: '/auth/forgot-password/',
   RESET_PASSWORD: '/auth/reset-password/',
   CHANGE_PASSWORD: '/auth/change-password/',
+  LOGIN_BONUS: '/auth/login-bonus/',
 
   // ORGANIZATION
   ORGANIZATION_LIST: '/organizations/',
@@ -476,6 +477,8 @@ export const apiRouters = {
   DASHBOARD_MEMBER_LIST: '/dashboard/members/',
   MEMO_DETAIL: '/users/memo/',
   AUTHENTICATED_USER: '/auth/me',
+  USER_BUY_ITEM: '/users/buy-item/',
+  USER_WEAR_ITEM: '/users/equipped-item/',
 
   // CATEGORY
   CATEGORY_LIST: '/statistic-categories/',
@@ -680,4 +683,7 @@ export const apiRouters = {
 
   // SHOP ITEM
   SHOP_ITEMS: '/shop-items/',
+
+  // ITEM CUSTOMIZE
+  LIST_ITEM_CUSTOMIZE: (id: string) => `/users/${id}/items/`,
 };

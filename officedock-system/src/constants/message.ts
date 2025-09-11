@@ -36,7 +36,7 @@ export const QUESTION_VALUE_REQUIRED_MESSAGE = '質問の内容を入力して�
 export const ANSWER_VALUE_REQUIRED_MESSAGE = '回答の内容を入力してください。';
 export const DATE_STOP_SURVEY_REQUIRED_MESSAGE =
   '受付終了時間を指定してください。';
-export const DELETED_EVENT_TITLE = '予定が削除されました。'
+export const DELETED_EVENT_TITLE = '予定が削除されました。';
 
 //Validate message
 export const PASSWORD_MIN_LENGTH_MESSAGE =
@@ -104,6 +104,7 @@ export const ERROR_SAVE_ZOOM = '拡大縮小のエラーが出ました。';
 export const ERROR_EXTEND_COLUMN = 'タブの拡大縮小のエラーが出ました。';
 export const ERROR_DUPLICATE_LOCATION = 'この場所名はすでに存在しています';
 export const ERROR_WRONG_DATE_SURVEY = '現時刻より後の時刻に設定してください。';
+export const ERROR_BUY_ITEM_USER = '交換に失敗しました。';
 
 // Toast message
 export const SUCCESS_TITLE_MESSAGE = '成功';

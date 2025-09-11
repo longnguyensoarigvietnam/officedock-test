@@ -71,8 +71,6 @@ const SurveyListPage = () => {
     useState<boolean>(false);
   const [tweetMessage, setTweetMessage] = useState<string>('');
 
-  const listAvatar = ['body', 'head-full', 'shoes', 'hat'];
-
   const handleSetTabParam = (tab: string) => {
     params.set('tab', tab);
 
@@ -287,7 +285,7 @@ const SurveyListPage = () => {
             {/* User */}
             <div className="flex-shrink-0 h-full">
               <div className="h-[424px] w-[336px] ml-[123px] mt-[325px] relative">
-                <RenderAccessories images={listAvatar} />
+                <RenderAccessories />
               </div>
               {/* Message user */}
               <div

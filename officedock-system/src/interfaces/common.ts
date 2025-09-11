@@ -1,6 +1,7 @@
 import { CreationDataStatisticCategory } from './category';
 import { Company } from './company';
 import { Organizations } from './organization';
+import { ItemUser } from './shop';
 import {
   CreationStatisticType,
   LargeCategory,
@@ -154,4 +155,11 @@ export type CreationDataCommon = {
     count: number;
     isOpenSurveys: boolean;
   };
+  balancesOfUser?: {
+    coin: number;
+    exchangeableCoin: number;
+    id: number;
+    pearl: number;
+  };
+  itemsOfUser?: ItemUser[];
 };

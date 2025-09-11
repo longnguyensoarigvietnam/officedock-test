@@ -1,28 +1,58 @@
 'use client';
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useEffect, useRef, useState } from 'react';
-import { useQueryClient } from 'react-query';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { useMutation, useQueryClient } from 'react-query';
 
 import ImageRound from '@components/common/ImageRound';
-import { RenderAccessories } from '@components/custom/UserCustomize';
 import Button from '@components/common/Button';
 import ItemGroupCard from '@components/shopItem/ItemDetail';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
+import ConfirmBuyItemUserModal from '@components/modals/ConfirmBuyItemUserModal';
+import { RenderAccessoriesPreview } from '@components/custom/UserCustomizePreview';
+import ActionModalSuccessItem from '@components/modals/ActionModalSuccessItem';
 
-import { pageRouters } from '@constants/routers';
-import { TabTypeShopItem } from '@constants/enums';
+import { apiRouters, pageRouters } from '@constants/routers';
+import { ItemAvatarType, TabTypeShopItem } from '@constants/enums';
+import { ERROR_BUY_ITEM_USER } from '@constants/message';
+
 import useListShopItem from '@hooks/useListShopItem';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+import { useUpdateShopItemCache } from '@hooks/CacheQuery/useUpdateShopItems';
+
+import { LoadingContext } from '@providers/LoadingProvider';
+import { useToast } from '@providers/ToastProvider';
+import api from '@base/api';
+import { AvatarItemUser, ItemUser, ShopItemResponse } from '@interfaces/shop';
+import { updateAvatarUrl } from '@utils';
 
 const ShopItemPage = () => {
   const router = useRouter();
-  const listAvatar = ['body', 'head-full', 'hat', 'shoes'];
   const searchParams = useSearchParams();
+  const { setIsLoading } = useContext(LoadingContext);
+  const { showToast } = useToast();
+
   const tabParam = searchParams.get('tab') as TabTypeShopItem | null;
+  const [totalPearl, setTotalPearl] = useState(0);
+
+  // Confirm buy
+  const [openConfirmModal, setOpenConfirmModal] = useState(false);
+  const [dataItemBuy, setDataItemBuy] = useState<ItemUser | null>(null);
+  const [openModalSuccess, setOpenModalSuccess] = useState(false);
 
   // State
   const [activeTab, setActiveTab] = useState<TabTypeShopItem>(
     tabParam || TabTypeShopItem.ALL,
   );
+
+  const defaultItemsPreview: AvatarItemUser[] = [
+    { name: 'body', type: ItemAvatarType.BODY, url: '' },
+    { name: 'head-full', type: 'head', url: '' },
+    { name: 'hat', type: ItemAvatarType.HAT, url: '' },
+    { name: 'shoes', type: ItemAvatarType.SHOES, url: '' },
+  ];
+
+  const [itemsPreview, setItemsPreview] =
+    useState<AvatarItemUser[]>(defaultItemsPreview);
 
   const queryClient = useQueryClient();
 
@@ -52,6 +82,26 @@ const ShopItemPage = () => {
 
   const resultsContainerRef = useRef<HTMLDivElement | null>(null);
 
+  const { isFetchingCreationDataCommon, refetchCreationDataCommon } =
+    useCreationDataCommon({
+      options: {
+        get_balances_of_user: true,
+        get_items_of_user: true,
+      },
+      onSuccess: (data) => {
+        setTotalPearl(data?.balancesOfUser?.pearl || 0);
+        if (data.itemsOfUser) {
+          const updates = data.itemsOfUser.map((item) => ({
+            type: item.itemType,
+            url: item.fullFile,
+          }));
+
+          const merged = updateAvatarUrl(itemsPreview, updates);
+          setItemsPreview(merged);
+        }
+      },
+    });
+
   useEffect(() => {
     const handleScroll = () => {
       const surveyContainer = resultsContainerRef.current;
@@ -78,6 +128,64 @@ const ShopItemPage = () => {
       }
     };
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  const { updateItemOwned } = useUpdateShopItemCache();
+
+  // Handle buy item
+  const handleBuyItem = async (data: ShopItemResponse) => {
+    const { data: response } = await api.post(apiRouters.USER_BUY_ITEM, data);
+    return response;
+  };
+
+  const { mutate: buyItemUser } = useMutation('buyItemsUser', handleBuyItem, {
+    onSuccess: async () => {
+      setOpenConfirmModal(false);
+      setDataItemBuy(null);
+      setOpenModalSuccess(true);
+      updateItemOwned({
+        id: dataItemBuy?.id as number,
+        isOwned: true,
+        type: activeTab === TabTypeShopItem.ALL ? '' : activeTab,
+        screenName: undefined,
+      });
+      refetchCreationDataCommon();
+    },
+    onError: () => {
+      showToast({
+        variant: 'error',
+        description: ERROR_BUY_ITEM_USER,
+      });
+    },
+    onSettled: () => {
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+    },
+  });
+  const handleBuyDataItem = (item: ItemUser) => {
+    setDataItemBuy(item);
+    setOpenConfirmModal(true);
+  };
+  const handleConfirmBuyItem = () => {
+    if (!dataItemBuy) return;
+    setIsLoading(true);
+    buyItemUser({
+      itemType: dataItemBuy.itemType,
+      item: dataItemBuy.id,
+      isEquipped: true,
+    });
+  };
+
+  const handlePreviewItem = (item: ItemUser) => {
+    setItemsPreview((prev) =>
+      prev.map((avatar) =>
+        avatar.type === item.itemType
+          ? { ...avatar, url: item.fullFile, name: item.name }
+          : avatar,
+      ),
+    );
+  };
+
   return (
     <>
       <div className="h-full w-full">
@@ -119,7 +227,7 @@ const ShopItemPage = () => {
                 src={'/icons/pearl.svg'}
                 className={`w-fit h-fit `}
               />
-              <p>10</p>
+              <p>{totalPearl}</p>
               <p className="text-sm text-primary underline ml-[11px] cursor-pointer hover:opacity-80">
                 ポイント履歴
               </p>
@@ -163,16 +271,19 @@ const ShopItemPage = () => {
                 <div className="h-full w-full">
                   <div
                     ref={resultsContainerRef}
-                    className="w-full h-full flex flex-col gap-[6px] overflow-y-auto">
+                    className="w-full  flex flex-col gap-[6px] overflow-y-auto">
                     {!isLoadingList &&
                       shopItemList.map((item, index) => (
                         <ItemGroupCard
                           key={`${index}${activeTab}`}
                           group={item}
+                          totalPearl={totalPearl}
+                          handleBuyDataItem={handleBuyDataItem}
+                          handlePreviewItem={handlePreviewItem}
                         />
                       ))}
                     {isLoadingList && (
-                      <div>
+                      <div className="w-full h-[calc(100vh_-_400px)] flex flex-col gap-[6px] overflow-hidden">
                         <RowSkeleton numberOfRows={5} className="h-[90px]" />
                       </div>
                     )}
@@ -182,8 +293,11 @@ const ShopItemPage = () => {
             </div>
             {/* User */}
             <div className="flex-shrink-0 flex-grow flex items-center justify-center h-full">
-              <div className="h-[424px] w-[336px] mt-24 ml-20  relative">
-                <RenderAccessories images={listAvatar} />
+              <div className="h-[424px] w-[336px] mt-20 ml-20  relative">
+                <RenderAccessoriesPreview
+                  itemsPreview={itemsPreview}
+                  isFetchingCreationDataCommon={isFetchingCreationDataCommon}
+                />
               </div>
             </div>
             {/* Customize */}
@@ -206,6 +320,23 @@ const ShopItemPage = () => {
           </div>
         </div>
       </div>
+      {openConfirmModal && dataItemBuy && (
+        <ConfirmBuyItemUserModal
+          dataItemBuy={dataItemBuy}
+          open={openConfirmModal}
+          onClose={() => {
+            setOpenConfirmModal(false);
+            setDataItemBuy(null);
+          }}
+          onConfirm={handleConfirmBuyItem}
+        />
+      )}
+      {openModalSuccess && (
+        <ActionModalSuccessItem
+          open={openModalSuccess}
+          onClose={() => setOpenModalSuccess(false)}
+        />
+      )}
     </>
   );
 };

@@ -11,6 +11,9 @@ import {
 } from 'react';
 
 import { OptionDropdownType } from '@interfaces/common';
+import { AvatarItemUser } from '@interfaces/shop';
+import { ItemAvatarType } from '@constants/enums';
+import { listAvatar } from '@constants';
 
 interface ContextValue {
   isExtendCalendar: boolean;
@@ -23,6 +26,8 @@ interface ContextValue {
     firstTab: string;
     secondTab: string;
   };
+  dataItems: AvatarItemUser[];
+  setDataItem: Dispatch<SetStateAction<AvatarItemUser[]>>;
   setIsExtendCalendar: Dispatch<SetStateAction<boolean>>;
   setTotalNotifications: Dispatch<SetStateAction<number>>;
   setExpanded: Dispatch<SetStateAction<boolean>>;
@@ -60,6 +65,8 @@ const defaultValue: ContextValue = {
     firstTab: '',
     secondTab: '',
   },
+  dataItems: [],
+  setDataItem: () => {},
   setIsExtendCalendar: () => {},
   setTotalNotifications: () => {},
   setExpanded: () => {},
@@ -79,6 +86,10 @@ export const GlobalStateContext = createContext<ContextValue>(defaultValue);
 
 export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   const [isExtendCalendar, setIsExtendCalendar] = useState(false);
+
+  // Avatar items user
+
+  const [dataItems, setDataItem] = useState<AvatarItemUser[]>(listAvatar);
 
   const [expanded, setExpanded] = useState(true);
   const [totalNotifications, setTotalNotifications] = useState(0);
@@ -149,6 +160,8 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     setLastVisitedByTab,
     isHasLoadingSkeleton,
     setIsHasLoadingSkeleton,
+    dataItems,
+    setDataItem,
   };
 
   return (

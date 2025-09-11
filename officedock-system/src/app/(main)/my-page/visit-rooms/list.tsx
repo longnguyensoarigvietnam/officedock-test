@@ -35,8 +35,6 @@ const RoomList = () => {
     },
   });
 
-  const listAvatar = ['boat', 'body', 'head-full', 'hat', 'shoes'];
-
   return (
     <>
       <div className="h-full w-full overflow-hidden">
@@ -79,7 +77,7 @@ const RoomList = () => {
           <div className="absolute -bottom-[115px] -left-[150px]">
             <div className="flex-grow">
               <div className="h-[424px] w-[336px] ml-[200px] relative">
-                <RenderAccessories images={listAvatar} />
+                <RenderAccessories />
               </div>
             </div>
           </div>

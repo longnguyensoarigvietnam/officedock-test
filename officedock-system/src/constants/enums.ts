@@ -671,7 +671,13 @@ export enum VotingCandidateRanking {
 }
 export enum HonoredUserInfoDirection {
   HORIZONTAL = 'HORIZONTAL',
-  VERTICAL = 'VERTICAL'
+  VERTICAL = 'VERTICAL',
+}
+export enum ItemAvatarType {
+  HAT = '帽子',
+  BODY = '服装',
+  SHOES = '靴',
+  BACKGROUND = '背景',
 }
 export enum PointHistoryActiveTab {
   COIN = 'COIN',
