@@ -114,7 +114,7 @@ export const TimeLine = ({
             }
             // const showDeleteIcon = tweet.user.id == session?.user.id;
             return (
-              <div key={tweet.id} className="space-y-2 text-white !w-full pr-3">
+              <div key={tweet.id} className="space-y-2 text-white !w-full">
                 <div className="flex items-center justify-between">
                   <div className={`flex gap-[9px] items-center`}>
                     <div className="h-[30px]">

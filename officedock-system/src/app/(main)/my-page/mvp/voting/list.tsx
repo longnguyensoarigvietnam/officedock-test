@@ -17,11 +17,11 @@ import useMVPVotingDetail from '@hooks/useMVPVotingDetail';
 import useCurrentVotingComment from '@hooks/useCurrentVotingComment';
 import { useErrorToast } from '@hooks/useErrorToast';
 
-import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 
 import { apiRouters } from '@constants/routers';
-import { ERROR_SAVE_MESSAGE, SUCCESS_SAVE_MESSAGE } from '@constants/message';
+import { ERROR_SAVE_MESSAGE } from '@constants/message';
+import { REMAINING_ORGANIZATIONS_ID } from '@constants';
 
 import { formatJapaneseDateRange } from '@utils/date';
 
@@ -77,7 +77,6 @@ export const VotingListPage = () => {
 
   // Toast
   const showErrorToast = useErrorToast();
-  const { showToast } = useToast();
 
   // Loading context
   const { setIsLoading } = useContext(LoadingContext);
@@ -91,15 +90,26 @@ export const VotingListPage = () => {
   const { currentMVPVotingDetail, refetchMVPVotingDetail } = useMVPVotingDetail(
     {
       onSuccess: (data) => {
-        data?.organizations &&
-          setMemberListByOrganization(
-            data?.organizations?.map((org) => {
-              return {
-                orgInfo: { ...org },
-                collapseStatus: true,
-              };
-            }),
-          );
+        const organizationList = [
+          ...(data?.organizations?.map((org) => ({
+            orgInfo: { ...org },
+            collapseStatus: true,
+          })) ?? []),
+          {
+            orgInfo: {
+              id: REMAINING_ORGANIZATIONS_ID,
+              icon: '',
+              iconColor: '',
+              name: '',
+              type: '',
+              uuid: '',
+              candidates: data?.remainingCandidates ?? [],
+            },
+            collapseStatus: true,
+          },
+        ];
+
+        setMemberListByOrganization(organizationList);
       },
     },
   );
@@ -117,9 +127,6 @@ export const VotingListPage = () => {
 
   const { mutate: voteMVP } = useMutation('voteMVP', handleVoteMVP, {
     onSuccess: () => {
-      showToast({
-        description: SUCCESS_SAVE_MESSAGE,
-      });
       setOpenVotingReasonForm({
         status: false,
         userInfo: null,
@@ -143,7 +150,8 @@ export const VotingListPage = () => {
   const listAvatar = ['podium', 'body', 'head-full', 'hat', 'shoes'];
 
   return (
-    <div className={`relative w-full h-full ${currentMVPVotingDetail && 'min-h-[800px]'}`}>
+    <div
+      className={`relative w-full h-full ${currentMVPVotingDetail && 'min-h-[800px]'}`}>
       <div className="relative w-[calc(100%_-_800px)] h-full">
         <div className="absolute bottom-10 left-[110px]">
           <div className="flex-grow">

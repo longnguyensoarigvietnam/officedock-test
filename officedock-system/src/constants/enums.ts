@@ -673,3 +673,7 @@ export enum HonoredUserInfoDirection {
   HORIZONTAL = 'HORIZONTAL',
   VERTICAL = 'VERTICAL'
 }
+export enum PointHistoryActiveTab {
+  COIN = 'COIN',
+  PEARL = 'PEARL'
+}

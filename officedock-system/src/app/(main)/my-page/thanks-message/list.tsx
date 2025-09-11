@@ -198,6 +198,7 @@ const ThanksMessageListPage = () => {
               />
             ) : (
               <ReceiveAndSendThanksMessageTable
+                key={activeTab}
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
                 thanksMessageList={thanksMessageList}
