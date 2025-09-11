@@ -312,10 +312,10 @@ def get_organization_with_users(organizations):
 
 def get_items_of_user(user):
     """
-    Get list item is weared of given user
+    Get list item is equipped of given user
     """
     items = ShopItems.objects.filter(
-        user_items__user=user, user_items__is_weared=True
+        user_items__user=user, user_items__is_equipped=True
     )
     return ShopItemSerializer(items, many=True).data
 
@@ -324,7 +324,7 @@ def get_balances_of_user(user):
     """
     Get current balances of user
     """
-    return UserBalanceSerializer(user.balances).data
+    return UserBalanceSerializer(user.get_balances()).data
 
 
 def get_unanswered_count(user):

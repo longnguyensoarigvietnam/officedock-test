@@ -128,6 +128,8 @@ _ERROR_MESSAGES = {
         "unique_vote": _("This candidate is voted"),
         "cannot_start_vote": _("Cannot start this MVP vote"),
         "cannot_buy_item": _("Cannot buy this item"),
+        # MVP vote
+        "vote_ended": _("This MVP vote is ended"),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -214,6 +216,8 @@ _ERROR_MESSAGES = {
         "unique_vote": _("この候補者に投票しました。"),
         "cannot_start_vote": _("この投票を開始できません。"),
         "cannot_buy_item": _("このアイテムを購入するためのポイントが不足しています。"),
+        # MVP vote
+        "vote_ended": _("この投票が終了しました。"),
     },
 }
 
