@@ -437,6 +437,7 @@ const KanbanBoardTask = () => {
         {
           ...taskAddEmpty,
           type: ItemStartType.TASK,
+          isStart: true,
         },
         ActionTask.CREATE,
         '',

@@ -268,9 +268,15 @@ const StackedAreaChart = ({
           statisticTagsList?.mediumCategories?.length
         ) {
           sortSource = statisticTagsList.mediumCategories;
-          if (selectedMedium && statisticTagsList?.smallCategories?.length) {
+          if (
+            selectedMedium?.value != '' &&
+            statisticTagsList?.smallCategories?.length
+          ) {
             sortSource = statisticTagsList.smallCategories;
-            if (selectedSmall && statisticTagsList?.category?.length) {
+            if (
+              selectedSmall?.value != '' &&
+              statisticTagsList?.category?.length
+            ) {
               sortSource = statisticTagsList.category;
             }
           }
@@ -882,7 +888,7 @@ const StackedAreaChart = ({
               {/* Column Chart 2 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge?.value !== '' && selectedMedium?.value == '' && selectedSmall?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && selectedLarge?.value != '' && selectedMedium?.value == '' && selectedSmall?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   大カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -900,7 +906,7 @@ const StackedAreaChart = ({
                   />
                 </div>
               </div>
-              {selectedMedium ? (
+              {selectedMedium?.value != '' ? (
                 <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit`}
@@ -936,7 +942,7 @@ const StackedAreaChart = ({
                   />
                 </div>
               </div>
-              {selectedSmall ? (
+              {selectedSmall?.value != '' ? (
                 <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit`}

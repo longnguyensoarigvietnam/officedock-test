@@ -27,6 +27,7 @@ import {
   ALL_TEAM_STATISTIC,
   DEFAULT_TIME_TEXT,
   STATISTIC_CHART_VIEW_OPTIONS,
+  STATISTIC_MAX_PERCENTAGE,
 } from '@constants';
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 import useStatisticAllTeamTaskDurations from '@hooks/useStatisticAllTeamTaskDurations';
@@ -61,47 +62,6 @@ type Props = {
   handleSelectMedium: (data: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
 };
-
-const buildTableDetail = (
-  tags: {
-    tagId?: number;
-    tagName?: string;
-    percent: number;
-    duration: string;
-    organizationId?: number;
-    users?: {
-      user: {
-        id: number;
-        fullName: string;
-        avatar?: string | null;
-        avatarColor: string;
-      };
-      duration: string;
-      percent: number;
-    }[];
-  }[] = [],
-) =>
-  tags.map((tag) => ({
-    tagId: Number(tag.tagId),
-    tagName: String(tag.tagName),
-    tagPercent: tag.percent,
-    tagDuration: tag.duration,
-    organizationId: tag.organizationId ?? 0,
-
-    userList:
-      tag.users && tag.users.length > 0
-        ? tag.users.map((user) => {
-            return {
-              userId: user.user.id,
-              userName: user.user.fullName,
-              userAvatar: user.user.avatar,
-              userAvatarColor: user.user.avatarColor,
-              userDuration: user.duration,
-              userPercent: user.percent,
-            };
-          })
-        : [],
-  }));
 export interface TagTableRowDetailTag {
   tagId: number;
   tagName: string;
@@ -117,30 +77,6 @@ export interface TagTableRowDetailTag {
     userPercent: number;
   }[];
 }
-
-const buildAllTeamTableDetail = (
-  organizations: StatisticsAllTeamTaskDuration['data'],
-): TagTableRowDetailTag[] =>
-  organizations.map((org) => {
-    const userList =
-      org.users?.map((user) => ({
-        userId: user.id,
-        userName: user.fullName,
-        userAvatarColor: user.avatarColor,
-        userAvatar: user.avatar ?? null,
-        userDuration: user.totalDuration,
-        userPercent: user.percent,
-      })) ?? [];
-
-    return {
-      tagId: org.organizationId as number,
-      tagName: org.organizationName,
-      tagDuration: org.duration,
-      tagPercent: org.percent,
-      organizationId: Number(org.organizationId),
-      userList,
-    };
-  });
 
 const StackedAreaTeamTagChart = ({
   statisticTagsListTeam,
@@ -179,9 +115,9 @@ const StackedAreaTeamTagChart = ({
 
   const getTotalDuration = () => {
     if (selectedOrganization?.value) {
-      if (selectedLarge?.value) {
-        if (selectedMedium?.value) {
-          if (selectedSmall?.value) {
+      if (selectedLarge?.value != '') {
+        if (selectedMedium?.value != '') {
+          if (selectedSmall?.value != '') {
             return totalDurationCategory;
           }
           return totalDurationSmall;
@@ -247,6 +183,121 @@ const StackedAreaTeamTagChart = ({
       setSelectedMembers(listMemberTeam.map((user) => Number(user.id)));
     }
   }, [orderingOptions?.user_ids, listMemberTeam, selectedOrganization]);
+
+  const buildTableDetail = (
+    tags: {
+      tagId?: number;
+      tagName?: string;
+      percent: number;
+      duration: string;
+      organizationId?: number;
+      users?: {
+        user: {
+          id: number;
+          fullName: string;
+          avatar?: string | null;
+          avatarColor: string;
+        };
+        duration: string;
+        percent: number;
+      }[];
+    }[] = [],
+  ) =>
+    tags.map((tag) => ({
+      tagId: Number(tag.tagId),
+      tagName: String(tag.tagName),
+      tagPercent:
+        tag.percent > STATISTIC_MAX_PERCENTAGE
+          ? STATISTIC_MAX_PERCENTAGE
+          : tag.percent,
+      tagDuration: tag.duration,
+      organizationId: tag.organizationId ?? 0,
+
+      userList:
+        orderingOptions?.user_ids && orderingOptions?.user_ids?.length > 0
+          ? orderingOptions?.user_ids?.map((userInfo) => {
+              const foundUser = tag.users?.find(
+                (user) => user.user.id == userInfo.value,
+              );
+              if (foundUser) {
+                return {
+                  userId: foundUser.user.id,
+                  userName: foundUser.user.fullName,
+                  userAvatar: foundUser.user.avatar,
+                  userAvatarColor: foundUser.user.avatarColor,
+                  userDuration: foundUser.duration,
+                  userPercent:
+                    foundUser.percent > STATISTIC_MAX_PERCENTAGE
+                      ? STATISTIC_MAX_PERCENTAGE
+                      : foundUser.percent,
+                };
+              }
+              return {
+                userId: Number(userInfo.value),
+                userName: userInfo?.label,
+                userAvatar: userInfo?.avatarUrl || '',
+                userAvatarColor: userInfo?.color || '',
+                userDuration: DEFAULT_TIME_TEXT,
+                userPercent: 0,
+              };
+            })
+          : (listMemberTeam ?? [])?.map((userInfo) => {
+              const foundUser = tag.users?.find(
+                (user) => user.user.id == userInfo.id,
+              );
+              if (foundUser) {
+                return {
+                  userId: foundUser.user.id,
+                  userName: foundUser.user.fullName,
+                  userAvatar: foundUser.user.avatar,
+                  userAvatarColor: foundUser.user.avatarColor,
+                  userDuration: foundUser.duration,
+                  userPercent:
+                    foundUser.percent > STATISTIC_MAX_PERCENTAGE
+                      ? STATISTIC_MAX_PERCENTAGE
+                      : foundUser.percent,
+                };
+              }
+              return {
+                userId: Number(userInfo.id),
+                userName: userInfo?.fullName,
+                userAvatar: userInfo?.avatarUrl || '',
+                userAvatarColor: userInfo?.color || '',
+                userDuration: DEFAULT_TIME_TEXT,
+                userPercent: 0,
+              };
+            }),
+    }));
+
+  const buildAllTeamTableDetail = (
+    organizations: StatisticsAllTeamTaskDuration['data'],
+  ): TagTableRowDetailTag[] =>
+    organizations.map((org) => {
+      const userList =
+        org.users?.map((user) => ({
+          userId: user.id,
+          userName: user.fullName,
+          userAvatarColor: user.avatarColor,
+          userAvatar: user.avatar ?? null,
+          userDuration: user.totalDuration,
+          userPercent:
+            user.percent > STATISTIC_MAX_PERCENTAGE
+              ? STATISTIC_MAX_PERCENTAGE
+              : user.percent,
+        })) ?? [];
+
+      return {
+        tagId: org.organizationId as number,
+        tagName: org.organizationName,
+        tagDuration: org.duration,
+        tagPercent:
+          org.percent > STATISTIC_MAX_PERCENTAGE
+            ? STATISTIC_MAX_PERCENTAGE
+            : org.percent,
+        organizationId: Number(org.organizationId),
+        userList,
+      };
+    });
 
   const handleTagSelection = (tagList: StatisticCategoryInfo[] | undefined) => {
     if (tagList?.length) {
@@ -315,7 +366,13 @@ const StackedAreaTeamTagChart = ({
       endDate: formatDateToYMD(`${endDate}`) || '',
       tagIds: orderingOptions?.tag_ids,
       statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
-      userIds: orderingOptions?.user_ids,
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? listMemberTeam.map((user) => ({
+              label: user.fullName,
+              value: user.id,
+            }))
+          : orderingOptions?.user_ids,
       mainOrganizationId: selectedOrganizationSideBar?.value as number,
       option: selectedOptionOrganizationInTable,
       isTagPage: true,
@@ -409,7 +466,7 @@ const StackedAreaTeamTagChart = ({
         handleTagSelection(statisticTagsListTeam.largeCategories);
       } else if (
         selectedOrganization &&
-        selectedLarge?.value !== '' &&
+        selectedLarge?.value != '' &&
         selectedMedium?.value == '' &&
         selectedSmall?.value == ''
       ) {
@@ -1342,7 +1399,7 @@ const StackedAreaTeamTagChart = ({
                 />
               </div>
             </div>
-            {selectedSmall?.value != '' ? (
+            {selectedSmall?.value !== '' ? (
               <div className="w-[18px]">
                 <ImageRound
                   className={`w-fit h-fit`}

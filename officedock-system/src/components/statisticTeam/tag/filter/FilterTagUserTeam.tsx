@@ -67,8 +67,8 @@ const FilterTagUserTeam = ({ className, classNameData }: Props) => {
           )}
         </Popover>
       </div>
-      <div className=" flex-grow flex-shrink-0">
-        <div className={`flex gap-2 flex-wrap flex-shrink-0 ${classNameData} `}>
+      <div className=" flex-grow flex">
+        <div className={`flex gap-2 flex-wrap  ${classNameData} `}>
           <>
             {allLabelUser.map((item, index) => {
               return (

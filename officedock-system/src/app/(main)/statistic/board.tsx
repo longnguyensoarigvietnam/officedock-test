@@ -220,7 +220,11 @@ const StatisticBoard = () => {
       if (data.largeTotalDuration) {
         if (data.mediumTotalDuration) {
           if (data.smallTotalDuration) {
-            if (selectedSmall && selectedSmall.value && data.smallCategories) {
+            if (
+              selectedSmall &&
+              selectedSmall.value != '' &&
+              data.smallCategories
+            ) {
               const itemMap = data.smallCategories.find(
                 (item) =>
                   String(item.categoryId) === String(selectedSmall.value),

@@ -347,10 +347,13 @@ const StatisticTeamTagBoard = () => {
       tagIds: orderingOptions?.tag_ids,
       mainOrganizationId: selectedOrganizationSideBar?.value as number,
       isTagPage: true,
-      userIds: listMemberTeam.map((user) => ({
-        label: user.fullName,
-        value: user.id,
-      })),
+      userIds:
+        orderingOptions?.user_ids && orderingOptions.user_ids.length > 0
+          ? orderingOptions.user_ids
+          : listMemberTeam.map((user) => ({
+              label: user.fullName,
+              value: user.id,
+            })),
     },
     condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
     onSuccess: (data) => {
@@ -375,10 +378,13 @@ const StatisticTeamTagBoard = () => {
         mainOrganizationId: selectedOrganizationSideBar?.value as number,
         isCompare: isCheckCompare,
         isTagPage: true,
-        userIds: listMemberTeam.map((user) => ({
-          label: user.fullName,
-          value: user.id,
-        })),
+        userIds:
+          orderingOptions?.user_ids && orderingOptions.user_ids.length > 0
+            ? orderingOptions.user_ids
+            : listMemberTeam.map((user) => ({
+                label: user.fullName,
+                value: user.id,
+              })),
       },
       condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
       onSuccess: (data) => {
@@ -447,12 +453,7 @@ const StatisticTeamTagBoard = () => {
       );
       setOrderingOptions({
         tag_ids: optionsTagList,
-        user_ids: organization.members.map((member) => ({
-          value: member.id,
-          label: member.fullName,
-          color: member?.avatarColor || '',
-          avatarUrl: member?.avatar || '',
-        })),
+        user_ids: [],
       });
 
       setCurrentPage(1);
@@ -590,7 +591,7 @@ const StatisticTeamTagBoard = () => {
     <div className="pt-[30px] pr-10  font-medium ">
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-5 ">
-          <div className="rounded-full w-[34px] h-[34px]  flex items-center justify-center overflow-hidden">
+          <div className="rounded-full w-[34px] h-[34px] min-w-[34px] flex items-center justify-center overflow-hidden">
             <ImageRound
               className="w-[34px] h-[34px] rounded-full"
               src="/icons/statistic-team.svg"
@@ -599,10 +600,7 @@ const StatisticTeamTagBoard = () => {
             />
           </div>
           <span className="text-[26px] font-medium relative top-[-2px] line-clamp-3 max-w-[450px] break-all">
-            {selectedOrganization?.label}
-          </span>
-          <span className="text-[26px] font-medium relative top-[-2px]">
-            チーム集計
+            {selectedOrganization?.label}チーム集計
           </span>
           <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ">
             <Button

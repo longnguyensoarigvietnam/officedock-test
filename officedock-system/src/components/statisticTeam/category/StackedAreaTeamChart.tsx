@@ -27,6 +27,7 @@ import {
   ALL_TEAM_STATISTIC,
   DEFAULT_TIME_TEXT,
   STATISTIC_CHART_VIEW_OPTIONS,
+  STATISTIC_MAX_PERCENTAGE,
 } from '@constants';
 
 import useStatisticAllTeamTaskDurations from '@hooks/useStatisticAllTeamTaskDurations';
@@ -64,77 +65,6 @@ type Props = {
   handleSelectMedium: (data: OptionDropdownType) => void;
 };
 
-const buildTableDetail = (
-  categories: {
-    categoryId: number;
-    categoryName: string;
-    organizationId?: number;
-
-    percent: number;
-    duration: string;
-    users?: {
-      user: {
-        id: number;
-        fullName: string;
-        avatar?: string | null;
-        avatarColor: string;
-      };
-      duration: string;
-      percent: number;
-    }[];
-  }[] = [],
-) =>
-  categories.map((category) => ({
-    categoryId: category.categoryId,
-    categoryName: category.categoryName,
-    categoryPercent: category.percent,
-    categoryDuration: category.duration,
-    organizationId: category.organizationId ?? 0,
-    userList:
-      category.users && category.users.length > 0
-        ? category.users.map((user) => {
-            return {
-              userId: user.user.id,
-              userName: user.user.fullName,
-              userAvatar: user.user.avatar,
-              userAvatarColor: user.user.avatarColor,
-              userDuration: user.duration,
-              userPercent: user.percent,
-            };
-          })
-        : [],
-  }));
-
-const buildAllTeamTableDetail = (
-  data: StatisticsAllTeamTaskDuration['data'] = [],
-): CategoryTableRowDetail[] => {
-  if (!Array.isArray(data)) return [];
-
-  return data.map((item) => {
-    const orgId = item.organizationId;
-    const safeOrgId = orgId && !isNaN(Number(orgId)) ? Number(orgId) : 0;
-
-    return {
-      categoryId: safeOrgId,
-      categoryName: item.organizationName,
-      categoryDuration: item.duration,
-      categoryPercent: item.percent,
-      organizationId: safeOrgId,
-      userList:
-        Array.isArray(item.users) && item.users.length > 0
-          ? item.users.map((user) => ({
-              userId: user.id,
-              userName: user.fullName,
-              userAvatar: user.avatar,
-              userAvatarColor: user.avatarColor,
-              userDuration: user.totalDuration,
-              userPercent: user.percent,
-            }))
-          : [],
-    };
-  });
-};
-
 const StackedAreaTeamChart = ({
   statisticTeamCategoryList,
   startDate,
@@ -147,7 +77,6 @@ const StackedAreaTeamChart = ({
   // Context
   const {
     isDisableCalendar,
-    totalDurationTask,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -160,6 +89,9 @@ const StackedAreaTeamChart = ({
     lineChartViewBy,
     areaTableData,
     isHasLoading,
+    totalDurationLarge,
+    totalDurationMedium,
+    totalDurationSmall,
     setAreaTableData,
     setLineChartViewBy,
   } = useContext(StatisticTeamStateContext);
@@ -257,10 +189,7 @@ const StackedAreaTeamChart = ({
         selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
-      userIds:
-        orderingOptions?.user_ids?.length == 0
-          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
-          : selectedMembers?.filter(Boolean).join(','),
+      userIds: (listMemberTeam ?? []).map((user) => Number(user.id)).join(','),
     },
     condition: [
       Boolean(
@@ -283,7 +212,10 @@ const StackedAreaTeamChart = ({
       endDate: formatDateToYMD(`${endDate}`) || '',
       tagIds: orderingOptions?.tag_ids,
       statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
-      userIds: orderingOptions?.user_ids,
+      userIds: listMemberTeam.map((user) => ({
+        label: user.fullName,
+        value: user.id,
+      })),
       mainOrganizationId: selectedOrganizationSideBar?.value as number,
       option: selectedOptionOrganizationInTable,
     },
@@ -359,6 +291,127 @@ const StackedAreaTeamChart = ({
 
   const [colorList, setColorList] = useState<string[]>([]);
 
+  const buildTableDetail = (
+    categories: {
+      categoryId: number;
+      categoryName: string;
+      organizationId?: number;
+
+      percent: number;
+      duration: string;
+      users?: {
+        user: {
+          id: number;
+          fullName: string;
+          avatar?: string | null;
+          avatarColor: string;
+        };
+        duration: string;
+        percent: number;
+      }[];
+    }[] = [],
+  ) =>
+    categories.map((category) => ({
+      categoryId: category.categoryId,
+      categoryName: category.categoryName,
+      categoryPercent:
+        category.percent > STATISTIC_MAX_PERCENTAGE
+          ? STATISTIC_MAX_PERCENTAGE
+          : category.percent,
+      categoryDuration: category.duration,
+      organizationId: category.organizationId ?? 0,
+      userList:
+        orderingOptions?.user_ids && orderingOptions?.user_ids?.length > 0
+          ? orderingOptions?.user_ids?.map((userInfo) => {
+              const foundUser = category.users?.find(
+                (user) => user.user.id == userInfo.value,
+              );
+              if (foundUser) {
+                return {
+                  userId: foundUser.user.id,
+                  userName: foundUser.user.fullName,
+                  userAvatar: foundUser.user.avatar,
+                  userAvatarColor: foundUser.user.avatarColor,
+                  userDuration: foundUser.duration,
+                  userPercent:
+                    foundUser.percent > STATISTIC_MAX_PERCENTAGE
+                      ? STATISTIC_MAX_PERCENTAGE
+                      : foundUser.percent,
+                };
+              }
+              return {
+                userId: Number(userInfo.value),
+                userName: userInfo?.label,
+                userAvatar: userInfo?.avatarUrl || '',
+                userAvatarColor: userInfo?.color || '',
+                userDuration: DEFAULT_TIME_TEXT,
+                userPercent: 0,
+              };
+            })
+          : (listMemberTeam ?? [])?.map((userInfo) => {
+              const foundUser = category.users?.find(
+                (user) => user.user.id == userInfo.id,
+              );
+              if (foundUser) {
+                return {
+                  userId: foundUser.user.id,
+                  userName: foundUser.user.fullName,
+                  userAvatar: foundUser.user.avatar,
+                  userAvatarColor: foundUser.user.avatarColor,
+                  userDuration: foundUser.duration,
+                  userPercent:
+                    foundUser.percent > STATISTIC_MAX_PERCENTAGE
+                      ? STATISTIC_MAX_PERCENTAGE
+                      : foundUser.percent,
+                };
+              }
+              return {
+                userId: Number(userInfo.id),
+                userName: userInfo?.fullName,
+                userAvatar: userInfo?.avatarUrl || '',
+                userAvatarColor: userInfo?.color || '',
+                userDuration: DEFAULT_TIME_TEXT,
+                userPercent: 0,
+              };
+            }),
+    }));
+
+  const buildAllTeamTableDetail = (
+    data: StatisticsAllTeamTaskDuration['data'] = [],
+  ): CategoryTableRowDetail[] => {
+    if (!Array.isArray(data)) return [];
+
+    return data.map((item) => {
+      const orgId = item.organizationId;
+      const safeOrgId = orgId && !isNaN(Number(orgId)) ? Number(orgId) : 0;
+
+      return {
+        categoryId: safeOrgId,
+        categoryName: item.organizationName,
+        categoryDuration: item.duration,
+        categoryPercent:
+          item.percent > STATISTIC_MAX_PERCENTAGE
+            ? STATISTIC_MAX_PERCENTAGE
+            : item.percent,
+        organizationId: safeOrgId,
+        userList:
+          Array.isArray(item.users) && item.users.length > 0
+            ? item.users.map((user) => ({
+                userId: user.id,
+                userName: user.fullName,
+                userAvatar: user.avatar,
+                userAvatarColor: user.avatarColor,
+                userDuration: user.totalDuration,
+                userPercent:
+                  user.percent > STATISTIC_MAX_PERCENTAGE
+                    ? STATISTIC_MAX_PERCENTAGE
+                    : user.percent,
+              }))
+            : [],
+      };
+    });
+  };
+
   // Get table info (statistic team categories)
   useEffect(() => {
     if (
@@ -416,6 +469,7 @@ const StackedAreaTeamChart = ({
     selectedLarge,
     selectedMedium,
   ]);
+
   // Data CHART with option no ALL TEAM
   useEffect(() => {
     if (
@@ -1120,6 +1174,43 @@ const StackedAreaTeamChart = ({
   };
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
+  function getShowTotal(): string {
+    if (
+      selectedOrganization &&
+      selectedLarge?.value == '' &&
+      selectedMedium?.value == '' &&
+      selectedSmall?.value == ''
+    ) {
+      return totalDurationLarge;
+    }
+    if (
+      selectedOrganization &&
+      selectedLarge?.value != '' &&
+      selectedMedium?.value == '' &&
+      selectedSmall?.value == ''
+    ) {
+      return totalDurationMedium;
+    }
+    if (
+      selectedOrganization &&
+      selectedLarge?.value != '' &&
+      selectedMedium?.value != '' &&
+      selectedSmall?.value == ''
+    ) {
+      return totalDurationSmall;
+    }
+    if (
+      selectedOrganization &&
+      selectedLarge?.value != '' &&
+      selectedMedium?.value != '' &&
+      selectedSmall?.value != ''
+    ) {
+      return totalDurationSmall;
+    }
+
+    return DEFAULT_TIME_TEXT;
+  }
+
   return (
     <div
       style={{
@@ -1140,7 +1231,10 @@ const StackedAreaTeamChart = ({
             </span>
           </div>
           {/* Filter modal */}
-          <FilterTeamStatistic />
+          <FilterTeamStatistic
+            isFilterMember={false}
+            className="relative top-[3px]"
+          />
         </div>
         <ImageRound
           src="/icons/extend-calendar.svg"
@@ -1247,13 +1341,13 @@ const StackedAreaTeamChart = ({
                 <p>合計時間</p>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-[34px] leading-none">
-                    {totalDurationTask?.split(':')[0]}
+                    {getShowTotal().split(':')[0]}
                   </p>
                   <p className="text-[25px] leading-none">時間</p>
                 </div>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-[34px] leading-none">
-                    {totalDurationTask?.split(':')[1]}
+                    {getShowTotal()?.split(':')[1]}
                   </p>
                   <p className="text-[25px] leading-none">分</p>
                 </div>

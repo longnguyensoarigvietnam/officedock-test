@@ -56,6 +56,7 @@ import {
   EVERYONE_OPTION_LABEL,
   NO_SETTING,
   STATISTIC_CHART_VIEW_OPTIONS,
+  STATISTIC_MAX_PERCENTAGE,
 } from '@constants';
 
 import {
@@ -250,7 +251,10 @@ const LineChartByTeamCompare = ({
     categories.map((category) => ({
       categoryId: category.categoryId,
       categoryName: category.categoryName,
-      categoryPercent: category.percent,
+      categoryPercent:
+        category.percent > STATISTIC_MAX_PERCENTAGE
+          ? STATISTIC_MAX_PERCENTAGE
+          : category.percent,
       categoryDuration: category.duration,
       organizationId: category.organizationId ?? 0,
       type,
@@ -267,7 +271,10 @@ const LineChartByTeamCompare = ({
                   userAvatar: foundUser.user.avatar,
                   userAvatarColor: foundUser.user.avatarColor,
                   userDuration: foundUser.duration,
-                  userPercent: foundUser.percent,
+                  userPercent:
+                    foundUser.percent > STATISTIC_MAX_PERCENTAGE
+                      ? STATISTIC_MAX_PERCENTAGE
+                      : foundUser.percent,
                 };
               }
               return {
@@ -290,7 +297,10 @@ const LineChartByTeamCompare = ({
                   userAvatar: foundUser.user.avatar,
                   userAvatarColor: foundUser.user.avatarColor,
                   userDuration: foundUser.duration,
-                  userPercent: foundUser.percent,
+                  userPercent:
+                    foundUser.percent > STATISTIC_MAX_PERCENTAGE
+                      ? STATISTIC_MAX_PERCENTAGE
+                      : foundUser.percent,
                 };
               }
               return {
@@ -460,6 +470,99 @@ const LineChartByTeamCompare = ({
         setHasFetchedCompareCategories(true);
       },
     });
+
+  useEffect(() => {
+    if (
+      selectedOrganization?.value != ALL_TEAM_STATISTIC &&
+      orderingOptions?.user_ids.length ==
+        selectedMembers.filter((member) => Boolean(member)).length &&
+      statisticTeamCategoryList &&
+      statisticCategoryListTeamCompare
+    ) {
+      let standardTableData: CategoryTableRowDetailWithType[] = [];
+      let compareTableData: CategoryTableRowDetailWithType[] = [];
+
+      if (
+        selectedOrganization?.value != '' &&
+        selectedLarge?.value == '' &&
+        selectedMedium?.value == ''
+      ) {
+        standardTableData = buildTableDetail(
+          statisticTeamCategoryList.largeCategories,
+          StatisticChartType.STANDARD,
+        );
+        compareTableData = buildTableDetail(
+          statisticCategoryListTeamCompare.largeCategories,
+          StatisticChartType.COMPARE,
+        );
+      } else if (
+        selectedOrganization?.value != '' &&
+        selectedLarge?.value != '' &&
+        selectedMedium?.value == ''
+      ) {
+        standardTableData = buildTableDetail(
+          statisticTeamCategoryList.mediumCategories,
+          StatisticChartType.STANDARD,
+        );
+        compareTableData = buildTableDetail(
+          statisticCategoryListTeamCompare.mediumCategories,
+          StatisticChartType.COMPARE,
+        );
+      } else if (
+        selectedOrganization?.value != '' &&
+        selectedLarge?.value != '' &&
+        selectedMedium?.value != ''
+      ) {
+        standardTableData = buildTableDetail(
+          statisticTeamCategoryList.smallCategories,
+          StatisticChartType.STANDARD,
+        );
+        compareTableData = buildTableDetail(
+          statisticCategoryListTeamCompare.smallCategories,
+          StatisticChartType.COMPARE,
+        );
+      }
+
+      const mergedTableData = mergeCategories([
+        ...(standardTableData || []),
+        ...(compareTableData || []),
+      ]);
+      const totalStandardDurationList = (standardTableData || [])
+        .map((item) => item.categoryDuration)
+        .filter(Boolean); // remove null, undefined, ''
+
+      const totalCompareDurationList = (compareTableData || [])
+        .map((item) => item.categoryDuration)
+        .filter(Boolean);
+
+      setTotalStandardDuration(
+        totalDurationsForStatistic(totalStandardDurationList),
+      );
+      setTotalCompareDuration(
+        totalDurationsForStatistic(totalCompareDurationList),
+      );
+
+      setMergedTableData(mergedTableData);
+      setCategoryCollapseStatuses(
+        mergedTableData.map((category) => {
+          return {
+            categoryName: category.categoryName!,
+            status: false,
+          };
+        }),
+      );
+      handleCategorySelection(mergedTableData);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    statisticTeamCategoryList,
+    statisticCategoryListTeamCompare,
+    selectedLarge,
+    selectedMedium,
+    selectedOrganization,
+    selectedMembers,
+    orderingOptions?.user_ids.length,
+  ]);
 
   useEffect(() => {
     if (hasFetchedStandardCategories && hasFetchedCompareCategories) {
@@ -1366,7 +1469,10 @@ const LineChartByTeamCompare = ({
               userAvatar: user.avatar,
               userAvatarColor: user.avatarColor,
               userDuration: user.totalDuration,
-              userPercent: user.percent,
+              userPercent:
+                user.percent > STATISTIC_MAX_PERCENTAGE
+                  ? STATISTIC_MAX_PERCENTAGE
+                  : user.percent,
             })),
           });
 
@@ -1391,7 +1497,10 @@ const LineChartByTeamCompare = ({
               userAvatar: user.avatar,
               userAvatarColor: user.avatarColor,
               userDuration: user.totalDuration,
-              userPercent: user.percent,
+              userPercent:
+                user.percent > STATISTIC_MAX_PERCENTAGE
+                  ? STATISTIC_MAX_PERCENTAGE
+                  : user.percent,
             })),
           });
 
@@ -2177,7 +2286,10 @@ const LineChartByTeamCompare = ({
             </span>
           </div>
           {/* Filter modal */}
-          <FilterTeamStatistic />
+          <FilterTeamStatistic
+            isFilterMember={false}
+            className="relative top-[3px]"
+          />
         </div>
         <ImageRound
           src="/icons/extend-calendar.svg"

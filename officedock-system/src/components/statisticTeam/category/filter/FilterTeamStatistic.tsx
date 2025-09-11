@@ -13,9 +13,14 @@ import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 type Props = {
   className?: string;
   classNameData?: string;
+  isFilterMember?: boolean;
 };
 
-const FilterTeamStatistic = ({ className, classNameData }: Props) => {
+const FilterTeamStatistic = ({
+  className,
+  classNameData,
+  isFilterMember = true,
+}: Props) => {
   const {
     orderingOptions,
     tagsOptions,
@@ -48,8 +53,13 @@ const FilterTeamStatistic = ({ className, classNameData }: Props) => {
                     name="Filter icon"
                     className="w-[14px] h-[14px] ml-2"
                   />
-                  {orderingOptions?.user_ids.length == 0 && (
-                    <span>メンバーとタグの絞り込み</span>
+                  {isFilterMember &&
+                    orderingOptions?.user_ids.length == 0 &&
+                    orderingOptions?.tag_ids.length == 0 && (
+                      <span>メンバーとタグの絞り込み</span>
+                    )}
+                  {!isFilterMember && orderingOptions?.tag_ids.length == 0 && (
+                    <span>タグの絞り込み</span>
                   )}
                 </PopoverButton>
               </div>
@@ -67,6 +77,7 @@ const FilterTeamStatistic = ({ className, classNameData }: Props) => {
                     tagsOptions={tagsOptions}
                     handleClose={close}
                     listMemberTeam={listMemberTeam}
+                    isFilterMember={isFilterMember}
                   />
                 </PopoverPanel>
               </Transition>
@@ -74,44 +85,45 @@ const FilterTeamStatistic = ({ className, classNameData }: Props) => {
           )}
         </Popover>
       </div>
-      <div className=" flex-grow flex-shrink-0">
-        <div className={`flex gap-2 flex-wrap flex-shrink-0 ${classNameData} `}>
+      <div className=" flex-grow flex-wrap ">
+        <div className={`flex gap-2 flex-wrap  ${classNameData} `}>
           <>
-            {allLabelUser.map((item, index) => {
-              return (
-                <div key={item.value} className="flex gap-[6px] items-center">
-                  {index === 0 && (
-                    <ImageRound
-                      src={`/icons/user-white.svg`}
-                      name="close"
-                      className="w-fit h-fit cursor-pointer"
-                    />
-                  )}
-                  <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                    <span className="min-w-[32px] max-w-[118px]  truncate">
-                      {item.label}
-                    </span>
-                    {isLoadingOrganization ||
-                    isLoadingLarge ||
-                    isLoadingMedium ||
-                    isLoadingOrganizationCompare ||
-                    isLoadingLargeCompare ||
-                    isLoadingMediumCompare ? (
-                      ''
-                    ) : (
+            {isFilterMember &&
+              allLabelUser.map((item, index) => {
+                return (
+                  <div key={item.value} className="flex gap-[6px] items-center">
+                    {index === 0 && (
                       <ImageRound
-                        onClick={() => {
-                          removeUser(item);
-                        }}
-                        src={`/icons/close-white.svg`}
+                        src={`/icons/user-white.svg`}
                         name="close"
                         className="w-fit h-fit cursor-pointer"
                       />
                     )}
+                    <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                      <span className="min-w-[32px] max-w-[118px]  truncate">
+                        {item.label}
+                      </span>
+                      {isLoadingOrganization ||
+                      isLoadingLarge ||
+                      isLoadingMedium ||
+                      isLoadingOrganizationCompare ||
+                      isLoadingLargeCompare ||
+                      isLoadingMediumCompare ? (
+                        ''
+                      ) : (
+                        <ImageRound
+                          onClick={() => {
+                            removeUser(item);
+                          }}
+                          src={`/icons/close-white.svg`}
+                          name="close"
+                          className="w-fit h-fit cursor-pointer"
+                        />
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </>
           <>
             {firstThreeTag.map((item, index) => {
@@ -150,7 +162,7 @@ const FilterTeamStatistic = ({ className, classNameData }: Props) => {
               );
             })}
             {allLabelTag.length > 3 && (
-              <p className="pr-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
+              <p className="pr-[10px] h-6 flex items-center flex-wrap justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
                 +{remainingCountTag}
               </p>
             )}
