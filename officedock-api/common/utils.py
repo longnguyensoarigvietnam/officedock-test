@@ -3,6 +3,10 @@ import io
 from datetime import date, datetime, timedelta, time
 import random
 import re
+import hashlib
+import hmac
+import urllib
+
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from dateutil.relativedelta import relativedelta
@@ -15,8 +19,6 @@ from django.utils.crypto import get_random_string
 from djangorestframework_camel_case.render import CamelCaseJSONRenderer
 from djangorestframework_camel_case.parser import CamelCaseJSONParser
 from rest_framework.exceptions import ValidationError, NotFound
-from google.auth.transport.requests import Request
-from google.cloud import storage
 
 from base.messages import ERROR_MESSAGES
 from calendars.constants import ScheduleCategoryTypes
@@ -53,44 +55,103 @@ def get_signed_url(file, expiration_seconds=None):
 
 def generate_signed_url(blob_name: str, expiration_seconds=None) -> str:
     """
-    Generate a signed URL for the given blob in the specified Google Cloud Storage bucket.
+    Generate a signed URL using an HMAC key.
+
+    This function creates a time-limited signed URL for a GCS object using an
+    HMAC key for authentication. The access ID and secret are read from
+    environment variables.
+    Args:
+        blob_name (str): The name/path of the file in the storage bucket.
+        expiration_seconds (int, optional): How long the URL should be valid for.
+    Returns:
+        str: A signed URL that can be used to access the file.
+    Raises:
+        ValueError: If HMAC credentials are not set in environment variables.
     """
-    # Retrieve the credentials from the Django settings
-    credentials = settings.GOOGLE_CLOUD_CREDENTIALS
 
-    # Refresh the credentials to ensure we have a valid access token
-    # This is necessary if the token is currently None or expired
-    if (
-        credentials.token is None
-        or not credentials.valid
-        or credentials.expired
-    ):
-        credentials.refresh(Request())
+    access_id = settings.GS_HMAC_ACCESS_ID
+    secret = settings.GS_HMAC_SECRET
 
-    # Create a Google Cloud Storage client
-    client = storage.Client()
+    if not access_id or not secret:
+        raise ValueError("GS_HMAC_ACCESS_ID and/or GS_HMAC_SECRET are not set.")
 
-    # Get the specified bucket using its name from settings
-    bucket = client.get_bucket(settings.GS_BUCKET_NAME)
+    # V4 signing process.
+    method = "GET"
+    bucket_name = settings.GS_BUCKET_NAME
 
-    # Create a blob (reference) for the file in the bucket using the blob name
-    blob = bucket.blob(blob_name)
+    cname = settings.GS_CUSTOM_ENDPOINT
+    if cname:
+        host = cname
+        path = f"/{blob_name}"
+    else:
+        host = "storage.googleapis.com"
+        path = f"/{bucket_name}/{blob_name}"
 
-    # Generate a signed URL for the blob that is valid for a specified duration
-    signed_url = blob.generate_signed_url(
-        version="v4",  # Use version 4 of the signed URL
-        service_account_email=credentials.service_account_email,  # Email of the service account
-        access_token=credentials.token,  # Current access token for authorization
-        expiration=timedelta(
-            seconds=expiration_seconds
+    now = datetime.datetime.now(datetime.timezone.utc)
+    datestamp = now.strftime("%Y%m%d")
+    timestamp = now.strftime("%Y%m%dT%H%M%SZ")
+
+    signed_headers = "host"
+    canonical_headers = f"host:{host}\n"
+
+    canonical_querystring = urllib.parse.urlencode(
+        {
+            "X-Goog-Algorithm": "GOOG4-HMAC-SHA256",
+            "X-Goog-Credential": f"{access_id}/{datestamp}/auto/storage/goog4_request",
+            "X-Goog-Date": timestamp,
+            "X-Goog-Expires": expiration_seconds
             if expiration_seconds
-            else settings.GS_EXPIRATION
-        ),  # Expiration time for the signed URL
-        method="GET",  # HTTP method that the signed URL allows
+            else settings.GS_EXPIRATION,
+            "X-Goog-SignedHeaders": signed_headers,
+        }
     )
 
-    # Return the signed URL, optionally disabling the toolbar in the viewer
-    return f"{signed_url}"
+    canonical_request = "\n".join(
+        [
+            method,
+            path,
+            canonical_querystring,
+            canonical_headers,
+            signed_headers,
+            "UNSIGNED-PAYLOAD",
+        ]
+    )
+
+    credential_scope = f"{datestamp}/auto/storage/goog4_request"
+    string_to_sign = "\n".join(
+        [
+            "GOOG4-HMAC-SHA256",
+            timestamp,
+            credential_scope,
+            hashlib.sha256(canonical_request.encode("utf-8")).hexdigest(),
+        ]
+    )
+
+    def _get_signature_key(key, date_stamp, region_name, service_name):
+        k_date = hmac.new(
+            ("GOOG4" + key).encode("utf-8"),
+            date_stamp.encode("utf-8"),
+            hashlib.sha256,
+        ).digest()
+        k_region = hmac.new(
+            k_date, region_name.encode("utf-8"), hashlib.sha256
+        ).digest()
+        k_service = hmac.new(
+            k_region, service_name.encode("utf-8"), hashlib.sha256
+        ).digest()
+        k_signing = hmac.new(
+            k_service, "goog4_request".encode("utf-8"), hashlib.sha256
+        ).digest()
+        return k_signing
+
+    signing_key = _get_signature_key(secret, datestamp, "auto", "storage")
+    signature = hmac.new(
+        signing_key, string_to_sign.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
+
+    signed_url = f"https://{host}{path}?{canonical_querystring}&X-Goog-Signature={signature}"
+
+    return signed_url
 
 
 def generate_unique_code(model, field, length=10):
