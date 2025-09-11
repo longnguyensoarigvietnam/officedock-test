@@ -10,14 +10,16 @@ from tasks.models import TaskDuration, TaskSchedule
 
 
 class TransactionService:
-    def reward_thanks_message(self, user, close_date, close_date_prev):
+    def reward_thanks_message(
+        self, user, date_after_closing, start_date_calculation_deadline
+    ):
         """
         Reward coins for received ThanksMessage.
         """
         thanks_count = ThanksMessage.objects.filter(
             recipient=user,
-            created_at__gte=close_date_prev,
-            created_at__lte=close_date,
+            created_at__gte=start_date_calculation_deadline,
+            created_at__lt=date_after_closing,
         ).count()
 
         if thanks_count > 0:
@@ -26,15 +28,17 @@ class TransactionService:
                 transaction_type=TransactionTypes.THANKS_MSG.value,
             )
 
-    def reward_login_bonus(self, user, close_date, close_date_prev):
+    def reward_login_bonus(
+        self, user, date_after_closing, start_date_calculation_deadline
+    ):
         """
         Reward pearls for daily login bonus.
         """
         login_bonus_point = (
             LoginBonus.objects.filter(
                 user=user,
-                created_at__gte=close_date_prev,
-                created_at__lte=close_date,
+                created_at__gte=start_date_calculation_deadline,
+                created_at__lt=date_after_closing,
             )
             .aggregate(total=Sum("bonus_points"))
             .get("total")
@@ -47,14 +51,16 @@ class TransactionService:
                 transaction_type=TransactionTypes.LOGIN_BONUS.value,
             )
 
-    def reward_task_complete(self, user, close_date, close_date_prev):
+    def reward_task_complete(
+        self, user, date_after_closing, start_date_calculation_deadline
+    ):
         """
         Reward pearls for completed tasks.
         """
         task_reward_logs = TaskRewardLog.objects.filter(
             user=user,
-            created_at__gte=close_date_prev,
-            created_at__lte=close_date,
+            created_at__gte=start_date_calculation_deadline,
+            created_at__lt=date_after_closing,
             rewarded_at__isnull=True,
         )
 
