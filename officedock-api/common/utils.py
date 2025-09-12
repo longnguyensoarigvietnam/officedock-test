@@ -840,9 +840,14 @@ def calculate_company_dates(company, reference_date=None):
     # - If close_date is the last day of month: previous start = first day of current month
     is_end_of_month = close_date.day == last_day_of_month
     if is_end_of_month:
+        close_date = close_date - relativedelta(months=1)
+        date_after_closing = date_after_closing - relativedelta(months=1)
+        date_after_data_edit_deadline = (
+            date_after_data_edit_deadline - relativedelta(months=1)
+        )
         start_date_calculation_deadline = date(
             reference_date.year, reference_date.month, 1
-        )
+        ) - relativedelta(months=1)
     else:
         start_date_calculation_deadline = (
             close_date - relativedelta(months=1)

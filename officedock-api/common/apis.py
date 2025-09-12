@@ -521,7 +521,7 @@ class CronJobViewSet(BaseAPIViewSet):
 
         # 2. Iterate over all companies to handle closing logic
         for company in Company.objects.all().prefetch_related("users"):
-            company_dates = calculate_company_dates(company)
+            company_dates = calculate_company_dates(company, today)
             date_after_closing = company_dates["date_after_closing"]
             start_date_calculation_deadline = company_dates[
                 "start_date_calculation_deadline"
@@ -534,14 +534,6 @@ class CronJobViewSet(BaseAPIViewSet):
             if today.day == date_after_closing.day:
                 company_users = company.users.all()
                 company_users_count = company_users.count()
-
-                user_exchangeable_amount = 0
-                if company_users_count > 0:
-                    user_exchangeable_amount = (
-                        company.exchangeable_amount // company_users_count
-                    )
-                    if user_exchangeable_amount < company.min_exchange_per_user:
-                        user_exchangeable_amount = company.min_exchange_per_user
 
                 for user in company_users:
                     # Reward coins for thanks messages (top voted)
@@ -565,8 +557,14 @@ class CronJobViewSet(BaseAPIViewSet):
 
                 # Update exchangeable coin for user
                 if company_users_count > 0:
+                    user_exchangeable_amount = (
+                        company.exchangeable_amount // company_users_count
+                    )
                     UserBalance.objects.filter(user__in=company_users).update(
-                        exchangeable_coin=user_exchangeable_amount
+                        exchangeable_coin=max(
+                            user_exchangeable_amount,
+                            company.min_exchange_per_user,
+                        )
                     )
 
             # --- Case 2: Deadline day ---

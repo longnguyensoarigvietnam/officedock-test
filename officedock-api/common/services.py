@@ -168,8 +168,8 @@ class TransactionService:
             elif duration.started_at and not duration.paused_at:
                 # If started but not paused, calculate from max(started_at, start_of_day) to end_of_day
                 effective_start = max(duration.started_at, start_of_day)
-                if effective_start < end_of_day:
-                    actual_duration = end_of_day - effective_start
+                if effective_start < now():
+                    actual_duration = now() - effective_start
                     total_actual_time += actual_duration
 
         return total_actual_time
