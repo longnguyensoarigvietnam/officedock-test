@@ -9,13 +9,19 @@ import DataCompanyPointChangeModal from '@components/modals/DetailCompanyChangeP
 import Button from '@components/common/Button';
 import { HistoryTable } from '@components/pointHistory/HistoryTable';
 
-import { pageRouters } from '@constants/routers';
+import { apiRouters, pageRouters } from '@constants/routers';
 import { PointHistoryActiveTab } from '@constants/enums';
 
 import useHistoryPointList from '@hooks/useListHistoryPoint';
+import useCurrentPoint from '@hooks/useCurrentPoint';
+
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
+import api from '@base/api';
 
 const HistoryListPage = () => {
   const router = useRouter();
+  const { data: session } = useSessionCache();
   const [isShowTotalPointChangeModal, setIsShowTotalPointChangeModal] =
     useState(false);
   const [isShowDetailCompanyChangeCoin, setIsShowDetailCompanyChangeCoin] =
@@ -35,11 +41,24 @@ const HistoryListPage = () => {
     type: activeTab,
   });
 
+  const { currentPointDetail } = useCurrentPoint({});
+
   useEffect(() => {
     return () => {
       queryClient.removeQueries(['getHistoryPointList']);
     };
   }, [queryClient]);
+
+  const navigateToDotMoney = async () => {
+    const { data: me } = await api.get(`${apiRouters.LOGIN_EXCHANGE}`, {
+      headers: {
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+    });
+    if (me.exchangeUrl) {
+      router.push(me.exchangeUrl);
+    }
+  };
 
   return (
     <>
@@ -103,14 +122,24 @@ const HistoryListPage = () => {
                   <div className="flex justify-center">
                     <ImageRound
                       name="Badge icon"
-                      src={'/icons/badge.svg'}
+                      src={
+                        activeTab == PointHistoryActiveTab.COIN
+                          ? '/icons/badge.svg'
+                          : '/icons/pearl.svg'
+                      }
                       className={`w-[60px] h-[60px]`}
                     />
                   </div>
                   <div className="flex items-end justify-center mt-[10px] gap-2 text-black font-medium">
-                    <p className="text-[40px] leading-10">2000</p>
+                    <p className="text-[40px] leading-10">
+                      {activeTab == PointHistoryActiveTab.COIN
+                        ? currentPointDetail?.coin
+                        : currentPointDetail?.pearl}
+                    </p>
                     <p className="text-[22px] leading-[22px]  relative">
-                      コイン
+                      {activeTab == PointHistoryActiveTab.COIN
+                        ? 'コイン'
+                        : 'パール'}
                     </p>
                   </div>
                   <div
@@ -168,6 +197,7 @@ const HistoryListPage = () => {
         <DataCompanyPointChangeModal
           open={isShowDetailCompanyChangeCoin}
           onClose={() => setIsShowDetailCompanyChangeCoin(false)}
+          onNavigateToDotMoney={navigateToDotMoney}
         />
       )}
     </>
