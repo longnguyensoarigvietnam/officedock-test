@@ -78,6 +78,11 @@ if GOOGLE_CLOUD_PROJECT_ID := os.environ.get("GOOGLE_CLOUD_PROJECT_ID", None):
             "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
         },
     }
+
+    # Config generate gcs signed url with hmac key
+    GS_HMAC_ACCESS_ID = os.getenv("GS_HMAC_ACCESS_ID")
+    GS_HMAC_SECRET = os.getenv("GS_HMAC_SECRET")
+    GS_CUSTOM_ENDPOINT = os.getenv("GS_CUSTOM_ENDPOINT", None)
 else:
     # SECURITY WARNING: keep the secret key used in production secret!
     SECRET_KEY = os.getenv("SECRET_KEY")
