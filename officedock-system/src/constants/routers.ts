@@ -676,6 +676,7 @@ export const apiRouters = {
 
   // POINT HISTORY
   POINT_HISTORY: '/point-histories/',
+  CURRENT_POINT: '/users/current-point/',
 
   // SHOP ITEM
   SHOP_ITEMS: '/shop-items/',

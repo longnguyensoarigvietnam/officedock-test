@@ -6,9 +6,10 @@ import Modal from '@components/common/Modal';
 type Props = {
   open: boolean;
   onClose: () => void;
+  onNavigateToDotMoney: () => Promise<void>
 };
 
-const DataCompanyPointChangeModal = ({ open, onClose }: Props) => {
+const DataCompanyPointChangeModal = ({ open, onClose, onNavigateToDotMoney }: Props) => {
   return (
     <Modal
       open={open}
@@ -44,7 +45,7 @@ const DataCompanyPointChangeModal = ({ open, onClose }: Props) => {
         <Button onClick={onClose} variant="outline" className="w-[128px] h-9">
           キャンセル
         </Button>
-        <Button onClick={onClose} variant="post" className="w-[128px] h-9">
+        <Button onClick={onNavigateToDotMoney} variant="post" className="w-[128px] h-9">
           交換する
         </Button>
       </div>
