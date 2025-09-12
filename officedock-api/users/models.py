@@ -175,6 +175,13 @@ class User(AbstractBaseUser, BaseModel, PermissionsMixin):
             self.balances.exchangeable_coin if hasattr(self, "balances") else 0
         )
 
+    def get_balances(self):
+        return (
+            self.balances
+            if hasattr(self, "balances")
+            else UserService().get_user_balance(self)
+        )
+
     @property
     def full_name(self):
         return self.profile.full_name

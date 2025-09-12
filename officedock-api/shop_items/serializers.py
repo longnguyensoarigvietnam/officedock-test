@@ -1,7 +1,5 @@
-from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
-from base.messages import ERROR_MESSAGES
 from shop_items.models import ShopItems, UserItems
 
 
@@ -39,11 +37,4 @@ class UserItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserItems
-        fields = ["item_type", "user", "item", "is_weared"]
-
-    def validate(self, attrs):
-        item = attrs.get("item")
-        user = attrs.get("user")
-        if UserItems.objects.filter(item=item, user=user).exists():
-            raise ValidationError({"detail": ERROR_MESSAGES["cannot_buy_item"]})
-        return attrs
+        fields = ["item_type", "item", "is_equipped"]

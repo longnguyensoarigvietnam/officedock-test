@@ -12,6 +12,7 @@ from shop_items.models import ShopItems, UserItems
 from shop_items.serializers import GroupedItemSerializer, UserItemSerializer
 from users.constants import CurrencyEnums
 from base.messages import ERROR_MESSAGES
+from users.models import User
 
 
 @extend_schema(tags=["System > Shop Items"])
@@ -75,6 +76,7 @@ class UserItemViewSet(BaseAPIViewSet):
     API endpoint for shop items
     """
 
+    queryset = User.objects.all()
     permission_classes = [IsAuthenticated]
 
     @action(
@@ -92,7 +94,9 @@ class UserItemViewSet(BaseAPIViewSet):
         serializer.is_valid(raise_exception=True)
         serializer_data = serializer.validated_data
         item = serializer_data.get("item")
-        user = serializer_data.get("user")
+        user = request.user
+        if UserItems.objects.filter(item=item, user=user).exists():
+            raise ValidationError({"detail": ERROR_MESSAGES["cannot_buy_item"]})
         user_wallet = (
             user.coin
             if item.type_price == CurrencyEnums.COIN.value
@@ -103,11 +107,40 @@ class UserItemViewSet(BaseAPIViewSet):
         serializer_data["company"] = user.company
         # Clean wearing of character
         UserItems.objects.filter(
-            item_type=serializer_data["item_type"], user=user, is_weared=True
-        ).update(is_weared=False)
+            item_type=serializer_data["item_type"], user=user, is_equipped=True
+        ).update(is_equipped=False)
         user_item = user.items.create(**serializer_data)
 
         return self.response_created(UserItemSerializer(user_item).data)
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="equipped-item",
+        serializer_class=UserItemSerializer,
+    )
+    @transaction.atomic()
+    def handle_equipped_item_by_user(self, request):
+        """
+        Equipped a item to the user.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        item = serializer_data.get("item")
+        is_equipped = serializer_data.get("is_equipped")
+        user = request.user
+        if not UserItems.objects.filter(item=item, user=user).exists():
+            raise ValidationError({"detail": ERROR_MESSAGES["cannot_updated"]})
+        # Clean wearing of character
+        UserItems.objects.filter(
+            item_type=serializer_data["item_type"], user=user, is_equipped=True
+        ).update(is_equipped=False)
+        user_item = user.items.filter(item=item, user=user).update(
+            is_equipped=is_equipped
+        )
+
+        return self.response_created()
 
     @extend_schema(
         parameters=[

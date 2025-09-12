@@ -179,7 +179,9 @@ def build_present_mvp_vote_with_organization_list(mvp_vote, user):
         for org in orgs:
             organization = BaseOrganizationSerializer(org).data
             # Filter candidates belonging only to the current organization
-            org_candidates = candidates_in_orgs.filter(user__in=org.users.all())
+            org_candidates = candidates_in_orgs.filter(
+                user__in=org.users.all()
+            ).order_by("user__created_at")
             # Process data for each candidate in the current organization
             organization["candidates"] = []
             for candidate in org_candidates:

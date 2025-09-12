@@ -118,3 +118,10 @@ class MvpVoteSerializer(serializers.ModelSerializer):
             "comment",
             "deleted_at",
         ]
+
+    def validate(self, attrs):
+        mvp_vote_management = attrs.get("mvp_vote_management")
+        if mvp_vote_management.type == MVPVoteTypes.PAST.value:
+            raise ValidationError({"detail": ERROR_MESSAGES["vote_ended"]})
+
+        return attrs

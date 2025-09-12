@@ -60,4 +60,4 @@ class UserItems(BaseModel):
     item_type = models.CharField(
         choices=ItemTypes.choices(), null=True, blank=True
     )
-    is_weared = models.BooleanField(default=False)
+    is_equipped = models.BooleanField(default=False)
