@@ -518,3 +518,5 @@ export const SYSTEM_TWEET_NAME = 'OFFICE DOCK';
 export const VOTING_BONUS_POINT = 200;
 
 export const JAPANESE_TIME_ZONE = 'Asia/Tokyo'
+
+export const REMAINING_ORGANIZATIONS_ID = 'remaining'

@@ -68,7 +68,7 @@ export const VotingCandidateList = ({
         background: '#DFAEAECC',
         boxShadow: '0px 4px 10px 0px #0000000D',
       }}
-      className="w-[720px] h-[90%] pl-[30px] py-[30px] pr-[13px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
+      className="w-[720px] h-[90%] p-[30px] pr-[12px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
       <div className="space-y-[14px] mb-10">
         {currentMVPVotingDetail ? (
           <>
@@ -77,7 +77,7 @@ export const VotingCandidateList = ({
               {formatJapaneseDateRange(
                 currentMVPVotingDetail?.startDate,
                 currentMVPVotingDetail?.endDate,
-                true
+                true,
               )}
             </p>
             <p className="text-[24px] font-semibold">
@@ -88,7 +88,8 @@ export const VotingCandidateList = ({
           <></>
         )}
       </div>
-      <div className={`flex flex-col max-h-[calc(100%_-_130px)] pr-[12px] gap-5 overflow-y-auto customized-scrollbar`}>
+      <div
+        className={`flex flex-col max-h-[calc(100%_-_130px)] gap-5 overflow-y-auto customized-scrollbar`}>
         {memberListByOrganization?.map((organization) => {
           return (
             <div
@@ -97,7 +98,7 @@ export const VotingCandidateList = ({
               <div className="flex items-center justify-between mb-5">
                 <p className="font-medium text-base max-w-full break-all">
                   {organization.orgInfo.name}{' '}
-                  <span className="text-xs font-medium ml-4">
+                  <span className={`text-xs font-medium ${organization.orgInfo.name && 'ml-4'}`}>
                     メンバー{organization.orgInfo.candidates.length}人
                   </span>
                 </p>
@@ -128,7 +129,7 @@ export const VotingCandidateList = ({
                             ? '0px 2px 8px 0px #0000001A'
                             : 'none',
                         }}
-                        className={`w-[157px] ${candidate.isVoted ? 'bg-[#FFE9CD] !border-[2px] !border-[#C69B44]' : 'bg-white'} hover:cursor-pointer rounded-[14px] h-[50px] px-[20px] py-[10px] flex items-center gap-2`}
+                        className={`w-[157px] ${candidate.isVoted ? 'bg-[#FFE9CD] !border-[2px] !border-[#C69B44]' : 'bg-white'} ${candidate.id == session?.user.id || (currentMVPVotingDetail?.isVoted && !candidate.isVoted) ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} rounded-[14px] h-[50px] px-[20px] py-[10px] flex items-center gap-2`}
                         onClick={() => {
                           session?.user.id != candidate.id &&
                             !currentMVPVotingDetail?.isVoted &&

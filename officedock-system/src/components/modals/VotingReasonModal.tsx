@@ -23,11 +23,6 @@ export const VotingReasonModal = ({
   onSubmit: () => void;
   onClose: () => void;
 }) => {
-  const doc = new DOMParser().parseFromString(votingReason, 'text/html');
-  const votingReasonNumOfChars = doc.body.textContent
-    ? doc.body.textContent.trim().length
-    : 0;
-
   return (
     <Modal
       open={open}
@@ -75,7 +70,6 @@ export const VotingReasonModal = ({
             style={{
               background: 'linear-gradient(180deg, #C59941 0%, #D0AA5A 100%)',
             }}
-            disabled={votingReasonNumOfChars == 0}
             onClick={onSubmit}>
             投票する
           </Button>

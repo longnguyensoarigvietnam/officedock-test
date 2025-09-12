@@ -87,7 +87,7 @@ export interface VotingRequest {
 }
 
 export interface MVPOrganization {
-  id: number;
+  id: number | string;
   name: string;
   uuid: string;
   icon: string | null;
@@ -127,6 +127,14 @@ export interface CurrentMVPVotingDetail {
   isAllUsers: boolean;
   isVoted: boolean;
   organizations: MVPOrganization[];
+  remainingCandidates: {
+    id: number;
+    fullName: string;
+    avatar: string | null;
+    avatarColor: string;
+    isVoted: boolean;
+    mvpCandidateId: number | null;
+  }[];
 }
 
 export interface MVPAnnouncementDetail {

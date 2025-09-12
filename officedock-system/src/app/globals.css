@@ -309,6 +309,11 @@ input[type='checkbox']:focus {
 }
 
 /* Customized scrollbar */
+.customized-scrollbar {
+  padding-right: 12px; /* creates space between content and scrollbar */
+  box-sizing: content-box; /* ensures padding doesn’t shrink content */
+}
+
 .customized-scrollbar::-webkit-scrollbar-track {
   border-radius: 10px;
   background-color: transparent;

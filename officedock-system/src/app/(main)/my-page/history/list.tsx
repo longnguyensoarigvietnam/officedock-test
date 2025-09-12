@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQueryClient } from 'react-query';
 import { useRouter } from 'next/navigation';
 
@@ -7,8 +7,11 @@ import ImageRound from '@components/common/ImageRound';
 import DataCountPointChangeModal from '@components/modals/DataCountPointChangeModal';
 import DataCompanyPointChangeModal from '@components/modals/DetailCompanyChangePoint';
 import Button from '@components/common/Button';
+import { HistoryTable } from '@components/pointHistory/HistoryTable';
 
 import { pageRouters } from '@constants/routers';
+import { PointHistoryActiveTab } from '@constants/enums';
+
 import useHistoryPointList from '@hooks/useListHistoryPoint';
 
 const HistoryListPage = () => {
@@ -17,8 +20,9 @@ const HistoryListPage = () => {
     useState(false);
   const [isShowDetailCompanyChangeCoin, setIsShowDetailCompanyChangeCoin] =
     useState(false);
-
-  const resultsContainerRef = useRef<HTMLDivElement | null>(null);
+  const [activeTab, setActiveTab] = useState<PointHistoryActiveTab>(
+    PointHistoryActiveTab.COIN,
+  );
 
   const queryClient = useQueryClient();
   const {
@@ -28,41 +32,14 @@ const HistoryListPage = () => {
     isLoadingList,
     isFetchingNextPage,
   } = useHistoryPointList({
-    type: 'COIN',
+    type: activeTab,
   });
 
   useEffect(() => {
     return () => {
-      queryClient.removeQueries(['getHistoryPontList']);
+      queryClient.removeQueries(['getHistoryPointList']);
     };
   }, [queryClient]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const surveyContainer = resultsContainerRef.current;
-      if (
-        surveyContainer &&
-        hasNextPage &&
-        !isFetchingNextPage &&
-        surveyContainer.clientHeight + Math.abs(surveyContainer.scrollTop) >=
-          surveyContainer.scrollHeight - 10
-      ) {
-        fetchNextPage();
-      }
-    };
-
-    const surveyContainer = resultsContainerRef.current;
-
-    if (surveyContainer) {
-      surveyContainer.addEventListener('scroll', handleScroll);
-    }
-
-    return () => {
-      if (surveyContainer) {
-        surveyContainer.removeEventListener('scroll', handleScroll);
-      }
-    };
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   return (
     <>
@@ -76,6 +53,7 @@ const HistoryListPage = () => {
             height: '100%',
           }}
           className="rounded-bl-[30px] relative rounded-tr-[30px] rounded-br-[30px] h-[calc(100vh-120px)] w-full">
+          {/* Page title */}
           <div className="flex absolute top-0 left-0 shadow-common rounded-br-[30px]">
             <div className="h-20 z-[30] bg-white w-fit px-10 py-4 text-[#77858F] font-medium flex items-center gap-[10px] rounded-br-[30px]">
               <div
@@ -93,14 +71,15 @@ const HistoryListPage = () => {
               </span>
             </div>
           </div>
-          <div className="relative  pr-[30px] flex w-full justify-between items-center h-full">
+          <div className="relative pr-[30px] flex w-full h-full">
             {/* User */}
-            <div className="flex-shrink-0 flex-grow h-full flex items-center justify-center ">
+            <div className="w-[calc(100%_-_720px)] flex-shrink-0 flex-grow h-full flex items-center justify-center">
               <div className="w-[402px] bg-white shadow-common rounded-3xl p-[6px]">
                 <div className="flex items-center gap-[6px] justify-center">
                   <Button
-                    variant="post"
-                    className="flex w-[192px] h-[50px]  items-center gap-[10px] !rounded-[40px] ">
+                    variant={`${activeTab == PointHistoryActiveTab.COIN ? 'post' : 'secondary'}`}
+                    className="flex w-[192px] h-[50px]  items-center gap-[10px] !rounded-[40px]"
+                    onClick={() => setActiveTab(PointHistoryActiveTab.COIN)}>
                     <ImageRound
                       name="Badge icon"
                       src={'/icons/badge.svg'}
@@ -109,8 +88,9 @@ const HistoryListPage = () => {
                     <p className="text-[18px]">コイン</p>
                   </Button>
                   <Button
-                    variant="secondary"
-                    className="flex w-[192px] h-[50px]  items-center gap-[10px] !rounded-[40px] ">
+                    variant={`${activeTab == PointHistoryActiveTab.PEARL ? 'post' : 'secondary'}`}
+                    className="flex w-[192px] h-[50px]  items-center gap-[10px] !rounded-[40px]"
+                    onClick={() => setActiveTab(PointHistoryActiveTab.PEARL)}>
                     <ImageRound
                       name="Pearl icon"
                       src={'/icons/pearl.svg'}
@@ -133,10 +113,10 @@ const HistoryListPage = () => {
                       コイン
                     </p>
                   </div>
-                  <div className="flex items-center gap-[10px] justify-end mt-6 pr-3">
-                    <div
-                      onClick={() => setIsShowTotalPointChangeModal(true)}
-                      className="flex items-center gap-3 py-[6px] px-3 rounded-lg bg-[#EBF1F7]">
+                  <div
+                    className="flex items-center gap-[10px] justify-end mt-6 pr-3"
+                    onClick={() => setIsShowTotalPointChangeModal(true)}>
+                    <div className="flex items-center gap-3 py-[6px] px-3 rounded-lg bg-[#EBF1F7]">
                       <p className="text-[13px] font-normal">
                         今月交換可能なコイン数
                       </p>
@@ -149,7 +129,7 @@ const HistoryListPage = () => {
                         <p className="text-base font-medium">100</p>
                       </div>
                     </div>
-                    <div className="text-xs text-[#77858F] flex items-center justify-center w-[22px] h-[22px] rounded-full bg-[#EBF1F7]">
+                    <div className="text-xs text-[#77858F] flex items-center justify-center w-[22px] h-[22px] rounded-full bg-[#EBF1F7] hover:cursor-pointer">
                       ?
                     </div>
                   </div>
@@ -165,86 +145,15 @@ const HistoryListPage = () => {
               </div>
             </div>
             {/* List history  */}
-            <div
-              style={{
-                background: 'rgba(53, 153, 216, 0.8)',
-                boxShadow: '0px 4px 10px 0px #0000000D',
-              }}
-              className="w-[720px] h-[calc(100vh_-_260px)] flex-shrink-0 font-medium text-white border border-white rounded-3xl py-[30px]">
-              {/* form */}
-              <div className="flex px-[30px] items-center gap-3 ">
-                <ImageRound
-                  name="Badge icon"
-                  src={'/icons/badge.svg'}
-                  className={`w-[30px] h-[30px]`}
-                />
-                <p className="text-[18px]">ポイント履歴</p>
-              </div>
-              <div className="h-full w-full pl-[30px] mt-5">
-                <div className="pr-5 h-full">
-                  {/* Header */}
-                  <div className="h-fit flex items-center  text-white text-xs font-medium">
-                    <div className="w-[134px]">日付</div>
-                    <div className="w-[129px]  flex justify-between items-center">
-                      <div className="h-[9px] w-[1px] border-l border-[#D2DBE1]"></div>
-                      <div className="flex-grow px-5">質問</div>
-                      <div className="h-[9px] w-[1px] border-l border-[#D2DBE1]"></div>
-                    </div>
-                    <div className="w-[129px]  flex justify-between items-center">
-                      <div className="h-[9px] w-[1px] border-l border-[#D2DBE1]"></div>
-                      <div className="flex-grow px-5">獲得</div>
-                      <div className="h-[9px] w-[1px] border-l border-[#D2DBE1]"></div>
-                    </div>
-                    <div className="w-[129px]  flex justify-between items-center">
-                      <div className="h-[9px] w-[1px] border-l border-[#D2DBE1]"></div>
-                      <div className="flex-grow px-5">差引残高</div>
-                      <div className="h-[9px] w-[1px] border-l border-[#D2DBE1]"></div>
-                    </div>
-                    <div className="flex-grow px-5">メモ</div>
-                  </div>
-                  {/* Table */}
-                  <div
-                    ref={resultsContainerRef}
-                    className="h-full max-h-[calc(100vh_-_415px)]  pr-[10px]  overflow-y-auto   mt-[14px]">
-                    <div className="w-full bg-white h-full py-[14px] rounded-[14px]">
-                      {historyPointList.length &&
-                        !isLoadingList &&
-                        historyPointList.map((item, index) => {
-                          return (
-                            <div
-                              key={index}
-                              className={`flex rounded-br-[14px] text-xs rounded-bl-[14px] items-stretch  bg-white text-black  font-normal py-[14px]`}>
-                              {/* Date column */}
-                              <div className="w-[134px] pl-5 pr-2 flex items-center">
-                                {/* TODO: Format time  */}
-                                {/* {item. &&
-                                  formatShowDateJapanese(item.createdAt)} */}
-                              </div>
-                              <div className="w-[1px] border-l border-[#D2DBE1] -my-[10px]"></div>
-                              <div className="w-[129px] px-[15px] flex items-center justify-between">
-                                5
-                              </div>
-                              <div className="w-[1px] border-l border-[#D2DBE1] -my-[10px]"></div>
-                              <div className="w-[129px] px-[15px] flex items-center justify-between">
-                                5
-                              </div>
-                              <div className="w-[1px] border-l border-[#D2DBE1] -my-[10px]"></div>
-                              <div className="w-[129px] px-[15px] flex items-center justify-between">
-                                5
-                              </div>
-                              <div className="w-[1px] border-l border-[#D2DBE1] -my-[10px]"></div>
-
-                              <div className="flex-grow flex items-center justify-center text-sm">
-                                スキルアップ
-                              </div>
-                            </div>
-                          );
-                        })}
-                      <div className="bg-[#409EDE] w-full my-[14px] h-[2px]"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="relative w-[720px]">
+              <HistoryTable
+                key={activeTab}
+                historyList={historyPointList}
+                hasNextPage={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                isLoadingList={isLoadingList}
+                fetchNextPage={fetchNextPage}
+              />
             </div>
           </div>
         </div>

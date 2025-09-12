@@ -75,7 +75,7 @@ const useHistoryPointList = ({
     isFetchingNextPage,
     isFetched,
   } = useInfiniteQuery({
-    queryKey: ['getHistoryPontList', screenName, type],
+    queryKey: ['getHistoryPointList', screenName, type],
     queryFn: ({ pageParam, signal }) =>
       getHistoryPontList({ pageParam, signal }),
     enabled: !!token,
