@@ -501,10 +501,10 @@ function StatisticTeamCalendar() {
           }}
           className="w-fit h-fit min-h-[34px] flex flex-col gap-[6px]  px-3 py-2 border border-[#77858F] bg-white rounded-md  ">
           <div className="flex items-center gap-[10px] h-5">
-            <div className="text-xs font-medium text-primary px-[14px] h-[18px] flex items-center  bg-[#EBF1F7] rounded-sm">
+            <div className="text-xs font-medium text-primary px-[14px] h-[18px] flex items-center  bg-[#EBF1F7] rounded-sm text-nowrap">
               {isTypeTime}
             </div>
-            <div className="text-[13px] text-black font-normal flex items-center gap-[6px]">
+            <div className="text-[13px] text-black font-normal flex items-center gap-[6px] text-nowrap">
               <span>{startDate && formatShowDateJapanese(startDate)}</span>
               <div className="h-[34px] flex items-center text-[#77858F]">
                 〜

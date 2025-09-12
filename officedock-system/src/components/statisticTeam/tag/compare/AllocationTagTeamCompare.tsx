@@ -481,7 +481,7 @@ const AllocationTagTeamCompare = memo(
           {/* Header & sort */}
           <div className="flex justify-between">
             <div className="flex items-center gap-x-5">
-              <div className="flex items-center gap-[10px] ">
+              <div className="flex flex-shrink-0 items-center gap-[10px] ">
                 <ImageRound
                   className={`w-5 h-5  hover:cursor-pointer relative top-[2px]`}
                   name="statistic-progress-bar icon"
@@ -900,7 +900,9 @@ const AllocationTagTeamCompare = memo(
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
                         disabled={
-                          !selectedLarge || isHasLoading || isDisableCalendar
+                          selectedLarge?.value == '' ||
+                          isHasLoading ||
+                          isDisableCalendar
                         }
                       />
                       <div className={`mt-[14px]`}>
@@ -1039,7 +1041,9 @@ const AllocationTagTeamCompare = memo(
                         selectedOption={selectedSmall || undefined}
                         onChange={(data) => handleSelectSmall(data)}
                         disabled={
-                          !selectedMedium || isHasLoading || isDisableCalendar
+                          selectedMedium?.value == '' ||
+                          isHasLoading ||
+                          isDisableCalendar
                         }
                       />
                       <div className={`mt-[14px]`}>

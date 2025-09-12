@@ -18,7 +18,7 @@ import FilterTagTeam from '@components/statisticTeam/tag/filter/FilterTagTeam';
 
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
-import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
+import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT, NO_SETTING } from '@constants';
 import { OrganizationStatisticType } from '@constants/enums';
 
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
@@ -136,12 +136,7 @@ const StatisticTeamTagBoard = () => {
         );
         setOrderingOptions({
           tag_ids: optionsTagList,
-          user_ids: mainItem.members.map((member) => ({
-            value: member.id,
-            label: member.fullName,
-            color: member?.avatarColor || '',
-            avatarUrl: member?.avatar || '',
-          })),
+          user_ids: []
         });
 
         return {
@@ -165,9 +160,18 @@ const StatisticTeamTagBoard = () => {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value as number,
-      mediumCategoryId: selectedMedium?.value as number,
-      smallCategoryId: selectedSmall?.value as number,
+      largeCategoryId:
+        selectedLarge?.value == null
+          ? NO_SETTING
+          : (selectedLarge?.value as number),
+      mediumCategoryId:
+        selectedMedium?.value == null
+          ? NO_SETTING
+          : (selectedMedium?.value as number),
+      smallCategoryId:
+        selectedSmall?.value == null
+          ? NO_SETTING
+          : (selectedSmall?.value as number),
       orderingOptions: orderingOptions,
       organizationMemberId:
         selectedOrganization?.type === OrganizationStatisticType.CALENDAR
@@ -229,18 +233,18 @@ const StatisticTeamTagBoard = () => {
           } else {
             if (
               selectedMedium &&
-              selectedMedium.value &&
+              selectedMedium.value != '' &&
               selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ) {
               setTotalDurationTask(DEFAULT_TIME_TEXT);
               return;
             }
-            if (selectedSmall && selectedSmall.value) return;
+            if (selectedSmall && selectedSmall.value != '') return;
 
             setTotalDurationTask(data.mediumTotalDuration);
           }
         } else {
-          if (selectedLarge && selectedLarge.value) return;
+          if (selectedLarge && selectedLarge.value != '') return;
           setTotalDurationTask(data.largeTotalDuration);
         }
       } else {
@@ -262,9 +266,18 @@ const StatisticTeamTagBoard = () => {
       fromDate: formatDateToYMD(startDateCompare) || '',
       endDate: formatDateToYMD(`${endDateCompare}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value as number,
-      mediumCategoryId: selectedMedium?.value as number,
-      smallCategoryId: selectedSmall?.value as number,
+      largeCategoryId:
+        selectedLarge?.value == null
+          ? NO_SETTING
+          : (selectedLarge?.value as number),
+      mediumCategoryId:
+        selectedMedium?.value == null
+          ? NO_SETTING
+          : (selectedMedium?.value as number),
+      smallCategoryId:
+        selectedSmall?.value == null
+          ? NO_SETTING
+          : (selectedSmall?.value as number),
       orderingOptions: orderingOptions,
       isCompare: isCheckCompare,
       organizationMemberId:
@@ -292,18 +305,18 @@ const StatisticTeamTagBoard = () => {
           } else {
             if (
               selectedMedium &&
-              selectedMedium.value &&
+              selectedMedium.value != '' &&
               selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ) {
               setTotalDurationTaskCompare(DEFAULT_TIME_TEXT);
               return;
             }
-            if (selectedSmall && selectedSmall.value) return;
+            if (selectedSmall && selectedSmall.value != '') return;
 
             setTotalDurationTaskCompare(data.mediumTotalDuration);
           }
         } else {
-          if (selectedLarge && selectedLarge.value) return;
+          if (selectedLarge && selectedLarge.value != '') return;
           setTotalDurationTaskCompare(data.largeTotalDuration);
         }
       } else {
@@ -429,12 +442,7 @@ const StatisticTeamTagBoard = () => {
       );
       setOrderingOptions({
         tag_ids: optionsTagList,
-        user_ids: organization.members.map((member) => ({
-          value: member.id,
-          label: member.fullName,
-          color: member?.avatarColor || '',
-          avatarUrl: member?.avatar || '',
-        })),
+        user_ids: []
       });
 
       setCurrentPage(1);
@@ -572,7 +580,7 @@ const StatisticTeamTagBoard = () => {
     <div className="pt-[30px] pr-10  font-medium ">
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-5 ">
-          <div className="rounded-full w-[34px] h-[34px]  flex items-center justify-center overflow-hidden">
+          <div className="rounded-full w-[34px] h-[34px] min-w-[34px] flex items-center justify-center overflow-hidden">
             <ImageRound
               className="w-[34px] h-[34px] rounded-full"
               src="/icons/statistic-team.svg"
@@ -581,10 +589,7 @@ const StatisticTeamTagBoard = () => {
             />
           </div>
           <span className="text-[26px] font-medium relative top-[-2px] line-clamp-3 max-w-[450px] break-all">
-            {selectedOrganization?.label}
-          </span>
-          <span className="text-[26px] font-medium relative top-[-2px]">
-            チーム集計
+            {selectedOrganization?.label}チーム集計
           </span>
           <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ">
             <Button
@@ -666,6 +671,8 @@ const StatisticTeamTagBoard = () => {
             endDate={endDate}
             startDateCompare={startDateCompare}
             endDateCompare={endDateCompare}
+            statisticTagsList={statisticTagsListTeam}
+            statisticTagsCompareList={statisticTagsListTeamCompare}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
@@ -700,6 +707,7 @@ const StatisticTeamTagBoard = () => {
           <LineChartByTeamTags
             startDate={startDate}
             endDate={endDate}
+            statisticTagsListTeam={statisticTagsListTeam}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}

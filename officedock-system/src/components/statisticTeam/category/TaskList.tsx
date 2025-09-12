@@ -376,7 +376,7 @@ const TaskListTeamStatistic = ({
                         handleSelectMedium(data);
                       }
                     }}
-                    disabled={!selectedLarge || isHasLoading}
+                    disabled={selectedLarge?.value == '' || isHasLoading}
                   />
                 </div>
               </div>
@@ -408,7 +408,7 @@ const TaskListTeamStatistic = ({
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
-                    disabled={!selectedMedium || isHasLoading}
+                    disabled={selectedMedium?.value == '' || isHasLoading}
                   />
                 </div>
               </div>

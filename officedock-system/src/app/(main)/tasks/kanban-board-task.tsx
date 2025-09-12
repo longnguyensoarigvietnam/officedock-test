@@ -431,6 +431,7 @@ const KanbanBoardTask = () => {
         {
           ...taskAddEmpty,
           type: ItemStartType.TASK,
+          isStart: true,
         },
         ActionTask.CREATE,
         '',
@@ -3368,7 +3369,7 @@ const KanbanBoardTask = () => {
                               }}
                             />
                           </div>
-                          <p className='text-nowrap'> 新規作成</p>
+                          <p className="text-nowrap"> 新規作成</p>
                         </Button>
                       </DynamicTooltip>
                     </div>

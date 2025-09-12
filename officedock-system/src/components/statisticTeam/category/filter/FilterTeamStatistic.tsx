@@ -20,7 +20,6 @@ const FilterTeamStatistic = ({ className, classNameData }: Props) => {
     orderingOptions,
     tagsOptions,
     listMemberTeam,
-    firstThreeUser,
     allLabelUser,
     allLabelTag,
     firstThreeTag,
@@ -30,7 +29,6 @@ const FilterTeamStatistic = ({ className, classNameData }: Props) => {
     isLoadingOrganizationCompare,
     isLoadingLargeCompare,
     isLoadingMediumCompare,
-    remainingCountUser,
     remainingCountTag,
     removeTag,
     removeUser,
@@ -76,10 +74,10 @@ const FilterTeamStatistic = ({ className, classNameData }: Props) => {
           )}
         </Popover>
       </div>
-      <div className=" flex-grow flex-shrink-0">
-        <div className={`flex gap-2 flex-wrap flex-shrink-0 ${classNameData} `}>
+      <div className=" flex-grow flex-wrap ">
+        <div className={`flex gap-2 flex-wrap  ${classNameData} `}>
           <>
-            {firstThreeUser.map((item, index) => {
+            {allLabelUser.map((item, index) => {
               return (
                 <div key={item.value} className="flex gap-[6px] items-center">
                   {index === 0 && (
@@ -114,11 +112,7 @@ const FilterTeamStatistic = ({ className, classNameData }: Props) => {
                 </div>
               );
             })}
-            {allLabelUser.length > 3 && (
-              <p className=" h-6 px-1 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
-                +{remainingCountUser}
-              </p>
-            )}
+       
           </>
           <>
             {firstThreeTag.map((item, index) => {
@@ -157,7 +151,7 @@ const FilterTeamStatistic = ({ className, classNameData }: Props) => {
               );
             })}
             {allLabelTag.length > 3 && (
-              <p className="pr-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
+              <p className="pr-[10px] h-6 flex items-center flex-wrap justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
                 +{remainingCountTag}
               </p>
             )}

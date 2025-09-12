@@ -570,7 +570,7 @@ const TaskCard = ({
                   className="font-bold  text-sm break-all truncate  w-full   ">
                   {event?.event instanceof Error
                     ? ''
-                    : event?.event?.title
+                    : event?.event?.title || event?.event?.title != ''
                       ? event.event.title
                       : NO_SETTING}
                 </p>
@@ -635,7 +635,7 @@ const TaskCard = ({
                       className="font-bold  text-sm break-all truncate  w-full   ">
                       {event?.event instanceof Error
                         ? ''
-                        : event?.event?.title
+                        : event?.event?.title || event?.event?.title != ''
                           ? event.event.title
                           : NO_SETTING}
                     </p>

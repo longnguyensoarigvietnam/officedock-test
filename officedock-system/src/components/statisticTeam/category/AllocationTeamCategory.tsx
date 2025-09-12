@@ -73,7 +73,7 @@ export function transformStatisticCategoryInfoToProgressData({
     color:
       item.categoryColor ||
       (colorData && lightenColor(colorData, item.percent)) ||
-      '',
+      '#83919e',
     duration: item.duration,
     optionData: item.users || [],
     organizationId: String(item.organizationId),
@@ -227,6 +227,7 @@ const AllocationTeamCategory = memo(
           const { finalData } = mapStatisticAllTeamCategoryInfoToProgressData({
             data: statisticAllTeamCategoryList.largeCategories,
           });
+
           setProgressDataLargeAllTeam(finalData);
         } else {
           setProgressDataLargeAllTeam([]);
@@ -575,7 +576,9 @@ const AllocationTeamCategory = memo(
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
                         disabled={
-                          !selectedLarge || isHasLoading || isDisableCalendar
+                          selectedLarge?.value == '' ||
+                          isHasLoading ||
+                          isDisableCalendar
                         }
                       />
                       <p className="text-sm text-black my-[26px]">

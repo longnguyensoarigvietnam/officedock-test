@@ -14,7 +14,7 @@ import {
   StatisticsCategories,
 } from '@interfaces/statistic';
 
-import { getRandomColor, lightenColor } from '@utils';
+import { lightenColor } from '@utils';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import FilterTeamStatistic from '../filter/FilterTeamStatistic';
 import { ALL_TEAM_STATISTIC, SUB_TEAMS } from '@constants';
@@ -116,9 +116,9 @@ const PercentageTeamCategoryCompare = ({
         categoryColor:
           item.categoryColor ||
           (colorData && lightenColor(colorData, item.percent)) ||
-          getRandomColor(),
+          '#83919e',
       })),
-      color: colorData || getRandomColor(),
+      color: colorData || '#83919e',
       totalDuration: '',
       optionData: otherItems
         .flatMap((item) =>
@@ -152,8 +152,8 @@ const PercentageTeamCategoryCompare = ({
       percentage: item.percent,
       color:
         item.categoryColor ||
-        lightenColor(colorData as string, item.percent) ||
-        getRandomColor(),
+        (colorData && lightenColor(colorData as string, item.percent)) ||
+        '#83919e',
       totalDuration: item.duration,
       optionData:
         item.users
@@ -197,7 +197,7 @@ const PercentageTeamCategoryCompare = ({
       label: item?.organizationName || '',
       percentage: item.percent,
       organizationId: item.organizationId,
-      color: item.color || getRandomColor(),
+      color: item.color || '#83919e',
       totalDuration: item.duration,
       optionData:
         item.organizationId == SUB_TEAMS
@@ -491,7 +491,9 @@ const PercentageTeamCategoryCompare = ({
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}
                       disabled={
-                        !selectedLarge || isHasLoading || isDisableCalendar
+                        selectedLarge?.value == '' ||
+                        isHasLoading ||
+                        isDisableCalendar
                       }
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">

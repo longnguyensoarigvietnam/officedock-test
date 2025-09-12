@@ -42,6 +42,7 @@ import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderT
 import { OptionDropdownType } from '@interfaces/common';
 import {
   CategoryLineChartDatasetInfo,
+  StatisticsCategories,
   TagTableRowDetailWithType,
   TeamDockAllTeamTableRowDetail,
   TeamDockMergedTable,
@@ -59,7 +60,9 @@ import {
   ALL_TEAM_STATISTIC,
   DEFAULT_TIME_TEXT,
   EVERYONE_OPTION_LABEL,
+  NO_SETTING,
   STATISTIC_CHART_VIEW_OPTIONS,
+  STATISTIC_MAX_PERCENTAGE,
 } from '@constants';
 
 import {
@@ -111,6 +114,8 @@ type Props = {
   endDate: Date | null;
   startDateCompare: Date;
   endDateCompare: Date | null;
+  statisticTagsList: StatisticsCategories | undefined;
+  statisticTagsCompareList: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -122,6 +127,8 @@ const LineChartByTeamTagsCompare = ({
   endDate,
   startDateCompare,
   endDateCompare,
+  statisticTagsList,
+  statisticTagsCompareList,
   handleSelectOrganization,
   handleSelectLarge,
   handleSelectMedium,
@@ -255,7 +262,10 @@ const LineChartByTeamTagsCompare = ({
     tags.map((tag) => ({
       tagId: Number(tag.tagId),
       tagName: String(tag.tagName),
-      tagPercent: tag.percent,
+      tagPercent:
+        tag.percent > STATISTIC_MAX_PERCENTAGE
+          ? STATISTIC_MAX_PERCENTAGE
+          : tag.percent,
       tagDuration: tag.duration,
       organizationId: tag.organizationId ?? 0,
       type,
@@ -272,7 +282,10 @@ const LineChartByTeamTagsCompare = ({
                   userAvatar: foundUser.user.avatar,
                   userAvatarColor: foundUser.user.avatarColor,
                   userDuration: foundUser.duration,
-                  userPercent: foundUser.percent,
+                  userPercent:
+                    foundUser.percent > STATISTIC_MAX_PERCENTAGE
+                      ? STATISTIC_MAX_PERCENTAGE
+                      : foundUser.percent,
                 };
               }
               return {
@@ -295,7 +308,10 @@ const LineChartByTeamTagsCompare = ({
                   userAvatar: foundUser.user.avatar,
                   userAvatarColor: foundUser.user.avatarColor,
                   userDuration: foundUser.duration,
-                  userPercent: foundUser.percent,
+                  userPercent:
+                    foundUser.percent > STATISTIC_MAX_PERCENTAGE
+                      ? STATISTIC_MAX_PERCENTAGE
+                      : foundUser.percent,
                 };
               }
               return {
@@ -331,9 +347,18 @@ const LineChartByTeamTagsCompare = ({
     filter: {
       fromDate: startDate ? `${formatDateToYMD(startDate)}` : '',
       endDate: endDate ? `${formatDateToYMD(endDate)}` : '',
-      largeCategoryId: selectedLarge?.value,
-      mediumCategoryId: selectedMedium?.value,
-      smallCategoryId: selectedSmall?.value,
+      largeCategoryId:
+        selectedLarge?.value == null
+          ? NO_SETTING
+          : (selectedLarge?.value as number),
+      mediumCategoryId:
+        selectedMedium?.value == null
+          ? NO_SETTING
+          : (selectedMedium?.value as number),
+      smallCategoryId:
+        selectedSmall?.value == null
+          ? NO_SETTING
+          : (selectedSmall?.value as number),
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: selectedOrganizationInTable,
       tagIds: selectedTag
@@ -371,9 +396,18 @@ const LineChartByTeamTagsCompare = ({
     filter: {
       fromDate: startDateCompare ? `${formatDateToYMD(startDateCompare)}` : '',
       endDate: endDateCompare ? `${formatDateToYMD(endDateCompare)}` : '',
-      largeCategoryId: selectedLarge?.value,
-      mediumCategoryId: selectedMedium?.value,
-      smallCategoryId: selectedSmall?.value,
+      largeCategoryId:
+        selectedLarge?.value == null
+          ? NO_SETTING
+          : (selectedLarge?.value as number),
+      mediumCategoryId:
+        selectedMedium?.value == null
+          ? NO_SETTING
+          : (selectedMedium?.value as number),
+      smallCategoryId:
+        selectedSmall?.value == null
+          ? NO_SETTING
+          : (selectedSmall?.value as number),
       statisticBy: `${lineChartViewBy?.value}`,
       selectedOrganization: selectedOrganizationInTable,
       tagIds: selectedTag
@@ -555,9 +589,18 @@ const LineChartByTeamTagsCompare = ({
           orderingOptions?.user_ids?.length == 0
             ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
             : selectedMembers?.filter(Boolean).join(','),
-        largeCategoryId: selectedLarge?.value,
-        mediumCategoryId: selectedMedium?.value,
-        smallCategoryId: selectedSmall?.value,
+        largeCategoryId:
+          selectedLarge?.value == null
+            ? NO_SETTING
+            : (selectedLarge?.value as number),
+        mediumCategoryId:
+          selectedMedium?.value == null
+            ? NO_SETTING
+            : (selectedMedium?.value as number),
+        smallCategoryId:
+          selectedSmall?.value == null
+            ? NO_SETTING
+            : (selectedSmall?.value as number),
         organizationId: String(selectedOrganization?.value),
         selectedTags: orderingOptions?.tag_ids || [],
         organizationMemberId:
@@ -565,45 +608,51 @@ const LineChartByTeamTagsCompare = ({
             ? String(selectedOrganizationSideBar?.value || '')
             : undefined,
       },
-      condition: [Boolean(selectedOrganization?.value != ALL_TEAM_STATISTIC)],
+      condition: [
+        Boolean(
+          selectedOrganization?.value != ALL_TEAM_STATISTIC &&
+            orderingOptions?.user_ids.length !=
+              selectedMembers.filter((member) => Boolean(member)).length,
+        ),
+      ],
       onSuccess: (data) => {
         if (!data) return;
         let tableDetail: TagTableRowDetailWithType[] = [];
         if (
-          selectedOrganization &&
-          !selectedLarge &&
-          !selectedMedium &&
-          !selectedSmall
+          selectedOrganization?.value != '' &&
+          selectedLarge?.value == '' &&
+          selectedMedium?.value == '' &&
+          selectedSmall?.value == ''
         ) {
           tableDetail = buildTableDetail(
             data.largeCategories,
             StatisticChartType.STANDARD,
           );
         } else if (
-          selectedOrganization &&
-          selectedLarge &&
-          !selectedMedium &&
-          !selectedSmall
+          selectedOrganization?.value != '' &&
+          selectedLarge?.value != '' &&
+          selectedMedium?.value == '' &&
+          selectedSmall?.value == ''
         ) {
           tableDetail = buildTableDetail(
             data.mediumCategories,
             StatisticChartType.STANDARD,
           );
         } else if (
-          selectedOrganization &&
-          selectedLarge &&
-          selectedMedium &&
-          !selectedSmall
+          selectedOrganization?.value != '' &&
+          selectedLarge?.value != '' &&
+          selectedMedium?.value != '' &&
+          selectedSmall?.value == ''
         ) {
           tableDetail = buildTableDetail(
             data.smallCategories,
             StatisticChartType.STANDARD,
           );
         } else if (
-          selectedOrganization &&
-          selectedLarge &&
-          selectedMedium &&
-          selectedSmall
+          selectedOrganization?.value != '' &&
+          selectedLarge?.value != '' &&
+          selectedMedium?.value != '' &&
+          selectedSmall?.value != ''
         ) {
           tableDetail = buildTableDetail(
             data.smallCategories,
@@ -628,9 +677,18 @@ const LineChartByTeamTagsCompare = ({
           orderingOptions?.user_ids?.length == 0
             ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
             : selectedMembers?.filter(Boolean).join(','),
-        largeCategoryId: selectedLarge?.value,
-        mediumCategoryId: selectedMedium?.value,
-        smallCategoryId: selectedSmall?.value,
+        largeCategoryId:
+          selectedLarge?.value == null
+            ? NO_SETTING
+            : (selectedLarge?.value as number),
+        mediumCategoryId:
+          selectedMedium?.value == null
+            ? NO_SETTING
+            : (selectedMedium?.value as number),
+        smallCategoryId:
+          selectedSmall?.value == null
+            ? NO_SETTING
+            : (selectedSmall?.value as number),
         organizationId: String(selectedOrganization?.value),
         selectedTags: orderingOptions?.tag_ids || [],
         organizationMemberId:
@@ -638,45 +696,51 @@ const LineChartByTeamTagsCompare = ({
             ? String(selectedOrganizationSideBar?.value || '')
             : undefined,
       },
-      condition: [Boolean(selectedOrganization?.value != ALL_TEAM_STATISTIC)],
+      condition: [
+        Boolean(
+          selectedOrganization?.value != ALL_TEAM_STATISTIC &&
+            orderingOptions?.user_ids.length !=
+              selectedMembers.filter((member) => Boolean(member)).length,
+        ),
+      ],
       onSuccess: (data) => {
         if (!data) return;
         let tableDetail: TagTableRowDetailWithType[] = [];
         if (
-          selectedOrganization &&
-          !selectedLarge &&
-          !selectedMedium &&
-          !selectedSmall
+          selectedOrganization?.value != '' &&
+          selectedLarge?.value == '' &&
+          selectedMedium?.value == '' &&
+          selectedSmall?.value == ''
         ) {
           tableDetail = buildTableDetail(
             data.largeCategories,
             StatisticChartType.COMPARE,
           );
         } else if (
-          selectedOrganization &&
-          selectedLarge &&
-          !selectedMedium &&
-          !selectedSmall
+          selectedOrganization?.value != '' &&
+          selectedLarge?.value != '' &&
+          selectedMedium?.value == '' &&
+          selectedSmall?.value == ''
         ) {
           tableDetail = buildTableDetail(
             data.mediumCategories,
             StatisticChartType.COMPARE,
           );
         } else if (
-          selectedOrganization &&
-          selectedLarge &&
-          selectedMedium &&
-          !selectedSmall
+          selectedOrganization?.value != '' &&
+          selectedLarge?.value != '' &&
+          selectedMedium?.value != '' &&
+          selectedSmall?.value == ''
         ) {
           tableDetail = buildTableDetail(
             data.smallCategories,
             StatisticChartType.COMPARE,
           );
         } else if (
-          selectedOrganization &&
-          selectedLarge &&
-          selectedMedium &&
-          selectedSmall
+          selectedOrganization?.value != '' &&
+          selectedLarge?.value != '' &&
+          selectedMedium?.value != '' &&
+          selectedSmall?.value != ''
         ) {
           tableDetail = buildTableDetail(
             data.smallCategories,
@@ -688,6 +752,118 @@ const LineChartByTeamTagsCompare = ({
         setHasFetchedCompareCategories(true);
       },
     });
+
+  useEffect(() => {
+    if (
+      selectedOrganization?.value != ALL_TEAM_STATISTIC &&
+      orderingOptions?.user_ids.length ==
+        selectedMembers.filter((member) => Boolean(member)).length &&
+      statisticTagsList &&
+      statisticTagsCompareList
+    ) {
+      let standardTableData: TagTableRowDetailWithType[] = [];
+      let compareTableData: TagTableRowDetailWithType[] = [];
+
+      if (
+        selectedOrganization?.value != '' &&
+        selectedLarge?.value == '' &&
+        selectedMedium?.value == '' &&
+        selectedSmall?.value == ''
+      ) {
+        standardTableData = buildTableDetail(
+          statisticTagsList.largeCategories,
+          StatisticChartType.STANDARD,
+        );
+        compareTableData = buildTableDetail(
+          statisticTagsCompareList.largeCategories,
+          StatisticChartType.COMPARE,
+        );
+      } else if (
+        selectedOrganization?.value != '' &&
+        selectedLarge?.value != '' &&
+        selectedMedium?.value == '' &&
+        selectedSmall?.value == ''
+      ) {
+        standardTableData = buildTableDetail(
+          statisticTagsList.mediumCategories,
+          StatisticChartType.STANDARD,
+        );
+        compareTableData = buildTableDetail(
+          statisticTagsCompareList.mediumCategories,
+          StatisticChartType.COMPARE,
+        );
+      } else if (
+        selectedOrganization?.value != '' &&
+        selectedLarge?.value != '' &&
+        selectedMedium?.value != '' &&
+        selectedSmall?.value == ''
+      ) {
+        standardTableData = buildTableDetail(
+          statisticTagsList.smallCategories,
+          StatisticChartType.STANDARD,
+        );
+        compareTableData = buildTableDetail(
+          statisticTagsCompareList.smallCategories,
+          StatisticChartType.COMPARE,
+        );
+      } else if (
+        selectedOrganization?.value != '' &&
+        selectedLarge?.value != '' &&
+        selectedMedium?.value != '' &&
+        selectedSmall?.value != ''
+      ) {
+        standardTableData = buildTableDetail(
+          statisticTagsList.smallCategories,
+          StatisticChartType.STANDARD,
+        );
+        compareTableData = buildTableDetail(
+          statisticTagsCompareList.smallCategories,
+          StatisticChartType.COMPARE,
+        );
+      }
+
+      const mergedTableData = mergeCategories([
+        ...(standardTableData || []),
+        ...(compareTableData || []),
+      ]);
+      const totalStandardDurationList = (standardTableData || [])
+        .map((item) => item.tagDuration)
+        .filter(Boolean); // remove null, undefined, ''
+
+      const totalCompareDurationList = (compareTableData || [])
+        .map((item) => item.tagDuration)
+        .filter(Boolean);
+
+      setTotalStandardDuration(
+        totalDurationsForStatistic(totalStandardDurationList),
+      );
+      setTotalCompareDuration(
+        totalDurationsForStatistic(totalCompareDurationList),
+      );
+
+      setMergedTableData(mergedTableData);
+      setTagCollapseStatuses(
+        mergedTableData.map((tag) => {
+          return {
+            tagId: tag.tagId!,
+            status: false,
+            organizationId: tag.organizationId,
+          };
+        }),
+      );
+      handleTagSelection(mergedTableData);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    statisticTagsList,
+    statisticTagsCompareList,
+    selectedLarge,
+    selectedMedium,
+    selectedOrganization,
+    selectedSmall,
+    selectedMembers,
+    orderingOptions?.user_ids.length,
+  ]);
 
   useEffect(() => {
     if (hasFetchedStandardCategories && hasFetchedCompareCategories) {
@@ -1253,7 +1429,10 @@ const LineChartByTeamTagsCompare = ({
               userAvatar: user.avatar,
               userAvatarColor: user.avatarColor,
               userDuration: user.totalDuration,
-              userPercent: user.percent,
+              userPercent:
+                user.percent > STATISTIC_MAX_PERCENTAGE
+                  ? STATISTIC_MAX_PERCENTAGE
+                  : user.percent,
             })),
           });
 
@@ -1278,7 +1457,10 @@ const LineChartByTeamTagsCompare = ({
               userAvatar: user.avatar,
               userAvatarColor: user.avatarColor,
               userDuration: user.totalDuration,
-              userPercent: user.percent,
+              userPercent:
+                user.percent > STATISTIC_MAX_PERCENTAGE
+                  ? STATISTIC_MAX_PERCENTAGE
+                  : user.percent,
             })),
           });
 
@@ -2116,7 +2298,7 @@ const LineChartByTeamTagsCompare = ({
               {/* Column Chart 1 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && !selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization?.value != '' && selectedLarge?.value == '' && selectedMedium?.value == '' && selectedSmall?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   チーム
                 </div>
                 <div className="mt-4 w-full">
@@ -2139,7 +2321,7 @@ const LineChartByTeamTagsCompare = ({
                   />
                 </div>
               </div>
-              {selectedLarge ? (
+              {selectedLarge?.value != '' ? (
                 <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit`}
@@ -2154,7 +2336,7 @@ const LineChartByTeamTagsCompare = ({
               {/* Column Chart 2 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization?.value != '' && selectedLarge?.value != '' && selectedMedium?.value == '' && selectedSmall?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   大カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -2172,11 +2354,11 @@ const LineChartByTeamTagsCompare = ({
                       setSelectedTag(null);
                       handleSelectLarge(data);
                     }}
-                    disabled={!selectedOrganization || isHasLoading}
+                    disabled={selectedOrganization?.value == '' || isHasLoading}
                   />
                 </div>
               </div>
-              {selectedMedium ? (
+              {selectedMedium?.value != '' ? (
                 <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit`}
@@ -2190,7 +2372,7 @@ const LineChartByTeamTagsCompare = ({
               {/* Column Chart 3 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization?.value != '' && selectedLarge?.value != '' && selectedMedium?.value != '' && selectedSmall?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   中カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -2209,12 +2391,14 @@ const LineChartByTeamTagsCompare = ({
                       handleSelectMedium(data);
                     }}
                     disabled={
-                      !selectedLarge || isHasLoading || isDisableCalendar
+                      selectedLarge?.value == '' ||
+                      isHasLoading ||
+                      isDisableCalendar
                     }
                   />
                 </div>
               </div>
-              {selectedSmall ? (
+              {selectedSmall?.value !== '' ? (
                 <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit`}
@@ -2228,7 +2412,7 @@ const LineChartByTeamTagsCompare = ({
               {/* Column Chart 4 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge && selectedMedium && selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization?.value != '' && selectedLarge?.value != '' && selectedMedium?.value != '' && selectedSmall?.value != '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   小カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -2247,7 +2431,9 @@ const LineChartByTeamTagsCompare = ({
                       handleSelectSmall(data);
                     }}
                     disabled={
-                      !selectedMedium || isHasLoading || isDisableCalendar
+                      selectedMedium?.value == '' ||
+                      isHasLoading ||
+                      isDisableCalendar
                     }
                   />
                 </div>
@@ -2354,38 +2540,36 @@ const LineChartByTeamTagsCompare = ({
                         onChange={(state) => {
                           setMergedTableData([]);
                           setSelectedTag(null);
+                          let updatedMembers = [...selectedMembers];
                           if (state) {
-                            setSelectedMembers((prev) => {
-                              if (member.id) {
-                                const foundMember = selectedMembers.find(
-                                  (memberId) => memberId == member.id,
-                                );
-                                if (!foundMember) {
-                                  return [...prev, member.id];
-                                }
-                                return [...prev];
-                              } else {
-                                return memberOptions.map((member) => member.id);
+                            if (member.id) {
+                              const foundMember = selectedMembers.find(
+                                (memberId) => memberId == member.id,
+                              );
+                              if (!foundMember) {
+                                updatedMembers = [...updatedMembers, member.id];
                               }
-                            });
+                            } else {
+                              updatedMembers = memberOptions.map(
+                                (member) => member.id,
+                              );
+                            }
                           } else {
-                            setSelectedMembers((prev) => {
-                              if (member.id) {
-                                const foundMember = selectedMembers.find(
-                                  (memberId) => memberId == member.id,
+                            if (member.id) {
+                              const foundMember = selectedMembers.find(
+                                (memberId) => memberId == member.id,
+                              );
+                              if (foundMember) {
+                                updatedMembers = [...selectedMembers].filter(
+                                  (memberId) =>
+                                    memberId && memberId != member.id,
                                 );
-                                if (foundMember) {
-                                  return [...prev].filter(
-                                    (memberId) =>
-                                      memberId && memberId != member.id,
-                                  );
-                                }
-                                return [...prev];
-                              } else {
-                                return [];
                               }
-                            });
+                            } else {
+                              updatedMembers = [];
+                            }
                           }
+                          setSelectedMembers(updatedMembers);
                         }}
                       />
                     </div>

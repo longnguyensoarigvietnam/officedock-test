@@ -27,6 +27,7 @@ import {
   ALL_TEAM_STATISTIC,
   DEFAULT_TIME_TEXT,
   STATISTIC_CHART_VIEW_OPTIONS,
+  STATISTIC_MAX_PERCENTAGE,
 } from '@constants';
 import useStatisticUserTaskDurations from '@hooks/useStatisticUserTaskDurations';
 import useStatisticAllTeamTaskDurations from '@hooks/useStatisticAllTeamTaskDurations';
@@ -61,47 +62,6 @@ type Props = {
   handleSelectMedium: (data: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
 };
-
-const buildTableDetail = (
-  tags: {
-    tagId?: number;
-    tagName?: string;
-    percent: number;
-    duration: string;
-    organizationId?: number;
-    users?: {
-      user: {
-        id: number;
-        fullName: string;
-        avatar?: string | null;
-        avatarColor: string;
-      };
-      duration: string;
-      percent: number;
-    }[];
-  }[] = [],
-) =>
-  tags.map((tag) => ({
-    tagId: Number(tag.tagId),
-    tagName: String(tag.tagName),
-    tagPercent: tag.percent,
-    tagDuration: tag.duration,
-    organizationId: tag.organizationId ?? 0,
-
-    userList:
-      tag.users && tag.users.length > 0
-        ? tag.users.map((user) => {
-            return {
-              userId: user.user.id,
-              userName: user.user.fullName,
-              userAvatar: user.user.avatar,
-              userAvatarColor: user.user.avatarColor,
-              userDuration: user.duration,
-              userPercent: user.percent,
-            };
-          })
-        : [],
-  }));
 export interface TagTableRowDetailTag {
   tagId: number;
   tagName: string;
@@ -117,30 +77,6 @@ export interface TagTableRowDetailTag {
     userPercent: number;
   }[];
 }
-
-const buildAllTeamTableDetail = (
-  organizations: StatisticsAllTeamTaskDuration['data'],
-): TagTableRowDetailTag[] =>
-  organizations.map((org) => {
-    const userList =
-      org.users?.map((user) => ({
-        userId: user.id,
-        userName: user.fullName,
-        userAvatarColor: user.avatarColor,
-        userAvatar: user.avatar ?? null,
-        userDuration: user.totalDuration,
-        userPercent: user.percent,
-      })) ?? [];
-
-    return {
-      tagId: org.organizationId as number,
-      tagName: org.organizationName,
-      tagDuration: org.duration,
-      tagPercent: org.percent,
-      organizationId: Number(org.organizationId),
-      userList,
-    };
-  });
 
 const StackedAreaTeamTagChart = ({
   statisticTagsListTeam,
@@ -179,9 +115,9 @@ const StackedAreaTeamTagChart = ({
 
   const getTotalDuration = () => {
     if (selectedOrganization?.value) {
-      if (selectedLarge?.value) {
-        if (selectedMedium?.value) {
-          if (selectedSmall?.value) {
+      if (selectedLarge?.value != '') {
+        if (selectedMedium?.value != '') {
+          if (selectedSmall?.value != '') {
             return totalDurationCategory;
           }
           return totalDurationSmall;
@@ -247,6 +183,121 @@ const StackedAreaTeamTagChart = ({
       setSelectedMembers(listMemberTeam.map((user) => Number(user.id)));
     }
   }, [orderingOptions?.user_ids, listMemberTeam, selectedOrganization]);
+
+  const buildTableDetail = (
+    tags: {
+      tagId?: number;
+      tagName?: string;
+      percent: number;
+      duration: string;
+      organizationId?: number;
+      users?: {
+        user: {
+          id: number;
+          fullName: string;
+          avatar?: string | null;
+          avatarColor: string;
+        };
+        duration: string;
+        percent: number;
+      }[];
+    }[] = [],
+  ) =>
+    tags.map((tag) => ({
+      tagId: Number(tag.tagId),
+      tagName: String(tag.tagName),
+      tagPercent:
+        tag.percent > STATISTIC_MAX_PERCENTAGE
+          ? STATISTIC_MAX_PERCENTAGE
+          : tag.percent,
+      tagDuration: tag.duration,
+      organizationId: tag.organizationId ?? 0,
+
+      userList:
+        orderingOptions?.user_ids && orderingOptions?.user_ids?.length > 0
+          ? orderingOptions?.user_ids?.map((userInfo) => {
+              const foundUser = tag.users?.find(
+                (user) => user.user.id == userInfo.value,
+              );
+              if (foundUser) {
+                return {
+                  userId: foundUser.user.id,
+                  userName: foundUser.user.fullName,
+                  userAvatar: foundUser.user.avatar,
+                  userAvatarColor: foundUser.user.avatarColor,
+                  userDuration: foundUser.duration,
+                  userPercent:
+                    foundUser.percent > STATISTIC_MAX_PERCENTAGE
+                      ? STATISTIC_MAX_PERCENTAGE
+                      : foundUser.percent,
+                };
+              }
+              return {
+                userId: Number(userInfo.value),
+                userName: userInfo?.label,
+                userAvatar: userInfo?.avatarUrl || '',
+                userAvatarColor: userInfo?.color || '',
+                userDuration: DEFAULT_TIME_TEXT,
+                userPercent: 0,
+              };
+            })
+          : (listMemberTeam ?? [])?.map((userInfo) => {
+              const foundUser = tag.users?.find(
+                (user) => user.user.id == userInfo.id,
+              );
+              if (foundUser) {
+                return {
+                  userId: foundUser.user.id,
+                  userName: foundUser.user.fullName,
+                  userAvatar: foundUser.user.avatar,
+                  userAvatarColor: foundUser.user.avatarColor,
+                  userDuration: foundUser.duration,
+                  userPercent:
+                    foundUser.percent > STATISTIC_MAX_PERCENTAGE
+                      ? STATISTIC_MAX_PERCENTAGE
+                      : foundUser.percent,
+                };
+              }
+              return {
+                userId: Number(userInfo.id),
+                userName: userInfo?.fullName,
+                userAvatar: userInfo?.avatarUrl || '',
+                userAvatarColor: userInfo?.color || '',
+                userDuration: DEFAULT_TIME_TEXT,
+                userPercent: 0,
+              };
+            }),
+    }));
+
+  const buildAllTeamTableDetail = (
+    organizations: StatisticsAllTeamTaskDuration['data'],
+  ): TagTableRowDetailTag[] =>
+    organizations.map((org) => {
+      const userList =
+        org.users?.map((user) => ({
+          userId: user.id,
+          userName: user.fullName,
+          userAvatarColor: user.avatarColor,
+          userAvatar: user.avatar ?? null,
+          userDuration: user.totalDuration,
+          userPercent:
+            user.percent > STATISTIC_MAX_PERCENTAGE
+              ? STATISTIC_MAX_PERCENTAGE
+              : user.percent,
+        })) ?? [];
+
+      return {
+        tagId: org.organizationId as number,
+        tagName: org.organizationName,
+        tagDuration: org.duration,
+        tagPercent:
+          org.percent > STATISTIC_MAX_PERCENTAGE
+            ? STATISTIC_MAX_PERCENTAGE
+            : org.percent,
+        organizationId: Number(org.organizationId),
+        userList,
+      };
+    });
 
   const handleTagSelection = (tagList: StatisticCategoryInfo[] | undefined) => {
     if (tagList?.length) {
@@ -401,33 +452,33 @@ const StackedAreaTeamTagChart = ({
 
       if (
         selectedOrganization &&
-        !selectedLarge &&
-        !selectedMedium &&
-        !selectedSmall
+        selectedLarge?.value == '' &&
+        selectedMedium?.value == '' &&
+        selectedSmall?.value == ''
       ) {
         tableDetail = buildTableDetail(statisticTagsListTeam.largeCategories);
         handleTagSelection(statisticTagsListTeam.largeCategories);
       } else if (
         selectedOrganization &&
-        selectedLarge &&
-        !selectedMedium &&
-        !selectedSmall
+        selectedLarge?.value != '' &&
+        selectedMedium?.value == '' &&
+        selectedSmall?.value == ''
       ) {
         tableDetail = buildTableDetail(statisticTagsListTeam.mediumCategories);
         handleTagSelection(statisticTagsListTeam.mediumCategories);
       } else if (
         selectedOrganization &&
-        selectedLarge &&
-        selectedMedium &&
-        !selectedSmall
+        selectedLarge?.value != '' &&
+        selectedMedium?.value != '' &&
+        selectedSmall?.value == ''
       ) {
         tableDetail = buildTableDetail(statisticTagsListTeam.smallCategories);
         handleTagSelection(statisticTagsListTeam.smallCategories);
       } else if (
         selectedOrganization &&
-        selectedLarge &&
-        selectedMedium &&
-        selectedSmall
+        selectedLarge?.value != '' &&
+        selectedMedium?.value != '' &&
+        selectedSmall?.value != ''
       ) {
         tableDetail = buildTableDetail(statisticTagsListTeam.smallCategories);
         handleTagSelection(statisticTagsListTeam.category);
@@ -1241,7 +1292,7 @@ const StackedAreaTeamTagChart = ({
             {/* Column Chart 1 */}
             <div className="w-[220px] flex flex-col items-center">
               <div
-                className={`${selectedOrganization && !selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                className={`${selectedOrganization && selectedLarge?.value == '' && selectedMedium?.value == '' && selectedSmall?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                 チーム
               </div>
               <div className="mt-4 w-full">
@@ -1265,7 +1316,7 @@ const StackedAreaTeamTagChart = ({
                 />
               </div>
             </div>
-            {selectedLarge ? (
+            {selectedLarge?.value != '' ? (
               <div className="w-[18px]">
                 <ImageRound
                   className={`w-fit h-fit`}
@@ -1280,7 +1331,7 @@ const StackedAreaTeamTagChart = ({
             {/* Column Chart 2 */}
             <div className="w-[220px] flex flex-col items-center">
               <div
-                className={`${selectedOrganization && selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                className={`${selectedOrganization && selectedLarge?.value != '' && selectedMedium?.value == '' && selectedSmall?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                 大カテゴリー
               </div>
               <div className="mt-4 w-full">
@@ -1302,7 +1353,7 @@ const StackedAreaTeamTagChart = ({
                 />
               </div>
             </div>
-            {selectedMedium ? (
+            {selectedMedium?.value != '' ? (
               <div className="w-[18px]">
                 <ImageRound
                   className={`w-fit h-fit`}
@@ -1316,7 +1367,7 @@ const StackedAreaTeamTagChart = ({
             {/* Column Chart 3 */}
             <div className="w-[220px] flex flex-col items-center">
               <div
-                className={`${selectedOrganization && selectedLarge && selectedMedium && !selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                className={`${selectedOrganization && selectedLarge?.value != '' && selectedMedium?.value != '' && selectedSmall?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                 中カテゴリー
               </div>
               <div className="mt-4 w-full">
@@ -1334,11 +1385,15 @@ const StackedAreaTeamTagChart = ({
                     setSelectedTag(null);
                     handleSelectMedium(data);
                   }}
-                  disabled={!selectedLarge || isHasLoading || isDisableCalendar}
+                  disabled={
+                    selectedLarge?.value == '' ||
+                    isHasLoading ||
+                    isDisableCalendar
+                  }
                 />
               </div>
             </div>
-            {selectedSmall ? (
+            {selectedSmall?.value !== '' ? (
               <div className="w-[18px]">
                 <ImageRound
                   className={`w-fit h-fit`}
@@ -1352,7 +1407,7 @@ const StackedAreaTeamTagChart = ({
             {/* Column Chart 4 */}
             <div className="w-[220px] flex flex-col items-center">
               <div
-                className={`${selectedOrganization && selectedLarge && selectedMedium && selectedSmall ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                className={`${selectedOrganization && selectedLarge?.value != '' && selectedMedium?.value != '' && selectedSmall?.value != '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                 小カテゴリー
               </div>
               <div className="mt-4 w-full">
@@ -1371,7 +1426,9 @@ const StackedAreaTeamTagChart = ({
                     handleSelectSmall(data);
                   }}
                   disabled={
-                    !selectedMedium || isHasLoading || isDisableCalendar
+                    selectedMedium?.value == '' ||
+                    isHasLoading ||
+                    isDisableCalendar
                   }
                 />
               </div>

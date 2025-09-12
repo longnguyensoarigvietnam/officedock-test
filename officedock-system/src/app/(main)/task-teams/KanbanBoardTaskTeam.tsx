@@ -2699,7 +2699,7 @@ const KanbanBoardTaskTeam = () => {
               onDragEnd={onDragEnd}>
               <div
                 ref={listContainerRef}
-                className={`flex gap-4 h-fit overflow-x-auto items-stretch  ${expanded ? 'w-[calc(100vw_-_270px)]' : 'w-[calc(100vw_-_120px)]'}`}>
+                className={`flex gap-4 h-[calc(100vh_-_250px)] overflow-x-auto items-stretch  ${expanded ? 'w-[calc(100vw_-_270px)]' : 'w-[calc(100vw_-_120px)]'}`}>
                 <NoSettingColumn
                   totalNoSetting={totalNoSetting}
                   setTotalNoSetting={setTotalNoSetting}

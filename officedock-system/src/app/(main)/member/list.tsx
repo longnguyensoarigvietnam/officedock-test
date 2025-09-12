@@ -13,17 +13,19 @@ import useMemberOrganizationList from '@hooks/userMemberOrganizationList';
 import useDebounceText from '@hooks/useDebounceText';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 const ListMember = () => {
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
 
   const [searchData, setSearchData] = useState<string>('');
+  const { authenticatedUser } = useAuthenticatedUser({});
 
   const searchTermDebounce = useDebounceText(searchData, 1000);
 
   const { listMemberOrganization } = useMemberOrganizationList({
     search: searchTermDebounce,
-    currentScreen: ScreenName.CALENDAR
+    currentScreen: ScreenName.CALENDAR,
   });
 
   const [isShowModalDetail, setIsShowModalDetail] = useState(false);
@@ -44,7 +46,7 @@ const ListMember = () => {
             name="Company icon"
             className="w-[34px] h-[34px]"
           />
-          <p className="">会社名</p>
+          <p className="">{authenticatedUser?.company.name || ''}</p>
           <div className="text-[#77858F] text-[13px] ml-[10px]">
             全メンバー{dashboardMembersWithAvatars.length}人
           </div>

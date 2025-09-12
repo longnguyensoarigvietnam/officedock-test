@@ -21,10 +21,7 @@ import {
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 
-import {
-  ChatParticipant,
-  ChatRoomDetail,
-} from '@interfaces/chat';
+import { ChatParticipant, ChatRoomDetail } from '@interfaces/chat';
 import { Profile } from '@interfaces/user';
 import { OptionDropdownType } from '@interfaces/common';
 
@@ -42,7 +39,7 @@ export type ChatSettingModalProps = {
   open: boolean;
   chatRoomDetail: ChatRoomDetail | undefined;
   code: string;
-  dashboardMemberList: Omit<Profile, "birthday" | "gender">[]
+  dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   onClose: () => void;
   openAddMemberModal: () => void;
   openConfirmRemoveModal: (id: number) => void;
@@ -161,7 +158,7 @@ const ChatSettingModal = memo(
         className="font-primary !rounded-[20px] text-gray-700 !p-0 w-[500px]"
         titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
         headerClassName="bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-6 py-4"
-        contentClass='!rounded-[20px]'
+        contentClass="!rounded-[20px]"
         closeIconClassName="!bg-white !rounded-full !p-2 !hover:cursor-pointer !shadow-sm"
         closeClassName="!mt-0 opacity-70 !w-4 !h-4 !hover:cursor-pointer"
         onClose={() => {
@@ -309,6 +306,10 @@ const ChatSettingModal = memo(
           <Button
             variant="primary"
             className="w-[110px]"
+            disabled={
+              (watch('groupName') && !watch('groupName').trim()) ||
+              !watch('groupName')
+            }
             onClick={handleConfirmUpdateGroupDetail}>
             保存する
           </Button>

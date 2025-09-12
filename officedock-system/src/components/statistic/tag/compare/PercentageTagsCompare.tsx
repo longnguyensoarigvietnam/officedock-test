@@ -536,7 +536,9 @@ const PercentageTagsCompare = ({
                       selectedOption={selectedSmall || undefined}
                       onChange={(data) => handleSelectSmall(data)}
                       disabled={
-                        !selectedMedium || isHasLoading || isDisableCalendar
+                        selectedMedium?.value == '' ||
+                        isHasLoading ||
+                        isDisableCalendar
                       }
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">

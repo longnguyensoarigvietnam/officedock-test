@@ -570,7 +570,7 @@ const ListUsers = () => {
           <div className=" flex items-center  gap-5">
             <p className="text-black text-[26px]">ユーザー管理</p>
             <span>{authenticatedUser?.company.name || ''}</span>
-            <span>全メンバー30人 / 50</span>
+            <span>全メンバー{userList?.count}人 / 50</span>
           </div>
           <div className="flex gap-[10px] font-medium items-center">
             <p className="text-xs ">現在のプラン</p>
