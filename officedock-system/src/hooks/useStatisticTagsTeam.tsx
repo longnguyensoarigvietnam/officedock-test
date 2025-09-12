@@ -15,9 +15,9 @@ import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderT
 interface FilterProps {
   endDate: string | Date;
   fromDate: string | Date;
-  largeCategoryId?: number;
-  mediumCategoryId?: number;
-  smallCategoryId?: number;
+  largeCategoryId?: number | string;
+  mediumCategoryId?: number | string;
+  smallCategoryId?: number | string;
   organizationIds?: string;
   organizationMemberId?: string;
   orderingOptions: {

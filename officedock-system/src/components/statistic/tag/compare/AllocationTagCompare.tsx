@@ -638,7 +638,7 @@ const AllocationTagCompare = memo(
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
-                        disabled={!selectedOrganization || isHasLoading}
+                        disabled={selectedOrganization?.value == '' || isHasLoading}
                       />
                       <div className={`mt-[14px]`}>
                         <div className="flex items-center">
@@ -809,7 +809,9 @@ const AllocationTagCompare = memo(
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
                         disabled={
-                          !selectedLarge || isHasLoading || isDisableCalendar
+                          selectedLarge?.value == '' ||
+                          isHasLoading ||
+                          isDisableCalendar
                         }
                       />
                       <div className={`mt-[14px]`}>
@@ -973,7 +975,9 @@ const AllocationTagCompare = memo(
                         selectedOption={selectedSmall || undefined}
                         onChange={(data) => handleSelectSmall(data)}
                         disabled={
-                          !selectedMedium || isHasLoading || isDisableCalendar
+                          selectedMedium?.value == '' ||
+                          isHasLoading ||
+                          isDisableCalendar
                         }
                       />
                       <div className={`mt-[14px]`}>

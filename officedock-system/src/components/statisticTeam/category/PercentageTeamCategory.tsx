@@ -99,7 +99,7 @@ const PercentageCategoryTeam = ({
     const mergedItems: StatisticCategoryInfo[] = [];
     const mergedCategory: StatisticCategoryInfo = {
       categoryName: 'その他',
-      categoryColor: colorData || getRandomColor(),
+      categoryColor: colorData || '#83919e',
       percent: 0,
       duration: '',
       tasks: [] as DataTaskModalStatisticType[],
@@ -114,7 +114,7 @@ const PercentageCategoryTeam = ({
           categoryColor:
             item.categoryColor ||
             (colorData && lightenColor(colorData, item.percent)) ||
-            getRandomColor(),
+            '#83919e',
         });
 
         mergedCategory.percent += item.percent;
@@ -122,7 +122,7 @@ const PercentageCategoryTeam = ({
         mergedCategory.categoryColor =
           item.categoryColor ||
           (colorData && lightenColor(colorData, item.percent)) ||
-          getRandomColor();
+          '#83919e';
         mergedCategory.tasks = mergedCategory.tasks.concat(item.tasks);
         mergedCategory.users = mergedCategory.users?.concat(item.users || []);
 
@@ -142,8 +142,8 @@ const PercentageCategoryTeam = ({
     const listColor = filteredCategories.map(
       (color, index) =>
         color.categoryColor ||
-        lightenColor(colorData as string, listPercent[index]) ||
-        getRandomColor(),
+        (colorData && lightenColor(colorData as string, listPercent[index])) ||
+        '#83919e',
     );
     // Get list label
     const listLabel = filteredCategories.map((label) => label.categoryName);
@@ -449,7 +449,13 @@ const PercentageCategoryTeam = ({
                               handleSelectOrganizationCustom(
                                 selectedOrganization,
                               );
-                            handleSelectLarge(data);
+                            const select = largeOptions.find(
+                              (item) => item.value === data.value,
+                            );
+
+                            if (select) {
+                              handleSelectLarge(select);
+                            }
                           }}
                           isAllTeamOption={
                             selectedOrganization?.value == ALL_TEAM_STATISTIC
@@ -540,7 +546,9 @@ const PercentageCategoryTeam = ({
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}
                       disabled={
-                        !selectedLarge || isHasLoading || isDisableCalendar
+                        selectedLarge?.value == '' ||
+                        isHasLoading ||
+                        isDisableCalendar
                       }
                     />
                     <p className="text-sm text-black my-[26px]">

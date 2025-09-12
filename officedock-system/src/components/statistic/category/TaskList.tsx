@@ -291,7 +291,7 @@ const TaskListStatistic = ({
                         handleSelectMedium(data);
                       }
                     }}
-                    disabled={!selectedLarge || isHasLoading}
+                    disabled={selectedLarge?.value == '' || isHasLoading}
                   />
                 </div>
               </div>
@@ -324,7 +324,9 @@ const TaskListStatistic = ({
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
                     disabled={
-                      !selectedMedium || isHasLoading || isDisableCalendar
+                      selectedMedium?.value == '' ||
+                      isHasLoading ||
+                      isDisableCalendar
                     }
                   />
                 </div>

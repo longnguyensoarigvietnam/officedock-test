@@ -217,6 +217,35 @@ export default function SendEnvelopeAnimationOverlay({
         <div ref={frontRef} className="absolute inset-0 z-20 top-[120px]">
           <EnvelopeFront />
         </div>
+
+        <div className="absolute -bottom-[160px] left-1/2 -translate-x-1/2">
+          {showConfirmMessage && (
+            <div className="w-[675px] bg-white rounded-[10px] pl-5 pr-[6px] py-[6px] flex items-center justify-between">
+              <p className="text-sm">
+                受け取り側にはこのように表示されます。この内容で送りますか？
+              </p>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  className="bg-transparent w-[100px] rounded-[8px] h-[36px] !p-0"
+                  onClick={onFinish}>
+                  キャンセル
+                </Button>
+                <Button
+                  variant="post"
+                  className={`w-[100px] rounded-[8px] h-[36px]`}
+                  onClick={async () => {
+                    sendThanksMessage({
+                      message: envelopeMessage,
+                      recipientId: userInfo.id,
+                    });
+                  }}>
+                  送る
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       <div ref={birdRef} className="absolute top-[-300px] left-[1200px] z-50">
         <div className="relative w-[300px] h-[260px]">
@@ -231,41 +260,15 @@ export default function SendEnvelopeAnimationOverlay({
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
         {showFinishMessage && (
           <div className="w-[400px] h-[130px] bg-white rounded-[20px]  flex flex-col gap-[30px] items-center justify-center">
-            <p className="text-sm !leading-none">サンクスメッセージを送りました</p>
+            <p className="text-sm !leading-none">
+              サンクスメッセージを送りました
+            </p>
             <Button
               variant="text"
               className={`w-[100px] rounded-[8px] !p-0`}
               onClick={onFinish}>
               閉じる
             </Button>
-          </div>
-        )}
-      </div>
-      <div className="absolute bottom-5">
-        {showConfirmMessage && (
-          <div className="w-[675px] bg-white rounded-[10px] pl-5 pr-[6px] py-[6px] flex items-center justify-between">
-            <p className="text-sm">
-              受け取り側にはこのように表示されます。この内容で送りますか？
-            </p>
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                className="bg-transparent w-[100px] rounded-[8px] h-[36px] !p-0"
-                onClick={onFinish}>
-                キャンセル
-              </Button>
-              <Button
-                variant="post"
-                className={`w-[100px] rounded-[8px] h-[36px]`}
-                onClick={async () => {
-                  sendThanksMessage({
-                    message: envelopeMessage,
-                    recipientId: userInfo.id,
-                  });
-                }}>
-                送る
-              </Button>
-            </div>
           </div>
         )}
       </div>

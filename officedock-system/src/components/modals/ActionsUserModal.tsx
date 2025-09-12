@@ -836,7 +836,7 @@ const ActionsUserModal = ({
               </div>
               <div className="flex flex-col gap-1 items-start w-full">
                 {fieldsRole.map((field, index) => (
-                  <div className="flex gap-3 w-full" key={field.id}>
+                  <div className="flex gap-3 w-[500px]" key={field.id}>
                     <Controller
                       control={control}
                       name={`roles.${index}`}

@@ -17,7 +17,7 @@ import FilterStatistic from '@components/statistic/category/filter/FilterStatist
 import LineChart from '@components/statistic/category/LineChart';
 
 import { OrganizationStatisticType } from '@constants/enums';
-import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT } from '@constants';
+import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT, NO_SETTING } from '@constants';
 import { pageRouters } from '@constants/routers';
 
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
@@ -90,9 +90,18 @@ const StatisticBoard = () => {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value as number,
-      mediumCategoryId: selectedMedium?.value as number,
-      smallCategoryId: selectedSmall?.value as number,
+      largeCategoryId:
+        selectedLarge?.value == null
+          ? NO_SETTING
+          : (selectedLarge?.value as number),
+      mediumCategoryId:
+        selectedMedium?.value == null
+          ? NO_SETTING
+          : (selectedMedium?.value as number),
+      smallCategoryId:
+        selectedSmall?.value == null
+          ? NO_SETTING
+          : (selectedSmall?.value as number),
       tagIds: selectedTags,
     },
     condition: [selectedOrganization?.value != ALL_TEAM_STATISTIC],
@@ -123,7 +132,11 @@ const StatisticBoard = () => {
       if (data.largeTotalDuration) {
         if (data.mediumTotalDuration) {
           if (data.smallTotalDuration) {
-            if (selectedSmall && selectedSmall.value && data.smallCategories) {
+            if (
+              selectedSmall &&
+              selectedSmall.value != '' &&
+              data.smallCategories
+            ) {
               const itemMap = data.smallCategories.find(
                 (item) =>
                   String(item.categoryId) === String(selectedSmall.value),
@@ -139,18 +152,18 @@ const StatisticBoard = () => {
           } else {
             if (
               selectedMedium &&
-              selectedMedium.value &&
+              selectedMedium.value != '' &&
               selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ) {
               setTotalDurationTask(DEFAULT_TIME_TEXT);
               return;
             }
-            if (selectedSmall && selectedSmall.value) return;
+            if (selectedSmall && selectedSmall.value != '') return;
 
             setTotalDurationTask(data.mediumTotalDuration);
           }
         } else {
-          if (selectedLarge && selectedLarge.value) return;
+          if (selectedLarge && selectedLarge.value != '') return;
           setTotalDurationTask(data.largeTotalDuration);
         }
       } else {
@@ -185,9 +198,18 @@ const StatisticBoard = () => {
       fromDate: formatDateToYMD(startDateCompare) || '',
       endDate: formatDateToYMD(`${endDateCompare}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value as number,
-      mediumCategoryId: selectedMedium?.value as number,
-      smallCategoryId: selectedSmall?.value as number,
+      largeCategoryId:
+        selectedLarge?.value == null
+          ? NO_SETTING
+          : (selectedLarge?.value as number),
+      mediumCategoryId:
+        selectedMedium?.value == null
+          ? NO_SETTING
+          : (selectedMedium?.value as number),
+      smallCategoryId:
+        selectedSmall?.value == null
+          ? NO_SETTING
+          : (selectedSmall?.value as number),
       isCompare: isCheckCompare,
       tagIds: selectedTags,
     },
@@ -199,7 +221,11 @@ const StatisticBoard = () => {
       if (data.largeTotalDuration) {
         if (data.mediumTotalDuration) {
           if (data.smallTotalDuration) {
-            if (selectedSmall && selectedSmall.value && data.smallCategories) {
+            if (
+              selectedSmall &&
+              selectedSmall.value != '' &&
+              data.smallCategories
+            ) {
               const itemMap = data.smallCategories.find(
                 (item) =>
                   String(item.categoryId) === String(selectedSmall.value),
@@ -215,19 +241,19 @@ const StatisticBoard = () => {
           } else {
             if (
               selectedMedium &&
-              selectedMedium.value &&
+              selectedMedium.value != '' &&
               selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ) {
               setTotalDurationTask(DEFAULT_TIME_TEXT);
               return;
             }
 
-            if (selectedSmall && selectedSmall.value) return;
+            if (selectedSmall && selectedSmall.value != '') return;
 
             setTotalDurationTaskCompare(data.mediumTotalDuration);
           }
         } else {
-          if (selectedLarge && selectedLarge.value) return;
+          if (selectedLarge && selectedLarge.value != '') return;
           setTotalDurationTaskCompare(data.largeTotalDuration);
         }
       } else {
@@ -267,8 +293,14 @@ const StatisticBoard = () => {
         fromDate: formatDateToYMD(startDate) || '',
         endDate: formatDateToYMD(`${endDate}`) || '',
         organizationIds: String(selectedOrganization?.value || ''),
-        largeCategoryId: selectedLarge?.value || '',
-        mediumCategoryId: selectedMedium?.value || '',
+        largeCategoryId:
+          selectedLarge?.value == null
+            ? NO_SETTING
+            : (selectedLarge?.value as number),
+        mediumCategoryId:
+          selectedMedium?.value == null
+            ? NO_SETTING
+            : (selectedMedium?.value as number),
         tagIds: selectedTags,
         statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
       },
@@ -298,8 +330,14 @@ const StatisticBoard = () => {
       fromDate: formatDateToYMD(startDateCompare) || '',
       endDate: formatDateToYMD(`${endDateCompare}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value || '',
-      mediumCategoryId: selectedMedium?.value || '',
+      largeCategoryId:
+        selectedLarge?.value == null
+          ? NO_SETTING
+          : (selectedLarge?.value as number),
+      mediumCategoryId:
+        selectedMedium?.value == null
+          ? NO_SETTING
+          : (selectedMedium?.value as number),
       tagIds: selectedTags,
       statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
       isCompare: isCheckCompare,
@@ -670,7 +708,11 @@ const StatisticBoard = () => {
                 options={mediumOptions}
                 selectedOption={selectedMedium || undefined}
                 onChange={(data) => handleSelectMedium(data)}
-                disabled={!selectedLarge || isHasLoading || isDisableCalendar}
+                disabled={
+                  selectedLarge?.value == '' ||
+                  isHasLoading ||
+                  isDisableCalendar
+                }
               />
             </div>
           </div>

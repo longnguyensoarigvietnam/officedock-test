@@ -2172,6 +2172,7 @@ const ActionsEventModal = ({
         <div className="flex justify-center mt-8">
           {session?.user.permissions &&
             ((action === ActionsEvent.EDIT &&
+              !isEditDisabled &&
               hasPermissionInArray(
                 session?.user.permissions,
                 PermissionsSystem.CALENDAR_UPDATE,
