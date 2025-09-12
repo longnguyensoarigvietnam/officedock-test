@@ -1,19 +1,19 @@
 // Require message
-export const EMAIL_IS_REQUIRED_MESSAGE = 'メールアドレスは必須です';
-export const OTP_CODE_REQUIRED_MESSAGE = '認証コードは必須です';
-export const EMAIL_INVALID_MESSAGE = 'メールアドレス形式で入力してください';
-export const PASSWORD_REQUIRED_MESSAGE = 'パスワードは必須です';
-export const FULL_NAME_REQUIRED_MESSAGE = '名前は必須です';
-export const COMPANY_NAME_REQUIRED_MESSAGE = '会社名は必須です';
+export const EMAIL_IS_REQUIRED_MESSAGE = 'メールアドレスを入力してください。';
+export const OTP_CODE_REQUIRED_MESSAGE = '認証コードは必須です。';
+export const EMAIL_INVALID_MESSAGE = 'メールアドレス形式で入力してください。';
+export const PASSWORD_REQUIRED_MESSAGE = 'パスワードを入力してください。';
+export const FULL_NAME_REQUIRED_MESSAGE = '名前は必須です。';
+export const COMPANY_NAME_REQUIRED_MESSAGE = '会社名は必須です。';
 export const STATUS_COMPANY_REQUIRED_MESSAGE = '契約状態を選択してください。';
-export const START_DATE_REQUIRE_MESSAGE = '契約開始日を選択してください';
-export const END_DATE_REQUIRE_MESSAGE = '契約終了日を選択してください';
-export const NAME_REQUIRED_MESSAGE = '名前は必須です';
+export const START_DATE_REQUIRE_MESSAGE = '契約開始日を選択してください。';
+export const END_DATE_REQUIRE_MESSAGE = '契約終了日を選択してください。';
+export const NAME_REQUIRED_MESSAGE = '名前は必須です。';
 
 //Validate message
 export const PASSWORD_MIN_LENGTH_MESSAGE =
-  '半角英数8文字以上で入力してください';
-export const PASSWORD_NOT_MATCHED_MESSAGE = 'パスワードが一致しません';
+  '半角英数8文字以上で入力してください。';
+export const PASSWORD_NOT_MATCHED_MESSAGE = 'パスワードが一致しません。';
 export const PASSWORD_WRONG_FORMAT = 'このパスワードは一般的すぎます。';
 
 // Success message
