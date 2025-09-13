@@ -1336,7 +1336,7 @@ const ListChatUsers = ({
           <div ref={listRoomRef} className="h-7">
             <div>
               {initialLoad ? (
-                <RowSkeleton numberOfRows={20} className="!h-[50px]" />
+                <RowSkeleton numberOfRows={20} className="!h-[50px] !bg-[#E6F3FB]" />
               ) : (
                 <div className="w-full h-6"></div>
               )}
@@ -1418,7 +1418,7 @@ const ListChatUsers = ({
             <div ref={listSearchRoomRef} className="h-7">
               <div>
                 {initialLoadSearch ? (
-                  <RowSkeleton numberOfRows={20} className="!h-[50px]" />
+                  <RowSkeleton numberOfRows={20} className="!h-[50px] !bg-[#E6F3FB]" />
                 ) : (
                   <div className="w-full h-6"></div>
                 )}

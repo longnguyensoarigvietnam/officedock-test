@@ -97,10 +97,16 @@ const TaskListStatisticTeamTags = ({
     useState<string>(DEFAULT_TIME_TEXT);
 
   useEffect(() => {
-    if (listMemberTeam && listMemberTeam.length > 0) {
+    if (
+      orderingOptions &&
+      orderingOptions.user_ids &&
+      orderingOptions.user_ids.length > 0
+    ) {
+      setSelectedMember(orderingOptions.user_ids[0].value as number);
+    } else if (listMemberTeam && listMemberTeam.length > 0) {
       setSelectedMember(listMemberTeam[0].id);
     }
-  }, [listMemberTeam]);
+  }, [listMemberTeam, orderingOptions]);
 
   useStatisticTask({
     isTeam: true,
@@ -236,33 +242,61 @@ const TaskListStatisticTeamTags = ({
               表示させるメンバー
             </p>
             <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[30px]">
-              {listMemberTeam.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center gap-2 cursor-pointer">
-                  <div className="w-4">
-                    <Checkbox
-                      isChecked={selectedMember === member.id}
-                      disable={selectedMember === member.id}
-                      onChange={() => {
-                        setCurrentPage(1);
-                        setSelectedMember(member.id);
-                      }}
-                      classSize="!rounded-full"
-                    />
-                  </div>
-                  <div className="relative top-[2px]">
-                    <CustomUserAvatar
-                      avatarUrl={member?.avatarUrl || ''}
-                      avatarColor={member?.color || ''}
-                      size={30}
-                    />
-                  </div>
-                  <span className="break-all w-full max-w-[800px] truncate text-sm">
-                    {member.fullName}
-                  </span>
-                </div>
-              ))}
+              {orderingOptions?.user_ids.length === 0
+                ? listMemberTeam.map((member) => (
+                    <div
+                      key={member.id}
+                      className="flex items-center gap-2 cursor-pointer">
+                      <div className="w-4">
+                        <Checkbox
+                          isChecked={selectedMember === member.id}
+                          disable={selectedMember === member.id}
+                          onChange={() => {
+                            setCurrentPage(1);
+                            setSelectedMember(member.id);
+                          }}
+                          classSize="!rounded-full"
+                        />
+                      </div>
+                      <div className="relative top-[2px]">
+                        <CustomUserAvatar
+                          avatarUrl={member?.avatarUrl || ''}
+                          avatarColor={member?.color || ''}
+                          size={30}
+                        />
+                      </div>
+                      <span className="break-all w-full max-w-[800px] truncate text-sm">
+                        {member.fullName}
+                      </span>
+                    </div>
+                  ))
+                : orderingOptions?.user_ids.map((member) => (
+                    <div
+                      key={member.value}
+                      className="flex items-center gap-2 cursor-pointer">
+                      <div className="w-4">
+                        <Checkbox
+                          isChecked={selectedMember === member.value}
+                          disable={selectedMember === member.value}
+                          onChange={() => {
+                            setCurrentPage(1);
+                            setSelectedMember(member.value as number);
+                          }}
+                          classSize="!rounded-full"
+                        />
+                      </div>
+                      <div className="relative top-[2px]">
+                        <CustomUserAvatar
+                          avatarUrl={member?.avatarUrl || ''}
+                          avatarColor={member?.color || ''}
+                          size={30}
+                        />
+                      </div>
+                      <span className="break-all w-full max-w-[800px] truncate text-sm">
+                        {member.label}
+                      </span>
+                    </div>
+                  ))}
             </div>
 
             <div className="flex items-end justify-between px-[30px] text-sm font-medium">

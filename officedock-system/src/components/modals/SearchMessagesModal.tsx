@@ -3,6 +3,7 @@ import {
   Dispatch,
   MutableRefObject,
   SetStateAction,
+  useContext,
   useEffect,
   useRef,
   useState,
@@ -60,6 +61,7 @@ import {
   renderScheduleChangeInCalendarRoom,
 } from '@utils';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import { LoadingContext } from '@providers/LoadingProvider';
 
 interface SearchMessagesModalProps {
   open: boolean;
@@ -120,6 +122,7 @@ export const SearchMessagesModal = ({
 }: SearchMessagesModalProps) => {
   const { data: session } = useSessionCache();
   const router = useRouter();
+  const { isLoading } = useContext(LoadingContext);
 
   const resultsContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -1136,10 +1139,12 @@ export const SearchMessagesModal = ({
                 </div>
               );
             })
-          ) : (
+          ) : !isLoading ? (
             <p className="text-sm text-center text-[#77858F]">
               {NO_DATA_AVAILABLE}
             </p>
+          ) : (
+            <></>
           )}
         </div>
       </div>
