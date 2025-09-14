@@ -710,3 +710,6 @@
 .schedule-custom .fc-event.resizable-disabled .fc-event-resizer-end {
   display: block !important;
 }
+.schedule-custom .fc-scroller-harness {
+  background: #E6F3FB !important;
+}

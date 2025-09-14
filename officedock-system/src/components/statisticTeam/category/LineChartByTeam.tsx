@@ -398,8 +398,7 @@ const LineChartByTeam = ({
           selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ? String(selectedOrganizationSideBar?.value || '')
             : undefined,
-        userIds:
-          orderingOptions?.user_ids?.length == 0
+        userIds: orderingOptions?.user_ids?.length == 0
             ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
             : selectedMembers?.filter(Boolean).join(','),
       },
@@ -558,8 +557,7 @@ const LineChartByTeam = ({
         selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
-      userIds:
-        orderingOptions?.user_ids?.length == 0
+      userIds:  orderingOptions?.user_ids?.length == 0
           ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
           : selectedMembers?.filter(Boolean).join(','),
     },
@@ -1526,7 +1524,10 @@ const LineChartByTeam = ({
             </span>
           </div>
           {/* Filter modal */}
-          <FilterTeamStatistic />
+          <FilterTeamStatistic
+            isFilterMember={false}
+            className="relative top-[3px]"
+          />
         </div>
         <ImageRound
           src="/icons/extend-calendar.svg"

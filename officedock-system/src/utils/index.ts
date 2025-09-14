@@ -218,12 +218,17 @@ export const trimUnnecessaryLineBreaks = (
   const doc = parser.parseFromString(content, 'text/html');
 
   // Remove empty elements like <p> with only <br>, or with only whitespace
+  // Keep nodes that have actual text OR meaningful elements (like images/icons)
   const clean = Array.from(doc.body.childNodes).filter((node) => {
     if (node.nodeType === Node.ELEMENT_NODE) {
       const el = node as HTMLElement;
 
-      // If it only contains <br> or is completely empty, ignore
-      return el.textContent?.trim() !== '';
+      // Consider element non-empty if it has text OR is an icon/image/custom reaction
+      const hasText = el.textContent?.trim() !== '';
+      const isIcon = el.querySelector('[data-custom-reaction]') !== null;
+      const isImg = el.tagName === 'IMG';
+
+      return hasText || isIcon || isImg;
     } else if (node.nodeType === Node.TEXT_NODE) {
       return node.textContent?.trim() !== '';
     }
@@ -477,7 +482,13 @@ export const getPermissionOptionDropdown = (
       PermissionType.NOT_ALLOWED,
     ]);
   }
-  if ([ScreenName.ROLE, ScreenName.CALENDAR_MANAGEMENT, ScreenName.MVP_VOTING_MANAGEMENT].includes(screen)) {
+  if (
+    [
+      ScreenName.ROLE,
+      ScreenName.CALENDAR_MANAGEMENT,
+      ScreenName.MVP_VOTING_MANAGEMENT,
+    ].includes(screen)
+  ) {
     return includePermissions([
       PermissionType.EDITABLE,
       PermissionType.NOT_ALLOWED,
@@ -504,7 +515,11 @@ export const getPermissionOptionDropdown = (
       PermissionType.TEAM_AND_SUB,
     ]);
   }
-  if ([ScreenName.SKILL_MAP, ScreenName.THANKS_MESSAGE_MANAGEMENT].includes(screen)) {
+  if (
+    [ScreenName.SKILL_MAP, ScreenName.THANKS_MESSAGE_MANAGEMENT].includes(
+      screen,
+    )
+  ) {
     return includePermissions([
       PermissionType.EDITABLE,
       PermissionType.TEAM_AND_SUB_EDIT,

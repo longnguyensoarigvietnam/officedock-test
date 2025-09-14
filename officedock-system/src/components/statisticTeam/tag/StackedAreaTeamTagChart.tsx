@@ -366,7 +366,13 @@ const StackedAreaTeamTagChart = ({
       endDate: formatDateToYMD(`${endDate}`) || '',
       tagIds: orderingOptions?.tag_ids,
       statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
-      userIds: orderingOptions?.user_ids,
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? listMemberTeam.map((user) => ({
+              label: user.fullName,
+              value: user.id,
+            }))
+          : orderingOptions?.user_ids,
       mainOrganizationId: selectedOrganizationSideBar?.value as number,
       option: selectedOptionOrganizationInTable,
       isTagPage: true,

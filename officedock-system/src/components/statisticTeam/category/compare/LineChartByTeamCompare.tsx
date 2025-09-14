@@ -2193,7 +2193,10 @@ const LineChartByTeamCompare = ({
             </span>
           </div>
           {/* Filter modal */}
-          <FilterTeamStatistic />
+          <FilterTeamStatistic
+            isFilterMember={false}
+            className="relative top-[3px]"
+          />
         </div>
         <ImageRound
           src="/icons/extend-calendar.svg"

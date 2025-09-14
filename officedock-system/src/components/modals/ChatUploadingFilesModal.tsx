@@ -252,7 +252,7 @@ const ChatUploadingFilesModal = memo(
             </DynamicTooltip>
           </div>
           <div className="mb-3">
-            <EditorContent editor={editor} />
+            <EditorContent editor={editor} className="w-full break-all whitespace-pre-wrap chat"/>
           </div>
           <input
             type="file"

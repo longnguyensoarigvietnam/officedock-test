@@ -136,7 +136,7 @@ const StatisticTeamTagBoard = () => {
         );
         setOrderingOptions({
           tag_ids: optionsTagList,
-          user_ids: []
+          user_ids: [],
         });
 
         return {
@@ -342,10 +342,13 @@ const StatisticTeamTagBoard = () => {
       tagIds: orderingOptions?.tag_ids,
       mainOrganizationId: selectedOrganizationSideBar?.value as number,
       isTagPage: true,
-      userIds: listMemberTeam.map((user) => ({
-        label: user.fullName,
-        value: user.id,
-      })),
+      userIds:
+        orderingOptions?.user_ids && orderingOptions.user_ids.length > 0
+          ? orderingOptions.user_ids
+          : listMemberTeam.map((user) => ({
+              label: user.fullName,
+              value: user.id,
+            })),
     },
     condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
     onSuccess: (data) => {
@@ -370,10 +373,13 @@ const StatisticTeamTagBoard = () => {
         mainOrganizationId: selectedOrganizationSideBar?.value as number,
         isCompare: isCheckCompare,
         isTagPage: true,
-        userIds: listMemberTeam.map((user) => ({
-          label: user.fullName,
-          value: user.id,
-        })),
+        userIds:
+          orderingOptions?.user_ids && orderingOptions.user_ids.length > 0
+            ? orderingOptions.user_ids
+            : listMemberTeam.map((user) => ({
+                label: user.fullName,
+                value: user.id,
+              })),
       },
       condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
       onSuccess: (data) => {
@@ -442,7 +448,7 @@ const StatisticTeamTagBoard = () => {
       );
       setOrderingOptions({
         tag_ids: optionsTagList,
-        user_ids: []
+        user_ids: [],
       });
 
       setCurrentPage(1);
