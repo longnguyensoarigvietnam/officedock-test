@@ -11,11 +11,13 @@ import { CurrentPointDetail } from '@interfaces/point';
 import api from '@base/api';
 
 interface UseCurrentPointHooksProps {
+  conditions?: boolean[];
   onSuccess?: (success: CurrentPointDetail) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
 }
 const useCurrentPoint = ({
+  conditions,
   onError,
   onSuccess,
   onSettled,
@@ -41,7 +43,7 @@ const useCurrentPoint = ({
     queryKey: ['getCurrentPointDetail'],
     queryFn: getCurrentPointDetail,
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && conditions?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (response: CurrentPointDetail) => {

@@ -30,6 +30,7 @@ import ReceiveEnvelopeAnimationOverlay from '@components/thanksMessage/ReceiveEn
 import { useSessionCache } from '@providers/SessionCacheProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
+import { MyPageStateContext } from '@providers/MyPageProvider';
 
 import { TweetFormData } from '@interfaces/tweet';
 import { ThanksMessageDetail } from '@interfaces/thanks-message';
@@ -53,6 +54,7 @@ import { useErrorToast } from '@hooks/useErrorToast';
 import { useUpdateTweetCache } from '@hooks/CacheQuery/useUpdateTweetCache';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
+import useCurrentPoint from '@hooks/useCurrentPoint';
 
 import { getLastChar } from '@utils';
 
@@ -65,6 +67,7 @@ const MyPage = () => {
   const queryClient = useQueryClient();
 
   const { setIsLoading } = useContext(LoadingContext);
+  const { pointDetail, setPointDetail } = useContext(MyPageStateContext);
   const router = useRouter();
 
   // Set skills
@@ -115,6 +118,14 @@ const MyPage = () => {
   // Survey
   const [openSettingSurvey, setOpenSettingSurvey] = useState(false);
   const [openSuccessSurvey, setOpenSuccessSurvey] = useState(false);
+
+  // Current coin + pearl
+  useCurrentPoint({
+    conditions: [Boolean(!pointDetail)],
+    onSuccess: (data) => {
+      setPointDetail(data);
+    },
+  });
 
   // Get thanks message list
   const { refetchThanksMessageList } = useThanksMessageList({
@@ -392,19 +403,19 @@ const MyPage = () => {
               <p className="text-base text-black">{session?.user.id}</p>
             </div>
           </div>
-          <div className="w-[303px] shadow-common mt-5 ml-5 font-bold text-base bg-white rounded-full h-10 flex items-center justify-center gap-[9px]">
+          <div className="w-fit px-5 shadow-common mt-5 ml-5 font-bold text-base bg-white rounded-full h-10 flex items-center justify-center gap-[9px]">
             <ImageRound
               name="Badge icon"
               src={'/icons/badge.svg'}
               className={`w-fit h-fit`}
             />
-            <p>200</p>
+            <p>{pointDetail?.coin}</p>
             <ImageRound
               name="Pearl icon"
               src={'/icons/pearl.svg'}
               className={`w-fit h-fit ml-[10px]`}
             />
-            <p>10</p>
+            <p>{pointDetail?.pearl}</p>
             <p
               onClick={() => router.push(pageRouters.HISTORY_POINT.href)}
               className="text-sm text-primary underline ml-[11px] cursor-pointer hover:opacity-80">
@@ -583,8 +594,12 @@ const MyPage = () => {
           {/* Menu */}
           <MyPageMenu
             onClickSettingSurvey={() => setOpenSettingSurvey(true)}
-            isOpenSurveys={creationDataCommonData?.unansweredCount?.isOpenSurveys || false}
-            unAnsweredSurveyCount={creationDataCommonData?.unansweredCount?.count || 0}
+            isOpenSurveys={
+              creationDataCommonData?.unansweredCount?.isOpenSurveys || false
+            }
+            unAnsweredSurveyCount={
+              creationDataCommonData?.unansweredCount?.count || 0
+            }
             isHasMvpVoting={creationDataCommonData?.isHasMvpVoting || false}
           />
           <div className="flex-grow">
