@@ -10,7 +10,7 @@ from base.paginations import CustomCursorPagination
 from shop_items.filters import ShopItemFilter
 from shop_items.models import ShopItems, UserItems
 from shop_items.serializers import GroupedItemSerializer, UserItemSerializer
-from users.constants import CurrencyEnums
+from users.constants import CurrencyEnums, TransactionTypes
 from base.messages import ERROR_MESSAGES
 from users.models import User
 
@@ -105,6 +105,7 @@ class UserItemViewSet(BaseAPIViewSet):
         if user_wallet < item.price:
             raise ValidationError({"detail": ERROR_MESSAGES["cannot_buy_item"]})
         serializer_data["company"] = user.company
+        user.use_pearl(item.price, TransactionTypes.BUY_ITEM.value)
         # Clean wearing of character
         UserItems.objects.filter(
             item_type=serializer_data["item_type"], user=user, is_equipped=True

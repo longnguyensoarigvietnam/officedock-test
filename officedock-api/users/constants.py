@@ -100,6 +100,7 @@ class TransactionTypes(EnumChoices):
 
     # Others
     EXCHANGE = "ポイント交換"  # Point Exchange
+    BUY_ITEM = "アイテム交換"
     OTHER = "その他"  # Other
 
 
