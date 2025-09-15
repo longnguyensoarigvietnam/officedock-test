@@ -2195,8 +2195,6 @@ const KanbanBoardTask = () => {
           .map((item) => ({ tagId: item.value }))
       : [];
 
-
-
     const planList =
       data.plans &&
       data.plans.filter((item) => item.planStartDate !== null).length > 0
@@ -2381,6 +2379,11 @@ const KanbanBoardTask = () => {
           .filter((item) => item.value !== '')
           .map((item) => ({ tagId: item.value }))
       : [];
+    const peopleInChargeIds =
+      data.peopleInChargeIds &&
+      data.peopleInChargeIds
+        .filter((item) => item.value !== '')
+        .map((item) => ({ peopleInChargeId: item.value }));
     const todoListData =
       data.todoList && data.todoList.filter((item) => item.content !== '');
 
@@ -2420,6 +2423,7 @@ const KanbanBoardTask = () => {
       isImportant: data.isImportant,
       todoList: todoListData,
       categoryIds: newWorkCategories,
+      peopleInChargeIds: peopleInChargeIds,
       type: MY_TEMPLATE,
       organizationId: data.organization
         ? Number(data.organization.value)
@@ -2472,7 +2476,6 @@ const KanbanBoardTask = () => {
           .filter((item) => item.value !== '')
           .map((item) => ({ tagId: item.value }))
       : [];
-
 
     const todoListData =
       data.todoList && data.todoList.filter((item) => item.content !== '');
@@ -2557,7 +2560,11 @@ const KanbanBoardTask = () => {
   // Action create
   // Function create  tasks
   const handleConfirmCreateTask = (data: TaskFormData) => {
-
+    const peopleInChargeIds =
+      data.peopleInChargeIds &&
+      data.peopleInChargeIds
+        .filter((item) => item.value !== '')
+        .map((item) => ({ peopleInChargeId: item.value }));
     const tagIds = data.tagIds
       ? data.tagIds
           .filter((item) => item.value !== '')
@@ -2632,6 +2639,7 @@ const KanbanBoardTask = () => {
             ? formatDateServer(data.deadlineDate)
             : null,
       description: data.description || '',
+      peopleInChargeIds: peopleInChargeIds,
       tagIds: tagIds,
       isImportant: data.isImportant,
       todoList: todoListData,
