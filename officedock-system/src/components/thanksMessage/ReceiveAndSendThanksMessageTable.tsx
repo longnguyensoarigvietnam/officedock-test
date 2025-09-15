@@ -132,7 +132,7 @@ export const ReceiveAndSendThanksMessageTable = ({
       {/* Table */}
       <div
         ref={resultsContainerRef}
-        className={`overflow-y-auto overflow-x-hidden h-fit rounded-[14px] max-h-[calc(100%_-_105px)] w-full mt-3 flex flex-col gap-[2px]  ${!isLoadingList && !thanksMessageList.length ? 'bg-white h-full w-full' : 'customized-scrollbar'}`}>
+        className={`overflow-y-auto overflow-x-hidden h-fit max-h-[calc(100%_-_105px)] w-full mt-3 flex flex-col gap-[2px]  ${!isLoadingList && !thanksMessageList.length ? 'bg-white h-full w-full' : 'customized-scrollbar'}`}>
         {isLoadingList ? (
           <div className='pl-3'>
             <RowSkeleton

@@ -100,7 +100,7 @@ export const HistoryVotingTable = ({
       {/* Table */}
       <div
         ref={resultsContainerRef}
-        className={`overflow-y-auto overflow-x-hidden h-fit rounded-[14px] max-h-[calc(100%_-_30px)] w-full mt-3 flex flex-col gap-[2px] ${!isLoadingList && !historyList.length ? 'bg-white h-full' : 'customized-scrollbar'}`}>
+        className={`overflow-y-auto overflow-x-hidden h-fit max-h-[calc(100%_-_30px)] w-full mt-3 flex flex-col gap-[2px] ${!isLoadingList && !historyList.length ? 'bg-white h-full' : 'customized-scrollbar'}`}>
         {isLoadingList ? (
           <div>
             <RowSkeleton
@@ -157,6 +157,14 @@ export const HistoryVotingTable = ({
                 </>
               );
             })}
+          </div>
+        )}
+        {isFetchingNextPage && (
+          <div className="mt-2">
+            <RowSkeleton
+              numberOfRows={2}
+              className="h-[125px] !rounded-[14px]"
+            />
           </div>
         )}
       </div>

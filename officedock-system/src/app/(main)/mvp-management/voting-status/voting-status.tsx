@@ -53,7 +53,7 @@ export const VotingStatus = () => {
               className="w-4 h-4 cursor-pointer"
             />
             <p className="text-base font-medium text-[#77858F]">
-              社内行事を一番頑張ったで賞 投票状況
+              {currentVotingDetail?.title || ''} 投票状況
             </p>
           </div>
           <div className="flex gap-3 items-center">

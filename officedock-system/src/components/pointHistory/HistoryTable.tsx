@@ -14,7 +14,10 @@ import { HistoryPoint } from '@interfaces/history';
 
 import { formatShowDateJapanese } from '@utils/date';
 
+import { PointHistoryActiveTab } from '@constants/enums';
+
 interface HistoryTableProps {
+  activeTab: PointHistoryActiveTab
   historyList: HistoryPoint[];
   hasNextPage: boolean | undefined;
   isFetchingNextPage: boolean;
@@ -37,6 +40,7 @@ interface HistoryTableProps {
 }
 
 export const HistoryTable = ({
+  activeTab,
   historyList,
   hasNextPage,
   isFetchingNextPage,
@@ -91,7 +95,11 @@ export const HistoryTable = ({
       <div className="flex items-center gap-3 mb-[25px]">
         <ImageRound
           name="Badge icon"
-          src={'/icons/badge.svg'}
+          src={
+            activeTab == PointHistoryActiveTab.COIN
+              ? '/icons/badge.svg'
+              : '/icons/pearl.svg'
+          }
           className={`w-[30px] h-[30px]`}
         />
         <p className="text-[18px]">ポイント履歴</p>
@@ -101,7 +109,7 @@ export const HistoryTable = ({
         <div className="w-[134px]">日付</div>
         <div className="w-[130px] min-w-[130px] flex justify-between items-center">
           <div className="h-[9px] w-[1px] border-l border-[#D2DBE1]"></div>
-          <div className="flex-grow px-5">質問</div>
+          <div className="flex-grow px-5">使用</div>
           <div className="h-[9px] w-[1px] border-l border-[#D2DBE1]"></div>
         </div>
         <div className="w-[130px] min-w-[130px] flex justify-between items-center">
@@ -117,7 +125,7 @@ export const HistoryTable = ({
       {/* Table */}
       <div
         ref={resultsContainerRef}
-        className={`overflow-y-auto overflow-x-hidden customized-scrollbar h-fit rounded-[14px] max-h-[calc(100%_-_80px)] w-full mt-3 flex flex-col gap-[2px] ${!isLoadingList && !historyList.length ? 'bg-white h-full' : ''}`}>
+        className={`overflow-y-auto overflow-x-hidden customized-scrollbar h-fit max-h-[calc(100%_-_80px)] w-full mt-3 flex flex-col gap-[2px] ${!isLoadingList && !historyList.length ? 'bg-white h-full' : ''}`}>
         {isLoadingList ? (
           <div>
             <RowSkeleton
