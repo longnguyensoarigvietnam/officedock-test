@@ -317,7 +317,7 @@ def get_items_of_user(user):
     items = ShopItems.objects.filter(
         user_items__user=user, user_items__is_equipped=True
     )
-    return ShopItemSerializer(items, many=True).data
+    return ShopItemSerializer(items, many=True, context={"user": user}).data
 
 
 def get_balances_of_user(user):
