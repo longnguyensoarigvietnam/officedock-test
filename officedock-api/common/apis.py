@@ -1,4 +1,4 @@
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 
 from django.conf import settings
 from django.db import transaction
@@ -493,6 +493,9 @@ class CronJobViewSet(BaseAPIViewSet):
     @extend_schema(
         parameters=[
             OpenApiParameter("cronjob_key", type=str, required=True),
+            OpenApiParameter("year", type=int),
+            OpenApiParameter("month", type=int),
+            OpenApiParameter("day", type=int),
         ]
     )
     @action(
@@ -508,7 +511,14 @@ class CronJobViewSet(BaseAPIViewSet):
         - Handle company closing and deadline logic
         - Reward users with coins/pearls based on activities
         """
-        today = now().date()
+        year = request.query_params.get("year")
+        month = request.query_params.get("month")
+        day = request.query_params.get("day")
+        if year and month and day:
+            today = date(int(year), int(month), int(day))
+        else:
+            today = now().date()
+
         transaction_service = TransactionService()
 
         # 1. Cleanup soft-deleted thanks messages after retention period
