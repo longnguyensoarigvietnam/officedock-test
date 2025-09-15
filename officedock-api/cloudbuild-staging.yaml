@@ -38,6 +38,48 @@ steps:
     secretEnv:
       ["_API_ARTIFACT_REGISTRY_PATH", "_API_REGION", "_API_CLOUD_SQL_INSTANCE"]
 
+  # Create cron jobs using Cloud Scheduler
+  - id: "Create Cloud Scheduler Jobs"
+    name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "bash"
+    secretEnv: ["_API_REGION", "_API_ENV"]
+    args:
+      - "-c"
+      - |
+          # Install jq (JSON processor)
+          apt-get update && apt-get install -y jq
+
+          # Extract values from the ENV environment variable
+          cloud_service_url=$(echo "$$_API_ENV" | grep '^CLOUD_RUN_SERVICE_URL=' | cut -d '=' -f2-)
+          secret_key=$(echo "$$_API_ENV" | grep '^SECRET_KEY_FOR_CRONJOB=' | cut -d '=' -f2-)
+
+          # Read jobs from cronjobs.json
+          jobs=$(cat cronjobs.json)
+
+          # Process each job
+          echo "$jobs" | jq -c '.[]' | while read -r job; do
+            # Extract job details from JSON
+            job_name=$(echo "$job" | jq -r '.name')
+            schedule=$(echo "$job" | jq -r '.schedule')
+            timezone=$(echo "$job" | jq -r '.timezone')
+            job_uri=$(echo "$job" | jq -r '.uri')
+
+            # Construct the full URL for the Cloud Scheduler job
+            cronjob_url="${cloud_service_url}${job_uri}${secret_key}"
+
+            # Check if the job already exists in Cloud Scheduler
+            gcloud scheduler jobs describe "$job_name" --location="$$_API_REGION" >/dev/null 2>&1 &&
+              action="update" || action="create"
+
+            # Create or update the Cloud Scheduler job
+            gcloud scheduler jobs $action http "$job_name" \
+              --location="$$_API_REGION" \
+              --schedule "$schedule" \
+              --uri "$cronjob_url" \
+              --time-zone "$timezone"
+          done
+    dir: "officedock-api"
+
   # Deploy built Docker Image on Cloud Run
   - id: "Deploy Docker Image"
     name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
@@ -79,3 +121,5 @@ availableSecrets:
       env: _API_SERVICE_NAME
     - versionName: projects/${PROJECT_NUMBER}/secrets/STG_API_CLOUD_SQL_INSTANCE/versions/latest
       env: _API_CLOUD_SQL_INSTANCE
+    - versionName: projects/${PROJECT_NUMBER}/secrets/STG_API_ENV/versions/latest
+      env: _API_ENV

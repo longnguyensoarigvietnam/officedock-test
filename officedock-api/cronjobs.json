@@ -1,0 +1,14 @@
+[
+  {
+    "name": "cronjob-run-every-minute",
+    "schedule": "* * * * *",
+    "timezone": "Asia/Tokyo",
+    "uri": "/api/v1/system/cron-jobs/run-every-minute/?cronjob_key="
+  },
+  {
+    "name": "cronjob-run-every-day",
+    "schedule": "0 0 * * *",
+    "timezone": "Asia/Tokyo",
+    "uri": "/api/v1/system/cron-jobs/run-every-day/?cronjob_key="
+  }
+]
