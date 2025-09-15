@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useQueryClient } from 'react-query';
 import { useRouter } from 'next/navigation';
 
@@ -16,6 +16,7 @@ import useHistoryPointList from '@hooks/useListHistoryPoint';
 import useCurrentPoint from '@hooks/useCurrentPoint';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
+import { MyPageStateContext } from '@providers/MyPageProvider';
 
 import api from '@base/api';
 
@@ -29,6 +30,7 @@ const HistoryListPage = () => {
   const [activeTab, setActiveTab] = useState<PointHistoryActiveTab>(
     PointHistoryActiveTab.COIN,
   );
+  const { pointDetail, setPointDetail } = useContext(MyPageStateContext);
 
   const queryClient = useQueryClient();
   const {
@@ -41,7 +43,13 @@ const HistoryListPage = () => {
     type: activeTab,
   });
 
-  const { currentPointDetail } = useCurrentPoint({});
+  // Current coin + pearl
+  useCurrentPoint({
+    conditions: [Boolean(!pointDetail)],
+    onSuccess: (data) => {
+      setPointDetail(data);
+    },
+  });
 
   useEffect(() => {
     return () => {
@@ -93,7 +101,7 @@ const HistoryListPage = () => {
           <div className="relative pr-[30px] flex w-full h-full">
             {/* User */}
             <div className="w-[calc(100%_-_720px)] flex-shrink-0 flex-grow h-full flex items-center justify-center">
-              <div className="w-[402px] bg-white shadow-common rounded-3xl p-[6px]">
+              <div className="w-[402px] h-[383px] flex flex-col items-center justify-between bg-white shadow-common rounded-3xl p-[6px] pb-[48px]">
                 <div className="flex items-center gap-[6px] justify-center">
                   <Button
                     variant={`${activeTab == PointHistoryActiveTab.COIN ? 'post' : 'secondary'}`}
@@ -118,7 +126,7 @@ const HistoryListPage = () => {
                     <p className="text-[18px]">パール</p>
                   </Button>
                 </div>
-                <div className="m-10">
+                <div className="">
                   <div className="flex justify-center">
                     <ImageRound
                       name="Badge icon"
@@ -133,8 +141,8 @@ const HistoryListPage = () => {
                   <div className="flex items-end justify-center mt-[10px] gap-2 text-black font-medium">
                     <p className="text-[40px] leading-10">
                       {activeTab == PointHistoryActiveTab.COIN
-                        ? currentPointDetail?.coin
-                        : currentPointDetail?.pearl}
+                        ? pointDetail?.coin
+                        : pointDetail?.pearl}
                     </p>
                     <p className="text-[22px] leading-[22px]  relative">
                       {activeTab == PointHistoryActiveTab.COIN
@@ -142,35 +150,49 @@ const HistoryListPage = () => {
                         : 'パール'}
                     </p>
                   </div>
-                  <div
-                    className="flex items-center gap-[10px] justify-end mt-6 pr-3"
-                    onClick={() => setIsShowTotalPointChangeModal(true)}>
-                    <div className="flex items-center gap-3 py-[6px] px-3 rounded-lg bg-[#EBF1F7]">
-                      <p className="text-[13px] font-normal">
-                        今月交換可能なコイン数
-                      </p>
-                      <div className="flex items-center gap-1">
-                        <ImageRound
-                          name="Badge icon"
-                          src={'/icons/badge.svg'}
-                          className={`w-[18px] h-[18px]`}
-                        />
-                        <p className="text-base font-medium">100</p>
+                  {activeTab == PointHistoryActiveTab.COIN ? (
+                    <div
+                      className="flex items-center gap-[10px] justify-end mt-6 pr-3"
+                      onClick={() => setIsShowTotalPointChangeModal(true)}>
+                      <div className="flex items-center gap-3 py-[6px] px-3 rounded-lg bg-[#EBF1F7]">
+                        <p className="text-[13px] font-normal">
+                          今月交換可能なコイン数
+                        </p>
+                        <div className="flex items-center gap-1">
+                          <ImageRound
+                            name="Badge icon"
+                            src={'/icons/badge.svg'}
+                            className={`w-[18px] h-[18px]`}
+                          />
+                          <p className="text-base font-medium">
+                            {pointDetail?.exchangeableCoin || 0}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-xs text-[#77858F] flex items-center justify-center w-[22px] h-[22px] rounded-full bg-[#EBF1F7] hover:cursor-pointer">
+                        ?
                       </div>
                     </div>
-                    <div className="text-xs text-[#77858F] flex items-center justify-center w-[22px] h-[22px] rounded-full bg-[#EBF1F7] hover:cursor-pointer">
-                      ?
-                    </div>
-                  </div>
-                  <div className="flex justify-center mt-[30px]">
+                  ) : (
+                    <></>
+                  )}
+
+                  
+                </div>
+                <div className="flex justify-center">
                     <Button
-                      onClick={() => setIsShowDetailCompanyChangeCoin(true)}
+                      onClick={() =>
+                        activeTab == PointHistoryActiveTab.COIN
+                          ? setIsShowDetailCompanyChangeCoin(true)
+                          : router.push(pageRouters.SHOP_ITEM.href)
+                      }
                       variant="post"
                       className="w-[200px] h-[46px] text-sm font-medium rounded-md">
-                      交換する
+                      {activeTab == PointHistoryActiveTab.COIN
+                        ? '交換する'
+                        : 'アイテムと交換する'}
                     </Button>
                   </div>
-                </div>
               </div>
             </div>
             {/* List history  */}
