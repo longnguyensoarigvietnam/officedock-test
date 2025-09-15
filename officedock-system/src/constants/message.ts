@@ -1,8 +1,8 @@
 // Require message
-export const EMAIL_IS_REQUIRED_MESSAGE = 'メールアドレスは必須です。';
+export const EMAIL_IS_REQUIRED_MESSAGE = 'メールアドレスを入力してください。';
 export const OTP_CODE_REQUIRED_MESSAGE = '認証コードは必須です。';
 export const EMAIL_INVALID_MESSAGE = 'メールアドレス形式で入力してください。';
-export const PASSWORD_REQUIRED_MESSAGE = 'パスワードは必須です。';
+export const PASSWORD_REQUIRED_MESSAGE = 'パスワードを入力してください。';
 export const FULL_NAME_REQUIRED_MESSAGE = '氏名は必須です。';
 export const COMPANY_NAME_REQUIRED_MESSAGE = '法人名は必須です。';
 export const COMPANY_NAME_REGISTER_REQUIRED_MESSAGE = '会社名は必須です。';
@@ -13,7 +13,8 @@ export const CATEGORY_SMALL_REQUIRED_MESSAGE = '小カテゴを選択してく�
 export const CATEGORY_MEDIUM_REQUIRED_MESSAGE =
   '中カテゴリを選択してください。';
 export const CATEGORY_LARGE_REQUIRED_MESSAGE = '大カテゴリを選択してください。';
-export const USER_NAME_REQUIRED_MESSAGE = 'ユーザー名を入力してください。';
+export const USER_NAME_REQUIRED_MESSAGE =
+  'IDまたはメールアドレスを入力してください。';
 export const ID_REQUIRED_MESSAGE = 'IDは必須です。';
 export const CATEGORY_NAME_REQUIRED_MESSAGE = 'カテゴリ名を入力してください。';
 export const SKILL_NAME_REQUIRED_MESSAGE = 'スキル名を入力してください。';
@@ -114,6 +115,7 @@ export const ERROR_MESSAGE_TIME_TASK =
 export const ERROR_MESSAGE_OVERLAP_TASK = '実施予定日時が重複しています。';
 
 export const RESEND_OTP_SUCCESS = '認証コードを再送しました。';
-export const PLEASE_SELECT_AT_LEAST_ONE_CANDIDATE = '候補メンバーを選択してください。'
+export const PLEASE_SELECT_AT_LEAST_ONE_CANDIDATE =
+  '候補メンバーを選択してください。';
 
 export const ERROR_WRONG_DATE_VOTING = '現時刻より後の時刻に設定してください。';

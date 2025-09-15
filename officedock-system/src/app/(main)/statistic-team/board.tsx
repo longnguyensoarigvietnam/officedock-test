@@ -53,6 +53,7 @@ const StatisticTeamBoard = () => {
     selectedSmall,
     selectedOrganization,
     orderingOptions,
+    listMemberTeam,
     setOrderingOptions,
     setTotalDurationTask,
     setTotalDurationTaskCompare,
@@ -167,7 +168,11 @@ const StatisticTeamBoard = () => {
       if (data.largeTotalDuration) {
         if (data.mediumTotalDuration) {
           if (data.smallTotalDuration) {
-            if (selectedSmall && selectedSmall.value && data.smallCategories) {
+            if (
+              selectedSmall &&
+              selectedSmall.value != '' &&
+              data.smallCategories
+            ) {
               const itemMap = data.smallCategories.find(
                 (item) =>
                   String(item.categoryId) === String(selectedSmall.value),
@@ -219,7 +224,13 @@ const StatisticTeamBoard = () => {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
       tagIds: orderingOptions?.tag_ids,
-      userIds: orderingOptions?.user_ids,
+      userIds:
+        orderingOptions?.user_ids?.length != 0
+          ? orderingOptions?.user_ids
+          : listMemberTeam.map((user) => ({
+              label: user.fullName,
+              value: user.id,
+            })),
       mainOrganizationId: selectedOrganizationSideBar?.value as number,
     },
     condition: [selectedOrganization?.value == ALL_TEAM_STATISTIC],
@@ -243,7 +254,13 @@ const StatisticTeamBoard = () => {
         fromDate: formatDateToYMD(startDateCompare) || '',
         endDate: formatDateToYMD(`${endDateCompare}`) || '',
         tagIds: orderingOptions?.tag_ids,
-        userIds: orderingOptions?.user_ids,
+        userIds:
+          orderingOptions?.user_ids?.length != 0
+            ? orderingOptions?.user_ids
+            : listMemberTeam.map((user) => ({
+                label: user.fullName,
+                value: user.id,
+              })),
         mainOrganizationId: selectedOrganizationSideBar?.value as number,
         isCompare: isCheckCompare,
       },
@@ -300,7 +317,7 @@ const StatisticTeamBoard = () => {
             if (data.smallTotalDuration) {
               if (
                 selectedSmall &&
-                selectedSmall.value &&
+                selectedSmall.value != '' &&
                 data.smallCategories
               ) {
                 const itemMap = data.smallCategories.find(
@@ -658,7 +675,7 @@ const StatisticTeamBoard = () => {
       <div className=" flex items-start justify-between">
         <div className="flex items-center justify-between">
           <div className="flex items-start gap-5 ">
-            <div className="rounded-full w-[34px] h-[34px]  flex items-center justify-center overflow-hidden">
+            <div className="rounded-full w-[34px] h-[34px] min-w-[34px] flex items-center justify-center overflow-hidden">
               <ImageRound
                 className="w-[34px] h-[34px] rounded-full"
                 src="/icons/statistic-team.svg"
@@ -667,10 +684,7 @@ const StatisticTeamBoard = () => {
               />
             </div>
             <span className="text-[26px] font-medium relative top-[-2px] max-w-[450px] line-clamp-3 break-all">
-              {selectedOrganization?.label}
-            </span>
-            <span className="text-[26px] font-medium relative top-[-2px]">
-              チーム集計
+              {selectedOrganization?.label}チーム集計
             </span>
             <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ">
               <Button

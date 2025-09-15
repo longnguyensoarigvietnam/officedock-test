@@ -957,7 +957,9 @@ const LineChart = ({
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
                     disabled={
-                      selectedLarge?.value == '' || isHasLoading || isDisableCalendar
+                      selectedLarge?.value == '' ||
+                      isHasLoading ||
+                      isDisableCalendar
                     }
                   />
                 </div>
@@ -991,7 +993,9 @@ const LineChart = ({
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
                     disabled={
-                      selectedMedium?.value == '' || isHasLoading || isDisableCalendar
+                      selectedMedium?.value == '' ||
+                      isHasLoading ||
+                      isDisableCalendar
                     }
                   />
                 </div>

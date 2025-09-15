@@ -218,8 +218,7 @@ export default function SendEnvelopeAnimationOverlay({
           <EnvelopeFront />
         </div>
 
-        {/* Confirm message */}
-        <div className="absolute -bottom-[170px] left-1/2 -translate-x-1/2">
+        <div className="absolute -bottom-[160px] left-1/2 -translate-x-1/2">
           {showConfirmMessage && (
             <div className="w-[675px] bg-white rounded-[10px] pl-5 pr-[6px] py-[6px] flex items-center justify-between">
               <p className="text-sm">

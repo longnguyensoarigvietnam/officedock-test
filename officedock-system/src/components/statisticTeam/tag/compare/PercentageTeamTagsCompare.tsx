@@ -368,7 +368,7 @@ const PercentageTeamTagsCompare = ({
         {/* Header & sort */}
         <div className="flex justify-between">
           <div className="flex items-center gap-x-5">
-            <div className="flex items-center gap-[10px] ">
+            <div className="flex flex-shrink-0 items-center gap-[10px] ">
               <ImageRound
                 className={`w-5 h-5  hover:cursor-pointer relative top-[2px]`}
                 name="statistic-active icon"
@@ -530,7 +530,9 @@ const PercentageTeamTagsCompare = ({
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}
                       disabled={
-                        !selectedLarge || isHasLoading || isDisableCalendar
+                        selectedLarge?.value == '' ||
+                        isHasLoading ||
+                        isDisableCalendar
                       }
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">

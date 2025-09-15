@@ -73,7 +73,7 @@ export function transformStatisticCategoryInfoToProgressData({
     color:
       item.categoryColor ||
       (colorData && lightenColor(colorData, item.percent)) ||
-      '',
+      '#83919e',
     duration: item.duration,
     optionData: item.users || [],
     organizationId: String(item.organizationId),
@@ -227,6 +227,7 @@ const AllocationTeamCategory = memo(
           const { finalData } = mapStatisticAllTeamCategoryInfoToProgressData({
             data: statisticAllTeamCategoryList.largeCategories,
           });
+
           setProgressDataLargeAllTeam(finalData);
         } else {
           setProgressDataLargeAllTeam([]);

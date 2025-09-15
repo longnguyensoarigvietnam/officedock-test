@@ -224,7 +224,7 @@ const StatisticTagBoard = () => {
             setTotalDurationTaskCompare(data.mediumTotalDuration);
           }
         } else {
-          if (selectedLarge && selectedLarge.value) return;
+          if (selectedLarge && selectedLarge.value != '') return;
           setTotalDurationTaskCompare(data.largeTotalDuration);
         }
       } else {

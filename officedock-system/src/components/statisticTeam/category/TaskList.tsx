@@ -205,7 +205,7 @@ const TaskListTeamStatistic = ({
             </span>
           </div>
           {/* Filter modal */}
-          <FilterTeamStatistic />
+          <FilterTeamStatistic isFilterMember={false} />
         </div>
         <ImageRound
           src="/icons/extend-calendar.svg"

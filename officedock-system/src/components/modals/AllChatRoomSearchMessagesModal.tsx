@@ -216,10 +216,12 @@ export const AllChatRoomSearchMessagesModal = ({
                 </div>
               );
             })
-          ) : (
+          ) : !isLoading ? (
             <p className="text-sm text-center text-[#77858F]">
               {NO_DATA_AVAILABLE}
             </p>
+          ) : (
+            <></>
           )}
           {!isLoading &&
           isSearchingMessagesRef &&

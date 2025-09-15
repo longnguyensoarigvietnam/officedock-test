@@ -53,6 +53,7 @@ import {
   EVERYONE_OPTION_LABEL,
   NO_SETTING,
   STATISTIC_CHART_VIEW_OPTIONS,
+  STATISTIC_MAX_PERCENTAGE,
 } from '@constants';
 
 import {
@@ -251,7 +252,10 @@ const LineChartByTeam = ({
     categories.map((category) => ({
       categoryId: category.categoryId,
       categoryName: category.categoryName,
-      categoryPercent: category.percent,
+      categoryPercent:
+        category.percent > STATISTIC_MAX_PERCENTAGE
+          ? STATISTIC_MAX_PERCENTAGE
+          : category.percent,
       categoryDuration: category.duration,
       organizationId: category.organizationId ?? 0,
       userList:
@@ -267,7 +271,10 @@ const LineChartByTeam = ({
                   userAvatar: foundUser.user.avatar,
                   userAvatarColor: foundUser.user.avatarColor,
                   userDuration: foundUser.duration,
-                  userPercent: foundUser.percent,
+                  userPercent:
+                    foundUser.percent > STATISTIC_MAX_PERCENTAGE
+                      ? STATISTIC_MAX_PERCENTAGE
+                      : foundUser.percent,
                 };
               }
               return {
@@ -290,7 +297,10 @@ const LineChartByTeam = ({
                   userAvatar: foundUser.user.avatar,
                   userAvatarColor: foundUser.user.avatarColor,
                   userDuration: foundUser.duration,
-                  userPercent: foundUser.percent,
+                  userPercent:
+                    foundUser.percent > STATISTIC_MAX_PERCENTAGE
+                      ? STATISTIC_MAX_PERCENTAGE
+                      : foundUser.percent,
                 };
               }
               return {
@@ -329,7 +339,10 @@ const LineChartByTeam = ({
             ? AllTeamStatisticOption.MAIN_TEAM
             : AllTeamStatisticOption.CALENDAR,
       categoryName: organization.organizationName,
-      categoryPercent: organization.percent,
+      categoryPercent:
+        organization.percent > STATISTIC_MAX_PERCENTAGE
+          ? STATISTIC_MAX_PERCENTAGE
+          : organization.percent,
       categoryDuration: organization.duration,
       organizationId: organization.organizationId ?? 0,
       userList: organization.users.length
@@ -340,7 +353,10 @@ const LineChartByTeam = ({
               userAvatar: user.avatar,
               userAvatarColor: user.avatarColor,
               userDuration: user.totalDuration,
-              userPercent: user.percent,
+              userPercent:
+                user.percent > STATISTIC_MAX_PERCENTAGE
+                  ? STATISTIC_MAX_PERCENTAGE
+                  : user.percent,
             };
           })
         : [],
@@ -382,8 +398,7 @@ const LineChartByTeam = ({
           selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ? String(selectedOrganizationSideBar?.value || '')
             : undefined,
-        userIds:
-          orderingOptions?.user_ids?.length == 0
+        userIds: orderingOptions?.user_ids?.length == 0
             ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
             : selectedMembers?.filter(Boolean).join(','),
       },
@@ -542,8 +557,7 @@ const LineChartByTeam = ({
         selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
-      userIds:
-        orderingOptions?.user_ids?.length == 0
+      userIds:  orderingOptions?.user_ids?.length == 0
           ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
           : selectedMembers?.filter(Boolean).join(','),
     },
@@ -1511,7 +1525,10 @@ const LineChartByTeam = ({
             </span>
           </div>
           {/* Filter modal */}
-          <FilterTeamStatistic />
+          <FilterTeamStatistic
+            isFilterMember={false}
+            className="relative top-[3px]"
+          />
         </div>
         <ImageRound
           src="/icons/extend-calendar.svg"

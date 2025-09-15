@@ -839,29 +839,31 @@ const ActionsUserModal = ({
               </div>
               <div className="flex flex-col gap-1 items-start w-full">
                 {fieldsRole.map((field, index) => (
-                  <div className="flex gap-3 w-full" key={field.id}>
-                    <Controller
-                      control={control}
-                      name={`roles.${index}`}
-                      rules={{ required: ROLE_REQUIRED_MESSAGE }}
-                      render={({ field: { value, onChange } }) => (
-                        <Dropdown
-                          options={unSelectedRoleOptions}
-                          selectedOption={roleUserOptions.find(
-                            (element) => element.value === value?.value,
-                          )}
-                          onChange={(option: OptionDropdownType) => {
-                            clearErrors('roles');
-                            onChange(option);
-                            handleSelectedRole(index, option);
-                          }}
-                          placeholderClass="!text-black text-sm font-normal"
-                          className={`!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] ${!errors?.roles ? '!border-[#77858F]' : '!border-error'}`}
-                          labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                          classNameOption="!text-sm"
-                        />
-                      )}
-                    />
+                  <div className="flex gap-3 w-[500px]" key={field.id}>
+                    <div className="w-[440px]">
+                      <Controller
+                        control={control}
+                        name={`roles.${index}`}
+                        rules={{ required: ROLE_REQUIRED_MESSAGE }}
+                        render={({ field: { value, onChange } }) => (
+                          <Dropdown
+                            options={unSelectedRoleOptions}
+                            selectedOption={roleUserOptions.find(
+                              (element) => element.value === value?.value,
+                            )}
+                            onChange={(option: OptionDropdownType) => {
+                              clearErrors('roles');
+                              onChange(option);
+                              handleSelectedRole(index, option);
+                            }}
+                            placeholderClass="!text-black text-sm font-normal"
+                            className={`!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] ${!errors?.roles ? '!border-[#77858F]' : '!border-error'}`}
+                            labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                            classNameOption="!text-sm"
+                          />
+                        )}
+                      />
+                    </div>
                     {fieldsRole.length > 1 && (
                       <div className="mt-[2.5px]">
                         <Button

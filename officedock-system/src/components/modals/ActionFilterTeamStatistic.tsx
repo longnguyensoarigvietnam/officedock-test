@@ -16,11 +16,13 @@ type ActionTaskFilterProp = {
     avatarUrl: string;
   }[];
   tagsOptions: OptionDropdownType[];
+  isFilterMember?: boolean;
   handleClose: () => void;
 };
 
 const ActionFilterStatisticTeam = ({
   listMemberTeam,
+  isFilterMember,
   handleClose,
   tagsOptions,
 }: ActionTaskFilterProp) => {
@@ -174,33 +176,35 @@ const ActionFilterStatisticTeam = ({
         </div>
         <div className="mt-[10px] flex  flex-col gap-[14px] ">
           {/*  User */}
-          <div>
-            <MultiSelectUserDropdown
-              className="!h-[34px] !rounded-md"
-              labelClass="!min-h-0 !text-sm font-medium"
-              valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center !rounded-md"
-              optionClassName="!border-[1px] !border-[#77858F]"
-              labelOptionClass="break-words max-w-[300px] line-clamp-3 !text-sm"
-              options={dataOptionsUserIds}
-              selectedOptions={watch('userIds') ?? []}
-              customLabel="メンバー"
-              onChange={(selected) => {
-                let updatedUserIds = [];
-                const currentUserIds = getValues('userIds') || [];
-                const foundItemIndex = currentUserIds.findIndex(
-                  (tag) => tag.value == selected.value,
-                );
-                if (foundItemIndex == -1) {
-                  updatedUserIds = [...currentUserIds, selected];
-                } else {
-                  updatedUserIds = currentUserIds.filter(
-                    (tag) => tag.value != selected.value,
+          {isFilterMember && (
+            <div>
+              <MultiSelectUserDropdown
+                className="!h-[34px] !rounded-md"
+                labelClass="!min-h-0 !text-sm font-medium"
+                valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center !rounded-md"
+                optionClassName="!border-[1px] !border-[#77858F]"
+                labelOptionClass="break-words max-w-[300px] line-clamp-3 !text-sm"
+                options={dataOptionsUserIds}
+                selectedOptions={watch('userIds') ?? []}
+                customLabel="メンバー"
+                onChange={(selected) => {
+                  let updatedUserIds = [];
+                  const currentUserIds = getValues('userIds') || [];
+                  const foundItemIndex = currentUserIds.findIndex(
+                    (tag) => tag.value == selected.value,
                   );
-                }
-                setValue('userIds', updatedUserIds);
-              }}
-            />
-          </div>
+                  if (foundItemIndex == -1) {
+                    updatedUserIds = [...currentUserIds, selected];
+                  } else {
+                    updatedUserIds = currentUserIds.filter(
+                      (tag) => tag.value != selected.value,
+                    );
+                  }
+                  setValue('userIds', updatedUserIds);
+                }}
+              />
+            </div>
+          )}
           {/* TagIds */}
           <div>
             <MultiSelectDropdown

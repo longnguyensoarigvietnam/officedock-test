@@ -20,10 +20,8 @@ interface FilterProps {
   largeCategoryId?: number | string;
   mediumCategoryId?: number | string;
   smallCategoryId?: number | string;
-
   organizationIds?: string;
   organizationMemberId?: string;
-
   orderingOptions: {
     tag_ids: OptionDropdownType[];
     user_ids: OptionDropdownType[];

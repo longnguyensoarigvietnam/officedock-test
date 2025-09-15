@@ -62,6 +62,7 @@ import {
   EVERYONE_OPTION_LABEL,
   NO_SETTING,
   STATISTIC_CHART_VIEW_OPTIONS,
+  STATISTIC_MAX_PERCENTAGE,
 } from '@constants';
 
 import {
@@ -261,7 +262,10 @@ const LineChartByTeamTagsCompare = ({
     tags.map((tag) => ({
       tagId: Number(tag.tagId),
       tagName: String(tag.tagName),
-      tagPercent: tag.percent,
+      tagPercent:
+        tag.percent > STATISTIC_MAX_PERCENTAGE
+          ? STATISTIC_MAX_PERCENTAGE
+          : tag.percent,
       tagDuration: tag.duration,
       organizationId: tag.organizationId ?? 0,
       type,
@@ -278,7 +282,10 @@ const LineChartByTeamTagsCompare = ({
                   userAvatar: foundUser.user.avatar,
                   userAvatarColor: foundUser.user.avatarColor,
                   userDuration: foundUser.duration,
-                  userPercent: foundUser.percent,
+                  userPercent:
+                    foundUser.percent > STATISTIC_MAX_PERCENTAGE
+                      ? STATISTIC_MAX_PERCENTAGE
+                      : foundUser.percent,
                 };
               }
               return {
@@ -301,7 +308,10 @@ const LineChartByTeamTagsCompare = ({
                   userAvatar: foundUser.user.avatar,
                   userAvatarColor: foundUser.user.avatarColor,
                   userDuration: foundUser.duration,
-                  userPercent: foundUser.percent,
+                  userPercent:
+                    foundUser.percent > STATISTIC_MAX_PERCENTAGE
+                      ? STATISTIC_MAX_PERCENTAGE
+                      : foundUser.percent,
                 };
               }
               return {
@@ -742,6 +752,118 @@ const LineChartByTeamTagsCompare = ({
         setHasFetchedCompareCategories(true);
       },
     });
+
+  useEffect(() => {
+    if (
+      selectedOrganization?.value != ALL_TEAM_STATISTIC &&
+      orderingOptions?.user_ids.length ==
+        selectedMembers.filter((member) => Boolean(member)).length &&
+      statisticTagsList &&
+      statisticTagsCompareList
+    ) {
+      let standardTableData: TagTableRowDetailWithType[] = [];
+      let compareTableData: TagTableRowDetailWithType[] = [];
+
+      if (
+        selectedOrganization?.value != '' &&
+        selectedLarge?.value == '' &&
+        selectedMedium?.value == '' &&
+        selectedSmall?.value == ''
+      ) {
+        standardTableData = buildTableDetail(
+          statisticTagsList.largeCategories,
+          StatisticChartType.STANDARD,
+        );
+        compareTableData = buildTableDetail(
+          statisticTagsCompareList.largeCategories,
+          StatisticChartType.COMPARE,
+        );
+      } else if (
+        selectedOrganization?.value != '' &&
+        selectedLarge?.value != '' &&
+        selectedMedium?.value == '' &&
+        selectedSmall?.value == ''
+      ) {
+        standardTableData = buildTableDetail(
+          statisticTagsList.mediumCategories,
+          StatisticChartType.STANDARD,
+        );
+        compareTableData = buildTableDetail(
+          statisticTagsCompareList.mediumCategories,
+          StatisticChartType.COMPARE,
+        );
+      } else if (
+        selectedOrganization?.value != '' &&
+        selectedLarge?.value != '' &&
+        selectedMedium?.value != '' &&
+        selectedSmall?.value == ''
+      ) {
+        standardTableData = buildTableDetail(
+          statisticTagsList.smallCategories,
+          StatisticChartType.STANDARD,
+        );
+        compareTableData = buildTableDetail(
+          statisticTagsCompareList.smallCategories,
+          StatisticChartType.COMPARE,
+        );
+      } else if (
+        selectedOrganization?.value != '' &&
+        selectedLarge?.value != '' &&
+        selectedMedium?.value != '' &&
+        selectedSmall?.value != ''
+      ) {
+        standardTableData = buildTableDetail(
+          statisticTagsList.smallCategories,
+          StatisticChartType.STANDARD,
+        );
+        compareTableData = buildTableDetail(
+          statisticTagsCompareList.smallCategories,
+          StatisticChartType.COMPARE,
+        );
+      }
+
+      const mergedTableData = mergeCategories([
+        ...(standardTableData || []),
+        ...(compareTableData || []),
+      ]);
+      const totalStandardDurationList = (standardTableData || [])
+        .map((item) => item.tagDuration)
+        .filter(Boolean); // remove null, undefined, ''
+
+      const totalCompareDurationList = (compareTableData || [])
+        .map((item) => item.tagDuration)
+        .filter(Boolean);
+
+      setTotalStandardDuration(
+        totalDurationsForStatistic(totalStandardDurationList),
+      );
+      setTotalCompareDuration(
+        totalDurationsForStatistic(totalCompareDurationList),
+      );
+
+      setMergedTableData(mergedTableData);
+      setTagCollapseStatuses(
+        mergedTableData.map((tag) => {
+          return {
+            tagId: tag.tagId!,
+            status: false,
+            organizationId: tag.organizationId,
+          };
+        }),
+      );
+      handleTagSelection(mergedTableData);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    statisticTagsList,
+    statisticTagsCompareList,
+    selectedLarge,
+    selectedMedium,
+    selectedOrganization,
+    selectedSmall,
+    selectedMembers,
+    orderingOptions?.user_ids.length,
+  ]);
 
   useEffect(() => {
     if (hasFetchedStandardCategories && hasFetchedCompareCategories) {
@@ -1419,7 +1541,10 @@ const LineChartByTeamTagsCompare = ({
               userAvatar: user.avatar,
               userAvatarColor: user.avatarColor,
               userDuration: user.totalDuration,
-              userPercent: user.percent,
+              userPercent:
+                user.percent > STATISTIC_MAX_PERCENTAGE
+                  ? STATISTIC_MAX_PERCENTAGE
+                  : user.percent,
             })),
           });
 
@@ -1444,7 +1569,10 @@ const LineChartByTeamTagsCompare = ({
               userAvatar: user.avatar,
               userAvatarColor: user.avatarColor,
               userDuration: user.totalDuration,
-              userPercent: user.percent,
+              userPercent:
+                user.percent > STATISTIC_MAX_PERCENTAGE
+                  ? STATISTIC_MAX_PERCENTAGE
+                  : user.percent,
             })),
           });
 

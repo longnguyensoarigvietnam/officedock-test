@@ -22,7 +22,6 @@ import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
-  SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
 } from '@constants/message';
 
@@ -202,9 +201,6 @@ const SurveyListPage = () => {
     useMutation('sendTweetMessage', handleSendTweetMessage, {
       onSuccess: () => {
         setTweetMessage('');
-        showToast({
-          description: SUCCESS_CREATE_MESSAGE,
-        });
       },
       onError: (error: AxiosError) => {
         showErrorToast(error, ERROR_CREATE_MESSAGE);

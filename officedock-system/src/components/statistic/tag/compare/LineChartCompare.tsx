@@ -1229,7 +1229,9 @@ const LineChartCompare = ({
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
                     disabled={
-                      selectedLarge?.value == '' || isHasLoading || isDisableCalendar
+                      selectedLarge?.value == '' ||
+                      isHasLoading ||
+                      isDisableCalendar
                     }
                   />
                 </div>
@@ -1263,7 +1265,9 @@ const LineChartCompare = ({
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
                     disabled={
-                      selectedMedium?.value == '' || isHasLoading || isDisableCalendar
+                      selectedMedium?.value == '' ||
+                      isHasLoading ||
+                      isDisableCalendar
                     }
                   />
                 </div>

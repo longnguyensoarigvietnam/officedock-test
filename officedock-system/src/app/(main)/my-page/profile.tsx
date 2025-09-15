@@ -39,7 +39,6 @@ import {
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
   ERROR_SAVE_MESSAGE,
-  SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
 } from '@constants/message';
 import { apiRouters, pageRouters } from '@constants/routers';
@@ -223,9 +222,6 @@ const MyPage = () => {
     useMutation('sendTweetMessage', handleSendTweetMessage, {
       onSuccess: (data) => {
         setTweetMessage('');
-        showToast({
-          description: SUCCESS_CREATE_MESSAGE,
-        });
         createTweetMessageLocal(data);
       },
       onError: (error: AxiosError) => {
@@ -588,7 +584,7 @@ const MyPage = () => {
             isHasMvpVoting={creationDataCommonData?.isHasMvpVoting || false}
           />
           <div className="flex-grow">
-            <div className="h-[424px] w-[336px] ml-[200px] relative">
+            <div className="h-[calc(100vh_-_535px)] w-[336px] ml-[200px] relative">
               <RenderAccessories images={listAvatar} />
             </div>
 

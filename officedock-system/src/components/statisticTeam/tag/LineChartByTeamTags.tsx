@@ -61,6 +61,7 @@ import {
   EVERYONE_OPTION_LABEL,
   NO_SETTING,
   STATISTIC_CHART_VIEW_OPTIONS,
+  STATISTIC_MAX_PERCENTAGE,
 } from '@constants';
 
 import {
@@ -221,7 +222,10 @@ const LineChartByTeamTags = ({
     tags.map((tag) => ({
       tagId: Number(tag.tagId),
       tagName: String(tag.tagName),
-      tagPercent: tag.percent,
+      tagPercent:
+        tag.percent > STATISTIC_MAX_PERCENTAGE
+          ? STATISTIC_MAX_PERCENTAGE
+          : tag.percent,
       tagDuration: tag.duration,
       organizationId: tag.organizationId ?? 0,
       userList:
@@ -237,7 +241,10 @@ const LineChartByTeamTags = ({
                   userAvatar: foundUser.user.avatar,
                   userAvatarColor: foundUser.user.avatarColor,
                   userDuration: foundUser.duration,
-                  userPercent: foundUser.percent,
+                  userPercent:
+                    foundUser.percent > STATISTIC_MAX_PERCENTAGE
+                      ? STATISTIC_MAX_PERCENTAGE
+                      : foundUser.percent,
                 };
               }
               return {
@@ -260,7 +267,10 @@ const LineChartByTeamTags = ({
                   userAvatar: foundUser.user.avatar,
                   userAvatarColor: foundUser.user.avatarColor,
                   userDuration: foundUser.duration,
-                  userPercent: foundUser.percent,
+                  userPercent:
+                    foundUser.percent > STATISTIC_MAX_PERCENTAGE
+                      ? STATISTIC_MAX_PERCENTAGE
+                      : foundUser.percent,
                 };
               }
               return {
@@ -299,7 +309,10 @@ const LineChartByTeamTags = ({
             ? AllTeamStatisticOption.MAIN_TEAM
             : AllTeamStatisticOption.CALENDAR,
       tagName: organization.organizationName,
-      tagPercent: organization.percent,
+      tagPercent:
+        organization.percent > STATISTIC_MAX_PERCENTAGE
+          ? STATISTIC_MAX_PERCENTAGE
+          : organization.percent,
       tagDuration: organization.duration,
       organizationId: organization.organizationId ?? 0,
       userList: organization.users.length
@@ -310,7 +323,10 @@ const LineChartByTeamTags = ({
               userAvatar: user.avatar,
               userAvatarColor: user.avatarColor,
               userDuration: user.totalDuration,
-              userPercent: user.percent,
+              userPercent:
+                user.percent > STATISTIC_MAX_PERCENTAGE
+                  ? STATISTIC_MAX_PERCENTAGE
+                  : user.percent,
             };
           })
         : [],

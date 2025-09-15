@@ -262,16 +262,22 @@ const StackedAreaChart = ({
         let sortSource: StatisticCategoryInfo[] | undefined =
           statisticCategoryList?.largeCategories;
 
-        if (selectedLarge && statisticCategoryList?.mediumCategories?.length) {
+        if (
+          selectedLarge?.value != '' &&
+          statisticCategoryList?.mediumCategories?.length
+        ) {
           sortSource = statisticCategoryList.mediumCategories;
 
           if (
-            selectedMedium &&
+            selectedMedium?.value != '' &&
             statisticCategoryList?.smallCategories?.length
           ) {
             sortSource = statisticCategoryList.smallCategories;
 
-            if (selectedSmall && statisticCategoryList?.category?.length) {
+            if (
+              selectedSmall?.value != '' &&
+              statisticCategoryList?.category?.length
+            ) {
               sortSource = statisticCategoryList.category;
             }
           }
@@ -857,7 +863,7 @@ const StackedAreaChart = ({
               {/* Column Chart 2 */}
               <div className="w-[300px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge?.value !== '' && selectedMedium?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && selectedLarge?.value != '' && selectedMedium?.value == '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   中カテゴリー
                 </div>
                 <div className="mt-4 w-full">
@@ -878,7 +884,7 @@ const StackedAreaChart = ({
               {/* Column Chart 3 */}
               <div className="w-[300px] flex flex-col items-center">
                 <div
-                  className={`${selectedOrganization && selectedLarge?.value !== '' && selectedMedium?.value !== '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
+                  className={`${selectedOrganization && selectedLarge?.value != '' && selectedMedium?.value != '' ? 'text-white bg-[#3CABF3]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   小カテゴリー
                 </div>
                 <div className="mt-4 w-full">
