@@ -233,9 +233,7 @@ const ActionsTaskModal = ({
 
   const defaultValues = useMemo<TaskFormData>(() => {
     const value: TaskFormData = {
-      peopleInChargeIds: dataTask
-        ? []
-        : [
+      peopleInChargeIds: [
             {
               label: session?.user.profile.fullName || '',
               value: session?.user.id || '',
@@ -907,7 +905,6 @@ const ActionsTaskModal = ({
                 : null,
               showDeadlineTime: Boolean(watch('deadlineTime')),
               peopleInChargeIds : undefined
-
             });
       }
       if (action === ActionTask.CREATE) {
@@ -924,7 +921,6 @@ const ActionsTaskModal = ({
               ? data.deadlineRemindCountdown
               : null,
             showDeadlineTime: Boolean(watch('deadlineTime')),
-            peopleInChargeIds : undefined
           });
       }
       if (action === ActionTask.COPY) {
@@ -941,8 +937,6 @@ const ActionsTaskModal = ({
               ? data.deadlineRemindCountdown
               : null,
             showDeadlineTime: Boolean(watch('deadlineTime')),
-                        peopleInChargeIds : undefined
-
           });
       }
     }
