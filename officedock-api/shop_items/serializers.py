@@ -16,11 +16,9 @@ class ShopItemSerializer(serializers.ModelSerializer):
         extra_fields = ["is_owned"]
 
     def get_is_owned(self, obj):
-        request = self.context.get("request")
-        if request.user:
-            return UserItems.objects.filter(
-                user=request.user, item=obj
-            ).exists()
+        user = self.context.get("user")
+        if user:
+            return UserItems.objects.filter(user=user, item=obj).exists()
         return False
 
 

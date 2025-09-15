@@ -29,6 +29,7 @@ class ShopItemViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
     @extend_schema(parameters=[OpenApiParameter("ordering", type=str)])
     def list(self, request, *args, **kwargs):
+        user = request.user
         # Distinct groups (name + item_type)
         distinct_groups = (
             self.filter_queryset(self.get_queryset())
@@ -63,7 +64,7 @@ class ShopItemViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         ]
 
         serializer = GroupedItemSerializer(
-            grouped_data, many=True, context={"request": request}
+            grouped_data, many=True, context={"user": user}
         )
         if page is not None:
             return self.get_paginated_response(serializer.data)
@@ -209,6 +210,6 @@ class UserItemViewSet(BaseAPIViewSet):
         ]
 
         serializer = GroupedItemSerializer(
-            grouped_data, many=True, context={"request": request}
+            grouped_data, many=True, context={"user": user}
         )
         return self.get_paginated_response(serializer.data)
