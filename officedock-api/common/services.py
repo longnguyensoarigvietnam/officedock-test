@@ -113,23 +113,37 @@ class TransactionService:
         """
         total_planned_time = timedelta()
 
-        # Get planned time from task schedules
+        # Define day bounds
+        start_of_day = datetime.combine(date, time.min)  # 00:00:00
+        end_of_day = datetime.combine(date, time.max)  # 23:59:59
+
+        # Get planned time from task schedules that overlap the day
         task_schedules = TaskSchedule.objects.filter(
-            plan_start_date__date=date, task__people_in_charge=user
+            Q(task__people_in_charge=user)
+            & Q(task__deleted_at__isnull=True)
+            & Q(plan_start_date__lte=end_of_day)
+            & Q(plan_end_date__gte=start_of_day)
         )
 
         for schedule in task_schedules:
-            duration = schedule.plan_end_date - schedule.plan_start_date
-            total_planned_time += duration
+            effective_start = max(schedule.plan_start_date, start_of_day)
+            effective_end = min(schedule.plan_end_date, end_of_day)
+            if effective_start < effective_end:
+                total_planned_time += effective_end - effective_start
 
-        # Get planned time from calendar schedules (RepeatSchedule)
+        # Get planned time from calendar schedules (RepeatSchedule) that overlap the day
         repeat_schedules = RepeatSchedule.objects.filter(
-            plan_start_date__date=date, schedule__participants=user
+            Q(schedule__participants=user)
+            & Q(schedule__deleted_at__isnull=True)
+            & Q(plan_start_date__lte=end_of_day)
+            & Q(plan_end_date__gte=start_of_day)
         )
 
         for schedule in repeat_schedules:
-            duration = schedule.plan_end_date - schedule.plan_start_date
-            total_planned_time += duration
+            effective_start = max(schedule.plan_start_date, start_of_day)
+            effective_end = min(schedule.plan_end_date, end_of_day)
+            if effective_start < effective_end:
+                total_planned_time += effective_end - effective_start
 
         return total_planned_time
 
