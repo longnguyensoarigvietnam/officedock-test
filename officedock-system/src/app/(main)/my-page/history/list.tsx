@@ -105,25 +105,25 @@ const HistoryListPage = () => {
                 <div className="flex items-center gap-[6px] justify-center">
                   <Button
                     variant={`${activeTab == PointHistoryActiveTab.COIN ? 'post' : 'secondary'}`}
-                    className="flex w-[192px] h-[50px]  items-center gap-[10px] !rounded-[40px]"
+                    className={`flex w-[192px] h-[50px] ${activeTab == PointHistoryActiveTab.PEARL && '!bg-[#EBF1F7] !border-none'} items-center gap-[10px] !rounded-[40px]`}
                     onClick={() => setActiveTab(PointHistoryActiveTab.COIN)}>
                     <ImageRound
                       name="Badge icon"
                       src={'/icons/badge.svg'}
-                      className={`w-7 h-7`}
+                      className={`w-[30px] h-[30px]`}
                     />
-                    <p className="text-[18px]">コイン</p>
+                    <p className={`text-[18px] ${activeTab == PointHistoryActiveTab.PEARL && '!text-[#77858F]'}`}>コイン</p>
                   </Button>
                   <Button
                     variant={`${activeTab == PointHistoryActiveTab.PEARL ? 'post' : 'secondary'}`}
-                    className="flex w-[192px] h-[50px]  items-center gap-[10px] !rounded-[40px]"
+                    className={`flex w-[192px] h-[50px] ${activeTab == PointHistoryActiveTab.COIN && '!bg-[#EBF1F7] !border-none'} items-center gap-[10px] !rounded-[40px]`}
                     onClick={() => setActiveTab(PointHistoryActiveTab.PEARL)}>
                     <ImageRound
                       name="Pearl icon"
                       src={'/icons/pearl.svg'}
-                      className={`w-fit h-fit ml-[10px]`}
+                      className={`w-[30px] h-[30px]`}
                     />
-                    <p className="text-[18px]">パール</p>
+                    <p className={`text-[18px] ${activeTab == PointHistoryActiveTab.COIN && '!text-[#77858F]'}`}>パール</p>
                   </Button>
                 </div>
                 <div className="">
@@ -144,7 +144,7 @@ const HistoryListPage = () => {
                         ? pointDetail?.coin
                         : pointDetail?.pearl}
                     </p>
-                    <p className="text-[22px] leading-[22px]  relative">
+                    <p className={`text-[22px] leading-[22px] relative`}>
                       {activeTab == PointHistoryActiveTab.COIN
                         ? 'コイン'
                         : 'パール'}
@@ -176,29 +176,31 @@ const HistoryListPage = () => {
                   ) : (
                     <></>
                   )}
-
-                  
                 </div>
                 <div className="flex justify-center">
-                    <Button
-                      onClick={() =>
-                        activeTab == PointHistoryActiveTab.COIN
-                          ? setIsShowDetailCompanyChangeCoin(true)
-                          : router.push(pageRouters.SHOP_ITEM.href)
-                      }
-                      variant="post"
-                      className="w-[200px] h-[46px] text-sm font-medium rounded-md">
-                      {activeTab == PointHistoryActiveTab.COIN
-                        ? '交換する'
-                        : 'アイテムと交換する'}
-                    </Button>
-                  </div>
+                  <Button
+                    onClick={() =>
+                      activeTab == PointHistoryActiveTab.COIN
+                        ? setIsShowDetailCompanyChangeCoin(true)
+                        : router.push(pageRouters.SHOP_ITEM.href)
+                    }
+                    variant="post"
+                    className="w-[200px] h-[46px] text-sm font-medium rounded-md"
+                    disabled={
+                      !pointDetail?.exchangeableCoin || !pointDetail.coin
+                    }>
+                    {activeTab == PointHistoryActiveTab.COIN
+                      ? '交換する'
+                      : 'アイテムと交換する'}
+                  </Button>
+                </div>
               </div>
             </div>
             {/* List history  */}
             <div className="relative w-[720px]">
               <HistoryTable
                 key={activeTab}
+                activeTab={activeTab}
                 historyList={historyPointList}
                 hasNextPage={hasNextPage}
                 isFetchingNextPage={isFetchingNextPage}
