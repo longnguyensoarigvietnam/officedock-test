@@ -11,7 +11,7 @@ PLANS = {
         "name": "Plan 1-10",
         "monthly_fee": 29000,  # Monthly fee (JPY)
         "exchangeable_amount": 3000,  # Amount convertible to DotMoney
-        "max_exchange_per_user": 300,  # Max convertible per user per month
+        "max_exchange_per_user": 3000,  # Max convertible per user per month
         "min_exchange_per_user": 300,  # Min convertible per user per month
     },
     "plan_11_20": {
