@@ -473,6 +473,7 @@ class ChatMessageBookMarkSerializer(ChatMessageSerializer):
 
     chat_room = serializers.SerializerMethodField()
     bookmark_at = serializers.SerializerMethodField()
+    is_bookmark = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ChatMessage
@@ -486,6 +487,7 @@ class ChatMessageBookMarkSerializer(ChatMessageSerializer):
             "created_at",
             "deleted_at",
             "bookmark_at",
+            "is_bookmark",
             "type",
             "task",
             "submit_level",
@@ -519,6 +521,13 @@ class ChatMessageBookMarkSerializer(ChatMessageSerializer):
 
         bookmark = obj.bookmarks.filter(user=request.user).first()
         return bookmark.bookmark_at if bookmark else None
+
+    def get_is_bookmark(self, obj):
+        request = self.context.get("request")
+        if not request:
+            return False
+
+        return obj.bookmarks.filter(user=request.user).exists()
 
 
 class BookMarkSerializer(serializers.Serializer):

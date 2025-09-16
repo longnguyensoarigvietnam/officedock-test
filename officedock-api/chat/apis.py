@@ -891,11 +891,12 @@ class ChatMessageViewSet(
         if message := request.query_params.get("message"):
             if is_bookmark:
                 messages = (
-                    messages.filter(
+                    messages.annotate(clean_message=StripTags(F("message")))
+                    .filter(
                         Q(task__title__icontains=message)
                         | Q(
                             Q(schedule__title__icontains=message)
-                            | Q(message__icontains=message)
+                            | Q(clean_message__icontains=message)
                         )
                         | Q(Q(submit_level__skill__name__icontains=message))
                     )
