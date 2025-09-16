@@ -18,10 +18,8 @@ export const CustomReaction = Node.create({
     return {
       src: {
         default: '',
-        parseHTML: (element: HTMLElement) => element.getAttribute('src') || '',
-        renderHTML: (attributes: CustomReactionAttrs) => ({
-          src: attributes.src,
-        }),
+        parseHTML: (el: HTMLElement) => el.getAttribute('data-src') ?? '',
+        renderHTML: (attrs: any) => ({ 'data-src': attrs.src }),
       },
       name: {
         default: '',
@@ -46,14 +44,17 @@ export const CustomReaction = Node.create({
 
   addNodeView() {
     return ReactNodeViewRenderer((props: NodeViewProps) => (
-      <NodeViewWrapper as="span">
+      <NodeViewWrapper
+        as="span"
+        className="inline-block align-middle"
+        contentEditable={false}>
         <img
           src={props.node.attrs.src}
           alt={props.node.attrs.name}
           title={props.node.attrs.name}
           style={{
-            width: '20px',
-            height: '20px',
+            width: 20,
+            height: 20,
             verticalAlign: 'sub',
             display: 'inline-block',
             margin: '0 2px',

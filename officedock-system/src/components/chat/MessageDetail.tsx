@@ -262,8 +262,6 @@ export const MessageDetail = ({
     );
   };
 
-  // console.log('22222');
-
   // Convert icon to image content
   const parseReactionsToImages = (message: string): string => {
     const div = document.createElement('div');
@@ -349,6 +347,7 @@ export const MessageDetail = ({
 
         if (child.nodeType === Node.ELEMENT_NODE) {
           const el = child as HTMLElement;
+
           if (el.dataset.taskId) {
             const taskId = el.dataset.taskId;
             const parser = new DOMParser();
@@ -462,6 +461,24 @@ export const MessageDetail = ({
             el.getAttribute('title')
           ) {
             const src = el.getAttribute('src');
+            const name = el.getAttribute('alt') ?? '';
+            children.push(
+              <Image
+                key={`${index}-${i}-reaction`}
+                src={src!}
+                alt={name}
+                title={name}
+                width={20}
+                height={20}
+                className="inline-block align-middle mx-[2px] w-[20px] h-[20px]"
+              />,
+            );
+          }
+          if (
+            el.tagName === 'SPAN' &&
+            el.getAttribute('data-src')?.includes('/icons/')
+          ) {
+            const src = el.getAttribute('data-src');
             const name = el.getAttribute('alt') ?? '';
             children.push(
               <Image
