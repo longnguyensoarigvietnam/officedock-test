@@ -1,6 +1,6 @@
 from calendar import monthrange
 import io
-from datetime import date, datetime, timedelta, time
+from datetime import date, datetime, timedelta, time, timezone as tz
 import random
 import re
 import hashlib
@@ -87,7 +87,7 @@ def generate_signed_url(blob_name: str, expiration_seconds=None) -> str:
         host = "storage.googleapis.com"
         path = f"/{bucket_name}/{blob_name}"
 
-    now = datetime.datetime.now(datetime.timezone.utc)
+    now = datetime.now(tz.utc)
     datestamp = now.strftime("%Y%m%d")
     timestamp = now.strftime("%Y%m%dT%H%M%SZ")
 
