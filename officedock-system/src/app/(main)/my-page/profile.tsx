@@ -30,7 +30,6 @@ import ReceiveEnvelopeAnimationOverlay from '@components/thanksMessage/ReceiveEn
 import { useSessionCache } from '@providers/SessionCacheProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
-import { MyPageStateContext } from '@providers/MyPageProvider';
 
 import { TweetFormData } from '@interfaces/tweet';
 import { ThanksMessageDetail } from '@interfaces/thanks-message';
@@ -66,7 +65,6 @@ const MyPage = () => {
   const queryClient = useQueryClient();
 
   const { setIsLoading } = useContext(LoadingContext);
-  const { pointDetail, setPointDetail } = useContext(MyPageStateContext);
   const router = useRouter();
 
   // Set skills
@@ -119,12 +117,7 @@ const MyPage = () => {
   const [openSuccessSurvey, setOpenSuccessSurvey] = useState(false);
 
   // Current coin + pearl
-  useCurrentPoint({
-    conditions: [Boolean(!pointDetail)],
-    onSuccess: (data) => {
-      setPointDetail(data);
-    },
-  });
+  const { currentPointDetail } = useCurrentPoint({});
 
   // Get thanks message list
   const { refetchThanksMessageList } = useThanksMessageList({
@@ -403,13 +396,13 @@ const MyPage = () => {
               src={'/icons/badge.svg'}
               className={`w-fit h-fit`}
             />
-            <p>{pointDetail?.coin}</p>
+            <p>{currentPointDetail?.coin || 0}</p>
             <ImageRound
               name="Pearl icon"
               src={'/icons/pearl.svg'}
               className={`w-fit h-fit ml-[10px]`}
             />
-            <p>{pointDetail?.pearl}</p>
+            <p>{currentPointDetail?.pearl || 0}</p>
             <p
               onClick={() => router.push(pageRouters.HISTORY_POINT.href)}
               className="text-sm text-primary underline ml-[11px] cursor-pointer hover:opacity-80">
