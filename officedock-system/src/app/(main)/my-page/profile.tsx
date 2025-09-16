@@ -580,7 +580,7 @@ const MyPage = () => {
             unAnsweredSurveyCount={unansweredSurveyCount?.count || 0}
           />
           <div className="flex-grow">
-            <div className="h-[calc(100vh_-_535px)] w-[336px] ml-[200px] relative">
+            <div className="h-[calc(100vh_-_535px)] min-h-[424px] w-[336px] ml-[200px] relative">
               <RenderAccessories images={listAvatar} />
             </div>
 
