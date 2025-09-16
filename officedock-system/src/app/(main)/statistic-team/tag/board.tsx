@@ -611,7 +611,7 @@ const StatisticTeamTagBoard = () => {
                 );
               }}
               disabled={isHasLoading}
-              className={`!py-0 !px-0 font-bold w-[90px] h-7 
+              className={`!py-0 !px-0 font-bold w-[90px] h-7
               !rounded-[20px] text-xs !text-[#77858F] !bg-[#EBF1F7] !border-none`}>
               カテゴリー
             </Button>

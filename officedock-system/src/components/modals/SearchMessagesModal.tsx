@@ -135,7 +135,7 @@ export const SearchMessagesModal = ({
       setDataSearch(searchMessageResults.results);
     }
   }, [searchMessageResults]);
- 
+
   const renderAvatar = (senderId: number) => {
     const memberInfo = dashboardMemberList.find(
       (member) => member.id === senderId,

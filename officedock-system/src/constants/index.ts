@@ -518,13 +518,13 @@ export const VOTING_TITLE_MAX_LENGTH = 18;
 export const SYSTEM_TWEET_NAME = 'OFFICE DOCK';
 export const VOTING_BONUS_POINT = 200;
 
-export const JAPANESE_TIME_ZONE = 'Asia/Tokyo';
-
 export const REMAINING_ORGANIZATIONS_ID = 'remaining';
-export const STATISTIC_MAX_PERCENTAGE = 100;
 export const listAvatar = [
   { name: 'body', type: ItemAvatarType.BODY, url: '' },
   { name: 'head-full', type: 'head', url: '' },
   { name: 'hat', type: ItemAvatarType.HAT, url: '' },
   { name: 'shoes', type: ItemAvatarType.SHOES, url: '' },
 ];
+export const JAPANESE_TIME_ZONE = 'Asia/Tokyo'
+
+export const STATISTIC_MAX_PERCENTAGE = 100
