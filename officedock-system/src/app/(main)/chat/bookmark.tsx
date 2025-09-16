@@ -250,11 +250,11 @@ const BookmarkList = ({
           prev
             ? {
                 ...prev,
-                results: prev.results.map((item) =>
-                  item.uuid === bookmark.uuid
-                    ? { ...item, isBookMark: bookmark.isBookmark }
-                    : item,
-                ),
+                results: prev.results.map((item) => {
+                  return item.uuid == bookmark.uuid
+                    ? { ...item, isBookmark: bookmark.isBookmark }
+                    : item;
+                }),
               }
             : prev,
         );
