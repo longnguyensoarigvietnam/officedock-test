@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQueryClient } from 'react-query';
 import { useRouter } from 'next/navigation';
 
@@ -16,7 +16,6 @@ import useHistoryPointList from '@hooks/useListHistoryPoint';
 import useCurrentPoint from '@hooks/useCurrentPoint';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
-import { MyPageStateContext } from '@providers/MyPageProvider';
 
 import api from '@base/api';
 
@@ -30,7 +29,6 @@ const HistoryListPage = () => {
   const [activeTab, setActiveTab] = useState<PointHistoryActiveTab>(
     PointHistoryActiveTab.COIN,
   );
-  const { pointDetail, setPointDetail } = useContext(MyPageStateContext);
 
   const queryClient = useQueryClient();
   const {
@@ -44,12 +42,7 @@ const HistoryListPage = () => {
   });
 
   // Current coin + pearl
-  useCurrentPoint({
-    conditions: [Boolean(!pointDetail)],
-    onSuccess: (data) => {
-      setPointDetail(data);
-    },
-  });
+  const { currentPointDetail } = useCurrentPoint({});
 
   useEffect(() => {
     return () => {
@@ -147,8 +140,8 @@ const HistoryListPage = () => {
                   <div className="flex items-end justify-center mt-[10px] gap-2 text-black font-medium">
                     <p className="text-[40px] leading-10">
                       {activeTab == PointHistoryActiveTab.COIN
-                        ? pointDetail?.coin
-                        : pointDetail?.pearl}
+                        ? currentPointDetail?.coin || 0
+                        : currentPointDetail?.pearl || 0}
                     </p>
                     <p className={`text-[22px] leading-[22px] relative`}>
                       {activeTab == PointHistoryActiveTab.COIN
@@ -171,7 +164,7 @@ const HistoryListPage = () => {
                             className={`w-[18px] h-[18px]`}
                           />
                           <p className="text-base font-medium">
-                            {pointDetail?.exchangeableCoin || 0}
+                            {currentPointDetail?.exchangeableCoin || 0}
                           </p>
                         </div>
                       </div>
@@ -194,7 +187,8 @@ const HistoryListPage = () => {
                     className="w-[200px] h-[46px] text-sm font-medium rounded-md"
                     disabled={
                       activeTab == PointHistoryActiveTab.COIN &&
-                      (!pointDetail?.exchangeableCoin || !pointDetail.coin)
+                      (!currentPointDetail?.exchangeableCoin ||
+                        !currentPointDetail.coin)
                     }>
                     {activeTab == PointHistoryActiveTab.COIN
                       ? '交換する'
