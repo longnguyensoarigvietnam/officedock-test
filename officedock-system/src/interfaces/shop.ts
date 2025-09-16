@@ -13,6 +13,7 @@ export interface ItemUser {
   cropFile: string;
   fullFile: string;
   isOwned: boolean;
+  isEquipped?: boolean;
 }
 
 export interface ShopItem {

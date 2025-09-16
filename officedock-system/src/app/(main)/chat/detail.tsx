@@ -334,7 +334,7 @@ const ChatDetail = ({
           setGotoMessageId(null);
           setTimeout(() => setHighlightedMessageId(null), 5000);
         }
-      }, 200);
+      }, 400);
       return () => clearTimeout(timer);
     }
   }, [gotoMessageId, dataMessageDetail, lastItemId]);
@@ -455,6 +455,7 @@ const ChatDetail = ({
   }) => {
     if (chatRoomCode) {
       setInitialLoad(true);
+
       const apiUrl = `${apiRouters.CHAT_MESSAGES(`${chatRoomCode}`)}?page=${page}&page_size=${PAGINATION_PAGE_SIZE_HIGHT}${data.bookmarkMessageId ? `&bookmark_message_id=${data.bookmarkMessageId}` : ''}`;
 
       return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
@@ -1829,6 +1830,7 @@ const ChatDetail = ({
       }
 
       const text = selection.toString();
+
       if (!text.trim()) {
         quoteButtonRef.current?.remove();
         quoteButtonRef.current = null;
@@ -1840,6 +1842,7 @@ const ChatDetail = ({
       const anchorNode = selection.anchorNode;
       const parent = anchorNode?.parentElement?.closest('[data-id]');
       const id = parent?.getAttribute('data-id');
+
       if (!id) return;
       lastSelectedMessageIdRef.current = id || null;
       const range = selection.getRangeAt(0);
@@ -3108,6 +3111,7 @@ const ChatDetail = ({
           onClose={() => setDataPreviewFile(null)}
           onGotoMessage={(data: { messageId: string | number }) => {
             setOpenSearchMessagesModal(false);
+
             gotoSelectedMessage({
               bookmarkMessageId: Number(data.messageId),
             });
