@@ -52,7 +52,6 @@ import { useErrorToast } from '@hooks/useErrorToast';
 import { useUpdateTweetCache } from '@hooks/CacheQuery/useUpdateTweetCache';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
-import useCurrentPoint from '@hooks/useCurrentPoint';
 
 import { getLastChar } from '@utils';
 
@@ -104,6 +103,10 @@ const MyPage = () => {
   >([]);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
 
+  // Total pearls and coins
+  const [totalPearls, setTotalPearls] = useState(0);
+  const [totalCoins, setTotalCoins] = useState(0);
+
   // Get tweet list
   const {
     tweetList,
@@ -115,9 +118,6 @@ const MyPage = () => {
   // Survey
   const [openSettingSurvey, setOpenSettingSurvey] = useState(false);
   const [openSuccessSurvey, setOpenSuccessSurvey] = useState(false);
-
-  // Current coin + pearl
-  const { currentPointDetail } = useCurrentPoint({});
 
   // Get thanks message list
   const { refetchThanksMessageList } = useThanksMessageList({
@@ -154,10 +154,16 @@ const MyPage = () => {
   };
 
   // Unanswered survey count
+  // Current coin + pearl
   const { creationDataCommonData } = useCreationDataCommon({
     options: {
       get_unanswered_count_of_survey: true,
       get_current_mvp_vote: true,
+      get_balances_of_user: true,
+    },
+    onSuccess: (data) => {
+      setTotalPearls(data?.balancesOfUser?.pearl || 0);
+      setTotalCoins(data?.balancesOfUser?.coin || 0);
     },
   });
 
@@ -396,13 +402,13 @@ const MyPage = () => {
               src={'/icons/badge.svg'}
               className={`w-fit h-fit`}
             />
-            <p>{currentPointDetail?.coin || 0}</p>
+            <p>{totalCoins || 0}</p>
             <ImageRound
               name="Pearl icon"
               src={'/icons/pearl.svg'}
               className={`w-fit h-fit ml-[10px]`}
             />
-            <p>{currentPointDetail?.pearl || 0}</p>
+            <p>{totalPearls || 0}</p>
             <p
               onClick={() => router.push(pageRouters.HISTORY_POINT.href)}
               className="text-sm text-primary underline ml-[11px] cursor-pointer hover:opacity-80">

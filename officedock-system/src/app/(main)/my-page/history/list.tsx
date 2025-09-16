@@ -13,7 +13,7 @@ import { apiRouters, pageRouters } from '@constants/routers';
 import { PointHistoryActiveTab } from '@constants/enums';
 
 import useHistoryPointList from '@hooks/useListHistoryPoint';
-import useCurrentPoint from '@hooks/useCurrentPoint';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
@@ -30,6 +30,11 @@ const HistoryListPage = () => {
     PointHistoryActiveTab.COIN,
   );
 
+  // Total pearls and coins
+  const [totalPearls, setTotalPearls] = useState(0);
+  const [totalCoins, setTotalCoins] = useState(0);
+  const [exchangableCoins, setExchangableCoins] = useState(0);
+
   const queryClient = useQueryClient();
   const {
     historyPointList,
@@ -42,7 +47,16 @@ const HistoryListPage = () => {
   });
 
   // Current coin + pearl
-  const { currentPointDetail } = useCurrentPoint({});
+  useCreationDataCommon({
+    options: {
+      get_balances_of_user: true,
+    },
+    onSuccess: (data) => {
+      setTotalPearls(data?.balancesOfUser?.pearl || 0);
+      setTotalCoins(data?.balancesOfUser?.coin || 0);
+      setExchangableCoins(data?.balancesOfUser?.exchangeableCoin || 0);
+    },
+  });
 
   useEffect(() => {
     return () => {
@@ -140,8 +154,8 @@ const HistoryListPage = () => {
                   <div className="flex items-end justify-center mt-[10px] gap-2 text-black font-medium">
                     <p className="text-[40px] leading-10">
                       {activeTab == PointHistoryActiveTab.COIN
-                        ? currentPointDetail?.coin || 0
-                        : currentPointDetail?.pearl || 0}
+                        ? totalCoins || 0
+                        : totalPearls || 0}
                     </p>
                     <p className={`text-[22px] leading-[22px] relative`}>
                       {activeTab == PointHistoryActiveTab.COIN
@@ -164,7 +178,7 @@ const HistoryListPage = () => {
                             className={`w-[18px] h-[18px]`}
                           />
                           <p className="text-base font-medium">
-                            {currentPointDetail?.exchangeableCoin || 0}
+                            {exchangableCoins || 0}
                           </p>
                         </div>
                       </div>
@@ -187,8 +201,7 @@ const HistoryListPage = () => {
                     className="w-[200px] h-[46px] text-sm font-medium rounded-md"
                     disabled={
                       activeTab == PointHistoryActiveTab.COIN &&
-                      (!currentPointDetail?.exchangeableCoin ||
-                        !currentPointDetail.coin)
+                      (!exchangableCoins || !totalCoins)
                     }>
                     {activeTab == PointHistoryActiveTab.COIN
                       ? '交換する'
