@@ -563,7 +563,8 @@ const ChatDetail = ({
             return merged;
           });
 
-          if(!data.data.hasNext && pendingMessages.length > 0) setPendingMessages([]);
+          if (!data.data.hasNext && pendingMessages.length > 0)
+            setPendingMessages([]);
 
           if (
             data.data.results.length > 0 &&
@@ -2161,8 +2162,14 @@ const ChatDetail = ({
     src: string;
     value: ReactionIconValue;
   }) => {
+    if (!editor) return;
+
+    const { state } = editor;
+    const { doc } = state;
+    const pos = doc.content.size;
+
     editor
-      ?.chain()
+      .chain()
       .focus()
       .insertContent({
         type: 'customReaction',
@@ -2171,6 +2178,7 @@ const ChatDetail = ({
           name: reaction.name,
         },
       })
+      .setTextSelection(pos)
       .run();
   };
 

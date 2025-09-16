@@ -321,6 +321,24 @@ export const MessageDetailQuote = ({
               />,
             );
           }
+          if (
+            el.tagName === 'SPAN' &&
+            el.getAttribute('data-src')?.includes('/icons/')
+          ) {
+            const src = el.getAttribute('data-src');
+            const name = el.getAttribute('alt') ?? '';
+            children.push(
+              <Image
+                key={`${index}-${i}-reaction`}
+                src={src!}
+                alt={name}
+                title={name}
+                width={20}
+                height={20}
+                className="inline-block align-middle mx-[2px] w-[20px] h-[20px]"
+              />,
+            );
+          }
         }
       });
 

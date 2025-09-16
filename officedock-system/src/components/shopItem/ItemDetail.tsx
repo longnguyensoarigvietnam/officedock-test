@@ -21,6 +21,8 @@ const ItemGroupCard = ({
 }: Props) => {
   const [selectedItem, setSelectedItem] = useState<ItemUser | null>(null);
 
+  const actionItem = group.items.find((item) => item.id == selectedItem?.id);
+
   return (
     <>
       <div className="flex items-center justify-between px-4 py-4">
@@ -89,7 +91,7 @@ const ItemGroupCard = ({
             })}
           </div>
           <div className="flex flex-col flex-shrink-0 items-center gap-2">
-            {selectedItem && !selectedItem?.isOwned && (
+            {actionItem && !actionItem?.isOwned && (
               <div className="flex items-center gap-[9px] text-black">
                 <Image
                   alt="Pearl icon"
@@ -113,16 +115,16 @@ const ItemGroupCard = ({
                 <p className="font-bold text-base">{group.items[0].price}</p>
               </div>
             )}
-            {selectedItem && selectedItem?.isOwned && (
+            {actionItem && actionItem?.isOwned && (
               <div className="flex items-center justify-center text-xs font-semibold text-center w-[56px] h-[22px] bg-[#EBF1F7] rounded-[3px] text-black">
                 所持済
               </div>
             )}
-            {selectedItem &&
-              !selectedItem.isOwned &&
-              totalPearl >= selectedItem?.price && (
+            {actionItem &&
+              !actionItem.isOwned &&
+              totalPearl >= actionItem?.price && (
                 <Button
-                  onClick={() => handleBuyDataItem(selectedItem)}
+                  onClick={() => handleBuyDataItem(actionItem)}
                   className="w-[48px] h-[21px] !text-xs !py !px-0 !rounded"
                   variant="post">
                   交換

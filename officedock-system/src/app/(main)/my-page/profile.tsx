@@ -596,8 +596,8 @@ const MyPage = () => {
             isHasMvpVoting={creationDataCommonData?.isHasMvpVoting || false}
           />
           <div className="flex-grow">
-            <div className="h-[calc(100vh_-_535px)] min-h-[424px] w-[336px] ml-[200px] relative">
-              <RenderAccessories/>
+            <div className="h-[424px] w-[336px] ml-[200px] relative">
+              <RenderAccessories />
             </div>
 
             {/* Message user */}
