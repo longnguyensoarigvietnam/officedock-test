@@ -216,7 +216,11 @@ class ListSubmitLevelSerializer(SubmitLevelSerializer):
         """
         step_before_submit = obj.step_before_submit
         level_before_submit = obj.level_before_submit
-        step_after_submit, level_after_submit = get_next_progression(
+        (
+            step_after_submit,
+            level_after_submit,
+            has_next_step,
+        ) = get_next_progression(
             step_before_submit,
             level_before_submit,
             skill=obj.skill,

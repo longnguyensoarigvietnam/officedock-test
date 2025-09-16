@@ -543,7 +543,11 @@ class SkillMapViewSet(
         data = {}
         if skill_map_skill_level:
 
-            step_after_submit, level_after_submit = get_next_progression(
+            (
+                step_after_submit,
+                level_after_submit,
+                has_next_step,
+            ) = get_next_progression(
                 skill_map.step,
                 skill_map_skill_level.level,
                 skill=skill_map.skill,

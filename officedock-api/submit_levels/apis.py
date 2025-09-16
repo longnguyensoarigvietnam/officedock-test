@@ -182,6 +182,89 @@ class SubmitLevelViewSet(
         ]:
             self._send_to_chat(instance.staff, submit_level)
 
+    def _award_skill_up_coins(
+        self, instance, step_after_submit, level_after_submit, has_next_step
+    ):
+        """
+        Award coins based on skill progression.
+
+        Args:
+            instance: SubmitLevelHistory instance
+            step_after_submit: The step after submission
+            level_after_submit: The level after submission
+            has_next_step: Boolean indicating if there's a next step available
+        """
+        # Define coin award rules
+        coin_rules = [
+            # Case: No next step available
+            {
+                "condition": (
+                    not has_next_step
+                    and step_after_submit == SkillStep.STEP_1.value
+                    and level_after_submit == SkillLevelEnum.LEVEL_3.value
+                ),
+                "coin_amount": COIN_SKILL_UP_STEP1,
+                "description": "Step 1 completed (no next step)",
+            },
+            {
+                "condition": (
+                    not has_next_step
+                    and step_after_submit == SkillStep.STEP_2.value
+                    and level_after_submit == SkillLevelEnum.LEVEL_3.value
+                ),
+                "coin_amount": COIN_SKILL_UP_STEP2,
+                "description": "Step 2 completed (no next step)",
+            },
+            {
+                "condition": (
+                    not has_next_step
+                    and instance.step_before_submit == SkillStep.STEP_3.value
+                    and instance.level_before_submit
+                    == SkillLevelEnum.LEVEL_3.value
+                ),
+                "coin_amount": COIN_SKILL_UP_STEP3,
+                "description": "Step 3 completed (no next step)",
+            },
+            # Case: Has next step available
+            {
+                "condition": (
+                    has_next_step
+                    and step_after_submit == SkillStep.STEP_2.value
+                    and level_after_submit == SkillLevelEnum.LEVEL_1.value
+                ),
+                "coin_amount": COIN_SKILL_UP_STEP1,
+                "description": "Step 1 completed (has next step)",
+            },
+            {
+                "condition": (
+                    has_next_step
+                    and step_after_submit == SkillStep.STEP_3.value
+                    and level_after_submit == SkillLevelEnum.LEVEL_1.value
+                ),
+                "coin_amount": COIN_SKILL_UP_STEP2,
+                "description": "Step 2 completed (has next step)",
+            },
+            {
+                "condition": (
+                    has_next_step
+                    and instance.step_before_submit == SkillStep.STEP_3.value
+                    and instance.level_before_submit
+                    == SkillLevelEnum.LEVEL_3.value
+                ),
+                "coin_amount": COIN_SKILL_UP_STEP3,
+                "description": "Step 3 completed (has next step)",
+            },
+        ]
+
+        # Find matching rule and award coins
+        for rule in coin_rules:
+            if rule["condition"]:
+                instance.staff.received_coin(
+                    rule["coin_amount"],
+                    transaction_type=TransactionTypes.SKILL_UP.value,
+                )
+                break
+
     def _handle_approve_submit_level(
         self, instance, skill_map, serializer, serializer_data
     ):
@@ -192,7 +275,11 @@ class SubmitLevelViewSet(
         """
         look_back_interval = serializer_data.pop("look_back_interval", None)
         look_back_type = serializer_data.pop("look_back_type", None)
-        step_after_submit, level_after_submit = get_next_progression(
+        (
+            step_after_submit,
+            level_after_submit,
+            has_next_step,
+        ) = get_next_progression(
             instance.step_before_submit, instance.level_before_submit
         )
         # Update current skill map skill level
@@ -257,35 +344,21 @@ class SubmitLevelViewSet(
                 else skill_level.look_back_type,
                 items=items,
             )
-        step_after_submit, level_after_submit = get_next_progression(
+        (
+            step_after_submit,
+            level_after_submit,
+            has_next_step,
+        ) = get_next_progression(
             instance.step_before_submit,
             instance.level_before_submit,
             skill=instance.skill,
         )
-        if (
-            step_after_submit == SkillStep.STEP_2.value
-            and level_after_submit == SkillLevelEnum.LEVEL_1.value
-        ):
-            instance.staff.received_coin(
-                COIN_SKILL_UP_STEP1,
-                transaction_type=TransactionTypes.SKILL_UP.value,
-            )
-        elif (
-            step_after_submit == SkillStep.STEP_3.value
-            and level_after_submit == SkillLevelEnum.LEVEL_1.value
-        ):
-            instance.staff.received_coin(
-                COIN_SKILL_UP_STEP2,
-                transaction_type=TransactionTypes.SKILL_UP.value,
-            )
-        elif (
-            instance.step_before_submit == SkillStep.STEP_3.value
-            and instance.level_before_submit == SkillLevelEnum.LEVEL_3.value
-        ):
-            instance.staff.received_coin(
-                COIN_SKILL_UP_STEP3,
-                transaction_type=TransactionTypes.SKILL_UP.value,
-            )
+
+        # Award coins based on skill progression
+        self._award_skill_up_coins(
+            instance, step_after_submit, level_after_submit, has_next_step
+        )
+
         return serializer.save(
             level_after_submit=level_after_submit,
             step_after_submit=step_after_submit,

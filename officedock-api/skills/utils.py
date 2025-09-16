@@ -88,6 +88,7 @@ def get_list_org_hierarchies(user, permission_name):
 
 def get_next_progression(current_step, current_level, skill=None):
     """Returns the next (step, level) progression based on current step and level."""
+    has_next_step = True
     steps = list(SkillStep)
     levels = list(SkillLevel)
     try:
@@ -101,19 +102,26 @@ def get_next_progression(current_step, current_level, skill=None):
         return (
             steps[current_step_index].value,
             levels[current_level_index + 1].value,
+            has_next_step,
         )
     else:
         if skill:
             exists_next_skill = Skill.objects.filter(parent_id=skill.id).first()
             # If not exists next step, replace next step is current step
             if not exists_next_skill:
-                return current_step, current_level
+                has_next_step = False
+                return current_step, current_level, has_next_step
         # Move to LEVEL_1 in next step, if exists
         if current_step_index < len(steps) - 1:
-            return steps[current_step_index + 1].value, SkillLevel.LEVEL_1.value
+            return (
+                steps[current_step_index + 1].value,
+                SkillLevel.LEVEL_1.value,
+                has_next_step,
+            )
         else:
             # Already at final step and final level
             return (
                 steps[current_step_index].value,
                 levels[current_level_index].value,
+                has_next_step,
             )
