@@ -689,7 +689,7 @@ const StatisticTeamBoard = () => {
             <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ">
               <Button
                 variant={'primary'}
-                className={`!py-0 !px-0 font-bold w-[90px] h-7 
+                className={`!py-0 !px-0 font-bold w-[90px] h-7
               !rounded-[20px] text-xs  `}>
                 カテゴリー
               </Button>

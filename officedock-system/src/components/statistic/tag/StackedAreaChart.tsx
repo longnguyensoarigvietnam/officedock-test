@@ -588,7 +588,7 @@ const StackedAreaChart = ({
       shared: true,
       custom: function () {
         return `
-         
+
         `;
       },
     },
