@@ -1,11 +1,12 @@
 'use client';
+import { useMutation } from 'react-query';
 import { ReactNode, useContext, useEffect, useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 import Metadata from '@components/common/Metadata';
 
-import { pageRouters } from '@constants/routers';
+import { apiRouters, pageRouters } from '@constants/routers';
 import { PermissionsSystem, SessionStatus } from '@constants/enums';
 import { SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
 
@@ -15,6 +16,7 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import Footer from './Footer';
+import api from '@base/api';
 
 type MainLayoutProps = {
   children?: ReactNode;
@@ -34,7 +36,6 @@ const MainLayout = ({
   const { totalNotifications } = useContext(GlobalStateContext);
   const { data: session, status, update } = useSessionCache();
   const router = useRouter();
-  
 
   const [isShow, setIsShow] = useState(false);
 
@@ -83,6 +84,52 @@ const MainLayout = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, status, permission]);
+
+  const handleLoginBonus = async () => {
+    const { data: response } = await api.get(apiRouters.LOGIN_BONUS);
+    return response;
+  };
+
+  const { mutate: loginBonusData } = useMutation(
+    'handleLoginBonus',
+    handleLoginBonus,
+    {
+      onSuccess: async () => {},
+      onError: () => {},
+      onSettled: () => {},
+    },
+  );
+
+  useEffect(() => {
+    if (session && status === SessionStatus.AUTHENTICATED) {
+      const today = new Date().toISOString().split('T')[0];
+      const idUser = String(session?.user.id);
+
+      const storedData = localStorage.getItem('loginBonus');
+      if (!storedData) {
+        loginBonus(idUser, today);
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(storedData);
+
+        if (parsed.idUser === idUser && parsed.date === today) {
+          return;
+        } else {
+          loginBonus(idUser, today);
+        }
+      } catch (e) {
+        loginBonus(idUser, today);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, status]);
+
+  function loginBonus(idUser: string, date: string) {
+    localStorage.setItem('loginBonus', JSON.stringify({ idUser, date }));
+    loginBonusData();
+  }
 
   return (
     <div className="h-[calc(100vh_-_76px)]">

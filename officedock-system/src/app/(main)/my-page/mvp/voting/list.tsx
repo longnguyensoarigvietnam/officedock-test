@@ -147,8 +147,6 @@ export const VotingListPage = () => {
     },
   });
 
-  const listAvatar = ['podium', 'body', 'head-full', 'hat', 'shoes'];
-
   return (
     <div
       className={`relative w-full h-full ${currentMVPVotingDetail && 'min-h-[800px]'}`}>
@@ -156,7 +154,7 @@ export const VotingListPage = () => {
         <div className="absolute bottom-10 left-[110px]">
           <div className="flex-grow">
             <div className="h-[424px] w-[336px] relative">
-              <RenderAccessories images={listAvatar} />
+              <RenderAccessories isPodium />
             </div>
           </div>
         </div>

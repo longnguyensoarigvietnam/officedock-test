@@ -74,6 +74,7 @@ import {
   getJapaneseWeekDay,
   sumDurationsChart,
 } from './date';
+import { AvatarItemUser } from '@interfaces/shop';
 
 export function hasPermissionInArray(
   requiredPermissions: PermissionsSystem[],
@@ -2402,3 +2403,36 @@ export const assignRankingsToCandidateList = (
 
   return { firstUsers, secondUsers, thirdUsers };
 };
+// Overload signatures
+export function updateAvatarUrl(
+  listAvatar: AvatarItemUser[],
+  updates:
+    | Pick<AvatarItemUser, 'type' | 'url'>
+    | Pick<AvatarItemUser, 'type' | 'url'>[],
+): AvatarItemUser[] {
+  const updatesArray = Array.isArray(updates) ? updates : [updates];
+
+  return listAvatar.map((avatar) => {
+    const found = updatesArray.find((u) => u.type === avatar.type);
+    return found ? { ...avatar, url: found.url } : avatar;
+  });
+}
+export function mergeAvatarUrls(
+  listAvatar: AvatarItemUser[],
+  updates:
+    | Pick<AvatarItemUser, 'type' | 'url'>
+    | Pick<AvatarItemUser, 'type' | 'url'>[],
+): AvatarItemUser[] {
+  const updatesArray = Array.isArray(updates) ? updates : [updates];
+
+  const updatedList = listAvatar.map((avatar) => {
+    const found = updatesArray.find((u) => u.type === avatar.type);
+    return found ? { ...avatar, url: found.url } : avatar;
+  });
+
+  const newItems = updatesArray.filter(
+    (u) => !listAvatar.some((avatar) => avatar.type === u.type),
+  ) as AvatarItemUser[];
+
+  return [...updatedList, ...newItems];
+}
