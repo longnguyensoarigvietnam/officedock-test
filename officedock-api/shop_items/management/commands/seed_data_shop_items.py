@@ -42,40 +42,40 @@ class Command(BaseCommand):
             parts = stem.split("_")
             code = parts[-1].lower() if parts else ""
 
-            # TODO: Fix color if use RGB
+            # Color mapping based on provided hex codes
             code_map = {
-                "bk": "black",
-                "black": "black",
-                "bl": "blue",
-                "blue": "blue",
-                "rd": "red",
-                "red": "red",
-                "yl": "yellow",
-                "y": "yellow",
-                "yellow": "yellow",
-                "ye": "yellow",
-                "gr": "green",
-                "green": "green",
-                "gy": "gray",
-                "grey": "gray",
-                "gray": "gray",
-                "wh": "white",
-                "white": "white",
-                "br": "brown",
-                "brown": "brown",
-                "pk": "pink",
-                "pink": "pink",
-                "or": "orange",
-                "org": "orange",
-                "orange": "orange",
-                "pr": "purple",
-                "pu": "purple",
-                "violet": "purple",
-                "purple": "purple",
-                "pur": "purple",
-                "lb": "light_blue",
-                "lp": "light_pink",
-                "yg": "yellow_green",
+                "bk": "#000000",
+                "black": "#000000",
+                "bl": "#6C92F4",  # blue
+                "blue": "#6C92F4",
+                "rd": "#F86683",  # red
+                "red": "#F86683",
+                "yl": "#FFCC40",  # yellow
+                "y": "#FFCC40",
+                "yellow": "#FFCC40",
+                "ye": "#FFCC40",
+                "gr": "#86DA91",  # green
+                "green": "#86DA91",
+                "gy": "#B0B8F2",  # gray
+                "grey": "#B0B8F2",
+                "gray": "#B0B8F2",
+                "wh": "#FFFFFF",
+                "white": "#FFFFFF",
+                "br": "#8B4513",  # brown (separate from orange)
+                "brown": "#8B4513",
+                "pk": "#FA81C1",  # pink
+                "pink": "#FA81C1",
+                "or": "#F89A7E",  # orange
+                "org": "#F89A7E",
+                "orange": "#F89A7E",
+                "pr": "#A992FF",  # purple
+                "pu": "#A992FF",
+                "violet": "#A992FF",
+                "purple": "#A992FF",
+                "pur": "#A992FF",
+                "lb": "#82C5F1",  # light_blue
+                "lp": "#FFB6C1",  # light_pink (separate from pink)
+                "yg": "#51C4B6",  # yellow_green
             }
             return code_map.get(code, code)
 
