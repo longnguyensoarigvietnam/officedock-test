@@ -9,7 +9,7 @@ import { CurrentMVPVotingDetail, MVPOrganization } from '@interfaces/mvp';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
-import { formatJapaneseDateRange } from '@utils/date';
+import { convertDateToJapaneseFormat, formatShowDateJapanese } from '@utils/date';
 
 interface VotingCandidateListProps {
   memberListByOrganization: {
@@ -74,10 +74,9 @@ export const VotingCandidateList = ({
           <>
             <p className="bg-white leading-none w-fit py-[9px] px-3 rounded-[6px] font-semibold text-[15px] text-[#B58F42]">
               投票期間{' '}
-              {formatJapaneseDateRange(
-                currentMVPVotingDetail?.startDate,
-                currentMVPVotingDetail?.endDate,
-                true,
+              {formatShowDateJapanese(String(currentMVPVotingDetail?.startDate))} ~{' '}
+              {convertDateToJapaneseFormat(
+                new Date(currentMVPVotingDetail?.endDate || new Date()),
               )}
             </p>
             <p className="text-[24px] font-semibold">
