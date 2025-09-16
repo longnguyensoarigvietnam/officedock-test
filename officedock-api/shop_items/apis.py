@@ -33,7 +33,7 @@ class ShopItemViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         # Distinct groups (name + item_type)
         distinct_groups = (
             self.filter_queryset(self.get_queryset())
-            .order_by("name")
+            .order_by("id")
             .values("name", "item_type")
             .distinct()
         )
@@ -51,7 +51,7 @@ class ShopItemViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         items = (
             self.get_queryset()
             .filter(name__in=selected_names, item_type__in=selected_types)
-            .order_by("name")
+            .order_by("id")
         )
 
         grouped = defaultdict(list)
