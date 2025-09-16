@@ -23,7 +23,7 @@ import { apiRouters } from '@constants/routers';
 import { ERROR_SAVE_MESSAGE } from '@constants/message';
 import { REMAINING_ORGANIZATIONS_ID } from '@constants';
 
-import { formatJapaneseDateRange } from '@utils/date';
+import { convertDateToJapaneseFormat, formatShowDeadline } from '@utils/date';
 
 import api from '@base/api';
 
@@ -195,11 +195,13 @@ export const VotingListPage = () => {
                   <p>
                     {' '}
                     投票期間は、
-                    <span className="text-base text-[#B58F42] ">
-                      {formatJapaneseDateRange(
-                        currentMVPVotingDetail?.startDate,
-                        currentMVPVotingDetail?.endDate,
-                        false,
+                    <span className="text-base text-[#B58F42] text-nowrap">
+                      {formatShowDeadline(
+                        String(currentMVPVotingDetail?.startDate),
+                      )}{' '}
+                      ~{' '}
+                      {convertDateToJapaneseFormat(
+                        new Date(currentMVPVotingDetail?.endDate || new Date()),
                       )}
                     </span>
                     ！

@@ -19,10 +19,7 @@ import { ChatParticipantType } from '@constants/enums';
 import { NO_OPTIONS } from '@constants';
 
 import { Profile } from '@interfaces/user';
-import {
-  ChatParticipant,
-  ChatRoomItem,
-} from '@interfaces/chat';
+import { ChatParticipant, ChatRoomItem } from '@interfaces/chat';
 
 import { checkIsParticipantSelected, sortChatParticipants } from '@utils';
 import { ERROR_LONG_FIELD_MESSAGE } from '@constants/message';
@@ -119,9 +116,10 @@ const ActionsAddMembersModal = memo(
     };
 
     const isSaveButtonDisabled =
-      watch('members').length >= 2 &&
-      ((watch('groupName') && !watch('groupName').trim()) ||
-        !watch('groupName'));
+      !watch('members').length ||
+      (watch('members').length >= 2 &&
+        ((watch('groupName') && !watch('groupName').trim()) ||
+          !watch('groupName')));
 
     const renderAvatar = (memberId: string) => {
       const actualMemberId = Number(memberId.split('-')[1]);

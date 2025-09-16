@@ -159,103 +159,112 @@ export const MessageHoverOptions = ({
     <div
       ref={optionRef}
       className={`bg-white ${isShowReaction ? '!flex' : ''}   group-hover:flex hidden rounded-3xl px-3 py-1.5 shadow-md absolute left-1/2 transform -translate-x-1/2 items-center gap-2`}>
-      <div className="relative">
-        <DynamicTooltip content={'返信'} placement="top">
-          <div className="bg-[#f0f1f1] relative  hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
-            <ImageRound
-              name="Reply"
-              src={'/icons/reply.svg'}
-              className="w-[18px] h-[15px] hover:cursor-pointer"
-              onClick={() => {
-                handleReplyMsg({
-                  user: {
-                    id: messageDetail.sender.id,
-                    name: messageDetail.sender.fullName,
-                  },
-                  replyUuid: messageDetail.uuid,
-                });
-              }}
-            />
-          </div>
-        </DynamicTooltip>
-        {isShowReaction && (
-          <div
-            style={{
-              boxShadow: '0px 4px 8px 0px #0000000F',
-            }}
-            className="w-[190px] h-[44px] absolute rounded-lg top-[-54px] bg-white flex items-center gap-1 justify-center left-[-24px]">
-            {REACTION_LIST.map((icon) => {
-              // Check Icon
-              const exists =
-                dataReactionMsg &&
-                dataReactionMsg.some((item) => item.icon === `${icon.value}`);
-              const existsForMe =
-                dataReactionMsg &&
-                session?.user.id &&
-                dataReactionMsg.some(
-                  (item) =>
-                    item.icon === `${icon.value}` &&
-                    item.users.includes(session?.user.id as number),
-                );
-              return (
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-
-                    if (exists) {
-                      handleRemoveReactionClick(`${icon.value}`);
-                      setShowReaction(false);
-                      moveReactionIcon(`${icon.value}`);
-                    } else {
-                      handleReactionClick(`${icon.value}`);
-                      setShowReaction(false);
-
-                      reactionIcon(`${icon.value}`);
-                    }
+      {(chatRoomDetail?.type === ChatRoomType.PRIVATE ||
+        chatRoomDetail?.type === ChatRoomType.GROUP ||
+        chatRoomDetail?.type === ChatRoomType.SELF) && (
+        <>
+          <div className="relative">
+            <DynamicTooltip content={'返信'} placement="top">
+              <div className="bg-[#f0f1f1] relative  hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
+                <ImageRound
+                  name="Reply"
+                  src={'/icons/reply.svg'}
+                  className="w-[18px] h-[15px] hover:cursor-pointer"
+                  onClick={() => {
+                    handleReplyMsg({
+                      user: {
+                        id: messageDetail.sender.id,
+                        name: messageDetail.sender.fullName,
+                      },
+                      replyUuid: messageDetail.uuid,
+                    });
                   }}
-                  key={icon.name}
-                  className={`p-[6px] rounded-full ${existsForMe && 'bg-gray-200'}`}>
-                  <ImageRound
-                    name={icon.name}
-                    src={icon.src}
-                    className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
-                  />
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-      <DynamicTooltip content={'リアクション'} placement="top">
-        <div
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowReaction(!isShowReaction);
-          }}
-          className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
-          <ImageRound
-            name="Reaction"
-            src={'/icons/reaction.svg'}
-            className="w-[15px] h-[15px] hover:cursor-pointer"
-          />
-        </div>
-      </DynamicTooltip>
+                />
+              </div>
+            </DynamicTooltip>
+            {isShowReaction && (
+              <div
+                style={{
+                  boxShadow: '0px 4px 8px 0px #0000000F',
+                }}
+                className="w-[190px] h-[44px] absolute rounded-lg top-[-54px] bg-white flex items-center gap-1 justify-center left-[-24px]">
+                {REACTION_LIST.map((icon) => {
+                  // Check Icon
+                  const exists =
+                    dataReactionMsg &&
+                    dataReactionMsg.some(
+                      (item) => item.icon === `${icon.value}`,
+                    );
+                  const existsForMe =
+                    dataReactionMsg &&
+                    session?.user.id &&
+                    dataReactionMsg.some(
+                      (item) =>
+                        item.icon === `${icon.value}` &&
+                        item.users.includes(session?.user.id as number),
+                    );
+                  return (
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
 
-      <DynamicTooltip content={'引用'} placement="top">
-        <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full px-[7px] py-[9px] hover:cursor-pointer">
-          <ImageRound
-            name="Quotation"
-            src={'/icons/quotation.svg'}
-            className="w-[15px] h-[10px] hover:cursor-pointer"
-            onClick={() => {
-              handleQuoteMsgIcon({
-                uuid: messageDetail.uuid,
-                title: '',
-              });
-            }}
-          />
-        </div>
-      </DynamicTooltip>
+                        if (exists) {
+                          handleRemoveReactionClick(`${icon.value}`);
+                          setShowReaction(false);
+                          moveReactionIcon(`${icon.value}`);
+                        } else {
+                          handleReactionClick(`${icon.value}`);
+                          setShowReaction(false);
+
+                          reactionIcon(`${icon.value}`);
+                        }
+                      }}
+                      key={icon.name}
+                      className={`p-[6px] rounded-full ${existsForMe && 'bg-gray-200'}`}>
+                      <ImageRound
+                        name={icon.name}
+                        src={icon.src}
+                        className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          <DynamicTooltip content={'リアクション'} placement="top">
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowReaction(!isShowReaction);
+              }}
+              className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
+              <ImageRound
+                name="Reaction"
+                src={'/icons/reaction.svg'}
+                className="w-[15px] h-[15px] hover:cursor-pointer"
+              />
+            </div>
+          </DynamicTooltip>
+
+          <DynamicTooltip content={'引用'} placement="top">
+            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full px-[7px] py-[9px] hover:cursor-pointer">
+              <ImageRound
+                name="Quotation"
+                src={'/icons/quotation.svg'}
+                className="w-[15px] h-[10px] hover:cursor-pointer"
+                onClick={() => {
+                  handleQuoteMsgIcon({
+                    uuid: messageDetail.uuid,
+                    title: '',
+                  });
+                }}
+              />
+            </div>
+          </DynamicTooltip>
+        </>
+      )}
+
       <DynamicTooltip
         content={isBookmark ? 'ブックマークを外す' : 'ブックマーク'}
         placement="top">

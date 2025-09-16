@@ -112,7 +112,10 @@ const HistoryListPage = () => {
                       src={'/icons/badge.svg'}
                       className={`w-[30px] h-[30px]`}
                     />
-                    <p className={`text-[18px] ${activeTab == PointHistoryActiveTab.PEARL && '!text-[#77858F]'}`}>コイン</p>
+                    <p
+                      className={`text-[18px] ${activeTab == PointHistoryActiveTab.PEARL && '!text-[#77858F]'}`}>
+                      コイン
+                    </p>
                   </Button>
                   <Button
                     variant={`${activeTab == PointHistoryActiveTab.PEARL ? 'post' : 'secondary'}`}
@@ -123,7 +126,10 @@ const HistoryListPage = () => {
                       src={'/icons/pearl.svg'}
                       className={`w-[30px] h-[30px]`}
                     />
-                    <p className={`text-[18px] ${activeTab == PointHistoryActiveTab.COIN && '!text-[#77858F]'}`}>パール</p>
+                    <p
+                      className={`text-[18px] ${activeTab == PointHistoryActiveTab.COIN && '!text-[#77858F]'}`}>
+                      パール
+                    </p>
                   </Button>
                 </div>
                 <div className="">
@@ -187,7 +193,8 @@ const HistoryListPage = () => {
                     variant="post"
                     className="w-[200px] h-[46px] text-sm font-medium rounded-md"
                     disabled={
-                      !pointDetail?.exchangeableCoin || !pointDetail.coin
+                      activeTab == PointHistoryActiveTab.COIN &&
+                      (!pointDetail?.exchangeableCoin || !pointDetail.coin)
                     }>
                     {activeTab == PointHistoryActiveTab.COIN
                       ? '交換する'

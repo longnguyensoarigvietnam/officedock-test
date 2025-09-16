@@ -185,6 +185,9 @@ const ChatDetail = ({
   const [dataMessageDetail, setDataMessageDetail] = useState<
     ChatMessageResponse[]
   >([]);
+  const [pendingMessages, setPendingMessages] = useState<ChatMessageResponse[]>(
+    [],
+  );
   const [selectedRemoveMemberId, setSelectedRemoveMemberId] =
     useState<number>();
 
@@ -396,6 +399,11 @@ const ChatDetail = ({
         item.code === chatRoomDetail?.code ? { ...item, isMuted: data } : item,
       ),
     );
+    setFilteredChatList((prev) =>
+      prev.map((item) =>
+        item.code === chatRoomDetail?.code ? { ...item, isMuted: data } : item,
+      ),
+    );
     actionMuteChat();
   };
 
@@ -531,19 +539,30 @@ const ChatDetail = ({
           }
 
           setDataMessageDetail((prev) => {
-            if (prev) {
-              const newMessages = data.data.results.slice().reverse();
+            const newMessages = data.data.results.slice().reverse();
 
-              const filteredMessages = newMessages.filter(
-                (newMsg) =>
-                  !prev.some((existingMsg) => existingMsg.id === newMsg.id),
+            const filteredMessages = newMessages.filter(
+              (newMsg) =>
+                !prev.some((existingMsg) => existingMsg.id === newMsg.id),
+            );
+
+            let merged = [...filteredMessages, ...prev];
+
+            // Append pending messages if hasNext=false and they’re not in list
+            if (!data.data.hasNext && pendingMessages.length > 0) {
+              const notFoundPending = pendingMessages.filter(
+                (pm) => !merged.some((msg) => msg.uuid === pm.uuid),
               );
 
-              return [...filteredMessages, ...prev];
-            } else {
-              return [...data.data.results.slice().reverse()];
+              if (notFoundPending.length > 0) {
+                merged = [...notFoundPending, ...merged];
+              }
             }
+
+            return merged;
           });
+
+          if(!data.data.hasNext && pendingMessages.length > 0) setPendingMessages([]);
 
           if (
             data.data.results.length > 0 &&
@@ -1258,35 +1277,35 @@ const ChatDetail = ({
       );
     }
 
-    if (!hasMoreDetailOnScrollDown) {
-      setDataMessageDetail([
-        {
-          uuid: uuidMsg,
-          message: filterMsg,
-          createdAt: getCurrentTimeInJapan(),
-          deletedAt: null,
-          bookmarkAt: null,
-          type: MessageType.MESSAGE,
-          isEdited: false,
-          task: null,
-          sender: {
-            fullName: session?.user.profile.fullName || '',
-            id: session?.user.id as number,
-            organizations: {
-              id: organizationMain?.id || 0,
-              name: organizationMain?.name || '',
-            },
-          },
-          mentions: mentionIds,
-          isBookmark: false,
-          chatFiles: chatUploadFiles,
-          quote:
-            allMsgIds && allMsgIds.length > 0 ? matchedMessagesQuote : null,
-          // TODO: Update sava data msg detail of reply in onsuccess API "reply"
+    const newMessageDetail = {
+      uuid: uuidMsg,
+      message: filterMsg,
+      createdAt: getCurrentTimeInJapan(),
+      deletedAt: null,
+      bookmarkAt: null,
+      type: MessageType.MESSAGE,
+      isEdited: false,
+      task: null,
+      sender: {
+        fullName: session?.user.profile.fullName || '',
+        id: session?.user.id as number,
+        organizations: {
+          id: organizationMain?.id || 0,
+          name: organizationMain?.name || '',
         },
+      },
+      mentions: mentionIds,
+      isBookmark: false,
+      chatFiles: chatUploadFiles,
+      quote: allMsgIds && allMsgIds.length > 0 ? matchedMessagesQuote : null,
+      // TODO: Update sava data msg detail of reply in onsuccess API "reply"
+    };
 
-        ...dataMessageDetail,
-      ]);
+    if (!hasMoreDetailOnScrollDown) {
+      setDataMessageDetail([newMessageDetail, ...dataMessageDetail]);
+    } else {
+      // When it has more to scroll down but user sends new message => Add this message to pending message list
+      setPendingMessages((prev) => [newMessageDetail, ...prev]);
     }
 
     setUploadFileStatus((prev) => ({

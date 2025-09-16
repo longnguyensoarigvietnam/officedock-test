@@ -21,9 +21,9 @@ export const VotingStatus = () => {
     status: false,
     candidateId: null,
   });
-  
+
   const { setCurrentVoting } = useContext(MVPManagementStateContext);
-  
+
   const {
     voteCommentList,
     fetchNextPage,
@@ -56,21 +56,23 @@ export const VotingStatus = () => {
               {currentVotingDetail?.title || ''} 投票状況
             </p>
           </div>
-          <div className="flex gap-3 items-center">
-            <p className="text-sm font-normal text-[#77858F]">開始日</p>
-            <p className="text-sm font-medium text-black">
-              {getCategoryFormattedDate(
-                new Date(currentVotingDetail?.startDate || new Date()),
-              )}
-            </p>
-            <p className="text-sm font-normal text-[#77858F]">~</p>
-            <p className="text-sm font-normal text-[#77858F]">終了日</p>
-            <p className="text-sm font-medium text-black">
-              {getFullFormattedDate(
-                new Date(currentVotingDetail?.endDate || new Date()),
-              )}
-            </p>
-          </div>
+          {currentVotingDetail?.startDate && currentVotingDetail?.endDate ? (
+            <div className="flex gap-3 items-center">
+              <p className="text-sm font-normal text-[#77858F]">開始日</p>
+              <p className="text-sm font-medium text-black">
+                {getCategoryFormattedDate(
+                  new Date(currentVotingDetail?.startDate),
+                )}
+              </p>
+              <p className="text-sm font-normal text-[#77858F]">~</p>
+              <p className="text-sm font-normal text-[#77858F]">終了日</p>
+              <p className="text-sm font-medium text-black">
+                {getFullFormattedDate(new Date(currentVotingDetail?.endDate))}
+              </p>
+            </div>
+          ) : (
+            <></>
+          )}
         </div>
 
         {isLoadingCurrentVotingDetail ? (

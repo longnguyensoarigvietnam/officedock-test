@@ -80,7 +80,7 @@ import { useToast } from '@providers/ToastProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import TaskPageDataHeader from './TaskPageDataHeader';
-import { addTimeToDate } from '@utils/date';
+import { addTimeToDate, formatDateServer } from '@utils/date';
 import api from '@base/api';
 
 type HeaderProps = {
@@ -461,7 +461,6 @@ const Header = ({ className }: HeaderProps) => {
           .map((item) => ({ tagId: item.value }))
       : [];
 
-
     const planList =
       data.plans &&
       data.plans.filter((item) => item.planStartDate !== null).length > 0
@@ -523,7 +522,9 @@ const Header = ({ className }: HeaderProps) => {
       deadline:
         data.deadlineDate && data.deadlineTime
           ? addTimeToDate(data.deadlineDate as Date, data.deadlineTime)
-          : null,
+          : data.deadlineDate && !data.deadlineTime
+            ? formatDateServer(data.deadlineDate)
+            : null,
       description: data.description,
       tagIds: tagIds,
       categoryIds: newWorkCategories,
@@ -583,6 +584,7 @@ const Header = ({ className }: HeaderProps) => {
             ? addTimeToDate(new Date(), data.repeatEndTime)
             : null
           : null,
+      showDeadlineTime: data.showDeadlineTime,
     });
   };
 
