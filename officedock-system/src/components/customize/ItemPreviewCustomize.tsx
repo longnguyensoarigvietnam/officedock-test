@@ -39,8 +39,8 @@ const ItemPreviewCustomize = ({ group, handleWearDataItem }: Props) => {
         </div>
 
         {/* Right: colors + price */}
-        <div className="flex items-center gap-[42px]">
-          <div className="grid grid-cols-5 gap-[3px] w-fit">
+        <div className="flex items-center justify-between gap-3 flex-grow flex-shrink-0">
+          <div className="grid grid-cols-5 gap-[3px] w-[132px] flex-shrink-0">
             {group.items.map((item) => {
               return selectedItem?.id === item.id ? (
                 <div className="w-fit h-fit rounded-full flex items-center justify-center border-[2px] border-[#0068B6]">
@@ -79,13 +79,17 @@ const ItemPreviewCustomize = ({ group, handleWearDataItem }: Props) => {
             })}
           </div>
           <div className="flex-shrink-0">
-            {selectedItem ? (
+            {selectedItem && !selectedItem.isEquipped ? (
               <Button
                 onClick={() => handleWearDataItem(selectedItem)}
                 className="w-[48px] h-[21px] !text-xs !py !px-0 !rounded"
                 variant="post">
                 交換
               </Button>
+            ) : selectedItem && selectedItem.isEquipped ? (
+              <div className="flex items-center justify-center text-xs font-semibold text-center w-[56px] h-[22px] bg-[#EBF1F7] rounded-[3px] text-black">
+                使用中
+              </div>
             ) : (
               <div className="w-[48px]"></div>
             )}

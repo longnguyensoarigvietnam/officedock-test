@@ -236,7 +236,7 @@ const FilePreview = ({
                         name="go file  icon"
                         onClick={() =>
                           onGotoMessage({
-                            messageId: fileDetail.chatMessageUuid,
+                            messageId: fileDetail.chatMessageId,
                           })
                         }
                       />

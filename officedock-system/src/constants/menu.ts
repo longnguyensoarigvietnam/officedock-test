@@ -316,9 +316,19 @@ export const MY_PAGE_MENU: MyPageMenuItem[] = [
   },
   {
     name: 'アイテム',
-    href: pageRouters.SHOP_ITEM.href,
+    href: '#',
     iconSrc: '/icons/shop.svg',
     iconName: 'Shop icon',
+    child: [
+      {
+        name: 'アイテムショップ',
+        href: pageRouters.SHOP_ITEM.href,
+      },
+      {
+        name: '所持アイテムをカスタマイズ',
+        href: pageRouters.CUSTOMIZE_ITEM.href,
+      },
+    ],
   },
 ];
 export const VISIT_PAGE_MENU: MyPageMenuItem[] = [

@@ -79,7 +79,7 @@ export type MessageDetailProps = {
   >;
   messageDetail: ChatMessageResponse;
   msgEditing?: string;
-  dashboardMemberList: Omit<Profile, "birthday" | "gender">[]
+  dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   editor: Editor | null;
   highlightedMessageId: string | null;
   handleReplyMsg: ({
@@ -627,9 +627,14 @@ export const MessageDetail = ({
               <div className={`ml-3 !w-full`}>
                 <div className="flex w-full justify-between items-baseline pb-2">
                   <div className="flex flex-grow  gap-2 items-baseline font-semibold text-[15px] pr-2">
-                    <div className="flex-grow min-w-0 break-all whitespace-normal line-clamp-3">
+                    <div
+                      data-id={messageDetail.uuid}
+                      className="flex-grow min-w-0 break-all whitespace-normal line-clamp-3">
                       {messageDetail.sender.fullName}
-                      <span className="font-medium text-xs text-[#77858F]">
+                      {messageDetail.id}
+                      <span
+                        data-id={messageDetail.uuid}
+                        className="font-medium text-xs text-[#77858F]">
                         {' '}
                         {messageDetail.sender?.organizations?.name}
                       </span>
@@ -644,7 +649,9 @@ export const MessageDetail = ({
                     )}
                   </div>
                   <div className={`flex items-start w-fit flex-shrink-0`}>
-                    <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
+                    <p
+                      data-id={messageDetail.uuid}
+                      className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
                       {messageDetail.createdAt &&
                         formatCheckDate(
                           getFormattedDateTime(
@@ -659,7 +666,9 @@ export const MessageDetail = ({
                           src={'/icons/dot.svg'}
                           className="w-[4px] h-[4px] hover:cursor-pointer ml-2"
                         />
-                        <p className="font-normal text-xs ml-2 text-nowrap">
+                        <p
+                          data-id={messageDetail.uuid}
+                          className="font-normal text-xs ml-2 text-nowrap">
                           編集済
                         </p>
                       </div>
@@ -671,6 +680,7 @@ export const MessageDetail = ({
                     <div className="flex flex-col">
                       {messageDetail.deletedAt ? (
                         <p
+                          data-id={messageDetail.uuid}
                           className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
                           {MESSAGE_DELETED}
                         </p>
@@ -725,6 +735,7 @@ export const MessageDetail = ({
                                                 onClick={() =>
                                                   downloadFileName(file.uuid)
                                                 }
+                                                data-id={messageDetail.uuid}
                                                 className={`text-primary cursor-pointer font-medium text-[14px] break-all max-w-full ${
                                                   file.fileType.includes(
                                                     'image',
@@ -790,13 +801,15 @@ export const MessageDetail = ({
                               <div
                                 className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                                 <div className={`flex flex-col items-start`}>
-                                  <p className="w-fit font-semibold text-black max-w-full break-all">
+                                  <p
+                                    data-id={messageDetail.uuid}
+                                    className="w-fit font-semibold text-black max-w-full break-all">
                                     {messageDetail.sender.fullName}{' '}
                                     {EVENT_DELETED}
                                   </p>
                                   <p className="font-semibold mt-2">日時</p>
                                   <div className={`text-left`}>
-                                    <p>
+                                    <p data-id={messageDetail.uuid}>
                                       {' '}
                                       {messageDetail.scheduleChanges?.new &&
                                         (messageDetail.scheduleChanges?.new
@@ -812,9 +825,14 @@ export const MessageDetail = ({
                                             ))}
                                     </p>
                                   </div>
-                                  <p className="font-semibold mt-2">参加者</p>
+                                  <p
+                                    data-id={messageDetail.uuid}
+                                    className="font-semibold mt-2">
+                                    参加者
+                                  </p>
                                   {renderParticipantsContent(messageDetail)}
                                   <p
+                                    data-id={messageDetail.uuid}
                                     className={`mt-2 text-left`}
                                     dangerouslySetInnerHTML={{
                                       __html: formatWithParagraphTags(
@@ -830,11 +848,15 @@ export const MessageDetail = ({
                               <div
                                 className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                                 <div className={`flex flex-col items-start`}>
-                                  <p className="w-fit font-semibold text-black max-w-full break-all">
+                                  <p
+                                    data-id={messageDetail.uuid}
+                                    className="w-fit font-semibold text-black max-w-full break-all">
                                     {messageDetail.sender.fullName}{' '}
                                     {EVENT_EDITED}
                                   </p>
-                                  <p className="mt-2">
+                                  <p
+                                    data-id={messageDetail.uuid}
+                                    className="mt-2">
                                     変更あり:{' '}
                                     {messageDetail.scheduleChanges?.fieldChanges?.map(
                                       (field, index) => {
@@ -854,9 +876,13 @@ export const MessageDetail = ({
                                       },
                                     )}
                                   </p>
-                                  <p className="font-semibold mt-2">日時</p>
+                                  <p
+                                    data-id={messageDetail.uuid}
+                                    className="font-semibold mt-2">
+                                    日時
+                                  </p>
                                   <div className={`text-left`}>
-                                    <p>
+                                    <p data-id={messageDetail.uuid}>
                                       {' '}
                                       {messageDetail.scheduleChanges?.new &&
                                         (messageDetail.scheduleChanges?.new
@@ -872,7 +898,7 @@ export const MessageDetail = ({
                                             ))}
                                     </p>
                                     {messageDetail.scheduleChanges?.old && (
-                                      <p>
+                                      <p data-id={messageDetail.uuid}>
                                         {'('}
                                         {EVENT_BEFORE_EDITED}
                                         {messageDetail.scheduleChanges?.old &&
@@ -891,10 +917,15 @@ export const MessageDetail = ({
                                       </p>
                                     )}
                                   </div>
-                                  <p className="font-semibold mt-2">参加者</p>
+                                  <p
+                                    data-id={messageDetail.uuid}
+                                    className="font-semibold mt-2">
+                                    参加者
+                                  </p>
                                   {renderParticipantsContent(messageDetail)}
                                   {messageDetail.schedule?.id ? (
                                     <p
+                                      data-id={messageDetail.uuid}
                                       className="hover:cursor-pointer mt-2"
                                       onClick={() =>
                                         handleConfirmGetDataDetailEvent(
@@ -910,6 +941,7 @@ export const MessageDetail = ({
                                     </p>
                                   )}
                                   <p
+                                    data-id={messageDetail.uuid}
                                     className={`mt-2 text-left`}
                                     dangerouslySetInnerHTML={{
                                       __html: formatWithParagraphTags(
@@ -926,12 +958,18 @@ export const MessageDetail = ({
                               <div
                                 className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                                 <div className={`flex flex-col items-start`}>
-                                  <p className="font-semibold text-black max-w-full break-all">
+                                  <p
+                                    data-id={messageDetail.uuid}
+                                    className="font-semibold text-black max-w-full break-all">
                                     {messageDetail.sender.fullName}{' '}
-                                    {EVENT_CREATED}
+                                    {EVENT_CREATED}111
                                   </p>
-                                  <p className="font-semibold mt-2">日時</p>
-                                  <p>
+                                  <p
+                                    data-id={messageDetail.uuid}
+                                    className="font-semibold mt-2">
+                                    日時
+                                  </p>
+                                  <p data-id={messageDetail.uuid}>
                                     {' '}
                                     {messageDetail.scheduleChanges?.new &&
                                       (messageDetail.scheduleChanges?.new
@@ -943,10 +981,15 @@ export const MessageDetail = ({
                                             messageDetail.scheduleChanges?.new,
                                           ))}
                                   </p>
-                                  <p className="font-semibold mt-2">参加者</p>
+                                  <p
+                                    data-id={messageDetail.uuid}
+                                    className="font-semibold mt-2">
+                                    参加者
+                                  </p>
                                   {renderParticipantsContent(messageDetail)}
                                   {messageDetail.schedule?.id ? (
                                     <p
+                                      data-id={messageDetail.uuid}
                                       className="hover:cursor-pointer mt-2"
                                       onClick={() =>
                                         handleConfirmGetDataDetailEvent(
@@ -956,7 +999,9 @@ export const MessageDetail = ({
                                       予定を確認する
                                     </p>
                                   ) : (
-                                    <p className="mt-2 italic text-gray-600">
+                                    <p
+                                      data-id={messageDetail.uuid}
+                                      className="mt-2 italic text-gray-600">
                                       {messageDetail.sender.fullName}{' '}
                                       {EVENT_DELETED}
                                     </p>
@@ -975,7 +1020,9 @@ export const MessageDetail = ({
                                 <div
                                   className={`text-xs font-normal bg-[#eaf8ff] w-full p-4 `}>
                                   <div className={`flex flex-col items-start`}>
-                                    <h4 className="text-sm w-fit font-medium text-black h-5 max-w-full break-all">
+                                    <h4
+                                      data-id={messageDetail.uuid}
+                                      className="text-sm w-fit font-medium text-black h-5 max-w-full break-all">
                                       {messageDetail.type ==
                                       MessageType.CREATION_TASK
                                         ? CREATION_TASK_MESSAGE
@@ -984,13 +1031,17 @@ export const MessageDetail = ({
                                           ? REMOVE_MEMBER_TASK_MESSAGE
                                           : ADD_MEMBER_TASK_MESSAGE}
                                     </h4>
-                                    <h4 className="text-sm w-fit text-black h-5 truncate max-w-[500px]">
+                                    <h4
+                                      data-id={messageDetail.uuid}
+                                      className="text-sm w-fit text-black h-5 truncate max-w-[500px]">
                                       タスクのタイトル:{' '}
                                       {messageDetail.task.title || NO_SETTING}
                                     </h4>
                                     {messageDetail.type !==
                                       MessageType.REMOVE_MEMBER_TASK && (
-                                      <p className="w-fit mt-2">
+                                      <p
+                                        data-id={messageDetail.uuid}
+                                        className="w-fit mt-2">
                                         締切 :{' '}
                                         {(messageDetail.task.deadline &&
                                           format(
@@ -1009,6 +1060,7 @@ export const MessageDetail = ({
                                   className={`text-sm font-normal bg-[#eaf8ff] p-1 w-full`}>
                                   <div className={`flex flex-col items-start`}>
                                     <div
+                                      data-id={messageDetail.uuid}
                                       className={`font-normal w-full  text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
                                       {TASK_DELETED}
                                     </div>
@@ -1427,17 +1479,21 @@ export const MessageDetail = ({
                       <div
                         className="flex items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer"
                         onClick={() => {
-                          messageDetail.schedule?.id && handleConfirmGetDataDetailEvent(
-                            `${messageDetail.schedule?.id}`,
-                          );
+                          messageDetail.schedule?.id &&
+                            handleConfirmGetDataDetailEvent(
+                              `${messageDetail.schedule?.id}`,
+                            );
                         }}>
                         <ImageRound
                           className={`w-[15px] h-[14px]`}
                           name="Calendar icon"
                           src="/icons/calendar-time.svg"
                         />
-                        <p className={`${messageDetail.schedule ? 'text-primary' : 'text-gray-300'} text-sm font-medium`}>
-                          {messageDetail.schedule ? messageDetail.schedule?.title : DELETED_EVENT_TITLE}
+                        <p
+                          className={`${messageDetail.schedule ? 'text-primary' : 'text-gray-300'} text-sm font-medium`}>
+                          {messageDetail.schedule
+                            ? messageDetail.schedule?.title
+                            : DELETED_EVENT_TITLE}
                         </p>
                       </div>
                       <div className="flex gap-1 text-sm font-medium">
