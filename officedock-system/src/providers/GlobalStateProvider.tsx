@@ -12,7 +12,6 @@ import {
 
 import { OptionDropdownType } from '@interfaces/common';
 import { AvatarItemUser } from '@interfaces/shop';
-import { ItemAvatarType } from '@constants/enums';
 import { listAvatar } from '@constants';
 
 interface ContextValue {
