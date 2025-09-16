@@ -49,7 +49,7 @@ def update_exchangeable_amount_user(apps, schema_editor):
                 user=user,
                 company=user.company,
                 defaults={
-                    "exchangeable_coin": min(exchange_per_user, 300),
+                    "exchangeable_coin": exchange_per_user,
                 },
             )
 
