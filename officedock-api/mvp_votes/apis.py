@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins
@@ -236,8 +237,10 @@ class MVPVoteViewSet(
         Get announcement of MVP vote
         """
         company = request.user.company
-        mvp_votes = MVPVoteManagement.objects.filter(
-            type=MVPVoteTypes.PAST.value, company=company
+        mvp_votes = MVPVoteManagement.objects.annotate(
+            vote_count=Count("votes")
+        ).filter(
+            type=MVPVoteTypes.PAST.value, company=company, vote_count__gt=0
         )
 
         return self.response_pagination(
@@ -274,7 +277,7 @@ class MVPVoteViewSet(
         ]
     )
     @action(url_path="comment", detail=False, methods=["GET"])
-    def get_vote_commment(self, request, *args, **kwargs):
+    def get_vote_comment(self, request, *args, **kwargs):
         """
         Handle get vote comment of mvp candidate by user
         """
@@ -304,8 +307,11 @@ class MVPVoteViewSet(
             mvp_vote = get_object_or_404(MVPVoteManagement, id=mvp_vote_id)
         else:
             mvp_vote = (
-                MVPVoteManagement.objects.filter(
-                    type=MVPVoteTypes.PAST.value, company=company
+                MVPVoteManagement.objects.annotate(vote_count=Count("votes"))
+                .filter(
+                    type=MVPVoteTypes.PAST.value,
+                    company=company,
+                    vote_count__gt=0,
                 )
                 .order_by("-end_date")
                 .first()
