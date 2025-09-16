@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -14,6 +15,13 @@ class Command(BaseCommand):
     help = "Seed ShopItems from templates/files folder."
 
     def handle(self, *args, **options):
+        def _natural_key(text: str):
+            # Split text into digit and non-digit chunks to sort numerically where applicable
+            return [
+                int(chunk) if chunk.isdigit() else chunk.lower()
+                for chunk in re.split(r"(\d+)", text)
+            ]
+
         # Clean Shop items
         ShopItems.objects.all().delete()
         templates_dir = Path(settings.BASE_DIR) / "templates" / "files"
@@ -54,8 +62,8 @@ class Command(BaseCommand):
                 "y": "#FFCC40",
                 "yellow": "#FFCC40",
                 "ye": "#FFCC40",
-                "gr": "#86DA91",  # green
-                "green": "#86DA91",
+                "gr": "#51C4B6",  # green
+                "green": "#51C4B6",
                 "gy": "#B0B8F2",  # gray
                 "grey": "#B0B8F2",
                 "gray": "#B0B8F2",
@@ -74,8 +82,8 @@ class Command(BaseCommand):
                 "purple": "#A992FF",
                 "pur": "#A992FF",
                 "lb": "#82C5F1",  # light_blue
-                "lp": "#FFB6C1",  # light_pink (separate from pink)
-                "yg": "#51C4B6",  # yellow_green
+                "lp": "#B0B8F2",  # light_pink (separate from pink)
+                "yg": "#86DA91",  # yellow_green
             }
             return code_map.get(code, code)
 
@@ -97,7 +105,7 @@ class Command(BaseCommand):
                     if p.is_file()
                     and p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}
                 ],
-                key=lambda p: p.name,
+                key=lambda p: _natural_key(p.name),
             )
 
             # Set name: "<type-specific prefix><index>"
