@@ -175,60 +175,80 @@ class UserItemViewSet(BaseAPIViewSet):
     )
     @action(
         methods=["GET"],
-        detail=True,
+        detail=False,
         url_path="items",
         pagination_class=CustomCursorPagination,
     )
-    def get_user_items(self, request, pk):
+    def get_user_items(self, request):
         """
         Get list item by user
         """
-        user = self.get_object()
+        user = request.user
+
+        # Prefetch user items to compute owned/equipped sets similar to list()
+        user_items_all = UserItems.objects.filter(user=user).select_related(
+            "item"
+        )
+        user_owned_items = set()
+        user_equipped_items = set()
+        for user_item in user_items_all:
+            user_owned_items.add(user_item.item_id)
+            if user_item.is_equipped:
+                user_equipped_items.add(user_item.item_id)
+
+        # Base queryset of the user's items (UserItems)
         queryset = user.items.select_related("item").all()
+
         # Optional filter by item_type from query params
         item_type = request.query_params.get("item_type")
         if item_type:
             queryset = queryset.filter(item_type=item_type)
 
-        # Extract distinct (name, item_type) pairs for pagination
+        # Distinct groups (item__name + item_type)
         distinct_groups = (
             queryset.values("item__name", "item_type")
             .distinct()
             .order_by("item__name", "item_type")
         )
 
-        # Apply pagination on distinct groups
+        # Paginate distinct groups
         page = self.paginate_queryset(distinct_groups)
         if page is None:
             selected_groups = distinct_groups
         else:
             selected_groups = page
-        # Build a list of (name, item_type) pairs from the selected groups
-        selected_pairs = [
-            (g["item__name"], g["item_type"]) for g in selected_groups
-        ]
 
-        # Fetch all UserItems that belong to the selected (name, item_type) groups
-        items = queryset.filter(
-            item__name__in=[name for name, _ in selected_pairs],
-            item_type__in=[itype for _, itype in selected_pairs],
-        ).order_by("item__name", "item_type", "id")
+        selected_names = [row["item__name"] for row in selected_groups]
+        selected_types = [row["item_type"] for row in selected_groups]
 
-        # Group items by (name, item_type)
+        # Fetch all UserItems that belong to the selected groups
+        items = (
+            queryset.filter(
+                item__name__in=selected_names, item_type__in=selected_types
+            )
+            .order_by("item__name", "item_type", "id")
+            .select_related("item")
+        )
+
+        # Group by (name, item_type) but append ShopItem objects
         grouped = defaultdict(list)
         for user_item in items:
-            # Append the related ShopItem (not UserItem) so it matches GroupedItemSerializer
             grouped[(user_item.item.name, user_item.item_type)].append(
                 user_item.item
             )
 
-        # Transform grouped dict into a list of objects compatible with GroupedItemSerializer
         grouped_data = [
             {"name": name, "item_type": item_type, "items": group_items}
             for (name, item_type), group_items in grouped.items()
         ]
 
         serializer = GroupedItemSerializer(
-            grouped_data, many=True, context={"user": user}
+            grouped_data,
+            many=True,
+            context={
+                "user": user,
+                "user_owned_items": user_owned_items,
+                "user_equipped_items": user_equipped_items,
+            },
         )
         return self.get_paginated_response(serializer.data)
