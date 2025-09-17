@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 import ImageRound from '@components/common/ImageRound';
+import SmoothImage from '@components/common/ImageRound/SmoothImage';
 import { AvatarItemUser } from '@interfaces/shop';
 
 interface props {
@@ -26,12 +27,13 @@ export const RenderAccessoriesPreview = ({
       )}
       {!isFetchingCreationDataCommon &&
         itemsPreview.map((item, index) => (
-          <ImageRound
+          <SmoothImage
             key={item.name}
             src={item.url || `/images/users/${item.name}.png`}
             name={item.name}
             className={`absolute bottom-0 inset-0 w-full h-full object-contain pointer-events-none`}
             style={{ zIndex: index }}
+            fill
           />
         ))}
     </div>

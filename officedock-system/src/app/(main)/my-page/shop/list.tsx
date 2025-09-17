@@ -151,6 +151,9 @@ const ShopItemPage = () => {
         type: activeTab === TabTypeShopItem.ALL ? '' : activeTab,
         screenName: undefined,
       });
+      if (dataItemBuy?.itemType == selectedItemType) {
+        setSelectedItemType(null);
+      }
       refetchCreationDataCommon();
     },
     onError: () => {

@@ -79,7 +79,7 @@ export const MyPageMenu = ({
                 style={{
                   boxShadow: '0px 4px 4px 0px #1D2D3F0A',
                 }}
-                className="absolute after:content-[''] after:absolute after:top-0 after:left-[-10px] after:w-[10px] after:h-full after:bg-transparent hidden group-hover:flex top-0 text-black left-[116px] text-sm  flex-col gap-[2px] py-1 font-medium bg-white w-[180px] h-fit rounded-md border border-button">
+                className="absolute after:content-[''] after:absolute after:top-0 after:left-[-10px] after:w-[10px] after:h-full after:bg-transparent hidden group-hover:flex top-0 text-black left-[116px] text-sm  flex-col gap-[2px] py-1 font-medium bg-white min-w-[180px] w-fit h-fit rounded-md border border-button">
                 {page.child.map((item, index) => (
                   <>
                     <Link
@@ -90,7 +90,7 @@ export const MyPageMenu = ({
                           onClickSettingSurvey();
                         }
                       }}
-                      className="px-2 py-[10px] hover:opacity-85 hover:text-primary cursor-pointer">
+                      className={`px-2 py-[10px] hover:opacity-85 hover:text-primary cursor-pointer w-fit ${item.name == pageRouters.CUSTOMIZE_ITEM.name && '!w-[200px]'}`}>
                       {item.name}{' '}
                       {item.displayCount && unAnsweredSurveyCount ? (
                         <span className="bg-[#FFEE6F] ml-1 py-[5px] px-[6px] w-[38px] text-[13px] rounded-[100px] text-black font-bold">

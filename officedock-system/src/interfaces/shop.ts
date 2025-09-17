@@ -18,6 +18,7 @@ export interface ItemUser {
 
 export interface ShopItem {
   name: string;
+  isAllOwned: boolean;
   itemType: string;
   items: ItemUser[];
 }
