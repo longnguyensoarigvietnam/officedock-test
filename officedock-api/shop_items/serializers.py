@@ -35,16 +35,15 @@ class ShopItemSerializer(serializers.ModelSerializer):
         return representation
 
     def get_is_owned(self, obj):
-        user = self.context.get("user")
-        if user:
-            return UserItems.objects.filter(user=user, item=obj).exists()
+        user_owned_items = self.context.get("user_owned_items")
+        if user_owned_items is not None:
+            return obj.id in user_owned_items
         return False
 
     def get_is_equipped(self, obj):
-        user = self.context.get("user")
-        if user:
-            user_item = UserItems.objects.filter(user=user, item=obj).first()
-            return user_item.is_equipped if user_item else False
+        user_equipped_items = self.context.get("user_equipped_items")
+        if user_equipped_items is not None:
+            return obj.id in user_equipped_items
         return False
 
 
@@ -52,6 +51,21 @@ class GroupedItemSerializer(serializers.Serializer):
     name = serializers.CharField()
     item_type = serializers.CharField()
     items = ShopItemSerializer(many=True)
+    is_all_owned = serializers.SerializerMethodField(read_only=True)
+
+    def get_is_all_owned(self, obj):
+        """
+        Check if all items in the group are owned by the user
+        """
+        user_owned_items = self.context.get("user_owned_items")
+        if user_owned_items is None or not obj.get("items"):
+            return False
+
+        # Check if all items in the group are owned
+        for item in obj["items"]:
+            if item.id not in user_owned_items:
+                return False
+        return True
 
 
 class UserItemSerializer(serializers.ModelSerializer):

@@ -65,7 +65,9 @@ def seed_shop_items_data(apps, schema_editor):
                         user=user,
                         item=obj,
                         item_type=item_type_value,
-                        is_equipped=True,
+                        defaults={
+                            "is_equipped": True,
+                        },
                     )
 
             # Save/replace files
