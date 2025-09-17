@@ -135,7 +135,8 @@ steps:
           --cpu=$_CR_CPU \
           --memory=$_CR_MEMORY \
           --concurrency $_CR_CONCURRENCY \
-          --min-instances $_CR_MIN_INSTANCES \
+          --min $_CR_MIN_INSTANCES \
+          --min-instances 0 \
           --max-instances $_CR_MAX_INSTANCES
 
 options:
