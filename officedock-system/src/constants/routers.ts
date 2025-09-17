@@ -685,5 +685,5 @@ export const apiRouters = {
   SHOP_ITEMS: '/shop-items/',
 
   // ITEM CUSTOMIZE
-  LIST_ITEM_CUSTOMIZE: (id: string) => `/users/${id}/items/`,
+  LIST_ITEM_CUSTOMIZE: `/users/items/`,
 };

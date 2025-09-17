@@ -12,7 +12,7 @@ interface Props {
   group: ShopItem;
   totalPearl: number;
   handleBuyDataItem: (item: ItemUser) => void;
-  handlePreviewItem: (items: ItemUser) => void;
+  handlePreviewItem: (item: ItemUser, isFirst?: boolean) => void;
 }
 
 const ItemGroupCard = ({
@@ -27,13 +27,14 @@ const ItemGroupCard = ({
     if (group && !selectedItem) {
       const itemEquipped = group.items.find((item) => item.isEquipped);
       setSelectedItem(itemEquipped || null);
-      itemEquipped && handlePreviewItem(itemEquipped);
+      itemEquipped && handlePreviewItem(itemEquipped, true);
     }
   }, [group, handlePreviewItem, selectedItem]);
 
   const actionItem = group.items.find((item) => item.id == selectedItem?.id);
 
-  const isHasBuy = selectedItem && totalPearl < selectedItem?.price;
+  const isHasBuy =
+    (selectedItem && totalPearl < selectedItem?.price) || selectedItem?.isOwned;
 
   const isCheckAllOwned =
     group.isAllOwned || group.items.every((item) => item.isOwned);

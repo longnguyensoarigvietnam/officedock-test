@@ -10,6 +10,7 @@ import RowSkeleton from '@components/skeleton/RowSkeleton';
 import ConfirmBuyItemUserModal from '@components/modals/ConfirmBuyItemUserModal';
 import { RenderAccessoriesPreview } from '@components/custom/UserCustomizePreview';
 import ActionModalSuccessItem from '@components/modals/ActionModalSuccessItem';
+import { TwinklingIcon } from '@components/common/TwinklingIcon';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ItemAvatarType, TabTypeShopItem } from '@constants/enums';
@@ -24,7 +25,6 @@ import { useToast } from '@providers/ToastProvider';
 import api from '@base/api';
 import { AvatarItemUser, ItemUser, ShopItemResponse } from '@interfaces/shop';
 import { updateAvatarUrl } from '@utils';
-import { TwinklingIcon } from '@components/common/TwinklingIcon';
 
 const ShopItemPage = () => {
   const router = useRouter();
@@ -182,7 +182,7 @@ const ShopItemPage = () => {
     });
   };
 
-  const handlePreviewItem = (item: ItemUser) => {
+  const handlePreviewItem = (item: ItemUser, isFirst?: boolean) => {
     setItemsPreview((prev) =>
       prev.map((avatar) =>
         avatar.type === item.itemType
@@ -190,7 +190,8 @@ const ShopItemPage = () => {
           : avatar,
       ),
     );
-    setSelectedItemType(item.isOwned ? null : item.itemType);
+    if (isFirst) return;
+    setSelectedItemType(item.itemType);
   };
 
   return (

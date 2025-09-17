@@ -16,6 +16,7 @@ import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
 import useGetListItemCustomize from '@hooks/useGetListItemCustomize';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+import { useUpdateCusTomizeItemCache } from '@hooks/CacheQuery/useUpdateCustomizeItems';
 
 import { CustomizeItemResponse, ItemUser } from '@interfaces/shop';
 import api from '@base/api';
@@ -101,6 +102,8 @@ const CustomizeItemPage = () => {
     };
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
+  const { updateItemEquipped } = useUpdateCusTomizeItemCache();
+
   // Handle choose item
   const handleWearItem = async (data: CustomizeItemResponse) => {
     const { data: response } = await api.post(apiRouters.USER_WEAR_ITEM, data);
@@ -114,6 +117,11 @@ const CustomizeItemPage = () => {
       onSuccess: async () => {
         setOpenConfirmModal(false);
         setDataItemWear(null);
+        updateItemEquipped({
+          id: dataItemWear?.id as number,
+          type: activeTab === TabTypeShopItem.ALL ? '' : activeTab,
+          screenName: undefined,
+        });
       },
       onError: () => {
         showToast({
@@ -206,6 +214,7 @@ const CustomizeItemPage = () => {
                     return (
                       <Button
                         key={tab.value}
+                        disabled={isLoadingList}
                         onClick={() => setActiveTab(tab.value)}
                         style={{
                           background: isActive
