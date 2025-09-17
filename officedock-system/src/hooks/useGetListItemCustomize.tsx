@@ -54,7 +54,7 @@ const useGetListItemCustomize = ({
       const params = new URLSearchParams();
       params.append('page_size', String(PAGINATION_PAGE_SIZE_MEDIUM));
       params.append('item_type', type);
-      apiUrl = `${apiRouters.LIST_ITEM_CUSTOMIZE(String(session?.user.id))}?${params.toString()}`;
+      apiUrl = `${apiRouters.LIST_ITEM_CUSTOMIZE}?${params.toString()}`;
     }
 
     const { data } = await api.get<BasePagination<ShopItem[]>>(apiUrl, {
@@ -84,7 +84,7 @@ const useGetListItemCustomize = ({
     refetchOnWindowFocus: false,
     getNextPageParam: (lastPage) => {
       return lastPage?.next
-        ? `${apiRouters.SHOP_ITEMS}${lastPage?.next}`
+        ? `${apiRouters.LIST_ITEM_CUSTOMIZE}${lastPage?.next}`
         : undefined;
     },
     onSuccess: (allPages) => {

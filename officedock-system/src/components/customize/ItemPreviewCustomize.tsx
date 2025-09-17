@@ -1,5 +1,5 @@
 'use client';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import Image from 'next/image';
 
 import { ItemUser, ShopItem } from '@interfaces/shop';
@@ -15,6 +15,14 @@ const ItemPreviewCustomize = ({ group, handleWearDataItem }: Props) => {
   const { setDataItem } = useContext(GlobalStateContext);
 
   const [selectedItem, setSelectedItem] = useState<ItemUser | null>(null);
+
+  useEffect(() => {
+    if (group && !selectedItem) {
+      const itemEquipped = group.items.find((item) => item.isEquipped);
+      setSelectedItem(itemEquipped || null);
+    }
+  }, [group, selectedItem]);
+  const actionItem = group.items.find((item) => item.id == selectedItem?.id);
 
   return (
     <>
@@ -79,14 +87,14 @@ const ItemPreviewCustomize = ({ group, handleWearDataItem }: Props) => {
             })}
           </div>
           <div className="flex-shrink-0">
-            {selectedItem && !selectedItem.isEquipped ? (
+            {actionItem && !actionItem.isEquipped ? (
               <Button
-                onClick={() => handleWearDataItem(selectedItem)}
+                onClick={() => selectedItem && handleWearDataItem(selectedItem)}
                 className="w-[48px] h-[21px] !text-xs !py !px-0 !rounded"
                 variant="post">
                 交換
               </Button>
-            ) : selectedItem && selectedItem.isEquipped ? (
+            ) : actionItem && actionItem.isEquipped ? (
               <div className="flex items-center justify-center text-xs font-semibold text-center w-[56px] h-[22px] bg-[#EBF1F7] rounded-[3px] text-black">
                 使用中
               </div>

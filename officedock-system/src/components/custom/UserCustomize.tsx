@@ -1,9 +1,11 @@
 'use client';
 import { useContext } from 'react';
 
+import SmoothImage from '@components/common/ImageRound/SmoothImage';
+import ImageRound from '@components/common/ImageRound';
+
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import ImageRound from '@components/common/ImageRound';
 import { updateAvatarUrl } from '@utils';
 
 interface props {
@@ -41,12 +43,13 @@ export const RenderAccessories = ({ isPodium = false }: props) => {
       )}
       {!isFetchingCreationDataCommon &&
         dataItems.map((item, index) => (
-          <ImageRound
+          <SmoothImage
             key={item.name}
             src={item.url || `/images/users/${item.name}.png`}
             name={item.name}
             className={`absolute bottom-0 inset-0 w-full h-full object-contain pointer-events-none`}
             style={{ zIndex: index }}
+            fill
           />
         ))}
     </div>

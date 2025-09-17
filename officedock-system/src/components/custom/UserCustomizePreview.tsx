@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
 import ImageRound from '@components/common/ImageRound';
 import SmoothImage from '@components/common/ImageRound/SmoothImage';
