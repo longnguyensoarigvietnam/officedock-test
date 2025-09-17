@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Q, Count
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins
@@ -180,7 +180,9 @@ class MVPVoteManagementViewSet(BaseAPIViewSet, ModelViewSet):
         """
         mvp_candidate_id = request.query_params.get("mvp_candidate_id")
         candidate = get_object_or_404(MVPVoteCandidate, id=mvp_candidate_id)
-        vote_comments = candidate.votes_received.all()
+        vote_comments = candidate.votes_received.exclude(
+            Q(comment__isnull=True) | Q(comment="")
+        ).all()
         return self.response_pagination(
             request,
             vote_comments,

@@ -16,6 +16,7 @@ class ShopItems(BaseModel):
     Shop items model
     """
 
+    key = models.CharField(max_length=255, unique=True)
     name = models.CharField()
     item_type = models.CharField(
         choices=ItemTypes.choices(), null=True, blank=True
