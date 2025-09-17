@@ -208,7 +208,7 @@ const TaskPageDataHeader = () => {
     if (dataTaskHeaderList) {
       const dataOption = dataTaskHeaderList.cards.map((item) => {
         return {
-          label: item.title,
+          label: item.title || '',
           value: item.type === ItemStartType.TASK ? item.id : `${item.id}event`,
           type: item.type,
           totalData: item.totalDuration,
@@ -317,7 +317,7 @@ const TaskPageDataHeader = () => {
         if (`${item.value}` === `${dataTaskEditKanban.value}`) {
           return {
             ...item,
-            label: dataTaskEditKanban.label,
+            label: dataTaskEditKanban?.label,
           };
         } else {
           return item;
@@ -325,7 +325,7 @@ const TaskPageDataHeader = () => {
       });
       setOptionsTaskMe(newOptions);
       if (
-        `${taskSelected.value}`.replace('event', '') ===
+        `${taskSelected?.value}`.replace('event', '') ===
         `${dataTaskEditKanban.value}`.replace('event', '')
       ) {
         setTaskSelected((prev) => {
@@ -557,7 +557,7 @@ const TaskPageDataHeader = () => {
       statusTaskSelected?.isStart && taskSelected.value
         ? formatTimeTaskCustom(`${dataTaskHeaderStart?.startedAt}`)
         : formatTimeTaskCustom(
-            `${timeTaskSelect ? timeTaskSelect.startedAt : ''}`,
+            `${timeTaskSelect ? timeTaskSelect?.startedAt : ''}`,
           ),
     );
   }, [
@@ -637,9 +637,9 @@ const TaskPageDataHeader = () => {
                   searchOption
                   isShowTextActive
                   selectedOption={
-                    taskSelected.value
+                    taskSelected?.value
                       ? optionsTaskMe.find(
-                          (element) => element.value === taskSelected.value,
+                          (element) => element.value === taskSelected?.value,
                         )
                       : undefined
                   }
@@ -648,12 +648,12 @@ const TaskPageDataHeader = () => {
                   }}
                 />
               </div>
-              {taskSelected.value &&
+              {taskSelected?.value &&
               statusTaskSelected &&
-              taskSelected.value !== OPTION_DEFAULT_TASK.value ? (
+              taskSelected?.value !== OPTION_DEFAULT_TASK.value ? (
                 <DynamicTooltip
                   content={
-                    statusTaskSelected?.isStart && taskSelected.value
+                    statusTaskSelected?.isStart && taskSelected?.value
                       ? '計測停止'
                       : '計測開始'
                   }
@@ -715,10 +715,10 @@ const TaskPageDataHeader = () => {
                 </div>
               )}
 
-              {taskSelected.value &&
-              parseInt(String(taskSelected.value)) &&
+              {taskSelected?.value &&
+              parseInt(String(taskSelected?.value)) &&
               optionsTaskMe.find(
-                (element) => element.value === taskSelected.value,
+                (element) => element.value === taskSelected?.value,
               ) ? (
                 <div className="flex gap-x-4">
                   <ShowTimeCounter statusTaskSelected={statusTaskSelected} />
@@ -832,11 +832,11 @@ const TaskPageDataHeader = () => {
                 <span className="text-[#77858F]">{DEFAULT_TIME_TEXT}</span>
               )}
               {statusTaskSelected?.isStart &&
-                taskSelected.value &&
+                taskSelected?.value &&
                 dataOverTimeWarning &&
                 dataOverTimeWarning?.isOverEstimate &&
-                taskSelected.type === dataOverTimeWarning.type &&
-                `${String(taskSelected.value).replace('event', '')}` ===
+                taskSelected?.type === dataOverTimeWarning?.type &&
+                `${String(taskSelected?.value).replace('event', '')}` ===
                   dataOverTimeWarning.id && (
                   <div className="flex gap-1 items-center text-xs font-normal text-[#E95062] mt-[2px]">
                     <ImageRound
@@ -863,7 +863,7 @@ const TaskPageDataHeader = () => {
                 className="whitespace-nowrap mt-1 min-w-[22px]  bg-transparent border-none hover:opacity-75  !px-0 !py-0 !rounded-lg"
                 onClick={() => {
                   const itemFind = optionsTaskMe.find(
-                    (element) => element.value === taskSelected.value,
+                    (element) => element.value === taskSelected?.value,
                   );
                   if (parseInt(String(taskSelected.value)) && itemFind) {
                     if (taskSelected.type === ItemStartType.SCHEDULE) {
