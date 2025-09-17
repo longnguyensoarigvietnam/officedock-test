@@ -60,13 +60,26 @@ def seed_shop_items_data(apps, schema_editor):
 
             if item_data["default"]:
                 for user in User.objects.all():
-                    UserItems.objects.get_or_create(
+                    # Ensure only one equipped item per user per item_type
+                    has_equipped_item = (
+                        UserItems.objects.filter(
+                            company=user.company,
+                            user=user,
+                            item_type=item_type_value,
+                            is_equipped=True,
+                        )
+                        .exclude(item=obj)
+                        .exists()
+                    )
+
+                    # Create or mark this default item as equipped for the user
+                    UserItems.objects.update_or_create(
                         company=user.company,
                         user=user,
                         item=obj,
                         item_type=item_type_value,
                         defaults={
-                            "is_equipped": True,
+                            "is_equipped": not has_equipped_item,
                         },
                     )
 
