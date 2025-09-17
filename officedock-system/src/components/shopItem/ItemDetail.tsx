@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { ItemUser, ShopItem } from '@interfaces/shop';
+
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
+
+import { ItemUser, ShopItem } from '@interfaces/shop';
 
 interface Props {
   group: ShopItem;
@@ -21,13 +23,27 @@ const ItemGroupCard = ({
 }: Props) => {
   const [selectedItem, setSelectedItem] = useState<ItemUser | null>(null);
 
+  useEffect(() => {
+    if (group && !selectedItem) {
+      const itemEquipped = group.items.find((item) => item.isEquipped);
+      setSelectedItem(itemEquipped || null);
+      itemEquipped && handlePreviewItem(itemEquipped);
+    }
+  }, [group, handlePreviewItem, selectedItem]);
+
   const actionItem = group.items.find((item) => item.id == selectedItem?.id);
+
+  const isHasBuy = selectedItem && totalPearl < selectedItem?.price;
+
+  const isCheckAllOwned =
+    group.isAllOwned || group.items.every((item) => item.isOwned);
 
   return (
     <>
-      <div className="flex items-center justify-between px-4 py-4">
+      <div
+        className={`flex items-center justify-between px-4 py-4 hover:bg-[#F6F6F6] group rounded-[20px] ${isCheckAllOwned && 'opacity-50'}`}>
         {/* Left: icon + tên */}
-        <div className="flex gap-4 items-center">
+        <div className={`flex gap-4 items-center ${isHasBuy && 'opacity-50'}`}>
           <div className="flex w-[72px] h-[72px] items-center justify-center bg-white rounded-[10px] border border-[#D2DBE1]">
             <Image
               alt={`${group.name} icon`}
@@ -50,14 +66,14 @@ const ItemGroupCard = ({
           <div className="grid grid-cols-5 gap-[3px] w-[132px] flex-shrink-0">
             {group.items.map((item) => {
               return selectedItem?.id === item.id ? (
-                <div className="w-fit h-fit rounded-full flex items-center justify-center border-[2px] border-[#0068B6]">
+                <div className="w-fit h-fit rounded-full flex items-center justify-center border-[2px] border-[#0068B6] ">
                   <button
                     key={item.id}
                     onClick={() => {
                       setSelectedItem(item);
                       handlePreviewItem(item);
                     }}
-                    className={`w-5 h-5 flex items-center justify-center rounded-full border-[2px] border-white  `}
+                    className={`w-5 h-5 flex items-center justify-center rounded-full border-[2px] border-white group-hover:border-[#F6F6F6] `}
                     style={{ backgroundColor: item.color }}>
                     {item.isOwned && (
                       <ImageRound
@@ -69,14 +85,15 @@ const ItemGroupCard = ({
                   </button>
                 </div>
               ) : (
-                <div className="w-fit h-fit rounded-full flex items-center justify-center border-[2px] border-white">
+                <div
+                  className={`w-fit h-fit rounded-full flex items-center justify-center border-[2px] border-white group-hover:border-[#F6F6F6] ${item.isOwned && 'opacity-50'}`}>
                   <button
                     key={item.id}
                     onClick={() => {
                       setSelectedItem(item);
                       handlePreviewItem(item);
                     }}
-                    className={`w-5 h-5 rounded-full  border-[2px] flex items-center justify-center border-white ${item.isOwned && 'opacity-50'}`}
+                    className={`w-5 h-5 rounded-full  border-[2px] flex items-center justify-center border-white group-hover:border-[#F6F6F6] `}
                     style={{ backgroundColor: item.color }}>
                     {item.isOwned && (
                       <ImageRound
@@ -99,7 +116,8 @@ const ItemGroupCard = ({
                   width={20}
                   height={20}
                 />
-                <p className="font-bold text-base">
+                <p
+                  className={`font-bold text-base ${isHasBuy && 'text-[#E95062]'}`}>
                   {selectedItem?.price || group.items[0].price}
                 </p>
               </div>

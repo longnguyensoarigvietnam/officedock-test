@@ -18,7 +18,7 @@ const ItemPreviewCustomize = ({ group, handleWearDataItem }: Props) => {
 
   return (
     <>
-      <div className="flex items-center justify-between px-4 py-4">
+      <div className="flex items-center justify-between px-4 py-4 group hover:bg-[#F6F6F6] rounded-[20px]">
         {/* Left: icon + tên */}
         <div className="flex gap-4 items-center">
           <div className="flex w-[72px] h-[72px] items-center justify-center bg-white rounded-[10px] border border-[#D2DBE1]">
@@ -43,7 +43,7 @@ const ItemPreviewCustomize = ({ group, handleWearDataItem }: Props) => {
           <div className="grid grid-cols-5 gap-[3px] w-[132px] flex-shrink-0">
             {group.items.map((item) => {
               return selectedItem?.id === item.id ? (
-                <div className="w-fit h-fit rounded-full flex items-center justify-center border-[2px] border-[#0068B6]">
+                <div className="w-fit h-fit rounded-full flex items-center justify-center border-[2px] border-[#0068B6] ">
                   <button
                     key={item.id}
                     onClick={() => {
@@ -54,7 +54,7 @@ const ItemPreviewCustomize = ({ group, handleWearDataItem }: Props) => {
                   />
                 </div>
               ) : (
-                <div className="w-fit h-fit rounded-full flex items-center justify-center border-[2px] border-white">
+                <div className="w-fit h-fit rounded-full flex items-center justify-center border-[2px] border-white group-hover:border-[#F6F6F6]">
                   <button
                     key={item.id}
                     onClick={() => {
@@ -71,7 +71,7 @@ const ItemPreviewCustomize = ({ group, handleWearDataItem }: Props) => {
                         ),
                       );
                     }}
-                    className={`w-5 h-5 rounded-full  border-[2px] flex items-center justify-center border-white `}
+                    className={`w-5 h-5 rounded-full  border-[2px] flex items-center justify-center border-white  group-hover:border-[#F6F6F6]`}
                     style={{ backgroundColor: item.color }}
                   />
                 </div>
