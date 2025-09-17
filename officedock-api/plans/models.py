@@ -15,6 +15,7 @@ class Plan(BaseModel):
     exchangeable_amount = models.IntegerField(
         default=0
     )  # Amount convertible to DotMoney
+    limit_person = models.IntegerField(default=0)
 
 
 class Tax(BaseModel):

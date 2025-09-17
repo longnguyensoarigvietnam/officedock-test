@@ -1,7 +1,9 @@
+from datetime import datetime
 from decimal import Decimal
 
 import stripe
-from companies.models import Company
+from companies.constants import CompanyStatus
+from companies.models import Company, CompanyPaymentMethod
 from core import settings
 from base.messages import ERROR_MESSAGES
 from rest_framework.exceptions import ValidationError
@@ -123,9 +125,7 @@ class StripeService:
             "currency": currency,
             "product": product.id,
             "recurring": {
-                "usage_type": "metered",  # For postpaid
                 "interval": interval,
-                "meter": meter_id,
             },
             "billing_scheme": "per_unit",
         }
@@ -143,18 +143,25 @@ class StripeService:
         Returns:
             str: The Stripe customer ID.
         """
-        if company.stripe_customer_id:
-            return company.stripe_customer_id
+        customers = stripe.Customer.search(
+            query=f"name:'{company.name}' AND metadata['company_id']:'{company.id}'"
+        )
+        if customers:
+            ids = [customer["id"] for customer in customers["data"]]
 
-        customer = stripe.Customer.create(
+            company.stripe_customer_id = ids[0]
+            company.save(update_fields=["stripe_customer_id"])
+            return ids[0]
+
+        new_customer = stripe.Customer.create(
             name=company.name,
             email=company.contract.responsible_person_mail,
             metadata={"company_id": str(company.id)},
         )
-        company.stripe_customer_id = customer.id
+        company.stripe_customer_id = new_customer.id
         company.save(update_fields=["stripe_customer_id"])
 
-        return customer.id
+        return new_customer.id
 
     def attach_payment_method_to_customer(
         self, company: Company, payment_method_id: str, is_create_company=False
@@ -246,7 +253,6 @@ class StripeService:
                 )
             company_plan = company.plan
             price = stripe.Price.retrieve(company_plan.plan.stripe_price_id)
-
             # Create fixed subscription billing at the end of the month
             tax = Tax.objects.first()
             subscription = stripe.Subscription.create(
@@ -257,19 +263,98 @@ class StripeService:
                         "tax_rates": [tax.stripe_tax_id] if tax else [],
                     }
                 ],
-                billing_cycle_anchor=start_date,  # Start date in contract
+                billing_cycle_anchor_config={
+                    "day_of_month": 1,
+                },
                 proration_behavior="none",  # No prorate for current month
+                # collection_method="charge_automatically",
                 collection_method="send_invoice",
-                days_until_due=5,  # Invoice will be send at day 5 of month
+                days_until_due=5,
                 metadata={"company_id": company.id},
             )
+
             return subscription
 
         except stripe.error.CardError as e:
             raise ValidationError({"detail": f"{ERROR_MESSAGES['card_error']}"})
         except stripe.error.StripeError as e:
             raise ValidationError({"detail": f"{e}"})
-        except Exception:
-            raise ValidationError(
-                {"detail": f"{ERROR_MESSAGES['payment_failed']}"}
+        except Exception as e:
+            raise ValidationError({"detail": f"{e}"})
+
+    def handle_invoice_created(self, invoice):
+        """
+        Handle logic when an invoice is created:
+        - Set the due date to the 5th of the next month.
+        - Update invoice with due date and default payment method.
+        """
+        if not invoice.subscription:
+            return  # Only process invoices tied to subscriptions
+
+        try:
+            # Get the company's default payment method
+            payment_method = CompanyPaymentMethod.objects.filter(
+                company__stripe_customer_id=invoice.customer, is_default=True
+            ).first()
+
+            # Convert period_end (UNIX timestamp) to datetime
+            period_end_dt = datetime.fromtimestamp(invoice.period_end)
+
+            # Calculate the 5th day of the next month
+            next_month = (
+                period_end_dt.month + 1 if period_end_dt.month < 12 else 1
             )
+            next_year = (
+                period_end_dt.year
+                if period_end_dt.month < 12
+                else period_end_dt.year + 1
+            )
+            due_date_dt = datetime(next_year, next_month, 5, 0, 0, 0)
+            finalizes_at = int(due_date_dt.timestamp())
+            # Update the invoice on Stripe
+            stripe.Invoice.modify(
+                invoice.id,
+                automatically_finalizes_at=finalizes_at,
+                default_payment_method=payment_method.stripe_payment_method_id
+                if payment_method
+                else None,
+            )
+
+        except Exception as e:
+            print({"detail": f"{e}"})
+            raise ValidationError({"detail": f"{e}"})
+
+    def handle_pay_invoice(self, invoice):
+        """
+        Attempt to pay the given invoice using Stripe.
+
+        - If the company is in TEMPORARY_USAGE status, mark the invoice as paid out-of-band
+        (i.e., outside of Stripe’s normal payment flow).
+        - Otherwise, Stripe attempts to charge the default payment method.
+
+        Args:
+            invoice (stripe.Invoice): The invoice object returned from Stripe.
+
+        Raises:
+            ValidationError: If the payment request to Stripe fails.
+        """
+        try:
+            # Check if the company should skip automatic payment
+            is_skip_payment = Company.objects.filter(
+                stripe_customer_id=invoice.customer,
+                status=CompanyStatus.TEMPORARY_USAGE.value,
+            ).exists()
+            # Pay the invoice via Stripe
+            if is_skip_payment:
+                stripe.Invoice.void_invoice(invoice.id)
+            else:
+                stripe.Invoice.pay(invoice.id)
+
+            # Optional: log successful payment
+            print(
+                f"Invoice {invoice.id} payment triggered (skip_payment={is_skip_payment})"
+            )  # FIXME: Remove when push PR
+
+        except Exception as e:
+            # Wrap Stripe error (or any other) into a DRF ValidationError
+            raise ValidationError({"detail": str(e)})

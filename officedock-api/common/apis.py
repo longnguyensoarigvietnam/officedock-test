@@ -9,6 +9,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny
+import stripe
 
 from base.apis import BaseAPIViewSet
 from base.permissions import IsCronJob
@@ -21,6 +22,7 @@ from chat.constants import WebSocketEventType
 from common.helpers import (
     get_all_organizations,
     get_balances_of_user,
+    get_company_status,
     get_data_organization_my_statistic,
     get_data_organization_team_statistic,
     get_event_locations,
@@ -33,6 +35,7 @@ from common.helpers import (
     get_organization_with_users,
     get_organizations_for_all_team_statistic,
     get_organizations_of_user_by_screen_role,
+    get_plans,
     get_roles,
     get_statistic_categories,
     get_tags,
@@ -40,6 +43,7 @@ from common.helpers import (
     get_unanswered_count,
     get_user_setting,
 )
+from common.services.stripe_service import StripeService
 from companies.serializers import CompanySerializer
 from dashboard.utils import separate_duration_while_keep_running
 from mvp_votes.constants import DEFAULT_CONTENT_TWEET_END_VOTE, MVPVoteTypes
@@ -114,6 +118,8 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             OpenApiParameter(
                 "get_organizations_for_all_team_statistic", type=bool
             ),
+            OpenApiParameter("get_company_status", type=bool),
+            OpenApiParameter("get_plans", type=bool),
         ]
     )
     @action(methods=["GET"], detail=False, url_path="common")
@@ -241,7 +247,11 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             response_data[
                 "organizations_of_all_team_statistic"
             ] = get_organizations_for_all_team_statistic(user)
-
+        if "get_company_status" in request.query_params:
+            response_data["company_status"] = get_company_status()
+        if "get_plans" in request.query_params:
+            response_data["plans"] = get_plans()
+            
         return self.response_ok(response_data)
 
     @extend_schema(
@@ -833,3 +843,92 @@ class CronJobViewSet(BaseAPIViewSet):
                 "current_balance": current_balance,
             }
         )
+
+@extend_schema(tags=["System > Webhook"])
+class WebhookView(BaseAPIViewSet):
+    """
+    Webhook endpoint for receiving and handling events from Stripe.
+    """
+
+    authentication_classes = []  # Webhooks are usually unauthenticated
+    permission_classes = [AllowAny]
+
+    @action(methods=["POST"], url_path="stripe", detail=False)
+    def received_webhook(self, request, pk=None):
+        """
+        Entry point for Stripe webhooks.
+        - Verifies the Stripe signature.
+        - Delegates event handling to appropriate service methods.
+        """
+        payload = request.body
+        sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
+        stripe_service = StripeService()
+
+        try:
+            # Verify webhook signature to ensure authenticity
+            event = stripe.Webhook.construct_event(
+                payload,
+                sig_header,
+                settings.STRIPE_WEBHOOK_KEY,
+            )
+        except ValueError as e:
+            # Invalid payload
+            return self.response_ok({"error": f"Invalid payload: {e}"})
+        except stripe.error.SignatureVerificationError as e:
+            # Invalid signature
+            return self.response_ok({"error": f"Invalid signature: {e}"})
+
+        # Route events to appropriate handlers
+        if event.type == "invoice.created":
+            stripe_service.handle_invoice_created(event.data.object)
+        elif event.type == "invoice.payment_succeeded":
+            self.handle_payment_succeeded(event.data.object)
+        elif event.type == "invoice.payment_failed":
+            self.handle_payment_failed(event.data.object)
+        elif event.type == "invoice.sent":
+            stripe_service.handle_pay_invoice(event.data.object)
+        else:
+            print(f"Unhandled event type: {event.type}")
+
+        return self.response_ok({"status": "success"})
+
+    def handle_payment_succeeded(self, invoice):
+        """
+        Handle successful invoice payment.
+        - Example: update subscription status, log event, notify user, etc.
+        """
+        print(f"✅ Payment succeeded for invoice {invoice.id}")
+
+    def handle_payment_failed(self, invoice):
+        """
+        Handle failed invoice payment.
+        - Example: notify user, retry payment, disable service, etc.
+        """
+        print(f"❌ Payment failed for invoice {invoice.id}")
+
+
+@extend_schema(tags=["Admin > Creation Data"])
+class AdminCreationDataViewSet(BaseAPIViewSet):
+    """
+    API endpoint for Admin CreationData.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("get_company_status", type=bool),
+            OpenApiParameter("get_plans", type=bool),
+        ]
+    )
+    @action(methods=["GET"], detail=False, url_path="common")
+    def common_data(self, request):
+        """
+        Handle and response data base on query params
+        """
+        response_data = {}
+        if "get_company_status" in request.query_params:
+            response_data["company_status"] = get_company_status()
+        if "get_plans" in request.query_params:
+            response_data["plans"] = get_plans()
+        return self.response_ok(response_data)

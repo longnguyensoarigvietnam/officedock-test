@@ -1,7 +1,7 @@
 from django.db import transaction
 from rest_framework import serializers
 
-from companies.models import Company, Contract
+from companies.models import Company, CompanyTransaction, Contract
 from base.messages import ERROR_MESSAGES
 from plans.models import Plan
 from users.models import User
@@ -16,6 +16,7 @@ class ContractSerializer(serializers.ModelSerializer):
         model = Contract
         fields = [
             "id",
+            "created_at",
             "start_date",
             "end_date",
             "next_renewal_at",
@@ -27,6 +28,7 @@ class ContractSerializer(serializers.ModelSerializer):
             "responsible_person_name",
             "responsible_person_mail",
         ]
+        read_only_fields = ["next_renewal_at"]
 
     def validate(self, attrs):
         start_date = attrs.get("start_date")
@@ -63,13 +65,8 @@ class CompanySerializer(serializers.ModelSerializer):
     """
 
     contract = ContractSerializer(required=False)
-    fullname = serializers.CharField(
-        write_only=True, max_length=255, required=False
-    )
-    email = serializers.CharField(
-        write_only=True, max_length=255, required=False
-    )
     total_users = serializers.SerializerMethodField(read_only=True)
+    plan = serializers.CharField(source="plan.plan.name", read_only=True)
 
     class Meta:
         model = Company
@@ -77,10 +74,10 @@ class CompanySerializer(serializers.ModelSerializer):
             "id",
             "name",
             "contract",
-            "fullname",
-            "email",
             "is_show_holidays_calendar",
             "total_users",
+            "plan",
+            "status",
         ]
         read_only_fields = ["is_show_holidays_calendar"]
 
@@ -150,6 +147,61 @@ class CreationCompanySerializer(serializers.Serializer):
     implementation_main_issue = serializers.CharField(required=False)
 
     def validate_responsible_person_mail(self, value):
+        # FIXME: Check duplicate email in User table
+        User.validate_unique_email(
+            instance=self.instance, email=value, is_admin_site=False
+        )
         if Contract.objects.filter(responsible_person_mail=value).exists():
             raise serializers.ValidationError(ERROR_MESSAGES["email_exists"])
         return value
+
+
+class RetrieveCompanySerializer(CompanySerializer):
+    """
+    Serializer class for retrieve company
+    """
+
+    payment_method = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Company
+        fields = [
+            "id",
+            "name",
+            "contract",
+            "plan",
+            "status",
+            "max_user_in_contract_period",
+            "max_user_at",
+            "total_users",
+            "payment_method",
+        ]
+
+    def get_payment_method(self, instance):
+        """
+        Get default payment method of company
+        """
+        payment_method = instance.payment_methods.filter(
+            is_default=True
+        ).first()
+        return payment_method.type if payment_method else None
+
+
+class CompanyTransactionSerializer(serializers.ModelSerializer):
+    """
+    Serializer for company transaction
+    """
+
+    plan = serializers.CharField(source="plan.name", allow_null=True)
+
+    class Meta:
+        model = CompanyTransaction
+        fields = [
+            "type",
+            "invoice_target",
+            "plan_start_at",
+            "plan_end_at",
+            "status",
+            "paid_at",
+            "plan",
+        ]

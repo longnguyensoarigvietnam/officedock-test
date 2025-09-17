@@ -1,5 +1,6 @@
+from django.utils.timezone import now
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -23,7 +24,10 @@ from utils.mail import MailService
 from common.serializers import EmptySerializer
 from common.services.stripe_service import StripeService
 from common.utils import delete_file
-from companies.constants import ContractStatus
+from companies.constants import (
+    CompanyStatus,
+    CompanyTransactionTypes,
+)
 from companies.services import CompanyService
 >>>>>>> 3d4ec0fa (API: Initial plan DB and implement API creation and active company)
 from .filters import CompanyFilter
@@ -32,8 +36,10 @@ from .serializers import (
     BaseCompanySerializer,
     CompanySerializer,
     CompanySettingSerializer,
+    CompanyTransactionSerializer,
     ContractSerializer,
     CreationCompanySerializer,
+    RetrieveCompanySerializer,
 )
 
 
@@ -55,6 +61,18 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     }
     filterset_class = CompanyFilter
 
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the Company service
+        """
+        super().__init__(*args, **kwargs)
+        self.company_service = CompanyService()
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return RetrieveCompanySerializer
+        return super().get_serializer_class()
+
     @action(
         url_path="active",
         detail=True,
@@ -68,9 +86,44 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         setting up Stripe subscription, and updating contract status.
         """
         company = self.get_object()
-        company_service = CompanyService()
-        company_service.active_company(company)
+        self.company_service.active_company(company)
         return self.response_ok()
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "type",
+                enum=[
+                    CompanyTransactionTypes.INVOICE.value,
+                    CompanyTransactionTypes.PLAN.value,
+                    CompanyTransactionTypes.POINT.value,
+                ],
+            )
+        ]
+    )
+    @action(
+        methods=["GET"],
+        detail=True,
+        url_path="transactions",
+        serializer_class=CompanyTransactionSerializer,
+    )
+    def get_transactions(self, request, pk=None):
+        """
+        Change plan of company
+        """
+        company = self.get_object()
+        transaction_type = request.query_params.get("type")
+        if transaction_type:
+            transactions = company.transactions.filter(
+                type=transaction_type
+            ).all()
+        else:
+            transactions = company.transactions.all()
+        return self.response_pagination(
+            request,
+            transactions,
+            CompanyTransactionSerializer,
+        )
 
     @action(
         methods=["POST"],
@@ -168,7 +221,8 @@ class SystemCompanyViewSet(
         plan = serializer_data.pop("plan")
         company_data = {
             "name": serializer_data.pop("company_name"),
-            "status": ContractStatus.PENDING_APPROVAL.value,
+            "status": CompanyStatus.PENDING_APPROVAL.value,
+            "max_user_at": now(),
         }
         # Create company
         company = Company.objects.create(**company_data)

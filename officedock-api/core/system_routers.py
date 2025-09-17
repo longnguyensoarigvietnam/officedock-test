@@ -46,6 +46,7 @@ from organizations.apis import (
 from common.apis import (
     SystemCreationDataViewSet,
     CronJobViewSet,
+    WebhookView,
 )
 from tags.apis import TagViewSet
 from dashboard.apis import (
@@ -175,6 +176,7 @@ api_router.register(
     "point-histories", SystemPointHistoryViewSet, basename="point_histories"
 )
 api_router.register("shop-items", ShopItemViewSet, basename="shop_items")
+api_router.register("webhook", WebhookView, basename="webhook")
 
 # Add api router urls
 urlpatterns = []

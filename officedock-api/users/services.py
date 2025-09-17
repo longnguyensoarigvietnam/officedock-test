@@ -1,4 +1,5 @@
 from django.db import transaction
+from companies.constants import CompanyStatus
 from users.constants import TransactionTypes
 
 
@@ -78,3 +79,14 @@ class UserService:
             company_id=user.company_id,
         )
         return user_balance
+
+    def check_valid_company(self, user):
+        """
+        Check status company of user.
+        Return False when status deny access to system
+        """
+        return user.company.status not in [
+            CompanyStatus.SUSPENDED.value,
+            CompanyStatus.CONTRACT_TERMINATED,
+            CompanyStatus.PENDING_APPROVAL,
+        ]
