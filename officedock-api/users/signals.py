@@ -4,15 +4,17 @@ from django.dispatch import receiver
 from users.models import User
 from chat.models import ChatRoom
 from chat.constants import ROOM_TYPES
+from shop_items.utils import assign_default_items_to_user
 
 
 @receiver(post_save, sender=User)
 def create_chat_room_default(sender, instance, created, **kwargs):
     """
-    Create chat room default
+    Create chat room default and assign default items for new users.
     """
     if created:
         instance.set_setting()
+        assign_default_items_to_user(instance)
 
     company = instance.company
 
