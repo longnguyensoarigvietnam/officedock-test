@@ -130,6 +130,7 @@ _ERROR_MESSAGES = {
         "cannot_buy_item": _("Cannot buy this item"),
         # MVP vote
         "vote_ended": _("This MVP vote is ended"),
+        "max_company_user": _("Cannot create more than 30 users."),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -218,6 +219,7 @@ _ERROR_MESSAGES = {
         "cannot_buy_item": _("このアイテムを購入するためのポイントが不足しています。"),
         # MVP vote
         "vote_ended": _("この投票が終了しました。"),
+        "max_company_user": _("30ユーザー以上を作成できません。"),
     },
 }
 

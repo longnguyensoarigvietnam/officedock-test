@@ -920,3 +920,28 @@ def calculate_company_dates(company, reference_date=None):
         "date_after_data_edit_deadline": date_after_data_edit_deadline,
         "start_date_calculation_deadline": start_date_calculation_deadline,
     }
+
+
+def get_client_ip(request):
+    """Return the best-effort client IP from request headers.
+
+    Resolution order:
+    1) First non-empty IP from `HTTP_X_FORWARDED_FOR` (original client behind proxies)
+    2) `HTTP_X_REAL_IP`
+    3) `REMOTE_ADDR`
+
+    Returns None if no suitable IP is present.
+    """
+    meta = getattr(request, "META", {}) or {}
+    x_forwarded_for = meta.get("HTTP_X_FORWARDED_FOR")
+    if x_forwarded_for:
+        return next(
+            (ip.strip() for ip in x_forwarded_for.split(",") if ip.strip()),
+            None,
+        )
+    return meta.get("HTTP_X_REAL_IP") or meta.get("REMOTE_ADDR")
+
+
+def get_user_agent(request):
+    """Return the raw User-Agent header string or empty string if missing."""
+    return getattr(request, "META", {}).get("HTTP_USER_AGENT", "")

@@ -29,6 +29,8 @@ from chat.models import ChatRoom
 from common.serializers import EmptySerializer
 from common.utils import (
     generate_file_name,
+    get_client_ip,
+    get_user_agent,
     get_username_alias,
     send_web_socket_event,
 )
@@ -50,6 +52,7 @@ from users.models import (
     ResetPassword,
     Role,
     User,
+    UserActivityLog,
     UserVerification,
     DailyReport,
     ConfirmReport,
@@ -865,6 +868,13 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         Perform create a user.
         """
+        current_user = self.request.user
+
+        # Validate cannot create if max user > 30
+        if current_user.company.users.count() > 30:
+            raise ValidationError(
+                {"detail": [ERROR_MESSAGES["max_company_user"]]}
+            )
 
         serializer_data = serializer.validated_data
         email = serializer_data.get("email", None)
@@ -891,7 +901,7 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         ) == LoginTypes.EMAIL.value else serializer_data.pop("email", None)
 
         # Save data to User and Profile
-        company = self.request.user.company
+        company = current_user.company
         password = get_random_string(8)
         user = serializer.save(
             company=company, password=password, username_alias=username_alias
@@ -933,6 +943,14 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             serializer_data.get("username"),
             password,
             company,
+        )
+
+        # Log user create
+        UserActivityLog.log_user_creation(
+            user,
+            current_user,
+            get_client_ip(self.request),
+            get_user_agent(self.request),
         )
 
     @transaction.atomic()
@@ -1053,8 +1071,10 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         Perform destroy a user.
         """
+        current_user = self.request.user
+
         # Cannot delete itself
-        if instance.id == self.request.user.id:
+        if instance.id == current_user.id:
             raise PermissionDenied
 
         company = instance.company
@@ -1090,6 +1110,14 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if instance.avatar:
             # Remove old avatar
             instance.avatar.delete()
+
+        # Log user create
+        UserActivityLog.log_user_deletion(
+            instance,
+            current_user,
+            get_client_ip(self.request),
+            get_user_agent(self.request),
+        )
 
         instance.delete()
 
