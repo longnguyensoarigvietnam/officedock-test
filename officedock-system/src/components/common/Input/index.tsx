@@ -21,6 +21,7 @@ export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   isBottomOptions?: boolean;
   iconSrc?: string;
   options?: OptionDropdownType[];
+  valueInput?: string | null;
   onChangeDropdown?: (value: OptionDropdownType) => void;
 };
 
@@ -38,6 +39,7 @@ const Input = ({
   autoCompleteInput = false,
   isShowClockIcon = false,
   options,
+  valueInput,
   classNameOption,
   isBottomOptions,
   onChangeDropdown,
@@ -69,6 +71,7 @@ const Input = ({
               className={`${iconSrc ? 'w-[22px] left-[10px] top-[4px]' : 'w-4 left-[5px] top-[8px]'} absolute  ${classNameOption} `}>
               <TimeDropdown
                 options={options ? options : []}
+                valueInput={valueInput}
                 onChange={onChangeDropdown}
                 iconSrc={iconSrc}
                 isBottomOptions={isBottomOptions}

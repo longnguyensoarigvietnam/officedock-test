@@ -1655,6 +1655,7 @@ const ActionsTaskModalTeam = ({
                           isShowClockIcon={true}
                           type="text"
                           disabled={isCheckActionPermission}
+                          valueInput={watch(`deadlineTime`)}
                           register={register('deadlineTime', {
                             required: Boolean(
                               isShowFieldRemind &&
@@ -1939,6 +1940,9 @@ const ActionsTaskModalTeam = ({
                                   isShowClockIcon={true}
                                   autoFocus={false}
                                   disabled={isCheckActionPermission}
+                                  valueInput={watch(
+                                    `plans.${index}.planStartTime`,
+                                  )}
                                   register={register(
                                     `plans.${index}.planStartTime`,
                                     {
@@ -2074,6 +2078,9 @@ const ActionsTaskModalTeam = ({
                                 <Input
                                   isShowClockIcon={true}
                                   disabled={isCheckActionPermission}
+                                  valueInput={watch(
+                                    `plans.${index}.planEndTime`,
+                                  )}
                                   register={register(
                                     `plans.${index}.planEndTime`,
                                     {
@@ -2736,6 +2743,9 @@ const ActionsTaskModalTeam = ({
                                       isShowClockIcon={true}
                                       autoFocus={false}
                                       disabled={isCheckActionPermission}
+                                      valueInput={watch(
+                                        `plans.${index}.planStartTime`,
+                                      )}
                                       register={register(
                                         `plans.${index}.planStartTime`,
                                         {
@@ -2882,6 +2892,9 @@ const ActionsTaskModalTeam = ({
                                     <Input
                                       isShowClockIcon={true}
                                       disabled={isCheckActionPermission}
+                                      valueInput={watch(
+                                        `plans.${index}.planEndTime`,
+                                      )}
                                       register={register(
                                         `plans.${index}.planEndTime`,
                                         {
@@ -3143,6 +3156,7 @@ const ActionsTaskModalTeam = ({
                               disabled={isCheckActionPermission}
                               type="text"
                               options={optionTimeInput}
+                              valueInput={watch(`repeatStartTime`)}
                               register={register('repeatStartTime', {
                                 onChange: (e) => {
                                   setIsFormTouched(true);
@@ -3173,6 +3187,7 @@ const ActionsTaskModalTeam = ({
                               disabled={isCheckActionPermission}
                               type="text"
                               options={optionTimeInput}
+                              valueInput={watch(`repeatEndTime`)}
                               register={register('repeatEndTime', {
                                 onChange: (e) => {
                                   setIsFormTouched(true);

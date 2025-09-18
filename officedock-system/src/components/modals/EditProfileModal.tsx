@@ -21,6 +21,7 @@ import { User, UserProfileFormData } from '@interfaces/user';
 import { passwordRegisterRules } from '@utils/validators';
 
 import { ALLOWED_IMAGE_TYPES, MAX_AVATAR_IMAGE_FILE_SIZE } from '@constants';
+import { ERROR_LONG_FIELD_MESSAGE } from '@constants/message';
 
 export type EditProfileModalProps = {
   open: boolean;
@@ -159,6 +160,10 @@ const EditProfileModal = memo(
                   className={`shadow-none text-[22px] leading-[56px] font-medium !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md ${editProfileErrorMessages.fullName && '!border-error'}`}
                   register={register('fullName', {
                     required: true,
+                    maxLength: {
+                      value: 255,
+                      message: ERROR_LONG_FIELD_MESSAGE,
+                    },
                     onChange: () => {
                       setEditProfileErrorMessages((prev) => {
                         return {

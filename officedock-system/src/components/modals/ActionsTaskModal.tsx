@@ -234,11 +234,11 @@ const ActionsTaskModal = ({
   const defaultValues = useMemo<TaskFormData>(() => {
     const value: TaskFormData = {
       peopleInChargeIds: [
-            {
-              label: session?.user.profile.fullName || '',
-              value: session?.user.id || '',
-            },
-          ],
+        {
+          label: session?.user.profile.fullName || '',
+          value: session?.user.id || '',
+        },
+      ],
       planEndDate: null,
       title: '',
       planStartDate: null,
@@ -904,7 +904,7 @@ const ActionsTaskModal = ({
                 ? data.deadlineRemindCountdown
                 : null,
               showDeadlineTime: Boolean(watch('deadlineTime')),
-              peopleInChargeIds : undefined
+              peopleInChargeIds: undefined,
             });
       }
       if (action === ActionTask.CREATE) {
@@ -1483,6 +1483,7 @@ const ActionsTaskModal = ({
                             isShowClockIcon={true}
                             type="text"
                             disabled={isCheckActionPermission}
+                            valueInput={watch('deadlineTime')}
                             register={register('deadlineTime', {
                               required: Boolean(
                                 isShowFieldRemind &&
@@ -1768,6 +1769,9 @@ const ActionsTaskModal = ({
                                   isShowClockIcon={true}
                                   autoFocus={false}
                                   disabled={isCheckActionPermission}
+                                  valueInput={watch(
+                                    `plans.${index}.planStartTime`,
+                                  )}
                                   register={register(
                                     `plans.${index}.planStartTime`,
                                     {
@@ -1903,6 +1907,9 @@ const ActionsTaskModal = ({
                                 <Input
                                   isShowClockIcon={true}
                                   disabled={isCheckActionPermission}
+                                  valueInput={watch(
+                                    `plans.${index}.planEndTime`,
+                                  )}
                                   register={register(
                                     `plans.${index}.planEndTime`,
                                     {
@@ -2564,6 +2571,9 @@ const ActionsTaskModal = ({
                                       isShowClockIcon={true}
                                       autoFocus={false}
                                       disabled={isCheckActionPermission}
+                                      valueInput={watch(
+                                        `plans.${index}.planStartTime`,
+                                      )}
                                       register={register(
                                         `plans.${index}.planStartTime`,
                                         {
@@ -2710,6 +2720,9 @@ const ActionsTaskModal = ({
                                     <Input
                                       isShowClockIcon={true}
                                       disabled={isCheckActionPermission}
+                                      valueInput={watch(
+                                        `plans.${index}.planEndTime`,
+                                      )}
                                       register={register(
                                         `plans.${index}.planEndTime`,
                                         {
@@ -2971,6 +2984,7 @@ const ActionsTaskModal = ({
                               disabled={isCheckActionPermission}
                               type="text"
                               options={optionTimeInput}
+                              valueInput={watch(`repeatStartTime`)}
                               register={register('repeatStartTime', {
                                 onChange: (e) => {
                                   setIsFormTouched(true);
@@ -3001,6 +3015,7 @@ const ActionsTaskModal = ({
                               disabled={isCheckActionPermission}
                               type="text"
                               options={optionTimeInput}
+                              valueInput={watch(`repeatEndTime`)}
                               register={register('repeatEndTime', {
                                 onChange: (e) => {
                                   setIsFormTouched(true);

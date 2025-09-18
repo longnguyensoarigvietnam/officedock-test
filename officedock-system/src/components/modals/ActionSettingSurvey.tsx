@@ -219,6 +219,7 @@ const ActionSettingSurvey = ({ open, onClose, onSuccess }: Props) => {
                 <div className="w-[91px] relative z-20">
                   <Input
                     isShowClockIcon={true}
+                    valueInput={watch(`endTime`)}
                     iconSrc={'clock-survey'}
                     type="text"
                     register={register('endTime', {

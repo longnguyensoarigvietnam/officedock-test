@@ -658,6 +658,7 @@ const ActionsVotingModal = ({
               <div className="w-[77px] z-40">
                 <Input
                   isShowClockIcon={true}
+                  valueInput={watch(`endTime`)}
                   register={register('endTime', {
                     required: watch('endDate') !== null ? true : false,
                     onChange: (e) => {

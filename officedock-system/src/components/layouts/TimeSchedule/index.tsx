@@ -2900,7 +2900,6 @@ const TimeSchedule = memo(
 
     // Event action
     const handleGetDataDetailEvent = async (id: string) => {
-      setIsLoading(true);
       const { data: response } = await api.get(
         `${apiRouters.SCHEDULE_DETAIL(id)}?current_screen=${ScreenName.MY_TASK}`,
       );
