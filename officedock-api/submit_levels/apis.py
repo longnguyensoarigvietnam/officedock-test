@@ -229,11 +229,47 @@ class SubmitLevelViewSet(
             {
                 "condition": (
                     has_next_step
+                    and step_after_submit == SkillStep.STEP_1.value
+                    and level_after_submit == SkillLevelEnum.LEVEL_2.value
+                ),
+                "coin_amount": COIN_SKILL_UP_STEP1,
+                "description": "Step 1 - level 1 completed (has next step)",
+            },
+            {
+                "condition": (
+                    has_next_step
+                    and step_after_submit == SkillStep.STEP_1.value
+                    and level_after_submit == SkillLevelEnum.LEVEL_3.value
+                ),
+                "coin_amount": COIN_SKILL_UP_STEP1,
+                "description": "Step 1 - level 2 completed (has next step)",
+            },
+            {
+                "condition": (
+                    has_next_step
                     and step_after_submit == SkillStep.STEP_2.value
                     and level_after_submit == SkillLevelEnum.LEVEL_1.value
                 ),
                 "coin_amount": COIN_SKILL_UP_STEP1,
-                "description": "Step 1 completed (has next step)",
+                "description": "Step 1 - level 3 completed (has next step)",
+            },
+            {
+                "condition": (
+                    has_next_step
+                    and step_after_submit == SkillStep.STEP_2.value
+                    and level_after_submit == SkillLevelEnum.LEVEL_2.value
+                ),
+                "coin_amount": COIN_SKILL_UP_STEP2,
+                "description": "Step 2 - level 1 completed (has next step)",
+            },
+            {
+                "condition": (
+                    has_next_step
+                    and step_after_submit == SkillStep.STEP_2.value
+                    and level_after_submit == SkillLevelEnum.LEVEL_3.value
+                ),
+                "coin_amount": COIN_SKILL_UP_STEP2,
+                "description": "Step 2 - level 2 completed (has next step)",
             },
             {
                 "condition": (
@@ -242,17 +278,25 @@ class SubmitLevelViewSet(
                     and level_after_submit == SkillLevelEnum.LEVEL_1.value
                 ),
                 "coin_amount": COIN_SKILL_UP_STEP2,
-                "description": "Step 2 completed (has next step)",
+                "description": "Step 2 - level 3 completed (has next step)",
             },
             {
                 "condition": (
                     has_next_step
-                    and instance.step_before_submit == SkillStep.STEP_3.value
-                    and instance.level_before_submit
-                    == SkillLevelEnum.LEVEL_3.value
+                    and step_after_submit == SkillStep.STEP_3.value
+                    and level_after_submit == SkillLevelEnum.LEVEL_2.value
                 ),
                 "coin_amount": COIN_SKILL_UP_STEP3,
-                "description": "Step 3 completed (has next step)",
+                "description": "Step 3 - level 1 completed (has next step)",
+            },
+            {
+                "condition": (
+                    has_next_step
+                    and step_after_submit == SkillStep.STEP_3.value
+                    and level_after_submit == SkillLevelEnum.LEVEL_3.value
+                ),
+                "coin_amount": COIN_SKILL_UP_STEP3,
+                "description": "Step 3 - level 2 completed (has next step)",
             },
         ]
 
