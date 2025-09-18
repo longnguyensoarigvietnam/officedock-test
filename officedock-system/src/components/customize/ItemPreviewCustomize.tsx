@@ -92,7 +92,7 @@ const ItemPreviewCustomize = ({ group, handleWearDataItem }: Props) => {
                 onClick={() => selectedItem && handleWearDataItem(selectedItem)}
                 className="w-[48px] h-[21px] !text-xs !py !px-0 !rounded"
                 variant="post">
-                交換
+                変更
               </Button>
             ) : actionItem && actionItem.isEquipped ? (
               <div className="flex items-center justify-center text-xs font-semibold text-center w-[56px] h-[22px] bg-[#EBF1F7] rounded-[3px] text-black">
