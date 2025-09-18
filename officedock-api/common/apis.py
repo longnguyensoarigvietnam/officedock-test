@@ -48,6 +48,7 @@ from surveys.models import Survey
 
 from tweets.models import Tweet
 from users.models import User, UserBalance
+from users.constants import RoleTypes
 from tasks.models import Task, TaskDuration
 from tasks.constants import (
     TaskTypes,
@@ -597,5 +598,114 @@ class CronJobViewSet(BaseAPIViewSet):
             {
                 "today": today.isoformat(),
                 "deleted_tks_msg_count": deleted_count,
+            }
+        )
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("cronjob_key", type=str, required=True),
+            OpenApiParameter("user_email", type=str, required=False),
+            OpenApiParameter("user_id", type=int, required=False),
+            OpenApiParameter("coin", type=int, required=False),
+            OpenApiParameter("pearl", type=int, required=False),
+        ]
+    )
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="seed-point",
+    )
+    @transaction.atomic
+    def seed_point_user(self, request):
+        """
+        Seed points (coins and pearls) to a user for testing purposes.
+        Requires either user_email or user_id to identify the user.
+        """
+
+        # Get parameters
+        user_email = request.query_params.get("user_email")
+        user_id = request.query_params.get("user_id")
+        coin_amount = int(request.query_params.get("coin", 0))
+        pearl_amount = int(request.query_params.get("pearl", 0))
+
+        # Validate that at least one user identifier is provided
+        if not user_email and not user_id:
+            return self.response(
+                "Either user_email or user_id must be provided", status_code=400
+            )
+
+        # Validate that at least one amount is provided
+        if coin_amount <= 0 and pearl_amount <= 0:
+            return self.response(
+                "At least one of coin or pearl amount must be greater than 0",
+                status_code=400,
+            )
+
+        try:
+            # Find user by email or ID
+            if user_email:
+                user = User.objects.exclude(
+                    roles__name=RoleTypes.OPERATION_ADMIN.value
+                ).get(email=user_email)
+            else:
+                user = User.objects.exclude(
+                    roles__name=RoleTypes.OPERATION_ADMIN.value
+                ).get(id=user_id)
+        except User.DoesNotExist:
+            return self.response(
+                f"User not found with {'email' if user_email else 'ID'}: {user_email or user_id}",
+                status_code=404,
+            )
+
+        # Track what was added
+        added_points = {}
+
+        # Add coins if specified
+        if coin_amount > 0:
+            try:
+                user_balance, created = UserBalance.objects.get_or_create(
+                    user=user,
+                    company=user.company,
+                )
+                user_balance.coin = (user_balance.coin or 0) + coin_amount
+                user_balance.save()
+                added_points["coin"] = coin_amount
+            except Exception as e:
+                return self.response(
+                    f"Failed to add coins: {str(e)}", status_code=500
+                )
+
+        # Add pearls if specified
+        if pearl_amount > 0:
+            try:
+                user_balance, created = UserBalance.objects.get_or_create(
+                    user=user,
+                    company=user.company,
+                )
+                user_balance.pearl = (user_balance.pearl or 0) + pearl_amount
+                user_balance.save()
+                added_points["pearl"] = pearl_amount
+            except Exception as e:
+                return self.response(
+                    f"Failed to add pearls: {str(e)}", status_code=500
+                )
+
+        # Get updated balance
+        user_balance = user.balances
+        current_balance = {
+            "coin": user_balance.coin if user_balance else 0,
+            "pearl": user_balance.pearl if user_balance else 0,
+        }
+
+        return self.response_ok(
+            {
+                "message": "Points successfully seeded",
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                    "name": user.full_name,
+                },
+                "added_points": added_points,
+                "current_balance": current_balance,
             }
         )
