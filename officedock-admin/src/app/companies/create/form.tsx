@@ -1,7 +1,7 @@
 'use client';
 import { useMutation } from 'react-query';
-import { useContext, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useContext, useEffect, useState } from 'react';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 
 import Input from '@components/common/Input';
@@ -48,6 +48,7 @@ interface CreateCompanyType {
 
 const CreateCompanyForm = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const params = useParams<{ id: string }>();
   const { setIsLoading } = useContext(LoadingContext);
 
@@ -128,6 +129,13 @@ const CreateCompanyForm = () => {
       },
     });
   };
+
+  useEffect(() => {
+    if (pathname == pageRouters.COMPANY_CREATE.href) {
+      router.push(pageRouters.COMPANY.href);
+    }
+  }, [pathname, router]);
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="grid gap-2">

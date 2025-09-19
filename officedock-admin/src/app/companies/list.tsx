@@ -1,9 +1,7 @@
 'use client';
-import { useMutation } from 'react-query';
 import { Transition } from '@headlessui/react';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
-
 import Link from 'next/link';
 
 import ImageRound from '@components/common/ImageRound';
@@ -12,78 +10,95 @@ import DatePicker from '@components/common/DatePicker';
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
 import Pagination from '@components/common/Pagination';
-import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import { Table, TableBody, TableHeader } from '@components/common/Table';
+import MonthPicker from '@components/common/DatePicker/MonthPicker';
 
-import {
-  ERROR_DELETE_MESSAGE,
-  NO_DATA_AVAILABLE,
-  SUCCESS_DELETE_MESSAGE,
-  UNREGISTERED,
-} from '@constants/message';
-import { STATUS_COMPANY } from '@constants/company';
-import { apiRouters, pageRouters } from '@constants/routers';
-import { StatusCompany } from '@constants/enums';
+import { NO_DATA_AVAILABLE, UNREGISTERED } from '@constants/message';
+import { pageRouters } from '@constants/routers';
+import { DATE_FORMAT_SERVER, MONTH_FORMAT_SERVER } from '@constants';
 
 import useCompanyList from '@hooks/useListCompany';
-
-import { LoadingContext } from '@providers/LoadingProvider';
-import { useToast } from '@providers/ToastProvider';
+import useCommonCreationData from '@hooks/useCommonCreationData';
 
 import { Company } from '@interfaces/company';
 import { OptionDropdownType } from '@interfaces/common';
 
-import { formatDateServer, renderDate } from '@utils';
-import api from '@base/api';
+import { formatDateServer, formatMonthServer, renderDate } from '@utils';
 
 interface FilterCompanyDataType {
   name: string;
+  user_amount: string;
   status: OptionDropdownType;
+  plan: OptionDropdownType;
   start_date: string;
   end_date: string;
+  next_renewal_at: string;
+  contract_created_at: string;
 }
 
 const CompanyList = () => {
-  const { setIsLoading } = useContext(LoadingContext);
   const { control, register, handleSubmit } = useForm<FilterCompanyDataType>({
     mode: 'onSubmit',
     defaultValues: {
       status: {
-        label: 'All',
+        label: 'すべて',
+        value: '',
+      },
+      plan: {
+        label: 'すべて',
         value: '',
       },
     },
   });
-
-  const { showToast } = useToast();
 
   const [isShowing, setIsShow] = useState<boolean>(true);
 
   // Company state
   const [dataCompany, setDataCompany] = useState<Company[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [idCompanyChoose, setIdCompanyChoose] = useState<number>();
-  const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
-  const [isOrdering, _setOrdering] = useState<string>('');
-  const [isFilter, setFilter] = useState({
+  const [filter, setFilter] = useState({
     name: '',
+    user_amount: '',
+    status: '',
+    plan: '',
     start_date: '',
     end_date: '',
-    status: '',
+    next_renewal_at: '',
+    contract_created_at: '',
   });
 
-  const statusFilter: OptionDropdownType[] = [
-    { label: '選択', value: '' },
-    ...STATUS_COMPANY,
-  ];
+  const [statusOptions, setStatusOptions] = useState<OptionDropdownType[]>([]);
+  const [planOptions, setPlanOptions] = useState<OptionDropdownType[]>([]);
+
+  useCommonCreationData({
+    options: {
+      get_company_status: true,
+      get_plans: true,
+    },
+    onSuccess: (data) => {
+      data.companyStatus &&
+        setStatusOptions([
+          { label: 'すべて', value: '' },
+          ...(data?.companyStatus.map((status) => ({
+            value: status,
+            label: status,
+          })) || []),
+        ]);
+
+      data.plans &&
+        setPlanOptions([
+          { label: 'すべて', value: '' },
+          ...(data?.plans.map((plan) => ({
+            value: plan,
+            label: plan,
+          })) || []),
+        ]);
+    },
+  });
 
   const [totalPages, setTotalPages] = useState<number>(1);
 
-  const { companyList, refetchCompanyList } = useCompanyList(
-    currentPage,
-    isOrdering,
-    isFilter,
-  );
+  const { companyList } = useCompanyList(currentPage, filter);
 
   useEffect(() => {
     if (companyList) {
@@ -92,74 +107,24 @@ const CompanyList = () => {
     }
   }, [companyList, currentPage]);
 
-  // Handle delete company
-  const handleOpenDeleteCompanyModal = (id: number) => {
-    setOpenConfirmDeleteModal(true);
-    setIdCompanyChoose(id);
-  };
-  const handleConfirmDeleteCompany = () => {
-    if (idCompanyChoose || idCompanyChoose === 0) {
-      setIsLoading(true);
-      deleteCompany(idCompanyChoose);
-      return;
-    }
-  };
-
-  const postDeleteCompany = async (id: number) => {
-    const { data: response } = await api.delete(
-      apiRouters.COMPANY_DETAIL(`${id}`),
-    );
-    return response;
-  };
-  const { mutate: deleteCompany } = useMutation(postDeleteCompany, {
-    onSuccess: async () => {
-      if (companyList?.results.length === 1 && currentPage > 1) {
-        setCurrentPage(currentPage - 1)
-      } else {
-        refetchCompanyList();
-      }
-      setOpenConfirmDeleteModal(false);
-      showToast({
-        description: SUCCESS_DELETE_MESSAGE,
-      });
-    },
-    onError: () => {
-      setIsLoading(true);
-      showToast({
-        description: ERROR_DELETE_MESSAGE,
-      });
-    },
-    onSettled: () => {},
-  });
-
   const onSubmit: SubmitHandler<FilterCompanyDataType> = (data) => {
     setCurrentPage(1);
     setFilter({
       name: data.name || '',
-      start_date: data.start_date ? formatDateServer(data.start_date) : '',
+      start_date: data.start_date ? formatMonthServer(data.start_date) : '',
       end_date: data.end_date ? formatDateServer(data.end_date) : '',
+      next_renewal_at: data.next_renewal_at
+        ? formatMonthServer(data.next_renewal_at)
+        : '',
+      contract_created_at: data.contract_created_at
+        ? formatDateServer(data.contract_created_at)
+        : '',
       status: data.status ? (data.status.value as string) : '',
+      plan: data.plan ? (data.plan.value as string) : '',
+      user_amount: data.user_amount || '',
     });
   };
 
-  const renderStatus = (status: string) => {
-    switch (status) {
-      case StatusCompany.NOT_YET:
-        return (
-          <div className="w-fit rounded-3xl px-2.5 py-0.5 bg-red-50 text-red-700 text-sm">
-            未締結
-          </div>
-        );
-      case StatusCompany.ALREADY:
-        return (
-          <div className="w-fit rounded-3xl px-2.5 py-0.5 bg-green-50 text-green-700 text-sm">
-            締結済み
-          </div>
-        );
-      default:
-        break;
-    }
-  };
   return (
     <>
       <div className="flex flex-col border rounded-lg">
@@ -181,33 +146,96 @@ const CompanyList = () => {
           leaveFrom="transform translate-y-0"
           leaveTo="transform -translate-y-[10%]">
           <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="flex gap-4 p-4">
-              <div className="w-1/2 flex flex-col gap-2">
-                <div className="w-full flex items-end gap-4">
-                  <div className="w-full">
+            <div className="flex flex-col gap-4 p-4">
+              <div className="flex gap-4">
+                <div className="w-1/2 flex items-end gap-4">
+                  <div className="w-1/2">
                     <Input
                       label="会社名"
-                      placeholder="文字入力"
+                      placeholder="会社名で検索..."
                       register={register('name')}
                     />
                   </div>
+                  <div className="w-1/2">
+                    <Controller
+                      control={control}
+                      name="status"
+                      render={({ field: { onChange, value } }) => (
+                        <Dropdown
+                          label="ステータス"
+                          options={statusOptions}
+                          className="w-1/2"
+                          selectedOption={statusOptions.find(
+                            (element) => element.value === value?.value,
+                          )}
+                          onChange={onChange}
+                        />
+                      )}
+                    />
+                  </div>
                 </div>
-                <div className="w-full flex items-end gap-1">
+
+                <div className="w-1/2 flex items-end gap-4">
+                  <div className="w-1/2">
+                    <Controller
+                      control={control}
+                      name="plan"
+                      render={({ field: { onChange, value } }) => (
+                        <Dropdown
+                          label="契約プラン"
+                          options={planOptions}
+                          className="w-1/2"
+                          selectedOption={planOptions.find(
+                            (element) => element.value === value?.value,
+                          )}
+                          onChange={onChange}
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="w-1/2">
+                    <Input
+                      label="ユーザー数"
+                      placeholder="ユーザー数"
+                      type="number"
+                      register={register('user_amount')}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="w-1/2 flex items-end gap-4">
                   <div className="w-1/2">
                     <Controller
                       control={control}
                       name="start_date"
                       render={({ field: { onChange, value } }) => (
-                        <DatePicker
-                          label="契約開始日"
-                          placeholder="yyyy/mm/dd"
+                        <MonthPicker
+                          label="利用開始月"
+                          placeholder="yyyy/mm"
                           selected={value ? new Date(value) : null}
                           onChange={onChange}
                         />
                       )}
                     />
                   </div>
-                  <p className="mb-3">~</p>
+                  <div className="w-1/2">
+                    <Controller
+                      control={control}
+                      name="next_renewal_at"
+                      render={({ field: { onChange, value } }) => (
+                        <MonthPicker
+                          label="次回の更新月"
+                          placeholder="yyyy/mm"
+                          selected={value ? new Date(value) : null}
+                          onChange={onChange}
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div className="w-1/2 flex items-end gap-4">
                   <div className="w-1/2">
                     <Controller
                       control={control}
@@ -222,22 +250,15 @@ const CompanyList = () => {
                       )}
                     />
                   </div>
-                </div>
-              </div>
-              <div className="w-1/2 flex flex-col gap-2">
-                <div className="w-full flex items-end gap-4">
                   <div className="w-1/2">
                     <Controller
                       control={control}
-                      name="status"
+                      name="contract_created_at"
                       render={({ field: { onChange, value } }) => (
-                        <Dropdown
-                          label="契約状態"
-                          options={statusFilter}
-                          className="w-1/2"
-                          selectedOption={statusFilter.find(
-                            (element) => element.value === value?.value,
-                          )}
+                        <DatePicker
+                          label="申込日"
+                          placeholder="yyyy/mm/dd"
+                          selected={value ? new Date(value) : null}
                           onChange={onChange}
                         />
                       )}
@@ -257,7 +278,7 @@ const CompanyList = () => {
           </form>
         </Transition>
       </div>
-      <div className="flex justify-end">
+      <div className="hidden">
         <Link href={pageRouters.COMPANY_CREATE.href}>
           <Button className="w-44">新規作成</Button>
         </Link>
@@ -265,53 +286,81 @@ const CompanyList = () => {
       <div className="w-full">
         <Table className="bg-white !rounded-lg ">
           <TableHeader>
-            <th className="w-16">ID</th>
-            <th className=" w-[302px] max-w-[302px] 2xl:w-[420px] 2xl:max-w-[420px]">
-              <div className="flex w-full items-center gap-2">
-                <span>会社名</span>
-              </div>
+            <th className="w-10">ID</th>
+            <th className="w-40 max-w-40">
+              <p className="w-full text-left">会社名</p>
             </th>
-            <th className="w-52">
-              <div className="flex w-full items-center gap-2">
-                <span>契約開始日</span>
-              </div>
+            <th className="w-28 max-w-28 text-nowrap">
+              <p>ステータス</p>
             </th>
-            <th className="w-52">
-              <div className="flex w-full items-center gap-2 ">
-                <span>契約終了日</span>
-              </div>
+            <th className=" w-28 max-w-28">
+              <p className="w-full text-left">契約プラン</p>
             </th>
-            <th className="w-32">
-              <span>契約状態</span>
+            <th className="w-28 max-w-28 text-nowrap">ユーザー数</th>
+            <th className="w-28 max-w-28 text-nowrap">
+              <p className="w-full text-left">利用開始月</p>
             </th>
-            <th className="w-36">操作</th>
+            <th className="w-28 max-w-28 text-nowrap">
+              <p className="w-full text-left">次回の更新月</p>
+            </th>
+            <th className="w-28 max-w-28 text-nowrap">
+              <p className="w-full text-left">契約終了日</p>
+            </th>
+            <th className="w-28 max-w-28 text-nowrap">
+              <p className="w-full text-left">申込日</p>
+            </th>
+            <th className="w-24 max-w-24">操作</th>
           </TableHeader>
           <TableBody>
             {dataCompany && dataCompany.length ? (
               dataCompany.map((company, index) => (
                 <tr key={index}>
-                  <td className="w-16">{company.id}</td>
-                  <td className="text-left w-[302px] max-w-[302px] 2xl:w-[420px] 2xl:max-w-[420px] truncate">
+                  <td className="w-10">{company.id}</td>
+                  <td className="text-left w-40 max-w-40 2xl:w-40 2xl:max-w-40 truncate">
                     {company.name}
                   </td>
-                  <td className="text-left w-52">
-                    {company.contract?.startDate
-                      ? renderDate(company.contract.startDate)
-                      : UNREGISTERED}
-                  </td>
-                  <td className="text-left w-52">
-                    {company.contract?.endDate
-                      ? renderDate(company.contract.endDate)
-                      : UNREGISTERED}
-                  </td>
-                  <td className="w-32">
+                  <td className="w-28">
                     <div className="flex justify-center items-center">
-                      {company.contract?.status
-                        ? renderStatus(company.contract.status)
-                        : renderStatus('未締結')}
+                      {company.status}
                     </div>
                   </td>
-                  <td className="w-36">
+                  <td className="text-left w-28 max-w-28 text-nowrap">
+                    {company.plan}
+                  </td>
+                  <td className="text-center w-28 max-w-28">
+                    {company.totalUsers}
+                  </td>
+                  <td className="text-left w-28 max-w-28">
+                    {company.contract?.startDate
+                      ? renderDate(
+                          company.contract.startDate,
+                          MONTH_FORMAT_SERVER,
+                        )
+                      : UNREGISTERED}
+                  </td>
+                  <td className="text-left w-28 max-w-28">
+                    {company.contract?.nextRenewalAt
+                      ? renderDate(
+                          company.contract.nextRenewalAt,
+                          MONTH_FORMAT_SERVER,
+                        )
+                      : UNREGISTERED}
+                  </td>
+                  <td className="text-left w-28 max-w-28 text-nowrap">
+                    {company.contract?.endDate
+                      ? renderDate(company.contract.endDate, DATE_FORMAT_SERVER)
+                      : UNREGISTERED}
+                  </td>
+                  <td className="text-left w-28 max-w-28 text-nowrap">
+                    {company.contract?.createdAt
+                      ? renderDate(
+                          company.contract.createdAt,
+                          DATE_FORMAT_SERVER,
+                        )
+                      : UNREGISTERED}
+                  </td>
+
+                  <td className="w-24 max-w-24">
                     <div className="flex w-full gap-2 justify-center ">
                       <Link
                         href={pageRouters.COMPANY_DETAIL.href(`${company.id}`)}>
@@ -329,14 +378,6 @@ const CompanyList = () => {
                           className="w-6 h-6 cursor-pointer hover:opacity-60"
                         />
                       </Link>
-                      <ImageRound
-                        name="Delete "
-                        onClick={() =>
-                          handleOpenDeleteCompanyModal(company?.id)
-                        }
-                        src={'/icons/delete.svg'}
-                        className="w-6 h-6 cursor-pointer hover:opacity-60"
-                      />
                     </div>
                   </td>
                 </tr>
@@ -361,12 +402,6 @@ const CompanyList = () => {
           />
         ) : null}
       </div>
-      <ConfirmDeleteModal
-        open={openConfirmDeleteModal}
-        type="会社"
-        onConfirm={handleConfirmDeleteCompany}
-        onClose={() => setOpenConfirmDeleteModal(false)}
-      />
     </>
   );
 };

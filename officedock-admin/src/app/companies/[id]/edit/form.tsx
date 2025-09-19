@@ -1,42 +1,59 @@
 'use client';
 import { AxiosError } from 'axios';
 import { useMutation } from 'react-query';
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 
 import Input from '@components/common/Input';
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
-import DatePicker from '@components/common/DatePicker';
 
 import {
+  ADDRESS_REQUIRED_MESSAGE,
   COMPANY_NAME_REQUIRED_MESSAGE,
-  END_DATE_REQUIRE_MESSAGE,
   ERROR_COMMON_MESSAGE,
   ERROR_UPDATE_MESSAGE,
-  START_DATE_REQUIRE_MESSAGE,
-  STATUS_COMPANY_REQUIRED_MESSAGE,
+  IMPLEMENTATION_MAIN_ISSUE_REQUIRED_MESSAGE,
+  INDUSTRY_REQUIRED_MESSAGE,
+  PHONE_NUMBER_WRONG_FORMAT,
+  PHONE_REQUIRED_MESSAGE,
+  RESPONSIBLE_PERSON_NAME_REQUIRED_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
+  SYSTEM_MAIN_PURPOSE_REQUIRED_MESSAGE,
 } from '@constants/message';
-import { STATUS_COMPANY } from '@constants/company';
 import { apiRouters, pageRouters } from '@constants/routers';
-import { ServerStatusCode, StatusCompany } from '@constants/enums';
+import { ServerStatusCode } from '@constants/enums';
+import { PHONE_REGEX } from '@constants/regex';
+
 import useCompanyDetail from '@hooks/useDetailCompany';
+import useCommonCreationData from '@hooks/useCommonCreationData';
+
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
-import { Company } from '@interfaces/company';
+
 import { OptionDropdownType } from '@interfaces/common';
+import { EditCompanyRequest } from '@interfaces/company';
+
+import { emailRules } from '@utils/validators';
+
 import api from '@base/api';
-import { formatDateServer } from '@utils';
 
 interface EditCompanyType {
-  id?: string;
+  id?: number;
   name: string;
+  plan?: string | null;
+  paymentMethod?: string | null;
   contract: {
-    status?: OptionDropdownType;
     startDate?: string | null;
     endDate?: string | null;
+    responsiblePersonName?: string | null;
+    responsiblePersonMail?: string | null;
+    phone?: string | null;
+    address?: string | null;
+    industry?: OptionDropdownType;
+    systemMainPurpose?: OptionDropdownType;
+    implementationMainIssue?: OptionDropdownType;
   };
 }
 
@@ -45,11 +62,17 @@ const EditCompanyForm = () => {
   const params = useParams<{ id: string }>();
   const { setIsLoading } = useContext(LoadingContext);
 
-  const [isCheckStatus, setCheckStatus] = useState<boolean>(false);
-
   const { showToast } = useToast();
 
-  const [minDate, setMinDate] = useState<Date | null>();
+  const [industryOptions, setIndustryOptions] = useState<OptionDropdownType[]>(
+    [],
+  );
+  const [systemMainPurposeOptions, setSystemMainPurposeOptions] = useState<
+    OptionDropdownType[]
+  >([]);
+  const [implementationMainIssueOptions, setImplementationMainIssueOptions] =
+    useState<OptionDropdownType[]>([]);
+
   const { companyDetail } = useCompanyDetail({
     companyId: params.id,
     onError: (error: AxiosError) => {
@@ -63,11 +86,43 @@ const EditCompanyForm = () => {
     },
   });
 
+  useCommonCreationData({
+    options: {
+      get_industry: true,
+      get_system_main_purpose: true,
+      get_implementation_main_issues: true,
+    },
+    onSuccess: (data) => {
+      data.industry &&
+        setIndustryOptions([
+          ...(data?.industry.map((industry) => ({
+            value: industry,
+            label: industry,
+          })) || []),
+        ]);
+
+      data.systemMainPurpose &&
+        setSystemMainPurposeOptions([
+          ...(data?.systemMainPurpose.map((purpose) => ({
+            value: purpose,
+            label: purpose,
+          })) || []),
+        ]);
+
+      data.implementationMainIssues &&
+        setImplementationMainIssueOptions([
+          ...(data?.implementationMainIssues.map((issue) => ({
+            value: issue,
+            label: issue,
+          })) || []),
+        ]);
+    },
+  });
+
   const {
     reset,
     control,
     register,
-    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm<EditCompanyType>({
@@ -76,47 +131,64 @@ const EditCompanyForm = () => {
 
   const defaultValues = useMemo<EditCompanyType>(() => {
     const value: EditCompanyType = {
+      id: 0,
       name: '',
+      plan: '',
+      paymentMethod: '',
       contract: {
-        status: undefined,
-        startDate: '',
-        endDate: '',
+        responsiblePersonName: '',
+        responsiblePersonMail: '',
+        phone: '',
+        address: '',
+        industry: undefined,
+        implementationMainIssue: undefined,
+        systemMainPurpose: undefined,
       },
     };
 
     if (companyDetail) {
-      (value.name = companyDetail.name),
-        (value.contract.startDate = companyDetail.contract?.startDate),
-        (value.contract.endDate = companyDetail.contract?.endDate),
-        (value.contract.status = companyDetail.contract?.status
+      (value.id = companyDetail.id),
+        (value.name = companyDetail.name),
+        (value.plan = companyDetail.plan),
+        (value.paymentMethod = companyDetail.paymentMethod),
+        (value.contract.responsiblePersonName =
+          companyDetail.contract?.responsiblePersonName),
+        (value.contract.responsiblePersonMail =
+          companyDetail.contract?.responsiblePersonMail),
+        (value.contract.phone = companyDetail.contract?.phone),
+        (value.contract.address = companyDetail.contract?.address),
+        (value.contract.industry = companyDetail.contract?.industry
           ? {
-              label: companyDetail.contract?.status
-                ? companyDetail.contract?.status?.toString()
+              label: companyDetail.contract?.industry
+                ? companyDetail.contract?.industry
                 : '',
-              value: companyDetail.contract?.status
-                ? companyDetail.contract?.status?.toString()
+              value: companyDetail.contract?.industry
+                ? companyDetail.contract?.industry
+                : '',
+            }
+          : undefined),
+        (value.contract.implementationMainIssue = companyDetail.contract
+          ?.implementationMainIssue
+          ? {
+              label: companyDetail.contract?.implementationMainIssue
+                ? companyDetail.contract?.implementationMainIssue
+                : '',
+              value: companyDetail.contract?.implementationMainIssue
+                ? companyDetail.contract?.implementationMainIssue
+                : '',
+            }
+          : undefined),
+        (value.contract.systemMainPurpose = companyDetail.contract
+          ?.systemMainPurpose
+          ? {
+              label: companyDetail.contract?.systemMainPurpose
+                ? companyDetail.contract?.systemMainPurpose
+                : '',
+              value: companyDetail.contract?.systemMainPurpose
+                ? companyDetail.contract?.systemMainPurpose
                 : '',
             }
           : undefined);
-    }
-
-    if (companyDetail?.contract?.startDate) {
-      setMinDate(
-        new Date(
-          new Date().setDate(
-            new Date(companyDetail.contract.startDate).getDate() + 1,
-          ),
-        ),
-      );
-    }
-
-    if (
-      companyDetail &&
-      companyDetail.contract?.status === StatusCompany.ALREADY
-    ) {
-      setCheckStatus(true);
-    } else {
-      setCheckStatus(false);
     }
 
     return value;
@@ -126,7 +198,7 @@ const EditCompanyForm = () => {
     reset(defaultValues);
   }, [defaultValues, reset]);
 
-  const handleEditCompany = async (data: Company) => {
+  const handleEditCompany = async (data: EditCompanyRequest) => {
     setIsLoading(true);
     return await api.patch(apiRouters.COMPANY_DETAIL(params.id), data);
   };
@@ -139,7 +211,6 @@ const EditCompanyForm = () => {
         showToast({
           description: SUCCESS_UPDATE_MESSAGE,
         });
-        reset();
         router.push(pageRouters.COMPANY_MANAGEMENT.href);
       },
       onError: () => {
@@ -159,129 +230,139 @@ const EditCompanyForm = () => {
     editCompany({
       ...data,
       id: parseFloat(params.id),
+      name: data?.name || '',
       contract: {
-        status: data.contract?.status?.value.toString(),
-        startDate: data.contract?.startDate
-          ? formatDateServer(data.contract.startDate)
-          : null,
-        endDate: data.contract?.endDate
-          ? formatDateServer(data.contract.endDate)
-          : null,
+        responsiblePersonName: data.contract?.responsiblePersonName || '',
+        responsiblePersonMail: data.contract?.responsiblePersonMail || '',
+        phone: data.contract?.phone || '',
+        address: data.contract?.address || '',
+        industry: data.contract?.industry?.value as string,
+        implementationMainIssue: data.contract?.implementationMainIssue
+          ?.value as string,
+        systemMainPurpose: data.contract?.systemMainPurpose?.value as string,
       },
     });
   };
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="grid gap-2">
-        {/* Name Area */}
-        <div className="grid grid-cols-2 gap-5">
-          <Input
-            label="会社名"
-            required
-            placeholder="会社名を入力してください"
-            register={register('name', {
-              required: COMPANY_NAME_REQUIRED_MESSAGE,
-            })}
-            autoComplete="off"
-            error={errors.name?.message}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <Input label="ID" register={register('id')} disabled={true} />
+      <Input
+        label="会社名"
+        placeholder="会社名を入力してください"
+        register={register('name', {
+          required: COMPANY_NAME_REQUIRED_MESSAGE,
+        })}
+        autoComplete="off"
+        error={errors.name?.message}
+      />
+      <Input label="契約プラン" register={register('plan')} disabled={true} />
+      <Input
+        label="決済方法"
+        register={register('paymentMethod')}
+        disabled={true}
+      />
+      <Input
+        label="担当責任者名"
+        placeholder="担当責任者名を入力してください"
+        register={register('contract.responsiblePersonName', {
+          required: RESPONSIBLE_PERSON_NAME_REQUIRED_MESSAGE,
+        })}
+        autoComplete="off"
+        error={errors?.contract?.responsiblePersonName?.message}
+      />
+      <Input
+        label="メールアドレス"
+        placeholder="メールアドレスを入力してください"
+        register={register('contract.responsiblePersonMail', emailRules(true))}
+        autoComplete="off"
+        error={errors?.contract?.responsiblePersonMail?.message}
+      />
+      <Input
+        label="電話番号"
+        placeholder="電話番号を入力してください"
+        className={`${errors?.contract?.phone?.message && '!border-error'}`}
+        type="tel"
+        register={register('contract.phone', {
+          required: {
+            value: true,
+            message: PHONE_REQUIRED_MESSAGE,
+          },
+          pattern: {
+            value: PHONE_REGEX,
+            message: PHONE_NUMBER_WRONG_FORMAT,
+          },
+        })}
+        autoComplete="off"
+        error={errors?.contract?.phone?.message}
+      />
+      <Input
+        label="住所"
+        placeholder="住所を入力してください"
+        register={register('contract.address', {
+          required: ADDRESS_REQUIRED_MESSAGE,
+        })}
+        autoComplete="off"
+        error={errors?.contract?.address?.message}
+      />
+      <Controller
+        control={control}
+        name="contract.industry"
+        render={({ field: { onChange, value } }) => (
+          <Dropdown
+            label="業種"
+            options={industryOptions}
+            selectedOption={industryOptions.find(
+              (element) => element.value === value?.value,
+            )}
+            className="w-1/2"
+            onChange={(e) => {
+              onChange(e);
+            }}
+            error={errors.contract?.industry?.message}
           />
-        </div>
-      </div>
-      <div className="grid gap-2  mt-4">
-        {/* Status Area */}
-        <div className="grid grid-cols-2 gap-5">
-          <div className="w-3/4">
-            <Controller
-              control={control}
-              name="contract.status"
-              render={({ field: { onChange, value } }) => (
-                <Dropdown
-                  label="契約状態"
-                  options={STATUS_COMPANY}
-                  selectedOption={STATUS_COMPANY.find(
-                    (element) => element.value === value?.value,
-                  )}
-                  className="w-1/2"
-                  onChange={(e) => {
-                    onChange(e);
-                    if (e.value === StatusCompany.ALREADY) {
-                      setCheckStatus(true);
-                    } else {
-                      setValue('contract.startDate', '');
-                      setValue('contract.endDate', '');
-                      setCheckStatus(false);
-                    }
-                  }}
-                  error={errors.contract?.status?.message}
-                />
+        )}
+        rules={{ required: INDUSTRY_REQUIRED_MESSAGE }}
+      />
+      <Controller
+        control={control}
+        name="contract.systemMainPurpose"
+        render={({ field: { onChange, value } }) => (
+          <Dropdown
+            label="システム導入の主な目的"
+            options={systemMainPurposeOptions}
+            selectedOption={systemMainPurposeOptions.find(
+              (element) => element.value === value?.value,
+            )}
+            className="w-1/2"
+            onChange={(e) => {
+              onChange(e);
+            }}
+            error={errors.contract?.systemMainPurpose?.message}
+          />
+        )}
+        rules={{ required: SYSTEM_MAIN_PURPOSE_REQUIRED_MESSAGE }}
+      />
+      <Controller
+        control={control}
+        name="contract.implementationMainIssue"
+        render={({ field: { onChange, value } }) => {
+          return (
+            <Dropdown
+              label="導入の背景にある主な課題"
+              options={implementationMainIssueOptions}
+              selectedOption={implementationMainIssueOptions.find(
+                (element) => element.value === value?.value,
               )}
-              rules={{ required: STATUS_COMPANY_REQUIRED_MESSAGE }}
-            />
-          </div>
-        </div>
-      </div>
-      <div className="grid gap-2 mt-4">
-        {/* StartDate Area */}
-        <div className="grid grid-cols-2 gap-5">
-          <div className="w-3/4">
-            <Controller
-              control={control}
-              name="contract.startDate"
-              rules={{
-                required: isCheckStatus && START_DATE_REQUIRE_MESSAGE,
+              className="w-1/2"
+              onChange={(e) => {
+                onChange(e);
               }}
-              render={({ field: { value, onChange } }) => (
-                <DatePicker
-                  label="契約開始日"
-                  required={isCheckStatus}
-                  placeholder="yyyy/mm/dd"
-                  selected={value ? new Date(value) : null}
-                  onChange={(e) => {
-                    onChange(e);
-                    if (e !== null) {
-                      const newDate = new Date(
-                        e.getTime() + 24 * 60 * 60 * 1000,
-                      );
-                      setMinDate(newDate);
-                    } else {
-                      setMinDate(null);
-                    }
-                    setValue('contract.endDate', '');
-                  }}
-                  error={
-                    isCheckStatus ? errors.contract?.startDate?.message : ''
-                  }
-                />
-              )}
+              error={errors.contract?.implementationMainIssue?.message}
             />
-          </div>
-        </div>
-      </div>
-      <div className="grid gap-2 mt-4">
-        {/* EndDate Area */}
-        <div className="grid grid-cols-2 gap-5">
-          <div className="w-3/4">
-            <Controller
-              control={control}
-              name="contract.endDate"
-              rules={{
-                required: isCheckStatus && END_DATE_REQUIRE_MESSAGE,
-              }}
-              render={({ field: { value, onChange } }) => (
-                <DatePicker
-                  label="契約終了日"
-                  required={isCheckStatus}
-                  placeholder="yyyy/mm/dd"
-                  selected={value ? new Date(value) : null}
-                  onChange={onChange}
-                  minDate={minDate}
-                  error={isCheckStatus ? errors.contract?.endDate?.message : ''}
-                />
-              )}
-            />
-          </div>
-        </div>
-      </div>
+          );
+        }}
+        rules={{ required: IMPLEMENTATION_MAIN_ISSUE_REQUIRED_MESSAGE }}
+      />
       <div className="flex justify-center">
         <div className="flex flex-col items-center gap-4 my-[60px]">
           <Button className="w-[426px]" variant="primary" type="submit">

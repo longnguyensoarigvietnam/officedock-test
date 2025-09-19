@@ -1,13 +1,15 @@
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
 import { useSession } from 'next-auth/react';
+import { AxiosError } from 'axios';
 
 import { apiRouters } from '@constants/routers';
 
 import { LoadingContext } from '@providers/LoadingProvider';
+
 import { Company } from '@interfaces/company';
+
 import api from '@base/api';
-import { AxiosError } from 'axios';
 
 interface UseCompanyDetailHooksProps {
   companyId: string;

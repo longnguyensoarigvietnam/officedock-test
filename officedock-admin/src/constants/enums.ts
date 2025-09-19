@@ -43,3 +43,19 @@ export enum VerifyTokenType {
   LOGIN = 'LOGIN',
   RESET_PASSWORD = 'RESET_PASSWORD',
 }
+
+export enum CompanyTransactionType {
+  INVOICE = 'INVOICE',
+  PLAN = 'PLAN',
+  POINT = 'POINT',
+}
+
+export enum CompanyStatus {
+  PENDING_APPROVAL = '申請中',
+  ACTIVE_CONTRACT = '契約中',
+  RETRY_PAYMENT = '決済失敗',
+  SUSPENDED = '利用停止中',
+  CANCELLATION_PENDING = '解約予約中',
+  CONTRACT_TERMINATED = '解約済',
+  TEMPORARY_USAGE = '仮利用',
+}

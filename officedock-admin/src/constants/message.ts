@@ -9,12 +9,23 @@ export const STATUS_COMPANY_REQUIRED_MESSAGE = '契約状態を選択してく�
 export const START_DATE_REQUIRE_MESSAGE = '契約開始日を選択してください。';
 export const END_DATE_REQUIRE_MESSAGE = '契約終了日を選択してください。';
 export const NAME_REQUIRED_MESSAGE = '名前は必須です。';
+export const PHONE_REQUIRED_MESSAGE = '電話番号は必須です。';
+export const RESPONSIBLE_PERSON_NAME_REQUIRED_MESSAGE = '担当者名は必須です。';
+export const RESPONSIBLE_PERSON_EMAIL_REQUIRED_MESSAGE =
+  '担当者メールアドレスは必須です。';
+export const ADDRESS_REQUIRED_MESSAGE = '住所は必須です。';
+export const INDUSTRY_REQUIRED_MESSAGE = '業種は必須です。';
+export const SYSTEM_MAIN_PURPOSE_REQUIRED_MESSAGE =
+  'システム導入の主な目的は必須です。';
+export const IMPLEMENTATION_MAIN_ISSUE_REQUIRED_MESSAGE =
+  '導入の背景にある主な課題は必須です。';
 
 //Validate message
 export const PASSWORD_MIN_LENGTH_MESSAGE =
   '半角英数8文字以上で入力してください。';
 export const PASSWORD_NOT_MATCHED_MESSAGE = 'パスワードが一致しません。';
 export const PASSWORD_WRONG_FORMAT = 'このパスワードは一般的すぎます。';
+export const PHONE_NUMBER_WRONG_FORMAT = '電話番号の形式が正しくありません。';
 
 // Success message
 export const SUCCESS_SENT_MAIL_MESSAGE = 'メール送信に成功しました';
@@ -24,6 +35,7 @@ export const SUCCESS_DELETE_MESSAGE = '削除に成功しました';
 export const ERROR_DELETE_MESSAGE = '削除に失敗しました';
 export const ERROR_CREATE_MESSAGE = '作成に失敗しました';
 export const SUCCESS_CREATE_MESSAGE = '作成に成功しました';
+export const SUCCESS_SAVE_MESSAGE = '保存に成功しました。';
 
 // Error
 export const ERROR_LOGIN_MESSAGE = 'ログインに失敗しました';
@@ -38,6 +50,7 @@ export const END_DATE_MUST_BE_GREATER_THAN_START_DATE =
   '終了日は開始日より後にしてください。';
 export const ERROR_EMAIL_AVAILABLE_MESSAGE =
   'このメールアドレスは既に存在しています。';
+export const ERROR_SAVE_MESSAGE = '保存に失敗しました。';
 
 // Toast message
 export const SUCCESS_TITLE_MESSAGE = '成功';
