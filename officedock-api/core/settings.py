@@ -239,7 +239,7 @@ EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "") != "false"
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", None)
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", None)
 EMAIL_SENDER = os.getenv("EMAIL_SENDER", EMAIL_HOST_USER)
-NAME_SENDER = os.getenv("NAME_SENDER", "OfficeDock")
+NAME_SENDER = os.getenv("NAME_SENDER", "OFFICE DOCK")
 
 if not EMAIL_HOST:
     # Only use in local environment if EMAIL_HOST is not set
