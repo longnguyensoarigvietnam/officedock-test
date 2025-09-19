@@ -11,17 +11,14 @@ class CompanyFilter(django_filters.FilterSet):
     id = django_filters.NumberFilter(field_name="id", lookup_expr="icontains")
     name = django_filters.CharFilter(field_name="name", lookup_expr="icontains")
     status = django_filters.CharFilter(field_name="status", lookup_expr="exact")
-    start_date = django_filters.DateFilter(
-        field_name="contract__start_date", lookup_expr="gte"
-    )
+    start_date = django_filters.CharFilter(method="filter_start_date")
     end_date = django_filters.DateFilter(
-        field_name="contract__end_date", lookup_expr="lte"
+        field_name="contract__end_date", lookup_expr="exact"
     )
-    next_renewal_at = django_filters.DateFilter(
-        field_name="contract__next_renewal_at", lookup_expr="lte"
-    )
+    next_renewal_at = django_filters.CharFilter(method="filter_next_renewal")
+
     contract_created_at = django_filters.DateFilter(
-        field_name="contract__created_at", lookup_expr="lte"
+        field_name="contract__created_at", lookup_expr="date"
     )
     plan = django_filters.CharFilter(
         field_name="plan__plan__name", lookup_expr="exact"
@@ -51,3 +48,29 @@ class CompanyFilter(django_filters.FilterSet):
                 total_user=value
             )
         return queryset
+
+    def filter_next_renewal(self, queryset, name, value):
+        """
+        Filter by format 'YYYY-MM'
+        """
+        try:
+            year, month = value.split("-")
+            return queryset.filter(
+                contract__next_renewal_at__year=int(year),
+                contract__next_renewal_at__month=int(month),
+            )
+        except ValueError:
+            return queryset
+
+    def filter_start_date(self, queryset, name, value):
+        """
+        Filter by format 'YYYY-MM'
+        """
+        try:
+            year, month = value.split("-")
+            return queryset.filter(
+                contract__start_date__year=int(year),
+                contract__start_date__month=int(month),
+            )
+        except ValueError:
+            return queryset

@@ -19,6 +19,7 @@ from calendars.constants import (
 )
 from calendars.models import Schedule
 from chat.constants import WebSocketEventType
+from common.constants import RETRY_PAYMENT_MAX
 from common.helpers import (
     get_all_organizations,
     get_balances_of_user,
@@ -44,7 +45,16 @@ from common.helpers import (
     get_user_setting,
 )
 from common.services.stripe_service import StripeService
+from companies.constants import (
+    CompanyStatus,
+    CompanyTransactionTypes,
+    ImplementationMainIssues,
+    Industry,
+    SystemMainPurpose,
+    TransactionStatus,
+)
 from companies.serializers import CompanySerializer
+from companies.services import CompanyService
 from dashboard.utils import separate_duration_while_keep_running
 from mvp_votes.constants import DEFAULT_CONTENT_TWEET_END_VOTE, MVPVoteTypes
 from mvp_votes.models import MVPVoteManagement
@@ -62,7 +72,7 @@ from tasks.constants import (
 from roles.constants import Actions, Screens
 from chat.models import ChatRoom
 from thanks_messages.models import ThanksMessage
-from companies.models import Company
+from companies.models import Company, CompanyTransaction
 from thanks_messages.models import ThanksMessage
 from base.messages import ERROR_MESSAGES
 from common.services.transaction_service import TransactionService
@@ -251,7 +261,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             response_data["company_status"] = get_company_status()
         if "get_plans" in request.query_params:
             response_data["plans"] = get_plans()
-            
+
         return self.response_ok(response_data)
 
     @extend_schema(
@@ -437,17 +447,21 @@ class CronJobViewSet(BaseAPIViewSet):
                 for user in users:
                     send_web_socket_event(
                         {
-                            "id": task_duration.task.id
-                            if isinstance(related_obj, Task)
-                            else task_duration.schedule.id,
+                            "id": (
+                                task_duration.task.id
+                                if isinstance(related_obj, Task)
+                                else task_duration.schedule.id
+                            ),
                             "task_duration_running_uuid": str(
                                 task_duration.uuid
                             ),
                             "is_over_estimate": is_over_estimate,
                             "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
-                            "type": CalendarTypes.TASK.value
-                            if isinstance(related_obj, Task)
-                            else CalendarTypes.SCHEDULE.value,
+                            "type": (
+                                CalendarTypes.TASK.value
+                                if isinstance(related_obj, Task)
+                                else CalendarTypes.SCHEDULE.value
+                            ),
                         },
                         user=user,
                     )
@@ -844,6 +858,7 @@ class CronJobViewSet(BaseAPIViewSet):
             }
         )
 
+
 @extend_schema(tags=["System > Webhook"])
 class WebhookView(BaseAPIViewSet):
     """
@@ -863,6 +878,7 @@ class WebhookView(BaseAPIViewSet):
         payload = request.body
         sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
         stripe_service = StripeService()
+        company_service = CompanyService()
 
         try:
             # Verify webhook signature to ensure authenticity
@@ -873,20 +889,63 @@ class WebhookView(BaseAPIViewSet):
             )
         except ValueError as e:
             # Invalid payload
-            return self.response_ok({"error": f"Invalid payload: {e}"})
+            print({"Webhook Error": f"Invalid payload: {e}"})
+            raise ValidationError({"detail": f"Invalid payload: {e}"})
         except stripe.error.SignatureVerificationError as e:
             # Invalid signature
-            return self.response_ok({"error": f"Invalid signature: {e}"})
+            print({"Webhook Error": f"Invalid signature: {e}"})
+            raise ValidationError({"detail": f"Invalid signature: {e}"})
 
+        print(f"Event type: {event.type}")
         # Route events to appropriate handlers
         if event.type == "invoice.created":
-            stripe_service.handle_invoice_created(event.data.object)
+            invoice = event.data.object
+            stripe_service.handle_invoice_created(invoice)
+            # Check renewal of contract and handle it
+            invoice_start_date = datetime.fromtimestamp(invoice.created)
+            company = Company.objects.filter(
+                stripe_customer_id=invoice.customer,
+                contract__next_renewal_at__lte=invoice_start_date,
+                status__in=[
+                    CompanyStatus.ACTIVE_CONTRACT.value,
+                    CompanyStatus.TEMPORARY_USAGE.value,
+                ],
+            ).first()
+            if company:
+                company_service.handle_contract_renewal(company, invoice)
         elif event.type == "invoice.payment_succeeded":
+            # Update status transaction
             self.handle_payment_succeeded(event.data.object)
         elif event.type == "invoice.payment_failed":
+            # Update status transaction and send mail
             self.handle_payment_failed(event.data.object)
-        elif event.type == "invoice.sent":
+        elif event.type == "invoice.finalized":
+            # Handle pay invoice and void it when company have status Temporary Usage
             stripe_service.handle_pay_invoice(event.data.object)
+        elif event.type == "customer.subscription.deleted":
+            subscription = event.data.object
+            company = Company.objects.filter(
+                stripe_customer_id=subscription.customer
+            ).first()
+            # After description deleted, the last invoice cannot auto pay, so need reset invoice finalize_at
+            if company:
+                # Get invoice
+                transaction = company.transactions.filter(
+                    type=CompanyTransactionTypes.INVOICE.value,
+                    status=TransactionStatus.UNPAID.value,
+                    paid_at__isnull=True,
+                ).last()
+                if transaction:
+                    invoice = stripe.Invoice.retrieve(
+                        transaction.stripe_invoice_id
+                    )
+                    # Set the finalize of invoice
+                    stripe_service.update_invoice_finalize(invoice)
+                # Update company status to contract terminated
+                company_service.change_status_of_company(
+                    company, CompanyStatus.CONTRACT_TERMINATED.value
+                )
+                print(f"✅ Company : {company.id} destroy contract")
         else:
             print(f"Unhandled event type: {event.type}")
 
@@ -898,6 +957,10 @@ class WebhookView(BaseAPIViewSet):
         - Example: update subscription status, log event, notify user, etc.
         """
         print(f"✅ Payment succeeded for invoice {invoice.id}")
+        # Update transaction status
+        CompanyTransaction.objects.filter(stripe_invoice_id=invoice.id).update(
+            status=TransactionStatus.PAID.value, paid_at=now()
+        )
 
     def handle_payment_failed(self, invoice):
         """
@@ -905,6 +968,21 @@ class WebhookView(BaseAPIViewSet):
         - Example: notify user, retry payment, disable service, etc.
         """
         print(f"❌ Payment failed for invoice {invoice.id}")
+        # TODO: Implement logic send notify mail when first payment failed
+        company = Company.objects.filter(
+            stripe_customer_id=invoice.customer
+        ).update(
+            status=(
+                CompanyStatus.SUSPENDED.value
+                if invoice.attempt_count >= RETRY_PAYMENT_MAX
+                else CompanyStatus.RETRY_PAYMENT.value
+            )
+        )
+        # Update transaction status
+        CompanyTransaction.objects.filter(stripe_invoice_id=invoice.id).update(
+            status=TransactionStatus.PAYMENT_FAILED.value,
+            retry_attempt=invoice.attempt_count,
+        )
 
 
 @extend_schema(tags=["Admin > Creation Data"])
@@ -919,6 +997,9 @@ class AdminCreationDataViewSet(BaseAPIViewSet):
         parameters=[
             OpenApiParameter("get_company_status", type=bool),
             OpenApiParameter("get_plans", type=bool),
+            OpenApiParameter("get_implementation_main_issues", type=bool),
+            OpenApiParameter("get_system_main_purpose", type=bool),
+            OpenApiParameter("get_industry", type=bool),
         ]
     )
     @action(methods=["GET"], detail=False, url_path="common")
@@ -931,4 +1012,12 @@ class AdminCreationDataViewSet(BaseAPIViewSet):
             response_data["company_status"] = get_company_status()
         if "get_plans" in request.query_params:
             response_data["plans"] = get_plans()
+        if "get_implementation_main_issues" in request.query_params:
+            response_data[
+                "implementation_main_issues"
+            ] = ImplementationMainIssues.values()
+        if "get_system_main_purpose" in request.query_params:
+            response_data["system_main_purpose"] = SystemMainPurpose.values()
+        if "get_industry" in request.query_params:
+            response_data["industry"] = Industry.values()
         return self.response_ok(response_data)

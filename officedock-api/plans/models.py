@@ -26,13 +26,3 @@ class Tax(BaseModel):
     name = models.CharField()
     percentage = models.FloatField()
     stripe_tax_id = models.CharField(null=True, blank=True)
-
-
-class Meter(BaseModel):
-    """
-    Meter model
-    """
-
-    display_name = models.CharField()
-    event_name = models.CharField()
-    stripe_meter_id = models.CharField(null=True, blank=True)

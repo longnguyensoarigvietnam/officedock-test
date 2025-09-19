@@ -76,6 +76,7 @@ class Contract(BaseModel):
     phone = models.CharField(null=True, blank=True)
     responsible_person_name = models.CharField(null=True, blank=True)
     responsible_person_mail = models.EmailField(null=True, blank=True)
+    cancel_at = models.DateTimeField(null=True, blank=True)
 
 
 class CompanyPlan(BaseModel):
@@ -134,3 +135,4 @@ class CompanyTransaction(BaseModel):
     paid_at = models.DateTimeField(null=True, blank=True)
     stripe_invoice_id = models.CharField(null=True, blank=True)
     amount_point = models.IntegerField(null=True, blank=True)
+    retry_attempt = models.IntegerField(default=0)

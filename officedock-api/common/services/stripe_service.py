@@ -2,13 +2,17 @@ from datetime import datetime
 from decimal import Decimal
 
 import stripe
-from companies.constants import CompanyStatus
-from companies.models import Company, CompanyPaymentMethod
+from companies.constants import (
+    CompanyStatus,
+    CompanyTransactionTypes,
+    TransactionStatus,
+)
+from companies.models import Company, CompanyTransaction
 from core import settings
 from base.messages import ERROR_MESSAGES
 from rest_framework.exceptions import ValidationError
 
-from plans.models import Meter, Tax
+from plans.models import Tax
 
 
 def set_stripe_key():
@@ -25,43 +29,6 @@ class StripeService:
         Initialize the Stripe service by setting the Stripe secret API key.
         """
         set_stripe_key()
-
-    def get_or_create_meter(
-        self, display_name, event_name, default_aggregation
-    ):
-        """
-        Get or create a Meter in Stripe.
-
-        If an active Meter with the same display_name and event_name exists,
-        return its ID. Otherwise, create a new Meter with the given parameters.
-
-        Arguments:
-            display_name (str): Human-readable name for the meter.
-            event_name (str): The event name used when reporting usage.
-            default_aggregation (dict): Aggregation settings, e.g. {"mode": "sum", "field_name": "value"}.
-
-        Returns:
-            str: Stripe Meter ID
-        """
-        # 1. Try to find existing meter
-        meter = Meter.objects.filter(
-            display_name=display_name, event_name=event_name
-        ).first()
-        if meter:
-            return meter.stripe_meter_id
-
-        # 2. Otherwise, create a new meter
-        new_meter = stripe.billing.Meter.create(
-            display_name=display_name,
-            event_name=event_name,
-            default_aggregation=default_aggregation,
-        )
-        Meter.objects.create(
-            display_name=display_name,
-            event_name=event_name,
-            stripe_meter_id=new_meter.id,
-        )
-        return new_meter.id
 
     def get_or_create_tax_rate(self, percentage, tax_name):
         """
@@ -265,11 +232,12 @@ class StripeService:
                 ],
                 billing_cycle_anchor_config={
                     "day_of_month": 1,
+                    "hour": 0,
+                    "minute": 0,
                 },
                 proration_behavior="none",  # No prorate for current month
-                # collection_method="charge_automatically",
                 collection_method="send_invoice",
-                days_until_due=5,
+                days_until_due=4,
                 metadata={"company_id": company.id},
             )
 
@@ -293,36 +261,45 @@ class StripeService:
 
         try:
             # Get the company's default payment method
-            payment_method = CompanyPaymentMethod.objects.filter(
-                company__stripe_customer_id=invoice.customer, is_default=True
+            company = Company.objects.filter(
+                stripe_customer_id=invoice.customer
             ).first()
-
-            # Convert period_end (UNIX timestamp) to datetime
-            period_end_dt = datetime.fromtimestamp(invoice.period_end)
-
-            # Calculate the 5th day of the next month
-            next_month = (
-                period_end_dt.month + 1 if period_end_dt.month < 12 else 1
+            self.update_invoice_finalize(invoice)
+            CompanyTransaction.objects.create(
+                company=company,
+                type=CompanyTransactionTypes.INVOICE.value,
+                status=TransactionStatus.UNPAID.value,
+                invoice_target=datetime.fromtimestamp(invoice.created),
+                stripe_invoice_id=invoice.id,
             )
-            next_year = (
-                period_end_dt.year
-                if period_end_dt.month < 12
-                else period_end_dt.year + 1
-            )
-            due_date_dt = datetime(next_year, next_month, 5, 0, 0, 0)
-            finalizes_at = int(due_date_dt.timestamp())
-            # Update the invoice on Stripe
-            stripe.Invoice.modify(
-                invoice.id,
-                automatically_finalizes_at=finalizes_at,
-                default_payment_method=payment_method.stripe_payment_method_id
-                if payment_method
-                else None,
-            )
+            print(f"Invoice created: {invoice.id}")
 
         except Exception as e:
-            print({"detail": f"{e}"})
+            print(f"❌ Invoice create failed: {e}")
             raise ValidationError({"detail": f"{e}"})
+
+    def update_invoice_finalize(self, invoice):
+        """
+        Set the finalize of invoice to the 5th of the next month.
+        """
+        # Convert period_end (UNIX timestamp) to datetime
+        period_end_dt = datetime.fromtimestamp(invoice.period_end)
+
+        # Calculate the 5th day of the next month
+        next_month = period_end_dt.month + 1 if period_end_dt.month < 12 else 1
+        next_year = (
+            period_end_dt.year
+            if period_end_dt.month < 12
+            else period_end_dt.year + 1
+        )
+        due_date_dt = datetime(next_year, next_month, 5, 0, 0, 0)
+        finalizes_at = int(due_date_dt.timestamp())
+        # Update the invoice on Stripe
+        stripe.Invoice.modify(
+            invoice.id,
+            automatically_finalizes_at=finalizes_at,
+            auto_advance=True,
+        )
 
     def handle_pay_invoice(self, invoice):
         """
@@ -350,11 +327,21 @@ class StripeService:
             else:
                 stripe.Invoice.pay(invoice.id)
 
-            # Optional: log successful payment
-            print(
-                f"Invoice {invoice.id} payment triggered (skip_payment={is_skip_payment})"
-            )  # FIXME: Remove when push PR
-
         except Exception as e:
             # Wrap Stripe error (or any other) into a DRF ValidationError
+            print(f"❌ Pay invoice failed {e}")
             raise ValidationError({"detail": str(e)})
+
+    def handle_cancel_subscription(self, subscription_id, cancel_at):
+        try:
+            subscription = stripe.Subscription.modify(
+                subscription_id, cancel_at_period_end=True
+            )
+        except Exception as e:
+            # Wrap Stripe error (or any other) into a DRF ValidationError
+            print(f"❌ Cancel subscription: {e}")
+            raise ValidationError({"detail": str(e)})
+        except stripe.error.StripeError as e:
+            print(f"❌ Cancel subscription from Stripe: {e}")
+            raise ValidationError({"detail": f"{e}"})
+        return True

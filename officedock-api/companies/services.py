@@ -1,9 +1,11 @@
+import datetime
 from django.contrib.auth.base_user import get_random_string
 from rest_framework.fields import ValidationError
 from base.messages import ERROR_MESSAGES
+from common.services import stripe_service
 from common.services.stripe_service import StripeService
 from common.utils import get_username_alias
-from companies.constants import CompanyStatus
+from companies.constants import CompanyStatus, CompanyTransactionTypes
 from companies.models import Company
 from companies.utils import generate_contract_related_date_base_on_now
 from users.constants import LoginTypes, RoleTypes
@@ -33,7 +35,6 @@ class CompanyService:
             login_text=contract.responsible_person_mail,
         )
         user_data["is_two_factor_auth"] = False
-        # FIXME: Check duplicate email
         user = User.objects.create(company=company, **user_data)
         Profile.objects.create(user=user, company=company, **profile)
 
@@ -61,6 +62,11 @@ class CompanyService:
         related_date = generate_contract_related_date_base_on_now()
         contract.__dict__.update(related_date)
         contract.save(update_fields=related_date.keys())
+        company.transactions.create(
+            plan_start_at=related_date["start_date"],
+            plan=company.plan.plan,
+            type=CompanyTransactionTypes.PLAN.value,
+        )
         # Create Stripe postpaid subscription and save IDs to company plan
         subscription = stripe.create_postpaid_subscription_with_invoice(
             company, start_date=related_date["start_date"]
@@ -80,17 +86,51 @@ class CompanyService:
         company.status = CompanyStatus.ACTIVE_CONTRACT.value
         company.save(update_fields=["status"])
 
-    def change_plan(self, company: Company):
+    def handle_contract_renewal(self, company, invoice):
         """
-        # TODO: comment here
+        Handle automatic contract renewal for the given company.
         """
-        stripe = StripeService()
+        invoice_start_date = datetime.datetime.fromtimestamp(invoice.created)
+        if (
+            company.contract.cancel_at
+            and company.contract.cancel_at < invoice_start_date
+        ):
+            end_date = company.contract.end_date
+            cancel_at = datetime.datetime.combine(end_date, datetime.time.max)
+            self.change_status_of_company(
+                company, CompanyStatus.CANCELLATION_PENDING.value
+            )
+            stripe_service.StripeService().handle_cancel_subscription(
+                subscription_id=invoice.subscription, cancel_at=cancel_at
+            )
+            print(
+                f"✅ Company : {company.id} pending contract at: {contract.cancel_at}"
+            )
+            return True
         contract = company.contract
+        related_date = generate_contract_related_date_base_on_now(
+            contract.next_renewal_at
+        )
+        contract.end_date = related_date["end_date"]
+        contract.next_renewal_at = related_date["next_renewal_at"]
+        contract.save(update_fields=["end_date", "next_renewal_at"])
+        print(
+            f"✅ Company : {company.id} renewal contract at: {contract.next_renewal_at}"
+        )
 
-        # Update contract dates relative to the current time
+        return True
+
+    def change_status_of_company(self, company, status):
+        """
+        Change status of company when over end date of contract
+        """
+        company.status = status
+        company.save(update_fields=["status"])
+
+    def change_plan(self, company):
+        stripe = StripeService()
         related_date = generate_contract_related_date_base_on_now()
-        contract.__dict__.update(related_date)
-        contract.save(update_fields=related_date.keys())
+
         # Create Stripe postpaid subscription and save IDs to company plan
         subscription = stripe.create_postpaid_subscription_with_invoice(
             company, start_date=related_date["start_date"]

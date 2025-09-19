@@ -4,12 +4,10 @@ import datetime
 from django.utils.timezone import now
 
 
-def generate_contract_related_date_base_on_now():
+def generate_contract_related_date_base_on_now(issue_date=now()):
     """
     Generate contract-related dates based on the company account issue date.
     """
-    issue_date = now()
-
     # 1. Official usage month: the month immediately after the issue month
     if issue_date.month == 12:
         start_year = issue_date.year + 1
@@ -39,16 +37,12 @@ def generate_contract_related_date_base_on_now():
     contract_end = datetime.datetime(
         contract_end_year, contract_end_month, last_day_of_end_month, 23, 59, 59
     )
-
-    # 3. First payment due date:
-    #    → usage_month fee is billed on the 5th day of the following month
-    if start_month == 12:
-        datetime.datetime(start_year + 1, 1, 5, 0, 0, 0)
-    else:
-        datetime.datetime(start_year, start_month + 1, 5, 0, 0, 0)
+    next_renewal_at = datetime.datetime(
+        contract_end_year, contract_end_month, 1, 0, 0, 0
+    )
 
     return {
         "start_date": contract_start,
         "end_date": contract_end,
-        "next_renewal_at": contract_end,
+        "next_renewal_at": next_renewal_at,
     }

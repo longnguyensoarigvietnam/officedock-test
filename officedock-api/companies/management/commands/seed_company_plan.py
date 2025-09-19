@@ -22,7 +22,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         for company in Company.objects.all():
             total_user = company.users.count()
-            related_date = generate_contract_related_date_base_on_now()
+            related_date = generate_contract_related_date_base_on_now(
+                company.created_at
+            )
             # Seed data contract
             contract_data = {
                 "implementation_main_issue": ImplementationMainIssues.random(),
@@ -75,7 +77,8 @@ class Command(BaseCommand):
                     "status",
                 ]
             )
-            stripe_service.StripeService().get_or_create_customer(company)
+            if not company.stripe_customer_id:
+                stripe_service.StripeService().get_or_create_customer(company)
 
         self.stdout.write(
             self.style.SUCCESS(

@@ -10,17 +10,6 @@ from base.permissions import IsOperationAdminOnly
 from base.apis import BaseAPIViewSet
 
 from common.filters import CustomOrderFilter
-<<<<<<< HEAD
-from common.utils import (
-    delete_file,
-    get_client_ip,
-    get_user_agent,
-    get_username_alias,
-)
-from users.constants import RoleTypes, LoginTypes
-from users.models import Role, User, Profile, UserActivityLog
-from utils.mail import MailService
-=======
 from common.serializers import EmptySerializer
 from common.services.stripe_service import StripeService
 from common.utils import delete_file
@@ -29,7 +18,6 @@ from companies.constants import (
     CompanyTransactionTypes,
 )
 from companies.services import CompanyService
->>>>>>> 3d4ec0fa (API: Initial plan DB and implement API creation and active company)
 from .filters import CompanyFilter
 from .models import Company, CompanyPaymentMethod, CompanyPlan, Contract
 from .serializers import (
@@ -87,6 +75,22 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         company = self.get_object()
         self.company_service.active_company(company)
+        return self.response_ok()
+
+    @action(
+        url_path="change-plan",
+        detail=True,
+        methods=["POST"],
+        serializer_class=EmptySerializer,
+    )
+    @transaction.atomic()
+    def handle_change_plan_company(self, request, pk):
+        """
+        Activate a company by creating its admin user, assigning roles,
+        setting up Stripe subscription, and updating contract status.
+        """
+        company = self.get_object()
+        self.company_service.change_plan(company)
         return self.response_ok()
 
     @extend_schema(
