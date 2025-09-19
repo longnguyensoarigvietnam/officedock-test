@@ -20,6 +20,7 @@ from .constants import (
     PEARL_TASK_COMPLETE,
     RoleTypes,
     TransactionTypes,
+    UserActivityTypes,
 )
 from .managers import ActiveUsersOnlyManager
 from .services import UserService
@@ -722,3 +723,67 @@ class ConfirmReport(BaseModel):
             self.company_id = self.user.company_id
 
         super().save(*args, **kwargs)
+
+
+class UserActivityLog(BaseModel):
+    """
+    User activity log model to track user creation, deletion, and other activities.
+    """
+
+    user_id = models.IntegerField()
+    user_name = models.CharField(max_length=255)
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="user_activity_logs",
+        on_delete=models.CASCADE,
+    )
+    activity_type = models.CharField(
+        max_length=50,
+        choices=UserActivityTypes.choices(),
+    )
+    performed_id = models.IntegerField()
+    performed_name = models.CharField(max_length=255)
+    ip_address = models.GenericIPAddressField(
+        null=True,
+        blank=True,
+    )
+    user_agent = models.TextField(
+        null=True,
+        blank=True,
+    )
+
+    @classmethod
+    def log_user_creation(
+        cls, user, performed_by, ip_address=None, user_agent=None
+    ):
+        """
+        Log user creation activity.
+        """
+        return cls.objects.create(
+            user_id=user.id,
+            user_name=user.full_name,
+            company_id=user.company_id,
+            activity_type=UserActivityTypes.USER_CREATED.value,
+            performed_id=performed_by.id,
+            performed_name=performed_by.full_name,
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
+
+    @classmethod
+    def log_user_deletion(
+        cls, user, performed_by, ip_address=None, user_agent=None
+    ):
+        """
+        Log user deletion activity.
+        """
+        return cls.objects.create(
+            user_id=user.id,
+            user_name=user.full_name,
+            company_id=user.company_id,
+            activity_type=UserActivityTypes.USER_DELETED.value,
+            performed_id=performed_by.id,
+            performed_name=performed_by.full_name,
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )

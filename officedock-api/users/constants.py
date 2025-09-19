@@ -121,3 +121,12 @@ COIN_SKILL_UP_STEP3 = 1000
 PEARL_TASK_COMPLETE = 100
 PEARL_LOGIN_BONUS = 50
 PEARL_TUTORIAL = 5000
+
+
+class UserActivityTypes(EnumChoices):
+    """
+    User activity types constants.
+    """
+
+    USER_CREATED = "USER_CREATED"
+    USER_DELETED = "USER_DELETED"

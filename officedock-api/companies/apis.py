@@ -10,9 +10,14 @@ from base.permissions import IsOperationAdminOnly
 from base.apis import BaseAPIViewSet
 
 from common.filters import CustomOrderFilter
-from common.utils import delete_file, get_username_alias
+from common.utils import (
+    delete_file,
+    get_client_ip,
+    get_user_agent,
+    get_username_alias,
+)
 from users.constants import RoleTypes, LoginTypes
-from users.models import Role, User, Profile
+from users.models import Role, User, Profile, UserActivityLog
 from utils.mail import MailService
 from .filters import CompanyFilter
 from .models import Company, Contract
@@ -45,6 +50,7 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     @transaction.atomic
     def perform_create(self, serializer):
         """Handle create company with user info"""
+        current_user = self.request.user
         serializer_data = serializer.validated_data
         user_data = {"email": serializer_data.pop("email")}
         profile = {"full_name": serializer_data.pop("fullname")}
@@ -68,6 +74,14 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         # Add system admin to user
         role = Role.get_role(RoleTypes.SYSTEM_ADMIN.value)
         user.roles.add(role, through_defaults={"company": company})
+
+        # Log user create
+        UserActivityLog.log_user_creation(
+            user,
+            current_user,
+            get_client_ip(self.request),
+            get_user_agent(self.request),
+        )
 
         # Save calendar organization
         calendar_org = company.get_calendar_organization()
