@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from base.apis import BaseAPIViewSet
@@ -59,6 +60,7 @@ from thanks_messages.models import ThanksMessage
 from companies.models import Company
 from thanks_messages.models import ThanksMessage
 from common.services import TransactionService
+from base.messages import ERROR_MESSAGES
 from .serializers import (
     CreationDataOrganizationSerializer,
     CreationDataTaskListSerializer,
@@ -494,9 +496,6 @@ class CronJobViewSet(BaseAPIViewSet):
     @extend_schema(
         parameters=[
             OpenApiParameter("cronjob_key", type=str, required=True),
-            OpenApiParameter("year", type=int),
-            OpenApiParameter("month", type=int),
-            OpenApiParameter("day", type=int),
         ]
     )
     @action(
@@ -512,14 +511,8 @@ class CronJobViewSet(BaseAPIViewSet):
         - Handle company closing and deadline logic
         - Reward users with coins/pearls based on activities
         """
-        year = request.query_params.get("year")
-        month = request.query_params.get("month")
-        day = request.query_params.get("day")
-        if year and month and day:
-            today = date(int(year), int(month), int(day))
-        else:
-            today = now().date()
 
+        today = now().date()
         transaction_service = TransactionService()
 
         # 1. Cleanup soft-deleted thanks messages after retention period
@@ -604,6 +597,127 @@ class CronJobViewSet(BaseAPIViewSet):
     @extend_schema(
         parameters=[
             OpenApiParameter("cronjob_key", type=str, required=True),
+            OpenApiParameter("company_id", type=int),
+            OpenApiParameter("year", type=int),
+            OpenApiParameter("month", type=int),
+            OpenApiParameter("day", type=int),
+        ]
+    )
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="fake-run-every-day",
+    )
+    @transaction.atomic
+    def fake_cronjob_run_every_day(self, request):
+        """
+        Fake daily cronjob endpoint.
+        - Handle company closing and deadline logic
+        - Reward users with coins/pearls based on activities
+        """
+
+        if not settings.DEBUG:
+            raise NotFound()
+
+        # 1. Get params
+        company_id = request.query_params.get("company_id")
+        year = request.query_params.get("year")
+        month = request.query_params.get("month")
+        day = request.query_params.get("day")
+        if year and month and day:
+            today = date(int(year), int(month), int(day))
+        else:
+            today = now().date()
+
+        if company_id:
+            all_companies = Company.objects.filter(id=company_id)
+
+            if not all_companies.exists():
+                raise ValidationError(
+                    {
+                        "detail": ERROR_MESSAGES["company_not_exists"].format(
+                            id=company_id
+                        )
+                    }
+                )
+        else:
+            all_companies = Company.objects.all()
+
+        transaction_service = TransactionService()
+
+        # 2. Iterate over all companies to handle closing logic
+        for company in all_companies.prefetch_related("users"):
+            company_dates = calculate_company_dates(company, today)
+            date_after_closing = company_dates["date_after_closing"]
+            start_date_calculation_deadline = company_dates[
+                "start_date_calculation_deadline"
+            ]
+            date_after_data_edit_deadline = company_dates[
+                "date_after_data_edit_deadline"
+            ]
+
+            # --- Case 1: Closing day ---
+            if today.day == date_after_closing.day:
+                company_users = company.users.all()
+                company_users_count = company_users.count()
+
+                for user in company_users:
+                    # Reward coins for thanks messages (top voted)
+                    transaction_service.reward_thanks_message(
+                        user,
+                        date_after_closing,
+                        start_date_calculation_deadline,
+                    )
+
+                    # Reward pearls
+                    transaction_service.reward_login_bonus(
+                        user,
+                        date_after_closing,
+                        start_date_calculation_deadline,
+                    )
+                    transaction_service.reward_task_complete(
+                        user,
+                        date_after_closing,
+                        start_date_calculation_deadline,
+                    )
+
+                # Update exchangeable coin for user
+                if company_users_count > 0:
+                    user_exchangeable_amount = (
+                        company.exchangeable_amount // company_users_count
+                    )
+                    UserBalance.objects.filter(user__in=company_users).update(
+                        exchangeable_coin=max(
+                            user_exchangeable_amount,
+                            company.min_exchange_per_user,
+                        )
+                    )
+
+            # --- Case 2: Deadline day ---
+            elif today.day == date_after_data_edit_deadline.day:
+                # Process working time rewards for all users in the company
+                # This runs at 00:00 of the day after the deadline
+                # Get all users in the company
+                company_users = company.users.all()
+
+                # Process working time rewards for each user for the entire month
+                for user in company_users:
+                    # Calculate total working time rewards for the entire month
+                    transaction_service.reward_actual_working_time(
+                        start_date_calculation_deadline,
+                        date_after_closing,
+                        user,
+                    )
+
+        return self.response_ok(
+            {
+                "today": today.isoformat(),
+            }
+        )
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("cronjob_key", type=str, required=True),
             OpenApiParameter("user_email", type=str, required=False),
             OpenApiParameter("user_id", type=int, required=False),
             OpenApiParameter("coin", type=int, required=False),
@@ -621,6 +735,9 @@ class CronJobViewSet(BaseAPIViewSet):
         Seed points (coins and pearls) to a user for testing purposes.
         Requires either user_email or user_id to identify the user.
         """
+
+        if not settings.DEBUG:
+            raise NotFound()
 
         # Get parameters
         user_email = request.query_params.get("user_email")
