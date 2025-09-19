@@ -95,10 +95,17 @@ export const apiRouters = {
   LOGIN_GOOGLE_VERIFY: '/auth/login/google/verify/',
   FORGOT_PASSWORD: '/auth/forgot-password/',
   RESET_PASSWORD: '/auth/reset-password/',
+
   COMPANY_LIST: '/companies/',
   COMPANY_DETAIL: (id: string) => `/companies/${id}/`,
+  COMPANY_TRANSACTION: (id: string) => `/companies/${id}/transactions/`,
+  COMPANY_ACTIVE: (id: string) => `/companies/${id}/active/`,
+
   USER_LIST: '/users/',
   USER_DETAIL: (id: string) => `/users/${id}/`,
+
   TERM_DETAIL: (id: string) => `/terms/${id}/`,
   TERM_LIST: '/terms/',
+  
+  COMMON_CREATION_DATA: '/creation-data/common/',
 };
