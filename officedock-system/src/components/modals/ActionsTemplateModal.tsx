@@ -28,7 +28,10 @@ import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
-import { DEFAULT_VALUE_TODO_LIST } from '@constants/message';
+import {
+  DEFAULT_VALUE_TODO_LIST,
+  ERROR_LONG_FIELD_MESSAGE,
+} from '@constants/message';
 import { COPY_MESSAGE, NO_SETTING, UNREGISTERED } from '@constants';
 import {
   ActionTask,
@@ -712,6 +715,10 @@ const ActionsTemplateModal = ({
               className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-centers !py-0 h-[46px] focus:!shadow-none focus:border !border-[#77858F] rounded-md"
               register={register('title', {
                 required: watch('title') !== null ? true : false,
+                maxLength: {
+                  value: 255,
+                  message: ERROR_LONG_FIELD_MESSAGE,
+                },
                 onChange: () => {
                   setIsFormTouched(true);
                 },

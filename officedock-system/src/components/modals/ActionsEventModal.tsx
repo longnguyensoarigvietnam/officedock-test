@@ -957,6 +957,7 @@ const ActionsEventModal = ({
                             <div className="w-[72px] z-40">
                               <Input
                                 isShowClockIcon={true}
+                                valueInput={watch(`startTime`)}
                                 register={register('startTime', {
                                   required:
                                     watch('startDate') !== null ? true : false,
@@ -1063,6 +1064,7 @@ const ActionsEventModal = ({
                             <div className="w-[72px] z-40">
                               <Input
                                 isShowClockIcon={true}
+                                valueInput={watch(`endTime`)}
                                 register={register('endTime', {
                                   required:
                                     watch('endDate') !== null ? true : false,
@@ -1619,6 +1621,7 @@ const ActionsEventModal = ({
                         disabled={isDisabled}
                         type="text"
                         options={optionTimeInput}
+                        valueInput={watch(`startTime`)}
                         register={register('startTime', {
                           onChange: (e) => {
                             handleChange(e, 'startTime');
@@ -1646,6 +1649,7 @@ const ActionsEventModal = ({
                         disabled={isDisabled}
                         type="text"
                         options={optionTimeInput}
+                        valueInput={watch(`endTime`)}
                         register={register('endTime', {
                           onChange: (e) => {
                             handleChange(e, 'endTime');

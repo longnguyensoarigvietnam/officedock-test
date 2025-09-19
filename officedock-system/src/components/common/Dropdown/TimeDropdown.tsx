@@ -39,6 +39,7 @@ type Props = {
   styleClassOption?: CSSProperties;
   isBottomOptions?: boolean;
   iconSrc?: string;
+  valueInput: string | null | undefined;
   onChange?: (value: OptionDropdownType) => void;
   onAdd?: (value: string) => void;
 };
@@ -48,6 +49,7 @@ const TimeDropdown = ({
   iconSrc,
   isLoading,
   options,
+  valueInput,
   labelOptionClass,
   disabled = false,
   isBottomOptions = true,
@@ -121,6 +123,17 @@ const TimeDropdown = ({
       }, 200);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && valueInput) {
+      const itemSelected = options.find((item) => item.value == valueInput);
+      if (itemSelected) {
+        setSelected(itemSelected);
+      } else {
+        setSelected(undefined);
+      }
+    }
+  }, [isOpen, options, valueInput]);
 
   const filteredOptions =
     options &&

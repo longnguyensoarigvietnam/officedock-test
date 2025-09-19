@@ -982,6 +982,7 @@ const CreateActualDurationsForm = () => {
                     <div className="w-[115px] relative">
                       <Input
                         isShowClockIcon={true}
+                        valueInput={watch(`startedAtTime`)}
                         register={register('startedAtTime', {
                           required:
                             watch('startedAtDate') !== null ? true : false,
@@ -1071,6 +1072,7 @@ const CreateActualDurationsForm = () => {
                     <div className="w-[115px] relative">
                       <Input
                         isShowClockIcon={true}
+                        valueInput={watch(`pausedAtTime`)}
                         register={register('pausedAtTime', {
                           required:
                             watch('pausedAtDate') !== null ? true : false,
