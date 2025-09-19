@@ -596,10 +596,7 @@ class CronJobViewSet(BaseAPIViewSet):
                         company.exchangeable_amount // company_users_count
                     )
                     UserBalance.objects.filter(user__in=company_users).update(
-                        exchangeable_coin=max(
-                            user_exchangeable_amount,
-                            company.min_exchange_per_user,
-                        )
+                        exchangeable_coin=user_exchangeable_amount
                     )
 
             # --- Case 2: Deadline day ---
@@ -718,10 +715,7 @@ class CronJobViewSet(BaseAPIViewSet):
                         company.exchangeable_amount // company_users_count
                     )
                     UserBalance.objects.filter(user__in=company_users).update(
-                        exchangeable_coin=max(
-                            user_exchangeable_amount,
-                            company.min_exchange_per_user,
-                        )
+                        exchangeable_coin=user_exchangeable_amount
                     )
 
             # --- Case 2: Deadline day ---

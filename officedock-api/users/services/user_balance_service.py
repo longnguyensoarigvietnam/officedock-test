@@ -87,6 +87,6 @@ class UserService:
         """
         return user.company.status not in [
             CompanyStatus.SUSPENDED.value,
-            CompanyStatus.CONTRACT_TERMINATED,
-            CompanyStatus.PENDING_APPROVAL,
+            CompanyStatus.CONTRACT_TERMINATED.value,
+            CompanyStatus.PENDING_APPROVAL.value,
         ]

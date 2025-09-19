@@ -74,7 +74,7 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         setting up Stripe subscription, and updating contract status.
         """
         company = self.get_object()
-        self.company_service.active_company(company)
+        self.company_service.active_company(request, company)
         return self.response_ok()
 
     @action(
