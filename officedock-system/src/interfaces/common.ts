@@ -162,4 +162,5 @@ export type CreationDataCommon = {
     pearl: number;
   };
   itemsOfUser?: ItemUser[];
+  organizationsOfAllTeamStatistic?: CreationStatisticType[];
 };

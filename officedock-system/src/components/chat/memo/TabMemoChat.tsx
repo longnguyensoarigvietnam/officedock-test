@@ -1,3 +1,4 @@
+'use client';
 import { useMutation } from 'react-query';
 import React, { useEffect, useState } from 'react';
 

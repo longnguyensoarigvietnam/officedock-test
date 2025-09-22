@@ -49,9 +49,9 @@ import api from '@base/api';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useErrorToast } from '@hooks/useErrorToast';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
-import useCreationDataStatisticAllTeam from '@hooks/useCreationDataStatisticAllTeam';
 import { Task } from '@interfaces/task';
 import { removeDuplicateOptions } from '@utils';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 interface TableChartProps {
   ordering: string;
@@ -173,11 +173,14 @@ const TableChart = ({
     ListTaskStatistic[]
   >([]);
 
-  const { creationDataStatisticDataAllTeam } = useCreationDataStatisticAllTeam({
-    userId: String(selectedMember),
+  const { creationDataCommonData } = useCreationDataCommon({
     condition: [
       !!selectedMember && selectedOrganization?.label === ALL_TEAM_STATISTIC,
     ],
+    userId: String(selectedMember),
+    options: {
+      get_organizations_for_all_team_statistic: true,
+    },
   });
 
   //  Handle call api edit task
@@ -544,16 +547,18 @@ const TableChart = ({
         // Find organization
         const organization =
           selectedOrganization?.value === ALL_TEAM_STATISTIC
-            ? creationDataStatisticDataAllTeam?.organizations.find(
+            ? creationDataCommonData?.organizationsOfAllTeamStatistic?.find(
                 (org) => org.id === rowData.organization,
               )
             : creationDataStatisticData;
         const listOptionAllTeamOrg =
-          creationDataStatisticDataAllTeam?.organizations.map((org) => ({
-            label: org.name,
-            value: org.id,
-            type: org.type,
-          }));
+          creationDataCommonData?.organizationsOfAllTeamStatistic?.map(
+            (org) => ({
+              label: org.name,
+              value: org.id,
+              type: org.type,
+            }),
+          );
 
         let largeCategories: OptionDropdownType[] = [];
         let mediumCategories: OptionDropdownType[] = [];

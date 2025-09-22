@@ -88,6 +88,7 @@ const TextAreaLink: React.FC<TextAreaLinkProps> = ({
         return false;
       },
     },
+    immediatelyRender: false,
   });
 
   // Optional: Update content when `initialValue` changes
@@ -96,7 +97,7 @@ const TextAreaLink: React.FC<TextAreaLinkProps> = ({
 
     editor.setOptions({ editable: !disabled });
     if (initialValue && initialValue !== editor.getHTML()) {
-      editor.commands.setContent(initialValue, false);
+      editor.commands.setContent(initialValue, { emitUpdate: false });
     }
   }, [editor, initialValue, disabled]);
 
