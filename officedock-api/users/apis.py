@@ -81,6 +81,7 @@ from users.serializers import (
     UserLoginSerializer,
     TransactionHistorySerializer,
 )
+from users.services import UserService
 from utils.mail import MailService
 from utils.jwt import JWTService
 from common.filters import CustomOrderFilter
@@ -98,7 +99,7 @@ def _login(self, request, is_admin=True):
     serializer = self.get_serializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     serializer_data = serializer.validated_data
-
+    user_service = UserService()
     if is_admin:
         user = User.objects.filter(
             email=serializer_data["email"],
@@ -113,16 +114,19 @@ def _login(self, request, is_admin=True):
             .exclude(roles__name=RoleTypes.OPERATION_ADMIN.value)
             .first()
         )
+        user = (
+            user if user_service.check_valid_company(user) else None
+        )  # TODO: Maybe refactor logic when implement redirect to change payment method page
+
+    # Check role
+    if not user:
+        return self.response(status_code=status.HTTP_401_UNAUTHORIZED)
 
     user = authenticate(
         request,
         username_alias=user.username_alias if user else None,
         password=serializer_data["password"],
     )
-
-    # Check role
-    if not user:
-        return self.response(status_code=status.HTTP_401_UNAUTHORIZED)
 
     # Login without using 2FA
     if not user.is_two_factor_auth:

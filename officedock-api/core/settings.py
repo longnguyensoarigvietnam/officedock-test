@@ -150,6 +150,7 @@ INSTALLED_APPS = [
     "mvp_votes",
     "shop_items",
     "dotmoney",
+    "plans",
 ]
 
 # Define constants
@@ -159,7 +160,8 @@ DOTMONEY_PRODUCT_ID = os.getenv("DOTMONEY_PRODUCT_ID")
 DOTMONEY_BASE_API = os.getenv("DOTMONEY_BASE_API")
 DOTMONEY_BASE_URL = os.getenv("DOTMONEY_BASE_URL")
 DOTMONEY_VERSION = os.getenv("DOTMONEY_VERSION", "Version1")
-
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", None)
+STRIPE_WEBHOOK_KEY = os.getenv("STRIPE_WEBHOOK_KEY", None)
 SECRET_KEY_FOR_CRONJOB = os.getenv("SECRET_KEY_FOR_CRONJOB", None)
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")

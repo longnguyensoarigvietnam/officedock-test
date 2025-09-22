@@ -1,0 +1,87 @@
+from datetime import datetime
+from django.core.management.base import BaseCommand
+from django.db.models import Q
+
+from common.services import stripe_service
+from companies.constants import (
+    CompanyStatus,
+    CompanyTransactionTypes,
+    ImplementationMainIssues,
+    Industry,
+    SystemMainPurpose,
+)
+from companies.models import Company, CompanyPlan
+from companies.utils import generate_contract_related_date_base_on_now
+from plans.models import Plan
+from users.constants import RoleTypes
+
+
+class Command(BaseCommand):
+    help = "Seed company plan and contract"
+
+    def handle(self, *args, **options):
+        for company in Company.objects.all():
+            total_user = company.users.count()
+            related_date = generate_contract_related_date_base_on_now(
+                company.created_at
+            )
+            # Seed data contract
+            contract_data = {
+                "implementation_main_issue": ImplementationMainIssues.random(),
+                "industry": Industry.OTHER.value,
+                "system_main_purpose": SystemMainPurpose.random(),
+                "start_date": related_date["start_date"],
+                "end_date": related_date["end_date"],
+                "next_renewal_at": related_date["next_renewal_at"],
+            }
+            if (
+                admin_user := company.user_roles.filter(
+                    role__name=RoleTypes.SYSTEM_ADMIN.value
+                )
+                .order_by("user__created_at")
+                .first()
+            ):
+                contract_data["responsible_person_mail"] = admin_user.user.email
+                contract_data[
+                    "responsible_person_name"
+                ] = admin_user.user.profile.full_name
+            company.contract.__dict__.update(contract_data)
+            company.contract.save(update_fields=contract_data.keys())
+            # # Seed data Company plan
+            if not CompanyPlan.objects.filter(company=company).exists():
+                if total_user <= 10:
+                    filter = Q(limit_person=10)
+                elif total_user <= 20:
+                    filter = Q(limit_person=20)
+                else:
+                    filter = Q(limit_person=30)
+                plan = Plan.objects.filter(filter).first()
+                CompanyPlan.objects.create(plan=plan, company=company)
+                # Seed data Company transaction
+                company.transactions.create(
+                    type=CompanyTransactionTypes.PLAN.value,
+                    plan_start_at=datetime.now(),
+                    plan=plan,
+                )
+            company.max_user_at = datetime.now()
+            company.max_user_in_contract_period = total_user
+            company.status = (
+                CompanyStatus.TEMPORARY_USAGE.value
+                if total_user > 0
+                else CompanyStatus.PENDING_APPROVAL.value
+            )
+            company.save(
+                update_fields=[
+                    "max_user_at",
+                    "max_user_in_contract_period",
+                    "status",
+                ]
+            )
+            if not company.stripe_customer_id:
+                stripe_service.StripeService().get_or_create_customer(company)
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Successfully seed data to Company Plan and Contract"
+            )
+        )

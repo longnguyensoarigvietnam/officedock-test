@@ -24,3 +24,4 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 redis==5.0.8
 uvicorn[standard]==0.34.0
+stripe==12.5.0

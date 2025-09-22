@@ -1,31 +1,33 @@
-from django.utils.crypto import get_random_string
+from django.utils.timezone import now
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.db import transaction
 
 from base.permissions import IsOperationAdminOnly
 from base.apis import BaseAPIViewSet
 
 from common.filters import CustomOrderFilter
-from common.utils import (
-    delete_file,
-    get_client_ip,
-    get_user_agent,
-    get_username_alias,
+from common.serializers import EmptySerializer
+from common.services.stripe_service import StripeService
+from common.utils import delete_file
+from companies.constants import (
+    CompanyStatus,
+    CompanyTransactionTypes,
 )
-from users.constants import RoleTypes, LoginTypes
-from users.models import Role, User, Profile, UserActivityLog
-from utils.mail import MailService
+from companies.services import CompanyService
 from .filters import CompanyFilter
-from .models import Company, Contract
+from .models import Company, CompanyPaymentMethod, CompanyPlan, Contract
 from .serializers import (
     BaseCompanySerializer,
     CompanySerializer,
     CompanySettingSerializer,
+    CompanyTransactionSerializer,
     ContractSerializer,
+    CreationCompanySerializer,
+    RetrieveCompanySerializer,
 )
 
 
@@ -47,56 +49,84 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     }
     filterset_class = CompanyFilter
 
-    @transaction.atomic
-    def perform_create(self, serializer):
-        """Handle create company with user info"""
-        current_user = self.request.user
-        serializer_data = serializer.validated_data
-        user_data = {"email": serializer_data.pop("email")}
-        profile = {"full_name": serializer_data.pop("fullname")}
-        contract = serializer_data.pop("contract")
-        # Create company and contract
-        company = serializer.save()
-        Contract.objects.create(**contract, company=company)
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the Company service
+        """
+        super().__init__(*args, **kwargs)
+        self.company_service = CompanyService()
 
-        # Create user with fullname in profile
-        user_data["two_factor_auth_email"] = user_data["email"]
-        user_data["password"] = get_random_string(8)
-        user_data["login_type"] = LoginTypes.EMAIL.value
-        user_data["username_alias"] = get_username_alias(
-            login_text=user_data["email"]
-        )
-        user_data["is_two_factor_auth"] = False
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return RetrieveCompanySerializer
+        return super().get_serializer_class()
 
-        user = User.objects.create(company=company, **user_data)
-        Profile.objects.create(user=user, company=company, **profile)
+    @action(
+        url_path="active",
+        detail=True,
+        methods=["POST"],
+        serializer_class=EmptySerializer,
+    )
+    @transaction.atomic()
+    def handle_active_company(self, request, pk):
+        """
+        Activate a company by creating its admin user, assigning roles,
+        setting up Stripe subscription, and updating contract status.
+        """
+        company = self.get_object()
+        self.company_service.active_company(company)
+        return self.response_ok()
 
-        # Add system admin to user
-        role = Role.get_role(RoleTypes.SYSTEM_ADMIN.value)
-        user.roles.add(role, through_defaults={"company": company})
+    @action(
+        url_path="change-plan",
+        detail=True,
+        methods=["POST"],
+        serializer_class=EmptySerializer,
+    )
+    @transaction.atomic()
+    def handle_change_plan_company(self, request, pk):
+        """
+        Activate a company by creating its admin user, assigning roles,
+        setting up Stripe subscription, and updating contract status.
+        """
+        company = self.get_object()
+        self.company_service.change_plan(company)
+        return self.response_ok()
 
-        # Log user create
-        UserActivityLog.log_user_creation(
-            user,
-            current_user,
-            get_client_ip(self.request),
-            get_user_agent(self.request),
-        )
-
-        # Save calendar organization
-        calendar_org = company.get_calendar_organization()
-        user.organizations.add(
-            calendar_org,
-            through_defaults={
-                "company": company,
-                "is_main": False,
-            },
-        )
-
-        # Send mail to user
-        mail_service = MailService()
-        mail_service.send_admin_create_company_by_email(
-            user.email, user_data["password"], company
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "type",
+                enum=[
+                    CompanyTransactionTypes.INVOICE.value,
+                    CompanyTransactionTypes.PLAN.value,
+                    CompanyTransactionTypes.POINT.value,
+                ],
+            )
+        ]
+    )
+    @action(
+        methods=["GET"],
+        detail=True,
+        url_path="transactions",
+        serializer_class=CompanyTransactionSerializer,
+    )
+    def get_transactions(self, request, pk=None):
+        """
+        Change plan of company
+        """
+        company = self.get_object()
+        transaction_type = request.query_params.get("type")
+        if transaction_type:
+            transactions = company.transactions.filter(
+                type=transaction_type
+            ).all()
+        else:
+            transactions = company.transactions.all()
+        return self.response_pagination(
+            request,
+            transactions,
+            CompanyTransactionSerializer,
         )
 
     @action(
@@ -141,7 +171,11 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
 
 @extend_schema(tags=["System > Company"])
-class SystemCompanyViewSet(BaseAPIViewSet, mixins.RetrieveModelMixin):
+class SystemCompanyViewSet(
+    BaseAPIViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+):
     """
     API endpoint for system company operations.
 
@@ -159,6 +193,78 @@ class SystemCompanyViewSet(BaseAPIViewSet, mixins.RetrieveModelMixin):
         Override the default queryset to only return the company associated with the authenticated user.
         """
         return super().get_queryset().filter(id=self.request.user.company_id)
+
+    def get_permissions(self):
+        """
+        Custom permission by action
+        """
+        permission_classes = (
+            [AllowAny] if self.action == "create" else [IsAuthenticated]
+        )
+        return [permission() for permission in permission_classes]
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return CreationCompanySerializer
+        return super().get_serializer_class()
+
+    @transaction.atomic()
+    def create(self, request):
+        """
+        Create company endpoint
+
+        This endpoint allows any sites to create their company's with payment method of Stripe.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        stripe_payment_method_id = serializer_data.pop(
+            "stripe_payment_method_id"
+        )
+        payment_method = serializer_data.pop("payment_method")
+        plan = serializer_data.pop("plan")
+        company_data = {
+            "name": serializer_data.pop("company_name"),
+            "status": CompanyStatus.PENDING_APPROVAL.value,
+            "max_user_at": now(),
+        }
+        # Create company
+        company = Company.objects.create(**company_data)
+
+        # Create contract of company
+        contract_data = {
+            "address": serializer_data.pop("address"),
+            "phone": serializer_data.pop("phone"),
+            "responsible_person_name": serializer_data.pop(
+                "responsible_person_name"
+            ),
+            "responsible_person_mail": serializer_data.pop(
+                "responsible_person_mail"
+            ),
+            "industry": serializer_data.pop("industry"),
+            "system_main_purpose": serializer_data.pop("system_main_purpose"),
+            "implementation_main_issue": serializer_data.pop(
+                "implementation_main_issue"
+            ),
+        }
+        Contract.objects.create(**contract_data, company=company)
+        # Create Stripe customer and attach payment method to customer
+        StripeService().get_or_create_customer(company)
+        stripe_payment = StripeService().attach_payment_method_to_customer(
+            company, stripe_payment_method_id, is_create_company=True
+        )
+        # Create payment method of company
+        CompanyPaymentMethod.objects.create(
+            company=company,
+            type=payment_method,
+            stripe_payment_method_id=stripe_payment_method_id,
+            stripe_fingerprint=stripe_payment["fingerprint"],
+            is_default=True,
+        )
+
+        # Create plan of company
+        CompanyPlan.objects.create(company=company, plan=plan)
+        return self.response_created()
 
     @action(
         methods=["POST"],
@@ -187,5 +293,4 @@ class SystemCompanyViewSet(BaseAPIViewSet, mixins.RetrieveModelMixin):
             "is_show_holidays_calendar", False
         )
         company.save()
-
         return self.response_ok()

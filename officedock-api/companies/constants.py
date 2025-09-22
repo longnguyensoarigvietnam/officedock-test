@@ -1,31 +1,46 @@
 from base.constants import EnumChoices
 
 
-class ContractStatus(EnumChoices):
-    SIGNED = "締結済み"
-    NOT_SIGNED = "未締結"
+class CompanyStatus(EnumChoices):
+    PENDING_APPROVAL = "申請中"
+    ACTIVE_CONTRACT = "契約中"
+    RETRY_PAYMENT = "決済失敗"
+    SUSPENDED = "利用停止中"
+    CANCELLATION_PENDING = "解約予約中"
+    CONTRACT_TERMINATED = "解約済"
+    TEMPORARY_USAGE = "仮利用"
 
 
-PLANS = {
-    "plan_1_10": {
-        "name": "Plan 1-10",
-        "monthly_fee": 29000,  # Monthly fee (JPY)
-        "exchangeable_amount": 3000,  # Amount convertible to DotMoney
-        "max_exchange_per_user": 3000,  # Max convertible per user per month
-        "min_exchange_per_user": 300,  # Min convertible per user per month
-    },
-    "plan_11_20": {
-        "name": "Plan 11-20",
-        "monthly_fee": 58000,
-        "exchangeable_amount": 6000,
-        "max_exchange_per_user": 545,
-        "min_exchange_per_user": 300,
-    },
-    "plan_21_30": {
-        "name": "Plan 21-30",
-        "monthly_fee": 78000,
-        "exchangeable_amount": 10000,
-        "max_exchange_per_user": 476,
-        "min_exchange_per_user": 333,
-    },
-}
+class CompanyTransactionTypes(EnumChoices):
+    INVOICE = "INVOICE"
+    PLAN = "PLAN"
+    POINT = "POINT"
+
+
+class TransactionStatus(EnumChoices):
+    PAID = "支払済"
+    UNPAID = "未支払"
+    PAYMENT_FAILED = "失敗"
+    SKIP_PAYMENT = "キャンセル"
+
+
+class ImplementationMainIssues(EnumChoices):
+    OVERTIME_VISIBILITY = "残業の見える化がしたい"
+    REDUCE_REPORT_BURDEN = "日報負担を減らしたい"
+    VISUALIZE_SKILL_UP = "スキルアップを可視化したい"
+
+
+class SystemMainPurpose(EnumChoices):
+    ATTENDANCE_MANAGEMENT = "勤怠管理"
+    BUSINESS_EFFICIENCY = "業務効率化"
+    SKILL_DEVELOPMENT = "スキル育成"
+    TALENT_EVALUATION = "人材評価"
+
+
+class Industry(EnumChoices):
+    IT = "IT"
+    MANUFACTURING = "製造"
+    FINANCE = "金融"
+    HEALTHCARE = "医療"
+    EDUCATION = "教育"
+    OTHER = "その他"

@@ -12,6 +12,7 @@ from common.serializers import (
     CreationDataUserWithMainOrganizationSerializer,
 )
 from common.utils import transform_statistic_categories
+from companies.constants import CompanyStatus
 from mvp_votes.constants import MVPVoteTypes
 from mvp_votes.models import MVPVoteManagement
 from organizations.models import Organization
@@ -19,6 +20,7 @@ from organizations.serializers import (
     BaseStatisticCategorySerializer,
     OrganizationDetailSerializer,
 )
+from plans.models import Plan
 from roles.constants import Actions, Screens, SelectionResultOptions
 from shop_items.models import ShopItems
 from shop_items.serializers import ShopItemSerializer
@@ -114,9 +116,7 @@ def get_organization_skills(orgs, organization_id):
                     "id": org.id,
                     "name": org.name,
                 },
-                "skills": [
-                    {"id": skill.id, "name": skill.name} for skill in skills
-                ],
+                "skills": [{"id": skill.id, "name": skill.name} for skill in skills],
             }
         )
 
@@ -279,15 +279,13 @@ def get_filter_organization_categories(organizations):
     """
     list_cats = []
     for organization in organizations:
-        organization_categories = OrganizationDetailSerializer(
-            organization
-        ).data["statistic_categories"]
+        organization_categories = OrganizationDetailSerializer(organization).data[
+            "statistic_categories"
+        ]
         categories = transform_statistic_categories(organization_categories)
         list_cats.append(
             {
-                "organization": CreationDataOrganizationSerializer(
-                    organization
-                ).data,
+                "organization": CreationDataOrganizationSerializer(organization).data,
                 "categories": [
                     cat[TaskCategoryTypes.LARGE.value]
                     for cat in categories
@@ -304,9 +302,7 @@ def get_organization_with_users(organizations):
     """
     list_org = []
     for organization in organizations:
-        list_org.append(
-            CreationDataOrganizationWithUserSerializer(organization).data
-        )
+        list_org.append(CreationDataOrganizationWithUserSerializer(organization).data)
     return list_org
 
 
@@ -351,9 +347,7 @@ def get_unanswered_count(user):
     ).distinct()
 
     # Calculate unanswered open surveys
-    unanswered_open_count = (
-        other_open_surveys.count() - answered_open_surveys.count()
-    )
+    unanswered_open_count = other_open_surveys.count() - answered_open_surveys.count()
 
     # 2. Count closed surveys that haven't been viewed (including user's own surveys)
     closed_surveys = Survey.objects.filter(
@@ -367,9 +361,7 @@ def get_unanswered_count(user):
     ).distinct()
 
     # Calculate unviewed closed surveys
-    unviewed_closed_count = (
-        closed_surveys.count() - viewed_closed_surveys.count()
-    )
+    unviewed_closed_count = closed_surveys.count() - viewed_closed_surveys.count()
 
     # Total count
     total_count = unanswered_open_count + unviewed_closed_count
@@ -392,3 +384,15 @@ def get_organizations_for_all_team_statistic(user):
     return CreationDataOrganizationWithStructCategorySerializer(
         organizations, many=True, context={"user": user}
     ).data
+
+
+def get_company_status():
+    return CompanyStatus.values()
+
+
+def get_plans():
+    """
+    Get all plan in system
+    """
+    plans = Plan.objects.values_list("name", flat=True)
+    return plans

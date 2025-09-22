@@ -13,7 +13,7 @@ from base.messages import ERROR_MESSAGES
 from base.paginations import CustomCursorPagination
 from base.filters import FilterByPermission
 from base.permissions import ActionPermission
-from common.services import TransactionService
+from common.services.transaction_service import TransactionService
 from mvp_votes.constants import (
     DEFAULT_BONUS_POINT,
     DEFAULT_CONTENT_TWEET_END_VOTE,
