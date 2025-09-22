@@ -31,6 +31,7 @@ from common.helpers import (
     get_organization_skills,
     get_organization_with_categories,
     get_organization_with_users,
+    get_organizations_for_all_team_statistic,
     get_organizations_of_user_by_screen_role,
     get_roles,
     get_statistic_categories,
@@ -110,6 +111,9 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             OpenApiParameter("get_balances_of_user", type=bool),
             OpenApiParameter("get_unanswered_count_of_survey", type=bool),
             OpenApiParameter("get_current_mvp_vote", type=bool),
+            OpenApiParameter(
+                "get_organizations_for_all_team_statistic", type=bool
+            ),
         ]
     )
     @action(methods=["GET"], detail=False, url_path="common")
@@ -229,11 +233,14 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             response_data["items_of_user"] = get_items_of_user(user)
         if "get_balances_of_user" in request.query_params:
             response_data["balances_of_user"] = get_balances_of_user(user)
-            response_data["items_of_user"] = get_items_of_user(user)
         if "get_unanswered_count_of_survey" in request.query_params:
             response_data["unanswered_count"] = get_unanswered_count(user)
         if "get_current_mvp_vote" in request.query_params:
             response_data["is_has_mvp_voting"] = get_is_have_mvp_vote(company)
+        if "get_organizations_for_all_team_statistic" in request.query_params:
+            response_data[
+                "organizations_of_all_team_statistic"
+            ] = get_organizations_for_all_team_statistic(user)
 
         return self.response_ok(response_data)
 
