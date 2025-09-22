@@ -706,65 +706,71 @@ const ChatDetail = ({
   }, [isLoadingOlder, isLoadingNewer]);
 
   // Text editor declaration
-  const editor = useEditor({
-    extensions: [
-      Document,
-      TaskQuote,
-      MsgQuote,
-      MsgQuoteText,
-      MsgReply,
-      Paragraph.extend({
-        addAttributes() {
-          return {
-            'data-task-id': {
-              default: null,
-              renderHTML(attributes) {
-                if (!attributes['data-task-id']) {
-                  return {};
-                }
-                return { 'data-task-id': attributes['data-task-id'] };
+  const editor = useEditor(
+    {
+      extensions: [
+        Document,
+        TaskQuote,
+        MsgQuote,
+        MsgQuoteText,
+        MsgReply,
+        CustomReaction,
+        Paragraph.extend({
+          addAttributes() {
+            return {
+              'data-task-id': {
+                default: null,
+                renderHTML(attributes) {
+                  const value = attributes['data-task-id'];
+                  if (!value) return {};
+                  if (typeof value === 'object') {
+                    return {
+                      'data-task-id': value.id ?? JSON.stringify(value),
+                    };
+                  }
+                  return { 'data-task-id': String(value) };
+                },
+                parseHTML(element) {
+                  const val = element.getAttribute('data-task-id');
+                  return val || null;
+                },
               },
-              parseHTML(element) {
-                return {
-                  'data-task-id': element.getAttribute('data-task-id'),
-                };
-              },
-            },
-          };
-        },
-      }),
-      Text,
-      TextStyle,
-      Color,
-      Mention.configure({
-        HTMLAttributes: {
-          class: 'mention text-[#0068B6]',
-        },
-      }),
-      Placeholder.configure({
-        placeholder: 'メッセージを入力',
-      }),
-      CustomReaction,
-    ],
-    content: message,
-    onUpdate: ({ editor }: { editor: Editor }) => {
-      setMessage(editor.getHTML());
-    },
-    editorProps: {
-      handlePaste(_view, event) {
-        const clipboardData = event.clipboardData;
-        const text = clipboardData?.getData('text/plain');
-
-        if (text) {
-          // Insert only plain text, no formatting
-          editor && editor.commands.insertContent(text);
-          return true; // prevent default paste
-        }
-
-        return false; // let Tiptap handle it if no plain text
+            };
+          },
+        }),
+        Text,
+        TextStyle,
+        Color,
+        Mention.configure({
+          HTMLAttributes: {
+            class: 'mention text-[#0068B6]',
+          },
+        }),
+        Placeholder.configure({
+          placeholder: 'メッセージを入力',
+        }),
+      ],
+      content: message,
+      onUpdate: ({ editor }: { editor: Editor }) => {
+        setMessage(editor.getHTML());
       },
+      editorProps: {
+        handlePaste(_view, event) {
+          const clipboardData = event.clipboardData;
+          const text = clipboardData?.getData('text/plain');
+
+          if (text) {
+            editor && editor.commands.insertContent(text);
+            return true;
+          }
+
+          return false;
+        },
+      },
+      immediatelyRender: false,
     },
-  });
+    [chatRoomCode],
+  );
 
   useEffect(() => {
     if (!chatRoomNotifications) {
@@ -2167,7 +2173,6 @@ const ChatDetail = ({
     const { state } = editor;
     const { doc } = state;
     const pos = doc.content.size;
-
     editor
       .chain()
       .focus()
@@ -2197,6 +2202,8 @@ const ChatDetail = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  if (!editor) return null;
 
   return (
     <>
@@ -2818,6 +2825,7 @@ const ChatDetail = ({
                             <div className="mt-5 !max-w-full">
                               <EditorContent
                                 editor={editor}
+                                key={chatRoomCode}
                                 className="w-full break-all whitespace-pre-wrap chat"
                               />
                             </div>

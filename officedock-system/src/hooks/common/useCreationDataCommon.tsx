@@ -39,6 +39,7 @@ interface useCreationDataCommonHooksProps {
     get_current_mvp_vote?: boolean;
     get_balances_of_user?: boolean;
     get_items_of_user?: boolean;
+    get_organizations_for_all_team_statistic?: boolean;
   };
   onSuccess?: (success: CreationDataCommon) => void;
   onError?: (error: AxiosError) => void;

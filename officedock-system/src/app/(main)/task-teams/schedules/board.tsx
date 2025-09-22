@@ -1119,7 +1119,7 @@ const ScheduleTeamBoard = () => {
                   <Button
                     variant="option"
                     className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '} !bg-[#3CABF3]  h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
-                    予定111
+                    予定
                   </Button>
                 </>
               )}
