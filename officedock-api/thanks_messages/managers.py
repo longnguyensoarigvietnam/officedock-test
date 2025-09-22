@@ -1,5 +1,7 @@
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.db.models import Manager
+from django.utils.timezone import now
 
 from common.utils import calculate_company_dates
 
@@ -11,14 +13,20 @@ class ThanksMessageManager(Manager):
 
     def sent_this_month(self, user):
         company_dates = calculate_company_dates(user.company)
-        start_date_calculation_deadline = company_dates[
-            "start_date_calculation_deadline"
-        ]
         date_after_closing = company_dates["date_after_closing"]
+        start_month = now().replace(
+            day=date_after_closing.day,
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
+        end_month = start_month + relativedelta(months=1)
+
         return self.filter(
             sender=user,
-            created_at__gte=start_date_calculation_deadline,
-            created_at__lt=date_after_closing,
+            created_at__gte=start_month,
+            created_at__lt=end_month,
         )
 
     def remaining_quota(self, user):
