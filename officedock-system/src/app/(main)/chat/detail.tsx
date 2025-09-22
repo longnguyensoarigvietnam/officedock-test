@@ -720,17 +720,18 @@ const ChatDetail = ({
             return {
               'data-task-id': {
                 default: null,
-                renderHTML(attributes) {
+                renderHTML(attributes: Record<string, unknown>) {
                   const value = attributes['data-task-id'];
                   if (!value) return {};
-                  if (typeof value === 'object') {
+                  if (typeof value === 'object' && value !== null) {
                     return {
-                      'data-task-id': value.id ?? JSON.stringify(value),
+                      'data-task-id':
+                        (value as { id?: string }).id ?? JSON.stringify(value),
                     };
                   }
                   return { 'data-task-id': String(value) };
                 },
-                parseHTML(element) {
+                parseHTML(element: HTMLElement) {
                   const val = element.getAttribute('data-task-id');
                   return val || null;
                 },
@@ -743,7 +744,7 @@ const ChatDetail = ({
         Color,
         Mention.configure({
           HTMLAttributes: {
-            class: 'mention text-[#0068B6]',
+            class: 'mention !text-[#228CDB]',
           },
         }),
         Placeholder.configure({

@@ -293,7 +293,7 @@ export const MessageDetailQuote = ({
               children.push(
                 <span
                   key={`${index}-${i}-mention`}
-                  className="mention text-primary"
+                  className="mention text-[#77858F]"
                   data-type="mention"
                   data-id={el.dataset.id}>
                   {mentionText}

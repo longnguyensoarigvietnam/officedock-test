@@ -419,7 +419,10 @@ const SurveyListPage = () => {
           tweetMessage={tweetMessage}
           isSendTweetSuccess={isSendTweetSuccess}
           setTweetMessage={setTweetMessage}
-          onClose={() => setOpenCreateTweetModal(false)}
+          onClose={() => {
+            setTweetMessage('');
+            setOpenCreateTweetModal(false);
+          }}
           onSubmit={() => sendTweetMessage({ content: tweetMessage })}
         />
       )}
