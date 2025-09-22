@@ -112,8 +112,9 @@ def get_list_durations_by_users(
         filter_tasks &= Q(user__in=users)
         filter_events &= Q(user__in=users)
     if durations:
-        combined_filter = filter_tasks | filter_events
-        result = durations.filter(combined_filter).distinct()
+        qs_tasks = durations.filter(filter_tasks).values_list("id", flat=True)
+        qs_events = durations.filter(filter_events).values_list("id", flat=True)
+        result = TaskDuration.objects.filter(id__in=qs_tasks.union(qs_events))
     else:
         if not start_of_day and not end_of_day:
             return TaskDuration.objects.none()
@@ -126,8 +127,10 @@ def get_list_durations_by_users(
             )
         )
         durations = TaskDuration.objects.filter(base_filter)
-        combined_filter = filter_tasks | filter_events
-        result = durations.filter(combined_filter).distinct()
+        qs_tasks = durations.filter(filter_tasks).values_list("id", flat=True)
+        qs_events = durations.filter(filter_events).values_list("id", flat=True)
+
+        result = TaskDuration.objects.filter(id__in=qs_tasks.union(qs_events))
 
     return result
 
@@ -1144,9 +1147,9 @@ def get_list_task_with_total_duration(durations, get_by_task=True):
         )
         return {d["task_id"]: d["total_duration"] for d in task_durations}
     else:
-        durations = durations.filter(schedule__isnull=False)
         task_durations = (
-            durations.annotate(
+            durations.filter(schedule__isnull=False)
+            .annotate(
                 effective_paused=Case(
                     When(paused_at__isnull=True, then=Value(now())),
                     default=F("paused_at"),
