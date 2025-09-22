@@ -384,3 +384,11 @@ def get_is_have_mvp_vote(company):
     return MVPVoteManagement.objects.filter(
         type=MVPVoteTypes.PRESENT.value, company=company
     ).exists()
+
+
+def get_organizations_for_all_team_statistic(user):
+    """"""
+    organizations = Organization.all_objects.filter(users=user).all()
+    return CreationDataOrganizationWithStructCategorySerializer(
+        organizations, many=True, context={"user": user}
+    ).data
