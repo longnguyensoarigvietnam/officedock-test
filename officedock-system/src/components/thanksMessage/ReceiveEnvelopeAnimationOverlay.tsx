@@ -375,74 +375,73 @@ export default function ReceiveEnvelopeAnimationOverlay({
                 />
               </div>
             )}
-
-            <div className="absolute -bottom-[160px] left-1/2 -translate-x-1/2">
-              {showConfirmMessage && (
-                <div className="flex items-center gap-3">
-                  <div className="w-[352px] bg-white rounded-[10px] p-[6px] flex items-center justify-between">
-                    <Button
-                      variant="post"
-                      className="w-[240px] rounded-[8px] h-[36px] !p-0"
-                      onClick={() => {
-                        readIdsRef.current = new Set();
-                        onNavigateToThanksMessageList();
-                      }}>
-                      過去にもらったメッセージを見る
-                    </Button>
-                    <Button
-                      variant="text"
-                      className="bg-transparent w-[100px] rounded-[8px] h-[36px] !p-0"
-                      onClick={() => {
-                        readIdsRef.current = new Set();
-                        onFinish();
-                      }}>
-                      閉じる
-                    </Button>
-                  </div>
-                  {receivedThanksMessageList.length > 1 ? (
-                    <div className="flex items-center gap-3">
-                      <Button
-                        variant="option"
-                        className="w-[60px] !rounded-full h-[60px] !bg-white !p-0"
-                        disabled={
-                          isAnimating ||
-                          (showReadMessage.show
-                            ? showReadMessage.index == 0
-                            : currentIndex == 0)
-                        }
-                        onClick={onPrevEnvelope}>
-                        <ImageRound
-                          name="Prev"
-                          src="/icons/chevron-primary.svg"
-                          className="w-[11px] h-[16px] rotate-180 cursor-pointer"
-                        />
-                      </Button>
-                      <Button
-                        variant="option"
-                        className="w-[60px] !rounded-full h-[60px] !bg-white !p-0"
-                        disabled={
-                          isAnimating ||
-                          (showReadMessage.show
-                            ? showReadMessage.index ==
-                              receivedThanksMessageList.length - 1
-                            : currentIndex ==
-                              receivedThanksMessageList.length - 1)
-                        }
-                        onClick={onNextEnvelope}>
-                        <ImageRound
-                          name="Next"
-                          src="/icons/chevron-primary.svg"
-                          className="w-[11px] h-[16px] cursor-pointer"
-                        />
-                      </Button>
-                    </div>
-                  ) : null}
-                </div>
-              )}
-            </div>
           </div>
         );
       })}
+
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2">
+        {showConfirmMessage && (
+          <div className="flex items-center gap-3">
+            <div className="w-[352px] bg-white rounded-[10px] p-[6px] flex items-center justify-between">
+              <Button
+                variant="post"
+                className="w-[240px] rounded-[8px] h-[36px] !p-0"
+                onClick={() => {
+                  readIdsRef.current = new Set();
+                  onNavigateToThanksMessageList();
+                }}>
+                過去にもらったメッセージを見る
+              </Button>
+              <Button
+                variant="text"
+                className="bg-transparent w-[100px] rounded-[8px] h-[36px] !p-0"
+                onClick={() => {
+                  readIdsRef.current = new Set();
+                  onFinish();
+                }}>
+                閉じる
+              </Button>
+            </div>
+            {receivedThanksMessageList.length > 1 ? (
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="option"
+                  className="w-[60px] !rounded-full h-[60px] !bg-white !p-0"
+                  disabled={
+                    isAnimating ||
+                    (showReadMessage.show
+                      ? showReadMessage.index == 0
+                      : currentIndex == 0)
+                  }
+                  onClick={onPrevEnvelope}>
+                  <ImageRound
+                    name="Prev"
+                    src="/icons/chevron-primary.svg"
+                    className="w-[11px] h-[16px] rotate-180 cursor-pointer"
+                  />
+                </Button>
+                <Button
+                  variant="option"
+                  className="w-[60px] !rounded-full h-[60px] !bg-white !p-0"
+                  disabled={
+                    isAnimating ||
+                    (showReadMessage.show
+                      ? showReadMessage.index ==
+                        receivedThanksMessageList.length - 1
+                      : currentIndex == receivedThanksMessageList.length - 1)
+                  }
+                  onClick={onNextEnvelope}>
+                  <ImageRound
+                    name="Next"
+                    src="/icons/chevron-primary.svg"
+                    className="w-[11px] h-[16px] cursor-pointer"
+                  />
+                </Button>
+              </div>
+            ) : null}
+          </div>
+        )}
+      </div>
 
       <div ref={birdRef} className="absolute z-50">
         <div className="relative w-[300px] h-[260px]">
