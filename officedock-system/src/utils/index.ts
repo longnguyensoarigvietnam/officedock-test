@@ -2245,7 +2245,7 @@ export const highlightTextSafely = (
           mentionName == `@${MENTION_ALL_MEMBERS}`
         ) {
           element.classList.remove('text-primary');
-          element.classList.add('text-[#0068B7]');
+          element.classList.add('text-[#228CDB]');
         } else {
           element.classList.remove('text-primary');
           element.classList.add('text-[#77858F]');

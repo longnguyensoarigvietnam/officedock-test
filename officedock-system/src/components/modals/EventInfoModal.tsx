@@ -345,7 +345,7 @@ const EventInfoModal = memo(
                           />
                         </div>
                       </DynamicTooltip>
-                      <p className="text-[#000000] text-[14px] font-medium w-[250px] break-words">
+                      <p className="text-[#000000] text-[14px] font-medium w-[180px] break-words">
                         {dataEvent.participants[0].fullName}
                       </p>
                     </div>

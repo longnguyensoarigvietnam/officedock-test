@@ -46,12 +46,12 @@ const WarningUncheckSkillModal = memo(
           {renderAvatar()}
           <p className="text-black text-[15px] font-medium max-w-[350px] break-all">
             {warningUncheckSkillDetail?.fullName || ''}
-          </p>
-          <p className="text-[#77858F] text-xs font-medium max-w-[130px] break-all">
-            {warningUncheckSkillDetail?.organizationName || ''}
+            <span className="text-[#77858F] text-xs font-medium">
+              {warningUncheckSkillDetail?.organizationName || ''}
+            </span>
           </p>
         </div>
-        <p className="text-[#000000] font-medium text-[16px] text-center mb-2">
+        <p className="text-[#000000] font-medium text-[16px] max-w-[480px] break-all text-center mb-2">
           {warningUncheckSkillDetail?.skillName || ''}
         </p>
         <p className="text-[#000000] font-normal text-sm text-center mb-3">

@@ -371,14 +371,17 @@ const ActionsVotingModal = ({
               error={errors.title?.message}
             />
             <p
-              className={`text-[13px] mt-[6px] flex justify-end ${Number(watch('title')?.length) > VOTING_TITLE_MAX_LENGTH ? 'text-error' : 'text-black'}`}>
-              {watch('title')?.length || 0}/{VOTING_TITLE_MAX_LENGTH}字
+              className={`text-[13px] mt-[6px] flex justify-end ${Number(watch('title')?.trim()?.length) > VOTING_TITLE_MAX_LENGTH ? 'text-error' : 'text-black'}`}>
+              {watch('title')?.trim()?.length || 0}/{VOTING_TITLE_MAX_LENGTH}字
             </p>
           </div>
           <div className="flex gap-2 items-center mt-[3px]">
             <Button
               type="submit"
-              disabled={action === ActionsModal.EDIT && !isDirty}
+              disabled={
+                (action === ActionsModal.EDIT && !isDirty) ||
+                Number(watch('title')?.trim()?.length) > VOTING_TITLE_MAX_LENGTH
+              }
               className="w-[82px] h-[36px] !text-[12px] !px-2">
               保存
             </Button>
@@ -701,7 +704,10 @@ const ActionsVotingModal = ({
         <div className="flex justify-center mb-[50px]">
           <Button
             type="submit"
-            disabled={action === ActionsModal.EDIT && !isDirty}
+            disabled={
+              (action === ActionsModal.EDIT && !isDirty) ||
+              Number(watch('title')?.trim()?.length) > VOTING_TITLE_MAX_LENGTH
+            }
             className="w-[200px] h-[46px] !text-[15px]">
             保存
           </Button>

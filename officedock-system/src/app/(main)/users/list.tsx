@@ -336,11 +336,12 @@ const ListUsers = () => {
       email?: string[];
       profile?: { fullName?: string[] };
       password?: string[];
+      detail?: string[];
     }>) => {
       const errorData = response?.data || {};
 
       // Extract known fields
-      const { username, email, profile, password, ...rest } = errorData;
+      const { username, email, profile, password, detail, ...rest } = errorData;
       const fullName = profile?.fullName;
 
       // Set known errors to form
@@ -358,6 +359,11 @@ const ListUsers = () => {
         showToast({
           variant: 'error',
           description: ERROR_UPDATE_ORGANIZATION_MESSAGE,
+        });
+      } else if (detail) {
+        showToast({
+          variant: 'error',
+          description: detail?.[0] || ERROR_UPDATE_MESSAGE,
         });
       } else {
         if (hasOtherErrors) {

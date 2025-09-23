@@ -97,7 +97,7 @@ const TextAreaLink: React.FC<TextAreaLinkProps> = ({
 
     editor.setOptions({ editable: !disabled });
     if (initialValue && initialValue !== editor.getHTML()) {
-      editor.commands.setContent(initialValue, { emitUpdate: false });
+      editor.commands.setContent(initialValue, { emitUpdate: false } as any);
     }
   }, [editor, initialValue, disabled]);
 

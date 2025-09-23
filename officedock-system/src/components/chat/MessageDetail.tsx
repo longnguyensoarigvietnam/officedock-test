@@ -221,7 +221,7 @@ export const MessageDetail = ({
     }
   };
 
-  function cleanTaskQuoteHTML(html: string): string {
+  const cleanTaskQuoteHTML = (html: string): string => {
     const container = document.createElement('div');
     container.innerHTML = html;
 
@@ -243,7 +243,7 @@ export const MessageDetail = ({
     });
 
     return container.innerHTML;
-  }
+  };
 
   // Render avatar
   const renderAvatar = (senderId: number) => {
@@ -313,7 +313,7 @@ export const MessageDetail = ({
       const color =
         matchedUser?.id === session?.user.id ||
         mentionName === MENTION_ALL_MEMBERS
-          ? '#0068B7'
+          ? '#228CDB'
           : '#77858F';
       mention.setAttribute('style', `color: ${color};`);
     });
@@ -446,9 +446,10 @@ export const MessageDetail = ({
               children.push(
                 <span
                   key={`${index}-${i}-mention`}
-                  className="mention text-[#77858F]"
+                  className="mention"
                   data-type="mention"
-                  data-id={el.dataset.id}>
+                  data-id={el.dataset.id}
+                  style={{ color: el.style.color }}>
                   {mentionText}
                 </span>,
               );

@@ -5,6 +5,9 @@
 .calendar-custom .fc-scroller {
   border-radius: 30px !important;
 }
+.calendar-custom.day .fc-scroller {
+  border-radius: 0px !important;
+}
 .calendar-custom.week .fc-daygrid-day-frame,
 .calendar-custom.day .fc-daygrid-day-frame {
   height: 100px !important;
