@@ -76,6 +76,7 @@ const EventInfoModal = memo(
 
         setPopupPosition(adjustedPosition);
       }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleClosePopover = (event: MouseEvent) => {
@@ -92,6 +93,7 @@ const EventInfoModal = memo(
       return () => {
         document.removeEventListener('click', handleClosePopover, true);
       };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const checkShowDimmedUserAvatar = (participantId: number) => {

@@ -440,6 +440,7 @@ const EditActualDurationsForm = () => {
       }
     }
     return value;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultTaskScheduleData]);
 
   useEffect(() => {

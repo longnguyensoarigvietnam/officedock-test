@@ -984,6 +984,7 @@ const ListChatUsers = ({
       page: 1,
       showLastMessageAt: false,
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedRoomNameSearch]);
 
   useEffect(() => {

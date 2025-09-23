@@ -4,6 +4,7 @@ interface EnvelopeBackFlapProps {
   isSendThanksMsg?: boolean;
 }
 
+// eslint-disable-next-line import/no-named-as-default-member
 export const EnvelopeBackFlap = React.forwardRef<
   HTMLDivElement,
   EnvelopeBackFlapProps

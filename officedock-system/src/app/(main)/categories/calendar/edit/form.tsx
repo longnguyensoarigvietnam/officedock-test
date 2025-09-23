@@ -79,10 +79,7 @@ const TableComponent = ({
     OptionDropdownType[]
   >([]);
   const [pendingSelection, setPendingSelection] = useState<{
-    oldLargeOption: OptionDropdownType;
-    oldMediumOption?: OptionDropdownType;
-    oldRowId?: string | number;
-    oldRowColor?: string;
+    originalRow?: CalendarCategoryRow;
     newValue: OptionDropdownType;
     type: string;
   } | null>(null);
@@ -441,7 +438,7 @@ const TableComponent = ({
   };
 
   const handleChangeLargeCategoryByPulldown = (
-    oldLargeOption: OptionDropdownType,
+    originalRow: CalendarCategoryRow | undefined,
     e: OptionDropdownType,
   ) => {
     setSelectedHierarchiesToUpdate((prev) => {
@@ -455,38 +452,64 @@ const TableComponent = ({
       };
 
       const matchedRows = statisticCategories
-        .filter((item) => item.large.value === oldLargeOption.value)
+        .filter((item) => item.large.value === originalRow?.large.value)
         .map((item) => ({
           ...item,
           large: newLarge,
         }));
-      const updatedHierarchies = matchedRows.map((row) => {
-        return {
-          organizationStatisticCategoryId: row.id,
-          largeStatisticCategory:
-            row.large.label == '' || isUUID(row.large.label as string)
-              ? null
-              : {
-                  name: row.large.label as string,
-                  uuid: row.large.value as string,
-                },
-          mediumStatisticCategory:
-            row.medium.label == '' || isUUID(row.medium.label as string)
-              ? null
-              : {
-                  name: row.medium.label as string,
-                  uuid: row.medium.value as string,
-                },
-          color: row.color,
-        };
-      });
+      let updatedHierarchies = [];
+
+      if (matchedRows.length) {
+        updatedHierarchies = matchedRows.map((row) => {
+          return {
+            organizationStatisticCategoryId: row.id,
+            largeStatisticCategory:
+              row.large.label == '' || isUUID(row.large.label as string)
+                ? null
+                : {
+                    name: row.large.label as string,
+                    uuid: row.large.value as string,
+                  },
+            mediumStatisticCategory:
+              row.medium.label == '' || isUUID(row.medium.label as string)
+                ? null
+                : {
+                    name: row.medium.label as string,
+                    uuid: row.medium.value as string,
+                  },
+            color: row.color,
+          };
+        });
+      } else {
+        updatedHierarchies = [
+          {
+            organizationStatisticCategoryId: originalRow?.id,
+            largeStatisticCategory:
+              newLarge.label == '' || isUUID(newLarge.label as string)
+                ? null
+                : {
+                    name: newLarge.label as string,
+                    uuid: newLarge.value as string,
+                  },
+            mediumStatisticCategory:
+              originalRow?.medium.label == '' ||
+              isUUID(originalRow?.medium.label as string)
+                ? null
+                : {
+                    name: originalRow?.medium.label as string,
+                    uuid: originalRow?.medium.value as string,
+                  },
+            color: originalRow?.color,
+          },
+        ];
+      }
 
       updatedHierarchies.forEach((updatedHierarchy) => {
         const key = `${
           updatedHierarchy.largeStatisticCategory?.uuid || ''
         }|${updatedHierarchy.mediumStatisticCategory?.uuid || ''}`;
 
-        const alreadyExists = updatedHierarchiesToUpdate.some(
+        const index = updatedHierarchiesToUpdate.findIndex(
           (item) =>
             item.organizationStatisticCategoryId ===
               updatedHierarchy.organizationStatisticCategoryId ||
@@ -495,8 +518,22 @@ const TableComponent = ({
             }|${item.mediumStatisticCategory?.uuid || ''}` === key,
         );
 
-        if (!alreadyExists) {
-          updatedHierarchiesToUpdate.push(updatedHierarchy);
+        if (index !== -1) {
+          // replace the old one
+          updatedHierarchiesToUpdate[index] = {
+            ...updatedHierarchy,
+            organizationStatisticCategoryId:
+              updatedHierarchy.organizationStatisticCategoryId!,
+            color: updatedHierarchy.color!,
+          };
+        } else {
+          // add new
+          updatedHierarchiesToUpdate.push({
+            ...updatedHierarchy,
+            organizationStatisticCategoryId:
+              updatedHierarchy.organizationStatisticCategoryId!,
+            color: updatedHierarchy.color!,
+          });
         }
       });
 
@@ -516,14 +553,14 @@ const TableComponent = ({
 
       // Separate matching and non-matching rows
       const matchedRows = statisticCategories
-        .filter((item) => item.large.value === oldLargeOption.value)
+        .filter((item) => item.large.value === originalRow?.large.value)
         .map((item) => ({
           ...item,
           large: newLarge,
         }));
 
       const remainingRows = statisticCategories.filter(
-        (item) => item.large.value !== oldLargeOption.value,
+        (item) => item.large.value !== originalRow?.large.value,
       );
 
       // Find the last index where newLarge.value already exists
@@ -538,7 +575,7 @@ const TableComponent = ({
       } else {
         // Instead of pushing, find the **original** position of row.original.large.value
         const originalIndex = statisticCategories.findIndex(
-          (item) => item.large.value === oldLargeOption.value,
+          (item) => item.large.value === originalRow?.large.value,
         );
 
         if (originalIndex !== -1) {
@@ -552,7 +589,7 @@ const TableComponent = ({
       const uniqueMap = new Map();
       const filteredStatisticCategories = newStatisticCategories.filter(
         (item) => {
-          const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}`;
+          const key = `${item.large.value}|${item.medium.value}`;
           if (uniqueMap.has(key)) return false;
           uniqueMap.set(key, true);
           return true;
@@ -570,8 +607,7 @@ const TableComponent = ({
   };
 
   const handleChangeMediumCategoryByPulldown = (
-    oldLargeOption: OptionDropdownType,
-    oldMediumOption: OptionDropdownType,
+    originalRow: CalendarCategoryRow | undefined,
     e: OptionDropdownType,
   ) => {
     setSelectedHierarchiesToUpdate((prev) => {
@@ -585,8 +621,8 @@ const TableComponent = ({
       const matchedRows = statisticCategories
         .filter(
           (item) =>
-            item.medium.value === oldMediumOption.value &&
-            item.large.value === oldLargeOption.value,
+            item.medium.value === originalRow?.medium.value &&
+            item.large.value === originalRow?.large.value,
         )
         .map((item) => ({
           ...item,
@@ -644,8 +680,8 @@ const TableComponent = ({
       const matchedRows = statisticCategories
         .filter(
           (item) =>
-            item.medium.value == oldMediumOption.value &&
-            item.large.value == oldLargeOption.value,
+            item.medium.value == originalRow?.medium.value &&
+            item.large.value == originalRow?.large.value,
         )
         .map((item) => ({
           ...item,
@@ -655,8 +691,8 @@ const TableComponent = ({
       const remainingRows = statisticCategories.filter(
         (item) =>
           !(
-            item.medium.value == oldMediumOption.value &&
-            item.large.value == oldLargeOption.value
+            item.medium.value == originalRow?.medium.value &&
+            item.large.value == originalRow?.large.value
           ),
       );
 
@@ -664,7 +700,7 @@ const TableComponent = ({
       let lastIndex = -1;
       remainingRows.forEach((item, index) => {
         if (
-          item.large.value == oldLargeOption.value &&
+          item.large.value == originalRow?.large.value &&
           item.medium.value === newMedium.value
         )
           lastIndex = index;
@@ -678,8 +714,8 @@ const TableComponent = ({
         // Instead of pushing, find the **original** position of row.original.medium.value
         const originalIndex = statisticCategories.findIndex(
           (item) =>
-            item.medium.value == oldMediumOption.value &&
-            item.large.value == oldLargeOption.value,
+            item.medium.value == originalRow?.medium.value &&
+            item.large.value == originalRow?.large.value,
         );
 
         if (originalIndex !== -1) {
@@ -690,18 +726,16 @@ const TableComponent = ({
           newStatisticCategories.push(...matchedRows);
         }
       }
-
       // Remove duplicates
       const uniqueMap = new Map();
       const filteredStatisticCategories = newStatisticCategories.filter(
         (item) => {
-          const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}`;
+          const key = `${item.large.value}|${item.medium.value}`;
           if (uniqueMap.has(key)) return false;
           uniqueMap.set(key, true);
           return true;
         },
       );
-
       // Update hierarchy list
       updatedHierarchyDetail = {
         ...updatedHierarchyDetail,
@@ -1173,13 +1207,13 @@ const TableComponent = ({
                               ) {
                                 setWarningChangeCategoryModalOpen(true);
                                 setPendingSelection({
-                                  oldLargeOption,
+                                  originalRow: row.original,
                                   newValue: e,
                                   type: StatisticCategoryType.LARGE,
                                 });
                               } else {
                                 handleChangeLargeCategoryByPulldown(
-                                  oldLargeOption,
+                                  row.original,
                                   e,
                                 );
                               }
@@ -1262,10 +1296,7 @@ const TableComponent = ({
                                 options={[
                                   ...categoryDropdownOptions.filter(
                                     (option) =>
-                                      !excludedMediums.includes(option.value) && // Prevent selecting the same as other rows in the group
-                                      option.value !==
-                                        row.original.large.value &&
-                                      option.value !== '',
+                                      !excludedMediums.includes(option.value), // Prevent selecting the same as other rows in the group
                                   ),
                                 ]}
                                 minDropdownHeight={240}
@@ -1278,7 +1309,6 @@ const TableComponent = ({
                                 )}
                                 onPendingChange={(e) => {
                                   const oldMediumOption = row.original.medium;
-                                  const oldLargeOption = row.original.large;
                                   if (e.value == oldMediumOption.value) return;
                                   if (
                                     row.original.medium.label &&
@@ -1287,15 +1317,13 @@ const TableComponent = ({
                                   ) {
                                     setWarningChangeCategoryModalOpen(true);
                                     setPendingSelection({
-                                      oldLargeOption,
-                                      oldMediumOption,
+                                      originalRow: row.original,
                                       newValue: e,
                                       type: StatisticCategoryType.MEDIUM,
                                     });
                                   } else {
                                     handleChangeMediumCategoryByPulldown(
-                                      oldLargeOption,
-                                      oldMediumOption!,
+                                      row.original,
                                       e,
                                     );
                                   }
@@ -1398,18 +1426,13 @@ const TableComponent = ({
           onConfirm={() => {
             if (!pendingSelection) return;
 
-            const { oldLargeOption, oldMediumOption, newValue, type } =
-              pendingSelection;
+            const { originalRow, newValue, type } = pendingSelection;
             switch (type) {
               case StatisticCategoryType.LARGE:
-                handleChangeLargeCategoryByPulldown(oldLargeOption, newValue);
+                handleChangeLargeCategoryByPulldown(originalRow, newValue);
                 break;
               case StatisticCategoryType.MEDIUM:
-                handleChangeMediumCategoryByPulldown(
-                  oldLargeOption,
-                  oldMediumOption!,
-                  newValue,
-                );
+                handleChangeMediumCategoryByPulldown(originalRow, newValue);
                 break;
             }
 

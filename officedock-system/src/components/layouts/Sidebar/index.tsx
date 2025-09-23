@@ -200,6 +200,7 @@ const Sidebar = ({ className }: Props) => {
         });
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId, teamList, organizationList]);
 
   const hour = new Intl.DateTimeFormat('ja-JP', {

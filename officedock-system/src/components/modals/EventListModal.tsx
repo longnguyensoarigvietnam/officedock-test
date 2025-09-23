@@ -86,6 +86,7 @@ export const EventListModal = ({
     return () => {
       document.removeEventListener('click', handleClosePopover, true);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
