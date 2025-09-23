@@ -51,6 +51,7 @@ export interface EditCompanyRequest {
   id?: number;
   name: string;
   plan?: string | null;
+  status?: string | null;
   paymentMethod?: string | null;
   contract: {
     startDate?: string | null;

@@ -15,6 +15,7 @@ export const RESPONSIBLE_PERSON_EMAIL_REQUIRED_MESSAGE =
   '担当者メールアドレスは必須です。';
 export const ADDRESS_REQUIRED_MESSAGE = '住所は必須です。';
 export const INDUSTRY_REQUIRED_MESSAGE = '業種は必須です。';
+export const STATUS_REQUIRED_MESSAGE = 'ステータスは必須です。';
 export const SYSTEM_MAIN_PURPOSE_REQUIRED_MESSAGE =
   'システム導入の主な目的は必須です。';
 export const IMPLEMENTATION_MAIN_ISSUE_REQUIRED_MESSAGE =

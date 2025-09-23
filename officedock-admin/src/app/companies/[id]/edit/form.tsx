@@ -19,11 +19,12 @@ import {
   PHONE_NUMBER_WRONG_FORMAT,
   PHONE_REQUIRED_MESSAGE,
   RESPONSIBLE_PERSON_NAME_REQUIRED_MESSAGE,
+  STATUS_REQUIRED_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
   SYSTEM_MAIN_PURPOSE_REQUIRED_MESSAGE,
 } from '@constants/message';
 import { apiRouters, pageRouters } from '@constants/routers';
-import { ServerStatusCode } from '@constants/enums';
+import { CompanyStatus, ServerStatusCode } from '@constants/enums';
 import { PHONE_REGEX } from '@constants/regex';
 
 import useCompanyDetail from '@hooks/useDetailCompany';
@@ -43,6 +44,7 @@ interface EditCompanyType {
   id?: number;
   name: string;
   plan?: string | null;
+  status?: OptionDropdownType;
   paymentMethod?: string | null;
   contract: {
     startDate?: string | null;
@@ -67,6 +69,16 @@ const EditCompanyForm = () => {
   const [industryOptions, setIndustryOptions] = useState<OptionDropdownType[]>(
     [],
   );
+  const STATUS_OPTIONS = [
+    {
+      label: CompanyStatus.ACTIVE_CONTRACT,
+      value: CompanyStatus.ACTIVE_CONTRACT,
+    },
+    {
+      label: CompanyStatus.TEMPORARY_USAGE,
+      value: CompanyStatus.TEMPORARY_USAGE,
+    },
+  ];
   const [systemMainPurposeOptions, setSystemMainPurposeOptions] = useState<
     OptionDropdownType[]
   >([]);
@@ -120,6 +132,7 @@ const EditCompanyForm = () => {
   });
 
   const {
+    watch,
     reset,
     control,
     register,
@@ -150,6 +163,12 @@ const EditCompanyForm = () => {
       (value.id = companyDetail.id),
         (value.name = companyDetail.name),
         (value.plan = companyDetail.plan),
+        (value.status = companyDetail.status
+          ? {
+              label: companyDetail.status ? companyDetail.status : '',
+              value: companyDetail.status ? companyDetail.status : '',
+            }
+          : undefined),
         (value.paymentMethod = companyDetail.paymentMethod),
         (value.contract.responsiblePersonName =
           companyDetail.contract?.responsiblePersonName),
@@ -231,6 +250,7 @@ const EditCompanyForm = () => {
       ...data,
       id: parseFloat(params.id),
       name: data?.name || '',
+      status: data?.status?.value as string,
       contract: {
         responsiblePersonName: data.contract?.responsiblePersonName || '',
         responsiblePersonMail: data.contract?.responsiblePersonMail || '',
@@ -255,6 +275,30 @@ const EditCompanyForm = () => {
         autoComplete="off"
         error={errors.name?.message}
       />
+      {watch('status.value') == CompanyStatus.ACTIVE_CONTRACT ||
+      watch('status.value') == CompanyStatus.TEMPORARY_USAGE ? (
+        <Controller
+          control={control}
+          name="status"
+          render={({ field: { onChange, value } }) => (
+            <Dropdown
+              label="業種"
+              options={STATUS_OPTIONS}
+              selectedOption={STATUS_OPTIONS.find(
+                (element) => element.value === value?.value,
+              )}
+              onChange={(e) => {
+                onChange(e);
+              }}
+              error={errors.status?.message}
+            />
+          )}
+          rules={{ required: STATUS_REQUIRED_MESSAGE }}
+        />
+      ) : (
+        <></>
+      )}
+
       <Input label="契約プラン" register={register('plan')} disabled={true} />
       <Input
         label="決済方法"
@@ -314,7 +358,6 @@ const EditCompanyForm = () => {
             selectedOption={industryOptions.find(
               (element) => element.value === value?.value,
             )}
-            className="w-1/2"
             onChange={(e) => {
               onChange(e);
             }}
@@ -333,7 +376,6 @@ const EditCompanyForm = () => {
             selectedOption={systemMainPurposeOptions.find(
               (element) => element.value === value?.value,
             )}
-            className="w-1/2"
             onChange={(e) => {
               onChange(e);
             }}
@@ -353,7 +395,6 @@ const EditCompanyForm = () => {
               selectedOption={implementationMainIssueOptions.find(
                 (element) => element.value === value?.value,
               )}
-              className="w-1/2"
               onChange={(e) => {
                 onChange(e);
               }}
