@@ -79,6 +79,33 @@ const CompanyDetailInfo = () => {
     },
   );
 
+  // Terminate contract
+  const handleTerminateContract = async () => {
+    setIsLoading(true);
+    return await api.post(apiRouters.TERMINATE_CONTRACT(params.id));
+  };
+
+  const { mutate: terminateContract } = useMutation(
+    'terminateContract',
+    handleTerminateContract,
+    {
+      onSuccess: () => {
+        showToast({
+          description: SUCCESS_SAVE_MESSAGE,
+        });
+        refetchCompanyDetail();
+        setIsLoading(false);
+      },
+      onError: () => {
+        showToast({
+          variant: 'error',
+          description: ERROR_SAVE_MESSAGE,
+        });
+        setIsLoading(false);
+      },
+    },
+  );
+
   return (
     <div className="flex flex-col gap-5 items-center pt-5 w-full">
       <InformationSection
@@ -199,7 +226,7 @@ const CompanyDetailInfo = () => {
         {companyDetail?.status == CompanyStatus.PENDING_APPROVAL ? (
           <Button
             variant="secondary"
-            className="w-28 !text-primary !bg-[#eaeeff] !rounded-lg !border-transparent"
+            className="!w-[135px] !text-primary !bg-[#eaeeff] !rounded-lg !border-transparent"
             onClick={() => activeCompany()}>
             アカウント発行
           </Button>
@@ -209,17 +236,22 @@ const CompanyDetailInfo = () => {
         {companyDetail?.status == CompanyStatus.CONTRACT_TERMINATED ? (
           <Button
             variant="secondary"
-            className="w-28 !text-primary !bg-[#eaeeff] !rounded-lg !border-transparent">
+            className="!w-[135px] !text-primary !bg-[#eaeeff] !rounded-lg !border-transparent">
             アカウント復元
           </Button>
         ) : (
           <></>
         )}
-        <Button
-          variant="secondary"
-          className="w-28 !text-primary !bg-[#eaeeff] !rounded-lg !border-transparent">
-          解約予約
-        </Button>
+        {companyDetail?.status != CompanyStatus.CANCELLATION_PENDING ? (
+          <Button
+            variant="secondary"
+            className="w-28 !text-primary !bg-[#eaeeff] !rounded-lg !border-transparent"
+            onClick={() => terminateContract()}>
+            解約予約
+          </Button>
+        ) : (
+          <></>
+        )}
       </div>
     </div>
   );

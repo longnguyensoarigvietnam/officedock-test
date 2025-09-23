@@ -100,6 +100,7 @@ export const apiRouters = {
   COMPANY_DETAIL: (id: string) => `/companies/${id}/`,
   COMPANY_TRANSACTION: (id: string) => `/companies/${id}/transactions/`,
   COMPANY_ACTIVE: (id: string) => `/companies/${id}/active/`,
+  TERMINATE_CONTRACT: (id: string) => `/companies/${id}/terminate-contract/`,
 
   USER_LIST: '/users/',
   USER_DETAIL: (id: string) => `/users/${id}/`,
