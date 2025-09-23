@@ -91,8 +91,8 @@ class CompanyService:
         UserActivityLog.log_user_creation(
             user,
             current_user,
-            get_client_ip(self.request),
-            get_user_agent(self.request),
+            get_client_ip(request),
+            get_user_agent(request),
         )
 
     def handle_contract_renewal(self, company, invoice):
