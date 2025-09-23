@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation } from 'react-query';
 import { AxiosError } from 'axios';
 
+import EventActionTypeModal from '@components/modals/EventActionTypeModal';
 import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModal';
 import InputSearch from '@components/common/InputSearch';
 import ImageRound from '@components/common/ImageRound';
@@ -54,7 +55,6 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import api from '@base/api';
-import EventActionTypeModal from '@components/modals/EventActionTypeModal';
 
 interface BookmarkListProps {
   searchChatMsg: string;
