@@ -71,11 +71,10 @@ from tasks.constants import (
 )
 from roles.constants import Actions, Screens
 from chat.models import ChatRoom
-from thanks_messages.models import ThanksMessage
 from companies.models import Company, CompanyTransaction
-from thanks_messages.models import ThanksMessage
 from base.messages import ERROR_MESSAGES
 from common.services.transaction_service import TransactionService
+from common.services.cleanup_data_service import CleanupDataService
 from .serializers import (
     CreationDataOrganizationSerializer,
     CreationDataTaskListSerializer,
@@ -341,6 +340,25 @@ class CronJobViewSet(BaseAPIViewSet):
     @action(methods=["POST"], detail=False, url_path="run-every-minute")
     @transaction.atomic
     def cronjob_run_every_minute(self, request):
+        """
+        Run per-minute maintenance/notification cron tasks.
+
+        Responsibilities:
+        - Finalize MVP votes that have ended:
+          - Mark `PRESENT` votes with `end_date < now()` as `PAST`
+          - Reward winners and create a system tweet
+        - Announce surveys that ended within the last minute:
+          - Bulk-create system tweets per survey
+        - Check Skill Map level progression popups:
+          - If a level meets look-back or measure thresholds, emit a websocket event to the staff user
+        - Split cross-day running task durations:
+          - For durations still running from a previous day, split while keeping the current one running
+        - Send task reminders:
+          - For tasks with `remind_at <= now < deadline`, emit a websocket reminder event to each PIC
+        - Warn for task/schedule durations overtime:
+          - For running durations started today, detect overtime and emit warning websocket events
+            to all relevant users (task PICs or schedule participants)
+        """
         now_time = now()
 
         # --- 1. Check MVP vote ended ---
@@ -538,6 +556,7 @@ class CronJobViewSet(BaseAPIViewSet):
     def cronjob_run_every_day(self, request):
         """
         Daily cronjob endpoint.
+        - Clean up companies whose contracts ended after the 2-month retention period
         - Clean up soft-deleted thanks messages after retention period
         - Handle company closing and deadline logic
         - Reward users with coins/pearls based on activities
@@ -545,14 +564,17 @@ class CronJobViewSet(BaseAPIViewSet):
 
         today = now().date()
         transaction_service = TransactionService()
+        cleanup_data_service = CleanupDataService()
 
-        # 1. Cleanup soft-deleted thanks messages after retention period
-        threshold_date = now() - timedelta(
-            days=settings.THANKS_MESSAGE_SOFT_DELETE_RETENTION_DAYS
+        # 1. Cleanup data
+        # Cleanup companies whose contracts ended after the 2-month retention period
+        deleted_company_contract_count = (
+            cleanup_data_service.cleanup_data_company_contracts()
         )
-        deleted_count, _ = ThanksMessage.objects.filter(
-            deleted_at__isnull=False, deleted_at__lte=threshold_date
-        ).delete()
+        # Cleanup soft-deleted thanks messages after retention period
+        deleted_tks_msg_count = (
+            cleanup_data_service.cleanup_data_thanks_messages()
+        )
 
         # 2. Iterate over all companies to handle closing logic
         for company in Company.objects.all().prefetch_related("users"):
@@ -618,7 +640,8 @@ class CronJobViewSet(BaseAPIViewSet):
         return self.response_ok(
             {
                 "today": today.isoformat(),
-                "deleted_tks_msg_count": deleted_count,
+                "deleted_tks_msg_count": deleted_tks_msg_count,
+                "deleted_company_contract_count": deleted_company_contract_count,
             }
         )
 
