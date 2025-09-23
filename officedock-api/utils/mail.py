@@ -211,7 +211,7 @@ class MailService:
         self.send(subject, message, [recipient])
 
 
-class PaymentEmailService(MailService):
+class PaymentMailService(MailService):
     """
     Email utilities for payment and billing lifecycle events.
 

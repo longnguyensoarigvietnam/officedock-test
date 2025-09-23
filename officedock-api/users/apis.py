@@ -1,6 +1,5 @@
-import os
 import random
-from datetime import timedelta, datetime
+from datetime import datetime
 
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist
@@ -13,14 +12,11 @@ from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework_simplejwt.tokens import AccessToken
 
 from base.apis import BaseAPIViewSet
 from base.constants import (
     DEFAULT_TOKEN_SECONDS_EXPIRATION,
-    ACCESS_TOKEN_LIFETIME,
     OTP_TOKEN_SECONDS_EXPIRATION,
-    ACCESS_TOKEN_LIFETIME_REMEMBER,
 )
 from base.messages import ERROR_MESSAGES
 from base.permissions import ActionPermission, IsOperationAdminOnly
@@ -40,7 +36,6 @@ from users.constants import (
     RoleTypes,
     StepsRegisterTypes,
     DEFAULT_OTP_ATTEMPTS,
-    VerifyTokenTypes,
     LoginTypes,
     CurrencyEnums,
 )
@@ -49,7 +44,6 @@ from users.models import (
     LoginToken,
     Memo,
     Profile,
-    ResetPassword,
     Role,
     User,
     UserActivityLog,
@@ -78,291 +72,224 @@ from users.serializers import (
     UserVerificationSerializer,
     SettingSerializer,
     DailyReportSerializer,
-    UserLoginSerializer,
     TransactionHistorySerializer,
 )
-from users.services import UserService
-from utils.mail import MailService
+from utils.mail import MailService, PaymentMailService
 from utils.jwt import JWTService
 from common.filters import CustomOrderFilter
 from roles.constants import Screens
 from base.filters import FilterByPermission
 from tasks.models import TeamTaskIndex
 from base.paginations import CustomCursorPagination
+from users.services.auth_service import UserAuthService
+
+"""
+Viewsets group for Admin
+"""
 
 
-def _login(self, request, is_admin=True):
+@extend_schema(tags=["Admin > Auth"])
+class AdminAuthViewSet(BaseAPIViewSet):
     """
-    The common function to create login session.
+    API endpoint for authentication.
     """
 
-    serializer = self.get_serializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    serializer_data = serializer.validated_data
-    user_service = UserService()
-    if is_admin:
-        user = User.objects.filter(
-            email=serializer_data["email"],
-            roles__name=RoleTypes.OPERATION_ADMIN.value,
-        ).first()
-    else:
-        user = (
-            User.objects.filter(
-                Q(email=serializer_data["username"])
-                | Q(username=serializer_data["username"])
-            )
-            .exclude(roles__name=RoleTypes.OPERATION_ADMIN.value)
-            .first()
-        )
-        user = (
-            user if user_service.check_valid_company(user) else None
-        )  # TODO: Maybe refactor logic when implement redirect to change payment method page
-
-    # Check role
-    if not user:
-        return self.response(status_code=status.HTTP_401_UNAUTHORIZED)
-
-    user = authenticate(
-        request,
-        username_alias=user.username_alias if user else None,
-        password=serializer_data["password"],
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="login",
+        serializer_class=AdminLoginSerializer,
     )
+    def login(self, request):
+        """
+        Login an admin and return a session to verify the OTP.
+        """
 
-    # Login without using 2FA
-    if not user.is_two_factor_auth:
-        remember_me = serializer_data.get("remember_me", False)
-        token = AccessToken.for_user(user)
-        token_lifetime = (
-            ACCESS_TOKEN_LIFETIME_REMEMBER
-            if remember_me
-            else ACCESS_TOKEN_LIFETIME
-        )
-        token.set_exp(lifetime=timedelta(minutes=token_lifetime))
-        user.login_token(token)
-
-        return self.response_ok(
-            {
-                "is_2fa": False,
-                "access": str(token),
-                "user": UserLoginSerializer(user).data,
-            }
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        result = UserAuthService().login(
+            request, serializer_data, is_admin=True
         )
 
-    try:
-        user_verification = user.user_verification
-    except ObjectDoesNotExist:
-        UserVerification.objects.create(user=user)
-        user_verification = user.user_verification
+        if not result:
+            return self.response(status_code=status.HTTP_401_UNAUTHORIZED)
 
-    token = JWTService.encode_token(
-        user.id, user.email, OTP_TOKEN_SECONDS_EXPIRATION
+        return self.response_ok(result)
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="resend-otp",
+        serializer_class=ResendOTPSerializer,
+        permission_classes=[AllowAny],
     )
+    def resend_otp(self, request):
+        """
+        Resend OTP when login for admin.
+        """
 
-    otp_code = (
-        "000000"
-        if is_admin and user.email == os.getenv("ADMIN_EMAIL")
-        else str(random.randint(100000, 999999))
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        token = serializer_data.pop("token")
+
+        # Handle resend OTP for admin
+        result = UserAuthService().resend_otp(token, is_admin=True)
+        return self.response_ok(result)
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="verify-login",
+        serializer_class=OTPVerificationSerializer,
     )
+    def verify_login(self, request):
+        """
+        Verify an admin login.
+        """
 
-    user_verification.token = token
-    user_verification.otp_code = otp_code
-    user_verification.otp_attempts = DEFAULT_OTP_ATTEMPTS  # Reset counter
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        result = UserAuthService().verify_login(serializer_data, is_admin=True)
 
-    # Send OTP code to user email
-    email_service = MailService()
-    email_service.send_admin_login_otp(
-        user.two_factor_auth_email, otp_code
-    ) if is_admin else email_service.send_system_login_otp(
-        str(user.profile), user.two_factor_auth_email, otp_code
+        if not result:
+            return self.response(status_code=status.HTTP_401_UNAUTHORIZED)
+
+        return self.response_ok(result)
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="verify-token",
+        serializer_class=TokenVerificationSerializer,
     )
-    user_verification.save()
+    def verify_token(self, request):
+        """
+        Check if token is valid.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        result = UserAuthService().verify_token(serializer_data)
+        return self.response_ok(result)
 
-    return self.response_ok({"is_2fa": True, "token": token})
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="forgot-password",
+        serializer_class=ForgotPasswordSerializer,
+    )
+    def forgot_password(self, request):
+        """
+        Forgot password.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        UserAuthService().forgot_password(serializer_data)
+        return self.response_ok()
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="reset-password",
+        serializer_class=ResetPasswordSerializer,
+    )
+    def reset_password(self, request):
+        """
+        Reset password.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        UserAuthService().reset_password(serializer.validated_data)
+        return self.response_ok()
 
 
-def _resend_otp(self, token, is_admin=True):
+@extend_schema(tags=["Admin > Users"])
+class AdminUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     """
-    Handle resend OTP code when login.
-    """
-    user_verification = UserVerification.objects.filter(token=token).first()
-
-    if not user_verification:
-        raise ValidationError({"detail": ERROR_MESSAGES["token_invalid"]})
-
-    user = user_verification.user
-    otp_code = (
-        "000000"
-        if is_admin and user.email == os.getenv("ADMIN_EMAIL")
-        else str(random.randint(100000, 999999))
-    )
-
-    user_verification.otp_code = otp_code
-    user_verification.otp_attempts = DEFAULT_OTP_ATTEMPTS  # Reset counter
-
-    # Send OTP code to user email
-    email_service = MailService()
-    email_service.send_admin_login_otp(
-        user.two_factor_auth_email, otp_code
-    ) if is_admin else email_service.send_system_login_otp(
-        str(user.profile), user.two_factor_auth_email, otp_code
-    )
-    user_verification.save()
-
-    return self.response_ok({"is_2fa": True, "token": token})
-
-
-def _verify_login(self, request, is_admin=True):
-    """
-    The common function to verify login session.
-    """
-
-    serializer = self.get_serializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    serializer_data = serializer.validated_data
-
-    token = serializer_data["token"]
-    otp_code = serializer_data["otp_code"]
-    remember_me = serializer_data.get("remember_me", False)
-    user_verification = UserVerification.objects.filter(token=token).last()
-    JWTService.decode_token(token)  # Check if token is expired or not
-
-    if user_verification is None:
-        raise ValidationError(
-            {"detail": [ERROR_MESSAGES["login_session_invalid"]]}
-        )
-
-    if not user_verification.otp_code == otp_code:
-        raise ValidationError({"detail": [ERROR_MESSAGES["otp_code_invalid"]]})
-
-    user = user_verification.user
-    if (
-        is_admin
-        and user.check_roles(RoleTypes.OPERATION_ADMIN.value, exclude=True)
-    ) or (not is_admin and user.check_roles(RoleTypes.OPERATION_ADMIN.value)):
-        return self.response(status_code=status.HTTP_401_UNAUTHORIZED)
-
-    token = AccessToken.for_user(user)
-    token_lifetime = (
-        ACCESS_TOKEN_LIFETIME_REMEMBER if remember_me else ACCESS_TOKEN_LIFETIME
-    )
-    token.set_exp(lifetime=timedelta(minutes=token_lifetime))
-    # Reset login session
-    user_verification.token = None
-    user_verification.otp_code = None
-    user_verification.save()
-    user.login_token(token)
-
-    return self.response_ok(
-        {
-            "access": str(token),
-            "user": UserLoginSerializer(user).data,
-        }
-    )
-
-
-def _verify_token(self, request, is_admin=True):
-    """
-    The common function to check if token is valid.
+    API endpoint that allows performed CRUD operations on users admin.
     """
 
-    serializer = self.get_serializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    serializer_data = serializer.validated_data
-    token = serializer_data["token"]
-    verify_type = serializer_data.pop("verify_type", None)
-
-    token_decoded = JWTService.decode_token(token)
-    response_data = {
-        "token": token,
+    queryset = User.objects.all()
+    serializer_class = AdminUserInviteSerializer
+    permission_classes = [IsOperationAdminOnly]
+    filter_backends = [
+        DjangoFilterBackend,
+        CustomOrderFilter,
+    ]
+    ordering_fields = {
+        "id": "id",
+        "email": "email",
+        "full_name": "profile__full_name",
     }
+    filterset_class = AdminUserFilter
 
-    if verify_type == VerifyTokenTypes.RESET_PASSWORD.value:
-        reset_password = ResetPassword.objects.filter(token=token).last()
-        user = User.objects.filter(pk=token_decoded.get("id")).first()
+    def get_queryset(self):
+        """
+        Filtering users by company.
+        """
 
-        if (
-            not reset_password
-            or (
-                is_admin
-                and user.check_roles(
-                    RoleTypes.OPERATION_ADMIN.value, exclude=True
-                )
-            )
-            or (
-                not is_admin
-                and user.check_roles(RoleTypes.OPERATION_ADMIN.value)
-            )
-        ):
-            raise ValidationError({"detail": [ERROR_MESSAGES["token_invalid"]]})
-    else:
-        # Decode token and retrieve User Verification data
-        user_verification = UserVerification.objects.filter(token=token).first()
-        if not user_verification:
-            raise ValidationError({"detail": [ERROR_MESSAGES["token_invalid"]]})
-
-        if user_verification.user is None:
-            response_data = {
-                "token": token,
-                "steps": user_verification.steps,
-            }
-
-    return self.response_ok(response_data)
-
-
-def _forgot_password(self, request, is_admin=True):
-    """
-    The common function to forgot password.
-    """
-
-    serializer = self.get_serializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    serializer_data = serializer.validated_data
-    email = serializer_data["email"]
-
-    if is_admin:
-        user = User.objects.filter(
-            email=email, roles__name=RoleTypes.OPERATION_ADMIN.value
-        ).first()
-    else:
-        user = (
-            User.objects.filter(email=email)
-            .exclude(roles__name=RoleTypes.OPERATION_ADMIN.value)
-            .first()
+        queryset = (
+            super()
+            .get_queryset()
+            .filter(roles__name=RoleTypes.OPERATION_ADMIN.value)
+            .distinct()
         )
+        return queryset.order_by("created_at")
 
-    if not user:
-        raise ValidationError({"email": [ERROR_MESSAGES["email_invalid"]]})
+    @transaction.atomic()
+    def perform_create(self, serializer):
+        """
+        Perform create a user.
+        """
 
-    reset_password = ResetPassword.create(user=user)
+        serializer_data = serializer.validated_data
 
-    mail_service = MailService()
-    mail_service.send_admin_forgot_password(
-        email, reset_password.token
-    ) if is_admin else mail_service.send_system_forgot_password(
-        email, reset_password.token
-    )
-    return self.response_ok()
+        username_alias = get_username_alias(
+            login_text=serializer_data.get("email", None),
+            is_operation_admin=True,
+        )
+        profile_data = serializer_data.pop("profile")
+
+        # Save data to User and Profile
+        company_id = self.request.user.company_id
+        password = get_random_string(8)
+        role = Role.get_role(RoleTypes.OPERATION_ADMIN.value)
+        user = serializer.save(
+            company_id=company_id,
+            password=password,
+            username_alias=username_alias,
+        )
+        Profile.objects.create(user=user, company_id=company_id, **profile_data)
+
+        # Set role Operation Admin
+        user.roles.add(role, through_defaults={"company_id": user.company_id})
+
+        # Send mail to invited user
+        mail_service = MailService()
+        mail_service.send_admin_invite_user(user.email, password, user)
+
+    @transaction.atomic()
+    def perform_update(self, serializer):
+        """
+        Perform update a user.
+        """
+
+        serializer_data = serializer.validated_data
+        profile_data = serializer_data.pop("profile")
+        serializer_data.pop("email", None)
+
+        # Update data to User and Profile
+        user = serializer.save()
+        user.set_profile(profile_data)
 
 
-def _reset_password(self, request):
-    """
-    The common function to reset password.
-    """
-
-    serializer = self.get_serializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    serializer_data = serializer.validated_data
-
-    # Verify and save a new password
-    user = ResetPassword.verify(serializer_data["token"])
-    if not user:
-        raise ValidationError({"token": [ERROR_MESSAGES["token_invalid"]]})
-    user.set_password(serializer_data["password"])
-    user.save()
-
-    # Remove used password reset token
-    ResetPassword.objects.filter(user=user).delete()
-    return self.response_ok()
+"""
+Viewsets group for System
+"""
 
 
 @extend_schema(tags=["System > Auth"])
@@ -429,7 +356,11 @@ class SystemAuthViewSet(BaseAPIViewSet):
         Check if token is valid.
         """
 
-        return _verify_token(self, request, is_admin=False)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        result = UserAuthService().verify_token(serializer_data, is_admin=False)
+        return self.response_ok(result)
 
     @action(
         methods=["POST"],
@@ -449,7 +380,8 @@ class SystemAuthViewSet(BaseAPIViewSet):
         token = serializer_data.pop("token")
 
         # Handle resend OTP for system
-        return _resend_otp(self, token=token, is_admin=False)
+        result = UserAuthService().resend_otp(token, is_admin=False)
+        return self.response_ok(result)
 
     @action(
         methods=["POST"],
@@ -470,7 +402,7 @@ class SystemAuthViewSet(BaseAPIViewSet):
         user_verification = UserVerification.objects.filter(token=token).first()
         if not user_verification:
             raise ValidationError({"detail": [ERROR_MESSAGES["token_invalid"]]})
-        elif not user_verification.otp_code == serializer_data["otp_code"]:
+        elif user_verification.otp_code != serializer_data["otp_code"]:
             raise ValidationError(
                 {"detail": [ERROR_MESSAGES["otp_code_invalid"]]}
             )
@@ -553,7 +485,17 @@ class SystemAuthViewSet(BaseAPIViewSet):
         Login a user and return a session to verify the OTP.
         """
 
-        return _login(self, request, is_admin=False)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        result = UserAuthService().login(
+            request, serializer_data, is_admin=False
+        )
+
+        if not result:
+            return self.response(status_code=status.HTTP_401_UNAUTHORIZED)
+
+        return self.response_ok(result)
 
     @action(
         methods=["POST"],
@@ -626,7 +568,15 @@ class SystemAuthViewSet(BaseAPIViewSet):
         Verify a user's login.
         """
 
-        return _verify_login(self, request, is_admin=False)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        result = UserAuthService().verify_login(serializer_data, is_admin=False)
+
+        if not result:
+            return self.response(status_code=status.HTTP_401_UNAUTHORIZED)
+
+        return self.response_ok(result)
 
     @action(
         methods=["POST"],
@@ -638,8 +588,11 @@ class SystemAuthViewSet(BaseAPIViewSet):
         """
         Forgot password.
         """
-
-        return _forgot_password(self, request, is_admin=False)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        UserAuthService().forgot_password(serializer_data, is_admin=False)
+        return self.response_ok()
 
     @action(
         methods=["POST"],
@@ -651,8 +604,10 @@ class SystemAuthViewSet(BaseAPIViewSet):
         """
         Reset password.
         """
-
-        return _reset_password(self, request)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        UserAuthService().reset_password(serializer.validated_data)
+        return self.response_ok()
 
     @action(
         methods=["POST"],
@@ -710,98 +665,6 @@ class SystemAuthViewSet(BaseAPIViewSet):
                 company_id=request.user.company_id,
             )
         return self.response_ok()
-
-
-@extend_schema(tags=["Admin > Auth"])
-class AdminAuthViewSet(BaseAPIViewSet):
-    """
-    API endpoint for authentication.
-    """
-
-    @action(
-        methods=["POST"],
-        detail=False,
-        url_path="login",
-        serializer_class=AdminLoginSerializer,
-    )
-    def login(self, request):
-        """
-        Login an admin and return a session to verify the OTP.
-        """
-
-        return _login(self, request, is_admin=True)
-
-    @action(
-        methods=["POST"],
-        detail=False,
-        url_path="resend-otp",
-        serializer_class=ResendOTPSerializer,
-        permission_classes=[AllowAny],
-    )
-    def resend_otp(self, request):
-        """
-        Resend OTP when login for admin.
-        """
-
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer_data = serializer.validated_data
-        token = serializer_data.pop("token")
-
-        # Handle resend OTP for admin
-        return _resend_otp(self, token=token, is_admin=True)
-
-    @action(
-        methods=["POST"],
-        detail=False,
-        url_path="verify-login",
-        serializer_class=OTPVerificationSerializer,
-    )
-    def verify_login(self, request):
-        """
-        Verify an admin login.
-        """
-
-        return _verify_login(self, request, is_admin=True)
-
-    @action(
-        methods=["POST"],
-        detail=False,
-        url_path="verify-token",
-        serializer_class=TokenVerificationSerializer,
-    )
-    def verify_token(self, request):
-        """
-        Check if token is valid.
-        """
-
-        return _verify_token(self, request)
-
-    @action(
-        methods=["POST"],
-        detail=False,
-        url_path="forgot-password",
-        serializer_class=ForgotPasswordSerializer,
-    )
-    def forgot_password(self, request):
-        """
-        Forgot password.
-        """
-
-        return _forgot_password(self, request)
-
-    @action(
-        methods=["POST"],
-        detail=False,
-        url_path="reset-password",
-        serializer_class=ResetPasswordSerializer,
-    )
-    def reset_password(self, request):
-        """
-        Reset password.
-        """
-
-        return _reset_password(self, request)
 
 
 @extend_schema(tags=["System > Users"])
@@ -937,17 +800,41 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             user.roles.add(role, through_defaults={"company": company})
 
         # Send mail to invited user
+        new_user_email = ""
         mail_service = MailService()
-        mail_service.send_system_invite_user_by_email(
-            user.email, password, company
-        ) if serializer_data.get(
-            "login_type"
-        ) == LoginTypes.EMAIL.value else mail_service.send_system_invite_user_by_id(
-            self.request.user.email,
-            serializer_data.get("username"),
-            password,
-            company,
-        )
+        payment_mail_service = PaymentMailService()
+        if serializer_data.get("login_type") == LoginTypes.EMAIL.value:
+            new_user_email = user.email
+            mail_service.send_system_invite_user_by_email(
+                user.email, password, company
+            )
+        else:
+            new_user_email = serializer_data.get("username")
+            mail_service.send_system_invite_user_by_id(
+                self.request.user.email,
+                new_user_email,
+                password,
+                company,
+            )
+
+        # Send mail to responsible
+        if hasattr(company, "responsible_email"):
+            payment_mail_service.send_account_added(
+                recipient=company.responsible_email,
+                company_name=company.name,
+                responsible_name=getattr(company, "responsible_name", ""),
+                new_user_name=user.full_name,
+                new_user_email=new_user_email,
+            )
+
+        # Handle check max user
+        company_user_count = company.users.count()
+        if company_user_count > company.max_user_in_contract_period:
+            company.max_user_in_contract_period = company_user_count
+            company.max_user_at = datetime.now()
+            company.save(
+                update_fields=["max_user_in_contract_period", "max_user_at"]
+            )
 
         # Log user create
         UserActivityLog.log_user_creation(
@@ -1282,86 +1169,6 @@ class SystemUserMemoViewSet(BaseAPIViewSet):
         )
 
         return self.response_ok(self.get_serializer(daily).data)
-
-
-@extend_schema(tags=["Admin > Users"])
-class AdminUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
-    """
-    API endpoint that allows performed CRUD operations on users admin.
-    """
-
-    queryset = User.objects.all()
-    serializer_class = AdminUserInviteSerializer
-    permission_classes = [IsOperationAdminOnly]
-    filter_backends = [
-        DjangoFilterBackend,
-        CustomOrderFilter,
-    ]
-    ordering_fields = {
-        "id": "id",
-        "email": "email",
-        "full_name": "profile__full_name",
-    }
-    filterset_class = AdminUserFilter
-
-    def get_queryset(self):
-        """
-        Filtering users by company.
-        """
-
-        queryset = (
-            super()
-            .get_queryset()
-            .filter(roles__name=RoleTypes.OPERATION_ADMIN.value)
-            .distinct()
-        )
-        return queryset.order_by("created_at")
-
-    @transaction.atomic()
-    def perform_create(self, serializer):
-        """
-        Perform create a user.
-        """
-
-        serializer_data = serializer.validated_data
-
-        username_alias = get_username_alias(
-            login_text=serializer_data.get("email", None),
-            is_operation_admin=True,
-        )
-        profile_data = serializer_data.pop("profile")
-
-        # Save data to User and Profile
-        company_id = self.request.user.company_id
-        password = get_random_string(8)
-        role = Role.get_role(RoleTypes.OPERATION_ADMIN.value)
-        user = serializer.save(
-            company_id=company_id,
-            password=password,
-            username_alias=username_alias,
-        )
-        Profile.objects.create(user=user, company_id=company_id, **profile_data)
-
-        # Set role Operation Admin
-        user.roles.add(role, through_defaults={"company_id": user.company_id})
-
-        # Send mail to invited user
-        mail_service = MailService()
-        mail_service.send_admin_invite_user(user.email, password, user)
-
-    @transaction.atomic()
-    def perform_update(self, serializer):
-        """
-        Perform update a user.
-        """
-
-        serializer_data = serializer.validated_data
-        profile_data = serializer_data.pop("profile")
-        serializer_data.pop("email", None)
-
-        # Update data to User and Profile
-        user = serializer.save()
-        user.set_profile(profile_data)
 
 
 @extend_schema(tags=["System > Point History"])

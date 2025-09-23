@@ -4,21 +4,22 @@ from rest_framework.fields import ValidationError
 from base.messages import ERROR_MESSAGES
 from common.services import stripe_service
 from common.services.stripe_service import StripeService
-from common.utils import get_username_alias
+from common.utils import get_client_ip, get_user_agent, get_username_alias
 from companies.constants import CompanyStatus, CompanyTransactionTypes
 from companies.models import Company
 from companies.utils import generate_contract_related_date_base_on_now
 from users.constants import LoginTypes, RoleTypes
-from users.models import Profile, Role, User
+from users.models import Profile, Role, User, UserActivityLog
 from utils.mail import MailService
 
 
 class CompanyService:
-    def active_company(self, company: Company):
+    def active_company(self, request, company: Company):
         """
         Activate a company by creating its admin user, assigning roles,
         setting up Stripe subscription, and updating contract status.
         """
+        current_user = request.user
         if company.status != CompanyStatus.PENDING_APPROVAL.value:
             raise ValidationError(
                 {"detail": ERROR_MESSAGES["company_not_match"]}
@@ -85,6 +86,14 @@ class CompanyService:
         # Mark company as active and save status
         company.status = CompanyStatus.ACTIVE_CONTRACT.value
         company.save(update_fields=["status"])
+
+        # Log user create
+        UserActivityLog.log_user_creation(
+            user,
+            current_user,
+            get_client_ip(self.request),
+            get_user_agent(self.request),
+        )
 
     def handle_contract_renewal(self, company, invoice):
         """

@@ -11,6 +11,7 @@ from common.constants import ALLOW_IMAGE_FORMATS, USER_AVATAR_FOLDER_UPLOAD
 from organizations.models import UsersOrganizations
 from utils.jwt import JWTService
 
+from users.services.user_balance_service import UserService
 from .constants import (
     AvatarColors,
     CurrencyEnums,
@@ -23,7 +24,6 @@ from .constants import (
     UserActivityTypes,
 )
 from .managers import ActiveUsersOnlyManager
-from .services import UserService
 
 
 class Permission(BaseModel):
