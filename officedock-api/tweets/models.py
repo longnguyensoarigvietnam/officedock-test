@@ -18,5 +18,5 @@ class Tweet(BaseModel):
         null=True,
         blank=True,
     )
-    content = models.CharField(max_length=255)
+    content = models.CharField()
     is_system = models.BooleanField(default=False)
