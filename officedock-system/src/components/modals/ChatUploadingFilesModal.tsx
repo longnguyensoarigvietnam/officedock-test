@@ -25,13 +25,14 @@ import Modal from '../common/Modal';
 import { ChatRoomType, ReactionIconValue } from '@constants/enums';
 import { REACTION_LIST } from '@constants';
 
-import {
-  ChatParticipant,
-  ChatRoomDetail,
-} from '@interfaces/chat';
+import { ChatParticipant, ChatRoomDetail } from '@interfaces/chat';
 import { Profile } from '@interfaces/user';
 
 import { trimUnnecessaryLineBreaks } from '@utils';
+import { TaskQuote } from '@components/chat/CustomTaskQuote';
+import { MsgQuote } from '@components/chat/CustomMsgQuote';
+import { MsgQuoteText } from '@components/chat/CustomMsgQuoteText';
+import { MsgReply } from '@components/chat/CustomMsgReply';
 
 export type ChatUploadingFilesModalProps = {
   message: string;
@@ -55,7 +56,7 @@ export type ChatUploadingFilesModalProps = {
   )[];
   searchMentionMembers: string;
   mentionMembers: ChatParticipant[];
-  dashboardMemberList: Omit<Profile, "birthday" | "gender">[]
+  dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   setMentionMembers: Dispatch<SetStateAction<ChatParticipant[]>>;
   handleCheckboxClick: (
     editor: Editor,
@@ -120,6 +121,10 @@ const ChatUploadingFilesModal = memo(
         Document,
         Paragraph,
         Text,
+        TaskQuote,
+        MsgQuote,
+        MsgQuoteText,
+        MsgReply,
         Mention.configure({
           HTMLAttributes: {
             class: 'mention text-primary',
@@ -134,6 +139,7 @@ const ChatUploadingFilesModal = memo(
       onUpdate: ({ editor }: { editor: Editor }) => {
         setMessage(editor.getHTML());
       },
+      immediatelyRender: false,
     });
 
     // Function to insert reaction into editor
@@ -251,7 +257,10 @@ const ChatUploadingFilesModal = memo(
             </DynamicTooltip>
           </div>
           <div className="mb-3">
-            <EditorContent editor={editor} className="w-full break-all whitespace-pre-wrap chat"/>
+            <EditorContent
+              editor={editor}
+              className="w-full break-all whitespace-pre-wrap chat"
+            />
           </div>
           <input
             type="file"

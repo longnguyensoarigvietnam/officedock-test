@@ -20,9 +20,9 @@ interface FilterProps {
   page: number;
   endDate: string | Date;
   fromDate: string | Date;
-  largeCategoryId?: number | null;
-  mediumCategoryId?: number | null;
-  smallCategoryId?: number | null;
+  largeCategoryId?: number | string | null;
+  mediumCategoryId?: number | string | null;
+  smallCategoryId?: number | string | null;
   organizationIds?: string;
   organizationId?: string;
   tagIds?: OptionDropdownType[];

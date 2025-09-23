@@ -201,7 +201,7 @@ export const MessageDetailQuote = ({
             const parser = new DOMParser();
             const doc = parser.parseFromString(el.innerHTML, 'text/html');
             const spans = doc.querySelectorAll('span');
-            const targetSpan = spans[1]?.outerHTML || '';
+            const targetSpan = spans[1]?.innerHTML || '';
 
             children.push(
               <div
@@ -217,7 +217,7 @@ export const MessageDetailQuote = ({
                   src="/icons/gray-checkbox.svg"
                 />
                 <span
-                  className="text-sm font-medium"
+                  className="text-sm font-medium  line-clamp-1 overflow-hidden text-[#228CDB]  break-all"
                   dangerouslySetInnerHTML={{ __html: targetSpan }}
                 />
               </div>,
@@ -461,7 +461,6 @@ export const MessageDetailQuote = ({
                         {messageDetail.sender?.organizations?.name}
                       </span>
                     </div>
-
                     {messageDetail.isBookmark && (
                       <ImageRound
                         name="Save"

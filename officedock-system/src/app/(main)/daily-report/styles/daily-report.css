@@ -228,9 +228,6 @@
   padding: 0 !important;
 }
 
-.daily-custom .fc-event-main {
-  box-shadow: 0px 2px 8px 0px #0000001a;
-}
 .daily-custom
   .fc
   .fc-event.fc-event-draggable.fc-event-start.fc-event-today.fc-daygrid-event.fc-daygrid-block-event.fc-h-event {
