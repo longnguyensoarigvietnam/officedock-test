@@ -217,7 +217,7 @@ export const MessageDetailBookmark = ({
 
             const spans = doc.querySelectorAll('span');
 
-            const targetSpan = spans[1]?.outerHTML || '';
+            const targetSpan = spans[1]?.innerHTML || '';
 
             return (
               <>
@@ -240,7 +240,7 @@ export const MessageDetailBookmark = ({
                     src="/icons/gray-checkbox.svg"
                   />
                   <span
-                    className="text-sm font-medium"
+                    className="text-sm font-medium  line-clamp-1 overflow-hidden text-[#228CDB]  break-all"
                     dangerouslySetInnerHTML={{ __html: targetSpan }}
                   />
                 </div>

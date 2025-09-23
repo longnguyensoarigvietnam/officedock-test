@@ -12,7 +12,7 @@ interface Props {
 }
 
 const ItemPreviewCustomize = ({ group, handleWearDataItem }: Props) => {
-  const { setDataItem } = useContext(GlobalStateContext);
+  const { setDataItem, dataItems } = useContext(GlobalStateContext);
 
   const [selectedItem, setSelectedItem] = useState<ItemUser | null>(null);
 
@@ -67,8 +67,8 @@ const ItemPreviewCustomize = ({ group, handleWearDataItem }: Props) => {
                     key={item.id}
                     onClick={() => {
                       setSelectedItem(item);
-                      setDataItem((prev) =>
-                        prev.map((avatar) =>
+                      setDataItem(
+                        dataItems.map((avatar) =>
                           avatar.type === item.itemType
                             ? {
                                 ...avatar,

@@ -353,7 +353,7 @@ export const MessageDetail = ({
             const parser = new DOMParser();
             const doc = parser.parseFromString(el.innerHTML, 'text/html');
             const spans = doc.querySelectorAll('span');
-            const targetSpan = spans[1]?.outerHTML || '';
+            const targetSpan = spans[1]?.innerHTML || '';
 
             children.push(
               <div
@@ -362,14 +362,14 @@ export const MessageDetail = ({
                 onClick={() => {
                   if (taskId) handleActionEditTask(Number(taskId));
                 }}
-                className="flex mb-2 items-center w-full rounded-[6px] h-[42px] border border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer">
+                className="flex mb-2 items-center w-full rounded-[6px] min-h-[42px] border border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer">
                 <ImageRound
                   className="w-[14px] h-[14px]"
                   name="Task icon"
                   src="/icons/gray-checkbox.svg"
                 />
                 <span
-                  className="text-sm font-medium"
+                  className="text-sm font-medium  line-clamp-1 overflow-hidden text-[#228CDB]  break-all"
                   dangerouslySetInnerHTML={{ __html: targetSpan }}
                 />
               </div>,
@@ -646,7 +646,7 @@ export const MessageDetail = ({
                   <div className="flex flex-grow  gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <div
                       data-id={messageDetail.uuid}
-                      className="flex-grow min-w-0 break-all whitespace-normal line-clamp-3">
+                      className="flex-grow min-w-0 flex items-center gap-1 break-all whitespace-normal line-clamp-3">
                       {messageDetail.sender.fullName}
                       {messageDetail.id}
                       <span
@@ -655,15 +655,14 @@ export const MessageDetail = ({
                         {' '}
                         {messageDetail.sender?.organizations?.name}
                       </span>
+                      {messageDetail.isBookmark && (
+                        <ImageRound
+                          name="Save"
+                          src="/icons/save-active.svg"
+                          className="w-[10px] h-[12px] hover:cursor-pointer flex-shrink-0"
+                        />
+                      )}
                     </div>
-
-                    {messageDetail.isBookmark && (
-                      <ImageRound
-                        name="Save"
-                        src="/icons/save-active.svg"
-                        className="w-[10px] h-[12px] hover:cursor-pointer flex-shrink-0"
-                      />
-                    )}
                   </div>
                   <div className={`flex items-start w-fit flex-shrink-0`}>
                     <p

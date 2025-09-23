@@ -8,8 +8,18 @@ export const CustomReaction = Node.create({
 
   addAttributes() {
     return {
-      src: { default: '' },
-      name: { default: '' },
+      src: {
+        default: '',
+        parseHTML: (element) => element.getAttribute('src'),
+        renderHTML: (attributes) =>
+          attributes.src ? { src: attributes.src } : {},
+      },
+      name: {
+        default: '',
+        parseHTML: (element) => element.getAttribute('name'),
+        renderHTML: (attributes) =>
+          attributes.name ? { name: attributes.name } : {},
+      },
     };
   },
 

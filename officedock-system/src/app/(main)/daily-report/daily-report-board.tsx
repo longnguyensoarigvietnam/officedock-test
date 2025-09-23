@@ -1630,17 +1630,16 @@ const DailyReportBoard = () => {
 
   const handleDownloadPDF = async () => {
     if (!divRef.current) return;
-    // Show div to render PDF
+
+    // --- show DOM offscreen so html2canvas can render ---
     divRef.current.style.visibility = 'visible';
     divRef.current.style.position = 'absolute';
     divRef.current.style.left = '-9999px';
     divRef.current.style.top = '0';
 
-    await new Promise((resolve) => {
-      requestAnimationFrame(() => setTimeout(resolve, 50));
-    });
+    await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 50)));
 
-    // ---- Get chart as image ----
+    // --- snapshot chart if exists ---
     const chartElem = document.getElementById('chart-to-pdf');
     let chartImgData = '';
     if (chartElem) {
@@ -1654,56 +1653,62 @@ const DailyReportBoard = () => {
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfW = pdf.internal.pageSize.getWidth();
     const pdfH = pdf.internal.pageSize.getHeight();
+
+    // margins (mm)
     const marginTop = 10;
     const marginBottom = 10;
-    const usableHpx = (pdfH - marginTop - marginBottom) / 0.264583;
+    const marginLeft = 10; // <-- left/right margin in mm
+    const marginRight = marginLeft;
 
-    // ---- Pagination table ----
+    // helpers convert
+    const mmToPx = (mm: number) => mm / 0.264583;
+    const usableHeightMm = pdfH - marginTop - marginBottom;
+    const usableHeightPx = mmToPx(usableHeightMm); // px available per page content area
+
+    // content width in mm (inside horizontal margins)
+    const contentWidthMm = pdfW - marginLeft - marginRight;
+
+    // --- compute table pagination (your original logic) ---
     const headerElem = divRef.current.querySelector(
       '.pdf-header',
     ) as HTMLElement;
     const headerHpx = headerElem?.getBoundingClientRect().height || 0;
-    const theadHpx = 50;
-    const headerHeight = headerHpx + theadHpx;
+    const theadHpx = 50; // kept from your logic
+    const headerHeightPx = headerHpx + theadHpx;
 
-    let currentHeight = headerHeight;
+    let curHeight = headerHeightPx;
     const currentRows: number[][] = [[]];
-    let page = 0;
 
     for (let i = 0; i < rowRefs.current.length; i++) {
       const row = rowRefs.current[i];
       if (!row) continue;
       const rowH = row.getBoundingClientRect().height;
-
-      if (currentHeight + rowH > usableHpx) {
-        page++;
-        currentRows[page] = [i];
-        currentHeight = headerHeight + rowH;
+      if (curHeight + rowH > usableHeightPx) {
+        currentRows.push([i]);
+        curHeight = headerHeightPx + rowH;
       } else {
-        currentRows[page].push(i);
-        currentHeight += rowH;
+        currentRows[currentRows.length - 1].push(i);
+        curHeight += rowH;
       }
     }
 
+    // --- render table pages (exactly once) ---
     let pdfPageIndex = 0;
-
-    // ---- Render Table Pages ----
-    for (let i = 0; i < currentRows.length; i++) {
+    for (let p = 0; p < currentRows.length; p++) {
       const clone = divRef.current.cloneNode(true) as HTMLElement;
       clone.style.position = 'static';
       clone.style.left = '0';
 
+      // remove rows not on this page
       const allTrs = clone.querySelectorAll('tr.custom-tr');
       allTrs.forEach((tr, idx) => {
-        if (!currentRows[i].includes(idx)) tr.remove();
+        if (!currentRows[p].includes(idx)) tr.remove();
       });
 
-      if (i > 0) {
-        const h = clone.querySelector('.pdf-header');
-        if (h) h.remove();
-      }
+      // remove header for pages > 0
+      if (p > 0) clone.querySelector('.pdf-header')?.remove();
 
-      // Replace chart = snapshotted image
+      // replace chart with snapshot image (if any)
       if (chartImgData) {
         const chartContainer = clone.querySelector('#chart-to-pdf');
         if (chartContainer) {
@@ -1716,197 +1721,192 @@ const DailyReportBoard = () => {
         }
       }
 
-      // Remove remark when rendering table
-      const remarkBlock = clone.querySelector('.pdf-remark');
-      if (remarkBlock) remarkBlock.remove();
+      // remove remark while rendering table pages
+      clone.querySelector('.pdf-remark')?.remove();
 
+      // attach to DOM and capture
       document.body.appendChild(clone);
       await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 50)));
-      const canvas = await html2canvas(clone, { scale: 2, useCORS: true });
+      const canvas = await html2canvas(clone, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+      });
       document.body.removeChild(clone);
 
       const imgData = canvas.toDataURL('image/jpeg', 1.0);
-      const imgH = (canvas.height * pdfW) / canvas.width;
+      // compute image height (mm) to fit contentWidthMm
+      const imgHeightMm = (canvas.height * contentWidthMm) / canvas.width;
 
+      // first page: no addPage(), subsequent pages: addPage()
       if (pdfPageIndex > 0) pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, marginTop, pdfW, imgH);
+      // place image with left margin
+      pdf.addImage(
+        imgData,
+        'JPEG',
+        marginLeft,
+        marginTop,
+        contentWidthMm,
+        imgHeightMm,
+      );
       pdfPageIndex++;
     }
 
-    const remainingHeight = usableHpx - currentHeight;
-
-    // Get the mark height
+    // --- Now render remark: ALWAYS START FROM A NEW PAGE ---
     const remarkRoot = divRef.current.querySelector(
       '.pdf-remark',
-    ) as HTMLElement;
-    const remarkHeight = remarkRoot?.getBoundingClientRect().height || 0;
-
-    // Determine long or short remark according to actual space
-    const isLongRemark = remarkHeight > remainingHeight;
-    if (!isLongRemark) {
-      // ==============================
-      // CASE 1: short remark, use original function
-      // ==============================
-      let currentHeight = headerHeight;
-      const currentRows: number[][] = [[]];
-      let page = 0;
-
-      for (let i = 0; i < rowRefs.current.length; i++) {
-        const row = rowRefs.current[i];
-        if (!row) continue;
-        const rowHeight = row.getBoundingClientRect().height;
-
-        if (currentHeight + rowHeight > usableHpx) {
-          page++;
-          currentRows[page] = [i];
-          currentHeight = headerHeight + rowHeight;
-        } else {
-          currentRows[page].push(i);
-          currentHeight += rowHeight;
-        }
-      }
-
-      for (let i = 0; i < currentRows.length; i++) {
-        const clone = divRef.current.cloneNode(true) as HTMLElement;
-        clone.style.position = 'static';
-        clone.style.left = '0';
-
-        const allTrs = clone.querySelectorAll('tr.custom-tr');
-        allTrs.forEach((tr, index) => {
-          if (!currentRows[i].includes(index)) {
-            tr.remove();
-          }
-        });
-
-        if (i > 0) {
-          const headerElem = clone.querySelector('.pdf-header');
-          if (headerElem) headerElem.remove();
-        }
-
-        if (chartImgData) {
-          const chartContainer = clone.querySelector('#chart-to-pdf');
-          if (chartContainer) {
-            const img = document.createElement('img');
-            img.src = chartImgData;
-            img.style.width = '180px';
-            img.style.height = '180px';
-            chartContainer.innerHTML = '';
-            chartContainer.appendChild(img);
-          }
-        }
-
-        document.body.appendChild(clone);
-
-        await new Promise((resolve) => {
-          requestAnimationFrame(() => setTimeout(resolve, 50));
-        });
-
-        const canvas = await html2canvas(clone, { scale: 2, useCORS: true });
-        document.body.removeChild(clone);
-
-        const imgData = canvas.toDataURL('image/jpeg', 1.0);
-        const imgH = (canvas.height * pdfW) / canvas.width;
-
-        if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, marginTop, pdfW, imgH);
-      }
-    } else {
-      const remarkRoot = divRef.current.querySelector(
-        '.pdf-remark',
-      ) as HTMLElement;
-      const remarkTitle = remarkRoot?.querySelector(
+    ) as HTMLElement | null;
+    if (remarkRoot) {
+      const remarkTitle = remarkRoot.querySelector(
         '.remark-title',
-      ) as HTMLElement;
-      const remarkContent = remarkRoot?.querySelector(
+      ) as HTMLElement | null;
+      const remarkContent = remarkRoot.querySelector(
         '.remark-content',
-      ) as HTMLElement;
+      ) as HTMLElement | null;
 
-      if (remarkRoot && remarkContent) {
-        const fullContent = remarkContent.cloneNode(true) as HTMLElement;
-        const fullContentHeight = remarkContent.scrollHeight;
+      if (remarkContent) {
+        // total content height in px
+        const totalPx = remarkContent.scrollHeight;
+        let offsetPx = 0;
 
-        let printed = 0;
+        // padding inside each slice (px)
+        const slicePaddingPx = 12;
+
+        // measure title height in px (if present)
+        const titleHpx = remarkTitle
+          ? remarkTitle.getBoundingClientRect().height
+          : 0;
+
         let isFirstRemarkPage = true;
-        while (printed < fullContentHeight) {
-          const pageWrapper = document.createElement('div');
-          pageWrapper.style.width = divRef.current.clientWidth + 'px';
-          pageWrapper.style.margin = '0 auto';
-          pageWrapper.style.position = 'relative';
-          pageWrapper.style.padding = '10px';
-          pageWrapper.style.boxSizing = 'border-box';
 
+        // We'll always start remark on a new PDF page
+        // Make sure we are not on an empty fresh PDF (we already have pages from table). Add page to start remark.
+        pdf.addPage();
+        // pdfPageIndex++; // not strictly necessary
+
+        while (offsetPx < totalPx) {
+          // reserved px for title only on first remark page
+          const reservedForTitle = isFirstRemarkPage ? titleHpx : 0;
+
+          // available px for content area (px) inside the box (we reserve slicePadding top/bottom)
+          const availablePx = Math.max(
+            20,
+            Math.floor(usableHeightPx - reservedForTitle - slicePaddingPx * 2),
+          );
+
+          // determine how many px of actual content we will show this slice
+          const sliceContentPx = Math.min(availablePx, totalPx - offsetPx);
+
+          // build wrapper sized to content width in px
+          const wrapper = document.createElement('div');
+          // convert content width mm -> px to set wrapper width
+          const contentWidthPx = Math.max(
+            100,
+            divRef.current.clientWidth -
+              mmToPx(marginLeft) -
+              mmToPx(marginRight),
+          );
+          wrapper.style.width = `${contentWidthPx}px`;
+          wrapper.style.boxSizing = 'border-box';
+          wrapper.style.background = '#ffffff';
+          wrapper.style.padding = '0';
+          wrapper.style.margin = '0 auto';
+
+          // outer box with left/right border and optional top/bottom border
           const box = document.createElement('div');
-          box.style.border = '1px solid rgb(107,114,128)';
-          box.style.display = 'flex';
-          box.style.flexDirection = 'column';
           box.style.boxSizing = 'border-box';
           box.style.width = '100%';
+          // left/right border
+          box.style.borderLeft = '1px solid #77858F';
+          box.style.borderRight = '1px solid #77858F';
+          // top border only for first slice
+          box.style.borderTop = isFirstRemarkPage
+            ? '1px solid #77858F'
+            : 'none';
 
-          if (!isFirstRemarkPage) {
-            box.style.marginTop = '10px';
-          }
-
+          // add title in first slice if exists
           if (isFirstRemarkPage && remarkTitle) {
-            const titleClone = remarkTitle.cloneNode(true) as HTMLElement;
-            titleClone.style.transform = 'none';
-            box.appendChild(titleClone);
+            const t = remarkTitle.cloneNode(true) as HTMLElement;
+            t.style.transform = 'none';
+            box.appendChild(t);
           }
 
+          // viewport holds the moved fullContent
           const viewport = document.createElement('div');
           viewport.style.overflow = 'hidden';
           viewport.style.position = 'relative';
-          viewport.style.flex = '1';
-          viewport.style.padding = getComputedStyle(remarkContent).padding;
+          viewport.style.width = '100%';
+          // padding inside viewport (left/right to simulate spacing)
+          viewport.style.padding = `${slicePaddingPx}px 12px`;
+          viewport.style.boxSizing = 'border-box';
 
-          if (!isFirstRemarkPage) {
-            viewport.style.paddingTop = '20px';
-          }
-
-          const moving = fullContent.cloneNode(true) as HTMLElement;
+          // moving contains the whole remark content moved up by offsetPx
+          const moving = remarkContent.cloneNode(true) as HTMLElement;
           moving.style.position = 'relative';
-          moving.style.transform = `translateY(-${printed}px)`;
+          moving.style.top = `-${offsetPx}px`;
+          moving.style.margin = '0';
+          // keep width consistent
+          moving.style.width = '100%';
+
           viewport.appendChild(moving);
-
           box.appendChild(viewport);
-          pageWrapper.appendChild(box);
-          document.body.appendChild(pageWrapper);
+          wrapper.appendChild(box);
 
+          document.body.appendChild(wrapper);
           await new Promise((r) =>
-            requestAnimationFrame(() => setTimeout(r, 20)),
+            requestAnimationFrame(() => setTimeout(r, 30)),
           );
 
-          let viewportH =
-            usableHpx - (box.offsetHeight - viewport.offsetHeight);
-          if (printed + viewportH > fullContentHeight) {
-            viewportH = fullContentHeight - printed;
-          }
-          viewport.style.height = `${viewportH}px`;
+          // set exact viewport height in px
+          const viewportPx = Math.max(20, availablePx + slicePaddingPx * 2);
+          viewport.style.height = `${viewportPx}px`;
 
           await new Promise((r) =>
-            requestAnimationFrame(() => setTimeout(r, 20)),
+            requestAnimationFrame(() => setTimeout(r, 30)),
           );
 
-          const canvas = await html2canvas(pageWrapper, {
+          // if this slice is the last chunk, add bottom border
+          const isLastSlice = offsetPx + sliceContentPx >= totalPx - 1;
+          if (isLastSlice) box.style.borderBottom = '1px solid #77858F';
+          else box.style.borderBottom = 'none';
+
+          // capture wrapper
+          const sliceCanvas = await html2canvas(wrapper, {
             scale: 2,
             useCORS: true,
+            backgroundColor: '#ffffff',
           });
-          document.body.removeChild(pageWrapper);
+          document.body.removeChild(wrapper);
 
-          const imgData = canvas.toDataURL('image/jpeg', 1.0);
-          const imgH = (canvas.height * pdfW) / canvas.width;
-          if (pdfPageIndex > 0) pdf.addPage();
-          pdf.addImage(imgData, 'JPEG', 0, marginTop, pdfW, imgH);
+          const imgData = sliceCanvas.toDataURL('image/jpeg', 1.0);
+          const imgHeightMm =
+            (sliceCanvas.height * contentWidthMm) / sliceCanvas.width;
 
-          pdfPageIndex++;
-          printed += viewportH;
+          // place slice image into PDF (we already added a new page before loop; for subsequent slices addPage())
+          // For the first iteration we already called pdf.addPage() above; if this is not the first loop, add a new page
+          if (!isFirstRemarkPage) {
+            pdf.addPage();
+          }
+          pdf.addImage(
+            imgData,
+            'JPEG',
+            marginLeft,
+            marginTop,
+            contentWidthMm,
+            imgHeightMm,
+          );
+
+          // advance
+          offsetPx += sliceContentPx;
           isFirstRemarkPage = false;
-        }
+        } // end while
       }
     }
 
+    // save pdf
     pdf.save('集計.pdf');
 
-    // Reset
+    // cleanup
     divRef.current.style.visibility = 'hidden';
     divRef.current.style.position = 'absolute';
     divRef.current.style.left = '-9999px';

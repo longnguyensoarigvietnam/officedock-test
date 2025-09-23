@@ -7,7 +7,11 @@ import Checkbox from '@components/common/Checkbox';
 import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
 import TableChart from './TableChart';
 
-import { DEFAULT_TIME_TEXT, PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
+import {
+  DEFAULT_TIME_TEXT,
+  NO_SETTING,
+  PAGINATION_PAGE_SIZE_KANBAN,
+} from '@constants';
 import { OrganizationStatisticType } from '@constants/enums';
 import {
   CreationStatisticType,
@@ -93,13 +97,23 @@ const TaskListStatistic = ({
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value as number,
+      largeCategoryId:
+        selectedLarge?.value == null
+          ? NO_SETTING
+          : (selectedLarge?.value as string),
       mediumCategoryId:
         selectedOrganization?.type == OrganizationStatisticType.CALENDAR &&
         dataMediumCalendar
-          ? (dataMediumCalendar?.value as number)
-          : (selectedMedium?.value as number),
-      smallCategoryId: selectedSmall?.value as number,
+          ? dataMediumCalendar?.value == null
+            ? NO_SETTING
+            : (dataMediumCalendar?.value as number)
+          : selectedMedium?.value == null
+            ? NO_SETTING
+            : (selectedMedium?.value as number),
+      smallCategoryId:
+        selectedSmall?.value == null
+          ? NO_SETTING
+          : (selectedSmall?.value as string),
       page: currentPage,
       ordering: ordering,
       pageSize: pageSize,
@@ -121,13 +135,23 @@ const TaskListStatistic = ({
       fromDate: formatDateToYMD(startDateCompare) || '',
       endDate: formatDateToYMD(`${endDateCompare}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value as number,
+      largeCategoryId:
+        selectedLarge?.value == null
+          ? NO_SETTING
+          : (selectedLarge?.value as string),
       mediumCategoryId:
         selectedOrganization?.type == OrganizationStatisticType.CALENDAR &&
         dataMediumCalendar
-          ? (dataMediumCalendar?.value as number)
-          : (selectedMedium?.value as number),
-      smallCategoryId: selectedSmall?.value as number,
+          ? dataMediumCalendar?.value == null
+            ? NO_SETTING
+            : (dataMediumCalendar?.value as number)
+          : selectedMedium?.value == null
+            ? NO_SETTING
+            : (selectedMedium?.value as number),
+      smallCategoryId:
+        selectedSmall?.value == null
+          ? NO_SETTING
+          : (selectedSmall?.value as string),
       page: currentPage,
       ordering: ordering,
       pageSize: pageSize,

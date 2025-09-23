@@ -1885,7 +1885,7 @@ const ChatDetail = ({
         </span>
       `;
         button.style.position = 'absolute';
-        button.style.zIndex = '9999';
+        button.style.zIndex = '20';
         button.style.width = '68px';
         button.style.height = '30px';
         button.style.justifyContent = 'center';

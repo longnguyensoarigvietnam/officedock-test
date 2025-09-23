@@ -19,6 +19,25 @@ body {
   }
 }
 
+p:has(.inline-msg-quote) {
+  margin: 0; /* leave default margin */
+  line-height: 1; /* matches span */
+  display: flex; /* if you want the height to be exactly equal to the span */
+  height: fit-content;
+  width: 100%;
+}
+
+.truncate-oneline {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+  word-break: keep-all;
+}
+
 /* Hide arrows from input number
 /* Works for Chrome, Safari, Edge, Opera */
 .no-number-arrows::-webkit-outer-spin-button,
