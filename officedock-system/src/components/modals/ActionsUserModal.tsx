@@ -360,6 +360,7 @@ const ActionsUserModal = ({
   const handleDeleteUser = () => {
     onDelete && onDelete(dataUserDetail!);
   };
+
   return (
     <Drawer
       open={open}
@@ -434,6 +435,7 @@ const ActionsUserModal = ({
                 className={`h-[42px] !border-[#77858F] rounded-md !w-[426px] ${errors?.name?.message || errorMessages?.fullName ? '!border-error' : '!border-[#77858F]'}`}
               />
             </div>
+
             <div className="flex gap-2 items-center">
               <Button
                 type="submit"
@@ -450,11 +452,18 @@ const ActionsUserModal = ({
               </Button>
             </div>
           </div>
-          {errorMessages?.fullName && (
+          {errorMessages?.fullName ? (
             <ErrorMessage
               error={errorMessages.fullName}
               className="mt-[5px] mb-[5px] text-xs"
             />
+          ) : errors?.name ? (
+            <ErrorMessage
+              error={errors?.name.message}
+              className="mt-[5px] mb-[5px] text-xs"
+            />
+          ) : (
+            <></>
           )}
 
           {/* Options */}

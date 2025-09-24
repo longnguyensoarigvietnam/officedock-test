@@ -449,13 +449,7 @@ const PercentageCategoryTeam = ({
                               handleSelectOrganizationCustom(
                                 selectedOrganization,
                               );
-                            const select = largeOptions.find(
-                              (item) => item.value === data.value,
-                            );
-
-                            if (select) {
-                              handleSelectLarge(select);
-                            }
+                            handleSelectLarge(data);
                           }}
                           isAllTeamOption={
                             selectedOrganization?.value == ALL_TEAM_STATISTIC

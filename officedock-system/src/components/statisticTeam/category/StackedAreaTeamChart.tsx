@@ -189,7 +189,10 @@ const StackedAreaTeamChart = ({
         selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
-      userIds: (listMemberTeam ?? []).map((user) => Number(user.id)).join(','),
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
+          : selectedMembers?.filter(Boolean).join(','),
     },
     condition: [
       Boolean(
@@ -212,10 +215,13 @@ const StackedAreaTeamChart = ({
       endDate: formatDateToYMD(`${endDate}`) || '',
       tagIds: orderingOptions?.tag_ids,
       statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
-      userIds: listMemberTeam.map((user) => ({
-        label: user.fullName,
-        value: user.id,
-      })),
+      userIds:
+        orderingOptions?.user_ids?.length == 0
+          ? listMemberTeam.map((user) => ({
+              label: user.fullName,
+              value: user.id,
+            }))
+          : orderingOptions?.user_ids,
       mainOrganizationId: selectedOrganizationSideBar?.value as number,
       option: selectedOptionOrganizationInTable,
     },

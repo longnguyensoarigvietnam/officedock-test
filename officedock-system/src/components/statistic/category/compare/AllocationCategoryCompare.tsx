@@ -809,13 +809,7 @@ const AllocationCategoryCompare = memo(
                                       data.value &&
                                       data.value != selectedLarge?.value
                                     ) {
-                                      const select = largeOptions.find(
-                                        (item) => item.value === data.value,
-                                      );
-
-                                      if (select) {
-                                        handleSelectLarge(select);
-                                      }
+                                      handleSelectLarge(data);
                                     }
                                   }}
                                   id={pair.main ? pair.main.id : 0}
@@ -864,13 +858,7 @@ const AllocationCategoryCompare = memo(
                                       data.value &&
                                       data.value != selectedLarge?.value
                                     ) {
-                                      const select = largeOptions.find(
-                                        (item) => item.value === data.value,
-                                      );
-
-                                      if (select) {
-                                        handleSelectLarge(select);
-                                      }
+                                      handleSelectLarge(data);
                                     }
                                   }}
                                   id={pair.compare ? pair.compare.id : 0}
@@ -1026,13 +1014,7 @@ const AllocationCategoryCompare = memo(
                                       data.value &&
                                       data.value != selectedMedium?.value
                                     ) {
-                                      const select = mediumOptions.find(
-                                        (item) => item.value === data.value,
-                                      );
-
-                                      if (select) {
-                                        handleSelectMedium(select);
-                                      }
+                                      handleSelectMedium(data);
                                     }
                                   }}
                                   id={pair.main ? pair.main.id : 0}
@@ -1069,13 +1051,7 @@ const AllocationCategoryCompare = memo(
                                       data.value &&
                                       data.value != selectedMedium?.value
                                     ) {
-                                      const select = mediumOptions.find(
-                                        (item) => item.value === data.value,
-                                      );
-
-                                      if (select) {
-                                        handleSelectMedium(select);
-                                      }
+                                      handleSelectMedium(data);
                                     }
                                   }}
                                   id={pair.compare ? pair.compare.id : 0}
