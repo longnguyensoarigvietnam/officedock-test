@@ -1,4 +1,7 @@
 # Define ordering datetime field
+from base.constants import EnumChoices
+
+
 ORDERING_DATETIME_FIELD = ["deadline"]
 
 # Define regex
@@ -28,3 +31,20 @@ ORGANIZATION_ICON_UPLOAD_MAX_SIZE = 20 * 1024 * 1024  # 20MB
 USER_AVATAR_UPLOAD_MAX_SIZE = 30 * 1024 * 1024  # 30MB
 AVATAR_GCS_EXPIRATION_SECONDS = 24 * 60 * 60  # Expires in 1 day
 RETRY_PAYMENT_MAX = 3
+
+
+class InvoiceReason(EnumChoices):
+    MANUAL = (
+        "manual"  # Unrelated to a subscription, created via the invoice editor
+    )
+    SUBSCRIPTION_CREATE = (
+        "subscription_create"  # A new subscription was created
+    )
+    SUBSCRIPTION_CYCLE = (
+        "subscription_cycle"  # A subscription advanced into a new period
+    )
+    SUBSCRIPTION_THRESHOLD = (
+        "subscription_threshold"  # A subscription reached a billing threshold
+    )
+    SUBSCRIPTION_UPDATE = "subscription_update"  # A subscription was updated
+    UPCOMING = "upcoming"  # Reserved for simulated invoices (upcoming endpoint)

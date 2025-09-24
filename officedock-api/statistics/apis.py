@@ -145,7 +145,14 @@ class StatisticViewSet(BaseAPIViewSet):
         end_of_day = datetime.combine(end_date, time.max)
         if user_id:
             user = get_object_or_404(User, id=user_id)
-        organization_ids = split_id_from_string(organization_ids_param)
+        if organization_ids_param == ALL_TEAM:
+            organization_ids = (
+                Organization.all_objects.filter(users__in=[user])
+                .values_list("id", flat=True)
+                .distinct()
+            )
+        else:
+            organization_ids = split_id_from_string(organization_ids_param)
 
         if tag_ids_param:
             tag_ids = split_id_from_string(tag_ids_param)
@@ -1364,6 +1371,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                 organization_ids,
                 tags=tag_ids,
             )
+
             if not durations.exists():
                 return self.response_ok(data)
             if is_tag_page:
