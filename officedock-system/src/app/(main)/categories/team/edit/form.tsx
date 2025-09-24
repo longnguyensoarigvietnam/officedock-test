@@ -93,11 +93,7 @@ const TableComponent = ({
     OptionDropdownType[]
   >([]);
   const [pendingSelection, setPendingSelection] = useState<{
-    oldLargeOption: OptionDropdownType;
-    oldMediumOption?: OptionDropdownType;
-    oldRowId?: string | number;
-    oldRowSkill?: OptionDropdownType[];
-    oldRowColor?: string;
+    originalRow?: OrganizationCategoryRow;
     newValue: OptionDropdownType;
     type: string;
   } | null>(null);
@@ -686,7 +682,7 @@ const TableComponent = ({
   };
 
   const handleChangeLargeCategoryByPulldown = (
-    oldLargeOption: OptionDropdownType,
+    originalRow: OrganizationCategoryRow | undefined,
     e: OptionDropdownType,
   ) => {
     setSelectedHierarchiesToUpdate((prev) => {
@@ -700,40 +696,76 @@ const TableComponent = ({
       };
 
       const matchedRows = statisticCategories
-        .filter((item) => item.large.value === oldLargeOption.value)
+        .filter((item) => item.large.value === originalRow?.large.value)
         .map((item) => ({
           ...item,
           large: newLarge,
         }));
-      const updatedHierarchies = matchedRows.map((row) => {
-        return {
-          organizationStatisticCategoryId: row.id,
-          organizationId: hierarchyList.id as number,
-          largeStatisticCategory:
-            row.large.label == '' || isUUID(row.large.label as string)
-              ? null
-              : {
-                  name: row.large.label as string,
-                  uuid: row.large.value as string,
-                },
-          mediumStatisticCategory:
-            row.medium.label == '' || isUUID(row.medium.label as string)
-              ? null
-              : {
-                  name: row.medium.label as string,
-                  uuid: row.medium.value as string,
-                },
-          smallStatisticCategory:
-            row.small.label == '' || isUUID(row.small.label as string)
-              ? null
-              : {
-                  name: row.small.label as string,
-                  uuid: row.small.value as string,
-                },
-          color: row.color,
-          skillIds: row.skills.map((skill) => Number(skill.value)),
-        };
-      });
+
+      let updatedHierarchies = [];
+      if (matchedRows.length) {
+        updatedHierarchies = matchedRows.map((row) => {
+          return {
+            organizationStatisticCategoryId: row.id,
+            organizationId: hierarchyList.id as number,
+            largeStatisticCategory:
+              row.large.label == '' || isUUID(row.large.label as string)
+                ? null
+                : {
+                    name: row.large.label as string,
+                    uuid: row.large.value as string,
+                  },
+            mediumStatisticCategory:
+              row.medium.label == '' || isUUID(row.medium.label as string)
+                ? null
+                : {
+                    name: row.medium.label as string,
+                    uuid: row.medium.value as string,
+                  },
+            smallStatisticCategory:
+              row.small.label == '' || isUUID(row.small.label as string)
+                ? null
+                : {
+                    name: row.small.label as string,
+                    uuid: row.small.value as string,
+                  },
+            color: row.color,
+            skillIds: row.skills.map((skill) => Number(skill.value)),
+          };
+        });
+      } else {
+        updatedHierarchies = [
+          {
+            organizationStatisticCategoryId: originalRow?.id,
+            organizationId: hierarchyList.id as number,
+            largeStatisticCategory:
+              newLarge.label == '' || isUUID(newLarge.label as string)
+                ? null
+                : {
+                    name: newLarge.label as string,
+                    uuid: newLarge.value as string,
+                  },
+            mediumStatisticCategory:
+              originalRow?.medium.label == '' ||
+              isUUID(originalRow?.medium.label as string)
+                ? null
+                : {
+                    name: originalRow?.medium.label as string,
+                    uuid: originalRow?.medium.value as string,
+                  },
+            smallStatisticCategory:
+              originalRow?.small.label == '' ||
+              isUUID(originalRow?.small.label as string)
+                ? null
+                : {
+                    name: originalRow?.small.label as string,
+                    uuid: originalRow?.small.value as string,
+                  },
+            color: originalRow?.color,
+            skillIds: originalRow?.skills.map((skill) => Number(skill.value)),
+          },
+        ];
+      }
 
       updatedHierarchies.forEach((updatedHierarchy) => {
         const key = `${updatedHierarchy.organizationId}|${
@@ -742,7 +774,7 @@ const TableComponent = ({
           updatedHierarchy.smallStatisticCategory?.uuid || ''
         }`;
 
-        const alreadyExists = updatedHierarchiesToUpdate.some(
+        const index = updatedHierarchiesToUpdate.findIndex(
           (item) =>
             item.organizationStatisticCategoryId ===
               updatedHierarchy.organizationStatisticCategoryId ||
@@ -753,8 +785,24 @@ const TableComponent = ({
             }` === key,
         );
 
-        if (!alreadyExists) {
-          updatedHierarchiesToUpdate.push(updatedHierarchy);
+        if (index !== -1) {
+          // replace the old one
+          updatedHierarchiesToUpdate[index] = {
+            ...updatedHierarchy,
+            organizationStatisticCategoryId:
+              updatedHierarchy.organizationStatisticCategoryId!,
+            color: updatedHierarchy.color!,
+            skillIds: updatedHierarchy.skillIds!,
+          };
+        } else {
+          // add new
+          updatedHierarchiesToUpdate.push({
+            ...updatedHierarchy,
+            organizationStatisticCategoryId:
+              updatedHierarchy.organizationStatisticCategoryId!,
+            color: updatedHierarchy.color!,
+            skillIds: updatedHierarchy.skillIds!,
+          });
         }
       });
 
@@ -784,14 +832,14 @@ const TableComponent = ({
 
         // Separate matching and non-matching rows
         const matchedRows = statisticCategories
-          .filter((item) => item.large.value === oldLargeOption.value)
+          .filter((item) => item.large.value === originalRow?.large.value)
           .map((item) => ({
             ...item,
             large: newLarge,
           }));
 
         const remainingRows = statisticCategories.filter(
-          (item) => item.large.value !== oldLargeOption.value,
+          (item) => item.large.value !== originalRow?.large.value,
         );
 
         // Find the last index where newLarge.value already exists
@@ -806,7 +854,7 @@ const TableComponent = ({
         } else {
           // Instead of pushing, find the **original** position of row.original.large.value
           const originalIndex = statisticCategories.findIndex(
-            (item) => item.large.value === oldLargeOption.value,
+            (item) => item.large.value === originalRow?.large.value,
           );
 
           if (originalIndex !== -1) {
@@ -840,8 +888,7 @@ const TableComponent = ({
   };
 
   const handleChangeMediumCategoryByPulldown = (
-    oldLargeOption: OptionDropdownType,
-    oldMediumOption: OptionDropdownType,
+    originalRow: OrganizationCategoryRow | undefined,
     e: OptionDropdownType,
   ) => {
     setSelectedHierarchiesToUpdate((prev) => {
@@ -855,8 +902,8 @@ const TableComponent = ({
       const matchedRows = statisticCategories
         .filter(
           (item) =>
-            item.medium.value === oldMediumOption.value &&
-            item.large.value === oldLargeOption.value,
+            item.medium.value === originalRow?.medium.value &&
+            item.large.value === originalRow?.large.value,
         )
         .map((item) => ({
           ...item,
@@ -933,8 +980,8 @@ const TableComponent = ({
         const matchedRows = statisticCategories
           .filter(
             (item) =>
-              item.medium.value == oldMediumOption.value &&
-              item.large.value == oldLargeOption.value,
+              item.medium.value == originalRow?.medium.value &&
+              item.large.value == originalRow?.large.value,
           )
           .map((item) => ({
             ...item,
@@ -944,8 +991,8 @@ const TableComponent = ({
         const remainingRows = statisticCategories.filter(
           (item) =>
             !(
-              item.medium.value == oldMediumOption.value &&
-              item.large.value == oldLargeOption.value
+              item.medium.value == originalRow?.medium.value &&
+              item.large.value == originalRow?.large.value
             ),
         );
 
@@ -953,7 +1000,7 @@ const TableComponent = ({
         let lastIndex = -1;
         remainingRows.forEach((item, index) => {
           if (
-            item.large.value == oldLargeOption.value &&
+            item.large.value == originalRow?.large.value &&
             item.medium.value === newMedium.value
           )
             lastIndex = index;
@@ -967,8 +1014,8 @@ const TableComponent = ({
           // Instead of pushing, find the **original** position of row.original.medium.value
           const originalIndex = statisticCategories.findIndex(
             (item) =>
-              item.medium.value == oldMediumOption.value &&
-              item.large.value == oldLargeOption.value,
+              item.medium.value == originalRow?.medium.value &&
+              item.large.value == originalRow?.large.value,
           );
 
           if (originalIndex !== -1) {
@@ -1003,51 +1050,61 @@ const TableComponent = ({
   };
 
   const handleChangeSmallCategoryByPulldown = (
-    oldLargeOption: OptionDropdownType,
-    oldMediumOption: OptionDropdownType,
-    oldRowId: string | number,
-    oldRowSkill: OptionDropdownType[],
-    oldRowColor: string,
+    originalRow: OrganizationCategoryRow | undefined,
     e: OptionDropdownType,
   ) => {
     setSelectedHierarchiesToUpdate((prev) => {
       const updatedHierarchiesToUpdate = [...prev];
 
       const existingIndex = updatedHierarchiesToUpdate.findIndex(
-        (item) => item.organizationStatisticCategoryId === oldRowId,
+        (item) => item.organizationStatisticCategoryId === originalRow?.id,
       );
 
       const newEntry = {
-        organizationStatisticCategoryId: oldRowId,
+        organizationStatisticCategoryId: originalRow?.id,
         organizationId: hierarchyList.id as number,
         largeStatisticCategory:
-          oldLargeOption.label == '' || isUUID(oldLargeOption.label as string)
+          originalRow?.large.label == '' ||
+          isUUID(originalRow?.large.label as string)
             ? null
             : {
-                name: oldLargeOption.label as string,
-                uuid: oldLargeOption.value as string,
+                name: originalRow?.large.label as string,
+                uuid: originalRow?.large.value as string,
               },
         mediumStatisticCategory:
-          oldMediumOption.label == '' || isUUID(oldMediumOption.label as string)
+          originalRow?.medium.label == '' ||
+          isUUID(originalRow?.medium.label as string)
             ? null
             : {
-                name: oldMediumOption.label as string,
-                uuid: oldMediumOption.value as string,
+                name: originalRow?.medium.label as string,
+                uuid: originalRow?.medium.value as string,
               },
         smallStatisticCategory: {
           name: e.label as string,
           uuid: e.value as string,
         },
-        color: oldRowColor,
-        skillIds: oldRowSkill.map((skill) => Number(skill.value)),
+        color: originalRow?.color,
+        skillIds: originalRow?.skills.map((skill) => Number(skill.value)),
       };
 
       if (existingIndex !== -1) {
         // If it exists, replace it
-        updatedHierarchiesToUpdate[existingIndex] = newEntry;
+        updatedHierarchiesToUpdate[existingIndex] = {
+          ...newEntry,
+          organizationStatisticCategoryId:
+            newEntry.organizationStatisticCategoryId!,
+          color: newEntry.color!,
+          skillIds: newEntry.skillIds!,
+        };
       } else {
         // Otherwise, add it
-        updatedHierarchiesToUpdate.push(newEntry);
+        updatedHierarchiesToUpdate.push({
+          ...newEntry,
+          organizationStatisticCategoryId:
+            newEntry.organizationStatisticCategoryId!,
+          color: newEntry.color!,
+          skillIds: newEntry.skillIds!,
+        });
       }
 
       return updatedHierarchiesToUpdate;
@@ -1066,7 +1123,7 @@ const TableComponent = ({
         const updatedCategories = updatedHierarchyList[
           foundOrganizationHierarchyIndex
         ].statisticCategories.map((hierarchy) =>
-          hierarchy.id === oldRowId
+          hierarchy.id === originalRow?.id
             ? {
                 ...hierarchy,
                 small: {
@@ -1777,13 +1834,14 @@ const TableComponent = ({
                               ) {
                                 setWarningChangeCategoryModalOpen(true);
                                 setPendingSelection({
-                                  oldLargeOption,
+                                  // oldLargeOption,
+                                  originalRow: row.original,
                                   newValue: e,
                                   type: StatisticCategoryType.LARGE,
                                 });
                               } else {
                                 handleChangeLargeCategoryByPulldown(
-                                  oldLargeOption,
+                                  row.original,
                                   e,
                                 );
                               }
@@ -1888,7 +1946,6 @@ const TableComponent = ({
                                 }
                                 onPendingChange={(e) => {
                                   const oldMediumOption = row.original.medium;
-                                  const oldLargeOption = row.original.large;
                                   if (e.value == oldMediumOption.value) return;
                                   if (
                                     row.original.medium.label &&
@@ -1897,15 +1954,13 @@ const TableComponent = ({
                                   ) {
                                     setWarningChangeCategoryModalOpen(true);
                                     setPendingSelection({
-                                      oldLargeOption,
-                                      oldMediumOption,
+                                      originalRow: row.original,
                                       newValue: e,
                                       type: StatisticCategoryType.MEDIUM,
                                     });
                                   } else {
                                     handleChangeMediumCategoryByPulldown(
-                                      oldLargeOption,
-                                      oldMediumOption!,
+                                      row.original,
                                       e,
                                     );
                                   }
@@ -2035,11 +2090,6 @@ const TableComponent = ({
                                   : undefined
                               }
                               onPendingChange={(e) => {
-                                const oldMediumOption = row.original.medium;
-                                const oldLargeOption = row.original.large;
-                                const oldRowId = row.original.id;
-                                const oldRowSkill = row.original.skills;
-                                const oldRowColor = row.original.color;
                                 if (e.value == row.original.small.value) return;
                                 if (
                                   row.original.small.label &&
@@ -2048,21 +2098,13 @@ const TableComponent = ({
                                 ) {
                                   setWarningChangeCategoryModalOpen(true);
                                   setPendingSelection({
-                                    oldLargeOption,
-                                    oldMediumOption,
-                                    oldRowId,
-                                    oldRowSkill,
-                                    oldRowColor,
+                                    originalRow: row.original,
                                     newValue: e,
                                     type: StatisticCategoryType.SMALL,
                                   });
                                 } else {
                                   handleChangeSmallCategoryByPulldown(
-                                    oldLargeOption,
-                                    oldMediumOption!,
-                                    oldRowId!,
-                                    oldRowSkill!,
-                                    oldRowColor!,
+                                    row.original,
                                     e,
                                   );
                                 }
@@ -2284,35 +2326,16 @@ const TableComponent = ({
           onConfirm={() => {
             if (!pendingSelection) return;
 
-            const {
-              oldLargeOption,
-              oldMediumOption,
-              oldRowId,
-              oldRowSkill,
-              oldRowColor,
-              newValue,
-              type,
-            } = pendingSelection;
+            const { originalRow, newValue, type } = pendingSelection;
             switch (type) {
               case StatisticCategoryType.LARGE:
-                handleChangeLargeCategoryByPulldown(oldLargeOption, newValue);
+                handleChangeLargeCategoryByPulldown(originalRow, newValue);
                 break;
               case StatisticCategoryType.MEDIUM:
-                handleChangeMediumCategoryByPulldown(
-                  oldLargeOption,
-                  oldMediumOption!,
-                  newValue,
-                );
+                handleChangeMediumCategoryByPulldown(originalRow, newValue);
                 break;
               case StatisticCategoryType.SMALL:
-                handleChangeSmallCategoryByPulldown(
-                  oldLargeOption,
-                  oldMediumOption!,
-                  oldRowId!,
-                  oldRowSkill!,
-                  oldRowColor!,
-                  newValue,
-                );
+                handleChangeSmallCategoryByPulldown(originalRow, newValue);
                 break;
             }
 

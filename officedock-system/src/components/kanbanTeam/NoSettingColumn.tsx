@@ -120,9 +120,11 @@ const NoSettingColumn = ({
 
     return () => {
       if (listTaskRef.current) {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         observer.unobserve(listTaskRef.current);
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalNoSetting, isFetching]);
 
   return (

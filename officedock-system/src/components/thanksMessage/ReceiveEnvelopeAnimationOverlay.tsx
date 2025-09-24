@@ -186,6 +186,7 @@ export default function ReceiveEnvelopeAnimationOverlay({
 
   useEffect(() => {
     playAnimation(0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onNextEnvelope = () => {

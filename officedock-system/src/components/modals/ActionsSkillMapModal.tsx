@@ -334,6 +334,7 @@ const ActionsSkillMapModal = ({
         }, 0);
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [skillMapEditDetail, dataOrganizationCategories]);
 
   const stepMap: Record<number, StepKey> = {

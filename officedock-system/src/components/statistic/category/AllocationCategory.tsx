@@ -124,6 +124,7 @@ const AllocationCategory = memo(
           setProgressDataSmall([]);
         }
       }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [statisticCategoryList, selectedOrganization?.value]);
 
     useEffect(() => {

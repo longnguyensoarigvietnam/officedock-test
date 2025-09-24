@@ -1153,6 +1153,7 @@ const ActionsTemplateModal = ({
                                   </>
                                 );
                                 return snapshot.isDragging
+                                  // eslint-disable-next-line import/no-named-as-default-member
                                   ? ReactDOM.createPortal(
                                       draggableElement,
                                       document.body,

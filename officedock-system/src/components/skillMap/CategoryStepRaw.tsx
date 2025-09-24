@@ -144,6 +144,7 @@ const CategoryStepRaw = ({
         }
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepKey]);
 
   // Validate show error duplicate row

@@ -1,3 +1,4 @@
+/* eslint-disable import/no-named-as-default-member */
 'use client';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
@@ -107,6 +108,7 @@ const TableDropdown = ({
         isShow: false,
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const filteredOptions = options.filter((option) =>
