@@ -765,7 +765,7 @@ const EventCalendar = () => {
                     content={`他に${participantList.length - 1}人の表示があります`}
                     placement="top">
                     <div
-                      className={`text-[#77858F] relative text-[11px] font-medium ${isWeekViewAllDaySection && 'border-[1px] !ml-[-12px] !text-[9px] text-white shrink-0 border-white rounded-full !w-[19px] !h-[19px] bg-[#77858F] flex items-center justify-center'} `}>
+                      className={`text-[#77858F] relative text-[11px] font-medium ${isWeekViewAllDaySection && 'border-[1px] !ml-[-12px] !text-[9px] text-white shrink-0 border-white rounded-full !w-[21px] !h-[21px] bg-[#77858F] flex items-center justify-center'} `}>
                       +{participantList.length - 1}
                     </div>
                   </DynamicTooltip>
@@ -855,8 +855,8 @@ const EventCalendar = () => {
             ) &&
               showUserAvatars(
                 eventContent.event.extendedProps.participants,
-                32,
-                '!w-[32px] !h-[32px]',
+                24,
+                '!w-[24px] !h-[24px]',
                 true,
                 false,
               )}
@@ -3100,6 +3100,7 @@ const EventCalendar = () => {
           left={infoModalPosition?.left}
           checkShowUserAvatar={checkShowUserAvatar}
           dashboardMemberList={dashboardMemberList}
+          dataOptionsOrganizations={dataOptionsOrganizations}
           selectedScheduleUserIds={selectedScheduleUserIds}
           onClose={() => {
             setDataEventEdit(undefined);

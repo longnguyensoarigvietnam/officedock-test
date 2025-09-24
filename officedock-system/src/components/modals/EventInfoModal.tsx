@@ -7,6 +7,7 @@ import tinycolor from 'tinycolor2';
 import ImageRound from '@components/common/ImageRound';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 import { NO_SETTING } from '@constants';
 import {
@@ -30,7 +31,14 @@ export type EventInfoModalProps = {
   top?: number;
   left?: number;
   dataEvent?: EventEditFormData;
-  dashboardMemberList: Profile[]
+  dashboardMemberList: Profile[];
+  dataOptionsOrganizations: {
+    id: string | number;
+    fullName: string;
+    color: string;
+    userIds: number[];
+  }[];
+  selectedScheduleUserIds: string;
   checkShowUserAvatar: (
     type?: EventCalendarType,
     participants?: EventParticipant[],
@@ -39,7 +47,6 @@ export type EventInfoModalProps = {
   onEdit?: (values: EventEditFormData) => void;
   onCopy?: (values: EventEditFormData) => void;
   onDelete?: (values: EventEditFormData) => void;
-  selectedScheduleUserIds: string;
 };
 
 const EventInfoModal = memo(
@@ -48,12 +55,13 @@ const EventInfoModal = memo(
     left,
     dataEvent,
     dashboardMemberList,
+    dataOptionsOrganizations,
+    selectedScheduleUserIds,
     checkShowUserAvatar,
     onEdit,
     onCopy,
     onDelete,
     onClose,
-    selectedScheduleUserIds,
   }: EventInfoModalProps) => {
     const popoverRef = useRef<HTMLDivElement | null>(null);
     const { data: session } = useSessionCache();
@@ -297,6 +305,38 @@ const EventInfoModal = memo(
           </div>
           {/* Participants */}
           {dataEvent &&
+          dataEvent?.selectOrganizations &&
+          dataEvent?.selectOrganizations?.length == 1 ? (
+            <div className="mt-3">
+              <p className="text-[#77858F] flex-none text-[12px] mb-3">
+                参加メンバー {dataEvent.participants?.length}人
+              </p>
+              <div className="flex items-center gap-[8px]">
+                <div className="w-[26px]">
+                  <GroupIconWithDynamicColor
+                    color={
+                      dataOptionsOrganizations.find(
+                        (org) =>
+                          dataEvent?.selectOrganizations &&
+                          org.id == dataEvent?.selectOrganizations[0],
+                      )?.color || '#228CDB'
+                    }
+                  />
+                </div>
+
+                <p className="text-[#000000] text-sm font-medium w-[180px] break-words">
+                  {
+                    dataOptionsOrganizations.find(
+                      (org) =>
+                        dataEvent?.selectOrganizations &&
+                        org.id == dataEvent?.selectOrganizations[0],
+                    )?.fullName
+                  }
+                </p>
+              </div>
+            </div>
+          ) : (
+            dataEvent &&
             checkShowUserAvatar(
               EventCalendarType.SCHEDULE,
               dataEvent.participants,
@@ -374,7 +414,8 @@ const EventInfoModal = memo(
                             content={`${participant.fullName}`}
                             key={index}
                             placement="top">
-                            <div className={`${index > 0 && 'ml-[-6px]'} relative mb-1`}>
+                            <div
+                              className={`${index > 0 && 'ml-[-6px]'} relative mb-1`}>
                               <CustomUserAvatar
                                 avatarUrl={memberInfo?.avatar || ''}
                                 avatarColor={
@@ -397,7 +438,8 @@ const EventInfoModal = memo(
                   )}
                 </div>
               </div>
-            )}
+            )
+          )}
         </div>
       </div>
     );
