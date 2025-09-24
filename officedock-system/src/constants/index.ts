@@ -522,7 +522,7 @@ export const REMAINING_ORGANIZATIONS_ID = 'remaining';
 export const listAvatar = [
   { name: 'body', type: ItemAvatarType.BODY, url: '' },
   { name: 'head-full', type: 'head', url: '' },
-  { name: 'hat-demo2', type: ItemAvatarType.HAT, url: '' },
+  { name: 'hat', type: ItemAvatarType.HAT, url: '' },
   { name: 'shoes', type: ItemAvatarType.SHOES, url: '' },
 ];
 export const JAPANESE_TIME_ZONE = 'Asia/Tokyo';
