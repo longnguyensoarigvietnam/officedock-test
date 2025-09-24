@@ -991,7 +991,7 @@ class WebhookView(BaseAPIViewSet):
         attempt_count = invoice.attempt_count
         line = invoice.lines.data[0]
         period_start = to_datetime(line.period.start)
-        if attempt_count == 1:
+        if attempt_count == 2:
             self.mail_service.send_payment_failed_first(
                 recipient=invoice.customer_email,
                 company_name=invoice.account_name,

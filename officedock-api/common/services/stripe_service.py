@@ -262,7 +262,7 @@ class StripeService:
         - Set the due date to the 5th of the next month.
         - Update invoice with due date and default payment method.
         """
-        if not invoice.billing_reason != InvoiceReason.SUBSCRIPTION_CYCLE.value:
+        if invoice.billing_reason != InvoiceReason.SUBSCRIPTION_CYCLE.value:
             return  # Only process invoices tied to subscriptions
 
         try:
@@ -341,9 +341,6 @@ class StripeService:
                     stripe_invoice_id=invoice.id
                 ).update(status=TransactionStatus.SKIP_PAYMENT.value)
                 stripe.Invoice.void_invoice(invoice.id)
-            else:
-                stripe.Invoice.pay(invoice.id)
-
         except Exception as e:
             # Wrap Stripe error (or any other) into a DRF ValidationError
             print(f"❌ Pay invoice failed {e}")
