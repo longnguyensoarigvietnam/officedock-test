@@ -37,7 +37,7 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     API endpoint for Company.
     """
 
-    queryset = Company.objects.order_by("created_at").all()
+    queryset = Company.objects.order_by("-created_at").all()
     serializer_class = CompanySerializer
     permission_classes = [IsOperationAdminOnly]
     filter_backends = [CustomOrderFilter, DjangoFilterBackend]
@@ -60,6 +60,12 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if self.action == "retrieve":
             return RetrieveCompanySerializer
         return super().get_serializer_class()
+
+    @transaction.atomic()
+    def perform_update(self, serializer):
+        """Override DRF's `perform_update` to add business logic after a company update."""
+        company = serializer.save()
+        self.company_service.handle_invoice_base_on_status(company)
 
     @action(
         url_path="active",
@@ -125,7 +131,7 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             transactions = company.transactions.all()
         return self.response_pagination(
             request,
-            transactions,
+            transactions.order_by("-created_at"),
             CompanyTransactionSerializer,
         )
 
@@ -144,6 +150,20 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(company=company)
         return self.response_ok(CompanySerializer(company).data)
+
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="terminate-contract",
+        serializer_class=EmptySerializer,
+    )
+    def handle_cancellation_pending_contract(self, request, pk=None):
+        """
+        Handle cancellation pending contract for Company and cancel subscription Stripe
+        """
+        company = self.get_object()
+        self.company_service.cancellation_pending_contract(company)
+        return self.response_ok()
 
     def perform_destroy(self, instance):
         """Handle destroy company"""

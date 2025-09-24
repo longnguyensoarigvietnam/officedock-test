@@ -90,7 +90,6 @@ class CompanyPlan(BaseModel):
         on_delete=models.CASCADE,
     )
     stripe_subscription_id = models.CharField(null=True, blank=True)
-    stripe_subscription_item_id = models.CharField(null=True, blank=True)
 
 
 class CompanyPaymentMethod(BaseModel):
