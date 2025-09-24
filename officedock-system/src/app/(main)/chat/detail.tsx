@@ -2223,7 +2223,7 @@ const ChatDetail = ({
             }}>
             {/* Header */}
             <div
-              className="flex justify-between items-center px-4 py-2 min-h-[78px] !w-[calc(100%_-_20px)] ml-auto border-b-[2px] rounded-bl-[24px] text-white"
+              className="flex justify-between items-center px-4 py-2 min-h-[78px] gap-3 !w-[calc(100%_-_20px)] ml-auto border-b-[2px] rounded-bl-[24px] text-white"
               style={{
                 background: 'linear-gradient(to right, #289BF2, #73CCDF)',
               }}>
@@ -2315,15 +2315,6 @@ const ChatDetail = ({
                             </Button>
                           </div>
                         </DynamicTooltip>
-                        {chatRoomDetail?.isMuted && (
-                          <div className={`flex-shrink-0`}>
-                            <ImageRound
-                              className={` w-fit h-fit hover:cursor-pointer`}
-                              src="/icons/mute-white.svg"
-                              name="mute icon"
-                            />
-                          </div>
-                        )}
                       </div>
                     )}
                   {chatRoomDetail?.isMuted &&
@@ -2338,6 +2329,15 @@ const ChatDetail = ({
                       </div>
                     )}
                 </div>
+                {chatRoomDetail?.isMuted && (
+                  <div className={`flex-shrink-0 w-fit ml-3`}>
+                    <ImageRound
+                      className={` w-fit h-fit hover:cursor-pointer`}
+                      src="/icons/mute-white.svg"
+                      name="mute icon"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2 items-center">

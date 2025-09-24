@@ -5,7 +5,7 @@ import {
   formatTimeToJapanese,
   getJapaneseDayName,
 } from '@utils/date';
-import { DataPercentCompareType } from '@interfaces/common';
+import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import CustomUserAvatar from '../AvatarIcon/CustomUserAvatar';
 import StatisticCompareLoading from '../SkeletonLoading/StatisticCompareLoading';
 
@@ -24,7 +24,7 @@ interface Props {
   isLoadingCompare: boolean;
   isAllTeam?: boolean;
   handleClickTooltip: (id: number | null, isCompare: boolean) => void;
-  handleClickChart: (data: string) => void;
+  handleClickChart: (data: OptionDropdownType) => void;
 }
 
 const PercentageBarCompareTeam = ({
@@ -77,7 +77,10 @@ const PercentageBarCompareTeam = ({
                   key={index}
                   onClick={() => {
                     if (item.id !== -1) {
-                      handleClickChart(item.id as string);
+                      handleClickChart({
+                        label: item.label,
+                        value: item.id,
+                      });
                     }
                   }}
                   className="flex group border-l border-white relative flex-col justify-center items-center text-white text-center py-2"
@@ -270,7 +273,10 @@ const PercentageBarCompareTeam = ({
                   key={index}
                   onClick={() => {
                     if (item.id !== -1) {
-                      handleClickChart(item.id as string);
+                      handleClickChart({
+                        label: item.label,
+                        value: item.id,
+                      });
                     }
                   }}
                   className="flex relative border-l border-white group flex-col justify-center items-center text-white text-center py-2"

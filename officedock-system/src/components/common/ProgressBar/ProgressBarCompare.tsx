@@ -5,7 +5,7 @@ import {
   formatTimeToJapanese,
   getJapaneseDayName,
 } from '@utils/date';
-import { DataPercentCompareType } from '@interfaces/common';
+import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import ImageRound from '../ImageRound';
 import StatisticCompareLoading from '../SkeletonLoading/StatisticCompareLoading';
 
@@ -28,7 +28,7 @@ interface Props {
     isCompare: boolean,
     organizationId?: string,
   ) => void;
-  handleClickChart: (data: number | string) => void;
+  handleClickChart: (data: OptionDropdownType) => void;
 }
 
 const PercentageBarCompare = ({
@@ -82,7 +82,10 @@ const PercentageBarCompare = ({
                   key={index}
                   onClick={() => {
                     if (item.id !== -1) {
-                      handleClickChart(item.id);
+                      handleClickChart({
+                        label: item.label,
+                        value: item.id,
+                      });
                     }
                   }}
                   className="flex group border-l border-white relative flex-col justify-center items-center text-white text-center py-2"
@@ -250,7 +253,10 @@ const PercentageBarCompare = ({
                   key={index}
                   onClick={() => {
                     if (item.id !== -1) {
-                      handleClickChart(item.id);
+                      handleClickChart({
+                        label: item.label,
+                        value: item.id,
+                      });
                     }
                   }}
                   className="flex relative group border-l border-white flex-col justify-center items-center text-white text-center py-2"

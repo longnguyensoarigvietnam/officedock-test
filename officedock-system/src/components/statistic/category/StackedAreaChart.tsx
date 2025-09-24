@@ -219,7 +219,6 @@ const StackedAreaChart = ({
             isEdge,
           );
         });
-
         setTimeRange(transformedDates);
 
         const categoryMap = new Map<string, number[]>();
@@ -245,16 +244,19 @@ const StackedAreaChart = ({
           }
         }
 
-        const isAddFirstValue =
-          normalizeDataObject.durations[0]?.startDate !==
-          normalizeDataObject.durations[0]?.endDate;
+        const len = normalizeDataObject.durations.length;
+
+        const isAddLastValue =
+          len > 0 &&
+          normalizeDataObject.durations[len - 1]?.startDate ===
+            normalizeDataObject.durations[len - 1]?.endDate;
 
         const chartData = Array.from(categoryMap.entries()).map(
           ([name, data]) => {
             const firstValue = data.at(0) ?? 0;
             return {
               name,
-              data: isAddFirstValue ? [firstValue, ...data] : [...data],
+              data: isAddLastValue ? [...data] : [firstValue, ...data],
             };
           },
         );
@@ -290,7 +292,6 @@ const StackedAreaChart = ({
               order.indexOf(String(a.name)) - order.indexOf(String(b.name)),
           );
         }
-
         setDataChart(chartData);
       } else {
         const timeMilestones = getStatisticMilestones(
@@ -426,16 +427,19 @@ const StackedAreaChart = ({
           }
         }
 
-        const isAddFirstValue =
-          normalizeDataObject.durations[0]?.startDate !==
-          normalizeDataObject.durations[0]?.endDate;
+        const len = normalizeDataObject.durations.length;
+
+        const isAddLastValue =
+          len > 0 &&
+          normalizeDataObject.durations[len - 1]?.startDate ===
+            normalizeDataObject.durations[len - 1]?.endDate;
 
         const chartData = Array.from(categoryMap.entries()).map(
           ([name, data]) => {
             const firstValue = data.at(0) ?? 0;
             return {
               name,
-              data: isAddFirstValue ? [firstValue, ...data] : [...data],
+              data: isAddLastValue ? [...data] : [firstValue, ...data],
             };
           },
         );

@@ -519,22 +519,18 @@ const PercentageCategoryCompare = ({
                         isAllTeamOption={
                           selectedOrganization?.value == ALL_TEAM_STATISTIC
                         }
-                        handleClickChart={(data: string | number) => {
+                        handleClickChart={(data: OptionDropdownType) => {
                           if (
                             selectedOrganization?.value === ALL_TEAM_STATISTIC
                           ) {
                             return;
                           }
-                          const select = largeOptions.find(
-                            (item) => item.value === data,
-                          );
+
                           selectedOrganization &&
                             handleSelectOrganizationCustom(
                               selectedOrganization,
                             );
-                          if (select) {
-                            handleSelectLarge(select);
-                          }
+                          handleSelectLarge(data);
                         }}
                         handleClickTooltip={(
                           id: number | null,
@@ -596,14 +592,8 @@ const PercentageCategoryCompare = ({
                         isAllTeamOption={
                           selectedOrganization?.value == ALL_TEAM_STATISTIC
                         }
-                        handleClickChart={(data: number | string) => {
-                          const select = mediumOptions.find(
-                            (item) => item.value === data,
-                          );
-
-                          if (select) {
-                            handleSelectMedium(select);
-                          }
+                        handleClickChart={(data: OptionDropdownType) => {
+                          handleSelectMedium(data);
                         }}
                         handleClickTooltip={(
                           id: number | null,
@@ -668,14 +658,8 @@ const PercentageCategoryCompare = ({
                         isAllTeamOption={
                           selectedOrganization?.value == ALL_TEAM_STATISTIC
                         }
-                        handleClickChart={(data: number | string) => {
-                          const select = smallOptions.find(
-                            (item) => item.value === data,
-                          );
-
-                          if (select) {
-                            handleSelectSmall(select);
-                          }
+                        handleClickChart={(data: OptionDropdownType) => {
+                          handleSelectSmall(data);
                         }}
                         handleClickTooltip={(
                           id: number | null,

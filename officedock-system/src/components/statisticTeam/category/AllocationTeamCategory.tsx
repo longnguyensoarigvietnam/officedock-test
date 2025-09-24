@@ -426,13 +426,7 @@ const AllocationTeamCategory = memo(
                                     data.value &&
                                     data.value != selectedLarge?.value
                                   ) {
-                                    const select = largeOptions.find(
-                                      (item) => item.value === data.value,
-                                    );
-
-                                    if (select) {
-                                      handleSelectLarge(select);
-                                    }
+                                    handleSelectLarge(data);
                                   }
                                 }}
                                 handleClickTooltip={({
@@ -532,13 +526,7 @@ const AllocationTeamCategory = memo(
                                     data.value &&
                                     data.value != selectedMedium?.value
                                   ) {
-                                    const select = mediumOptions.find(
-                                      (item) => item.value === data.value,
-                                    );
-
-                                    if (select) {
-                                      handleSelectMedium(select);
-                                    }
+                                    handleSelectMedium(data);
                                   }
                                 }}
                                 startDate={startDate}

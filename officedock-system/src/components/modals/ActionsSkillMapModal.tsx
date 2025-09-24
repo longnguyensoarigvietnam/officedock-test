@@ -35,7 +35,11 @@ import {
   SKILL_MAP_STEP_COUNT,
   SKILL_MAP_STEPS,
 } from '@constants';
-import { ERROR_CREATE_MESSAGE, ERROR_UPDATE_MESSAGE } from '@constants/message';
+import {
+  ERROR_CREATE_MESSAGE,
+  ERROR_LONG_FIELD_MESSAGE,
+  ERROR_UPDATE_MESSAGE,
+} from '@constants/message';
 
 import { formatShowDateJapanese } from '@utils/date';
 import {
@@ -1070,7 +1074,12 @@ const ActionsSkillMapModal = ({
             }
             register={register(
               getStepField(currentStep as 1 | 2 | 3, 'description'),
+
               {
+                maxLength: {
+                  value: 255,
+                  message: ERROR_LONG_FIELD_MESSAGE,
+                },
                 onChange: () => {
                   setIsFormTouched(true);
                 },
