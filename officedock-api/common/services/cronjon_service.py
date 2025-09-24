@@ -2,13 +2,14 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from common.services import stripe_service
 from common.services.transaction_service import TransactionService
-from common.utils import calculate_company_dates
+from common.utils import calculate_company_dates, format_date
 from companies.constants import (
     CompanyStatus,
     CompanyTransactionTypes,
     TransactionStatus,
 )
 from companies.models import Company, CompanyTransaction
+from plans.models import Tax
 from users.models import UserBalance
 from utils.mail import PaymentMailService
 
@@ -43,16 +44,20 @@ class CronJobService:
         if companies := Company.objects.filter(
             contract__next_renewal_at__date=usage_month.date()
         ).all():
+            tax = Tax.objects.first()
             mail_service = PaymentMailService()
             for company in companies:
                 plan = company.plan.plan
+                price = plan.monthly_fee + (
+                    plan.monthly_fee * tax.percentage / 100
+                )
                 mail_service.send_contract_renewal_notice(
-                    renewal_date=usage_month,
+                    renewal_date=format_date(usage_month, style="jp_date"),
                     company_name=company.name,
                     responsible_name=company.contract.responsible_person_name,
                     recipient=company.contract.responsible_person_mail,
                     plan=plan.name,
-                    price=plan.monthly_fee,
+                    price=format(int(price), ","),
                 )
 
     def iterate_over_all_companies_to_closing(self, today):

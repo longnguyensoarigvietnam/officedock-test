@@ -719,7 +719,7 @@ class CronJobViewSet(BaseAPIViewSet):
                         date_after_closing,
                         user,
                     )
-
+                # 3. Send mail notify renewal contract
         return self.response_ok(
             {
                 "today": today.isoformat(),
@@ -916,6 +916,7 @@ class WebhookView(BaseAPIViewSet):
             ).first()
             # After description deleted, the last invoice cannot auto pay, so need reset invoice finalize_at
             if company:
+                contract = company.contract
                 # Get invoice
                 transaction = company.transactions.filter(
                     type=CompanyTransactionTypes.INVOICE.value,
@@ -935,12 +936,10 @@ class WebhookView(BaseAPIViewSet):
                         invoice, company
                     )
                 self.mail_service.send_contract_cancelled(
-                    recipient=invoice.customer_email,
-                    company_name=invoice.account_name,
-                    responsible_name=invoice.customer_name,
-                    end_date=format_date(
-                        company.contract.end_date, style="jp_date"
-                    ),
+                    recipient=contract.responsible_person_mail,
+                    company_name=company.name,
+                    responsible_name=contract.responsible_person_name,
+                    end_date=format_date(contract.end_date, style="jp_date"),
                 )
                 # Update company status to contract terminated
                 self.company_service.change_status_of_company(
@@ -961,15 +960,17 @@ class WebhookView(BaseAPIViewSet):
         company_transaction = CompanyTransaction.objects.filter(
             stripe_invoice_id=invoice.id
         ).first()
+        company = company_transaction.company
+        contract = company.contract
         line = invoice.lines.data[0]
         period_start = to_datetime(line.period.start)
         period_end = to_datetime(line.period.end)
         paid_at = to_datetime(invoice.status_transitions.paid_at)
         period = f"{format_date(period_start, style='jp_date')} 〜 {format_date(period_end, style='jp_date')}"
         self.mail_service.send_monthly_payment_success(
-            recipient=invoice.customer_email,
-            company_name=invoice.account_name,
-            responsible_name=invoice.customer_name,
+            recipient=contract.responsible_person_mail,
+            company_name=company.name,
+            responsible_name=contract.responsible_person_name,
             usage_month=format_date(
                 company_transaction.invoice_target, style="jp_month_year"
             ),
@@ -991,19 +992,23 @@ class WebhookView(BaseAPIViewSet):
         attempt_count = invoice.attempt_count
         line = invoice.lines.data[0]
         period_start = to_datetime(line.period.start)
-        if attempt_count == 2:
+        company = Company.objects.filter(
+            stripe_customer_id=invoice.customer
+        ).first()
+        contract = company.contract
+        if attempt_count == 1:
             self.mail_service.send_payment_failed_first(
-                recipient=invoice.customer_email,
-                company_name=invoice.account_name,
-                responsible_name=invoice.customer_name,
+                recipient=contract.responsible_person_mail,
+                company_name=company.name,
+                responsible_name=contract.responsible_person_name,
                 usage_month=format_date(period_start, style="jp_month_year"),
                 payment_url=None,
             )
         if attempt_count == 4:
             self.mail_service.send_payment_failed_final(
-                recipient=invoice.customer_email,
-                company_name=invoice.account_name,
-                responsible_name=invoice.customer_name,
+                recipient=contract.responsible_person_mail,
+                company_name=company.name,
+                responsible_name=contract.responsible_person_name,
                 usage_month=format_date(period_start, style="jp_month_year"),
                 payment_url=None,
             )
