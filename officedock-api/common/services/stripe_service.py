@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 
 import stripe
+from common.constants import InvoiceReason
 from companies.constants import (
     CompanyStatus,
     CompanyTransactionTypes,
@@ -261,7 +262,7 @@ class StripeService:
         - Set the due date to the 5th of the next month.
         - Update invoice with due date and default payment method.
         """
-        if not invoice.subscription:
+        if not invoice.billing_reason != InvoiceReason.SUBSCRIPTION_CYCLE.value:
             return  # Only process invoices tied to subscriptions
 
         try:
@@ -297,9 +298,9 @@ class StripeService:
             if period_end_dt.month < 12
             else period_end_dt.year + 1
         )
-        due_date_dt = datetime(next_year, next_month, 5, 0, 10, 0)
+        due_date_dt = datetime(next_year, next_month, 5, 0, 0, 0)
         finalizes_at = int(due_date_dt.timestamp())
-        if company.status != CompanyStatus.TEMPORARY_USAGE.value:
+        if company and company.status != CompanyStatus.TEMPORARY_USAGE.value:
             # Update the invoice on Stripe
             stripe.Invoice.modify(
                 invoice.id,
@@ -340,7 +341,6 @@ class StripeService:
                     stripe_invoice_id=invoice.id
                 ).update(status=TransactionStatus.SKIP_PAYMENT.value)
                 stripe.Invoice.void_invoice(invoice.id)
-
             else:
                 stripe.Invoice.pay(invoice.id)
 
