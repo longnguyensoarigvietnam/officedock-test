@@ -99,9 +99,11 @@ def generate_signed_url(blob_name: str, expiration_seconds=None) -> str:
             "X-Goog-Algorithm": "GOOG4-HMAC-SHA256",
             "X-Goog-Credential": f"{access_id}/{datestamp}/auto/storage/goog4_request",
             "X-Goog-Date": timestamp,
-            "X-Goog-Expires": expiration_seconds
-            if expiration_seconds
-            else settings.GS_EXPIRATION,
+            "X-Goog-Expires": (
+                expiration_seconds
+                if expiration_seconds
+                else settings.GS_EXPIRATION
+            ),
             "X-Goog-SignedHeaders": signed_headers,
         }
     )
@@ -583,15 +585,21 @@ def get_common_categories_with_none_category(category, obj=None):
             continue
         formatted.append(
             {
-                "id": getattr(category, attr).id
-                if getattr(category, attr)
-                else NONE_CATEGORY,
-                "name": getattr(category, attr).name
-                if getattr(category, attr)
-                else NONE_CATEGORY,
-                "color": color
-                if type_value == ScheduleCategoryTypes.LARGE.value
-                else None,
+                "id": (
+                    getattr(category, attr).id
+                    if getattr(category, attr)
+                    else NONE_CATEGORY
+                ),
+                "name": (
+                    getattr(category, attr).name
+                    if getattr(category, attr)
+                    else NONE_CATEGORY
+                ),
+                "color": (
+                    color
+                    if type_value == ScheduleCategoryTypes.LARGE.value
+                    else None
+                ),
                 "type": type_value,
             }
         )
@@ -945,3 +953,26 @@ def get_client_ip(request):
 def get_user_agent(request):
     """Return the raw User-Agent header string or empty string if missing."""
     return getattr(request, "META", {}).get("HTTP_USER_AGENT", "")
+
+
+def format_date(date, style="jp_full"):
+    """Return format date by multiple style"""
+    formats = {
+        "jp_date": "%Y年%m月%d日",
+        "jp_month_year": "%Y年%m月",
+        "jp_full": "%Y年%m月%d日 %H時%M分%S秒",
+        "vn_date": "%d/%m/%Y",
+        "iso": "%Y-%m-%d",
+    }
+
+    fmt = formats.get(style, formats["iso"])
+    return date.strftime(fmt)
+
+
+def to_datetime(ts):
+    """Convert UNIX timestamp -> datetime"""
+    if ts is None:
+        return None
+    if ts > 1e12:
+        ts = ts / 1000
+    return datetime.fromtimestamp(ts)

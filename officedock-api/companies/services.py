@@ -5,12 +5,16 @@ from base.messages import ERROR_MESSAGES
 from common.services import stripe_service
 from common.services.stripe_service import StripeService
 from common.utils import get_client_ip, get_user_agent, get_username_alias
-from companies.constants import CompanyStatus, CompanyTransactionTypes
-from companies.models import Company
+from companies.constants import (
+    CompanyStatus,
+    CompanyTransactionTypes,
+    TransactionStatus,
+)
+from companies.models import Company, CompanyTransaction
 from companies.utils import generate_contract_related_date_base_on_now
 from users.constants import LoginTypes, RoleTypes
 from users.models import Profile, Role, User, UserActivityLog
-from utils.mail import MailService
+from utils.mail import PaymentMailService
 
 
 class CompanyService:
@@ -30,6 +34,7 @@ class CompanyService:
         # Prepare profile and login data for the system admin user
         profile = {"full_name": contract.responsible_person_name}
         user_data["two_factor_auth_email"] = contract.responsible_person_mail
+        user_data["email"] = contract.responsible_person_mail
         user_data["password"] = get_random_string(8)
         user_data["login_type"] = LoginTypes.EMAIL.value
         user_data["username_alias"] = get_username_alias(
@@ -53,10 +58,22 @@ class CompanyService:
             },
         )
 
+        # Log user create
+        UserActivityLog.log_user_creation(
+            user,
+            current_user,
+            get_client_ip(request),
+            get_user_agent(request),
+        )
+
         # Send welcome email with login credentials to the admin
-        mail_service = MailService()
-        mail_service.send_admin_create_company_by_email(
-            user.email, user_data["password"], company
+        mail_service = PaymentMailService()
+        mail_service.send_account_issued(
+            recipient=contract.responsible_person_mail,
+            user_email=contract.responsible_person_mail,
+            password=user_data["password"],
+            company_name=company.name,
+            responsible_name=contract.responsible_person_name,
         )
 
         # Update contract dates relative to the current time
@@ -68,32 +85,20 @@ class CompanyService:
             plan=company.plan.plan,
             type=CompanyTransactionTypes.PLAN.value,
         )
+
         # Create Stripe postpaid subscription and save IDs to company plan
         subscription = stripe.create_postpaid_subscription_with_invoice(
             company, start_date=related_date["start_date"]
         )
         company.plan.stripe_subscription_id = subscription.id
-        items = subscription.get("items", {}).get("data", [])
-        if items:
-            company.plan.stripe_subscription_item_id = items[0]["id"]
         company.plan.save(
             update_fields=[
                 "stripe_subscription_id",
-                "stripe_subscription_item_id",
             ]
         )
-
         # Mark company as active and save status
         company.status = CompanyStatus.ACTIVE_CONTRACT.value
         company.save(update_fields=["status"])
-
-        # Log user create
-        UserActivityLog.log_user_creation(
-            user,
-            current_user,
-            get_client_ip(request),
-            get_user_agent(request),
-        )
 
     def handle_contract_renewal(self, company, invoice):
         """
@@ -104,14 +109,7 @@ class CompanyService:
             company.contract.cancel_at
             and company.contract.cancel_at < invoice_start_date
         ):
-            end_date = company.contract.end_date
-            cancel_at = datetime.datetime.combine(end_date, datetime.time.max)
-            self.change_status_of_company(
-                company, CompanyStatus.CANCELLATION_PENDING.value
-            )
-            stripe_service.StripeService().handle_cancel_subscription(
-                subscription_id=invoice.subscription, cancel_at=cancel_at
-            )
+            self.cancellation_pending_contract(company)
             print(
                 f"✅ Company : {company.id} pending contract at: {contract.cancel_at}"
             )
@@ -137,6 +135,12 @@ class CompanyService:
         company.save(update_fields=["status"])
 
     def change_plan(self, company):
+        """
+        Change the company's subscription plan in Stripe and update the local CompanyPlan.
+
+        Raises:
+            Exception: If Stripe subscription creation fails.
+        """
         stripe = StripeService()
         related_date = generate_contract_related_date_base_on_now()
 
@@ -145,12 +149,45 @@ class CompanyService:
             company, start_date=related_date["start_date"]
         )
         company.plan.stripe_subscription_id = subscription.id
-        items = subscription.get("items", {}).get("data", [])
-        if items:
-            company.plan.stripe_subscription_item_id = items[0]["id"]
         company.plan.save(
             update_fields=[
                 "stripe_subscription_id",
-                "stripe_subscription_item_id",
             ]
         )
+
+    def cancellation_pending_contract(self, company):
+        """
+        Mark the company's contract as pending cancellation and schedule Stripe cancellation.
+        """
+        end_date = company.contract.end_date
+        cancel_at = datetime.datetime.combine(end_date, datetime.time.max)
+        if not company.plan.stripe_subscription_id:
+            raise ValidationError({"detail": ERROR_MESSAGES["plan_invalid"]})
+        self.change_status_of_company(
+            company, CompanyStatus.CANCELLATION_PENDING.value
+        )
+        stripe_service.StripeService().handle_cancel_subscription(
+            subscription_id=company.plan.stripe_subscription_id,
+            cancel_at=cancel_at,
+        )
+
+    def handle_invoice_base_on_status(self, company):
+        """
+        Handle all unpaid invoices for a company by checking their status in Stripe
+        and finalizing them if necessary.
+        """
+        invoices = CompanyTransaction.objects.filter(
+            company=company,
+            paid_at__isnull=True,
+            type=CompanyTransactionTypes.INVOICE.value,
+            status=TransactionStatus.UNPAID.value,
+        ).all()
+        if invoices:
+            for invoice in invoices:
+                stripe_invoice = stripe_service.StripeService().get_invoice(
+                    invoice.stripe_invoice_id
+                )
+                if stripe_invoice:
+                    stripe_service.StripeService().update_invoice_finalize(
+                        stripe_invoice, company
+                    )

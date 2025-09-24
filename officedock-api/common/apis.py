@@ -44,6 +44,7 @@ from common.helpers import (
     get_unanswered_count,
     get_user_setting,
 )
+from common.services.cronjon_service import CronJobService
 from common.services.stripe_service import StripeService
 from companies.constants import (
     CompanyStatus,
@@ -75,6 +76,7 @@ from companies.models import Company, CompanyTransaction
 from base.messages import ERROR_MESSAGES
 from common.services.transaction_service import TransactionService
 from common.services.cleanup_data_service import CleanupDataService
+from utils.mail import PaymentMailService
 from .serializers import (
     CreationDataOrganizationSerializer,
     CreationDataTaskListSerializer,
@@ -82,7 +84,9 @@ from .serializers import (
 from .utils import (
     calculate_company_dates,
     check_task_overtime,
+    format_date,
     send_web_socket_event,
+    to_datetime,
     to_snake_case,
     validate_company_organization,
 )
@@ -334,6 +338,13 @@ class CronJobViewSet(BaseAPIViewSet):
 
     permission_classes = [AllowAny, IsCronJob]
 
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the Company service
+        """
+        super().__init__(*args, **kwargs)
+        self.cronjob_service = CronJobService()
+
     @extend_schema(
         parameters=[OpenApiParameter("cronjob_key", type=str, required=True)],
     )
@@ -563,7 +574,6 @@ class CronJobViewSet(BaseAPIViewSet):
         """
 
         today = now().date()
-        transaction_service = TransactionService()
         cleanup_data_service = CleanupDataService()
 
         # 1. Cleanup data
@@ -577,65 +587,18 @@ class CronJobViewSet(BaseAPIViewSet):
         )
 
         # 2. Iterate over all companies to handle closing logic
-        for company in Company.objects.all().prefetch_related("users"):
-            company_dates = calculate_company_dates(company, today)
-            date_after_closing = company_dates["date_after_closing"]
-            start_date_calculation_deadline = company_dates[
-                "start_date_calculation_deadline"
-            ]
-            date_after_data_edit_deadline = company_dates[
-                "date_after_data_edit_deadline"
-            ]
+        self.cronjob_service.iterate_over_all_companies_to_closing(today)
+        # 3. Send mail notify renewal contract
+        if now().day == 1:
+            self.cronjob_service.handle_send_email_renewal_company_contract(
+                today
+            )
 
-            # --- Case 1: Closing day ---
-            if today.day == date_after_closing.day:
-                company_users = company.users.all()
-                company_users_count = company_users.count()
-
-                for user in company_users:
-                    # Reward coins for thanks messages (top voted)
-                    transaction_service.reward_thanks_message(
-                        user,
-                        date_after_closing,
-                        start_date_calculation_deadline,
-                    )
-
-                    # Reward pearls
-                    transaction_service.reward_login_bonus(
-                        user,
-                        date_after_closing,
-                        start_date_calculation_deadline,
-                    )
-                    transaction_service.reward_task_complete(
-                        user,
-                        date_after_closing,
-                        start_date_calculation_deadline,
-                    )
-
-                # Update exchangeable coin for user
-                if company_users_count > 0:
-                    user_exchangeable_amount = (
-                        company.exchangeable_amount // company_users_count
-                    )
-                    UserBalance.objects.filter(user__in=company_users).update(
-                        exchangeable_coin=user_exchangeable_amount
-                    )
-
-            # --- Case 2: Deadline day ---
-            elif today.day == date_after_data_edit_deadline.day:
-                # Process working time rewards for all users in the company
-                # This runs at 00:00 of the day after the deadline
-                # Get all users in the company
-                company_users = company.users.all()
-
-                # Process working time rewards for each user for the entire month
-                for user in company_users:
-                    # Calculate total working time rewards for the entire month
-                    transaction_service.reward_actual_working_time(
-                        start_date_calculation_deadline,
-                        date_after_closing,
-                        user,
-                    )
+        # 4. Get company have status Temporary Usage and void the invoice before auto pay
+        if now().day == 5:
+            self.cronjob_service.handle_cancel_the_invoice_of_company_temporary_usage(
+                today
+            )
 
         return self.response_ok(
             {
@@ -885,6 +848,15 @@ class WebhookView(BaseAPIViewSet):
     authentication_classes = []  # Webhooks are usually unauthenticated
     permission_classes = [AllowAny]
 
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the services
+        """
+        super().__init__(*args, **kwargs)
+        self.stripe_service = StripeService()
+        self.company_service = CompanyService()
+        self.mail_service = PaymentMailService()
+
     @action(methods=["POST"], url_path="stripe", detail=False)
     def received_webhook(self, request, pk=None):
         """
@@ -894,8 +866,6 @@ class WebhookView(BaseAPIViewSet):
         """
         payload = request.body
         sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
-        stripe_service = StripeService()
-        company_service = CompanyService()
 
         try:
             # Verify webhook signature to ensure authenticity
@@ -917,7 +887,7 @@ class WebhookView(BaseAPIViewSet):
         # Route events to appropriate handlers
         if event.type == "invoice.created":
             invoice = event.data.object
-            stripe_service.handle_invoice_created(invoice)
+            self.stripe_service.handle_invoice_created(invoice)
             # Check renewal of contract and handle it
             invoice_start_date = datetime.fromtimestamp(invoice.created)
             company = Company.objects.filter(
@@ -929,8 +899,8 @@ class WebhookView(BaseAPIViewSet):
                 ],
             ).first()
             if company:
-                company_service.handle_contract_renewal(company, invoice)
-        elif event.type == "invoice.payment_succeeded":
+                self.company_service.handle_contract_renewal(company, invoice)
+        elif event.type in ["invoice.payment_succeeded"]:
             # Update status transaction
             self.handle_payment_succeeded(event.data.object)
         elif event.type == "invoice.payment_failed":
@@ -938,7 +908,7 @@ class WebhookView(BaseAPIViewSet):
             self.handle_payment_failed(event.data.object)
         elif event.type == "invoice.finalized":
             # Handle pay invoice and void it when company have status Temporary Usage
-            stripe_service.handle_pay_invoice(event.data.object)
+            self.stripe_service.handle_pay_invoice(event.data.object)
         elif event.type == "customer.subscription.deleted":
             subscription = event.data.object
             company = Company.objects.filter(
@@ -956,10 +926,24 @@ class WebhookView(BaseAPIViewSet):
                     invoice = stripe.Invoice.retrieve(
                         transaction.stripe_invoice_id
                     )
+                    # Get the company's default payment method
+                    company = Company.objects.filter(
+                        stripe_customer_id=invoice.customer
+                    ).first()
                     # Set the finalize of invoice
-                    stripe_service.update_invoice_finalize(invoice)
+                    self.stripe_service.update_invoice_finalize(
+                        invoice, company
+                    )
+                self.mail_service.send_contract_cancelled(
+                    recipient=invoice.customer_email,
+                    company_name=invoice.account_name,
+                    responsible_name=invoice.customer_name,
+                    end_date=format_date(
+                        company.contract.end_date, style="jp_date"
+                    ),
+                )
                 # Update company status to contract terminated
-                company_service.change_status_of_company(
+                self.company_service.change_status_of_company(
                     company, CompanyStatus.CONTRACT_TERMINATED.value
                 )
                 print(f"✅ Company : {company.id} destroy contract")
@@ -974,10 +958,29 @@ class WebhookView(BaseAPIViewSet):
         - Example: update subscription status, log event, notify user, etc.
         """
         print(f"✅ Payment succeeded for invoice {invoice.id}")
-        # Update transaction status
-        CompanyTransaction.objects.filter(stripe_invoice_id=invoice.id).update(
-            status=TransactionStatus.PAID.value, paid_at=now()
+        company_transaction = CompanyTransaction.objects.filter(
+            stripe_invoice_id=invoice.id
+        ).first()
+        line = invoice.lines.data[0]
+        period_start = to_datetime(line.period.start)
+        period_end = to_datetime(line.period.end)
+        paid_at = to_datetime(invoice.status_transitions.paid_at)
+        period = f"{format_date(period_start, style='jp_date')} 〜 {format_date(period_end, style='jp_date')}"
+        self.mail_service.send_monthly_payment_success(
+            recipient=invoice.customer_email,
+            company_name=invoice.account_name,
+            responsible_name=invoice.customer_name,
+            usage_month=format_date(
+                company_transaction.invoice_target, style="jp_month_year"
+            ),
+            billing_date=format_date(paid_at, style="jp_date"),
+            amount=format(invoice.amount_paid, ","),
+            period=period,
         )
+        # Update transaction status
+        company_transaction.status = TransactionStatus.PAID.value
+        company_transaction.paid_at = paid_at
+        company_transaction.save(update_fields=["status", "paid_at"])
 
     def handle_payment_failed(self, invoice):
         """
@@ -985,20 +988,38 @@ class WebhookView(BaseAPIViewSet):
         - Example: notify user, retry payment, disable service, etc.
         """
         print(f"❌ Payment failed for invoice {invoice.id}")
-        # TODO: Implement logic send notify mail when first payment failed
+        attempt_count = invoice.attempt_count
+        line = invoice.lines.data[0]
+        period_start = to_datetime(line.period.start)
+        if attempt_count == 1:
+            self.mail_service.send_payment_failed_first(
+                recipient=invoice.customer_email,
+                company_name=invoice.account_name,
+                responsible_name=invoice.customer_name,
+                usage_month=format_date(period_start, style="jp_month_year"),
+                payment_url=None,
+            )
+        if attempt_count == 4:
+            self.mail_service.send_payment_failed_final(
+                recipient=invoice.customer_email,
+                company_name=invoice.account_name,
+                responsible_name=invoice.customer_name,
+                usage_month=format_date(period_start, style="jp_month_year"),
+                payment_url=None,
+            )
         company = Company.objects.filter(
             stripe_customer_id=invoice.customer
         ).update(
             status=(
                 CompanyStatus.SUSPENDED.value
-                if invoice.attempt_count >= RETRY_PAYMENT_MAX
+                if attempt_count > RETRY_PAYMENT_MAX
                 else CompanyStatus.RETRY_PAYMENT.value
             )
         )
         # Update transaction status
         CompanyTransaction.objects.filter(stripe_invoice_id=invoice.id).update(
             status=TransactionStatus.PAYMENT_FAILED.value,
-            retry_attempt=invoice.attempt_count,
+            retry_attempt=attempt_count,
         )
 
 

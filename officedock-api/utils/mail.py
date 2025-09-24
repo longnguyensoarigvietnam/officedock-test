@@ -242,6 +242,7 @@ class PaymentMailService(MailService):
                 ログインURL： <a href="{settings.SYSTEM_WEBAPP_URL}">{settings.SYSTEM_WEBAPP_URL}</a>
             </p>
             <p>初回ログイン時には、セキュリティのためパスワードの変更をお願いいたします。</p>
+            <p>今後とも{self.SYSTEM_NAME}をよろしくお願い申し上げます。</p>
         """
         self.send(subject, message, [recipient])
 
@@ -268,6 +269,7 @@ class PaymentMailService(MailService):
             </p>
             <p>追加されたユーザー様には別途、ログイン情報が通知されます。<br>
             アカウントの管理は、ユーザー管理画面よりご確認いただけます。</p>
+            <p>今後とも{self.SYSTEM_NAME}をよろしくお願い申し上げます。</p>
         """
         self.send(subject, message, [recipient])
 
@@ -281,6 +283,8 @@ class PaymentMailService(MailService):
             <p>いつも{self.SYSTEM_NAME}をご利用いただき、ありがとうございます。</p>
             <p>アカウントの復元手続きが完了し、本日よりサービスの利用が再開されましたことをお知らせいたします。<br>
             なお、課金は翌月1日より再開されます。（今月分のご利用料金は発生いたしません）</p>
+            <p>引き続き{self.SYSTEM_NAME}をよろしくお願い申し上げます。</p>
+
         """
         self.send(subject, message, [recipient])
 
@@ -301,6 +305,7 @@ class PaymentMailService(MailService):
                 お支払い金額： {price} 円（税込）
             </p>
             <p>今回のお支払い金額は、翌月のご利用料金と合わせてご請求させていただきます。</p>
+            <p>今後とも{self.SYSTEM_NAME}をよろしくお願い申し上げます。</p>
         """
         self.send(subject, message, [recipient])
 
@@ -332,6 +337,8 @@ class PaymentMailService(MailService):
                 適用開始月： {start_month} ご利用分より<br>
                 次回ご請求金額： {new_price} 円（税込）
             </p>
+            <p>{start_month} のご利用分より、新しいプランの料金が適用されます。</p>
+            <p>今後とも{self.SYSTEM_NAME}をよろしくお願い申し上げます。</p>
         """
         self.send(subject, message, [recipient])
 
@@ -351,13 +358,16 @@ class PaymentMailService(MailService):
         message = f"""
             <p>{company_name}<br>{responsible_name} 様</p>
             <p>いつも{self.SYSTEM_NAME}をご利用いただき、ありがとうございます。</p>
-            <p>ご契約の更新が近づいてまいりました。下記の内容で自動的に1年間更新されます。</p>
+            <p>ご契約いただいております{self.SYSTEM_NAME}の契約更新が近づいてまいりました。<br>
+            つきましては、下記の契約内容にて自動的に1年間更新されますことをお知らせいたします。
+            </p>
             <p>
                 ■ 更新内容<br>
                 契約更新日： {renewal_date}<br>
                 更新後プラン： {plan}<br>
                 更新後料金： {price} 円/月（税込）
             </p>
+            <p>今後とも{self.SYSTEM_NAME}をよろしくお願い申し上げます。</p>
         """
         self.send(subject, message, [recipient])
 
@@ -377,12 +387,14 @@ class PaymentMailService(MailService):
         subject = f"【{self.SYSTEM_NAME}】{usage_month}分 ご利用料金の決済完了のお知らせ"
         message = f"""
             <p>{company_name}<br>{responsible_name} 様</p>
+            <p>いつも{self.SYSTEM_NAME}をご利用いただき、ありがとうございます。</p>
             <p>{usage_month}分のご利用料金につきまして、決済が完了いたしましたのでお知らせいたします。</p>
             <p>
                 決済日： {billing_date}<br>
                 ご請求金額： {amount} 円（税込）<br>
                 対象期間： {period}
             </p>
+            <p>今後とも{self.SYSTEM_NAME}をよろしくお願い申し上げます。</p>
         """
         self.send(subject, message, [recipient])
 
@@ -400,14 +412,18 @@ class PaymentMailService(MailService):
         subject = f"【{self.SYSTEM_NAME}】ご利用料金のお支払いエラーのお知らせ"
         message = f"""
             <p>{company_name}<br>{responsible_name} 様</p>
-            <p>{usage_month}分のご利用料金につきまして、登録済みのお支払い方法で決済が完了しませんでした。</p>
+            <p>いつも{self.SYSTEM_NAME}をご利用いただき、ありがとうございます。</p>
+            <p>{usage_month}分のご利用料金につきまして、ご登録のお支払い方法での決済が正常に完了しませんでした。</p>
             <p>現在、サービスの利用は継続可能ですが、お支払い情報に問題がある可能性がございます。</p>
+            <p>お手数ですが、下記よりお支払い情報をご確認・ご変更いただきますようお願いいたします。</p>
             <p>
                 ▼お支払い方法の確認・変更はこちら<br>
                 <a href="{payment_url}">{payment_url}</a>
             </p>
-            <p>本メール配信後、システムによる決済の再試行が自動的に開始されます。<br>
-            期間中にお支払いが確認できない場合、サービスが一時停止されることがございます。</p>
+            <p>なお、本メール配信後、システムによる決済の再試行（リトライ）が自動的に開始されます。<br>
+            リトライ期間中にお支払いが確認できない場合、サービスが一時的に停止されることがございますので、お早めにご対応ください。 <br>
+            </p>
+            <p>ご不明な点がございましたら、サポートまでお問い合わせください。</p>
         """
         self.send(subject, message, [recipient])
 
@@ -425,12 +441,17 @@ class PaymentMailService(MailService):
         subject = f"【{self.SYSTEM_NAME}】サービス利用停止のお知らせ"
         message = f"""
             <p>{company_name}<br>{responsible_name} 様</p>
-            <p>{usage_month}分のご利用料金につきまして、再試行を重ねましたが決済の確認が取れませんでした。</p>
-            <p>誠に不本意ながら、本日よりサービスのご利用を一時的に停止させていただきました。</p>
+            <p>いつも{self.SYSTEM_NAME}をご利用いただき、ありがとうございます。</p>
+            <p>{usage_month}分のご利用料金につきまして、決済の再試行を重ねてまいりましたが、残念ながらお支払いの確認が取れませんでした。</p>
+            <p>つきましては、誠に不本意ながら、本日より貴社の{self.SYSTEM_NAME}のご利用を一時的に停止させていただきましたことを、ここにご通知申し上げます。</p>
+            <p>サービスを再開するには、下記URLよりログインいただき、未払い料金のお支払い手続きをお願いいたします。<br>
+            決済が確認でき次第、サービスは自動的に再開されます。
+            </p>
             <p>
                 ▼お支払い手続きはこちら<br>
                 <a href="{payment_url}">{payment_url}</a>
             </p>
+            <p>何卒、ご理解ご協力いただけますようお願い申し上げます。</p>
         """
         self.send(subject, message, [recipient])
 
@@ -441,8 +462,11 @@ class PaymentMailService(MailService):
         subject = f"【{self.SYSTEM_NAME}】サービス利用再開のお知らせ"
         message = f"""
             <p>{company_name}<br>{responsible_name} 様</p>
+            <p>いつも{self.SYSTEM_NAME}をご利用いただき、ありがとうございます。</p>
             <p>お支払い情報の更新と未払い料金の決済が確認できました。</p>
-            <p>一時停止しておりましたサービスの利用を本日より再開いたしましたのでお知らせいたします。</p>
+            <p>一時停止しておりましたサービスの利用を、本日より再開いたしましたのでお知らせいたします。</p>
+            <p>この度はご対応いただき、誠にありがとうございました。</p>
+            <p>引き続き{self.SYSTEM_NAME}をよろしくお願い申し上げます。</p>
         """
         self.send(subject, message, [recipient])
 
@@ -455,9 +479,14 @@ class PaymentMailService(MailService):
         subject = f"【{self.SYSTEM_NAME}】解約手続き完了のお知らせ"
         message = f"""
             <p>{company_name}<br>{responsible_name} 様</p>
-            <p>{self.SYSTEM_NAME}の解約予約手続きを承りました。<br>
-            契約終了予定日： {end_date}</p>
-            <p>契約終了日までサービスは引き続きご利用いただけます。</p>
+            <p>いつも{self.SYSTEM_NAME}をご利用いただき、ありがとうございます。</p>
+            <p>この度、申請いただきました{self.SYSTEM_NAME}の解約予約手続きを承りました。<br>
+            最終的な契約終了日は、以下の通りとなります。
+            </p>
+            <p>
+            契約終了日： {end_date}</p>
+            <p>契約終了日まで、サービスは引き続きご利用いただけます。</p>
+            <p>引き続き{self.SYSTEM_NAME}をよろしくお願い申し上げます。</p>
         """
         self.send(subject, message, [recipient])
 
@@ -470,8 +499,10 @@ class PaymentMailService(MailService):
         subject = f"【{self.SYSTEM_NAME}】解約手続き完了のお知らせ"
         message = f"""
             <p>{company_name}<br>{responsible_name} 様</p>
-            <p>{end_date} をもちまして、{self.SYSTEM_NAME}のご契約が満了となり、解約手続きがすべて完了いたしました。</p>
-            <p>貴社のアカウントはご利用いただけなくなります。<br>
-            データは解約後2ヶ月間保持された後、完全に削除されます。</p>
+            <p>{end_date} をもちまして、{self.SYSTEM_NAME}のご契約が満了となり、解約手続きがすべて完了いたしましたことをお知らせいたします。</p>
+            <p>これに伴い、貴社のアカウントはご利用いただけなくなります。<br>
+            なお、貴社のデータは解約後2ヶ月間保持された後、完全に削除されます。</p>
+            <p>長らくのご利用、誠にありがとうございました。</p>
+            <p>またのご利用を心よりお待ちしております。</p>
         """
         self.send(subject, message, [recipient])

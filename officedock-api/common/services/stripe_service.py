@@ -219,6 +219,12 @@ class StripeService:
                     {"detail": ERROR_MESSAGES["stripe_customer_id_missing"]}
                 )
             company_plan = company.plan
+            if company_plan.stripe_subscription_id:
+                stripe_subs = stripe.Subscription.retrieve(
+                    company_plan.stripe_subscription_id
+                )
+                if stripe_subs:
+                    return stripe_subs
             price = stripe.Price.retrieve(company_plan.plan.stripe_price_id)
             # Create fixed subscription billing at the end of the month
             tax = Tax.objects.first()
@@ -236,8 +242,7 @@ class StripeService:
                     "minute": 0,
                 },
                 proration_behavior="none",  # No prorate for current month
-                collection_method="send_invoice",
-                days_until_due=4,
+                collection_method="charge_automatically",
                 metadata={"company_id": company.id},
             )
 
@@ -264,7 +269,7 @@ class StripeService:
             company = Company.objects.filter(
                 stripe_customer_id=invoice.customer
             ).first()
-            self.update_invoice_finalize(invoice)
+            self.update_invoice_finalize(invoice, company)
             CompanyTransaction.objects.create(
                 company=company,
                 type=CompanyTransactionTypes.INVOICE.value,
@@ -278,7 +283,7 @@ class StripeService:
             print(f"❌ Invoice create failed: {e}")
             raise ValidationError({"detail": f"{e}"})
 
-    def update_invoice_finalize(self, invoice):
+    def update_invoice_finalize(self, invoice, company):
         """
         Set the finalize of invoice to the 5th of the next month.
         """
@@ -292,14 +297,21 @@ class StripeService:
             if period_end_dt.month < 12
             else period_end_dt.year + 1
         )
-        due_date_dt = datetime(next_year, next_month, 5, 0, 0, 0)
+        due_date_dt = datetime(next_year, next_month, 5, 0, 10, 0)
         finalizes_at = int(due_date_dt.timestamp())
-        # Update the invoice on Stripe
-        stripe.Invoice.modify(
-            invoice.id,
-            automatically_finalizes_at=finalizes_at,
-            auto_advance=True,
-        )
+        if company.status != CompanyStatus.TEMPORARY_USAGE.value:
+            # Update the invoice on Stripe
+            stripe.Invoice.modify(
+                invoice.id,
+                automatically_finalizes_at=finalizes_at,
+                auto_advance=True,
+            )
+        else:
+            # Update the invoice on Stripe
+            stripe.Invoice.modify(
+                invoice.id,
+                auto_advance=False,
+            )
 
     def handle_pay_invoice(self, invoice):
         """
@@ -323,7 +335,12 @@ class StripeService:
             ).exists()
             # Pay the invoice via Stripe
             if is_skip_payment:
+                # Update transaction status
+                CompanyTransaction.objects.filter(
+                    stripe_invoice_id=invoice.id
+                ).update(status=TransactionStatus.SKIP_PAYMENT.value)
                 stripe.Invoice.void_invoice(invoice.id)
+
             else:
                 stripe.Invoice.pay(invoice.id)
 
@@ -333,10 +350,16 @@ class StripeService:
             raise ValidationError({"detail": str(e)})
 
     def handle_cancel_subscription(self, subscription_id, cancel_at):
+        """Cancel a Stripe subscription either at a specific date or at the period end."""
         try:
-            subscription = stripe.Subscription.modify(
-                subscription_id, cancel_at_period_end=True
-            )
+            if cancel_at:
+                subscription = stripe.Subscription.modify(
+                    subscription_id, cancel_at=cancel_at
+                )
+            else:
+                subscription = stripe.Subscription.modify(
+                    subscription_id, cancel_at_period_end=True
+                )
         except Exception as e:
             # Wrap Stripe error (or any other) into a DRF ValidationError
             print(f"❌ Cancel subscription: {e}")
@@ -345,3 +368,17 @@ class StripeService:
             print(f"❌ Cancel subscription from Stripe: {e}")
             raise ValidationError({"detail": f"{e}"})
         return True
+
+    def get_invoice(self, invoice_id):
+        """Retrieve a Stripe invoice by ID."""
+        try:
+            return stripe.Invoice.retrieve(invoice_id)
+        except stripe.error.StripeError as e:
+            return False
+
+    def finalize_invoice(self, invoice_id):
+        """Finalize a Stripe invoice."""
+        try:
+            return stripe.Invoice.finalize_invoice(invoice_id)
+        except stripe.error.StripeError as e:
+            return False
