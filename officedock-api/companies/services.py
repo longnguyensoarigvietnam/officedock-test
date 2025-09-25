@@ -1,5 +1,6 @@
 import datetime
 from django.contrib.auth.base_user import get_random_string
+from django.utils.timezone import now
 from rest_framework.fields import ValidationError
 from base.messages import ERROR_MESSAGES
 from common.services import stripe_service
@@ -172,20 +173,20 @@ class CompanyService:
         """
         Mark the company's contract as pending cancellation and schedule Stripe cancellation.
         """
-        renewal_at = company.contract.next_renewal_at
-        cancel_at = renewal_at - datetime.timedelta(days=1)
-
         if not company.plan.stripe_subscription_id:
             raise ValidationError({"detail": ERROR_MESSAGES["plan_invalid"]})
+
         contract = company.contract
-        contract.cancel_at = cancel_at
+        contract.cancel_at = now()
         contract.save(update_fields=["cancel_at"])
         PaymentMailService().send_contract_cancellation_request(
             recipient=contract.responsible_person_mail,
             company_name=company.name,
             responsible_name=contract.responsible_person_name,
-            end_date=format_date(date=cancel_at, style="jp_date"),
+            end_date=format_date(date=now(), style="jp_date"),
         )
+        company.status = CompanyStatus.CANCELLATION_PENDING.value
+        company.save(update_fields=["status"])
         subscription_cancel_at = datetime.datetime.combine(
             contract.end_date, datetime.time.max
         )

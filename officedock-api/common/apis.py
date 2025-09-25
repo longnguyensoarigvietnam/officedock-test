@@ -595,35 +595,11 @@ class CronJobViewSet(BaseAPIViewSet):
             self.cronjob_service.handle_send_email_renewal_company_contract(
                 today
             )
-            # Get companies already renewal
-            companies = Company.objects.filter(
-                contract__next_renewal_at__date=today,
-                contract__cancel_at__isnull=True,
-                status__in=[
-                    CompanyStatus.ACTIVE_CONTRACT.value,
-                    CompanyStatus.TEMPORARY_USAGE.value,
-                ],
-            ).all()
-            if companies:
-                # Renewal contract of company
-                for company in companies:
-                    CompanyService().handle_contract_renewal(company, today)
         # 4. Get company have status Temporary Usage and void the invoice before auto pay
         if today.day == 5:
             self.cronjob_service.handle_cancel_the_invoice_of_company_temporary_usage(
                 today
             )
-        # 5. Get company have status cancel contract and change status
-        companies = Company.objects.filter(
-            contract__cancel_at__date=today,
-            status__in=[
-                CompanyStatus.ACTIVE_CONTRACT.value,
-                CompanyStatus.TEMPORARY_USAGE.value,
-            ],
-        ).all()
-        if companies:
-            for company in companies:
-                CompanyService().handle_contract_renewal(company, today)
 
         return self.response_ok(
             {
@@ -750,35 +726,11 @@ class CronJobViewSet(BaseAPIViewSet):
             self.cronjob_service.handle_send_email_renewal_company_contract(
                 today
             )
-            # Get companies already renewal
-            companies = Company.objects.filter(
-                contract__next_renewal_at__date=today,
-                contract__cancel_at__isnull=True,
-                status__in=[
-                    CompanyStatus.ACTIVE_CONTRACT.value,
-                    CompanyStatus.TEMPORARY_USAGE.value,
-                ],
-            ).all()
-            if companies:
-                # Renewal contract of company
-                for company in companies:
-                    CompanyService().handle_contract_renewal(company, today)
         # 4. Get company have status Temporary Usage and void the invoice before auto pay
         if now().day == 5:
             self.cronjob_service.handle_cancel_the_invoice_of_company_temporary_usage(
                 today
             )
-        # 5. Get company have status cancel contract and change status
-        companies = Company.objects.filter(
-            contract__cancel_at__date=today,
-            status__in=[
-                CompanyStatus.ACTIVE_CONTRACT.value,
-                CompanyStatus.TEMPORARY_USAGE.value,
-            ],
-        ).all()
-        if companies:
-            for company in companies:
-                CompanyService().handle_contract_renewal(company, today)
 
         return self.response_ok(
             {
@@ -948,6 +900,20 @@ class WebhookView(BaseAPIViewSet):
         if event.type == "invoice.created":
             invoice = event.data.object
             self.stripe_service.handle_invoice_created(invoice)
+            # Check renewal of contract and handle it
+            invoice_start_date = datetime.fromtimestamp(invoice.created)
+            company = Company.objects.filter(
+                stripe_customer_id=invoice.customer,
+                contract__next_renewal_at__lte=invoice_start_date,
+                status__in=[
+                    CompanyStatus.ACTIVE_CONTRACT.value,
+                    CompanyStatus.TEMPORARY_USAGE.value,
+                ],
+            ).first()
+            if company:
+                self.company_service.handle_contract_renewal(
+                    company, invoice_start_date.date()
+                )
         elif event.type in ["invoice.payment_succeeded"]:
             # Update status transaction
             self.handle_payment_succeeded(event.data.object)
@@ -1002,16 +968,13 @@ class WebhookView(BaseAPIViewSet):
                 company,
                 (
                     CompanyStatus.CANCELLATION_PENDING.value
-                    if company.contract.cancel_at
-                    and company.contract.cancel_at <= period_start
+                    if contract.cancel_at and contract.cancel_at <= period_start
                     else CompanyStatus.ACTIVE_CONTRACT.value
                 ),
             )
         # Terminate the contract when the last invoice is paid
-        elif (
-            get_a_day_in_next_month(
-                company.contract.end_date, target_date=5
-            ).date()
+        elif company.status == CompanyStatus.CANCELLATION_PENDING.value and (
+            get_a_day_in_next_month(contract.end_date, target_date=5).date()
             == to_datetime(invoice.effective_at).date()
         ):
             # Update company status
