@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import Pagination from '@components/common/Pagination';
 import { Table, TableBody, TableHeader } from '@components/common/Table';
+import ViewInfo from '@components/common/ViewInfo';
 
 import { CompanyTransactionType } from '@constants/enums';
 import { NO_DATA_AVAILABLE } from '@constants/message';
@@ -14,7 +15,11 @@ import { CompanyTransaction } from '@interfaces/company';
 
 import { renderDate } from '@utils';
 
-export const PaymentInformation = () => {
+export const PaymentInformation = ({
+  paymentMethod,
+}: {
+  paymentMethod: string;
+}) => {
   const params = useParams<{ id: string }>();
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [invoiceList, setInvoiceList] = useState<CompanyTransaction[]>([]);
@@ -42,6 +47,12 @@ export const PaymentInformation = () => {
       </section>
       {/* Body */}
       <section className="flex flex-col gap-4">
+        <ViewInfo
+          label="決済方法"
+          labelClassName="font-normal"
+          className="flex justify-between items-center">
+          {paymentMethod}
+        </ViewInfo>
         <p>支払いの状況</p>
         <div className="w-full">
           <Table className="bg-white !rounded-lg ">
@@ -56,7 +67,10 @@ export const PaymentInformation = () => {
                   <tr key={index}>
                     <td className="text-left w-1/3 truncate">
                       {invoice.invoiceTarget
-                        ? renderDate(invoice.invoiceTarget, JAPAN_YEAR_MONTH_FORMAT)
+                        ? renderDate(
+                            invoice.invoiceTarget,
+                            JAPAN_YEAR_MONTH_FORMAT,
+                          )
                         : ''}
                     </td>
                     <td className="text-left w-1/3 truncate">

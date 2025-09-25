@@ -20,7 +20,7 @@ import { CompanyStatus, ServerStatusCode } from '@constants/enums';
 import {
   JAPAN_DATE_FORMAT,
   JAPAN_DATE_WITH_TIME_FORMAT,
-  JAPAN_MONTH_FORMAT,
+  JAPAN_YEAR_MONTH_FORMAT,
 } from '@constants';
 
 import useCompanyDetail from '@hooks/useDetailCompany';
@@ -107,7 +107,7 @@ const CompanyDetailInfo = () => {
   );
 
   return (
-    <div className="flex flex-col gap-5 items-center pt-5 w-full">
+    <div className="flex flex-col gap-5 items-center pt-5 pl-1 w-[calc(100%_-_10px)]">
       <InformationSection
         name="基本情報"
         infoArr={[
@@ -135,7 +135,7 @@ const CompanyDetailInfo = () => {
           {
             label: '利用開始月',
             value: companyDetail?.contract?.startDate
-              ? renderDate(companyDetail.contract.startDate, JAPAN_MONTH_FORMAT)
+              ? renderDate(companyDetail.contract.startDate, JAPAN_YEAR_MONTH_FORMAT)
               : UNREGISTERED,
           },
           {
@@ -143,7 +143,7 @@ const CompanyDetailInfo = () => {
             value: companyDetail?.contract?.nextRenewalAt
               ? renderDate(
                   companyDetail.contract.nextRenewalAt,
-                  JAPAN_MONTH_FORMAT,
+                  JAPAN_YEAR_MONTH_FORMAT,
                 )
               : UNREGISTERED,
           },
@@ -180,7 +180,7 @@ const CompanyDetailInfo = () => {
           },
         ]}
       />
-      <PaymentInformation />
+      <PaymentInformation paymentMethod={companyDetail?.paymentMethod || ''} />
       <InformationSection
         name="ユーザー情報"
         infoArr={[
@@ -242,7 +242,8 @@ const CompanyDetailInfo = () => {
         ) : (
           <></>
         )}
-        {companyDetail?.status != CompanyStatus.CANCELLATION_PENDING ? (
+        {companyDetail?.status == CompanyStatus.ACTIVE_CONTRACT ||
+        companyDetail?.status == CompanyStatus.TEMPORARY_USAGE ? (
           <Button
             variant="secondary"
             className="w-28 !text-primary !bg-[#eaeeff] !rounded-lg !border-transparent"

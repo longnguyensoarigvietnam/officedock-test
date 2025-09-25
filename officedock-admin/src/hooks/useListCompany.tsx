@@ -40,6 +40,7 @@ const useCompanyList = (
     const params = new URLSearchParams();
     params.append('page', String(page));
     params.append('page_size', String(PAGINATION_PAGE_SIZE_SM));
+    params.append('ordering', 'id');
     filter?.name && params.append('name', filter?.name);
     filter?.user_amount && params.append('user_amount', filter?.user_amount);
     filter?.status && params.append('status', filter?.status);

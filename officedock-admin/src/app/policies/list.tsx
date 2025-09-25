@@ -29,9 +29,12 @@ import { useToast } from '@providers/ToastProvider';
 
 import { CreateTermFormData, Term } from '@interfaces/term';
 import { OptionDropdownType } from '@interfaces/common';
+
 import useListTerm from '@hooks/useListTerm';
+
 import { renderDate } from '@utils';
 import { formatDate } from '@utils/date';
+
 import api from '@base/api';
 
 const ListPolicies = () => {
@@ -43,9 +46,10 @@ const ListPolicies = () => {
   const [maxDatePlan, setMaxDatePlan] = useState<Date | null>();
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const { control, register, handleSubmit } = useForm<CreateTermFormData>({
-    mode: 'onSubmit',
-  });
+  const { control, register, setValue, handleSubmit } =
+    useForm<CreateTermFormData>({
+      mode: 'onSubmit',
+    });
   const [filterRequest, setFilterRequest] = useState({
     title: '',
     status: '',
@@ -178,6 +182,16 @@ const ListPolicies = () => {
     },
   });
 
+  const handleClearFilterForm = () => {
+    setValue('title', '');
+    setValue('status', {
+      label: '選択',
+      value: '選択',
+    });
+    setValue('periodStart', '');
+    setValue('periodEnd', '');
+  };
+
   return (
     <Fragment>
       <div className="flex flex-col border rounded-lg">
@@ -302,7 +316,14 @@ const ListPolicies = () => {
                 register={register('title')}
               />
             </div>
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-5">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-28 !text-primary !rounded-lg"
+                onClick={handleClearFilterForm}>
+                クリア
+              </Button>
               <Button
                 variant="secondary"
                 type="submit"

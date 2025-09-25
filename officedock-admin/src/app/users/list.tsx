@@ -37,7 +37,7 @@ const ListUsers = () => {
 
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const { register, handleSubmit } = useForm<UserFilterFormData>({
+  const { register, setValue, handleSubmit } = useForm<UserFilterFormData>({
     mode: 'onSubmit',
   });
   const [filterRequest, setFilterRequest] = useState({
@@ -122,6 +122,11 @@ const ListUsers = () => {
     },
   });
 
+  const handleClearFilterForm = () => {
+    setValue('fullName', '');
+    setValue('email', '');
+  };
+
   return (
     <Fragment>
       <div className="flex flex-col border rounded-lg">
@@ -165,7 +170,14 @@ const ListUsers = () => {
                 </div>
               </div>
             </div>
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-5">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-28 !text-primary !rounded-lg"
+                onClick={handleClearFilterForm}>
+                クリア
+              </Button>
               <Button
                 variant="secondary"
                 type="submit"

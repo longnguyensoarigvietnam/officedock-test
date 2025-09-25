@@ -24,11 +24,11 @@ export const pageRouters = {
     href: '/companies',
   },
   COMPANY_DETAIL: {
-    name: '会社情報',
+    name: '導入企業管理詳細',
     href: (id: string) => `/companies/${id}`,
   },
   COMPANY_EDIT: {
-    name: '会社情報編集',
+    name: '導入企業管理編集',
     href: (id: string) => `/companies/${id}/edit`,
   },
   COMPANY_CREATE: {
