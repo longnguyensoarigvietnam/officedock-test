@@ -16,7 +16,7 @@ export const pageRouters = {
     href: '/reset-password',
   },
   COMPANY_MANAGEMENT: {
-    name: '会社・契約管理',
+    name: '導入企業管理',
     href: '/companies',
   },
   COMPANY: {
@@ -107,6 +107,6 @@ export const apiRouters = {
 
   TERM_DETAIL: (id: string) => `/terms/${id}/`,
   TERM_LIST: '/terms/',
-  
+
   COMMON_CREATION_DATA: '/creation-data/common/',
 };
