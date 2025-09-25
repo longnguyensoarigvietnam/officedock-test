@@ -4,7 +4,12 @@ from rest_framework.fields import ValidationError
 from base.messages import ERROR_MESSAGES
 from common.services import stripe_service
 from common.services.stripe_service import StripeService
-from common.utils import get_client_ip, get_user_agent, get_username_alias
+from common.utils import (
+    format_date,
+    get_client_ip,
+    get_user_agent,
+    get_username_alias,
+)
 from companies.constants import (
     CompanyStatus,
     CompanyTransactionTypes,
@@ -172,8 +177,15 @@ class CompanyService:
 
         if not company.plan.stripe_subscription_id:
             raise ValidationError({"detail": ERROR_MESSAGES["plan_invalid"]})
-        company.contract.cancel_at = cancel_at
-        company.contract.save(update_fields=["cancel_at"])
+        contract = company.contract
+        contract.cancel_at = cancel_at
+        contract.save(update_fields=["cancel_at"])
+        PaymentMailService().send_contract_cancellation_request(
+            recipient=contract.responsible_person_mail,
+            company_name=company.name,
+            responsible_name=contract.responsible_person_name,
+            end_date=format_date(date=cancel_at, style="jp_date"),
+        )
         subscription_cancel_at = datetime.datetime.combine(
             company.contract.end_date, datetime.time.max
         )
