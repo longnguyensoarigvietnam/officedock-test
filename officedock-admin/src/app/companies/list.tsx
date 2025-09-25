@@ -15,7 +15,7 @@ import MonthPicker from '@components/common/DatePicker/MonthPicker';
 
 import { NO_DATA_AVAILABLE, UNREGISTERED } from '@constants/message';
 import { pageRouters } from '@constants/routers';
-import { DATE_FORMAT_SERVER, MONTH_FORMAT_SERVER } from '@constants';
+import { DATE_FORMAT, MONTH_FORMAT } from '@constants';
 
 import useCompanyList from '@hooks/useListCompany';
 import useCommonCreationData from '@hooks/useCommonCreationData';
@@ -37,19 +37,20 @@ interface FilterCompanyDataType {
 }
 
 const CompanyList = () => {
-  const { control, register, handleSubmit } = useForm<FilterCompanyDataType>({
-    mode: 'onSubmit',
-    defaultValues: {
-      status: {
-        label: 'すべて',
-        value: '',
+  const { control, register, setValue, handleSubmit } =
+    useForm<FilterCompanyDataType>({
+      mode: 'onSubmit',
+      defaultValues: {
+        status: {
+          label: 'すべて',
+          value: '',
+        },
+        plan: {
+          label: 'すべて',
+          value: '',
+        },
       },
-      plan: {
-        label: 'すべて',
-        value: '',
-      },
-    },
-  });
+    });
 
   const [isShowing, setIsShow] = useState<boolean>(true);
 
@@ -123,6 +124,17 @@ const CompanyList = () => {
       plan: data.plan ? (data.plan.value as string) : '',
       user_amount: data.user_amount || '',
     });
+  };
+
+  const handleClearFilterForm = () => {
+    setValue('name', '');
+    setValue('start_date', '');
+    setValue('end_date', '');
+    setValue('next_renewal_at', '');
+    setValue('contract_created_at', '');
+    setValue('status', { label: 'すべて', value: '' });
+    setValue('plan', { label: 'すべて', value: '' });
+    setValue('user_amount', '');
   };
 
   return (
@@ -267,7 +279,14 @@ const CompanyList = () => {
                 </div>
               </div>
             </div>
-            <div className="flex justify-end py-2 px-4">
+            <div className="flex justify-end py-2 px-4 gap-5">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-28 !text-primary !rounded-lg"
+                onClick={handleClearFilterForm}>
+                クリア
+              </Button>
               <Button
                 type="submit"
                 variant="secondary"
@@ -332,31 +351,22 @@ const CompanyList = () => {
                   </td>
                   <td className="text-left w-28 max-w-28">
                     {company.contract?.startDate
-                      ? renderDate(
-                          company.contract.startDate,
-                          MONTH_FORMAT_SERVER,
-                        )
+                      ? renderDate(company.contract.startDate, MONTH_FORMAT)
                       : UNREGISTERED}
                   </td>
                   <td className="text-left w-28 max-w-28">
                     {company.contract?.nextRenewalAt
-                      ? renderDate(
-                          company.contract.nextRenewalAt,
-                          MONTH_FORMAT_SERVER,
-                        )
+                      ? renderDate(company.contract.nextRenewalAt, MONTH_FORMAT)
                       : UNREGISTERED}
                   </td>
                   <td className="text-left w-28 max-w-28 text-nowrap">
                     {company.contract?.endDate
-                      ? renderDate(company.contract.endDate, DATE_FORMAT_SERVER)
+                      ? renderDate(company.contract.endDate, DATE_FORMAT)
                       : UNREGISTERED}
                   </td>
                   <td className="text-left w-28 max-w-28 text-nowrap">
                     {company.contract?.createdAt
-                      ? renderDate(
-                          company.contract.createdAt,
-                          DATE_FORMAT_SERVER,
-                        )
+                      ? renderDate(company.contract.createdAt, DATE_FORMAT)
                       : UNREGISTERED}
                   </td>
 

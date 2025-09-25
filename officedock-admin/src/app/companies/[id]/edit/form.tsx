@@ -282,7 +282,7 @@ const EditCompanyForm = () => {
           name="status"
           render={({ field: { onChange, value } }) => (
             <Dropdown
-              label="業種"
+              label="ステータス"
               options={STATUS_OPTIONS}
               selectedOption={STATUS_OPTIONS.find(
                 (element) => element.value === value?.value,
