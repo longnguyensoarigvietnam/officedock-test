@@ -1,4 +1,3 @@
-from django.utils.timezone import now
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets, mixins
@@ -246,7 +245,6 @@ class SystemCompanyViewSet(
         company_data = {
             "name": serializer_data.pop("company_name"),
             "status": CompanyStatus.PENDING_APPROVAL.value,
-            "max_user_at": now(),
         }
         # Create company
         company = Company.objects.create(**company_data)
