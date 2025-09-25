@@ -9,7 +9,6 @@ import { apiRouters } from '@constants/routers';
 import { TaskRunningType } from '@interfaces/task';
 
 interface UseTaskHeaderStartHooksProps {
-  userId: string;
   condition?: boolean[];
   onSuccess?: (success: TaskRunningType) => void;
   onError?: (error: AxiosError) => void;
@@ -17,7 +16,6 @@ interface UseTaskHeaderStartHooksProps {
 }
 
 const useTaskHeaderStart = ({
-  userId,
   condition,
   onSuccess,
   onError,
@@ -39,7 +37,7 @@ const useTaskHeaderStart = ({
     refetch: refetchTaskHeaderStart,
     isFetched: isFetchedUsersDetail,
   } = useQuery({
-    queryKey: ['getTaskHeaderStart', userId],
+    queryKey: ['getTaskHeaderStart'],
     queryFn: getTaskHeaderStart,
     retry: 0,
     enabled: !!token && condition?.every(Boolean),

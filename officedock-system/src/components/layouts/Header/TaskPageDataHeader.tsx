@@ -32,11 +32,15 @@ import useDataHeaderTaskList from '@hooks/useDataHeaderTask';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 import { OptionDropdownType } from '@interfaces/common';
-import { Task, TaskDuration, TaskRequest } from '@interfaces/task';
+import {
+  Task,
+  TaskDuration,
+  TaskRequest,
+  TaskRunningType,
+} from '@interfaces/task';
 import { WebSocketMessageDataOverTime } from '@interfaces/chat';
 import { TaskContext } from '@providers/TaskProvider';
 import { hasPermissionInArray } from '@utils';
-import api from '@base/api';
 import {
   combineDateAndTime,
   convertDateString,
@@ -51,6 +55,7 @@ import {
   getTimeDifference,
   isTimeEarlier,
 } from '@utils/date';
+import api from '@base/api';
 
 const ShowTimeCounter = memo(
   ({ statusTaskSelected }: { statusTaskSelected: TaskDuration }) => {
@@ -64,8 +69,6 @@ const TaskPageDataHeader = () => {
   const searchParams = useSearchParams();
 
   const params = new URLSearchParams(searchParams);
-
-  const userIdTask = searchParams.get('user');
 
   const { data: session } = useSessionCache();
 
@@ -107,6 +110,8 @@ const TaskPageDataHeader = () => {
     setDataActualEdit,
   } = useContext(TaskContext);
 
+  const [isShowWarningEmptyTask, setIsShowWarningEmptyTask] = useState(false);
+
   const [optionsTaskMe, setOptionsTaskMe] = useState<OptionDropdownType[]>([]);
   const [dataOverTimeWarning, setDataOverTimeWarning] = useState<{
     id: string;
@@ -132,7 +137,6 @@ const TaskPageDataHeader = () => {
   const { authenticatedUser } = useAuthenticatedUser({});
 
   const { dataTaskHeaderStart, refetchTaskHeaderStart } = useTaskHeaderStart({
-    userId: `${userIdTask}`,
     onSuccess: (data) => {
       if (data.isOverEstimate) {
         setDataOverTimeWarning({
@@ -512,7 +516,35 @@ const TaskPageDataHeader = () => {
         calculateDurationTask({
           id: String(data.id),
           type: ItemStartType.TASK,
+          isStart: true,
         });
+      },
+      onError: () => {},
+      onSettled: () => {},
+    },
+  );
+  // Check star with task empty
+  const handleCheckTaskStartWithEmpty = async () => {
+    const apiUrl = apiRouters.TASK_HEADER_START;
+    const { data } = await api.get<TaskRunningType>(apiUrl);
+    return data;
+  };
+
+  const { mutate: checkTaskStartWithEmpty } = useMutation(
+    'handleCheckTaskStartWithEmpty',
+    handleCheckTaskStartWithEmpty,
+    {
+      onSuccess: async (data) => {
+        if (data.isStart) {
+          setIdTaskStarting({
+            id: String(data.id),
+            type: data.type,
+          });
+          setIsShowWarningEmptyTask(true);
+          return;
+        } else {
+          handleStartEmptyTask();
+        }
       },
       onError: () => {},
       onSettled: () => {},
@@ -710,7 +742,7 @@ const TaskPageDataHeader = () => {
                     src={`/icons/play.svg`}
                     name="Start task day"
                     className={`!w-9 !h-9 hover:cursor-pointer`}
-                    onClick={handleStartEmptyTask}
+                    onClick={() => checkTaskStartWithEmpty()}
                   />
                 </div>
               )}
@@ -925,6 +957,19 @@ const TaskPageDataHeader = () => {
             setShowWarningStartTaskModal(false);
           }}
           onConfirm={handleConfirmStartNewTask}
+        />
+      )}
+      {isShowWarningEmptyTask && (
+        <WarningStartTaskModal
+          open={isShowWarningEmptyTask}
+          type={idTaskStarting.type === ItemStartType.TASK ? 'タスク' : '予定'}
+          onClose={() => {
+            setIsShowWarningEmptyTask(false);
+          }}
+          onConfirm={() => {
+            handleStartEmptyTask();
+            setIsShowWarningEmptyTask(false);
+          }}
         />
       )}
     </>

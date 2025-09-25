@@ -549,7 +549,7 @@ const TaskCard = ({
             <div
               className={`${isTooSmall && 'hidden'} flex overflow-hidden h-full flex-col   flex-grow gap-[10px]`}>
               <div className="flex items-center gap-[6px] w-full">
-                {!isEvent && resourcePlan && (
+                {!isEvent && resourcePlan == true && (
                   <div
                     style={{ backgroundColor: largeColor || 'white' }}
                     className="w-2 h-2 rounded-full mt-[5px] flex-shrink-0"></div>
@@ -682,7 +682,7 @@ const TaskCard = ({
             )}
 
             <div className="h-fit flex gap-[6px] items-end w-fit flex-shrink-0">
-              {resourcePlan && (
+              {resourcePlan == true && (
                 <>
                   {isEvent && (
                     <ImageRound

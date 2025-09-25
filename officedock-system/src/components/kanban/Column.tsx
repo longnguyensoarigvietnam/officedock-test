@@ -429,7 +429,7 @@ const Column = ({
                 paddingTop: `${(columnWidth / 247) * 14}px`,
                 marginRight: isMyRoutine ? `-${(columnWidth / 247) * 16}px` : 0,
                 paddingRight: isMyRoutine ? paddingRight : '10px',
-                boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 ${!isMyRoutine ? '#f8fafc' : '#EBF1F7'}`,
+                boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 ${!isMyRoutine ? '#f8fafc' : snapshot.isDraggingOver ? '#e5e7eb' : '#EBF1F7'}`,
                 minHeight: showFrequentlyTasks
                   ? isHasOrdering
                     ? 'calc(100vh - 402px)'

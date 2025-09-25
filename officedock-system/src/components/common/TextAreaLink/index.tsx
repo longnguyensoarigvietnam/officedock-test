@@ -9,6 +9,7 @@ import { Link } from '@tiptap/extension-link';
 interface TextAreaLinkProps {
   initialValue: string;
   className?: string;
+  classNameCustom?: boolean;
   disabled?: boolean;
   onChange?: (text: string) => void;
 }
@@ -16,6 +17,7 @@ interface TextAreaLinkProps {
 const TextAreaLink: React.FC<TextAreaLinkProps> = ({
   initialValue,
   className,
+  classNameCustom,
   disabled,
   onChange,
 }) => {
@@ -106,7 +108,7 @@ const TextAreaLink: React.FC<TextAreaLinkProps> = ({
       <EditorContent
         editor={editor}
         disabled={disabled}
-        className="prose prose-sm max-w-none [&_a]:text-blue-600 [&_a]:cursor-pointer text-sm"
+        className={`prose prose-sm max-w-none [&_a]:text-blue-600 [&_a]:cursor-pointer text-sm  ${classNameCustom && 'custom-editor-content'} `}
       />
     </div>
   );
