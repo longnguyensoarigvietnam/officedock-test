@@ -47,6 +47,7 @@ import { useToast } from '@providers/ToastProvider';
 import { Category } from '@interfaces/category';
 
 import api from '@base/api';
+import { ResponseError } from '@interfaces/response';
 
 const ListCategory = () => {
   const { setIsLoading } = useContext(LoadingContext);
@@ -153,8 +154,22 @@ const ListCategory = () => {
         refetchCategoryList();
         isEditingRef.current = false;
       },
-      onError: (error: AxiosError<any>) => {
-        showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      onError: ({
+        response,
+      }: ResponseError<{
+        name?: string[];
+        detail?: string[];
+      }>) => {
+        const errorData = response?.data || {};
+        const { name, detail } = errorData;
+
+        const description = name?.[0] || detail?.[0] || ERROR_UPDATE_MESSAGE;
+
+        showToast({
+          variant: 'error',
+          description,
+        });
+
         setSelectedCategoryToUpdate((prev) => {
           return {
             ...prev,
@@ -192,8 +207,22 @@ const ListCategory = () => {
         refetchCategoryList();
         isCreatingRef.current = false;
       },
-      onError: (error: AxiosError<any>) => {
-        showErrorToast(error, ERROR_CREATE_MESSAGE);
+      onError: ({
+        response,
+      }: ResponseError<{
+        name?: string[];
+        detail?: string[];
+      }>) => {
+        const errorData = response?.data || {};
+        const { name, detail } = errorData;
+
+        const description = name?.[0] || detail?.[0] || ERROR_CREATE_MESSAGE;
+
+        showToast({
+          variant: 'error',
+          description,
+        });
+
         setSelectedCategoryToUpdate((prev) => {
           return {
             ...prev,

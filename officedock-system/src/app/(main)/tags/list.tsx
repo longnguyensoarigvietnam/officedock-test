@@ -747,7 +747,10 @@ const ListTags = () => {
         type="タグ"
         message="紐づいているタスクからも削除されます。"
         onConfirm={handleConfirmDeleteTag}
-        onClose={() => setOpenConfirmDeleteModal(false)}
+        onClose={() => {
+          setSelectedTagToDelete(null);
+          setOpenConfirmDeleteModal(false);
+        }}
       />
 
       {openActionsTagModal && actionTypeParam && (
@@ -769,6 +772,7 @@ const ListTags = () => {
             handleConfirmEditTag(data);
           }}
           onDelete={(data) => {
+            setSelectedTagToUpdate(null)
             handleOpenDeleteTagModal(data);
             setDataTagEdit(null);
             setOpenActionsTagModal(false);
