@@ -39,11 +39,12 @@ class UserAuthService:
                 .exclude(roles__name=RoleTypes.OPERATION_ADMIN.value)
                 .first()
             )
-        
-            user = (
-                user if user and UserService().check_valid_company(user) else None
-            )  # TODO: Maybe refactor logic when implement redirect to change payment method page
 
+            user = (
+                user
+                if user and UserService().check_valid_company(user)
+                else None
+            )  # TODO: Maybe refactor logic when implement redirect to change payment method page
 
         user = authenticate(
             request,
@@ -157,10 +158,17 @@ class UserAuthService:
 
         user = user_verification.user
         if (
-            is_admin
-            and user.check_roles(RoleTypes.OPERATION_ADMIN.value, exclude=True)
-        ) or (
-            not is_admin and user.check_roles(RoleTypes.OPERATION_ADMIN.value)
+            (
+                is_admin
+                and user.check_roles(
+                    RoleTypes.OPERATION_ADMIN.value, exclude=True
+                )
+            )
+            or (
+                not is_admin
+                and user.check_roles(RoleTypes.OPERATION_ADMIN.value)
+            )
+            or (not UserService().check_valid_company(user))
         ):
             return False
 

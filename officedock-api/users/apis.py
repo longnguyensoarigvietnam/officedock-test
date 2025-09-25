@@ -74,6 +74,7 @@ from users.serializers import (
     DailyReportSerializer,
     TransactionHistorySerializer,
 )
+from users.services.user_balance_service import UserService
 from utils.mail import MailService, PaymentMailService
 from utils.jwt import JWTService
 from common.filters import CustomOrderFilter
@@ -547,9 +548,8 @@ class SystemAuthViewSet(BaseAPIViewSet):
             username_alias=user.username_alias if user else None,
             password=serializer_data["password"],
         )
-
         # Check authenticate
-        if not user:
+        if not user or not UserService().check_valid_company(user):
             return self.response(status_code=status.HTTP_401_UNAUTHORIZED)
 
         if not user.is_two_factor_auth:

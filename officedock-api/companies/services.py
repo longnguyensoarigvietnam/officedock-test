@@ -187,7 +187,7 @@ class CompanyService:
             end_date=format_date(date=cancel_at, style="jp_date"),
         )
         subscription_cancel_at = datetime.datetime.combine(
-            company.contract.end_date, datetime.time.max
+            contract.end_date, datetime.time.max
         )
 
         stripe_service.StripeService().handle_cancel_subscription(
