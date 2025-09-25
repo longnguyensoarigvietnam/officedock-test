@@ -132,10 +132,17 @@ const useCreationDataCommon = ({
                   ),
                 ];
 
+                // remove duplicate MEDIUM by id
+                const uniqueUpdatedMedium = Array.from(
+                  new Map(
+                    updatedMedium.map((medium) => [medium.MEDIUM?.id ?? NO_SETTING_CATEGORY, medium]), 
+                  ).values(),
+                );
+
                 return {
                   ...category,
                   LARGE: updatedLarge,
-                  MEDIUM: updatedMedium,
+                  MEDIUM: uniqueUpdatedMedium,
                 };
               },
             );

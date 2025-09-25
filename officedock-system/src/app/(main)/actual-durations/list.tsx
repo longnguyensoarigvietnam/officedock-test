@@ -101,7 +101,7 @@ const ListActualDurations = () => {
   >([]);
 
   // TODO: Update logic sort for multi column
-  const { register, control, handleSubmit } = useForm<{
+  const { register, control, setValue, handleSubmit } = useForm<{
     type: OptionDropdownType;
     title: string;
     tag: OptionDropdownType;
@@ -111,6 +111,15 @@ const ListActualDurations = () => {
     smallCategory: OptionDropdownType;
   }>({
     mode: 'onSubmit',
+    defaultValues: {
+      type: { label: '未選択', value: '' },
+      tag: { label: '未選択', value: '' },
+      staff: { label: '未選択', value: '' },
+      largeCategory: { label: '未選択', value: '' },
+      mediumCategory: { label: '未選択', value: '' },
+      smallCategory: { label: '未選択', value: '' },
+      title: '',
+    },
   });
   const [filterRequest, setFilterRequest] = useState({
     type: '',
@@ -316,6 +325,17 @@ const ListActualDurations = () => {
         : '',
     });
   };
+
+  const handleClearFilterForm = () => {
+    setValue('type', { label: '未選択', value: '' });
+    setValue('tag', { label: '未選択', value: '' });
+    setValue('staff', { label: '未選択', value: '' });
+    setValue('largeCategory', { label: '未選択', value: '' });
+    setValue('mediumCategory', { label: '未選択', value: '' });
+    setValue('smallCategory', { label: '未選択', value: '' });
+    setValue('title', '');
+  };
+
   return (
     <Fragment>
       <div className="flex flex-col border rounded-lg">
@@ -347,7 +367,7 @@ const ListActualDurations = () => {
                     <Controller
                       control={control}
                       name={'type'}
-                      render={({ field: { onChange } }) => (
+                      render={({ field: { onChange, value } }) => (
                         <Dropdown
                           label="タスク/予定"
                           options={[
@@ -357,6 +377,10 @@ const ListActualDurations = () => {
                           placeholder="選択してください"
                           className=""
                           onChange={onChange}
+                          selectedOption={[
+                            { label: '選択', value: '' },
+                            ...TASK_AND_EVENT_OPTIONS,
+                          ].find((element) => element.value == value?.value)}
                         />
                       )}
                     />
@@ -380,7 +404,7 @@ const ListActualDurations = () => {
                     <Controller
                       control={control}
                       name={'tag'}
-                      render={({ field: { onChange } }) => (
+                      render={({ field: { onChange, value } }) => (
                         <Dropdown
                           label="集計タグ"
                           options={[
@@ -390,6 +414,10 @@ const ListActualDurations = () => {
                           placeholder="選択してください"
                           className=""
                           onChange={onChange}
+                          selectedOption={[
+                            { label: '選択', value: '' },
+                            ...dataOptionsTags,
+                          ].find((element) => element.value == value?.value)}
                         />
                       )}
                     />
@@ -402,7 +430,7 @@ const ListActualDurations = () => {
                     <Controller
                       control={control}
                       name={'staff'}
-                      render={({ field: { onChange } }) => (
+                      render={({ field: { onChange, value } }) => (
                         <Dropdown
                           label="従業員"
                           options={[
@@ -412,6 +440,10 @@ const ListActualDurations = () => {
                           placeholder="選択してください"
                           className=""
                           onChange={onChange}
+                          selectedOption={[
+                            { label: '選択', value: '' },
+                            ...dataOptionsStaff,
+                          ].find((element) => element.value == value?.value)}
                         />
                       )}
                     />
@@ -426,16 +458,20 @@ const ListActualDurations = () => {
                     <Controller
                       control={control}
                       name={'largeCategory'}
-                      render={({ field: { onChange } }) => (
+                      render={({ field: { onChange, value } }) => (
                         <Dropdown
                           label="大カテゴリ"
                           options={[
-                            { label: '未選択', value: 'null' },
+                            { label: '未選択', value: '' },
                             ...dataOptionsLargeCategories,
                           ]}
                           placeholder="選択してください"
                           className=""
                           onChange={onChange}
+                          selectedOption={[
+                            { label: '選択', value: '' },
+                            ...dataOptionsLargeCategories,
+                          ].find((element) => element.value == value?.value)}
                         />
                       )}
                     />
@@ -448,16 +484,20 @@ const ListActualDurations = () => {
                     <Controller
                       control={control}
                       name={'mediumCategory'}
-                      render={({ field: { onChange } }) => (
+                      render={({ field: { onChange, value } }) => (
                         <Dropdown
                           label="中カテゴリ"
                           options={[
-                            { label: '未選択', value: 'null' },
+                            { label: '未選択', value: '' },
                             ...dataOptionsMediumCategories,
                           ]}
                           placeholder="選択してください"
                           className=""
                           onChange={onChange}
+                          selectedOption={[
+                            { label: '選択', value: '' },
+                            ...dataOptionsMediumCategories,
+                          ].find((element) => element.value == value?.value)}
                         />
                       )}
                     />
@@ -470,16 +510,20 @@ const ListActualDurations = () => {
                     <Controller
                       control={control}
                       name={'smallCategory'}
-                      render={({ field: { onChange } }) => (
+                      render={({ field: { onChange, value } }) => (
                         <Dropdown
                           label="小カテゴリ"
                           options={[
-                            { label: '未選択', value: 'null' },
+                            { label: '未選択', value: '' },
                             ...dataOptionsSmallCategories,
                           ]}
                           placeholder="選択してください"
                           className=""
                           onChange={onChange}
+                          selectedOption={[
+                            { label: '選択', value: '' },
+                            ...dataOptionsSmallCategories,
+                          ].find((element) => element.value == value?.value)}
                         />
                       )}
                     />
@@ -488,7 +532,14 @@ const ListActualDurations = () => {
               </div>
               <div className="w-[278px]"></div>
             </div>
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-5">
+              <Button
+                variant="outline"
+                type="button"
+                className="w-28 !text-primary !rounded-lg"
+                onClick={handleClearFilterForm}>
+                クリア
+              </Button>
               <Button
                 variant="secondary"
                 type="submit"

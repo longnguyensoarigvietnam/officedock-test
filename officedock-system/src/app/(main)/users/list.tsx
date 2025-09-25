@@ -1,5 +1,5 @@
 'use client';
-import { Fragment, useContext, useEffect, useState } from 'react';
+import { Fragment, useContext, useEffect, useRef, useState } from 'react';
 import { useMutation } from 'react-query';
 import { signOut } from 'next-auth/react';
 import { AxiosError } from 'axios';
@@ -79,6 +79,7 @@ const ListUsers = () => {
     OptionDropdownType[]
   >([]);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [originalUserCount, setOriginalUserCount] = useState<number>(0);
 
   const [userEditId, setUserEditId] = useState<number | null>(null);
   const [userEditDetail, setUserEditDetail] = useState<User | null>(null);
@@ -114,6 +115,8 @@ const ListUsers = () => {
   const [actionTypeParam, setActionTypeParam] = useState<string | null>(
     searchParams.get('action'),
   );
+
+  const initialFetchRef = useRef(false);
 
   const debouncedSearch = useDebounceText(search, 1000);
 
@@ -178,6 +181,8 @@ const ListUsers = () => {
 
   useEffect(() => {
     if (userList) {
+      !initialFetchRef.current && setOriginalUserCount(userList.count);
+      initialFetchRef.current = true;
       setDataUsers(userList.results);
       setTotalPages(userList.numPages);
     }
@@ -572,7 +577,10 @@ const ListUsers = () => {
           <div className=" flex items-center  gap-5">
             <p className="text-black text-[26px]">ユーザー管理</p>
             <span>{creationDataCommonData?.company?.name || ''}</span>
-            <span>全メンバー{userList?.count}人 / 50</span>
+            <span>
+              全メンバー{originalUserCount}人 /
+              {creationDataCommonData?.company?.totalUsers || ''}
+            </span>
           </div>
           <div className="flex gap-[10px] font-medium items-center">
             <p className="text-xs ">現在のプラン</p>
