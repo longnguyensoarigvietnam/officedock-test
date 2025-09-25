@@ -63,13 +63,14 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     @transaction.atomic()
     def perform_update(self, serializer):
         """Override DRF's `perform_update` to add business logic after a company update."""
-        current_company = self.get_object()
+        current_company = serializer.instance
+        old_name = current_company.name
+        old_email = current_company.contract.responsible_person_mail
         company = serializer.save()
         self.company_service.handle_invoice_base_on_status(company)
         if (
-            current_company.name != company.name
-            or current_company.contract.responsible_person_mail
-            != company.contract.responsible_person_mail
+            old_name != company.name
+            or old_email != company.contract.responsible_person_mail
         ):
             StripeService().update_customer(company)
 

@@ -85,6 +85,8 @@ class CompanySerializer(serializers.ModelSerializer):
         """
         Validate unique email for System site.
         """
+        if Contract.objects.filter(responsible_person_mail=value).exists():
+            raise serializers.ValidationError(ERROR_MESSAGES["email_exists"])
         User.validate_unique_email(
             instance=self.instance, email=value, is_admin_site=False
         )

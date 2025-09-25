@@ -85,6 +85,8 @@ class UserService:
         Check status company of user.
         Return False when status deny access to system
         """
+        if not user:
+            return False
         return user.company.status not in [
             CompanyStatus.SUSPENDED.value,
             CompanyStatus.CONTRACT_TERMINATED.value,

@@ -136,7 +136,7 @@ class StripeService:
         """Update a Stripe customer with the latest company information."""
         if not company.stripe_customer_id:
             return
-        stripe.Customer.update(
+        stripe.Customer.modify(
             company.stripe_customer_id,
             name=company.name,
             email=company.contract.responsible_person_mail,
