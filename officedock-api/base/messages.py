@@ -42,6 +42,9 @@ _ERROR_MESSAGES = {
         "last_system_admin_deleted": _(
             "The last system admin cannot be deleted"
         ),
+        "last_operation_admin_deleted": _(
+            "The last operation admin cannot be deleted"
+        ),
         "last_system_admin_role_change": _(
             "The last system admin role cannot change"
         ),
@@ -166,6 +169,7 @@ _ERROR_MESSAGES = {
         "login_type_does_not_match": _("ログインのタイプが一致しません。"),
         "task_not_started": _("既に計測中のタスクがあるため、他のタスクの計測を開始できません。"),
         "last_system_admin_deleted": _("最後のシステム管理者ロールのユーザーを削除できません。"),
+        "last_operation_admin_deleted": _("管理者が最低1人はシステム上に存在する必要があります。"),
         "last_system_admin_role_change": _("最後のシステム管理者ロールのユーザーのロールを変更できません。"),
         "participant_does_not_exist": _("このトークルームに参加していません。"),
         "company_not_match": _("このユーザーは別の会社に所属しています。"),
