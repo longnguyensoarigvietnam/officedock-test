@@ -85,6 +85,7 @@ from .utils import (
     calculate_company_dates,
     check_task_overtime,
     format_date,
+    get_a_day_in_next_month,
     send_web_socket_event,
     to_datetime,
     to_snake_case,
@@ -594,12 +595,35 @@ class CronJobViewSet(BaseAPIViewSet):
             self.cronjob_service.handle_send_email_renewal_company_contract(
                 today
             )
-
+            # Get companies already renewal
+            companies = Company.objects.filter(
+                contract__next_renewal_at__date=today,
+                contract__cancel_at__isnull=True,
+                status__in=[
+                    CompanyStatus.ACTIVE_CONTRACT.value,
+                    CompanyStatus.TEMPORARY_USAGE.value,
+                ],
+            ).all()
+            if companies:
+                # Renewal contract of company
+                for company in companies:
+                    CompanyService().handle_contract_renewal(company, today)
         # 4. Get company have status Temporary Usage and void the invoice before auto pay
         if today.day == 5:
             self.cronjob_service.handle_cancel_the_invoice_of_company_temporary_usage(
                 today
             )
+        # 5. Get company have status cancel contract and change status
+        companies = Company.objects.filter(
+            contract__cancel_at__date=today,
+            status__in=[
+                CompanyStatus.ACTIVE_CONTRACT.value,
+                CompanyStatus.TEMPORARY_USAGE.value,
+            ],
+        ).all()
+        if companies:
+            for company in companies:
+                CompanyService().handle_contract_renewal(company, today)
 
         return self.response_ok(
             {
@@ -720,7 +744,42 @@ class CronJobViewSet(BaseAPIViewSet):
                         date_after_closing,
                         user,
                     )
-                # 3. Send mail notify renewal contract
+
+        # 3. Send mail notify renewal contract
+        if now().day == 1:
+            self.cronjob_service.handle_send_email_renewal_company_contract(
+                today
+            )
+            # Get companies already renewal
+            companies = Company.objects.filter(
+                contract__next_renewal_at__date=today,
+                contract__cancel_at__isnull=True,
+                status__in=[
+                    CompanyStatus.ACTIVE_CONTRACT.value,
+                    CompanyStatus.TEMPORARY_USAGE.value,
+                ],
+            ).all()
+            if companies:
+                # Renewal contract of company
+                for company in companies:
+                    CompanyService().handle_contract_renewal(company, today)
+        # 4. Get company have status Temporary Usage and void the invoice before auto pay
+        if now().day == 5:
+            self.cronjob_service.handle_cancel_the_invoice_of_company_temporary_usage(
+                today
+            )
+        # 5. Get company have status cancel contract and change status
+        companies = Company.objects.filter(
+            contract__cancel_at__date=today,
+            status__in=[
+                CompanyStatus.ACTIVE_CONTRACT.value,
+                CompanyStatus.TEMPORARY_USAGE.value,
+            ],
+        ).all()
+        if companies:
+            for company in companies:
+                CompanyService().handle_contract_renewal(company, today)
+
         return self.response_ok(
             {
                 "today": today.isoformat(),
@@ -889,18 +948,6 @@ class WebhookView(BaseAPIViewSet):
         if event.type == "invoice.created":
             invoice = event.data.object
             self.stripe_service.handle_invoice_created(invoice)
-            # Check renewal of contract and handle it
-            invoice_start_date = datetime.fromtimestamp(invoice.created)
-            company = Company.objects.filter(
-                stripe_customer_id=invoice.customer,
-                contract__next_renewal_at__lte=invoice_start_date,
-                status__in=[
-                    CompanyStatus.ACTIVE_CONTRACT.value,
-                    CompanyStatus.TEMPORARY_USAGE.value,
-                ],
-            ).first()
-            if company:
-                self.company_service.handle_contract_renewal(company, invoice)
         elif event.type in ["invoice.payment_succeeded"]:
             # Update status transaction
             self.handle_payment_succeeded(event.data.object)
@@ -912,41 +959,8 @@ class WebhookView(BaseAPIViewSet):
             self.stripe_service.handle_pay_invoice(event.data.object)
         elif event.type == "customer.subscription.deleted":
             subscription = event.data.object
-            company = Company.objects.filter(
-                stripe_customer_id=subscription.customer
-            ).first()
-            # After description deleted, the last invoice cannot auto pay, so need reset invoice finalize_at
-            if company:
-                contract = company.contract
-                # Get invoice
-                transaction = company.transactions.filter(
-                    type=CompanyTransactionTypes.INVOICE.value,
-                    status=TransactionStatus.UNPAID.value,
-                    paid_at__isnull=True,
-                ).last()
-                if transaction:
-                    invoice = stripe.Invoice.retrieve(
-                        transaction.stripe_invoice_id
-                    )
-                    # Get the company's default payment method
-                    company = Company.objects.filter(
-                        stripe_customer_id=invoice.customer
-                    ).first()
-                    # Set the finalize of invoice
-                    self.stripe_service.update_invoice_finalize(
-                        invoice, company
-                    )
-                self.mail_service.send_contract_cancelled(
-                    recipient=contract.responsible_person_mail,
-                    company_name=company.name,
-                    responsible_name=contract.responsible_person_name,
-                    end_date=format_date(contract.end_date, style="jp_date"),
-                )
-                # Update company status to contract terminated
-                self.company_service.change_status_of_company(
-                    company, CompanyStatus.CONTRACT_TERMINATED.value
-                )
-                print(f"✅ Company : {company.id} destroy contract")
+            self.handle_subscription_deleted(subscription)
+
         else:
             print(f"Unhandled event type: {event.type}")
 
@@ -979,6 +993,31 @@ class WebhookView(BaseAPIViewSet):
             amount=format(invoice.amount_paid, ","),
             period=period,
         )
+        if invoice.attempt_count > 0 and company.status not in [
+            CompanyStatus.CONTRACT_TERMINATED.value,
+            CompanyStatus.ACTIVE_CONTRACT.value,
+        ]:
+            # Update company status
+            self.company_service.change_status_of_company(
+                company,
+                (
+                    CompanyStatus.CANCELLATION_PENDING.value
+                    if company.contract.cancel_at
+                    and company.contract.cancel_at <= period_start
+                    else CompanyStatus.ACTIVE_CONTRACT.value
+                ),
+            )
+        # Terminate the contract when the last invoice is paid
+        elif (
+            get_a_day_in_next_month(
+                company.contract.end_date, target_date=5
+            ).date()
+            == to_datetime(invoice.effective_at).date()
+        ):
+            # Update company status
+            self.company_service.change_status_of_company(
+                company, CompanyStatus.CONTRACT_TERMINATED.value
+            )
         # Update transaction status
         company_transaction.status = TransactionStatus.PAID.value
         company_transaction.paid_at = paid_at
@@ -1013,20 +1052,51 @@ class WebhookView(BaseAPIViewSet):
                 usage_month=format_date(period_start, style="jp_month_year"),
                 payment_url=None,
             )
-        company = Company.objects.filter(
-            stripe_customer_id=invoice.customer
-        ).update(
-            status=(
+        # Update company status
+        self.company_service.change_status_of_company(
+            company,
+            (
                 CompanyStatus.SUSPENDED.value
                 if attempt_count > RETRY_PAYMENT_MAX
                 else CompanyStatus.RETRY_PAYMENT.value
-            )
+            ),
         )
+
         # Update transaction status
         CompanyTransaction.objects.filter(stripe_invoice_id=invoice.id).update(
             status=TransactionStatus.PAYMENT_FAILED.value,
             retry_attempt=attempt_count,
         )
+
+    def handle_subscription_deleted(self, subscription):
+
+        company = Company.objects.filter(
+            stripe_customer_id=subscription.customer
+        ).first()
+        # After description deleted, the last invoice cannot auto pay, so need reset invoice finalize_at
+        if company:
+            contract = company.contract
+            # Get invoice
+            transaction = company.transactions.filter(
+                type=CompanyTransactionTypes.INVOICE.value,
+                status=TransactionStatus.UNPAID.value,
+                paid_at__isnull=True,
+            ).last()
+            if transaction:
+                invoice = stripe.Invoice.retrieve(transaction.stripe_invoice_id)
+                # Get the company's default payment method
+                company = Company.objects.filter(
+                    stripe_customer_id=invoice.customer
+                ).first()
+                # Set the finalize of invoice
+                self.stripe_service.update_invoice_finalize(invoice, company)
+            self.mail_service.send_contract_cancelled(
+                recipient=contract.responsible_person_mail,
+                company_name=company.name,
+                responsible_name=contract.responsible_person_name,
+                end_date=format_date(contract.end_date, style="jp_date"),
+            )
+            print(f"✅ Company {company.id} cancel subscription")
 
 
 @extend_schema(tags=["Admin > Creation Data"])

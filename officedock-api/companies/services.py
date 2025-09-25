@@ -108,17 +108,20 @@ class CompanyService:
             ]
         )
 
-    def handle_contract_renewal(self, company, invoice):
+    def handle_contract_renewal(self, company, day):
         """
         Handle automatic contract renewal for the given company.
         """
-        invoice_start_date = datetime.datetime.fromtimestamp(invoice.created)
         contract = company.contract
-        if contract.cancel_at and contract.cancel_at < invoice_start_date:
-            self.cancellation_pending_contract(company)
-            print(
-                f"✅ Company : {company.id} pending contract at: {contract.cancel_at}"
+
+        if (
+            company.contract.cancel_at
+            and company.contract.cancel_at.date() <= day
+        ):
+            self.change_status_of_company(
+                company, CompanyStatus.CANCELLATION_PENDING.value
             )
+            print(f"✅ Company : {company.id} pending contract at: {day}")
             return True
         related_date = generate_contract_related_date_base_on_now(
             contract.next_renewal_at
@@ -164,16 +167,20 @@ class CompanyService:
         """
         Mark the company's contract as pending cancellation and schedule Stripe cancellation.
         """
-        end_date = company.contract.end_date
-        cancel_at = datetime.datetime.combine(end_date, datetime.time.max)
+        renewal_at = company.contract.next_renewal_at
+        cancel_at = renewal_at - datetime.timedelta(days=1)
+
         if not company.plan.stripe_subscription_id:
             raise ValidationError({"detail": ERROR_MESSAGES["plan_invalid"]})
-        self.change_status_of_company(
-            company, CompanyStatus.CANCELLATION_PENDING.value
+        company.contract.cancel_at = cancel_at
+        company.contract.save(update_fields=["cancel_at"])
+        subscription_cancel_at = datetime.datetime.combine(
+            company.contract.end_date, datetime.time.max
         )
+
         stripe_service.StripeService().handle_cancel_subscription(
             subscription_id=company.plan.stripe_subscription_id,
-            cancel_at=cancel_at,
+            cancel_at=subscription_cancel_at,
         )
 
     def handle_invoice_base_on_status(self, company):

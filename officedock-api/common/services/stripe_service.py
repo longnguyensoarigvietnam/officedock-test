@@ -3,6 +3,7 @@ from decimal import Decimal
 
 import stripe
 from common.constants import InvoiceReason
+from common.utils import get_a_day_in_next_month
 from companies.constants import (
     CompanyStatus,
     CompanyTransactionTypes,
@@ -130,6 +131,16 @@ class StripeService:
         company.save(update_fields=["stripe_customer_id"])
 
         return new_customer.id
+
+    def update_customer(self, company: Company):
+        """Update a Stripe customer with the latest company information."""
+        if not company.stripe_customer_id:
+            return
+        stripe.Customer.update(
+            company.stripe_customer_id,
+            name=company.name,
+            email=company.contract.responsible_person_mail,
+        )
 
     def attach_payment_method_to_customer(
         self, company: Company, payment_method_id: str, is_create_company=False
@@ -290,16 +301,11 @@ class StripeService:
         """
         # Convert period_end (UNIX timestamp) to datetime
         period_end_dt = datetime.fromtimestamp(invoice.period_end)
-
-        # Calculate the 5th day of the next month
-        next_month = period_end_dt.month + 1 if period_end_dt.month < 12 else 1
-        next_year = (
-            period_end_dt.year
-            if period_end_dt.month < 12
-            else period_end_dt.year + 1
+        finalizes_at = int(
+            get_a_day_in_next_month(
+                date=period_end_dt, target_date=5
+            ).timestamp()
         )
-        due_date_dt = datetime(next_year, next_month, 5, 0, 0, 0)
-        finalizes_at = int(due_date_dt.timestamp())
         if company and company.status != CompanyStatus.TEMPORARY_USAGE.value:
             # Update the invoice on Stripe
             stripe.Invoice.modify(
