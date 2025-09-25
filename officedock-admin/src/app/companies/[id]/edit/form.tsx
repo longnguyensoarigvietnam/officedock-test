@@ -25,7 +25,7 @@ import {
 } from '@constants/message';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { CompanyStatus, ServerStatusCode } from '@constants/enums';
-import { PHONE_REGEX } from '@constants/regex';
+import { HALF_WIDTH_DIGIT_REGEX, ONLY_DIGITS_REGEX, PHONE_REGEX } from '@constants/regex';
 
 import useCompanyDetail from '@hooks/useDetailCompany';
 import useCommonCreationData from '@hooks/useCommonCreationData';
@@ -336,6 +336,22 @@ const EditCompanyForm = () => {
             message: PHONE_NUMBER_WRONG_FORMAT,
           },
         })}
+        onInput={(e) => {
+          e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // remove non-digits
+        }}
+        onBeforeInput={(e) => {
+          const nativeEvent = e.nativeEvent as InputEvent; // browser's InputEvent
+          if (!HALF_WIDTH_DIGIT_REGEX.test(nativeEvent.data || '')) {
+            e.preventDefault();
+          }
+        }}
+        onPaste={(e) => {
+          const pasted = e.clipboardData.getData('text');
+          // block paste if it contains anything other than ASCII digits
+          if (!ONLY_DIGITS_REGEX.test(pasted)) {
+            e.preventDefault();
+          }
+        }}
         autoComplete="off"
         error={errors?.contract?.phone?.message}
       />
