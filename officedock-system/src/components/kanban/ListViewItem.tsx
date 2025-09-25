@@ -432,7 +432,7 @@ const ListViewItem = ({
                     </p>
                     {content.isImportant ? (
                       <div className="w-1/5 border-r-2 flex items-center justify-center">
-                        <p className="text-center font-medium text-primary bg-[#DFE6EA] rounded w-fit px-1 py-0.5">
+                        <p className="text-center font-medium text-primary bg-[#EBF1F7] rounded w-fit px-1 py-0.5">
                           重要
                         </p>
                       </div>

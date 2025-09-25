@@ -3096,6 +3096,7 @@ const ActionsTaskModal = ({
                     {/* Description */}
                     <TextAreaLink
                       initialValue={getValues('description') || ''}
+                      classNameCustom
                       onChange={(data) => {
                         setValue('description', data);
                         setIsFormTouched(true);
@@ -3233,8 +3234,8 @@ const ActionsTaskModal = ({
                                               <div className="mt-[2.5px] ml-2 flex items-center">
                                                 {!isCheckActionPermission && (
                                                   <ImageRound
-                                                    className="w-[16px] h-[10px] opacity-40 hover:cursor-pointer"
-                                                    src="/icons/zoom-out.svg"
+                                                    className="!w-fit !h-fit hover:cursor-pointer"
+                                                    src="/icons/remove-item.svg"
                                                     name="remove icon"
                                                     onClick={() => {
                                                       setIsFormTouched(true);

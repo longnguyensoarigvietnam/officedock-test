@@ -228,14 +228,22 @@ const DraggableLayout = () => {
                       <p className="text-primary text-[10px] font-normal">
                         memo
                       </p>
-                      <Image
-                        className="hover:cursor-pointer hover:opacity-70"
-                        src="/icons/zoom-out.svg"
-                        alt="Close modal"
-                        width={15}
-                        height={15}
-                        onClick={() => handleBack()}
-                      />
+                      <div
+                        onClick={() => {
+                          handleBack();
+                        }}
+                        className="w-8 h-3 flex items-center justify-end">
+                        <Image
+                          className="!w-fit !h-fit hover:cursor-pointer hover:opacity-70"
+                          src="/icons/remove-item.svg"
+                          alt="Close modal"
+                          width={15}
+                          height={15}
+                          onClick={() => {
+                            handleBack();
+                          }}
+                        />
+                      </div>
                     </div>
                     <div className="px-[6px] w-full h-[calc(100%_-_19px)]">
                       <TextArea

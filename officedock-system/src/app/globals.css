@@ -37,6 +37,9 @@ p:has(.inline-msg-quote) {
   white-space: nowrap;
   word-break: keep-all;
 }
+.custom-editor-content .ProseMirror {
+  height: 160px;
+}
 
 /* Hide arrows from input number
 /* Works for Chrome, Safari, Edge, Opera */
