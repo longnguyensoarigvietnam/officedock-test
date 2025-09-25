@@ -286,6 +286,27 @@ class AdminUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         user = serializer.save()
         user.set_profile(profile_data)
 
+    def perform_destroy(self, instance):
+        """
+        Perform destroy a user.
+        """
+        if self.request.user.id == instance.id:
+            raise ValidationError(
+                {"detail": [ERROR_MESSAGES["cannot_delete_yourself"]]}
+            )
+
+        if (
+            User.objects.filter(
+                roles__name=RoleTypes.OPERATION_ADMIN.value
+            ).count()
+            <= 1
+        ):
+            raise ValidationError(
+                {"detail": [ERROR_MESSAGES["last_operation_admin_deleted"]]}
+            )
+
+        instance.delete()
+
 
 """
 Viewsets group for System
