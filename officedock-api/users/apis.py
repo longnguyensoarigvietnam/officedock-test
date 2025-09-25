@@ -10,7 +10,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from base.apis import BaseAPIViewSet
@@ -990,7 +990,9 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         # Cannot delete itself
         if instance.id == current_user.id:
-            raise PermissionDenied
+            raise ValidationError(
+                {"detail": [ERROR_MESSAGES["cannot_delete_yourself"]]}
+            )
 
         company = instance.company
         system_admin_of_company_count = User.objects.filter(

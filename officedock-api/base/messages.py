@@ -48,6 +48,7 @@ _ERROR_MESSAGES = {
         "last_system_admin_role_change": _(
             "The last system admin role cannot change"
         ),
+        "cannot_delete_yourself": _("You cannot delete yourself."),
         "participant_does_not_exist": _("You are not in chat room"),
         "company_not_match": _("The user is at a different company"),
         "company_not_exists": _("The {id} company does not exists."),
@@ -171,6 +172,7 @@ _ERROR_MESSAGES = {
         "last_system_admin_deleted": _("最後のシステム管理者ロールのユーザーを削除できません。"),
         "last_operation_admin_deleted": _("管理者が最低1人はシステム上に存在する必要があります。"),
         "last_system_admin_role_change": _("最後のシステム管理者ロールのユーザーのロールを変更できません。"),
+        "cannot_delete_yourself": _("ご自身のアカウントは削除できません。"),
         "participant_does_not_exist": _("このトークルームに参加していません。"),
         "company_not_match": _("このユーザーは別の会社に所属しています。"),
         "company_not_exists": _("会社の{id}が存在しません。"),
