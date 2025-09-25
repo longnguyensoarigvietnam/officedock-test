@@ -976,3 +976,10 @@ def to_datetime(ts):
     if ts > 1e12:
         ts = ts / 1000
     return datetime.fromtimestamp(ts)
+
+
+def get_a_day_in_next_month(date: datetime, target_date: int):
+    """Return the target day of the next month"""
+    next_month = date.month + 1 if date.month < 12 else 1
+    next_year = date.year if date.month < 12 else date.year + 1
+    return datetime(next_year, next_month, target_date, 0, 0, 0)
