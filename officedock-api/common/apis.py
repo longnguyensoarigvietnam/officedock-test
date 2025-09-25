@@ -588,14 +588,15 @@ class CronJobViewSet(BaseAPIViewSet):
 
         # 2. Iterate over all companies to handle closing logic
         self.cronjob_service.iterate_over_all_companies_to_closing(today)
+
         # 3. Send mail notify renewal contract
-        if now().day == 1:
+        if today.day == 1:
             self.cronjob_service.handle_send_email_renewal_company_contract(
                 today
             )
 
         # 4. Get company have status Temporary Usage and void the invoice before auto pay
-        if now().day == 5:
+        if today.day == 5:
             self.cronjob_service.handle_cancel_the_invoice_of_company_temporary_usage(
                 today
             )

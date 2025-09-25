@@ -98,23 +98,28 @@ class CompanyService:
         )
         # Mark company as active and save status
         company.status = CompanyStatus.ACTIVE_CONTRACT.value
-        company.save(update_fields=["status"])
+        company.max_user_in_contract_period = 1
+        company.max_user_at = datetime.datetime.now()
+        company.save(
+            update_fields=[
+                "status",
+                "max_user_in_contract_period",
+                "max_user_at",
+            ]
+        )
 
     def handle_contract_renewal(self, company, invoice):
         """
         Handle automatic contract renewal for the given company.
         """
         invoice_start_date = datetime.datetime.fromtimestamp(invoice.created)
-        if (
-            company.contract.cancel_at
-            and company.contract.cancel_at < invoice_start_date
-        ):
+        contract = company.contract
+        if contract.cancel_at and contract.cancel_at < invoice_start_date:
             self.cancellation_pending_contract(company)
             print(
                 f"✅ Company : {company.id} pending contract at: {contract.cancel_at}"
             )
             return True
-        contract = company.contract
         related_date = generate_contract_related_date_base_on_now(
             contract.next_renewal_at
         )
