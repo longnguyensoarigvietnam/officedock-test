@@ -93,9 +93,9 @@ export const HistoryVotingTable = ({
       <div className="h-fit flex items-center text-white text-xs font-medium gap-[14px] mb-[14px]">
         <p className="w-[121px]">投票期間</p>
         <div className="w-[1px] h-[9px] bg-[#D2DBE1]"></div>
-        <p className="w-[282px]">受賞テーマ</p>
+        <p className="w-[263px]">受賞テーマ</p>
         <div className="w-[1px] h-[9px] bg-[#D2DBE1]"></div>
-        <p className="w-[calc(100%_-_430px)]">MVP</p>
+        <p className="w-[calc(100%_-_442px)]">MVP</p>
       </div>
       {/* Table */}
       <div

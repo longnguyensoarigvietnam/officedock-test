@@ -579,7 +579,7 @@ const ListUsers = () => {
             <span>{creationDataCommonData?.company?.name || ''}</span>
             <span>
               全メンバー{originalUserCount}人 /
-              {creationDataCommonData?.company?.totalUsers || ''}
+              {creationDataCommonData?.company?.plan?.limitPerson || 0}
             </span>
           </div>
           <div className="flex gap-[10px] font-medium items-center">
