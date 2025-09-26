@@ -8,13 +8,14 @@ import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import Input from '@components/common/Input';
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
+import SelectionBox from '@components/common/SelectionBox';
 
 import {
   ADDRESS_REQUIRED_MESSAGE,
   COMPANY_NAME_REQUIRED_MESSAGE,
+  DEPARTMENT_REQUIRED_MESSAGE,
   ERROR_COMMON_MESSAGE,
   ERROR_UPDATE_MESSAGE,
-  IMPLEMENTATION_MAIN_ISSUE_REQUIRED_MESSAGE,
   INDUSTRY_REQUIRED_MESSAGE,
   PHONE_NUMBER_WRONG_FORMAT,
   PHONE_REQUIRED_MESSAGE,
@@ -24,8 +25,17 @@ import {
   SYSTEM_MAIN_PURPOSE_REQUIRED_MESSAGE,
 } from '@constants/message';
 import { apiRouters, pageRouters } from '@constants/routers';
-import { CompanyStatus, ServerStatusCode } from '@constants/enums';
-import { HALF_WIDTH_DIGIT_REGEX, ONLY_DIGITS_REGEX, PHONE_REGEX } from '@constants/regex';
+import {
+  CompanyStatus,
+  SelectionBoxType,
+  ServerStatusCode,
+} from '@constants/enums';
+import {
+  HALF_WIDTH_DIGIT_REGEX,
+  ONLY_DIGITS_REGEX,
+  PHONE_REGEX,
+} from '@constants/regex';
+import { MAX_PHONE_NUMBER_LENGTH, NAME_OTHER_OPTION, OTHER_OPTION_VALUE } from '@constants';
 
 import useCompanyDetail from '@hooks/useDetailCompany';
 import useCommonCreationData from '@hooks/useCommonCreationData';
@@ -46,16 +56,16 @@ interface EditCompanyType {
   plan?: string | null;
   status?: OptionDropdownType;
   paymentMethod?: string | null;
+  responsiblePersonName?: string | null;
+  responsiblePersonMail?: string | null;
   contract: {
     startDate?: string | null;
     endDate?: string | null;
-    responsiblePersonName?: string | null;
-    responsiblePersonMail?: string | null;
     phone?: string | null;
     address?: string | null;
     industry?: OptionDropdownType;
-    systemMainPurpose?: OptionDropdownType;
-    implementationMainIssue?: OptionDropdownType;
+    systemMainPurpose?: OptionDropdownType[];
+    department?: OptionDropdownType[];
   };
 }
 
@@ -82,8 +92,9 @@ const EditCompanyForm = () => {
   const [systemMainPurposeOptions, setSystemMainPurposeOptions] = useState<
     OptionDropdownType[]
   >([]);
-  const [implementationMainIssueOptions, setImplementationMainIssueOptions] =
-    useState<OptionDropdownType[]>([]);
+  const [departmentOptions, setDepartmentOptions] = useState<
+    OptionDropdownType[]
+  >([]);
 
   const { companyDetail } = useCompanyDetail({
     companyId: params.id,
@@ -102,7 +113,7 @@ const EditCompanyForm = () => {
     options: {
       get_industry: true,
       get_system_main_purpose: true,
-      get_implementation_main_issues: true,
+      get_department: true,
     },
     onSuccess: (data) => {
       data.industry &&
@@ -121,11 +132,11 @@ const EditCompanyForm = () => {
           })) || []),
         ]);
 
-      data.implementationMainIssues &&
-        setImplementationMainIssueOptions([
-          ...(data?.implementationMainIssues.map((issue) => ({
-            value: issue,
-            label: issue,
+      data.department &&
+        setDepartmentOptions([
+          ...(data?.department.map((department) => ({
+            value: department,
+            label: department,
           })) || []),
         ]);
     },
@@ -148,70 +159,82 @@ const EditCompanyForm = () => {
       name: '',
       plan: '',
       paymentMethod: '',
+      responsiblePersonName: '',
+      responsiblePersonMail: '',
       contract: {
-        responsiblePersonName: '',
-        responsiblePersonMail: '',
         phone: '',
         address: '',
         industry: undefined,
-        implementationMainIssue: undefined,
+        department: undefined,
         systemMainPurpose: undefined,
       },
     };
 
     if (companyDetail) {
-      (value.id = companyDetail.id),
-        (value.name = companyDetail.name),
-        (value.plan = companyDetail.plan),
-        (value.status = companyDetail.status
+      value.id = companyDetail.id;
+      value.name = companyDetail.name;
+      value.plan = companyDetail.plan;
+      value.status = companyDetail.status
+        ? {
+            label: companyDetail.status,
+            value: companyDetail.status,
+          }
+        : undefined;
+
+      value.paymentMethod = companyDetail.paymentMethod;
+      value.responsiblePersonName = companyDetail?.responsiblePersonName;
+      value.responsiblePersonMail = companyDetail?.responsiblePersonMail;
+      value.contract.phone = companyDetail.contract?.phone;
+      value.contract.address = companyDetail.contract?.address;
+
+      value.contract.industry = companyDetail.contract?.industry
+        ? industryOptions.find(
+            (option) => option.value == companyDetail.contract?.industry,
+          )
           ? {
-              label: companyDetail.status ? companyDetail.status : '',
-              value: companyDetail.status ? companyDetail.status : '',
+              label: companyDetail.contract.industry,
+              value: companyDetail.contract.industry,
             }
-          : undefined),
-        (value.paymentMethod = companyDetail.paymentMethod),
-        (value.contract.responsiblePersonName =
-          companyDetail.contract?.responsiblePersonName),
-        (value.contract.responsiblePersonMail =
-          companyDetail.contract?.responsiblePersonMail),
-        (value.contract.phone = companyDetail.contract?.phone),
-        (value.contract.address = companyDetail.contract?.address),
-        (value.contract.industry = companyDetail.contract?.industry
-          ? {
-              label: companyDetail.contract?.industry
-                ? companyDetail.contract?.industry
-                : '',
-              value: companyDetail.contract?.industry
-                ? companyDetail.contract?.industry
-                : '',
+          : {
+              label: NAME_OTHER_OPTION,
+              value: OTHER_OPTION_VALUE,
+              other: companyDetail.contract?.industry,
             }
-          : undefined),
-        (value.contract.implementationMainIssue = companyDetail.contract
-          ?.implementationMainIssue
-          ? {
-              label: companyDetail.contract?.implementationMainIssue
-                ? companyDetail.contract?.implementationMainIssue
-                : '',
-              value: companyDetail.contract?.implementationMainIssue
-                ? companyDetail.contract?.implementationMainIssue
-                : '',
-            }
-          : undefined),
-        (value.contract.systemMainPurpose = companyDetail.contract
-          ?.systemMainPurpose
-          ? {
-              label: companyDetail.contract?.systemMainPurpose
-                ? companyDetail.contract?.systemMainPurpose
-                : '',
-              value: companyDetail.contract?.systemMainPurpose
-                ? companyDetail.contract?.systemMainPurpose
-                : '',
-            }
-          : undefined);
+        : undefined;
+
+      value.contract.systemMainPurpose = companyDetail.contract
+        ?.systemMainPurpose?.length
+        ? companyDetail.contract.systemMainPurpose.map((purpose) => ({
+            label: purpose || '',
+            value: purpose || '',
+          }))
+        : undefined;
+
+      value.contract.department = companyDetail.contract?.department?.length
+        ? companyDetail.contract.department.map((department) => {
+            return departmentOptions.find(
+              (option) => option.value == department,
+            )
+              ? {
+                  label: department,
+                  value: department,
+                }
+              : {
+                  label: NAME_OTHER_OPTION,
+                  value: OTHER_OPTION_VALUE,
+                  other: department,
+                };
+          })
+        : undefined;
     }
 
     return value;
-  }, [companyDetail]);
+  }, [companyDetail, industryOptions, departmentOptions]);
+  // useEffect(() => {
+  //   if(departmentOptions.length && defaultValues.contract.department) {
+
+  //   }
+  // }, [departmentOptions])
 
   useEffect(() => {
     reset(defaultValues);
@@ -244,6 +267,8 @@ const EditCompanyForm = () => {
     },
   );
 
+  const watchedDepartment = watch('contract.department');
+
   const onSubmit: SubmitHandler<EditCompanyType> = (data) => {
     setIsLoading(true);
     editCompany({
@@ -251,18 +276,25 @@ const EditCompanyForm = () => {
       id: parseFloat(params.id),
       name: data?.name || '',
       status: data?.status?.value as string,
+      responsiblePersonName: data.responsiblePersonName || '',
+      responsiblePersonMail: data.responsiblePersonMail || '',
       contract: {
-        responsiblePersonName: data.contract?.responsiblePersonName || '',
-        responsiblePersonMail: data.contract?.responsiblePersonMail || '',
         phone: data.contract?.phone || '',
         address: data.contract?.address || '',
-        industry: data.contract?.industry?.value as string,
-        implementationMainIssue: data.contract?.implementationMainIssue
-          ?.value as string,
-        systemMainPurpose: data.contract?.systemMainPurpose?.value as string,
+        industry:
+          data.contract?.industry?.value == OTHER_OPTION_VALUE
+            ? (data.contract?.industry?.other as string)
+            : (data.contract?.industry?.value as string),
+        department: data.contract?.department?.map((item) =>
+          item.value == OTHER_OPTION_VALUE ? item.other || '' : item.value,
+        ) as string[],
+        systemMainPurpose: data.contract?.systemMainPurpose?.map((item) =>
+          item.value == OTHER_OPTION_VALUE ? item.other || '' : item.value,
+        ) as string[],
       },
     });
   };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <Input label="ID" register={register('id')} disabled={true} />
@@ -308,18 +340,18 @@ const EditCompanyForm = () => {
       <Input
         label="担当責任者名"
         placeholder="担当責任者名を入力してください"
-        register={register('contract.responsiblePersonName', {
+        register={register('responsiblePersonName', {
           required: RESPONSIBLE_PERSON_NAME_REQUIRED_MESSAGE,
         })}
         autoComplete="off"
-        error={errors?.contract?.responsiblePersonName?.message}
+        error={errors?.responsiblePersonName?.message}
       />
       <Input
         label="メールアドレス"
         placeholder="メールアドレスを入力してください"
-        register={register('contract.responsiblePersonMail', emailRules(true))}
+        register={register('responsiblePersonMail', emailRules(true))}
         autoComplete="off"
-        error={errors?.contract?.responsiblePersonMail?.message}
+        error={errors?.responsiblePersonMail?.message}
       />
       <Input
         label="電話番号"
@@ -338,6 +370,11 @@ const EditCompanyForm = () => {
         })}
         onInput={(e) => {
           e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // remove non-digits
+
+          // If the value is longer than 11, remove the last added character
+          if (e.currentTarget.value.length > MAX_PHONE_NUMBER_LENGTH) {
+            e.currentTarget.value = e.currentTarget.value.replace(/.$/, '');
+          }
         }}
         onBeforeInput={(e) => {
           const nativeEvent = e.nativeEvent as InputEvent; // browser's InputEvent
@@ -367,58 +404,248 @@ const EditCompanyForm = () => {
       <Controller
         control={control}
         name="contract.industry"
-        render={({ field: { onChange, value } }) => (
-          <Dropdown
-            label="業種"
-            options={industryOptions}
-            selectedOption={industryOptions.find(
-              (element) => element.value === value?.value,
-            )}
-            onChange={(e) => {
-              onChange(e);
-            }}
-            error={errors.contract?.industry?.message}
-          />
-        )}
+        render={({ field: { onChange, value } }) => {
+          const currentValue = value?.other
+            ? OTHER_OPTION_VALUE
+            : value?.value || '';
+
+          return (
+            <SelectionBox
+              label="業種"
+              type={SelectionBoxType.MONO_SELECT}
+              options={
+                industryOptions?.map((item) => {
+                  if (item.label.includes(NAME_OTHER_OPTION)) {
+                    return {
+                      label: item.label,
+                      value: String(item.value),
+                      other: watch('contract.industry.other'),
+                    };
+                  }
+                  return {
+                    label: item.label,
+                    value: String(item.value),
+                  };
+                }) || []
+              }
+              initialValue={
+                !industryOptions.find(
+                  (item) =>
+                    String(item.value) ==
+                    String(defaultValues.contract.industry),
+                )
+                  ? defaultValues.contract.industry?.other || ''
+                  : ''
+              }
+              value={
+                typeof currentValue === 'number'
+                  ? String(currentValue)
+                  : currentValue
+              }
+              onChange={(val) => {
+                const option = industryOptions?.find(
+                  (opt) => opt.value === val || String(opt.id) === val,
+                );
+                onChange(
+                  val
+                    ? {
+                        label: option?.label,
+                        value: val,
+                      }
+                    : null,
+                );
+              }}
+              onOtherTextChange={(other) => {
+                const trimmed = other.trim();
+
+                // If user clears input
+                if (!trimmed) {
+                  onChange(null);
+                  return;
+                }
+                // If already selected OTHER_OPTION
+                if (value?.value === OTHER_OPTION_VALUE) {
+                  onChange({
+                    ...value, // keep existing fields
+                    label: trimmed, // update label to full text
+                    other: trimmed, // update other to full text
+                  });
+                } else {
+                  // First time selecting OTHER_OPTION
+                  onChange({
+                    label: trimmed,
+                    value: OTHER_OPTION_VALUE,
+                    other: trimmed,
+                  });
+                }
+              }}
+              placeholder="職種を選択"
+              className="w-full shadow-none text-sm !rounded mt-1.5 md:mt-0"
+              customStyleClassName={
+                errors.contract?.industry?.message
+                  ? 'border-[1px] !border-error'
+                  : ''
+              }
+            />
+          );
+        }}
         rules={{ required: INDUSTRY_REQUIRED_MESSAGE }}
       />
       <Controller
         control={control}
         name="contract.systemMainPurpose"
         render={({ field: { onChange, value } }) => (
-          <Dropdown
+          <SelectionBox
             label="システム導入の主な目的"
-            options={systemMainPurposeOptions}
-            selectedOption={systemMainPurposeOptions.find(
-              (element) => element.value === value?.value,
-            )}
-            onChange={(e) => {
-              onChange(e);
+            type={SelectionBoxType.MULTIPLE_SELECT}
+            disabled={watch('contract.systemMainPurpose')?.length == 2}
+            options={
+              systemMainPurposeOptions?.map((item) => {
+                return {
+                  label: item.label,
+                  value: String(item.value),
+                };
+              }) || []
+            }
+            value={
+              Array.isArray(value)
+                ? value.map((v) =>
+                    v.other ? OTHER_OPTION_VALUE : String(v.value),
+                  )
+                : []
+            }
+            onChange={(vals) => {
+              onChange(
+                Array.isArray(vals)
+                  ? vals.map((v) => {
+                      const option = systemMainPurposeOptions?.find(
+                        (opt) => opt.value === v,
+                      );
+                      return {
+                        label:
+                          option && !option.label.includes(NAME_OTHER_OPTION)
+                            ? option.label
+                            : OTHER_OPTION_VALUE,
+                        value: v,
+                      };
+                    })
+                  : [],
+              );
             }}
-            error={errors.contract?.systemMainPurpose?.message}
+            placeholder={'資格を選択'}
+            className="w-full shadow-none text-sm !rounded mt-1.5 md:mt-0"
+            customStyleClassName={
+              errors.contract?.systemMainPurpose?.message
+                ? 'border-[1px] !border-error'
+                : ''
+            }
+            errorMessage={errors.contract?.systemMainPurpose?.message}
           />
         )}
         rules={{ required: SYSTEM_MAIN_PURPOSE_REQUIRED_MESSAGE }}
       />
       <Controller
         control={control}
-        name="contract.implementationMainIssue"
+        name="contract.department"
         render={({ field: { onChange, value } }) => {
           return (
-            <Dropdown
-              label="導入の背景にある主な課題"
-              options={implementationMainIssueOptions}
-              selectedOption={implementationMainIssueOptions.find(
-                (element) => element.value === value?.value,
-              )}
-              onChange={(e) => {
-                onChange(e);
+            <SelectionBox
+              label="利用部門"
+              type={SelectionBoxType.MULTIPLE_SELECT}
+              options={
+                departmentOptions?.map((item) => {
+                  if (item.label.includes(NAME_OTHER_OPTION)) {
+                    return {
+                      label: item.label,
+                      value: String(item.value),
+                      other:
+                        watchedDepartment?.find(
+                          (d) => d.value == 'other' && d.other,
+                        )?.other || '',
+                    };
+                  }
+                  return {
+                    label: item.label,
+                    value: String(item.value),
+                  };
+                }) || []
+              }
+              initialValue={
+                defaultValues.contract.department
+                  ?.filter((d) => d.other)
+                  ?.map((d) => d.other)?.[0] || ''
+              }
+              value={
+                Array.isArray(value)
+                  ? value.map((v) =>
+                      v.other ? OTHER_OPTION_VALUE : String(v.value),
+                    )
+                  : []
+              }
+              onChange={(vals) => {
+                const existingOtherItem = value?.find(
+                  (item) => item.value == OTHER_OPTION_VALUE,
+                );
+                onChange(
+                  Array.isArray(vals)
+                    ? vals.map((v) => {
+                        const option = departmentOptions?.find(
+                          (opt) => opt.value === v,
+                        );
+                        return {
+                          label:
+                            option && !option.label.includes(NAME_OTHER_OPTION)
+                              ? option.label
+                              : OTHER_OPTION_VALUE,
+                          value: v,
+                          other:
+                            v == OTHER_OPTION_VALUE
+                              ? existingOtherItem?.other || ''
+                              : undefined,
+                        };
+                      })
+                    : [],
+                );
               }}
-              error={errors.contract?.implementationMainIssue?.message}
+              onOtherTextChange={(other) => {
+                const currentValue = Array.isArray(value) ? value : [];
+                const updatedValue = [...currentValue];
+
+                // find by value === OTHER_OPTION_VALUE
+                const existingOtherIndex = updatedValue.findIndex(
+                  (item) => item.value === OTHER_OPTION_VALUE,
+                );
+
+                if (other.trim()) {
+                  const otherItem = {
+                    label: OTHER_OPTION_VALUE, // keep label as "other"
+                    value: OTHER_OPTION_VALUE, // stable value so we can find it later
+                    other: other.trim(), // store the real text here
+                  };
+
+                  if (existingOtherIndex >= 0) {
+                    updatedValue[existingOtherIndex] = otherItem; // replace
+                  } else {
+                    updatedValue.push(otherItem); // add once
+                  }
+                } else if (existingOtherIndex >= 0) {
+                  updatedValue.splice(existingOtherIndex, 1); // remove if empty
+                }
+
+                onChange(updatedValue);
+              }}
+              placeholder={'資格を選択'}
+              className="w-full shadow-none text-sm !rounded mt-1.5 md:mt-0"
+              customStyleClassName={
+                errors.contract?.department?.message
+                  ? 'border-[1px] !border-error'
+                  : ''
+              }
+              errorMessage={errors.contract?.department?.message}
             />
           );
         }}
-        rules={{ required: IMPLEMENTATION_MAIN_ISSUE_REQUIRED_MESSAGE }}
+        rules={{ required: DEPARTMENT_REQUIRED_MESSAGE }}
       />
       <div className="flex justify-center">
         <div className="flex flex-col items-center gap-4 my-[60px]">

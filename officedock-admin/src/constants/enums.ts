@@ -59,3 +59,8 @@ export enum CompanyStatus {
   CONTRACT_TERMINATED = '解約済',
   TEMPORARY_USAGE = '仮利用',
 }
+
+export enum SelectionBoxType {
+  MONO_SELECT = 'monoSelect',
+  MULTIPLE_SELECT = 'multipleSelect',
+}

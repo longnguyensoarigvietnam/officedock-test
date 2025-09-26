@@ -1,7 +1,7 @@
 export interface CommonCreationData {
   companyStatus: string[];
   plans: string[];
-  implementationMainIssues: string[];
+  department: string[];
   systemMainPurpose: string[];
   industry: string[];
 }

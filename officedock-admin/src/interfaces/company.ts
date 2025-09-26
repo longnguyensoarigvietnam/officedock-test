@@ -15,14 +15,14 @@ export interface Company {
     createdAt?: string | null;
     address?: string | null;
     id?: string | null;
-    implementationMainIssue?: string | null;
+    department?: string[] | null;
     industry?: string | null;
     nextRenewalAt?: string | null;
     phone?: string | null;
-    responsiblePersonMail?: string | null;
-    responsiblePersonName?: string | null;
-    systemMainPurpose?: string | null;
+    systemMainPurpose?: string[] | null;
   };
+  responsiblePersonMail?: string | null;
+  responsiblePersonName?: string | null;
 }
 
 export interface CreateCompanyFormData {
@@ -53,15 +53,15 @@ export interface EditCompanyRequest {
   plan?: string | null;
   status?: string | null;
   paymentMethod?: string | null;
+  responsiblePersonName?: string | null;
+  responsiblePersonMail?: string | null;
   contract: {
     startDate?: string | null;
     endDate?: string | null;
-    responsiblePersonName?: string | null;
-    responsiblePersonMail?: string | null;
     phone?: string | null;
     address?: string | null;
     industry?: string | null;
-    systemMainPurpose?: string | null;
-    implementationMainIssue?: string | null;
+    systemMainPurpose?: string[] | null;
+    department?: string[] | null;
   };
 }
