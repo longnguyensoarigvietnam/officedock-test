@@ -2,6 +2,9 @@ export interface OptionDropdownType {
   value: string | number;
   label: string;
   imgUrl?: string;
+  isOther?: boolean;
+  id?: string | number;
+  other?: string;
 }
 export interface BasePagination<T> {
   count: number;

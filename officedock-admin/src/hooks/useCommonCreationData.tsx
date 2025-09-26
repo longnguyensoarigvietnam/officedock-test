@@ -16,7 +16,7 @@ interface useCommonCreationDataHooksProps {
     get_plans?: boolean;
     get_industry?: boolean;
     get_system_main_purpose?: boolean;
-    get_implementation_main_issues?: boolean;
+    get_department?: boolean;
   };
   onSuccess?: (success: CommonCreationData) => void;
   onError?: (error: AxiosError) => void;

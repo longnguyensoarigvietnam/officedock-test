@@ -25,7 +25,7 @@ export const InformationSection = ({
             key={index}
             labelClassName="font-normal"
             className="flex justify-between items-center">
-            {info.value}
+            <p className="max-w-[600px] break-all">{info.value}</p>
           </ViewInfo>
         ))}
       </section>

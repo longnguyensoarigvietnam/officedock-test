@@ -160,11 +160,11 @@ const CompanyDetailInfo = () => {
         infoArr={[
           {
             label: '担当責任者名',
-            value: companyDetail?.contract?.responsiblePersonName || '',
+            value: companyDetail?.responsiblePersonName || '',
           },
           {
             label: 'メールアドレス',
-            value: companyDetail?.contract?.responsiblePersonMail || '',
+            value: companyDetail?.responsiblePersonMail || '',
           },
           {
             label: '電話番号',
@@ -206,11 +206,11 @@ const CompanyDetailInfo = () => {
         infoArr={[
           {
             label: 'システム導入の主な目的',
-            value: companyDetail?.contract?.systemMainPurpose || '',
+            value: companyDetail?.contract?.systemMainPurpose?.join('／') || '',
           },
           {
-            label: '導入の背景にある主な課題',
-            value: companyDetail?.contract?.implementationMainIssue || '',
+            label: '利用部門',
+            value: companyDetail?.contract?.department?.join('／') || '',
           },
           {
             label: '申込日',
