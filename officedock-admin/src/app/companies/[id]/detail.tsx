@@ -130,12 +130,15 @@ const CompanyDetailInfo = () => {
         infoArr={[
           {
             label: '契約プラン',
-            value: companyDetail?.plan || '',
+            value: companyDetail?.plan?.name || '',
           },
           {
             label: '利用開始月',
             value: companyDetail?.contract?.startDate
-              ? renderDate(companyDetail.contract.startDate, JAPAN_YEAR_MONTH_FORMAT)
+              ? renderDate(
+                  companyDetail.contract.startDate,
+                  JAPAN_YEAR_MONTH_FORMAT,
+                )
               : UNREGISTERED,
           },
           {
@@ -149,9 +152,16 @@ const CompanyDetailInfo = () => {
           },
           {
             label: '契約終了日',
-            value: companyDetail?.contract?.endDate
-              ? renderDate(companyDetail.contract.endDate, JAPAN_DATE_FORMAT)
-              : UNREGISTERED,
+            value:
+              companyDetail?.status == CompanyStatus.CANCELLATION_PENDING ||
+              companyDetail?.status == CompanyStatus.CONTRACT_TERMINATED
+                ? companyDetail?.contract?.endDate
+                  ? renderDate(
+                      companyDetail.contract.endDate,
+                      JAPAN_DATE_FORMAT,
+                    )
+                  : ''
+                : '',
           },
         ]}
       />

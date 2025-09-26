@@ -108,7 +108,7 @@ const SelectionBox = ({
     }
     handleChange(newValue);
   };
-  // console.log(selectedValue)
+
   const getDisplayLabel = (val: string | string[]) => {
     if (Array.isArray(val)) {
       if (val.length === 0) return placeholder;
@@ -237,7 +237,7 @@ const SelectionBox = ({
                         // Let the parent component handle the logic through onOtherTextChange callback
                         onOtherTextChange && onOtherTextChange(val);
                       }}
-                      className={`w-[calc(100%_-_90px)] py-2 text-base ${
+                      className={`w-[calc(100%_-_120px)] py-2 text-base ${
                         selectedValue && selectedValue === (otherValue || '')
                           ? 'bg-[#F0F9F8] group-hover:bg-[#f8fafc]'
                           : 'group-hover:bg-[#f8fafc]'
@@ -372,7 +372,7 @@ const SelectionBox = ({
                           onOtherTextChange && onOtherTextChange(val);
                         }
                       }}
-                      className={`w-[calc(100%_-_120px)] px-2 py-2 text-sm border-0 border-b-[1px] placeholder-[#B6C9C8] focus:outline-none focus:ring-0 focus:border-primary caret-primary cursor-pointer`}
+                      className={`w-[calc(100%_-_150px)] px-2 py-2 text-sm border-0 border-b-[1px] placeholder-[#B6C9C8] focus:outline-none focus:ring-0 focus:border-primary caret-primary cursor-pointer`}
                     />
                   </div>
                 )}

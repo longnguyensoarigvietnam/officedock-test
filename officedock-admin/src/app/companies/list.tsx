@@ -344,7 +344,7 @@ const CompanyList = () => {
                     </div>
                   </td>
                   <td className="text-left w-28 max-w-28 text-nowrap">
-                    {company.plan}
+                    {company?.plan?.name || ''}
                   </td>
                   <td className="text-center w-28 max-w-28">
                     {company.totalUsers}
