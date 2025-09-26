@@ -5,7 +5,13 @@ export interface Company {
   name: string;
   totalUsers: number;
   status?: string | null;
-  plan?: string | null;
+  plan?: {
+    id: number;
+    exchangeableAmount: number;
+    limitPerson: number;
+    monthlyFee: number;
+    name: string;
+  }
   maxUserAt?: string | null;
   maxUserInContractPeriod?: number;
   paymentMethod?: string | null;

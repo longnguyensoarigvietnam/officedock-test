@@ -173,7 +173,7 @@ const EditCompanyForm = () => {
     if (companyDetail) {
       value.id = companyDetail.id;
       value.name = companyDetail.name;
-      value.plan = companyDetail.plan;
+      value.plan = companyDetail.plan?.name || '';
       value.status = companyDetail.status
         ? {
             label: companyDetail.status,
@@ -230,11 +230,6 @@ const EditCompanyForm = () => {
 
     return value;
   }, [companyDetail, industryOptions, departmentOptions]);
-  // useEffect(() => {
-  //   if(departmentOptions.length && defaultValues.contract.department) {
-
-  //   }
-  // }, [departmentOptions])
 
   useEffect(() => {
     reset(defaultValues);
