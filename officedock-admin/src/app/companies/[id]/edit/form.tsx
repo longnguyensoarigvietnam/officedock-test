@@ -35,7 +35,11 @@ import {
   ONLY_DIGITS_REGEX,
   PHONE_REGEX,
 } from '@constants/regex';
-import { MAX_PHONE_NUMBER_LENGTH, NAME_OTHER_OPTION, OTHER_OPTION_VALUE } from '@constants';
+import {
+  MAX_PHONE_NUMBER_LENGTH,
+  NAME_OTHER_OPTION,
+  OTHER_OPTION_VALUE,
+} from '@constants';
 
 import useCompanyDetail from '@hooks/useDetailCompany';
 import useCommonCreationData from '@hooks/useCommonCreationData';
@@ -250,10 +254,19 @@ const EditCompanyForm = () => {
         });
         router.push(pageRouters.COMPANY_MANAGEMENT.href);
       },
-      onError: () => {
+      onError: (error: any) => {
+        const data = error?.response?.data as
+          | Record<string, string[]>
+          | undefined;
+
+        const firstErrorMessage =
+          data && Object.keys(data).length > 0
+            ? data[Object.keys(data)[0]]?.[0] // first field → first message
+            : ERROR_UPDATE_MESSAGE;
+
         showToast({
           variant: 'error',
-          description: ERROR_UPDATE_MESSAGE,
+          description: firstErrorMessage || ERROR_UPDATE_MESSAGE,
         });
       },
       onSettled: () => {

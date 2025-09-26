@@ -184,7 +184,7 @@ const SelectionBox = ({
             </div>
 
             {open && (
-              <div className="absolute z-10 mt-1 w-full border rounded-md bg-white shadow p-2 max-h-[136px] overflow-y-auto custom-scrollbar">
+              <div className="absolute z-10 mt-1 w-full border rounded-md bg-white shadow p-2 max-h-[170px] overflow-y-auto custom-scrollbar">
                 {options
                   .filter((opt) => !opt.label.includes(NAME_OTHER_OPTION))
                   .map((opt) => {
@@ -269,7 +269,7 @@ const SelectionBox = ({
             </div>
 
             {open && (
-              <div className="absolute z-10 mt-1 w-full border rounded-md bg-white shadow p-2 max-h-[200px] overflow-y-auto custom-scrollbar">
+              <div className="absolute z-10 mt-1 w-full border rounded-md bg-white shadow p-2 max-h-[170px] overflow-y-auto custom-scrollbar">
                 {/* Normal options */}
                 {options
                   .filter((opt) => !opt.label.includes(NAME_OTHER_OPTION))
