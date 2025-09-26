@@ -90,24 +90,26 @@ export const VotingListPage = () => {
   const { currentMVPVotingDetail, refetchMVPVotingDetail } = useMVPVotingDetail(
     {
       onSuccess: (data) => {
-        const organizationList = [
-          ...(data?.organizations?.map((org) => ({
-            orgInfo: { ...org },
-            collapseStatus: true,
-          })) ?? []),
-          {
-            orgInfo: {
-              id: REMAINING_ORGANIZATIONS_ID,
-              icon: '',
-              iconColor: '',
-              name: '',
-              type: '',
-              uuid: '',
-              candidates: data?.remainingCandidates ?? [],
-            },
-            collapseStatus: true,
-          },
-        ];
+        const organizationList = data?.organizations?.length
+          ? [
+              ...(data?.organizations?.map((org) => ({
+                orgInfo: { ...org },
+                collapseStatus: true,
+              })) ?? []),
+              {
+                orgInfo: {
+                  id: REMAINING_ORGANIZATIONS_ID,
+                  icon: '',
+                  iconColor: '',
+                  name: '',
+                  type: '',
+                  uuid: '',
+                  candidates: data?.remainingCandidates ?? [],
+                },
+                collapseStatus: true,
+              },
+            ]
+          : [];
 
         setMemberListByOrganization(organizationList);
       },

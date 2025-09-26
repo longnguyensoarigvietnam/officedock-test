@@ -6,4 +6,11 @@ export interface Company {
   contract: Contract;
   isShowHolidaysCalendar: boolean;
   totalUsers?: number;
+  plan?: {
+    id: number;
+    exchangeableAmount: number;
+    limitPerson: number;
+    monthlyFee: number;
+    name: string;
+  }
 }
