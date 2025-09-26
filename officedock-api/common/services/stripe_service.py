@@ -124,7 +124,7 @@ class StripeService:
 
         new_customer = stripe.Customer.create(
             name=company.name,
-            email=company.contract.responsible_person_mail,
+            email=company.responsible_person_mail,
             metadata={"company_id": str(company.id)},
         )
         company.stripe_customer_id = new_customer.id
@@ -139,7 +139,7 @@ class StripeService:
         stripe.Customer.modify(
             company.stripe_customer_id,
             name=company.name,
-            email=company.contract.responsible_person_mail,
+            email=company.responsible_person_mail,
         )
 
     def attach_payment_method_to_customer(
@@ -230,7 +230,7 @@ class StripeService:
                 raise ValidationError(
                     {"detail": ERROR_MESSAGES["stripe_customer_id_missing"]}
                 )
-            company_plan = company.plan
+            company_plan = company.company_plan
             if company_plan.stripe_subscription_id:
                 stripe_subs = stripe.Subscription.retrieve(
                     company_plan.stripe_subscription_id

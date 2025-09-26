@@ -6,7 +6,7 @@ from common.services import stripe_service
 from companies.constants import (
     CompanyStatus,
     CompanyTransactionTypes,
-    ImplementationMainIssues,
+    Department,
     Industry,
     SystemMainPurpose,
 )
@@ -22,14 +22,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         for company in Company.objects.all():
             total_user = company.users.count()
-            related_date = generate_contract_related_date_base_on_now(
-                company.created_at
-            )
+            related_date = generate_contract_related_date_base_on_now()
             # Seed data contract
             contract_data = {
-                "implementation_main_issue": ImplementationMainIssues.random(),
-                "industry": Industry.OTHER.value,
-                "system_main_purpose": SystemMainPurpose.random(),
+                "department": [Department.random()],
+                "industry": Industry.random(),
+                "system_main_purpose": [SystemMainPurpose.random()],
                 "start_date": related_date["start_date"],
                 "end_date": related_date["end_date"],
                 "next_renewal_at": related_date["next_renewal_at"],
@@ -41,10 +39,13 @@ class Command(BaseCommand):
                 .order_by("user__created_at")
                 .first()
             ):
-                contract_data["responsible_person_mail"] = admin_user.user.email
-                contract_data[
-                    "responsible_person_name"
-                ] = admin_user.user.profile.full_name
+                company.responsible_person_mail = (
+                    admin_user.user.email
+                    or admin_user.user.two_factor_auth_email
+                )
+                company.responsible_person_name = (
+                    admin_user.user.profile.full_name
+                )
             company.contract.__dict__.update(contract_data)
             company.contract.save(update_fields=contract_data.keys())
             # # Seed data Company plan
@@ -75,6 +76,8 @@ class Command(BaseCommand):
                     "max_user_at",
                     "max_user_in_contract_period",
                     "status",
+                    "responsible_person_mail",
+                    "responsible_person_name",
                 ]
             )
             if not company.stripe_customer_id:

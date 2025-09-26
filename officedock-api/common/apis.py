@@ -49,7 +49,7 @@ from common.services.stripe_service import StripeService
 from companies.constants import (
     CompanyStatus,
     CompanyTransactionTypes,
-    ImplementationMainIssues,
+    Department,
     Industry,
     SystemMainPurpose,
     TransactionStatus,
@@ -722,12 +722,12 @@ class CronJobViewSet(BaseAPIViewSet):
                     )
 
         # 3. Send mail notify renewal contract
-        if now().day == 1:
+        if today.day == 1:
             self.cronjob_service.handle_send_email_renewal_company_contract(
                 today
             )
         # 4. Get company have status Temporary Usage and void the invoice before auto pay
-        if now().day == 5:
+        if today.day == 5:
             self.cronjob_service.handle_cancel_the_invoice_of_company_temporary_usage(
                 today
             )
@@ -942,6 +942,9 @@ class WebhookView(BaseAPIViewSet):
             stripe_invoice_id=invoice.id
         ).first()
         company = company_transaction.company
+        if not company:
+            print(f"❌ Cannot find company of customer {invoice.customer}")
+            return
         contract = company.contract
         line = invoice.lines.data[0]
         period_start = to_datetime(line.period.start)
@@ -949,9 +952,9 @@ class WebhookView(BaseAPIViewSet):
         paid_at = to_datetime(invoice.status_transitions.paid_at)
         period = f"{format_date(period_start, style='jp_date')} 〜 {format_date(period_end, style='jp_date')}"
         self.mail_service.send_monthly_payment_success(
-            recipient=contract.responsible_person_mail,
+            recipient=company.responsible_person_mail,
             company_name=company.name,
-            responsible_name=contract.responsible_person_name,
+            responsible_name=company.responsible_person_name,
             usage_month=format_date(
                 company_transaction.invoice_target, style="jp_month_year"
             ),
@@ -959,7 +962,22 @@ class WebhookView(BaseAPIViewSet):
             amount=format(invoice.amount_paid, ","),
             period=period,
         )
-        if invoice.attempt_count > 0 and company.status not in [
+        # Terminate the contract when the last invoice is paid
+        if company.status == CompanyStatus.CANCELLATION_PENDING.value and (
+            get_a_day_in_next_month(contract.end_date, target_date=5).date()
+            == to_datetime(invoice.effective_at).date()
+        ):
+            # Update company status
+            self.company_service.change_status_of_company(
+                company, CompanyStatus.CONTRACT_TERMINATED.value
+            )
+            self.mail_service.send_contract_cancelled(
+                recipient=company.responsible_person_mail,
+                company_name=company.name,
+                responsible_name=company.responsible_person_name,
+                end_date=format_date(contract.end_date, style="jp_date"),
+            )
+        elif invoice.attempt_count > 1 and company.status not in [
             CompanyStatus.CONTRACT_TERMINATED.value,
             CompanyStatus.ACTIVE_CONTRACT.value,
         ]:
@@ -971,15 +989,6 @@ class WebhookView(BaseAPIViewSet):
                     if contract.cancel_at and contract.cancel_at <= period_start
                     else CompanyStatus.ACTIVE_CONTRACT.value
                 ),
-            )
-        # Terminate the contract when the last invoice is paid
-        elif company.status == CompanyStatus.CANCELLATION_PENDING.value and (
-            get_a_day_in_next_month(contract.end_date, target_date=5).date()
-            == to_datetime(invoice.effective_at).date()
-        ):
-            # Update company status
-            self.company_service.change_status_of_company(
-                company, CompanyStatus.CONTRACT_TERMINATED.value
             )
         # Update transaction status
         company_transaction.status = TransactionStatus.PAID.value
@@ -998,20 +1007,19 @@ class WebhookView(BaseAPIViewSet):
         company = Company.objects.filter(
             stripe_customer_id=invoice.customer
         ).first()
-        contract = company.contract
         if attempt_count == 1:
             self.mail_service.send_payment_failed_first(
-                recipient=contract.responsible_person_mail,
+                recipient=company.responsible_person_mail,
                 company_name=company.name,
-                responsible_name=contract.responsible_person_name,
+                responsible_name=company.responsible_person_name,
                 usage_month=format_date(period_start, style="jp_month_year"),
                 payment_url=None,
             )
         if attempt_count == 4:
             self.mail_service.send_payment_failed_final(
-                recipient=contract.responsible_person_mail,
+                recipient=company.responsible_person_mail,
                 company_name=company.name,
-                responsible_name=contract.responsible_person_name,
+                responsible_name=company.responsible_person_name,
                 usage_month=format_date(period_start, style="jp_month_year"),
                 payment_url=None,
             )
@@ -1038,7 +1046,6 @@ class WebhookView(BaseAPIViewSet):
         ).first()
         # After description deleted, the last invoice cannot auto pay, so need reset invoice finalize_at
         if company:
-            contract = company.contract
             # Get invoice
             transaction = company.transactions.filter(
                 type=CompanyTransactionTypes.INVOICE.value,
@@ -1053,12 +1060,6 @@ class WebhookView(BaseAPIViewSet):
                 ).first()
                 # Set the finalize of invoice
                 self.stripe_service.update_invoice_finalize(invoice, company)
-            self.mail_service.send_contract_cancelled(
-                recipient=contract.responsible_person_mail,
-                company_name=company.name,
-                responsible_name=contract.responsible_person_name,
-                end_date=format_date(contract.end_date, style="jp_date"),
-            )
             print(f"✅ Company {company.id} cancel subscription")
 
 
@@ -1074,7 +1075,7 @@ class AdminCreationDataViewSet(BaseAPIViewSet):
         parameters=[
             OpenApiParameter("get_company_status", type=bool),
             OpenApiParameter("get_plans", type=bool),
-            OpenApiParameter("get_implementation_main_issues", type=bool),
+            OpenApiParameter("get_department", type=bool),
             OpenApiParameter("get_system_main_purpose", type=bool),
             OpenApiParameter("get_industry", type=bool),
         ]
@@ -1089,10 +1090,8 @@ class AdminCreationDataViewSet(BaseAPIViewSet):
             response_data["company_status"] = get_company_status()
         if "get_plans" in request.query_params:
             response_data["plans"] = get_plans()
-        if "get_implementation_main_issues" in request.query_params:
-            response_data[
-                "implementation_main_issues"
-            ] = ImplementationMainIssues.values()
+        if "get_department" in request.query_params:
+            response_data["department"] = Department.values()
         if "get_system_main_purpose" in request.query_params:
             response_data["system_main_purpose"] = SystemMainPurpose.values()
         if "get_industry" in request.query_params:

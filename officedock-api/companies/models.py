@@ -27,6 +27,8 @@ class Company(BaseModel):
     status = models.CharField(
         max_length=100, choices=CompanyStatus.choices(), null=True, blank=True
     )
+    responsible_person_name = models.CharField(null=True, blank=True)
+    responsible_person_mail = models.EmailField(null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -45,7 +47,7 @@ class Company(BaseModel):
     @property
     def exchangeable_amount(self):
         return (
-            self.plan.plan.exchangeable_amount
+            self.company_plan.plan.exchangeable_amount
             if hasattr(self, "plan") and hasattr(self.plan, "plan")
             else 0
         )
@@ -64,13 +66,11 @@ class Contract(BaseModel):
         on_delete=models.CASCADE,
     )
     next_renewal_at = models.DateTimeField(null=True, blank=True)
-    system_main_purpose = models.CharField(null=True, blank=True)
-    implementation_main_issue = models.CharField(null=True, blank=True)
+    system_main_purpose = models.JSONField(null=True, blank=True)
+    department = models.JSONField(null=True, blank=True)
     industry = models.CharField(null=True, blank=True)
     address = models.CharField(null=True, blank=True)
     phone = models.CharField(null=True, blank=True)
-    responsible_person_name = models.CharField(null=True, blank=True)
-    responsible_person_mail = models.EmailField(null=True, blank=True)
     cancel_at = models.DateTimeField(null=True, blank=True)
 
 
@@ -81,7 +81,7 @@ class CompanyPlan(BaseModel):
 
     company = models.OneToOneField(
         "companies.Company",
-        related_name="plan",
+        related_name="company_plan",
         on_delete=models.CASCADE,
     )
     plan = models.ForeignKey(

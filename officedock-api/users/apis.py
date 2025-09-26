@@ -839,13 +839,12 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
 
         # Send mail to responsible
-        contract = company.contract
-        if contract and hasattr(contract, "responsible_person_mail"):
+        if hasattr(company, "responsible_person_mail"):
             payment_mail_service.send_account_added(
-                recipient=contract.responsible_person_mail,
+                recipient=company.responsible_person_mail,
                 company_name=company.name,
                 responsible_name=getattr(
-                    contract, "responsible_person_name", ""
+                    company, "responsible_person_name", ""
                 ),
                 new_user_name=user.full_name,
                 new_user_email=new_user_email,

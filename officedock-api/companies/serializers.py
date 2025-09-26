@@ -4,6 +4,7 @@ from rest_framework import serializers
 from companies.models import Company, CompanyTransaction, Contract
 from base.messages import ERROR_MESSAGES
 from plans.models import Plan
+from plans.serializers import PlanSerializer
 from users.models import User
 
 
@@ -21,12 +22,10 @@ class ContractSerializer(serializers.ModelSerializer):
             "end_date",
             "next_renewal_at",
             "system_main_purpose",
-            "implementation_main_issue",
+            "department",
             "industry",
             "address",
             "phone",
-            "responsible_person_name",
-            "responsible_person_mail",
         ]
         read_only_fields = ["next_renewal_at"]
 
@@ -66,7 +65,7 @@ class CompanySerializer(serializers.ModelSerializer):
 
     contract = ContractSerializer(required=False)
     total_users = serializers.SerializerMethodField(read_only=True)
-    plan = serializers.CharField(source="plan.plan.name", read_only=True)
+    plan = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Company
@@ -78,17 +77,29 @@ class CompanySerializer(serializers.ModelSerializer):
             "total_users",
             "plan",
             "status",
+            "responsible_person_mail",
+            "responsible_person_name",
         ]
         read_only_fields = ["is_show_holidays_calendar"]
 
-    def validate_email(self, value):
+    def get_plan(self, instance):
+        return PlanSerializer(instance.company_plan.plan).data
+
+    def validate_responsible_person_mail(self, value):
         """
         Validate unique email for System site.
         """
-        if Contract.objects.filter(responsible_person_mail=value).exists():
+        check_email_duplicate = Company.objects.filter(
+            responsible_person_mail=value
+        )
+        if self.instance:
+            check_email_duplicate = check_email_duplicate.exclude(
+                id=self.instance.id
+            )
+        if check_email_duplicate.exists():
             raise serializers.ValidationError(ERROR_MESSAGES["email_exists"])
         User.validate_unique_email(
-            instance=self.instance, email=value, is_admin_site=False
+            instance=None, email=value, is_admin_site=False
         )
         return super().validate(value)
 
@@ -146,14 +157,14 @@ class CreationCompanySerializer(serializers.Serializer):
     stripe_payment_method_id = serializers.CharField()
     industry = serializers.CharField(required=False)
     system_main_purpose = serializers.CharField(required=False)
-    implementation_main_issue = serializers.CharField(required=False)
+    department = serializers.CharField(required=False)
 
     def validate_responsible_person_mail(self, value):
         # FIXME: Check duplicate email in User table
         User.validate_unique_email(
-            instance=self.instance, email=value, is_admin_site=False
+            instance=None, email=value, is_admin_site=False
         )
-        if Contract.objects.filter(responsible_person_mail=value).exists():
+        if Company.objects.filter(responsible_person_mail=value).exists():
             raise serializers.ValidationError(ERROR_MESSAGES["email_exists"])
         return value
 
@@ -177,6 +188,8 @@ class RetrieveCompanySerializer(CompanySerializer):
             "max_user_at",
             "total_users",
             "payment_method",
+            "responsible_person_mail",
+            "responsible_person_name",
         ]
 
     def get_payment_method(self, instance):
