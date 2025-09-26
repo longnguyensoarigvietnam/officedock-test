@@ -24,23 +24,37 @@ class TransactionStatus(EnumChoices):
     SKIP_PAYMENT = "キャンセル"
 
 
-class ImplementationMainIssues(EnumChoices):
-    OVERTIME_VISIBILITY = "残業の見える化がしたい"
-    REDUCE_REPORT_BURDEN = "日報負担を減らしたい"
-    VISUALIZE_SKILL_UP = "スキルアップを可視化したい"
+class Department(EnumChoices):
+    ALL = "全部門利用"
+    ADMINISTRATION = "事務部門"
+    HR = "人事労務部門"
+    ACCOUNTING = "会計部門"
+    PLANNING_PRODUCTION = "企画制作部門"
+    MARKETING = "マーケティング部門"
+    SALES = "営業部門"
+    OTHER = "その他（自由記述）"
 
 
 class SystemMainPurpose(EnumChoices):
-    ATTENDANCE_MANAGEMENT = "勤怠管理"
-    BUSINESS_EFFICIENCY = "業務効率化"
-    SKILL_DEVELOPMENT = "スキル育成"
-    TALENT_EVALUATION = "人材評価"
+    VISUALIZATION_EFFICIENCY = "業務の「見える化」と「効率化」"
+    HR_DEVELOPMENT_SKILL_MAP = "人材育成とスキルマップ"
+    MOTIVATION = "従業員のモチベーション向上"
+    STRATEGIC_MANAGEMENT = "数値に基づいた戦略的経営判断"
 
 
 class Industry(EnumChoices):
-    IT = "IT"
-    MANUFACTURING = "製造"
-    FINANCE = "金融"
-    HEALTHCARE = "医療"
+    IT_INTERNET = "IT・インターネット"
+    FOOD_HOSPITALITY = "飲食・宿泊"
+    HUMAN_RESOURCES = "人材・派遣"
+    MEDICAL_WELFARE = "医療・福祉"
+    WHOLESALE_RETAIL = "卸売・小売"
+    LEISURE = "レジャー"
     EDUCATION = "教育"
-    OTHER = "その他"
+    CONSTRUCTION_REAL_ESTATE = "建設・不動産"
+    FINANCE_INSURANCE = "金融・保険"
+    MANUFACTURING = "製造業・メーカー"
+    TRANSPORT_POSTAL = "運輸・郵便"
+    PR_MEDIA = "PR・メディア"
+    PLANNING_PRODUCTION = "企画・制作"
+    PROFESSIONAL_SERVICES = "士業、専門・技術サービス業"
+    OTHER = "その他（自由記述）"

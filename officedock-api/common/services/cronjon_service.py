@@ -47,15 +47,15 @@ class CronJobService:
             tax = Tax.objects.first()
             mail_service = PaymentMailService()
             for company in companies:
-                plan = company.plan.plan
+                plan = company.company_plan.plan
                 price = plan.monthly_fee + (
                     plan.monthly_fee * tax.percentage / 100
                 )
                 mail_service.send_contract_renewal_notice(
                     renewal_date=format_date(usage_month, style="jp_date"),
                     company_name=company.name,
-                    responsible_name=company.contract.responsible_person_name,
-                    recipient=company.contract.responsible_person_mail,
+                    responsible_name=company.responsible_person_name,
+                    recipient=company.responsible_person_mail,
                     plan=plan.name,
                     price=format(int(price), ","),
                 )

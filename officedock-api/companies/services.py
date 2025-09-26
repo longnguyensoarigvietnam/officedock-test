@@ -1,5 +1,6 @@
 import datetime
 from django.contrib.auth.base_user import get_random_string
+from datetime import timezone
 from django.utils.timezone import now
 from rest_framework.fields import ValidationError
 from base.messages import ERROR_MESSAGES
@@ -38,13 +39,13 @@ class CompanyService:
         contract = company.contract
         user_data = {}
         # Prepare profile and login data for the system admin user
-        profile = {"full_name": contract.responsible_person_name}
-        user_data["two_factor_auth_email"] = contract.responsible_person_mail
-        user_data["email"] = contract.responsible_person_mail
+        profile = {"full_name": company.responsible_person_name}
+        user_data["two_factor_auth_email"] = company.responsible_person_mail
+        user_data["email"] = company.responsible_person_mail
         user_data["password"] = get_random_string(8)
         user_data["login_type"] = LoginTypes.EMAIL.value
         user_data["username_alias"] = get_username_alias(
-            login_text=contract.responsible_person_mail,
+            login_text=company.responsible_person_mail,
         )
         user_data["is_two_factor_auth"] = False
         user = User.objects.create(company=company, **user_data)
@@ -75,11 +76,11 @@ class CompanyService:
         # Send welcome email with login credentials to the admin
         mail_service = PaymentMailService()
         mail_service.send_account_issued(
-            recipient=contract.responsible_person_mail,
-            user_email=contract.responsible_person_mail,
+            recipient=company.responsible_person_mail,
+            user_email=company.responsible_person_mail,
             password=user_data["password"],
             company_name=company.name,
-            responsible_name=contract.responsible_person_name,
+            responsible_name=company.responsible_person_name,
         )
 
         # Update contract dates relative to the current time
@@ -88,7 +89,7 @@ class CompanyService:
         contract.save(update_fields=related_date.keys())
         company.transactions.create(
             plan_start_at=related_date["start_date"],
-            plan=company.plan.plan,
+            plan=company.company_plan.plan,
             type=CompanyTransactionTypes.PLAN.value,
         )
 
@@ -96,8 +97,8 @@ class CompanyService:
         subscription = stripe.create_postpaid_subscription_with_invoice(
             company, start_date=related_date["start_date"]
         )
-        company.plan.stripe_subscription_id = subscription.id
-        company.plan.save(
+        company.company_plan.stripe_subscription_id = subscription.id
+        company.company_plan.save(
             update_fields=[
                 "stripe_subscription_id",
             ]
@@ -162,8 +163,8 @@ class CompanyService:
         subscription = stripe.create_postpaid_subscription_with_invoice(
             company, start_date=related_date["start_date"]
         )
-        company.plan.stripe_subscription_id = subscription.id
-        company.plan.save(
+        company.company_plan.stripe_subscription_id = subscription.id
+        company.company_plan.save(
             update_fields=[
                 "stripe_subscription_id",
             ]
@@ -173,26 +174,25 @@ class CompanyService:
         """
         Mark the company's contract as pending cancellation and schedule Stripe cancellation.
         """
-        if not company.plan.stripe_subscription_id:
+        if not company.company_plan.stripe_subscription_id:
             raise ValidationError({"detail": ERROR_MESSAGES["plan_invalid"]})
 
         contract = company.contract
         contract.cancel_at = now()
         contract.save(update_fields=["cancel_at"])
         PaymentMailService().send_contract_cancellation_request(
-            recipient=contract.responsible_person_mail,
+            recipient=company.responsible_person_mail,
             company_name=company.name,
-            responsible_name=contract.responsible_person_name,
-            end_date=format_date(date=now(), style="jp_date"),
+            responsible_name=company.responsible_person_name,
+            end_date=format_date(date=contract.end_date, style="jp_date"),
         )
         company.status = CompanyStatus.CANCELLATION_PENDING.value
         company.save(update_fields=["status"])
         subscription_cancel_at = datetime.datetime.combine(
-            contract.end_date, datetime.time.max
+            contract.end_date, datetime.time.max, tzinfo=timezone.utc
         )
-
         stripe_service.StripeService().handle_cancel_subscription(
-            subscription_id=company.plan.stripe_subscription_id,
+            subscription_id=company.company_plan.stripe_subscription_id,
             cancel_at=subscription_cancel_at,
         )
 

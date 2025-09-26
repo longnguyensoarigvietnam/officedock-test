@@ -65,12 +65,12 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """Override DRF's `perform_update` to add business logic after a company update."""
         current_company = serializer.instance
         old_name = current_company.name
-        old_email = current_company.contract.responsible_person_mail
+        old_email = current_company.responsible_person_mail
         company = serializer.save()
         self.company_service.handle_invoice_base_on_status(company)
         if (
             old_name != company.name
-            or old_email != company.contract.responsible_person_mail
+            or old_email != company.responsible_person_mail
         ):
             StripeService().update_customer(company)
 
@@ -253,6 +253,12 @@ class SystemCompanyViewSet(
         company_data = {
             "name": serializer_data.pop("company_name"),
             "status": CompanyStatus.PENDING_APPROVAL.value,
+            "responsible_person_name": serializer_data.pop(
+                "responsible_person_name"
+            ),
+            "responsible_person_mail": serializer_data.pop(
+                "responsible_person_mail"
+            ),
         }
         # Create company
         company = Company.objects.create(**company_data)
@@ -261,17 +267,9 @@ class SystemCompanyViewSet(
         contract_data = {
             "address": serializer_data.pop("address"),
             "phone": serializer_data.pop("phone"),
-            "responsible_person_name": serializer_data.pop(
-                "responsible_person_name"
-            ),
-            "responsible_person_mail": serializer_data.pop(
-                "responsible_person_mail"
-            ),
             "industry": serializer_data.pop("industry"),
             "system_main_purpose": serializer_data.pop("system_main_purpose"),
-            "implementation_main_issue": serializer_data.pop(
-                "implementation_main_issue"
-            ),
+            "department": serializer_data.pop("department"),
         }
         Contract.objects.create(**contract_data, company=company)
         # Create Stripe customer and attach payment method to customer
