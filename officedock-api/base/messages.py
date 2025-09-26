@@ -144,6 +144,8 @@ _ERROR_MESSAGES = {
         "card_already_exists": _("A payment card already exists."),
         "stripe_customer_id_missing": _("Stripe customer ID not found."),
         "card_declined": _("Payment card declined."),
+        # Validate
+        "must_be_array": _("{field} must be a array."),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -242,6 +244,8 @@ _ERROR_MESSAGES = {
         "card_already_exists": _("支払カードがすでに存在しています。"),
         "stripe_customer_id_missing": _("StripeIDが見つかりません。"),
         "card_declined": _("支払カードが拒否されました。"),
+        # Validate
+        "must_be_array": _("{field}は配列でなければなりません。"),
     },
 }
 

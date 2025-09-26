@@ -39,6 +39,22 @@ class ContractSerializer(serializers.ModelSerializer):
             )
         return attrs
 
+    def validate_system_main_purpose(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError(
+                ERROR_MESSAGES["must_be_array"].format(
+                    field="system_main_purpose"
+                )
+            )
+        return value
+
+    def validate_department(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError(
+                ERROR_MESSAGES["must_be_array"].format(field="department")
+            )
+        return value
+
 
 class BaseCompanySerializer(serializers.ModelSerializer):
     """
@@ -156,8 +172,24 @@ class CreationCompanySerializer(serializers.Serializer):
     )
     stripe_payment_method_id = serializers.CharField()
     industry = serializers.CharField(required=False)
-    system_main_purpose = serializers.CharField(required=False)
-    department = serializers.CharField(required=False)
+    system_main_purpose = serializers.JSONField(required=False)
+    department = serializers.JSONField(required=False)
+
+    def validate_system_main_purpose(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError(
+                ERROR_MESSAGES["must_be_array"].format(
+                    field="system_main_purpose"
+                )
+            )
+        return value
+
+    def validate_department(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError(
+                ERROR_MESSAGES["must_be_array"].format(field="department")
+            )
+        return value
 
     def validate_responsible_person_mail(self, value):
         # FIXME: Check duplicate email in User table
