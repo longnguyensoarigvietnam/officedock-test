@@ -4,6 +4,17 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
+def clean_data_of_fields_change_to_json(apps, schema_editor):
+    """Clean data of fields change to json"""
+    Contract = apps.get_model("companies", "Contract")
+    for contract in Contract.objects.all():
+        contract.system_main_purpose = []
+        contract.implementation_main_issue = []
+        contract.save(
+            update_fields=["system_main_purpose", "implementation_main_issue"]
+        )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -11,6 +22,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(
+            clean_data_of_fields_change_to_json, migrations.RunPython.noop
+        ),
         migrations.RemoveField(
             model_name="contract",
             name="implementation_main_issue",
