@@ -200,3 +200,23 @@ class IsCronJob(BasePermission):
             return False
 
         return True
+
+
+class IsApiKeyValid(BasePermission):
+    """
+    Permission that allows access only if the request includes
+    a valid X-API-Key header matching the value defined in settings.
+    """
+
+    def has_permission(self, request, view):
+        # Get the API key from environment (settings.py loads it from .env)
+        api_key_env = getattr(settings, "API_SECRET_KEY", None)
+        # Extract the API key from request headers
+        api_key_request = request.headers.get("X-API-Key")
+
+        # Deny if no API key is configured or no header is provided
+        if not api_key_env or not api_key_request:
+            return False
+
+        # Allow only if header matches the expected secret key
+        return api_key_request == api_key_env
