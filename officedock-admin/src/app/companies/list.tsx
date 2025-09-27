@@ -13,9 +13,10 @@ import Pagination from '@components/common/Pagination';
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 import MonthPicker from '@components/common/DatePicker/MonthPicker';
 
-import { NO_DATA_AVAILABLE, UNREGISTERED } from '@constants/message';
+import { NO_DATA_AVAILABLE } from '@constants/message';
 import { pageRouters } from '@constants/routers';
 import { DATE_FORMAT, MONTH_FORMAT } from '@constants';
+import { CompanyStatus } from '@constants/enums';
 
 import useCompanyList from '@hooks/useListCompany';
 import useCommonCreationData from '@hooks/useCommonCreationData';
@@ -352,22 +353,25 @@ const CompanyList = () => {
                   <td className="text-left w-28 max-w-28">
                     {company.contract?.startDate
                       ? renderDate(company.contract.startDate, MONTH_FORMAT)
-                      : UNREGISTERED}
+                      : ''}
                   </td>
                   <td className="text-left w-28 max-w-28">
                     {company.contract?.nextRenewalAt
                       ? renderDate(company.contract.nextRenewalAt, MONTH_FORMAT)
-                      : UNREGISTERED}
+                      : ''}
                   </td>
                   <td className="text-left w-28 max-w-28 text-nowrap">
-                    {company.contract?.endDate
-                      ? renderDate(company.contract.endDate, DATE_FORMAT)
-                      : UNREGISTERED}
+                    {company?.status == CompanyStatus.CANCELLATION_PENDING ||
+                    company?.status == CompanyStatus.CONTRACT_TERMINATED
+                      ? company.contract?.endDate
+                        ? renderDate(company.contract.endDate, DATE_FORMAT)
+                        : ''
+                      : ''}
                   </td>
                   <td className="text-left w-28 max-w-28 text-nowrap">
                     {company.contract?.createdAt
                       ? renderDate(company.contract.createdAt, DATE_FORMAT)
-                      : UNREGISTERED}
+                      : ''}
                   </td>
 
                   <td className="w-24 max-w-24">
