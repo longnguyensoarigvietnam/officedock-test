@@ -99,7 +99,11 @@ class CompanySerializer(serializers.ModelSerializer):
         read_only_fields = ["is_show_holidays_calendar"]
 
     def get_plan(self, instance):
-        return PlanSerializer(instance.company_plan.plan).data
+        if hasattr(instance, "company_plan") and hasattr(
+            instance.company_plan, "plan"
+        ):
+            return PlanSerializer(instance.company_plan.plan).data
+        return None
 
     def validate_responsible_person_mail(self, value):
         """
