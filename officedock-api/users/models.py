@@ -255,6 +255,9 @@ class User(AbstractBaseUser, BaseModel, PermissionsMixin):
         if not LoginToken.objects.filter(user=self, token=token).exists():
             raise LockedError()
 
+        if not (UserService().check_valid_company(self)):
+            raise LockedError()
+
         return True
 
     def login_token(self, token):
