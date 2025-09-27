@@ -580,11 +580,11 @@ class CronJobViewSet(BaseAPIViewSet):
         # 1. Cleanup data
         # Cleanup companies whose contracts ended after the 2-month retention period
         deleted_company_contract_count = (
-            cleanup_data_service.cleanup_data_company_contracts()
+            cleanup_data_service.cleanup_data_company_contracts(today)
         )
         # Cleanup soft-deleted thanks messages after retention period
         deleted_tks_msg_count = (
-            cleanup_data_service.cleanup_data_thanks_messages()
+            cleanup_data_service.cleanup_data_thanks_messages(today)
         )
 
         # 2. Iterate over all companies to handle closing logic
@@ -606,247 +606,6 @@ class CronJobViewSet(BaseAPIViewSet):
                 "today": today.isoformat(),
                 "deleted_tks_msg_count": deleted_tks_msg_count,
                 "deleted_company_contract_count": deleted_company_contract_count,
-            }
-        )
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter("cronjob_key", type=str, required=True),
-            OpenApiParameter("company_id", type=int),
-            OpenApiParameter("year", type=int),
-            OpenApiParameter("month", type=int),
-            OpenApiParameter("day", type=int),
-        ]
-    )
-    @action(
-        methods=["POST"],
-        detail=False,
-        url_path="fake-run-every-day",
-    )
-    @transaction.atomic
-    def fake_cronjob_run_every_day(self, request):
-        """
-        Fake daily cronjob endpoint.
-        - Handle company closing and deadline logic
-        - Reward users with coins/pearls based on activities
-        """
-
-        if not settings.DEBUG:
-            raise NotFound()
-
-        # 1. Get params
-        company_id = request.query_params.get("company_id")
-        year = request.query_params.get("year")
-        month = request.query_params.get("month")
-        day = request.query_params.get("day")
-        if year and month and day:
-            today = date(int(year), int(month), int(day))
-        else:
-            today = now().date()
-
-        if company_id:
-            all_companies = Company.objects.filter(id=company_id)
-
-            if not all_companies.exists():
-                raise ValidationError(
-                    {
-                        "detail": ERROR_MESSAGES["company_not_exists"].format(
-                            id=company_id
-                        )
-                    }
-                )
-        else:
-            all_companies = Company.objects.all()
-
-        transaction_service = TransactionService()
-
-        # 2. Iterate over all companies to handle closing logic
-        for company in all_companies.prefetch_related("users"):
-            company_dates = calculate_company_dates(company, today)
-            date_after_closing = company_dates["date_after_closing"]
-            start_date_calculation_deadline = company_dates[
-                "start_date_calculation_deadline"
-            ]
-            date_after_data_edit_deadline = company_dates[
-                "date_after_data_edit_deadline"
-            ]
-
-            # --- Case 1: Closing day ---
-            if today.day == date_after_closing.day:
-                company_users = company.users.all()
-                company_users_count = company_users.count()
-
-                for user in company_users:
-                    # Reward coins for thanks messages (top voted)
-                    transaction_service.reward_thanks_message(
-                        user,
-                        date_after_closing,
-                        start_date_calculation_deadline,
-                    )
-
-                    # Reward pearls
-                    transaction_service.reward_login_bonus(
-                        user,
-                        date_after_closing,
-                        start_date_calculation_deadline,
-                    )
-                    transaction_service.reward_task_complete(
-                        user,
-                        date_after_closing,
-                        start_date_calculation_deadline,
-                    )
-
-                # Update exchangeable coin for user
-                if company_users_count > 0:
-                    user_exchangeable_amount = (
-                        company.exchangeable_amount // company_users_count
-                    )
-                    UserBalance.objects.filter(user__in=company_users).update(
-                        exchangeable_coin=user_exchangeable_amount
-                    )
-
-            # --- Case 2: Deadline day ---
-            elif today.day == date_after_data_edit_deadline.day:
-                # Process working time rewards for all users in the company
-                # This runs at 00:00 of the day after the deadline
-                # Get all users in the company
-                company_users = company.users.all()
-
-                # Process working time rewards for each user for the entire month
-                for user in company_users:
-                    # Calculate total working time rewards for the entire month
-                    transaction_service.reward_actual_working_time(
-                        start_date_calculation_deadline,
-                        date_after_closing,
-                        user,
-                    )
-
-        # 3. Send mail notify renewal contract
-        if today.day == 1:
-            self.cronjob_service.handle_send_email_renewal_company_contract(
-                today
-            )
-        # 4. Get company have status Temporary Usage and void the invoice before auto pay
-        if today.day == 5:
-            self.cronjob_service.handle_cancel_the_invoice_of_company_temporary_usage(
-                today
-            )
-
-        return self.response_ok(
-            {
-                "today": today.isoformat(),
-            }
-        )
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter("cronjob_key", type=str, required=True),
-            OpenApiParameter("user_email", type=str, required=False),
-            OpenApiParameter("user_id", type=int, required=False),
-            OpenApiParameter("coin", type=int, required=False),
-            OpenApiParameter("pearl", type=int, required=False),
-        ]
-    )
-    @action(
-        methods=["POST"],
-        detail=False,
-        url_path="seed-point",
-    )
-    @transaction.atomic
-    def seed_point_user(self, request):
-        """
-        Seed points (coins and pearls) to a user for testing purposes.
-        Requires either user_email or user_id to identify the user.
-        """
-
-        if not settings.DEBUG:
-            raise NotFound()
-
-        # Get parameters
-        user_email = request.query_params.get("user_email")
-        user_id = request.query_params.get("user_id")
-        coin_amount = int(request.query_params.get("coin", 0))
-        pearl_amount = int(request.query_params.get("pearl", 0))
-
-        # Validate that at least one user identifier is provided
-        if not user_email and not user_id:
-            return self.response(
-                "Either user_email or user_id must be provided", status_code=400
-            )
-
-        # Validate that at least one amount is provided
-        if coin_amount <= 0 and pearl_amount <= 0:
-            return self.response(
-                "At least one of coin or pearl amount must be greater than 0",
-                status_code=400,
-            )
-
-        try:
-            # Find user by email or ID
-            if user_email:
-                user = User.objects.exclude(
-                    roles__name=RoleTypes.OPERATION_ADMIN.value
-                ).get(email=user_email)
-            else:
-                user = User.objects.exclude(
-                    roles__name=RoleTypes.OPERATION_ADMIN.value
-                ).get(id=user_id)
-        except User.DoesNotExist:
-            return self.response(
-                f"User not found with {'email' if user_email else 'ID'}: {user_email or user_id}",
-                status_code=404,
-            )
-
-        # Track what was added
-        added_points = {}
-
-        # Add coins if specified
-        if coin_amount > 0:
-            try:
-                user_balance, created = UserBalance.objects.get_or_create(
-                    user=user,
-                    company=user.company,
-                )
-                user_balance.coin = (user_balance.coin or 0) + coin_amount
-                user_balance.save()
-                added_points["coin"] = coin_amount
-            except Exception as e:
-                return self.response(
-                    f"Failed to add coins: {str(e)}", status_code=500
-                )
-
-        # Add pearls if specified
-        if pearl_amount > 0:
-            try:
-                user_balance, created = UserBalance.objects.get_or_create(
-                    user=user,
-                    company=user.company,
-                )
-                user_balance.pearl = (user_balance.pearl or 0) + pearl_amount
-                user_balance.save()
-                added_points["pearl"] = pearl_amount
-            except Exception as e:
-                return self.response(
-                    f"Failed to add pearls: {str(e)}", status_code=500
-                )
-
-        # Get updated balance
-        user_balance = user.balances
-        current_balance = {
-            "coin": user_balance.coin if user_balance else 0,
-            "pearl": user_balance.pearl if user_balance else 0,
-        }
-
-        return self.response_ok(
-            {
-                "message": "Points successfully seeded",
-                "user": {
-                    "id": user.id,
-                    "email": user.email,
-                    "name": user.full_name,
-                },
-                "added_points": added_points,
-                "current_balance": current_balance,
             }
         )
 
@@ -1097,3 +856,299 @@ class AdminCreationDataViewSet(BaseAPIViewSet):
         if "get_industry" in request.query_params:
             response_data["industry"] = Industry.values()
         return self.response_ok(response_data)
+
+
+@extend_schema(tags=["System > APIs testing "])
+class TestingViewset(BaseAPIViewSet):
+    """
+    API endpoint for testing
+    """
+
+    permission_classes = [AllowAny]
+
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the Company service
+        """
+        super().__init__(*args, **kwargs)
+        self.cronjob_service = CronJobService()
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("company_id", type=int),
+            OpenApiParameter("year", type=int),
+            OpenApiParameter("month", type=int),
+            OpenApiParameter("day", type=int),
+        ]
+    )
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="fake-run-every-day",
+    )
+    @transaction.atomic
+    def fake_cronjob_run_every_day(self, request):
+        """
+        Fake daily cronjob endpoint.
+        - Handle company closing and deadline logic
+        - Reward users with coins/pearls based on activities
+        """
+
+        if not settings.DEBUG:
+            raise NotFound()
+
+        # 1. Get params
+        company_id = request.query_params.get("company_id")
+        year = request.query_params.get("year")
+        month = request.query_params.get("month")
+        day = request.query_params.get("day")
+        if year and month and day:
+            today = date(int(year), int(month), int(day))
+        else:
+            today = now().date()
+
+        if company_id:
+            all_companies = Company.objects.filter(id=company_id)
+
+            if not all_companies.exists():
+                raise ValidationError(
+                    {
+                        "detail": ERROR_MESSAGES["company_not_exists"].format(
+                            id=company_id
+                        )
+                    }
+                )
+        else:
+            all_companies = Company.objects.all()
+
+        transaction_service = TransactionService()
+        cleanup_data_service = CleanupDataService()
+
+        # 1. Cleanup data
+        # Cleanup companies whose contracts ended after the 2-month retention period
+        deleted_company_contract_count = (
+            cleanup_data_service.cleanup_data_company_contracts(today)
+        )
+        # Cleanup soft-deleted thanks messages after retention period
+        deleted_tks_msg_count = (
+            cleanup_data_service.cleanup_data_thanks_messages(today)
+        )
+
+        # 2. Iterate over all companies to handle closing logic
+        for company in all_companies.prefetch_related("users"):
+            company_dates = calculate_company_dates(company, today)
+            date_after_closing = company_dates["date_after_closing"]
+            start_date_calculation_deadline = company_dates[
+                "start_date_calculation_deadline"
+            ]
+            date_after_data_edit_deadline = company_dates[
+                "date_after_data_edit_deadline"
+            ]
+
+            # --- Case 1: Closing day ---
+            if today.day == date_after_closing.day:
+                company_users = company.users.all()
+                company_users_count = company_users.count()
+
+                for user in company_users:
+                    # Reward coins for thanks messages (top voted)
+                    transaction_service.reward_thanks_message(
+                        user,
+                        date_after_closing,
+                        start_date_calculation_deadline,
+                    )
+
+                    # Reward pearls
+                    transaction_service.reward_login_bonus(
+                        user,
+                        date_after_closing,
+                        start_date_calculation_deadline,
+                    )
+                    transaction_service.reward_task_complete(
+                        user,
+                        date_after_closing,
+                        start_date_calculation_deadline,
+                    )
+
+                # Update exchangeable coin for user
+                if company_users_count > 0:
+                    user_exchangeable_amount = (
+                        company.exchangeable_amount // company_users_count
+                    )
+                    UserBalance.objects.filter(user__in=company_users).update(
+                        exchangeable_coin=user_exchangeable_amount
+                    )
+
+            # --- Case 2: Deadline day ---
+            elif today.day == date_after_data_edit_deadline.day:
+                # Process working time rewards for all users in the company
+                # This runs at 00:00 of the day after the deadline
+                # Get all users in the company
+                company_users = company.users.all()
+
+                # Process working time rewards for each user for the entire month
+                for user in company_users:
+                    # Calculate total working time rewards for the entire month
+                    transaction_service.reward_actual_working_time(
+                        start_date_calculation_deadline,
+                        date_after_closing,
+                        user,
+                    )
+
+        # 3. Send mail notify renewal contract
+        if today.day == 1:
+            self.cronjob_service.handle_send_email_renewal_company_contract(
+                today
+            )
+        # 4. Get company have status Temporary Usage and void the invoice before auto pay
+        if today.day == 5:
+            self.cronjob_service.handle_cancel_the_invoice_of_company_temporary_usage(
+                today
+            )
+
+        return self.response_ok(
+            {
+                "today": today.isoformat(),
+                "deleted_company_contract_count": deleted_company_contract_count,
+                "deleted_tks_msg_count": deleted_tks_msg_count,
+            }
+        )
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("user_email", type=str, required=False),
+            OpenApiParameter("user_id", type=int, required=False),
+            OpenApiParameter("coin", type=int, required=False),
+            OpenApiParameter("pearl", type=int, required=False),
+        ]
+    )
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="seed-point",
+    )
+    @transaction.atomic
+    def seed_point_user(self, request):
+        """
+        Seed points (coins and pearls) to a user for testing purposes.
+        Requires either user_email or user_id to identify the user.
+        """
+
+        if not settings.DEBUG:
+            raise NotFound()
+
+        # Get parameters
+        user_email = request.query_params.get("user_email")
+        user_id = request.query_params.get("user_id")
+        coin_amount = int(request.query_params.get("coin", 0))
+        pearl_amount = int(request.query_params.get("pearl", 0))
+
+        # Validate that at least one user identifier is provided
+        if not user_email and not user_id:
+            return self.response(
+                "Either user_email or user_id must be provided", status_code=400
+            )
+
+        # Validate that at least one amount is provided
+        if coin_amount <= 0 and pearl_amount <= 0:
+            return self.response(
+                "At least one of coin or pearl amount must be greater than 0",
+                status_code=400,
+            )
+
+        try:
+            # Find user by email or ID
+            if user_email:
+                user = User.objects.exclude(
+                    roles__name=RoleTypes.OPERATION_ADMIN.value
+                ).get(email=user_email)
+            else:
+                user = User.objects.exclude(
+                    roles__name=RoleTypes.OPERATION_ADMIN.value
+                ).get(id=user_id)
+        except User.DoesNotExist:
+            return self.response(
+                f"User not found with {'email' if user_email else 'ID'}: {user_email or user_id}",
+                status_code=404,
+            )
+
+        # Track what was added
+        added_points = {}
+
+        # Add coins if specified
+        if coin_amount > 0:
+            try:
+                user_balance, created = UserBalance.objects.get_or_create(
+                    user=user,
+                    company=user.company,
+                )
+                user_balance.coin = (user_balance.coin or 0) + coin_amount
+                user_balance.save()
+                added_points["coin"] = coin_amount
+            except Exception as e:
+                return self.response(
+                    f"Failed to add coins: {str(e)}", status_code=500
+                )
+
+        # Add pearls if specified
+        if pearl_amount > 0:
+            try:
+                user_balance, created = UserBalance.objects.get_or_create(
+                    user=user,
+                    company=user.company,
+                )
+                user_balance.pearl = (user_balance.pearl or 0) + pearl_amount
+                user_balance.save()
+                added_points["pearl"] = pearl_amount
+            except Exception as e:
+                return self.response(
+                    f"Failed to add pearls: {str(e)}", status_code=500
+                )
+
+        # Get updated balance
+        user_balance = user.balances
+        current_balance = {
+            "coin": user_balance.coin if user_balance else 0,
+            "pearl": user_balance.pearl if user_balance else 0,
+        }
+
+        return self.response_ok(
+            {
+                "message": "Points successfully seeded",
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                    "name": user.full_name,
+                },
+                "added_points": added_points,
+                "current_balance": current_balance,
+            }
+        )
+
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="payment-method-id",
+    )
+    @transaction.atomic
+    def fake_payment_method_id(self, request):
+        """
+        Create a test payment method ID for testing purposes.
+        """
+
+        if not settings.DEBUG:
+            raise NotFound()
+
+        try:
+            # Initialize Stripe service
+            StripeService()
+
+            # Create test payment method using token
+            payment_method = stripe.PaymentMethod.create(
+                type="card", card={"token": "tok_visa"}
+            )
+
+            return self.response_ok({"payment_method_id": payment_method.id})
+
+        except Exception as e:
+            return self.response(f"Card error: {str(e)}", status_code=400)

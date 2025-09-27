@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import routers
 
 from calendars.apis import (
@@ -46,6 +47,7 @@ from organizations.apis import (
 from common.apis import (
     SystemCreationDataViewSet,
     CronJobViewSet,
+    TestingViewset,
     WebhookView,
 )
 from tags.apis import TagViewSet
@@ -177,6 +179,9 @@ api_router.register(
 )
 api_router.register("shop-items", ShopItemViewSet, basename="shop_items")
 api_router.register("webhook", WebhookView, basename="webhook")
+
+if settings.DEBUG:
+    api_router.register("testing", TestingViewset, basename="testing")
 
 # Add api router urls
 urlpatterns = []
