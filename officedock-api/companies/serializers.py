@@ -105,24 +105,6 @@ class CompanySerializer(serializers.ModelSerializer):
             return PlanSerializer(instance.company_plan.plan).data
         return None
 
-    def validate_responsible_person_mail(self, value):
-        """
-        Validate unique email for System site.
-        """
-        check_email_duplicate = Company.objects.filter(
-            responsible_person_mail=value
-        )
-        if self.instance:
-            check_email_duplicate = check_email_duplicate.exclude(
-                id=self.instance.id
-            )
-        if check_email_duplicate.exists():
-            raise serializers.ValidationError(ERROR_MESSAGES["email_exists"])
-        User.validate_unique_email(
-            instance=None, email=value, is_admin_site=False
-        )
-        return super().validate(value)
-
     def get_total_users(self, obj):
         return obj.users.count()
 
