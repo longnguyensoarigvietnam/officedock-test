@@ -154,6 +154,9 @@ INSTALLED_APPS = [
 ]
 
 # Define constants
+API_SECRET_KEY = os.getenv(
+    "API_SECRET_KEY"
+)  # Used for authentication of public APIs
 DOTMONEY_ACCESS_KEY = os.getenv("DOTMONEY_ACCESS_KEY")
 DOTMONEY_SECRET_KEY = os.getenv("DOTMONEY_SECRET_KEY")
 DOTMONEY_PRODUCT_ID = os.getenv("DOTMONEY_PRODUCT_ID")

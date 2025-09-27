@@ -2,10 +2,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 
-from base.permissions import IsOperationAdminOnly
+from base.permissions import IsApiKeyValid, IsOperationAdminOnly
 from base.apis import BaseAPIViewSet
 
 from common.filters import CustomOrderFilter
@@ -225,10 +225,10 @@ class SystemCompanyViewSet(
         """
         Custom permission by action
         """
-        permission_classes = (
-            [AllowAny] if self.action == "create" else [IsAuthenticated]
-        )
-        return [permission() for permission in permission_classes]
+        if self.action == "create":
+            return [IsApiKeyValid()]
+
+        return super().get_permissions()
 
     def get_serializer_class(self):
         if self.action == "create":
