@@ -54,8 +54,20 @@ if GOOGLE_CLOUD_PROJECT_ID := os.environ.get("GOOGLE_CLOUD_PROJECT_ID", None):
     ADMIN_WEBAPP_URL = os.getenv("ADMIN_WEBAPP_URL", "http://localhost:3000")
     CLOUD_RUN_SERVICE_URL = env("CLOUD_RUN_SERVICE_URL", default=None)
     ALLOWED_HOSTS = [urlparse(CLOUD_RUN_SERVICE_URL).netloc]
-    CSRF_TRUSTED_ORIGINS = [SYSTEM_WEBAPP_URL, ADMIN_WEBAPP_URL]
-    CORS_ALLOWED_ORIGINS = [SYSTEM_WEBAPP_URL, ADMIN_WEBAPP_URL]
+    CSRF_TRUSTED_ORIGINS = [
+        SYSTEM_WEBAPP_URL,
+        ADMIN_WEBAPP_URL,
+        "https://www.officedock.jp",
+        "https://*.officedock.jp",
+    ]
+    CORS_ALLOWED_ORIGINS = [
+        SYSTEM_WEBAPP_URL,
+        ADMIN_WEBAPP_URL,
+        "https://www.officedock.jp",
+    ]
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^https://[a-zA-Z0-9-]+\.officedock\.jp$",
+    ]
 
     DEBUG = env("DEBUG", default=False)
     DATABASES = {"default": env.db()}
@@ -90,7 +102,15 @@ else:
     SYSTEM_WEBAPP_URL = os.getenv("SYSTEM_WEBAPP_URL", "http://localhost:3000")
     ADMIN_WEBAPP_URL = os.getenv("ADMIN_WEBAPP_URL", "http://localhost:3000")
     CORS_ALLOW_ALL_ORIGINS = True
-    CSRF_TRUSTED_ORIGINS = [SYSTEM_WEBAPP_URL, ADMIN_WEBAPP_URL]
+    CSRF_TRUSTED_ORIGINS = [
+        SYSTEM_WEBAPP_URL,
+        ADMIN_WEBAPP_URL,
+        "https://www.officedock.jp",
+        "https://*.officedock.jp",
+    ]
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^https://[a-zA-Z0-9-]+\.officedock\.jp$",
+    ]
     ALLOWED_HOSTS = ["*"]
 
     # Database
