@@ -62,7 +62,9 @@ export type ActionsUserModalProps = {
     fullName?: string;
   };
   resetOrganizationFields: boolean;
+  resetRoleField: boolean;
   setResetOrganizationFields: Dispatch<SetStateAction<boolean>>;
+  setResetRoleField: Dispatch<SetStateAction<boolean>>;
   setErrorMessages: Dispatch<
     SetStateAction<{
       email?: string;
@@ -85,7 +87,9 @@ const ActionsUserModal = ({
   originalOrganizationOptions,
   errorMessages,
   resetOrganizationFields,
+  resetRoleField,
   setResetOrganizationFields,
+  setResetRoleField,
   setErrorMessages,
   onClose,
   onDelete,
@@ -127,7 +131,7 @@ const ActionsUserModal = ({
       isTwoFactorAuth: true,
     },
   });
-  // console.log(dirtyFields)
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'organizations',
@@ -261,6 +265,14 @@ const ActionsUserModal = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetOrganizationFields]);
+
+  useEffect(() => {
+    if (resetRoleField) {
+      setValue('roles', defaultValues.roles);
+      setResetRoleField(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetRoleField]);
 
   // Update default value
   useEffect(() => {

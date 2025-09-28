@@ -222,18 +222,38 @@ const ActionsAddMembersModal = memo(
       const updatedParticipantList = dataOptionsParticipants?.filter((member) =>
         member.fullName.toLowerCase().includes(searchName.toLowerCase()),
       );
+      const updatedSelectedUserIds = updatedParticipantList
+        .filter((participant) => participant.type === ChatParticipantType.USER)
+        .map((participant) => Number(String(participant.id).split('-')[1]));
+      const updatedSelectedOrgIds = updatedParticipantList
+        .filter(
+          (participant) =>
+            participant.type === ChatParticipantType.ORGANIZATION,
+        )
+        .map((participant) => Number(String(participant.id).split('-')[1]));
+
+      // Use Set for uniqueness
+      const updatedSelectedUsersBelongToOrgIds = new Set<number>();
+
+      updatedParticipantList
+        .filter(
+          (participant) =>
+            participant.type === ChatParticipantType.ORGANIZATION,
+        )
+        .forEach((org) => {
+          (org.userIds || []).forEach((userId) => {
+            if (!updatedSelectedUserIds.includes(userId)) {
+              updatedSelectedUsersBelongToOrgIds.add(userId);
+            }
+          });
+        });
       setValue(
         'members',
         Array.from(
           new Set([
             ...(watch('members') || []),
-            ...updatedParticipantList
-              .filter(
-                (participant) => participant.type === ChatParticipantType.USER,
-              )
-              .map((participant) =>
-                Number(String(participant.id).split('-')[1]),
-              ),
+            ...updatedSelectedUserIds,
+            ...Array.from(updatedSelectedUsersBelongToOrgIds),
           ]),
         ),
       );
@@ -243,14 +263,7 @@ const ActionsAddMembersModal = memo(
         Array.from(
           new Set([
             ...(watch('organizations') || []),
-            ...updatedParticipantList
-              .filter(
-                (participant) =>
-                  participant.type == ChatParticipantType.ORGANIZATION,
-              )
-              .map((participant) =>
-                Number(String(participant.id).split('-')[1]),
-              ),
+            ...updatedSelectedOrgIds,
           ]),
         ),
       );
@@ -267,23 +280,44 @@ const ActionsAddMembersModal = memo(
       const currentParticipantIds = watch('members') || [];
       const currentOrganizationIds = watch('organizations') || [];
 
+      const matchingUserIds = matchingParticipantList
+        .filter((participant) => participant.type === ChatParticipantType.USER)
+        .map((participant) => Number(String(participant.id).split('-')[1]));
+      const matchingOrgIds = matchingParticipantList
+        .filter(
+          (participant) =>
+            participant.type === ChatParticipantType.ORGANIZATION,
+        )
+        .map((participant) => Number(String(participant.id).split('-')[1]));
+
+      // Use Set for uniqueness
+      const matchingUsersBelongToOrgIds = new Set<number>();
+
+      matchingParticipantList
+        .filter(
+          (participant) =>
+            participant.type === ChatParticipantType.ORGANIZATION,
+        )
+        .forEach((org) => {
+          (org.userIds || []).forEach((userId) => {
+            if (!matchingUserIds.includes(userId)) {
+              matchingUsersBelongToOrgIds.add(userId);
+            }
+          });
+        });
+
       const filteredParticipantIds = currentParticipantIds.filter(
         (participantId) =>
-          !matchingParticipantList.find(
-            (matchingParticipant) =>
-              String(matchingParticipant.id).split('-')[1] ===
-                String(participantId) &&
-              matchingParticipant.type == ChatParticipantType.USER,
-          ),
+          !Array.from(
+            new Set([
+              ...matchingUserIds,
+              ...Array.from(matchingUsersBelongToOrgIds),
+            ]),
+          ).find((userId) => userId == participantId),
       );
       const filteredOrganizationIds = currentOrganizationIds.filter(
         (participantId) =>
-          !matchingParticipantList.find(
-            (matchingParticipant) =>
-              String(matchingParticipant.id).split('-')[1] ===
-                String(participantId) &&
-              matchingParticipant.type == ChatParticipantType.ORGANIZATION,
-          ),
+          !matchingOrgIds.find((orgId) => orgId == participantId),
       );
 
       setValue('members', filteredParticipantIds);

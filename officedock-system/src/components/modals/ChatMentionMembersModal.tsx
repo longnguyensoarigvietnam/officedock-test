@@ -73,11 +73,11 @@ export const ChatMentionMembersList = ({
     );
 
     return (
-      <div className="h-6">
+      <div className="h-[24px]">
         <CustomUserAvatar
           avatarUrl={memberInfo?.avatar || ''}
           avatarColor={memberInfo?.avatarColor || ''}
-          size={33}
+          size={24}
         />
       </div>
     );
@@ -177,11 +177,11 @@ export const ChatMentionMembersList = ({
                         }}
                       />
                     </div>
-                    <div className="flex gap-2 items-center p-1.5 hover:cursor-pointer">
+                    <div className="flex gap-2 items-center p-2 hover:cursor-pointer">
                       {participant.id == null &&
                       participant.fullName == MENTION_ALL_MEMBERS ? (
                         <ImageRound
-                          className="w-8 h-8"
+                          className="w-[24px] h-[24px]"
                           src="/icons/multi-users.svg"
                           border="full"
                           name="Avatar user"
@@ -194,13 +194,13 @@ export const ChatMentionMembersList = ({
                         <>{renderAvatar(participant.id as number)}</>
                       ) : (
                         <ImageRound
-                          className="w-8 h-8"
+                          className="w-[24px] h-[24px]"
                           src="/images/avatar-default.svg"
                           border="full"
                           name="Avatar user"
                         />
                       )}
-                      <p className="font-medium text-[14px] text-black !break-all max-w-[145px]">
+                      <p className="font-medium text-[14px] text-black !break-all max-w-[150px]">
                         {participant.fullName}
                       </p>
                     </div>

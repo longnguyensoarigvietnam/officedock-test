@@ -1155,6 +1155,7 @@ const TableComponent = ({
                         <div className="flex flex-col !h-full w-full">
                           <div className="mb-1 !h-full w-full">
                             <input
+                              key={JSON.stringify(row.original.large)}
                               type="text"
                               className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[6px]`}
                               placeholder="新しいカテゴリーを入力"
@@ -1264,6 +1265,7 @@ const TableComponent = ({
                           <div className="flex flex-col !h-full w-full">
                             <div className="mb-1 !h-full w-full">
                               <input
+                                key={JSON.stringify(row.original.medium)}
                                 type="text"
                                 className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[6px]`}
                                 placeholder="新しいカテゴリーを入力"

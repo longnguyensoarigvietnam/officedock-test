@@ -398,7 +398,8 @@ const LineChartByTeam = ({
           selectedOrganization?.type === OrganizationStatisticType.CALENDAR
             ? String(selectedOrganizationSideBar?.value || '')
             : undefined,
-        userIds: orderingOptions?.user_ids?.length == 0
+        userIds:
+          orderingOptions?.user_ids?.length == 0
             ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
             : selectedMembers?.filter(Boolean).join(','),
       },
@@ -557,7 +558,8 @@ const LineChartByTeam = ({
         selectedOrganization?.type === OrganizationStatisticType.CALENDAR
           ? String(selectedOrganizationSideBar?.value || '')
           : undefined,
-      userIds:  orderingOptions?.user_ids?.length == 0
+      userIds:
+        orderingOptions?.user_ids?.length == 0
           ? (listMemberTeam ?? []).map((user) => Number(user.id)).join(',')
           : selectedMembers?.filter(Boolean).join(','),
     },
@@ -595,6 +597,7 @@ const LineChartByTeam = ({
       ),
     ],
   });
+
   // Hide tooltip when mouse leave over 80px
   useEffect(() => {
     let hideTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -1220,9 +1223,11 @@ const LineChartByTeam = ({
                   setSelectedOrganizationInTable(
                     info.row.original.organizationId,
                   );
-                  setSelectedOrganizationOptionInTable(
-                    info.row.original.categoryId as AllTeamStatisticOption,
-                  );
+                  if (selectedOrganization?.value == ALL_TEAM_STATISTIC) {
+                    setSelectedOrganizationOptionInTable(
+                      info.row.original.categoryId as AllTeamStatisticOption,
+                    );
+                  }
                 }
               }}
             />

@@ -792,6 +792,122 @@ const ActionsEventModal = ({
     );
   };
 
+  const handleGetAllSelectedMembers = () => {
+    const updatedParticipantList = dataOptionsParticipants?.filter((member) =>
+      member.fullName.toLowerCase().includes(searchName.toLowerCase()),
+    );
+    const updatedSelectedUserIds = updatedParticipantList
+      .filter((participant) => participant.type === EventParticipantType.USER)
+      .map((participant) => Number(String(participant.id).split('-')[1]));
+    const updatedSelectedOrgIds = updatedParticipantList
+      .filter(
+        (participant) => participant.type === EventParticipantType.ORGANIZATION,
+      )
+      .map((participant) => Number(String(participant.id).split('-')[1]));
+
+    // Use Set for uniqueness
+    const updatedSelectedUsersBelongToOrgIds = new Set<number>();
+
+    updatedParticipantList
+      .filter(
+        (participant) => participant.type === EventParticipantType.ORGANIZATION,
+      )
+      .forEach((org) => {
+        (org.userIds || []).forEach((userId) => {
+          if (!updatedSelectedUserIds.includes(userId)) {
+            updatedSelectedUsersBelongToOrgIds.add(userId);
+          }
+        });
+      });
+
+    if (removeMyselfOption) {
+      setValue(
+        'participantIds',
+        Array.from(
+          new Set([
+            ...(watch('participantIds') || []),
+            ...updatedSelectedUserIds,
+            ...Array.from(updatedSelectedUsersBelongToOrgIds), // ensure it's an array too
+          ]),
+        )
+          .filter((id) => id != Number(session?.user.id))
+          .map(Number),
+        { shouldDirty: true },
+      );
+    } else {
+      setValue(
+        'participantIds',
+        Array.from(
+          new Set([
+            ...(watch('participantIds') || []),
+            ...updatedSelectedUserIds,
+            ...Array.from(updatedSelectedUsersBelongToOrgIds), // ensure it's an array too
+          ]),
+        ).map(Number),
+        { shouldDirty: true },
+      );
+    }
+
+    setValue(
+      'selectOrganizations',
+      [...(watch('selectOrganizations') || []), ...updatedSelectedOrgIds],
+      { shouldDirty: true },
+    );
+  };
+
+  const handleRemoveAllSelectedMembers = () => {
+    const matchingParticipantList = dataOptionsParticipants?.filter((member) =>
+      member.fullName.toLowerCase().includes(searchName.toLowerCase()),
+    );
+    const currentParticipantIds = watch('participantIds') || [];
+    const currentOrganizationIds = watch('selectOrganizations') || [];
+    const matchingUserIds = matchingParticipantList
+      .filter((participant) => participant.type === EventParticipantType.USER)
+      .map((participant) => Number(String(participant.id).split('-')[1]));
+    const matchingOrgIds = matchingParticipantList
+      .filter(
+        (participant) => participant.type === EventParticipantType.ORGANIZATION,
+      )
+      .map((participant) => Number(String(participant.id).split('-')[1]));
+
+    // Use Set for uniqueness
+    const matchingUsersBelongToOrgIds = new Set<number>();
+
+    matchingParticipantList
+      .filter(
+        (participant) => participant.type === EventParticipantType.ORGANIZATION,
+      )
+      .forEach((org) => {
+        (org.userIds || []).forEach((userId) => {
+          if (!matchingUserIds.includes(userId)) {
+            matchingUsersBelongToOrgIds.add(userId);
+          }
+        });
+      });
+
+    const filteredParticipantIds = currentParticipantIds.filter(
+      (participantId) =>
+        !Array.from(
+          new Set([
+            ...matchingUserIds,
+            ...Array.from(matchingUsersBelongToOrgIds),
+          ]),
+        ).find((userId) => userId == participantId),
+    );
+    const filteredOrganizationIds = currentOrganizationIds.filter(
+      (participantId) =>
+        !matchingOrgIds.find((orgId) => orgId == participantId),
+    );
+
+    setValue('participantIds', filteredParticipantIds, {
+      shouldDirty: true,
+    });
+
+    setValue('selectOrganizations', filteredOrganizationIds, {
+      shouldDirty: true,
+    });
+  };
+
   return (
     <Drawer
       open={open}
@@ -1923,93 +2039,12 @@ const ActionsEventModal = ({
                 <div className="flex justify-between items-center my-3">
                   <p
                     className="text-[#77858F] font-medium text-[11px] hover:cursor-pointer"
-                    onClick={() => {
-                      const updatedParticipantList =
-                        dataOptionsParticipants?.filter((member) =>
-                          member.fullName
-                            .toLowerCase()
-                            .includes(searchName.toLowerCase()),
-                        );
-                      setValue(
-                        'participantIds',
-                        [
-                          ...(watch('participantIds') || []),
-                          ...updatedParticipantList
-                            .filter(
-                              (participant) =>
-                                participant.type === EventParticipantType.USER,
-                            )
-                            .map((participant) =>
-                              Number(String(participant.id).split('-')[1]),
-                            ),
-                        ],
-                        { shouldDirty: true },
-                      );
-
-                      setValue(
-                        'selectOrganizations',
-                        [
-                          ...(watch('selectOrganizations') || []),
-                          ...updatedParticipantList
-                            .filter(
-                              (participant) =>
-                                participant.type ==
-                                EventParticipantType.ORGANIZATION,
-                            )
-                            .map((participant) =>
-                              Number(String(participant.id).split('-')[1]),
-                            ),
-                        ],
-                        { shouldDirty: true },
-                      );
-                    }}>
+                    onClick={handleGetAllSelectedMembers}>
                     全てをチェック
                   </p>
                   <p
                     className="text-[#77858F] font-medium text-[12px] hover:cursor-pointer"
-                    onClick={() => {
-                      const matchingParticipantList =
-                        dataOptionsParticipants?.filter((member) =>
-                          member.fullName
-                            .toLowerCase()
-                            .includes(searchName.toLowerCase()),
-                        );
-                      const currentParticipantIds =
-                        watch('participantIds') || [];
-                      const currentOrganizationIds =
-                        watch('selectOrganizations') || [];
-
-                      const filteredParticipantIds =
-                        currentParticipantIds.filter(
-                          (participantId) =>
-                            !matchingParticipantList.find(
-                              (matchingParticipant) =>
-                                String(matchingParticipant.id).split('-')[1] ===
-                                  String(participantId) &&
-                                matchingParticipant.type ==
-                                  EventParticipantType.USER,
-                            ),
-                        );
-                      const filteredOrganizationIds =
-                        currentOrganizationIds.filter(
-                          (participantId) =>
-                            !matchingParticipantList.find(
-                              (matchingParticipant) =>
-                                String(matchingParticipant.id).split('-')[1] ===
-                                  String(participantId) &&
-                                matchingParticipant.type ==
-                                  EventParticipantType.ORGANIZATION,
-                            ),
-                        );
-
-                      setValue('participantIds', filteredParticipantIds, {
-                        shouldDirty: true,
-                      });
-
-                      setValue('selectOrganizations', filteredOrganizationIds, {
-                        shouldDirty: true,
-                      });
-                    }}>
+                    onClick={handleRemoveAllSelectedMembers}>
                     全てのチェックをクリア
                   </p>
                 </div>

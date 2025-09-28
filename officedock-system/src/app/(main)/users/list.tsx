@@ -86,6 +86,8 @@ const ListUsers = () => {
 
   const [resetOrganizationFields, setResetOrganizationFields] =
     useState<boolean>(false);
+  const [resetRoleField, setResetRoleField] =
+    useState<boolean>(false);
 
   // Error messages
   const [errorMessages, setErrorMessages] = useState<{
@@ -332,6 +334,7 @@ const ListUsers = () => {
           fullName: '',
         });
         setResetOrganizationFields(false);
+        setResetRoleField(false)
       }
     },
     onError: ({
@@ -366,6 +369,7 @@ const ListUsers = () => {
           description: ERROR_UPDATE_ORGANIZATION_MESSAGE,
         });
       } else if (detail) {
+        setResetRoleField(true)
         showToast({
           variant: 'error',
           description: detail?.[0] || ERROR_UPDATE_MESSAGE,
@@ -460,6 +464,7 @@ const ListUsers = () => {
           fullName: '',
         });
         setResetOrganizationFields(false);
+        setResetRoleField(false)
       },
       onError: ({
         response,
@@ -844,7 +849,9 @@ const ListUsers = () => {
             errorMessages={errorMessages}
             setErrorMessages={setErrorMessages}
             resetOrganizationFields={resetOrganizationFields}
+            resetRoleField={resetRoleField}
             setResetOrganizationFields={setResetOrganizationFields}
+            setResetRoleField={setResetRoleField}
             onClose={() => {
               handleRemoveParam();
               setOpenActionsUserModal(false);
@@ -857,6 +864,7 @@ const ListUsers = () => {
                 fullName: '',
               });
               setResetOrganizationFields(false);
+              setResetRoleField(false)
             }}
             onDelete={(userToDelete: User) => {
               handleOpenDeleteUserModal(userToDelete);

@@ -1253,9 +1253,11 @@ const LineChartByTeamTags = ({
                   setSelectedOrganizationInTable(
                     info.row.original.organizationId,
                   );
-                  setSelectedOrganizationOptionInTable(
-                    info.row.original.tagId as AllTeamStatisticOption,
-                  );
+                  if (selectedOrganization?.value == ALL_TEAM_STATISTIC) {
+                    setSelectedOrganizationOptionInTable(
+                      info.row.original.tagId as AllTeamStatisticOption,
+                    );
+                  }
                 }
               }}
             />
