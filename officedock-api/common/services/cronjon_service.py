@@ -15,12 +15,16 @@ from utils.mail import PaymentMailService
 
 
 class CronJobService:
-    def handle_cancel_the_invoice_of_company_temporary_usage(self, day):
-        companies = Company.objects.filter(
-            status=CompanyStatus.TEMPORARY_USAGE.value
-        ).all()
+    def handle_cancel_the_invoice_of_company_temporary_usage(
+        self, day, companies=None
+    ):
+        if not companies:
+            companies = Company.objects.all()
+
         last_month = day - relativedelta(months=1)
-        for company in companies:
+        for company in companies.filter(
+            status=CompanyStatus.TEMPORARY_USAGE.value
+        ):
             invoices = CompanyTransaction.objects.filter(
                 company=company,
                 paid_at__isnull=True,
@@ -33,7 +37,7 @@ class CronJobService:
                         invoice.stripe_invoice_id
                     )
 
-    def handle_send_email_renewal_company_contract(self, day):
+    def handle_send_email_renewal_company_contract(self, day, companies=None):
         if day.month == 12:
             start_year = day.year + 1
             start_month = 1
@@ -41,12 +45,15 @@ class CronJobService:
             start_year = day.year
             start_month = day.month + 1
         usage_month = datetime(start_year, start_month, 1, 0, 0, 0)
-        if companies := Company.objects.filter(
-            contract__next_renewal_at__date=usage_month.date()
-        ).all():
+        if not companies:
+            companies = Company.objects.all()
+
+        if companies:
             tax = Tax.objects.first()
             mail_service = PaymentMailService()
-            for company in companies:
+            for company in companies.filter(
+                contract__next_renewal_at__date=usage_month.date()
+            ):
                 plan = company.company_plan.plan
                 price = plan.monthly_fee + (
                     plan.monthly_fee * tax.percentage / 100
@@ -60,9 +67,12 @@ class CronJobService:
                     price=format(int(price), ","),
                 )
 
-    def iterate_over_all_companies_to_closing(self, today):
+    def iterate_over_all_companies_to_closing(self, today, companies=None):
+        if not companies:
+            companies = Company.objects.all()
+
         transaction_service = TransactionService()
-        for company in Company.objects.all().prefetch_related("users"):
+        for company in companies.prefetch_related("users"):
             company_dates = calculate_company_dates(company, today)
             date_after_closing = company_dates["date_after_closing"]
             start_date_calculation_deadline = company_dates[
