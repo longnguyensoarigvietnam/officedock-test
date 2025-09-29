@@ -7,6 +7,7 @@ from itertools import chain
 
 from django.db.models import (
     Q,
+    Count,
     Prefetch,
     Case,
     When,
@@ -16,7 +17,6 @@ from django.db.models import (
     ExpressionWrapper,
     DurationField,
     F,
-    Sum,
 )
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
@@ -1758,7 +1758,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         # Preload related objects
         durations = durations.select_related(
             "user", "task__organization", "schedule__organization"
-        )
+        ).prefetch_related("task__tags", "schedule__tags")
         # Annotate filtered relations so counting tags does not create nested aggregates
         durations = durations.annotate(
             # Determine organization_id from either task or schedule
@@ -1768,6 +1768,26 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                     schedule__isnull=False, then=F("schedule__organization_id")
                 ),
                 default=Value(None),
+                output_field=IntegerField(),
+            ),
+            related_tag_count=Case(
+                When(
+                    task__isnull=False,
+                    then=Count(
+                        "task__tags",
+                        filter=Q(task__tags__in=tag_ids),
+                        distinct=True,
+                    ),
+                ),
+                When(
+                    schedule__isnull=False,
+                    then=Count(
+                        "schedule__tags",
+                        filter=Q(schedule__tags__in=tag_ids),
+                        distinct=True,
+                    ),
+                ),
+                default=1,
                 output_field=IntegerField(),
             ),
             # Effective paused time
@@ -1784,11 +1804,14 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         )
 
         grouped_durations = durations.values(
-            "organization_id", "user_id"
-        ).annotate(total_duration=Sum("actual_duration"))
+            "organization_id", "user_id", "related_tag_count", "actual_duration"
+        )
         durations_by_user = defaultdict(timedelta)
         for row in grouped_durations:
-            durations_by_user[row["organization_id"], row["user_id"]] += row[
-                "total_duration"
-            ]
+            total_duration = row["actual_duration"]
+            if is_tag_page:
+                total_duration *= row["related_tag_count"]
+            durations_by_user[
+                row["organization_id"], row["user_id"]
+            ] += total_duration
         return durations_by_user
