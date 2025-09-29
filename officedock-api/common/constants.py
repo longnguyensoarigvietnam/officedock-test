@@ -48,3 +48,22 @@ class InvoiceReason(EnumChoices):
     )
     SUBSCRIPTION_UPDATE = "subscription_update"  # A subscription was updated
     UPCOMING = "upcoming"  # Reserved for simulated invoices (upcoming endpoint)
+
+
+class SubscriptionStatus(EnumChoices):
+    INCOMPLETE = "incomplete"
+    INCOMPLETE_EXPIRED = "incomplete_expired"
+    TRIALING = "trialing"
+    ACTIVE = "active"
+    PAST_DUE = "past_due"
+    CANCELED = "canceled"
+    UNPAID = "unpaid"
+    PAUSED = "paused"
+
+
+class InvoiceStatus(EnumChoices):
+    DRAFT = "draft"
+    OPEN = "open"
+    PAID = "paid"
+    UNCOLLECTIBLE = "uncollectible"
+    VOID = "void"

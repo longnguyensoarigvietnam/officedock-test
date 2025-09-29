@@ -19,7 +19,11 @@ from calendars.constants import (
 )
 from calendars.models import Schedule
 from chat.constants import WebSocketEventType
-from common.constants import RETRY_PAYMENT_MAX
+from common.constants import (
+    RETRY_PAYMENT_MAX,
+    InvoiceStatus,
+    SubscriptionStatus,
+)
 from common.helpers import (
     get_all_organizations,
     get_balances_of_user,
@@ -72,7 +76,7 @@ from tasks.constants import (
 )
 from roles.constants import Actions, Screens
 from chat.models import ChatRoom
-from companies.models import Company, CompanyTransaction
+from companies.models import Company, CompanyPlan, CompanyTransaction
 from base.messages import ERROR_MESSAGES
 from common.services.transaction_service import TransactionService
 from common.services.cleanup_data_service import CleanupDataService
@@ -685,7 +689,8 @@ class WebhookView(BaseAPIViewSet):
         elif event.type == "customer.subscription.deleted":
             subscription = event.data.object
             self.handle_subscription_deleted(subscription)
-
+        elif event.type == "invoice.updated":
+            self.handle_update_the_last_invoice(event.data.object)
         else:
             print(f"Unhandled event type: {event.type}")
 
@@ -700,8 +705,10 @@ class WebhookView(BaseAPIViewSet):
         company_transaction = CompanyTransaction.objects.filter(
             stripe_invoice_id=invoice.id
         ).first()
-        company = company_transaction.company
-        if not company:
+        company = Company.objects.filter(
+            stripe_customer_id=invoice.customer
+        ).first()
+        if not company or not company_transaction:
             print(f"❌ Cannot find company of customer {invoice.customer}")
             return
         contract = company.contract
@@ -799,7 +806,6 @@ class WebhookView(BaseAPIViewSet):
         )
 
     def handle_subscription_deleted(self, subscription):
-
         company = Company.objects.filter(
             stripe_customer_id=subscription.customer
         ).first()
@@ -813,13 +819,43 @@ class WebhookView(BaseAPIViewSet):
             ).last()
             if transaction:
                 invoice = stripe.Invoice.retrieve(transaction.stripe_invoice_id)
-                # Get the company's default payment method
-                company = Company.objects.filter(
-                    stripe_customer_id=invoice.customer
-                ).first()
                 # Set the finalize of invoice
                 self.stripe_service.update_invoice_finalize(invoice, company)
             print(f"✅ Company {company.id} cancel subscription")
+
+    def handle_update_the_last_invoice(self, invoice):
+        """
+        Handle update the last invoice, make it finalize in the correct time before terminate contract of company
+        """
+        # Get invoice
+        transaction = CompanyTransaction.objects.filter(
+            type=CompanyTransactionTypes.INVOICE.value,
+            status=TransactionStatus.UNPAID.value,
+            paid_at__isnull=True,
+            stripe_invoice_id=invoice.id,
+        ).last()
+        if not transaction:
+            return
+        company_plan = CompanyPlan.objects.filter(
+            company=transaction.company
+        ).first()
+        subscription = stripe.Subscription.retrieve(
+            company_plan.stripe_subscription_id
+        )
+        if (
+            transaction
+            and invoice.status == InvoiceStatus.DRAFT.value
+            and not invoice.automatically_finalizes_at
+            and subscription.status == SubscriptionStatus.CANCELED.value
+        ):
+            invoice = stripe.Invoice.retrieve(transaction.stripe_invoice_id)
+            # Get the company's default payment method
+            company = Company.objects.filter(
+                stripe_customer_id=invoice.customer
+            ).first()
+            # Set the finalize of invoice
+            self.stripe_service.update_invoice_finalize(invoice, company)
+            print(f"✅ Turn on automatic payment of last invoice ")
 
 
 @extend_schema(tags=["Admin > Creation Data"])
