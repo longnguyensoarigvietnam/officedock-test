@@ -1,5 +1,5 @@
 'use client';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { AxiosError } from 'axios';
 import { useMutation } from 'react-query';
 import { useParams, useRouter } from 'next/navigation';
@@ -8,6 +8,7 @@ import { InformationSection } from '@components/feature/company/detail/Informati
 import Button from '@components/common/Button';
 import { PaymentInformation } from '@components/feature/company/detail/PaymentInformation';
 import { UsageHistory } from '@components/feature/company/detail/UsageHistory';
+import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
@@ -37,6 +38,8 @@ const CompanyDetailInfo = () => {
   const router = useRouter();
   const { showToast } = useToast();
   const { setIsLoading } = useContext(LoadingContext);
+  const [openConfirmTerminateModal, setOpenConfirmTerminateModal] =
+    useState(false);
 
   // Call and handle API get company detail
   const { companyDetail, refetchCompanyDetail } = useCompanyDetail({
@@ -94,6 +97,7 @@ const CompanyDetailInfo = () => {
           description: SUCCESS_SAVE_MESSAGE,
         });
         refetchCompanyDetail();
+        setOpenConfirmTerminateModal(false);
         setIsLoading(false);
       },
       onError: () => {
@@ -101,10 +105,15 @@ const CompanyDetailInfo = () => {
           variant: 'error',
           description: ERROR_SAVE_MESSAGE,
         });
+        setOpenConfirmTerminateModal(false);
         setIsLoading(false);
       },
     },
   );
+
+  const handleOpenTerminateModal = () => {
+    setOpenConfirmTerminateModal(true);
+  };
 
   return (
     <div className="flex flex-col gap-5 items-center pt-5 pl-1 w-[calc(100%_-_10px)]">
@@ -257,13 +266,21 @@ const CompanyDetailInfo = () => {
           <Button
             variant="secondary"
             className="w-28 !text-primary !bg-[#eaeeff] !rounded-lg !border-transparent"
-            onClick={() => terminateContract()}>
+            onClick={handleOpenTerminateModal}>
             解約予約
           </Button>
         ) : (
           <></>
         )}
       </div>
+
+      <ConfirmDeleteModal
+        open={openConfirmTerminateModal}
+        type=''
+        customMessage="本当に解約予約を行いますか？"
+        onConfirm={terminateContract}
+        onClose={() => setOpenConfirmTerminateModal(false)}
+      />
     </div>
   );
 };
