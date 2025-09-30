@@ -91,25 +91,26 @@ export const VotingListPage = () => {
     {
       onSuccess: (data) => {
         const organizationList = data?.organizations?.length
-          ? [
-              ...(data?.organizations?.map((org) => ({
-                orgInfo: { ...org },
-                collapseStatus: true,
-              })) ?? []),
-              {
-                orgInfo: {
-                  id: REMAINING_ORGANIZATIONS_ID,
-                  icon: '',
-                  iconColor: '',
-                  name: '',
-                  type: '',
-                  uuid: '',
-                  candidates: data?.remainingCandidates ?? [],
-                },
-                collapseStatus: true,
-              },
-            ]
+          ? data.organizations.map((org) => ({
+              orgInfo: { ...org },
+              collapseStatus: true,
+            }))
           : [];
+
+        if (data?.remainingCandidates?.length) {
+          organizationList.push({
+            orgInfo: {
+              id: REMAINING_ORGANIZATIONS_ID,
+              icon: '',
+              iconColor: '',
+              name: '',
+              type: '',
+              uuid: '',
+              candidates: data?.remainingCandidates ?? [],
+            },
+            collapseStatus: true,
+          });
+        }
 
         setMemberListByOrganization(organizationList);
       },
