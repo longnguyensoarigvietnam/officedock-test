@@ -87,6 +87,13 @@ class CronJobService:
                 company_users = company.users.all()
                 company_users_count = company_users.count()
 
+                # Update exchangeable coin for user
+                user_exchangeable_amount = 0
+                if company_users_count > 0:
+                    user_exchangeable_amount = (
+                        company.exchangeable_amount // company_users_count
+                    )
+
                 for user in company_users:
                     # Reward coins for thanks messages (top voted)
                     transaction_service.reward_thanks_message(
@@ -107,14 +114,20 @@ class CronJobService:
                         start_date_calculation_deadline,
                     )
 
-                # Update exchangeable coin for user
-                if company_users_count > 0:
-                    user_exchangeable_amount = (
-                        company.exchangeable_amount // company_users_count
-                    )
-                    UserBalance.objects.filter(user__in=company_users).update(
-                        exchangeable_coin=user_exchangeable_amount
-                    )
+                    # Update exchangeable coin for user
+                    if user_balance := UserBalance.objects.filter(
+                        user=user
+                    ).first():
+                        user_balance.exchangeable_coin = (
+                            user_exchangeable_amount
+                        )
+                        user_balance.save(update_fields=["exchangeable_coin"])
+                    else:
+                        UserBalance.objects.create(
+                            company=company,
+                            user=user,
+                            exchangeable_coin=user_exchangeable_amount,
+                        )
 
             # --- Case 2: Deadline day ---
             elif today.day == date_after_data_edit_deadline.day:
