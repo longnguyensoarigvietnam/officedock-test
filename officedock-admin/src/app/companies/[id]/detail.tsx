@@ -261,8 +261,7 @@ const CompanyDetailInfo = () => {
         ) : (
           <></>
         )}
-        {companyDetail?.status == CompanyStatus.ACTIVE_CONTRACT ||
-        companyDetail?.status == CompanyStatus.TEMPORARY_USAGE ? (
+        {companyDetail?.status == CompanyStatus.ACTIVE_CONTRACT ? (
           <Button
             variant="secondary"
             className="w-28 !text-primary !bg-[#eaeeff] !rounded-lg !border-transparent"
