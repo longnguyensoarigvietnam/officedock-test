@@ -673,7 +673,7 @@ const TaskPageDataHeader = () => {
                       ? optionsTaskMe.find(
                           (element) => element.value === taskSelected?.value,
                         )
-                      : undefined
+                      : OPTION_DEFAULT_TASK
                   }
                   onChange={(option: OptionDropdownType) => {
                     setTaskSelected(option);

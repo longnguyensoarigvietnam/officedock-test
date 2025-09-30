@@ -647,7 +647,7 @@ const ActionsVotingModal = ({
                   render={({ field: { value, onChange } }) => (
                     <DatePickerCustom
                       minDate={new Date()}
-                      className="h-[34px] !px-2 !pl-[30px] !border-[1px] !border-[#77858F] rounded-md !text-xs !pt-2 text-center"
+                      className={`h-[34px] !px-2 !pl-[30px] !border-[1px] ${errors.endDate ? '!border-error' : '!border-[#77858F]'} rounded-md !text-xs !pt-2 text-center`}
                       selected={value ? new Date(value) : null}
                       onChange={(e) => {
                         setVotingDateTimeErrorMsg(null);
