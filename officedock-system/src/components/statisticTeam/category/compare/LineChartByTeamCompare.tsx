@@ -1829,9 +1829,11 @@ const LineChartByTeamCompare = ({
                       info.row.original.organizationId,
                     );
                   }
-                  setSelectedOrganizationOptionInTable(
-                    info.row.original.categoryId as AllTeamStatisticOption,
-                  );
+                  if (selectedOrganization?.value == ALL_TEAM_STATISTIC) {
+                    setSelectedOrganizationOptionInTable(
+                      info.row.original.categoryId as AllTeamStatisticOption,
+                    );
+                  }
                 }
               }}
             />

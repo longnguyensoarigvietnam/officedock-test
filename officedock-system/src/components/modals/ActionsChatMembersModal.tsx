@@ -37,10 +37,7 @@ import {
   sortChatParticipants,
 } from '@utils';
 
-import {
-  ChatParticipant,
-  ChatRoomDetail,
-} from '@interfaces/chat';
+import { ChatParticipant, ChatRoomDetail } from '@interfaces/chat';
 import { Profile } from '@interfaces/user';
 
 import api from '@base/api';
@@ -48,7 +45,7 @@ import api from '@base/api';
 export type ActionsChatMembersModalProps = {
   open: boolean;
   participantsList: number[] | undefined;
-  dashboardMemberList: Omit<Profile, "birthday" | "gender">[]
+  dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   dataOptionsParticipants: ChatParticipant[];
   code: string;
   selectedOrganizations: number[];
@@ -260,8 +257,32 @@ const ActionsChatMembersModal = memo(
         )
         ?.map((participant) => Number(String(participant.id).split('-')[1]));
 
+      // Use Set for uniqueness
+      const updatedSelectedUsersBelongToOrgIds = new Set<number>();
+
+      dataOptionsParticipants
+        ?.filter(
+          (member) =>
+            member.type == ChatParticipantType.ORGANIZATION &&
+            (selectedOrganizations || [])?.findIndex(
+              (item) => item == Number(String(member.id).split('-')[1]),
+            ) == -1,
+        )
+        ?.filter((member) =>
+          member.fullName.toLowerCase().includes(searchName.toLowerCase()),
+        )
+        .forEach((org) => {
+          (org.userIds || []).forEach((userId) =>
+            updatedSelectedUsersBelongToOrgIds.add(userId),
+          );
+        });
+
       const uniqueMemberIds = Array.from(
-        new Set([...(watch('members') || []), ...(allParticipantIds || [])]),
+        new Set([
+          ...(watch('members') || []),
+          ...(allParticipantIds || []),
+          ...Array.from(updatedSelectedUsersBelongToOrgIds),
+        ]),
       );
 
       const uniqueOrganizationIds = Array.from(
@@ -286,23 +307,44 @@ const ActionsChatMembersModal = memo(
       const currentParticipantIds = watch('members') || [];
       const currentOrganizationIds = watch('organizations') || [];
 
+      const matchingUserIds = matchingParticipantList
+        .filter((participant) => participant.type === ChatParticipantType.USER)
+        .map((participant) => Number(String(participant.id).split('-')[1]));
+      const matchingOrgIds = matchingParticipantList
+        .filter(
+          (participant) =>
+            participant.type === ChatParticipantType.ORGANIZATION,
+        )
+        .map((participant) => Number(String(participant.id).split('-')[1]));
+
+      // Use Set for uniqueness
+      const matchingUsersBelongToOrgIds = new Set<number>();
+
+      matchingParticipantList
+        .filter(
+          (participant) =>
+            participant.type === ChatParticipantType.ORGANIZATION,
+        )
+        .forEach((org) => {
+          (org.userIds || []).forEach((userId) => {
+            if (!matchingUserIds.includes(userId)) {
+              matchingUsersBelongToOrgIds.add(userId);
+            }
+          });
+        });
+
       const filteredParticipantIds = currentParticipantIds.filter(
         (participantId) =>
-          !matchingParticipantList.find(
-            (matchingParticipant) =>
-              String(matchingParticipant.id).split('-')[1] ===
-                String(participantId) &&
-              matchingParticipant.type == ChatParticipantType.USER,
-          ),
+          !Array.from(
+            new Set([
+              ...matchingUserIds,
+              ...Array.from(matchingUsersBelongToOrgIds),
+            ]),
+          ).find((userId) => userId == participantId),
       );
       const filteredOrganizationIds = currentOrganizationIds.filter(
         (participantId) =>
-          !matchingParticipantList.find(
-            (matchingParticipant) =>
-              String(matchingParticipant.id).split('-')[1] ===
-                String(participantId) &&
-              matchingParticipant.type == ChatParticipantType.ORGANIZATION,
-          ),
+          !matchingOrgIds.find((orgId) => orgId == participantId),
       );
 
       setValue('members', filteredParticipantIds);

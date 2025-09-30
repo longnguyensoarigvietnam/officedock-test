@@ -390,6 +390,7 @@ const EventCalendar = () => {
     ),
   ).current;
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedFilterSchedulesByUsers = useCallback(
     debounce(
       (
@@ -1107,6 +1108,7 @@ const EventCalendar = () => {
                     end: adjustedEndISOString,
                     type: event.type,
                     participants: event.participants || [],
+                    selectOrganizations: event.selectOrganizations || [],
                     location: event.location || '',
                   });
                 }
@@ -1119,6 +1121,7 @@ const EventCalendar = () => {
                   end: adjustedEndISOString,
                   type: event.type,
                   participants: event.participants || [],
+                  selectOrganizations: event.selectOrganizations || [],
                   location: event.location || '',
                 });
               }
@@ -1172,6 +1175,7 @@ const EventCalendar = () => {
             end: adjustedEndISOString,
             type: event.type,
             participants: event.participants || [],
+            selectOrganizations: event.selectOrganizations || [],
             address: event.address || '',
             allDay: event.allDay,
             location: event.location || '',
@@ -1306,6 +1310,7 @@ const EventCalendar = () => {
                   eventId: event.id,
                   type: EventCalendarType.SCHEDULE,
                   participants: event.participants || [],
+                  selectOrganizations: event?.selectOrganizations || [],
                   location: event.location || '',
                   resourceIds: [
                     ...(event.participants
@@ -1477,40 +1482,54 @@ const EventCalendar = () => {
     const currentSelectedOrgIds = selectedScheduleOrgIds
       ? selectedScheduleOrgIds.split(',').filter(Boolean)
       : [];
+    const updatedSelectedUserIds = updatedParticipantList
+      .filter((participant) => participant.type === EventParticipantType.USER)
+      .map((participant) => Number(String(participant.id).split('-')[1]));
+    const updatedSelectedOrgIds = updatedParticipantList
+      .filter(
+        (participant) => participant.type === EventParticipantType.ORGANIZATION,
+      )
+      .map((participant) => Number(String(participant.id).split('-')[1]));
+
+    // Use Set for uniqueness
+    const updatedSelectedUsersBelongToOrgIds = new Set<number>();
+
+    updatedParticipantList
+      .filter(
+        (participant) => participant.type === EventParticipantType.ORGANIZATION,
+      )
+      .forEach((org) => {
+        (org.userIds || []).forEach((userId) => {
+          if (!updatedSelectedUserIds.includes(userId)) {
+            updatedSelectedUsersBelongToOrgIds.add(userId);
+          }
+        });
+      });
+
     let updatedParticipantIds: number[] = [];
     if (removeMyselfOption) {
-      updatedParticipantIds = [
-        ...currentSelectedUserIds,
-        ...updatedParticipantList
-          .filter(
-            (participant) => participant.type === EventParticipantType.USER,
-          )
-          .map((participant) => Number(String(participant.id).split('-')[1])),
-      ]
+      updatedParticipantIds = Array.from(
+        new Set([
+          ...currentSelectedUserIds,
+          ...updatedSelectedUserIds,
+          ...Array.from(updatedSelectedUsersBelongToOrgIds), // ensure it's an array too
+        ]),
+      )
         .filter((id) => id != Number(session?.user.id))
         .map(Number);
     } else {
-      updatedParticipantIds = [
-        ...currentSelectedUserIds,
-        ...updatedParticipantList
-          .filter(
-            (participant) => participant.type === EventParticipantType.USER,
-          )
-          .map((participant) => Number(String(participant.id).split('-')[1])),
-      ].map(Number);
+      updatedParticipantIds = Array.from(
+        new Set([
+          ...currentSelectedUserIds,
+          ...updatedSelectedUserIds,
+          ...Array.from(updatedSelectedUsersBelongToOrgIds), // ensure it's an array too
+        ]),
+      ).map(Number);
     }
 
     setSelectedScheduleUserIds(updatedParticipantIds.join(','));
     setSelectedScheduleOrgIds(
-      [
-        ...(currentSelectedOrgIds || []),
-        ...updatedParticipantList
-          .filter(
-            (participant) =>
-              participant.type === EventParticipantType.ORGANIZATION,
-          )
-          .map((participant) => Number(String(participant.id).split('-')[1])),
-      ].join(','),
+      [...(currentSelectedOrgIds || []), ...updatedSelectedOrgIds].join(','),
     );
 
     debouncedFilterSchedulesByUsers(
@@ -1534,22 +1553,41 @@ const EventCalendar = () => {
     const currentSelectedOrgIds = selectedScheduleOrgIds
       ? selectedScheduleOrgIds.split(',').filter(Boolean)
       : [];
+    const matchingUserIds = matchingParticipantList
+      .filter((participant) => participant.type === EventParticipantType.USER)
+      .map((participant) => Number(String(participant.id).split('-')[1]));
+    const matchingOrgIds = matchingParticipantList
+      .filter(
+        (participant) => participant.type === EventParticipantType.ORGANIZATION,
+      )
+      .map((participant) => Number(String(participant.id).split('-')[1]));
+    // Use Set for uniqueness
+    const matchingUsersBelongToOrgIds = new Set<number>();
+
+    matchingParticipantList
+      .filter(
+        (participant) => participant.type === EventParticipantType.ORGANIZATION,
+      )
+      .forEach((org) => {
+        (org.userIds || []).forEach((userId) => {
+          if (!matchingUserIds.includes(userId)) {
+            matchingUsersBelongToOrgIds.add(userId);
+          }
+        });
+      });
 
     const filteredParticipantIds = currentSelectedUserIds.filter(
       (participantId) =>
-        !matchingParticipantList.find(
-          (matchingParticipant) =>
-            String(matchingParticipant.id).split('-')[1] == participantId &&
-            matchingParticipant.type === EventParticipantType.USER,
-        ),
+        !Array.from(
+          new Set([
+            ...matchingUserIds,
+            ...Array.from(matchingUsersBelongToOrgIds),
+          ]),
+        ).find((userId) => String(userId) == participantId),
     );
     const filteredOrganizationIds = currentSelectedOrgIds.filter(
       (participantId) =>
-        !matchingParticipantList.find(
-          (matchingParticipant) =>
-            String(matchingParticipant.id).split('-')[1] == participantId &&
-            matchingParticipant.type === EventParticipantType.ORGANIZATION,
-        ),
+        !matchingOrgIds.find((orgId) => String(orgId) == participantId),
     );
     setSelectedScheduleUserIds(filteredParticipantIds.join(','));
     setSelectedScheduleOrgIds(filteredOrganizationIds.join(','));
@@ -1973,6 +2011,7 @@ const EventCalendar = () => {
                     isMyEvent: isMyEvent,
                     location: data.location,
                     participants: data.participants,
+                    selectOrganizations: data?.selectOrganizations || [],
                     resourceIds: [
                       ...(data.participants
                         ?.filter(
@@ -2853,6 +2892,7 @@ const EventCalendar = () => {
         <EventListModal
           checkShowUserAvatar={checkShowUserAvatar}
           dashboardMemberList={dashboardMemberList}
+          dataOptionsOrganizations={dataOptionsOrganizations}
           handleCreateNewEventFromPopup={handleCreateNewEventFromPopup}
           handleEventClickInPopup={handleEventClickInPopup}
           eventListModalInfo={eventListModalInfo}

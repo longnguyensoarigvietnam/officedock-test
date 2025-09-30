@@ -15,6 +15,7 @@ export interface EventCalendarDetail {
   type?: string;
   isMyEvent?: boolean;
   participants?: EventParticipant[];
+  selectOrganizations?: number[];
   resourceIds?: string[];
   location?: LocationEventType;
   largeColor?: string;
@@ -163,6 +164,7 @@ export interface EventCalendarProps {
   isMySchedule?: boolean;
   isStart: boolean;
   participants?: EventParticipant[];
+  selectOrganizations?: number[];
   location?: LocationEventType;
   categories?: {
     name: string;
@@ -213,6 +215,7 @@ export interface CalendarPopoverInfo {
     end?: Date;
     type?: EventCalendarType;
     participants?: EventParticipant[];
+    selectOrganizations?: number[];
     location?: LocationEventType;
     allDay?: boolean;
   }>;

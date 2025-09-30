@@ -1,12 +1,6 @@
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
-import {
-  Dispatch,
-  SetStateAction,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { isSameDay } from 'date-fns';
 
 import ImageRound from '@components/common/ImageRound';
@@ -30,11 +24,18 @@ import {
   formatShowDeadline,
   getDateInfo,
 } from '@utils/date';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 interface EventListModalProps {
   eventListModalInfo: CalendarPopoverInfo | null;
-  dashboardMemberList: Profile[]
+  dashboardMemberList: Profile[];
   popoverInfoLoading: boolean;
+  dataOptionsOrganizations: {
+    id: string | number;
+    fullName: string;
+    color: string;
+    userIds: number[];
+  }[];
   setEventListModalInfo: Dispatch<SetStateAction<CalendarPopoverInfo | null>>;
   setDefaultCreateStartDate: Dispatch<SetStateAction<Date | undefined>>;
   handleCreateNewEventFromPopup: () => void;
@@ -50,6 +51,7 @@ export const EventListModal = ({
   eventListModalInfo,
   dashboardMemberList,
   popoverInfoLoading,
+  dataOptionsOrganizations,
   setEventListModalInfo,
   setDefaultCreateStartDate,
   handleCreateNewEventFromPopup,
@@ -86,7 +88,7 @@ export const EventListModal = ({
     return () => {
       document.removeEventListener('click', handleClosePopover, true);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -270,8 +272,25 @@ export const EventListModal = ({
                       }
                     }}>
                     <div className="flex items-center gap-2">
-                      {checkShowUserAvatar(event.type, event.participants) &&
-                        showUserAvatars(event.participants || [])}
+                      {event &&
+                      event?.selectOrganizations &&
+                      event?.selectOrganizations?.length == 1 ? (
+                        <div className="!w-[24px] !h-[24px]">
+                          <GroupIconWithDynamicColor
+                            color={
+                              dataOptionsOrganizations.find(
+                                (org) =>
+                                  event?.selectOrganizations &&
+                                  org.id == event?.selectOrganizations[0],
+                              )?.color || '#228CDB'
+                            }
+                            classname="!w-[24px] !h-[24px]"
+                          />
+                        </div>
+                      ) : (
+                        checkShowUserAvatar(event.type, event.participants) &&
+                        showUserAvatars(event.participants || [])
+                      )}
                       <div className="mb-2">
                         <div
                           className={`font-semibold max-w-[170px] min-h-4 truncate ${event.repeatScheduleId.includes('holiday') && 'text-error'}`}>

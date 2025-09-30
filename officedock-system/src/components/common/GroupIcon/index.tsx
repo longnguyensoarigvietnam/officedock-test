@@ -1,14 +1,15 @@
 export type GroupIconProps = {
   color: string;
+  classname?: string;
 };
 
-const GroupIconWithDynamicColor = ({ color }: GroupIconProps) => {
+const GroupIconWithDynamicColor = ({ color, classname }: GroupIconProps) => {
   return (
     <div
       style={{
         backgroundColor: color,
       }}
-      className={`w-[28px] h-[28px] rounded-full flex items-center justify-center`}>
+      className={`w-[28px] h-[28px] rounded-full flex items-center justify-center ${classname}`}>
       <svg
         width="20"
         height="16"
