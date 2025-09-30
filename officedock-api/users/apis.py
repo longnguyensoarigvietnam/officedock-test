@@ -757,13 +757,6 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         Perform create a user.
         """
         current_user = self.request.user
-
-        # Validate cannot create if max user >= 30
-        if current_user.company.users.count() >= 30:
-            raise ValidationError(
-                {"detail": [ERROR_MESSAGES["max_company_user"]]}
-            )
-
         serializer_data = serializer.validated_data
         email = serializer_data.get("email", None)
         username = serializer_data.get("username", None)
