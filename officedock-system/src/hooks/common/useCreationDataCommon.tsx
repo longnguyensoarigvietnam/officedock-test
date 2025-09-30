@@ -6,7 +6,11 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
 import { CreationDataCommon } from '@interfaces/common';
-import { MediumCategory, SmallCategory } from '@interfaces/statistic';
+import {
+  LargeCategory,
+  MediumCategory,
+  SmallCategory,
+} from '@interfaces/statistic';
 import { NO_SETTING_CATEGORY } from '@constants';
 
 interface useCreationDataCommonHooksProps {
@@ -92,6 +96,7 @@ const useCreationDataCommon = ({
     queryKey: ['getCreationDataCommon', organizationId, options],
     queryFn: getCreationDataCommon,
     select: (response: CreationDataCommon) => {
+      let responseCustom = { ...response };
       if (response.organizationCategories) {
         const updatedOrganizations = response.organizationCategories.map(
           (org) => {
@@ -135,7 +140,10 @@ const useCreationDataCommon = ({
                 // remove duplicate MEDIUM by id
                 const uniqueUpdatedMedium = Array.from(
                   new Map(
-                    updatedMedium.map((medium) => [medium.MEDIUM?.id ?? NO_SETTING_CATEGORY, medium]), 
+                    updatedMedium.map((medium) => [
+                      medium.MEDIUM?.id ?? NO_SETTING_CATEGORY,
+                      medium,
+                    ]),
                   ).values(),
                 );
 
@@ -153,14 +161,253 @@ const useCreationDataCommon = ({
             };
           },
         );
-        return {
-          ...response,
+        responseCustom = {
+          ...responseCustom,
           organizationCategories: updatedOrganizations,
+        };
+      }
+      if (response.myStatistics) {
+        const normalizeCategories = (
+          categories: LargeCategory[],
+        ): LargeCategory[] => {
+          return categories.map((category) => {
+            const isLargeValid = category.LARGE && category.LARGE.id != null;
+            const updatedLarge = isLargeValid
+              ? category.LARGE
+              : NO_SETTING_CATEGORY;
+
+            let updatedMedium: MediumCategory[] = [];
+
+            if (Array.isArray(category.MEDIUM) && category.MEDIUM.length > 0) {
+              updatedMedium = category.MEDIUM.map(
+                (mediumItem): MediumCategory => {
+                  const isMediumValid =
+                    mediumItem.MEDIUM && mediumItem.MEDIUM.id != null;
+                  const updatedMediumValue = isMediumValid
+                    ? mediumItem.MEDIUM
+                    : NO_SETTING_CATEGORY;
+
+                  const updatedSmallRaw: SmallCategory[] = Array.isArray(
+                    mediumItem.SMALL,
+                  )
+                    ? mediumItem.SMALL.map((smallItem) =>
+                        smallItem && smallItem.id != null
+                          ? smallItem
+                          : NO_SETTING_CATEGORY,
+                      )
+                    : [];
+
+                  const hasNoSettingSmall = updatedSmallRaw.some(
+                    (s) => String(s.id) === String(NO_SETTING_CATEGORY.id),
+                  );
+
+                  const updatedSmall: SmallCategory[] = hasNoSettingSmall
+                    ? updatedSmallRaw
+                    : [NO_SETTING_CATEGORY, ...updatedSmallRaw];
+
+                  return {
+                    MEDIUM: updatedMediumValue,
+                    SMALL: updatedSmall,
+                  };
+                },
+              );
+
+              const hasNoSettingMedium = updatedMedium.some(
+                (m) => String(m.MEDIUM?.id) === String(NO_SETTING_CATEGORY.id),
+              );
+
+              if (!hasNoSettingMedium) {
+                updatedMedium = [
+                  {
+                    MEDIUM: NO_SETTING_CATEGORY,
+                    SMALL: [NO_SETTING_CATEGORY],
+                  },
+                  ...updatedMedium,
+                ];
+              }
+            } else {
+              updatedMedium = [
+                {
+                  MEDIUM: NO_SETTING_CATEGORY,
+                  SMALL: [NO_SETTING_CATEGORY],
+                },
+              ];
+            }
+
+            return {
+              ...category,
+              LARGE: updatedLarge,
+              MEDIUM: updatedMedium,
+            };
+          });
+        };
+
+        const updatedOrganizations = response.myStatistics.map(
+          (organization) => ({
+            ...organization,
+            statisticCategories: organization.statisticCategories
+              ? normalizeCategories(organization.statisticCategories)
+              : [],
+          }),
+        );
+
+        responseCustom = {
+          ...responseCustom,
+          myStatistics: updatedOrganizations,
+        };
+      }
+      if (response.organizationStatistics) {
+        const normalizeCategories = (
+          categories: LargeCategory[],
+        ): LargeCategory[] => {
+          return categories.map((category) => {
+            const isLargeValid = category.LARGE && category.LARGE.id != null;
+            const updatedLarge = isLargeValid
+              ? category.LARGE
+              : NO_SETTING_CATEGORY;
+
+            let updatedMedium: MediumCategory[] = [];
+
+            if (Array.isArray(category.MEDIUM) && category.MEDIUM.length > 0) {
+              updatedMedium = category.MEDIUM.map(
+                (mediumItem): MediumCategory => {
+                  const isMediumValid =
+                    mediumItem.MEDIUM && mediumItem.MEDIUM.id != null;
+                  const updatedMediumValue = isMediumValid
+                    ? mediumItem.MEDIUM
+                    : NO_SETTING_CATEGORY;
+
+                  const updatedSmallRaw: SmallCategory[] = Array.isArray(
+                    mediumItem.SMALL,
+                  )
+                    ? mediumItem.SMALL.map((smallItem) =>
+                        smallItem && smallItem.id != null
+                          ? smallItem
+                          : NO_SETTING_CATEGORY,
+                      )
+                    : [];
+
+                  const hasNoSettingSmall = updatedSmallRaw.some(
+                    (s) => String(s.id) === String(NO_SETTING_CATEGORY.id),
+                  );
+
+                  const updatedSmall: SmallCategory[] = hasNoSettingSmall
+                    ? updatedSmallRaw
+                    : [NO_SETTING_CATEGORY, ...updatedSmallRaw];
+
+                  return {
+                    MEDIUM: updatedMediumValue,
+                    SMALL: updatedSmall,
+                  };
+                },
+              );
+
+              const hasNoSettingMedium = updatedMedium.some(
+                (m) => String(m.MEDIUM?.id) === String(NO_SETTING_CATEGORY.id),
+              );
+
+              if (!hasNoSettingMedium) {
+                updatedMedium = [
+                  {
+                    MEDIUM: NO_SETTING_CATEGORY,
+                    SMALL: [NO_SETTING_CATEGORY],
+                  },
+                  ...updatedMedium,
+                ];
+              }
+            } else {
+              updatedMedium = [
+                {
+                  MEDIUM: NO_SETTING_CATEGORY,
+                  SMALL: [NO_SETTING_CATEGORY],
+                },
+              ];
+            }
+
+            return {
+              ...category,
+              LARGE: updatedLarge,
+              MEDIUM: updatedMedium,
+            };
+          });
+        };
+
+        const updatedOrganizations = response.organizationStatistics.map(
+          (organization) => ({
+            ...organization,
+            statisticCategories: organization.statisticCategories
+              ? normalizeCategories(organization.statisticCategories)
+              : [],
+          }),
+        );
+
+        responseCustom = {
+          ...responseCustom,
+          organizationStatistics: updatedOrganizations,
+        };
+      }
+      if (response.organizationsOfAllTeamStatistic) {
+        const updatedOrganizations =
+          response.organizationsOfAllTeamStatistic.map((org) => {
+            const updatedCategories = org.statisticCategories.map(
+              (category) => {
+                const updatedLarge =
+                  category.LARGE && category.LARGE.id != null
+                    ? category.LARGE
+                    : NO_SETTING_CATEGORY;
+
+                const updatedMedium: MediumCategory[] = [
+                  ...(category.MEDIUM || []).map(
+                    (mediumItem): MediumCategory => {
+                      const updatedMediumValue =
+                        mediumItem.MEDIUM && mediumItem.MEDIUM.id != null
+                          ? mediumItem.MEDIUM
+                          : NO_SETTING_CATEGORY;
+
+                      const updatedSmall: SmallCategory[] = [
+                        ...(mediumItem.SMALL || []).map(
+                          (smallItem): SmallCategory =>
+                            smallItem && smallItem.id != null
+                              ? smallItem
+                              : NO_SETTING_CATEGORY,
+                        ),
+                        NO_SETTING_CATEGORY,
+                      ];
+
+                      return {
+                        MEDIUM: updatedMediumValue,
+                        SMALL: updatedSmall,
+                      };
+                    },
+                  ),
+                  {
+                    MEDIUM: NO_SETTING_CATEGORY,
+                    SMALL: [NO_SETTING_CATEGORY],
+                  },
+                ];
+
+                return {
+                  ...category,
+                  LARGE: updatedLarge,
+                  MEDIUM: updatedMedium,
+                };
+              },
+            );
+
+            return {
+              ...org,
+              statisticCategories: updatedCategories,
+            };
+          });
+
+        responseCustom = {
+          ...responseCustom,
+          organizationsOfAllTeamStatistic: updatedOrganizations,
         };
       }
 
       return {
-        ...response,
+        ...responseCustom,
       };
     },
     retry: 0,

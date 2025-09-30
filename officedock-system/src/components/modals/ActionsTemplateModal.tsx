@@ -998,6 +998,7 @@ const ActionsTemplateModal = ({
                 </div>
                 <TextAreaLink
                   disabled={isCheckActionPermission}
+                  classNameCustom
                   initialValue={getValues('description') || ''}
                   onChange={(data) => {
                     setValue('description', data);
@@ -1124,8 +1125,8 @@ const ActionsTemplateModal = ({
                                       <div className="mt-[2.5px] ml-2 flex items-center">
                                         {!isCheckActionPermission && (
                                           <ImageRound
-                                            className="w-[16px] h-[10px] opacity-40 hover:cursor-pointer"
-                                            src="/icons/zoom-out.svg"
+                                            className="!w-fit !h-fit hover:cursor-pointer"
+                                            src="/icons/remove-item.svg"
                                             name="remove icon"
                                             onClick={() => {
                                               setIsFormTouched(true);
@@ -1153,8 +1154,8 @@ const ActionsTemplateModal = ({
                                   </>
                                 );
                                 return snapshot.isDragging
-                                  // eslint-disable-next-line import/no-named-as-default-member
-                                  ? ReactDOM.createPortal(
+                                  ? // eslint-disable-next-line import/no-named-as-default-member
+                                    ReactDOM.createPortal(
                                       draggableElement,
                                       document.body,
                                     )

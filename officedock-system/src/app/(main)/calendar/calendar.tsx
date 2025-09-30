@@ -228,13 +228,14 @@ const EventCalendar = () => {
   // Zoom
   const screenHeight = window.innerHeight;
 
-  const baseHeight = Math.round(43 * (screenHeight / 717));
-  const baseSlider = Math.round(43 * (screenHeight / 717));
-  const [resetTrigger, _setResetTrigger] = useState(0);
-  const [isOptionZoomSchedule, setIsOptionZoomSchedule] = useState('00:15:00');
+  const baseHeight = Math.round(43 * (screenHeight / 890));
+  const baseSlider = Math.round(43 * (screenHeight / 890));
 
   const [sliderValue, setSliderValue] = useState(baseSlider);
   const [slotHeight, setSlotHeight] = useState(baseHeight);
+  const [resetTrigger, _setResetTrigger] = useState(0);
+
+  const [isOptionZoomSchedule, setIsOptionZoomSchedule] = useState('00:15:00');
 
   // Abort controller
   const controllerRef = useRef<AbortController | null>(null);
@@ -2397,7 +2398,28 @@ const EventCalendar = () => {
     return 'zero-all-day-events';
   };
 
-  // Zoom calendar
+  // ZOOM IN / ZOOM OUT SCHEDULE
+  useEffect(() => {
+    const slots = document.querySelectorAll('.fc-timegrid-slot');
+
+    slots.forEach((slot) => {
+      const slotElement = slot as HTMLElement;
+      slotElement.style.height = `${slotHeight}px`;
+      slotElement.style.minHeight = `${slotHeight}px`;
+    });
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      if (calendarApi) {
+        calendarApi.updateSize();
+        const newDataTimeList = events.map((event) => {
+          return { ...event };
+        });
+        // Set data schedule
+        setEvents(newDataTimeList);
+      }
+    }
+  }, [slotHeight, searchParams]);
+
   const calculateSlotHeight = (value: number): number => {
     if (value < 38) {
       return 93 - (38 - value);
@@ -2416,24 +2438,6 @@ const EventCalendar = () => {
     }
     return '00:15:00';
   };
-
-  // ZOOM IN / ZOOM OUT SCHEDULE
-  useEffect(() => {
-    const slots = document.querySelectorAll('.fc-timegrid-slot');
-
-    slots.forEach((slot) => {
-      const slotElement = slot as HTMLElement;
-      slotElement.style.height = `${slotHeight}px`;
-      slotElement.style.minHeight = `${slotHeight}px`;
-    });
-
-    if (calendarRef.current) {
-      const calendarApi = calendarRef.current.getApi();
-      if (calendarApi) {
-        calendarApi.updateSize();
-      }
-    }
-  }, [slotHeight, searchParams]);
 
   const [keySearch, setKeySearch] = useState<string>('');
   const debouncedSearch = useDebounceText(keySearch, 800);
