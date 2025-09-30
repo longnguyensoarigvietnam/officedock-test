@@ -48,7 +48,8 @@ class Company(BaseModel):
     def exchangeable_amount(self):
         return (
             self.company_plan.plan.exchangeable_amount
-            if hasattr(self, "plan") and hasattr(self.plan, "plan")
+            if hasattr(self, "company_plan")
+            and hasattr(self.company_plan, "plan")
             else 0
         )
 
