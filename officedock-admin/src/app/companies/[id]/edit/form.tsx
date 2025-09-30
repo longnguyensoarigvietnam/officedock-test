@@ -51,6 +51,7 @@ import { OptionDropdownType } from '@interfaces/common';
 import { EditCompanyRequest } from '@interfaces/company';
 
 import { emailRules } from '@utils/validators';
+import { normalizeJapaneseText } from '@utils';
 
 import api from '@base/api';
 
@@ -448,7 +449,7 @@ const EditCompanyForm = () => {
               value={
                 typeof currentValue === 'number'
                   ? String(currentValue)
-                  : currentValue
+                  : normalizeJapaneseText(currentValue)
               }
               onChange={(val) => {
                 const option = industryOptions?.find(
@@ -487,7 +488,7 @@ const EditCompanyForm = () => {
                   });
                 }
               }}
-              placeholder="職種を選択"
+              placeholder="選択"
               className="w-full shadow-none text-sm !rounded mt-1.5 md:mt-0"
               customStyleClassName={
                 errors.contract?.industry?.message
@@ -518,7 +519,7 @@ const EditCompanyForm = () => {
             value={
               Array.isArray(value)
                 ? value.map((v) =>
-                    v.other ? OTHER_OPTION_VALUE : String(v.value),
+                    v.other ? OTHER_OPTION_VALUE : normalizeJapaneseText(String(v.value)),
                   )
                 : []
             }
@@ -540,7 +541,7 @@ const EditCompanyForm = () => {
                   : [],
               );
             }}
-            placeholder={'資格を選択'}
+            placeholder={'選択'}
             className="w-full shadow-none text-sm !rounded mt-1.5 md:mt-0"
             customStyleClassName={
               errors.contract?.systemMainPurpose?.message
@@ -586,7 +587,7 @@ const EditCompanyForm = () => {
               value={
                 Array.isArray(value)
                   ? value.map((v) =>
-                      v.other ? OTHER_OPTION_VALUE : String(v.value),
+                      v.other ? OTHER_OPTION_VALUE : normalizeJapaneseText(String(v.value)),
                     )
                   : []
               }
@@ -642,7 +643,7 @@ const EditCompanyForm = () => {
 
                 onChange(updatedValue);
               }}
-              placeholder={'資格を選択'}
+              placeholder={'選択'}
               className="w-full shadow-none text-sm !rounded mt-1.5 md:mt-0"
               customStyleClassName={
                 errors.contract?.department?.message

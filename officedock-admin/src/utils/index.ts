@@ -44,7 +44,10 @@ export const isContentEmpty = (content: string) => {
 };
 
 // Format Japanese date range with start and end date
-export const formatJapaneseDateRange = (startDate: string | null, endDate: string | null) => {
+export const formatJapaneseDateRange = (
+  startDate: string | null,
+  endDate: string | null,
+) => {
   if (!startDate) return '';
 
   const start = new Date(startDate);
@@ -65,3 +68,5 @@ export const formatJapaneseDateRange = (startDate: string | null, endDate: strin
     return `${startYear}年${startMonth}月~${endYear}年${endMonth}月`;
   }
 };
+
+export const normalizeJapaneseText = (str: string) => str.normalize('NFC');
