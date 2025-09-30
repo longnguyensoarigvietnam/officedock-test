@@ -6,12 +6,15 @@ import Button from '@components/common/Button';
 import Modal from '@components/common/Modal';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 
+import useSurveyDetail from '@hooks/useSurveyDetail';
+import { useUpdateSurveyDetailCache } from '@hooks/CacheQuery/useUpdateSurveyDetailCache';
+
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { apiRouters } from '@constants/routers';
 
 import { useToast } from '@providers/ToastProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
-import useSurveyDetail from '@hooks/useSurveyDetail';
 import { formatShowDateJapanese } from '@utils/date';
 import { getDaysUntil } from '@utils';
 import api from '@base/api';
@@ -32,20 +35,24 @@ const ActionAnswerSurveyModal = ({
   onClose,
 }: Props) => {
   const { showToast } = useToast();
+  const { data: session } = useSessionCache();
+
+  const [isMyCreate, setMyCreate] = useState(isMySurvey);
 
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
 
-  const { surveyDetail, isFetchingSurveyDetail, refetchSurveyDetail } =
-    useSurveyDetail({
-      surveyId: detailId,
-      onSuccess: (data) => {
-        const selectedItem = data.questions.find((q) => q.isSelected);
+  const { surveyDetail, isFetchingSurveyDetail } = useSurveyDetail({
+    surveyId: detailId,
+    onSuccess: (data) => {
+      const selectedItem = data.questions.find((q) => q.isSelected);
 
-        if (selectedItem) {
-          setSelectedAnswer(selectedItem.id);
-        }
-      },
-    });
+      if (selectedItem) {
+        setSelectedAnswer(selectedItem.id);
+      }
+      setMyCreate(data.createdBy.id == session?.user.id);
+    },
+  });
+  const { updateSurveyQuestion } = useUpdateSurveyDetailCache();
 
   // Answer API
   const handleAnswerQuestion = async (id: number) => {
@@ -56,9 +63,9 @@ const ActionAnswerSurveyModal = ({
     'postAnswerQuestion',
     handleAnswerQuestion,
     {
-      onSuccess: () => {
-        if (isMySurvey) {
-          refetchSurveyDetail();
+      onSuccess: (data, id) => {
+        if (isMyCreate) {
+          updateSurveyQuestion(detailId, id);
         }
       },
       onError: () => {
@@ -75,7 +82,6 @@ const ActionAnswerSurveyModal = ({
     (sum, o) => sum + o.selectedUserCount,
     0,
   );
-  const isViewDetail = isMySurvey;
 
   return (
     <Modal
@@ -158,9 +164,9 @@ const ActionAnswerSurveyModal = ({
                         handleAnswerSurvey(surveyDetail.id);
                       }
                     }}
-                    className={`${selectedAnswer == question.id && surveyDetail.status.open && !isViewDetail && 'bg-[#8DD1EE] !text-black'} relative min-h-[44px] flex items-center ${surveyDetail.status.open && 'cursor-pointer'}  justify-between rounded-md border border-[#77858F] overflow-hidden`}>
+                    className={`${selectedAnswer == question.id && surveyDetail.status.open && !isMyCreate && 'bg-[#8DD1EE] !text-black'} relative min-h-[44px] flex items-center ${surveyDetail.status.open && 'cursor-pointer'}  justify-between rounded-md border border-[#77858F] overflow-hidden`}>
                     {/* Background color bar */}
-                    {(surveyDetail.status.closed || isViewDetail) && (
+                    {(surveyDetail.status.closed || isMyCreate) && (
                       <div
                         className={`absolute top-0 left-0 h-full ${
                           selectedAnswer == question.id
@@ -177,11 +183,11 @@ const ActionAnswerSurveyModal = ({
                       <p
                         dangerouslySetInnerHTML={{ __html: question.text }}
                         className={`text-sm break-all font-normal text-[#77858F] ${selectedAnswer == question.id && ' !text-black'}`}></p>
-                      {(surveyDetail.status.closed || isViewDetail) && (
+                      {(surveyDetail.status.closed || isMyCreate) && (
                         <span
                           className={`text-sm flex-shrink-0 ${
                             question.selectedUserCount === 0
-                              ? isViewDetail
+                              ? isMyCreate
                                 ? 'text-back'
                                 : 'text-[#77858F]'
                               : 'text-black'
@@ -194,12 +200,12 @@ const ActionAnswerSurveyModal = ({
                 );
               })}{' '}
             </div>
-            {surveyDetail?.status.open && !isViewDetail && (
+            {surveyDetail?.status.open && !isMyCreate && (
               <p className="text-[13px] font-normal mt-[8px]">
                 残り{surveyDetail?.endAt && getDaysUntil(surveyDetail.endAt)}日
               </p>
             )}
-            {(surveyDetail?.status.closed || isViewDetail) && (
+            {(surveyDetail?.status.closed || isMyCreate) && (
               <p className="text-[13px] font-normal mt-[8px]">
                 合計{totalVotes}票
               </p>

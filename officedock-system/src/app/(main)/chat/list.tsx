@@ -83,6 +83,7 @@ interface dataProps {
   setHasMoreDetailOnScrollDown: Dispatch<SetStateAction<boolean>>;
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
   handleSetChatRoomParam: (code: string) => void;
+  handleRemoveChatRoomParam: () => void;
 }
 const ListChatUsers = ({
   hasMore,
@@ -100,6 +101,7 @@ const ListChatUsers = ({
   setHasMoreDetailOnScrollDown,
   setSearchChatMsg,
   handleSetChatRoomParam,
+  handleRemoveChatRoomParam,
 }: dataProps) => {
   // Refs
   const { ref: listRoomRef, inView: inViewListRoom } = useInView({
@@ -611,6 +613,37 @@ const ListChatUsers = ({
         case SocketActions.ADD_PARTICIPANT:
           handleAddParticipantLocal(data);
           break;
+        case SocketActions.HIDE_ROOM:
+          setDataChatList((prev) =>
+            prev.filter((item) => item.code != chatRoomCode),
+          );
+          setFilteredChatList((prev) =>
+            prev.filter((item) => item.code != chatRoomCode),
+          );
+          if (
+            data.chatRoom &&
+            chatRoomCode &&
+            data.chatRoom.code == chatRoomCode
+          ) {
+            if (dataChatList.length > 0) {
+              if (dataChatList[0].code != chatRoomCode) {
+                setLastItemId(null);
+                handleSetChatRoomParam(dataChatList[0].code);
+              } else {
+                if (dataChatList.length > 1) {
+                  if (dataChatList[1].code != chatRoomCode) {
+                    setLastItemId(null);
+                    handleSetChatRoomParam(dataChatList[1].code);
+                  } else {
+                    handleRemoveChatRoomParam();
+                  }
+                }
+              }
+            } else {
+              handleRemoveChatRoomParam();
+            }
+          }
+          break;
         default:
           break;
       }
@@ -984,7 +1017,7 @@ const ListChatUsers = ({
       page: 1,
       showLastMessageAt: false,
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedRoomNameSearch]);
 
   useEffect(() => {
@@ -1334,7 +1367,10 @@ const ListChatUsers = ({
           <div ref={listRoomRef} className="h-7">
             <div>
               {initialLoad ? (
-                <RowSkeleton numberOfRows={20} className="!h-[50px] !bg-[#E6F3FB]" />
+                <RowSkeleton
+                  numberOfRows={20}
+                  className="!h-[50px] !bg-[#E6F3FB]"
+                />
               ) : (
                 <div className="w-full h-6"></div>
               )}
@@ -1416,7 +1452,10 @@ const ListChatUsers = ({
             <div ref={listSearchRoomRef} className="h-7">
               <div>
                 {initialLoadSearch ? (
-                  <RowSkeleton numberOfRows={20} className="!h-[50px] !bg-[#E6F3FB]" />
+                  <RowSkeleton
+                    numberOfRows={20}
+                    className="!h-[50px] !bg-[#E6F3FB]"
+                  />
                 ) : (
                   <div className="w-full h-6"></div>
                 )}

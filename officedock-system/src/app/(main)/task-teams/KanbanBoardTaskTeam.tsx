@@ -530,6 +530,7 @@ const KanbanBoardTaskTeam = () => {
     ) {
       return;
     }
+
     if (
       StatusTask[sourceStatus as keyof typeof StatusTask] ===
         StatusTask.COMPLETED &&
@@ -539,6 +540,7 @@ const KanbanBoardTaskTeam = () => {
     ) {
       return;
     }
+
     if (
       StatusTask[destStatus as keyof typeof StatusTask] ===
         StatusTask.COMPLETED &&
@@ -546,6 +548,7 @@ const KanbanBoardTaskTeam = () => {
     ) {
       return;
     }
+
     if (
       StatusTask[sourceStatus as keyof typeof StatusTask] !==
         StatusTask.COMPLETED &&
@@ -555,6 +558,7 @@ const KanbanBoardTaskTeam = () => {
     ) {
       return;
     }
+
     // Move concurrent task to another status then return
     if (
       sourceUserId === destUserId &&
@@ -711,6 +715,7 @@ const KanbanBoardTaskTeam = () => {
         });
       }
     }
+
     // Drag user --> drop no setting
     if (sourceUserId !== COLUMN_ID_TASK && destUserId === COLUMN_ID_TASK) {
       const newUsers = listDataKanbanTeam.map((user) => ({
@@ -849,6 +854,7 @@ const KanbanBoardTaskTeam = () => {
         });
       }
     }
+
     // Drag no setting --> drop user
     if (sourceUserId === COLUMN_ID_TASK && destUserId !== COLUMN_ID_TASK) {
       const newUsers = listDataKanbanTeam.map((user) => ({
@@ -1003,7 +1009,6 @@ const KanbanBoardTaskTeam = () => {
       const sourceUser = newUsers.find((user) => user.id === sourceUserId);
       const destUser = newUsers.find((user) => user.id === destUserId);
       if (!sourceUser || !destUser) return;
-
       const sourceTasks = [
         ...sourceUser.statuses[sourceStatus as keyof TransformedStatuses],
       ];

@@ -549,7 +549,7 @@ export const SearchMessagesModal = ({
                           <ImageRound
                             name="Book mark"
                             src={`/icons/save-active.svg`}
-                            className="w-[10px] h-[12px] hover:cursor-pointer"
+                            className="w-[10px] relative top-[2px] h-[12px] hover:cursor-pointer"
                           />
                         )}
                       </div>

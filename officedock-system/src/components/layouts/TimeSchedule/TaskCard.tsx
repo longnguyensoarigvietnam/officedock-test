@@ -25,6 +25,7 @@ import {
 import { TaskTimeSchedule } from '@interfaces/task';
 import { EventEditFormData } from '@interfaces/calendar';
 import { generateVerticalGradient } from '@utils';
+import { CreationDataCommon } from '@interfaces/common';
 
 interface TaskCardProps {
   event: EventContentArg;
@@ -36,6 +37,7 @@ interface TaskCardProps {
   isShiftPressed: boolean;
   taskTimeScheduleList: TaskTimeSchedule[];
   isModalShow: boolean;
+  creationDataCommonData: CreationDataCommon | undefined;
   handleSetEventParam: ({
     id,
     action,
@@ -73,6 +75,7 @@ const TaskCard = ({
   slotHeight,
   isOptionZoomSchedule,
   taskTimeScheduleList,
+  creationDataCommonData,
   onDeleteEvent,
   deletePlanTask,
   deleteActualTask,
@@ -387,6 +390,7 @@ const TaskCard = ({
               monthDay: event.event?.extendedProps?.monthDay,
               month: event.event?.extendedProps?.month,
             }}
+            creationDataCommonData={creationDataCommonData}
             onDelete={onDeleteEvent}
           />
         ) : (

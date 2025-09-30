@@ -33,7 +33,10 @@ interface MessageHoverOptionsProps {
     };
     replyUuid: string;
   }) => void;
-  handleQuoteMsgIcon: (data: { uuid: string; title: string }) => void;
+  handleQuoteMsgIcon: (data: {
+    data: ChatMessageResponse;
+    title: string;
+  }) => void;
 }
 
 export const MessageHoverOptions = ({
@@ -165,20 +168,21 @@ export const MessageHoverOptions = ({
         <>
           <div className="relative">
             <DynamicTooltip content={'返信'} placement="top">
-              <div className="bg-[#f0f1f1] relative  hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
+              <div
+                onClick={() => {
+                  handleReplyMsg({
+                    user: {
+                      id: messageDetail.sender.id,
+                      name: messageDetail.sender.fullName,
+                    },
+                    replyUuid: messageDetail.uuid,
+                  });
+                }}
+                className="bg-[#f0f1f1] relative  hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
                 <ImageRound
                   name="Reply"
                   src={'/icons/reply.svg'}
                   className="w-[18px] h-[15px] hover:cursor-pointer"
-                  onClick={() => {
-                    handleReplyMsg({
-                      user: {
-                        id: messageDetail.sender.id,
-                        name: messageDetail.sender.fullName,
-                      },
-                      replyUuid: messageDetail.uuid,
-                    });
-                  }}
                 />
               </div>
             </DynamicTooltip>
@@ -248,17 +252,18 @@ export const MessageHoverOptions = ({
           </DynamicTooltip>
 
           <DynamicTooltip content={'引用'} placement="top">
-            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full px-[7px] py-[9px] hover:cursor-pointer">
+            <div
+              onClick={() => {
+                handleQuoteMsgIcon({
+                  data: messageDetail,
+                  title: '',
+                });
+              }}
+              className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full px-[7px] py-[9px] hover:cursor-pointer">
               <ImageRound
                 name="Quotation"
                 src={'/icons/quotation.svg'}
                 className="w-[15px] h-[10px] hover:cursor-pointer"
-                onClick={() => {
-                  handleQuoteMsgIcon({
-                    uuid: messageDetail.uuid,
-                    title: '',
-                  });
-                }}
               />
             </div>
           </DynamicTooltip>

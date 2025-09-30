@@ -3233,10 +3233,7 @@ const ActionsTaskModal = ({
                                               />
                                               <div className="mt-[2.5px] ml-2 flex items-center">
                                                 {!isCheckActionPermission && (
-                                                  <ImageRound
-                                                    className="!w-fit !h-fit hover:cursor-pointer"
-                                                    src="/icons/remove-item.svg"
-                                                    name="remove icon"
+                                                  <div
                                                     onClick={() => {
                                                       setIsFormTouched(true);
                                                       if (todo.customId) {
@@ -3261,7 +3258,13 @@ const ActionsTaskModal = ({
                                                         ]);
                                                       }
                                                     }}
-                                                  />
+                                                    className="h-3 flex items-center hover:cursor-pointer">
+                                                    <ImageRound
+                                                      className="!w-fit !h-fit hover:cursor-pointer"
+                                                      src="/icons/remove-item.svg"
+                                                      name="remove icon"
+                                                    />
+                                                  </div>
                                                 )}
                                               </div>
                                             </li>

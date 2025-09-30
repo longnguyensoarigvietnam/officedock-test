@@ -2436,3 +2436,44 @@ export function mergeAvatarUrls(
 
   return [...updatedList, ...newItems];
 }
+
+export function getRootPSpanData(html: string) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  const rootPs = Array.from(doc.body.children).filter(
+    (el) => el.tagName.toLowerCase() === 'p',
+  );
+
+  const allData = rootPs.flatMap((p) => {
+    const spans = Array.from(p.children).filter(
+      (el) => el.tagName.toLowerCase() === 'span',
+    );
+
+    return spans
+      .map((span) => {
+        const raw = span.getAttribute('data-msg-data');
+        try {
+          return raw ? JSON.parse(raw) : null;
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
+  });
+
+  return { data: allData };
+}
+export function attachUuidToAllP(html: string, listFiles: string[]): string {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  // get all <body> > <p> (only get direct children of body)
+  const pEls = doc.querySelectorAll('body > p');
+
+  pEls.forEach((pEl) => {
+    pEl.setAttribute('data-uuid', JSON.stringify(listFiles));
+  });
+  // get back full HTML inside body
+  return doc.body.innerHTML;
+}

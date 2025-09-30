@@ -308,7 +308,7 @@ const Dropdown = ({
                                   />
                                 )}
                                 <p
-                                  className={` ${!openByDefault ? 'ml-1' : 'text-center w-full'} ${!isStatusDropdown && selected?.value == option.value ? (isShowTextActive ? '' : 'text-blue-500') : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px] !text-sm'} w-[100%] break-words ${disableItems.includes(String(option.value)) && 'text-gray-300 hover:cursor-not-allowed'}`}>
+                                  className={` ${!openByDefault ? 'ml-1' : 'text-center w-full'} ${!isStatusDropdown && selected?.value == option.value ? (isShowTextActive ? '' : 'text-blue-500') : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px] !text-sm'} ${isShowTextActive ? 'w-[78%] ' : 'w-[100%] '} break-words ${disableItems.includes(String(option.value)) && 'text-gray-300 hover:cursor-not-allowed'}`}>
                                   {option.label}
                                 </p>
                                 {isStatusDropdown && (
@@ -318,7 +318,7 @@ const Dropdown = ({
                                   </p>
                                 )}
                                 {isShowTextActive && (
-                                  <p className="w-fit text-[#A7B7C2] text-xs flex-shrink-0">
+                                  <p className="w-fit  text-[#A7B7C2] text-xs flex-shrink-0">
                                     {selected?.value === option.value &&
                                       '選択中'}
                                   </p>

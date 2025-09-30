@@ -513,6 +513,15 @@ const TaskPageDataHeader = () => {
           },
         ]);
 
+        setTaskSelectedAction({
+          id:
+            idTaskStarting.type === ItemStartType.TASK
+              ? `${idTaskStarting.id}`
+              : `${`${idTaskStarting.id}`.replace('event', '')}event`,
+          isStart: false,
+          type: `${idTaskStarting.type}`,
+        });
+
         calculateDurationTask({
           id: String(data.id),
           type: ItemStartType.TASK,

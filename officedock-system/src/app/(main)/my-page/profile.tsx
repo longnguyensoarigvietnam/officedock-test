@@ -382,7 +382,7 @@ const MyPage = () => {
           width: '100%',
           height: '100%',
         }}
-        className="h-[calc(100vh-120px)] w-full">
+        className="h-[calc(100vh-120px)] w-full flex flex-col">
         <div className="flex ">
           <div className="h-20 bg-white w-fit px-5 py-4 text-[#77858F] font-medium flex items-center gap-5  shadow-common rounded-br-[30px]">
             <div>{session?.user.id && renderBoxUser()}</div>
@@ -583,7 +583,7 @@ const MyPage = () => {
             <></>
           )}
         </div>
-        <div className="mt-[74px] mb-5 relative ml-[30px] flex items-end">
+        <div className=" relative ml-[30px] mb-[40px] flex items-end flex-grow">
           {/* Menu */}
           <MyPageMenu
             onClickSettingSurvey={() => setOpenSettingSurvey(true)}
@@ -608,7 +608,7 @@ const MyPage = () => {
                     'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
                   boxShadow: '0px 4px 0px 0px #355AC940',
                 }}
-                className="absolute top-[13px] left-[555px] p-[10px] rounded-[14px] w-[258px] h-fit] ">
+                className="absolute top-[calc(100%_-_531px)] left-[555px] p-[10px] rounded-[14px] w-[258px] h-fit ">
                 <p className="text-white text-[13px] font-bold">マイルくん</p>
                 <div className="mt-[10px] w-full bg-white rounded-[5px] p-4 text-[13px] font-semibold text-black">
                   {receivedThanksMessageList?.length
@@ -616,7 +616,7 @@ const MyPage = () => {
                     : 'ポイントが貯まると、素敵な商品と交換できるよ！'}
                 </div>
               </div>
-              <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[25px] w-[22px] top-[128px] left-[585px]"></div>
+              <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[25px] w-[22px] top-[calc(100%_-_417px)] left-[585px]"></div>
             </>
             {/* Seagull icon */}
             {receivedThanksMessageList?.length ? (

@@ -537,6 +537,7 @@ export const apiRouters = {
   LIST_CHAT_FILE: '/chat-files/',
   FILE_DETAIL: (id: string) => `/chat-files/${id}/`,
   MUTE_CHAT: (code: string) => `/chat/${code}/mute/`,
+  LEAVE_GROUP: (code: string) => `/chat/${code}/leave_group/`,
 
   // BOOKMARK
   BOOKMARK_LIST: '/messages/',

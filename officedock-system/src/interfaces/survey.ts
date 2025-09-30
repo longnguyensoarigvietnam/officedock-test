@@ -35,13 +35,13 @@ export type SurveyDetailType = {
     avatar: string;
     avatarColor: string;
     fullName: string;
-    id: 108;
+    id: number;
   };
 
   isAnswered: boolean;
   title: string;
   questions: {
-    id: 1;
+    id: number;
     isSelected: boolean;
     order: number;
     selectedUserCount: number;
