@@ -82,7 +82,6 @@ from .serializers import (
     CreationDataTaskListSerializer,
 )
 from .utils import (
-    calculate_company_dates,
     check_task_overtime,
     format_date,
     get_a_day_in_next_month,
@@ -910,105 +909,51 @@ class TestingViewset(BaseAPIViewSet):
         if company_id:
             all_companies = Company.objects.filter(id=company_id)
 
-            if not all_companies.exists():
-                raise ValidationError(
-                    {
-                        "detail": ERROR_MESSAGES["company_not_exists"].format(
-                            id=company_id
-                        )
-                    }
-                )
-        else:
-            all_companies = Company.objects.all()
+        if not company_id or not all_companies.exists():
+            raise ValidationError(
+                {
+                    "detail": ERROR_MESSAGES["company_not_exists"].format(
+                        id=company_id
+                    )
+                }
+            )
 
-        transaction_service = TransactionService()
         cleanup_data_service = CleanupDataService()
 
         # 1. Cleanup data
         # Cleanup companies whose contracts ended after the 2-month retention period
         deleted_company_contract_count = (
-            cleanup_data_service.cleanup_data_company_contracts(today)
+            cleanup_data_service.cleanup_data_company_contracts(
+                today, all_companies
+            )
         )
         # Cleanup soft-deleted thanks messages after retention period
         deleted_tks_msg_count = (
-            cleanup_data_service.cleanup_data_thanks_messages(today)
+            cleanup_data_service.cleanup_data_thanks_messages(
+                today, all_companies
+            )
         )
 
         # 2. Iterate over all companies to handle closing logic
-        for company in all_companies.prefetch_related("users"):
-            company_dates = calculate_company_dates(company, today)
-            date_after_closing = company_dates["date_after_closing"]
-            start_date_calculation_deadline = company_dates[
-                "start_date_calculation_deadline"
-            ]
-            date_after_data_edit_deadline = company_dates[
-                "date_after_data_edit_deadline"
-            ]
-
-            # --- Case 1: Closing day ---
-            if today.day == date_after_closing.day:
-                company_users = company.users.all()
-                company_users_count = company_users.count()
-
-                for user in company_users:
-                    # Reward coins for thanks messages (top voted)
-                    transaction_service.reward_thanks_message(
-                        user,
-                        date_after_closing,
-                        start_date_calculation_deadline,
-                    )
-
-                    # Reward pearls
-                    transaction_service.reward_login_bonus(
-                        user,
-                        date_after_closing,
-                        start_date_calculation_deadline,
-                    )
-                    transaction_service.reward_task_complete(
-                        user,
-                        date_after_closing,
-                        start_date_calculation_deadline,
-                    )
-
-                # Update exchangeable coin for user
-                if company_users_count > 0:
-                    user_exchangeable_amount = (
-                        company.exchangeable_amount // company_users_count
-                    )
-                    UserBalance.objects.filter(user__in=company_users).update(
-                        exchangeable_coin=user_exchangeable_amount
-                    )
-
-            # --- Case 2: Deadline day ---
-            elif today.day == date_after_data_edit_deadline.day:
-                # Process working time rewards for all users in the company
-                # This runs at 00:00 of the day after the deadline
-                # Get all users in the company
-                company_users = company.users.all()
-
-                # Process working time rewards for each user for the entire month
-                for user in company_users:
-                    # Calculate total working time rewards for the entire month
-                    transaction_service.reward_actual_working_time(
-                        start_date_calculation_deadline,
-                        date_after_closing,
-                        user,
-                    )
+        self.cronjob_service.iterate_over_all_companies_to_closing(
+            today, all_companies
+        )
 
         # 3. Send mail notify renewal contract
         if today.day == 1:
             self.cronjob_service.handle_send_email_renewal_company_contract(
-                today
+                today, all_companies
             )
+
         # 4. Get company have status Temporary Usage and void the invoice before auto pay
         if today.day == 5:
             self.cronjob_service.handle_cancel_the_invoice_of_company_temporary_usage(
-                today
+                today, all_companies
             )
 
         return self.response_ok(
             {
-                "today": today.isoformat(),
+                "fake_today": today.isoformat(),
                 "deleted_company_contract_count": deleted_company_contract_count,
                 "deleted_tks_msg_count": deleted_tks_msg_count,
             }
