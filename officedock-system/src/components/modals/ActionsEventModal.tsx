@@ -186,7 +186,8 @@ const ActionsEventModal = ({
               fullName: org.name,
               type: EventParticipantType.ORGANIZATION,
               userIds: org.users ? org.users.map((user) => user.id) : [],
-              color: org.iconColor || '#0068B6',
+              color: org.iconColor || '#228CDB',
+              avatarUrl: org.icon || ''
             }))
           : [];
         setDataOptionsOrganizations([
@@ -194,7 +195,8 @@ const ActionsEventModal = ({
             value: org.id || '',
             label: org.name,
             userIds: org.users ? org.users.map((user) => user.id) : [],
-            iconColor: org.iconColor || '#0068B6',
+            iconColor: org.iconColor || '#228CDB',
+            avatarUrl: org.icon || ''
           })),
         ]);
       }
@@ -782,11 +784,11 @@ const ActionsEventModal = ({
     );
 
     return (
-      <div className="h-6 min-w-[33px] min-h-[33px]">
+      <div className="h-6 min-w-[30px] min-h-[30px]">
         <CustomUserAvatar
           avatarUrl={memberInfo?.avatar || ''}
           avatarColor={memberInfo?.avatarColor || ''}
-          size={33}
+          size={30}
         />
       </div>
     );
@@ -2120,11 +2122,21 @@ const ActionsEventModal = ({
                             <>{renderAvatar(String(member.id))}</>
                           )}
                           {member.type == EventParticipantType.ORGANIZATION && (
-                            <div className="scale-110">
-                              <GroupIconWithDynamicColor
-                                color={member.color || '#0068B6'}
-                              />
-                            </div>
+                            <>
+                              {member.avatarUrl ? (
+                                <CustomUserAvatar
+                                  avatarUrl={member?.avatarUrl || ''}
+                                  avatarColor={member?.color || ''}
+                                  size={30}
+                                />
+                              ) : (
+                                <div className="scale-[1.0714]">
+                                  <GroupIconWithDynamicColor
+                                    color={member.color || '#228CDB'}
+                                  />
+                                </div>
+                              )}
+                            </>
                           )}
                           <p
                             className={`text-[15px] truncate max-w-[350px] text-black leading-normal ${member.type == EventParticipantType.ORGANIZATION && 'ml-1'}`}>

@@ -62,11 +62,21 @@ const ViewVotingMemberListModal = memo(
                   key={organization.id}
                   className="flex items-center justify-between border-b-[1px] border-[#D2DBE1] last:border-b-[0px]">
                   <div className="flex items-center px-5 py-2 gap-[10px] w-full">
-                    <div className="scale-110">
-                      <GroupIconWithDynamicColor
-                        color={organization.iconColor || '#0068B6'}
-                      />
-                    </div>
+                    <>
+                      {organization.icon ? (
+                        <CustomUserAvatar
+                          avatarUrl={organization?.icon || ''}
+                          avatarColor={organization?.iconColor || ''}
+                          size={30}
+                        />
+                      ) : (
+                        <div className="scale-[1.0714]">
+                          <GroupIconWithDynamicColor
+                            color={organization.iconColor || '#228CDB'}
+                          />
+                        </div>
+                      )}
+                    </>
                     <div className="w-[calc(100%_-_50px)]">
                       <p className="text-black text-[15px] font-medium break-all line-clamp-3">
                         {organization.name}の全員

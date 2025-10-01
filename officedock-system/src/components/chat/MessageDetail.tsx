@@ -1129,11 +1129,21 @@ export const MessageDetail = ({
           )}
           {chatRoomDetail?.type === ChatRoomType.TASK && (
             <div
-              className={`flex  !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
+              className={`flex !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
               <div>
-                <GroupIconWithDynamicColor
-                  color={messageDetail?.organization?.iconColor || ''}
-                />
+                {messageDetail?.organization?.icon ? (
+                  <CustomUserAvatar
+                    avatarUrl={messageDetail?.organization.icon}
+                    avatarColor={
+                      messageDetail?.organization?.iconColor || '#228CDB'
+                    }
+                    size={28}
+                  />
+                ) : (
+                  <GroupIconWithDynamicColor
+                    color={messageDetail?.organization?.iconColor || '#228CDB'}
+                  />
+                )}
               </div>
               <div className={`ml-3 mt-[6px] !w-full`}>
                 <div className="flex justify-between items-baseline pb-2">

@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 import ImageRound from '@components/common/ImageRound';
@@ -22,20 +22,19 @@ const GroupMember = ({ item, onClickMember }: DataGroupMemberProps) => {
 
   const [isExpandedGroup, setIsExpandedGroup] = useState(true);
 
-  const getRandomColor = () => {
-    const hue = Math.floor(Math.random() * 360);
-    const saturation = Math.floor(Math.random() * (80 - 40) + 40);
-    const lightness = Math.floor(Math.random() * (70 - 30) + 30);
-
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-  };
-  const randomColor = useMemo(() => getRandomColor(), []);
-
   return (
     <div>
       <div className="flex justify-between">
         <div className="flex items-start gap-[10px] w-fit">
-          <GroupIconWithDynamicColor color={randomColor} />
+          {item.icon ? (
+            <CustomUserAvatar
+              avatarUrl={item?.icon || ''}
+              avatarColor={item?.iconColor || ''}
+              size={30}
+            />
+          ) : (
+              <GroupIconWithDynamicColor color={item.iconColor || '#228CDB'} />
+          )}
 
           <p className="text-[18px] break-all line-clamp-3 max-w-[500px]">
             {item.name}

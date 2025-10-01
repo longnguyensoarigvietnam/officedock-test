@@ -4,7 +4,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import Button from '@components/common/Button';
 import StatisticTeamCalendar from '@components/statisticTeam/tag/StatisticTeamCalendar';
-import ImageRound from '@components/common/ImageRound';
 import PercentageTeamTags from '@components/statisticTeam/tag/PercentageTeamTags';
 import PercentageTeamTagsCompare from '@components/statisticTeam/tag/compare/PercentageTeamTagsCompare';
 import TaskListStatisticTeamTags from '@components/statisticTeam/tag/TaskList';
@@ -590,19 +589,16 @@ const StatisticTeamTagBoard = () => {
   return (
     <div className="pt-[30px] pr-10  font-medium ">
       <div className="flex items-start justify-between">
-        <div className="flex items-start gap-5 ">
-          <div className="rounded-full w-[34px] h-[34px] min-w-[34px] flex items-center justify-center overflow-hidden">
-            <ImageRound
-              className="w-[34px] h-[34px] rounded-full"
-              src="/icons/statistic-team.svg"
-              border="full"
-              name="Multi users"
-            />
-          </div>
-          <span className="text-[26px] font-medium relative top-[-2px] line-clamp-3 max-w-[450px] break-all">
-            {selectedOrganization?.label}チーム集計
+        <div className="flex items-start">
+          {selectedOrganizationSideBar?.imgComponent && (
+            <div className="rounded-full w-[34px] h-[34px] scale-125 min-w-[34px] flex items-center justify-center overflow-hidden">
+              {selectedOrganizationSideBar?.imgComponent}
+            </div>
+          )}
+          <span className="text-[26px] font-medium relative top-[-2px] max-w-[450px] line-clamp-3 break-all ml-[10px]">
+            {selectedOrganizationSideBar?.label}チーム集計
           </span>
-          <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ">
+          <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ml-5">
             <Button
               variant={'outline'}
               onClick={() => {

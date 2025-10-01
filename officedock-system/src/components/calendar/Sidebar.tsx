@@ -178,7 +178,7 @@ export const CalendarSidebar = ({
             全てのチェックをクリア
           </p>
         </div>
-        <div className="pt-3 max-h-[calc(85vh_-_200px)] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
+        <div className="pt-3 max-h-[calc(80vh_-_200px)] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
           {dataOptionsParticipants &&
             dataOptionsParticipants.filter((member) =>
               member.fullName.toLowerCase().includes(searchName.toLowerCase()),
@@ -260,11 +260,21 @@ export const CalendarSidebar = ({
                         <>{renderAvatar(String(member.id))}</>
                       )}
                       {member.type == EventParticipantType.ORGANIZATION && (
-                        <div className="scale-110 min-w-[33px]">
-                          <GroupIconWithDynamicColor
-                            color={member.color || '#0068B6'}
-                          />
-                        </div>
+                        <>
+                          {member.avatarUrl ? (
+                            <CustomUserAvatar
+                              avatarUrl={member?.avatarUrl || ''}
+                              avatarColor={member?.color || ''}
+                              size={30}
+                            />
+                          ) : (
+                            <div className="scale-[1.0714]">
+                              <GroupIconWithDynamicColor
+                                color={member.color || '#0068B6'}
+                              />
+                            </div>
+                          )}
+                        </>
                       )}
                       <div className="!w-full">
                         <p className="line-clamp-3 break-all font-medium text-[15px] text-black">

@@ -18,6 +18,7 @@ import socketEventEmitter from '@components/socket/socketEventEmitter';
 import Dropdown from '@components/common/Dropdown';
 import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 import ChatWarningUploadingFilesModal from '@components/modals/ChatWarningUploadingFilesModal';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import {
@@ -131,14 +132,6 @@ const Sidebar = ({ className }: Props) => {
   const menuItemsCloneTeam: MenuItem[] = lodash.cloneDeep(MENU_ITEMS_TEAM);
   const menuItemsTeam = updateCurrent(menuItemsCloneTeam, pathname);
 
-  const getRandomColor = () => {
-    const hue = Math.floor(Math.random() * 360);
-    const saturation = Math.floor(Math.random() * (80 - 40) + 40);
-    const lightness = Math.floor(Math.random() * (70 - 30) + 30);
-
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-  };
-
   useEffect(() => {
     const handleSocketMessage = (data: WebSocketMessageData) => {
       switch (data.action) {
@@ -172,14 +165,30 @@ const Sidebar = ({ className }: Props) => {
         ...data.map((org) => ({
           value: org.id as number,
           label: org.name,
-          imgComponent: <GroupIconWithDynamicColor color={getRandomColor()} />,
+          imgComponent: org.icon ? (
+            <CustomUserAvatar
+              avatarUrl={org.icon}
+              avatarColor={org.iconColor || '#228CDB'}
+              size={28}
+            />
+          ) : (
+            <GroupIconWithDynamicColor color={org.iconColor || '#228CDB'} />
+          ),
         })),
       ]);
       setOrganizationTeamList([
         ...data.map((org) => ({
           value: org.id as number,
           label: org.name,
-          imgComponent: <GroupIconWithDynamicColor color={getRandomColor()} />,
+          imgComponent: org.icon ? (
+            <CustomUserAvatar
+              avatarUrl={org.icon}
+              avatarColor={org.iconColor || '#228CDB'}
+              size={28}
+            />
+          ) : (
+            <GroupIconWithDynamicColor color={org.iconColor || '#228CDB'} />
+          ),
         })),
       ]);
     },
@@ -200,7 +209,7 @@ const Sidebar = ({ className }: Props) => {
         });
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId, teamList, organizationList]);
 
   const hour = new Intl.DateTimeFormat('ja-JP', {

@@ -7,15 +7,16 @@ import ImageRound from '@components/common/ImageRound';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import Spinner from '@components/common/Spinner';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
-import {
-  CalendarViewOptions,
-  EventCalendarType,
-  PermissionsSystem,
-} from '@constants/enums';
+import { CalendarViewOptions, PermissionsSystem } from '@constants/enums';
 import { JAPANESE_TIME_ZONE } from '@constants';
 
-import { CalendarPopoverInfo, EventParticipant } from '@interfaces/calendar';
+import {
+  CalendarPopoverEvent,
+  CalendarPopoverInfo,
+  EventParticipant,
+} from '@interfaces/calendar';
 import { Profile } from '@interfaces/user';
 
 import { calculatePopupPosition, hasPermissionInArray } from '@utils';
@@ -24,7 +25,6 @@ import {
   formatShowDeadline,
   getDateInfo,
 } from '@utils/date';
-import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 interface EventListModalProps {
   eventListModalInfo: CalendarPopoverInfo | null;
@@ -35,15 +35,13 @@ interface EventListModalProps {
     fullName: string;
     color: string;
     userIds: number[];
+    avatarUrl: string;
   }[];
   setEventListModalInfo: Dispatch<SetStateAction<CalendarPopoverInfo | null>>;
   setDefaultCreateStartDate: Dispatch<SetStateAction<Date | undefined>>;
   handleCreateNewEventFromPopup: () => void;
   handleEventClickInPopup: (eventId: string, repeatScheduleId: string) => void;
-  checkShowUserAvatar: (
-    type?: EventCalendarType,
-    participants?: EventParticipant[],
-  ) => boolean;
+  checkShowUserAvatar: (participants?: EventParticipant[]) => boolean;
   calendarView: CalendarViewOptions;
 }
 
@@ -92,6 +90,8 @@ export const EventListModal = ({
   }, []);
 
   useEffect(() => {
+    if (popoverInfoLoading) return;
+
     if (popoverRef.current) {
       const popupRect = popoverRef.current.getBoundingClientRect();
       const adjustedPosition = calculatePopupPosition({
@@ -100,93 +100,144 @@ export const EventListModal = ({
         currentPosition: popupPosition,
         padding: 20,
       });
-
-      setPopupPosition(adjustedPosition);
-    }
-  }, [popupPosition, calendarView]);
-
-  const showUserAvatars = (participantList: EventParticipant[]) => {
-    if (participantList && participantList.length > 0) {
-      if (participantList.length == 1) {
-        const memberInfo = dashboardMemberList.find(
-          (member) => member.id == participantList[0].id,
-        );
-        return (
-          <DynamicTooltip
-            content={`${participantList[0].fullName}`}
-            placement="top">
-            <div className="border-[1px] relative border-white rounded-full mt-[-7px] mr-1">
-              <CustomUserAvatar
-                avatarUrl={memberInfo?.avatar || ''}
-                avatarColor={memberInfo?.avatarColor || ''}
-                size={24}
-              />
-            </div>
-          </DynamicTooltip>
-        );
-      } else if (participantList.length === 2) {
-        return (
-          <div className="mt-[-7px] mr-1 flex items-center">
-            {participantList.map((participant, index) => {
-              const memberInfo = dashboardMemberList.find(
-                (member) => member.id === participant.id,
-              );
-
-              return (
-                <DynamicTooltip
-                  content={`${participant.fullName}`}
-                  placement="top"
-                  key={participant.id}>
-                  <div
-                    className={`border-[1px] relative border-white rounded-full ${index != 0 && 'ml-[-7px]'}`}>
-                    <CustomUserAvatar
-                      avatarUrl={memberInfo?.avatar || ''}
-                      avatarColor={memberInfo?.avatarColor || ''}
-                      size={24}
-                    />
-                  </div>
-                </DynamicTooltip>
-              );
-            })}
-          </div>
-        );
-      } else if (participantList.length > 2) {
-        return (
-          <div className="mt-[-7px] mr-1 flex items-center">
-            {participantList.slice(0, 1).map((participant, index) => {
-              const memberInfo = dashboardMemberList.find(
-                (member) => member.id === participant.id,
-              );
-
-              return (
-                <DynamicTooltip
-                  content={`${participant.fullName}`}
-                  placement="top"
-                  key={participant.id}>
-                  <div
-                    className={`border-[1px] relative border-white rounded-full ${index != 0 && 'ml-[-7px]'}`}>
-                    <CustomUserAvatar
-                      avatarUrl={memberInfo?.avatar || ''}
-                      avatarColor={memberInfo?.avatarColor || ''}
-                      size={24}
-                    />
-                  </div>
-                </DynamicTooltip>
-              );
-            })}
-            {participantList && participantList.length > 1 && (
-              <DynamicTooltip
-                content={`他に${participantList.length - 1}人の表示があります`}
-                placement="top">
-                <div className="text-white relative border-[1px] !w-[24px] h-[24px] ml-[-7px] border-white rounded-full text-[10px] font-medium bg-[#77858F] flex items-center justify-center">
-                  +{participantList.length - 1}
-                </div>
-              </DynamicTooltip>
-            )}
-          </div>
-        );
+      if (
+        adjustedPosition.left != popupPosition.left ||
+        adjustedPosition.top != popupPosition.top
+      ) {
+        setPopupPosition(adjustedPosition);
       }
     }
+  }, [calendarView, popupPosition, popoverInfoLoading]);
+
+  // Render single user avatar
+  const renderUserAvatar = (participant: EventParticipant, index?: number) => {
+    const memberInfo = dashboardMemberList.find(
+      (member) => member.id === participant.id,
+    );
+
+    return (
+      <DynamicTooltip
+        key={participant.id}
+        content={participant.fullName}
+        placement="top">
+        <div className={`relative rounded-full ${index ? 'ml-[-7px]' : ''}`}>
+          <CustomUserAvatar
+            avatarUrl={memberInfo?.avatar || ''}
+            avatarColor={memberInfo?.avatarColor || ''}
+            size={24}
+          />
+        </div>
+      </DynamicTooltip>
+    );
+  };
+
+  // Render single org avatar
+  const renderOrgAvatar = (orgId: number, index?: number) => {
+    const orgInfo = dataOptionsOrganizations.find((org) => org.id === orgId);
+
+    return (
+      <DynamicTooltip
+        key={orgInfo?.id}
+        content={orgInfo?.fullName || ''}
+        placement="top">
+        <div className={`relative rounded-full ${index ? 'ml-[-7px]' : ''}`}>
+          {orgInfo?.avatarUrl ? (
+            <CustomUserAvatar
+              avatarUrl={orgInfo.avatarUrl}
+              avatarColor={orgInfo.color || ''}
+              size={24}
+            />
+          ) : (
+            <div className="scale-[0.8571]">
+              <GroupIconWithDynamicColor color={orgInfo?.color || '#228CDB'} />
+            </div>
+          )}
+        </div>
+      </DynamicTooltip>
+    );
+  };
+
+  // Show user avatars
+  const showUserAvatars = (participantList: EventParticipant[]) => {
+    if (!participantList?.length) return null;
+
+    const count = participantList.length;
+
+    if (count === 1) return renderUserAvatar(participantList[0]);
+
+    return (
+      <div className="mt-[-7px] mr-1 flex items-center">
+        {participantList
+          .slice(0, count > 2 ? 1 : 2)
+          .map((p, i) => renderUserAvatar(p, i))}
+        {count > 2 && (
+          <DynamicTooltip
+            content={`他に${count - 1}人の表示があります`}
+            placement="top">
+            <div className="text-white relative border-[1px] !w-[24px] h-[24px] ml-[-7px] border-white rounded-full text-[10px] font-medium bg-[#77858F] flex items-center justify-center">
+              +{count - 1}
+            </div>
+          </DynamicTooltip>
+        )}
+      </div>
+    );
+  };
+
+  // Show organization avatars
+  const showOrgAvatars = (orgIds: number[]) => {
+    if (!orgIds?.length) return null;
+
+    const count = orgIds.length;
+
+    if (count === 1) return renderOrgAvatar(orgIds[0]);
+
+    return (
+      <div className="mt-[-7px] mr-1 flex items-center">
+        {orgIds
+          .slice(0, count > 2 ? 1 : 2)
+          .map((orgId, i) => renderOrgAvatar(orgId, i))}
+        {count > 2 && (
+          <DynamicTooltip
+            content={`他に${count - 1}チームの表示があります`}
+            placement="top">
+            <div className="text-white relative border-[1px] !w-[24px] h-[24px] ml-[-7px] border-white rounded-full text-[10px] font-medium bg-[#77858F] flex items-center justify-center">
+              +{count - 1}
+            </div>
+          </DynamicTooltip>
+        )}
+      </div>
+    );
+  };
+
+  // Show avatars depending on event
+  const showEventAvatars = (event: CalendarPopoverEvent) => {
+    const organizationIds = event.selectOrganizations || [];
+    const userIds = event.participants?.map((user) => Number(user.id)) || [];
+
+    // Start by assuming we show organization avatars only if there are selected orgs
+    let showOrganizationAvatar = organizationIds.length > 0;
+
+    if (showOrganizationAvatar) {
+      // Collect all userIds that belong to the selected organizations
+      const selectedOrgUserIds = dataOptionsOrganizations
+        .filter((org) => organizationIds.includes(Number(org.id)))
+        .flatMap((org) => org.userIds);
+
+      // If any participant is not in any selected organization, disable org avatars
+      const hasOutsideUser = userIds.some(
+        (userId) => !selectedOrgUserIds.includes(userId),
+      );
+
+      if (hasOutsideUser) {
+        showOrganizationAvatar = false;
+      }
+    }
+
+    if (showOrganizationAvatar) return showOrgAvatars(organizationIds);
+    if (checkShowUserAvatar(event.participants))
+      return showUserAvatars(event.participants || []);
+
+    return null;
   };
 
   return (
@@ -196,7 +247,7 @@ export const EventListModal = ({
         ref={popoverRef}
         style={{
           position: 'absolute',
-          top: `${popupPosition.top}px`,
+          top: `${popoverInfoLoading ? popupPosition.top - 70 : popupPosition.top}px`,
           left: `${popupPosition.left}px`,
         }}>
         <div
@@ -272,25 +323,7 @@ export const EventListModal = ({
                       }
                     }}>
                     <div className="flex items-center gap-2">
-                      {event &&
-                      event?.selectOrganizations &&
-                      event?.selectOrganizations?.length == 1 ? (
-                        <div className="!w-[24px] !h-[24px]">
-                          <GroupIconWithDynamicColor
-                            color={
-                              dataOptionsOrganizations.find(
-                                (org) =>
-                                  event?.selectOrganizations &&
-                                  org.id == event?.selectOrganizations[0],
-                              )?.color || '#228CDB'
-                            }
-                            classname="!w-[24px] !h-[24px]"
-                          />
-                        </div>
-                      ) : (
-                        checkShowUserAvatar(event.type, event.participants) &&
-                        showUserAvatars(event.participants || [])
-                      )}
+                      {event ? showEventAvatars(event) : <></>}
                       <div className="mb-2">
                         <div
                           className={`font-semibold max-w-[170px] min-h-4 truncate ${event.repeatScheduleId.includes('holiday') && 'text-error'}`}>

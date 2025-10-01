@@ -168,6 +168,7 @@ export interface ChatParticipant {
   userIds?: number[];
   mainOrganization?: string;
   avatarColor?: string;
+  avatarUrl?: string | null;
 }
 
 export interface ChatRoomDetail {

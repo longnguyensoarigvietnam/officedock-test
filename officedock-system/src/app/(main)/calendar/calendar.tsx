@@ -290,6 +290,7 @@ const EventCalendar = () => {
       fullName: string;
       color: string;
       userIds: number[];
+      avatarUrl: string;
     }[]
   >([]);
   useCreationDataCommon({
@@ -322,7 +323,8 @@ const EventCalendar = () => {
               fullName: org.name,
               type: EventParticipantType.ORGANIZATION,
               userIds: org.users ? org.users.map((user) => user.id) : [],
-              color: org.iconColor || '#0068B6',
+              color: org.iconColor || '#228CDB',
+              avatarUrl: org.icon || '',
             }))
           : [];
         setDataOptionsOrganizations([
@@ -330,7 +332,8 @@ const EventCalendar = () => {
             id: org.id || '',
             fullName: org.name,
             userIds: org.users ? org.users.map((user) => user.id) : [],
-            color: org.iconColor || '#0068B6',
+            color: org.iconColor || '#228CDB',
+            avatarUrl: org.icon || '',
           })),
         ]);
       }
@@ -648,7 +651,6 @@ const EventCalendar = () => {
 
   // Check to show user's avatar
   const checkShowUserAvatar = (
-    type?: EventCalendarType,
     participants?: EventParticipant[],
   ) => {
     const filteredUserIds = selectedScheduleUserIds
@@ -662,7 +664,6 @@ const EventCalendar = () => {
           (participant: EventParticipant) => participant.id == session?.user.id,
         )
       ) &&
-      type == EventCalendarType.SCHEDULE &&
       filteredUserIds.length > 0
     );
   };
@@ -820,7 +821,6 @@ const EventCalendar = () => {
                 className={` text-black bg-white overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
                 style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
                 {checkShowUserAvatar(
-                  eventContent.event.extendedProps.type,
                   eventContent.event.extendedProps.participants,
                 ) ? (
                   <div className="flex items-center gap-1">
@@ -852,7 +852,6 @@ const EventCalendar = () => {
           <div
             className={`overflow-hidden p-1.5 ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-event'} ${isMySchedule && isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
             {checkShowUserAvatar(
-              eventContent.event.extendedProps.type,
               eventContent.event.extendedProps.participants,
             ) &&
               showUserAvatars(
@@ -1017,7 +1016,6 @@ const EventCalendar = () => {
                 className={`text-black bg-white overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
                 style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
                 {checkShowUserAvatar(
-                  eventContent.event.extendedProps.type,
                   eventContent.event.extendedProps.participants,
                 ) ? (
                   <div className="flex items-center gap-1">
@@ -2190,15 +2188,15 @@ const EventCalendar = () => {
             keySearch,
           });
         }
+
+        setSelectedEventInfo(null);
+        setEventActionType(null);
+        setDataEventEdit(undefined);
+        setDefaultCreateStartDate(undefined);
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
         setIsLoading(false);
-      },
-      onSettled: () => {
-        setDataEventEdit(undefined);
-        setEventActionType(null);
-        setSelectedEventInfo(null);
       },
     },
   );
@@ -2265,17 +2263,15 @@ const EventCalendar = () => {
           });
         }
         setSelectedEventInfo(null);
+        setDefaultCreateStartDate(undefined);
         queryClient.refetchQueries(['getDataTaskHeaderList']);
         queryClient.refetchQueries(['getTaskHeaderStart']);
         queryClient.refetchQueries(['getTaskDurationDetail']);
+        setEventActionType(null);
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_DELETE_MESSAGE);
-        setSelectedEventInfo(null);
         setIsLoading(false);
-      },
-      onSettled: () => {
-        setEventActionType(null);
       },
     },
   );
@@ -2931,6 +2927,7 @@ const EventCalendar = () => {
               type: null,
             });
             setIsEditingRepetitiveFields(false);
+            setEventActionType(null);
           }}
           onSubmit={(data) => {
             setConfirmEventDataToCreate(data);

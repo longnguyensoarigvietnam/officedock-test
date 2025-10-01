@@ -2,19 +2,13 @@ import { memo, useEffect, useRef, useState } from 'react';
 import { isSameDay } from 'date-fns';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
-import tinycolor from 'tinycolor2';
-
 import ImageRound from '@components/common/ImageRound';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 import { NO_SETTING } from '@constants';
-import {
-  EventCalendarType,
-  PermissionsSystem,
-  TaskRepetitiveValue,
-} from '@constants/enums';
+import { PermissionsSystem, TaskRepetitiveValue } from '@constants/enums';
 
 import { EventEditFormData, EventParticipant } from '@interfaces/calendar';
 import { LocationEventType } from '@interfaces/location';
@@ -37,12 +31,10 @@ export type EventInfoModalProps = {
     fullName: string;
     color: string;
     userIds: number[];
+    avatarUrl: string;
   }[];
   selectedScheduleUserIds: string;
-  checkShowUserAvatar: (
-    type?: EventCalendarType,
-    participants?: EventParticipant[],
-  ) => boolean;
+  checkShowUserAvatar: (participants?: EventParticipant[]) => boolean;
   onClose: () => void;
   onEdit?: (values: EventEditFormData) => void;
   onCopy?: (values: EventEditFormData) => void;
@@ -84,7 +76,7 @@ const EventInfoModal = memo(
 
         setPopupPosition(adjustedPosition);
       }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleClosePopover = (event: MouseEvent) => {
@@ -101,7 +93,7 @@ const EventInfoModal = memo(
       return () => {
         document.removeEventListener('click', handleClosePopover, true);
       };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const checkShowDimmedUserAvatar = (participantId: number) => {
@@ -110,10 +102,6 @@ const EventInfoModal = memo(
         .map((num) => num.trim())
         .filter(Boolean)
         .find((selectedUserId) => Number(selectedUserId) == participantId);
-    };
-
-    const lightenColor = (color: string, amount = 40) => {
-      return tinycolor(color).lighten(amount).toString();
     };
 
     const displayRepetitiveEventTime = (dataEvent: EventEditFormData) => {
@@ -159,6 +147,182 @@ const EventInfoModal = memo(
           break;
       }
       return title;
+    };
+
+    // Show user avatars
+    const showUserAvatars = (participantList: EventParticipant[]) => {
+      return (
+        <div className="mt-3">
+          <p className="text-[#77858F] flex-none text-[12px] mb-3">
+            参加メンバー {participantList?.length}人
+          </p>
+          <div className="flex flex-wrap">
+            {participantList && participantList?.length == 1 ? (
+              <div className="flex gap-2 items-center">
+                <DynamicTooltip
+                  content={`${participantList[0].fullName}`}
+                  placement="top">
+                  <div
+                    className={`rounded-full relative ${checkShowDimmedUserAvatar(Number(participantList[0].id)) && 'opacity-60'}`}>
+                    <CustomUserAvatar
+                      avatarUrl={
+                        (participantList?.[0] &&
+                          dashboardMemberList?.find(
+                            (member) => member.id === participantList?.[0]?.id,
+                          )?.avatar) ||
+                        ''
+                      }
+                      avatarColor={
+                        (participantList?.[0] &&
+                          dashboardMemberList?.find(
+                            (member) => member.id === participantList?.[0]?.id,
+                          )?.avatarColor) ||
+                        ''
+                      }
+                      size={26}
+                      customClassName={`${
+                        !participantList?.[0] &&
+                        dashboardMemberList?.find(
+                          (member) => member.id === participantList?.[0]?.id,
+                        )?.avatar &&
+                        '!mt-0'
+                      }`}
+                    />
+                  </div>
+                </DynamicTooltip>
+                <p className="text-[#000000] text-[14px] font-medium w-[180px] break-words">
+                  {participantList[0].fullName}
+                </p>
+              </div>
+            ) : (
+              participantList
+                ?.sort((a: EventParticipant, b: EventParticipant) => {
+                  const aIsDimmed = checkShowDimmedUserAvatar(Number(a.id));
+                  const bIsDimmed = checkShowDimmedUserAvatar(Number(b.id));
+
+                  if (aIsDimmed !== bIsDimmed) {
+                    return aIsDimmed ? 1 : -1;
+                  }
+
+                  return a.fullName.localeCompare(b.fullName);
+                })
+                ?.map((participant, index) => {
+                  const memberInfo = dashboardMemberList?.find(
+                    (member) => member.id == participant.id,
+                  );
+                  return (
+                    <DynamicTooltip
+                      content={`${participant.fullName}`}
+                      key={index}
+                      placement="top">
+                      <div
+                        className={`${index > 0 && 'ml-[-6px]'} relative mb-1 inline-block`}>
+                        <CustomUserAvatar
+                          avatarUrl={memberInfo?.avatar || ''}
+                          avatarColor={memberInfo?.avatarColor || ''}
+                          size={26}
+                          customClassName={`${!memberInfo?.avatar && '!mt-0 border-[2px] rounded-full border-white/60'}`}
+                        />
+
+                        {checkShowDimmedUserAvatar(Number(participant.id)) && (
+                          <div className="absolute inset-0 rounded-full bg-white/60 border-[2px] border-white/60 pointer-events-none" />
+                        )}
+                      </div>
+                    </DynamicTooltip>
+                  );
+                })
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    // Show organization avatars
+    const showOrgAvatars = (orgIds: number[]) => {
+      if (!orgIds?.length) return null;
+
+      return (
+        <div className="mt-3">
+          <p className="text-[#77858F] flex-none text-[12px] mb-3">
+            参加メンバー {orgIds.length}チーム
+          </p>
+
+          <div className="flex flex-wrap items-center">
+            {orgIds.map((orgId, index) => {
+              const orgInfo = dataOptionsOrganizations.find(
+                (org) => org.id === orgId,
+              );
+
+              return (
+                <div
+                  key={orgInfo?.id || orgId}
+                  className="flex items-center gap-2">
+                  <DynamicTooltip
+                    content={orgInfo?.fullName || ''}
+                    placement="top">
+                    <div
+                      className={`relative rounded-full ${
+                        index > 0 ? 'ml-[-6px]' : ''
+                      }`}>
+                      {orgInfo?.avatarUrl ? (
+                        <CustomUserAvatar
+                          avatarUrl={orgInfo.avatarUrl}
+                          avatarColor={orgInfo.color || ''}
+                          size={26}
+                        />
+                      ) : (
+                        <div className="scale-[0.9285]">
+                          <GroupIconWithDynamicColor
+                            color={orgInfo?.color || '#228CDB'}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </DynamicTooltip>
+
+                  {/* Show org name if there's only one organization */}
+                  {orgIds.length === 1 && (
+                    <span className="text-[#000000] text-[14px] font-medium w-[180px] break-words">
+                      {orgInfo?.fullName || ''}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    };
+
+    // Show avatars depending on event
+    const showEventAvatars = (event: EventEditFormData) => {
+      const organizationIds = event.selectOrganizations || [];
+      const userIds = event.participants?.map((user) => Number(user.id)) || [];
+
+      // Start by assuming we show organization avatars only if there are selected orgs
+      let showOrganizationAvatar = organizationIds.length > 0;
+
+      if (showOrganizationAvatar) {
+        // Collect all userIds that belong to the selected organizations
+        const selectedOrgUserIds = dataOptionsOrganizations
+          .filter((org) => organizationIds.includes(Number(org.id)))
+          .flatMap((org) => org.userIds);
+
+        // If any participant is not in any selected organization, disable org avatars
+        const hasOutsideUser = userIds.some(
+          (userId) => !selectedOrgUserIds.includes(userId),
+        );
+
+        if (hasOutsideUser) {
+          showOrganizationAvatar = false;
+        }
+      }
+
+      if (showOrganizationAvatar) return showOrgAvatars(organizationIds);
+      if (checkShowUserAvatar(event.participants))
+        return showUserAvatars(event.participants || []);
+
+      return null;
     };
 
     return (
@@ -306,142 +470,7 @@ const EventInfoModal = memo(
             )}
           </div>
           {/* Participants */}
-          {dataEvent &&
-          dataEvent?.selectOrganizations &&
-          dataEvent?.selectOrganizations?.length == 1 ? (
-            <div className="mt-3">
-              <p className="text-[#77858F] flex-none text-[12px] mb-3">
-                参加メンバー {dataEvent.participants?.length}人
-              </p>
-              <div className="flex items-center gap-[8px]">
-                <div className="w-[26px]">
-                  <GroupIconWithDynamicColor
-                    color={
-                      dataOptionsOrganizations.find(
-                        (org) =>
-                          dataEvent?.selectOrganizations &&
-                          org.id == dataEvent?.selectOrganizations[0],
-                      )?.color || '#228CDB'
-                    }
-                  />
-                </div>
-
-                <p className="text-[#000000] text-sm font-medium w-[180px] break-words">
-                  {
-                    dataOptionsOrganizations.find(
-                      (org) =>
-                        dataEvent?.selectOrganizations &&
-                        org.id == dataEvent?.selectOrganizations[0],
-                    )?.fullName
-                  }
-                </p>
-              </div>
-            </div>
-          ) : (
-            dataEvent &&
-            checkShowUserAvatar(
-              EventCalendarType.SCHEDULE,
-              dataEvent.participants,
-            ) && (
-              <div className="mt-3">
-                <p className="text-[#77858F] flex-none text-[12px] mb-3">
-                  参加メンバー {dataEvent.participants?.length}人
-                </p>
-                <div className="flex flex-wrap">
-                  {dataEvent.participants &&
-                  dataEvent.participants?.length == 1 ? (
-                    <div className="flex gap-2 items-center">
-                      <DynamicTooltip
-                        content={`${dataEvent.participants[0].fullName}`}
-                        placement="top">
-                        <div
-                          className={`rounded-full relative ${checkShowDimmedUserAvatar(Number(dataEvent.participants[0].id)) && 'opacity-60'}`}>
-                          <CustomUserAvatar
-                            avatarUrl={
-                              (dataEvent.participants?.[0] &&
-                                dashboardMemberList?.find(
-                                  (member) =>
-                                    member.id ===
-                                    dataEvent.participants?.[0]?.id,
-                                )?.avatar) ||
-                              ''
-                            }
-                            avatarColor={
-                              (dataEvent.participants?.[0] &&
-                                dashboardMemberList?.find(
-                                  (member) =>
-                                    member.id ===
-                                    dataEvent.participants?.[0]?.id,
-                                )?.avatarColor) ||
-                              ''
-                            }
-                            size={26}
-                            customClassName={`${
-                              !dataEvent.participants?.[0] &&
-                              dashboardMemberList?.find(
-                                (member) =>
-                                  member.id === dataEvent.participants?.[0]?.id,
-                              )?.avatar &&
-                              '!mt-0'
-                            }`}
-                          />
-                        </div>
-                      </DynamicTooltip>
-                      <p className="text-[#000000] text-[14px] font-medium w-[180px] break-words">
-                        {dataEvent.participants[0].fullName}
-                      </p>
-                    </div>
-                  ) : (
-                    dataEvent.participants
-                      ?.sort((a: EventParticipant, b: EventParticipant) => {
-                        const aIsDimmed = checkShowDimmedUserAvatar(
-                          Number(a.id),
-                        );
-                        const bIsDimmed = checkShowDimmedUserAvatar(
-                          Number(b.id),
-                        );
-
-                        if (aIsDimmed !== bIsDimmed) {
-                          return aIsDimmed ? 1 : -1;
-                        }
-
-                        return a.fullName.localeCompare(b.fullName);
-                      })
-                      ?.map((participant, index) => {
-                        const memberInfo = dashboardMemberList?.find(
-                          (member) => member.id == participant.id,
-                        );
-                        return (
-                          <DynamicTooltip
-                            content={`${participant.fullName}`}
-                            key={index}
-                            placement="top">
-                            <div
-                              className={`${index > 0 && 'ml-[-6px]'} relative mb-1`}>
-                              <CustomUserAvatar
-                                avatarUrl={memberInfo?.avatar || ''}
-                                avatarColor={
-                                  checkShowDimmedUserAvatar(
-                                    Number(participant.id),
-                                  )
-                                    ? lightenColor(
-                                        memberInfo?.avatarColor || '',
-                                        30,
-                                      )
-                                    : memberInfo?.avatarColor || ''
-                                }
-                                size={26}
-                                customClassName={`${!memberInfo?.avatar && '!mt-0'}`}
-                              />
-                            </div>
-                          </DynamicTooltip>
-                        );
-                      })
-                  )}
-                </div>
-              </div>
-            )
-          )}
+          {dataEvent ? showEventAvatars(dataEvent) ?? <></> : <></>}
         </div>
       </div>
     );

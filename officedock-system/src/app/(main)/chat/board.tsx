@@ -105,6 +105,7 @@ const BoardChat = () => {
               type: ChatParticipantType.ORGANIZATION,
               userIds: org.users ? org.users.map((user) => user.id) : [],
               color: org.iconColor || '#0068B6',
+              avatarUrl: org.icon || ''
             }))
           : [];
       }

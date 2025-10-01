@@ -1,5 +1,12 @@
 'use client';
-import { Fragment, useContext, useEffect, useRef, useState } from 'react';
+import {
+  ChangeEvent,
+  Fragment,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useMutation } from 'react-query';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
@@ -11,11 +18,19 @@ import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import Input from '@components/common/Input';
 import Pagination from '@components/common/Pagination';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
+import ErrorUploadFileValidationModal from '@components/modals/ErrorUploadFileValidationModal';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import Dropdown from '@components/common/Dropdown';
 import InputSearch from '@components/common/InputSearch';
 
-import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
+import {
+  ALLOWED_IMAGE_TYPES,
+  MAX_AVATAR_IMAGE_FILE_SIZE,
+  NO_DATA_AVAILABLE,
+  PAGE_SIZE_OPTIONS,
+} from '@constants';
 import { apiRouters } from '@constants/routers';
 import {
   ERROR_CREATE_MESSAGE,
@@ -24,6 +39,7 @@ import {
   SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
+  UPLOAD_AVATAR_FILE_MAXIMUM_SIZE,
 } from '@constants/message';
 import { ActionsModal, PermissionsSystem } from '@constants/enums';
 
@@ -64,6 +80,7 @@ const ListOrganizations = () => {
   const organizationNameInputRef = useRef<HTMLInputElement | null>(null);
   const isCreatingRef = useRef(false);
   const isEditingRef = useRef(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const { showToast } = useToast();
 
@@ -74,6 +91,8 @@ const ListOrganizations = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
 
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
+  const [openErrorUploadFileModal, setOpenErrorUploadFileModal] =
+    useState(false);
   const [searchOrganizationName, setSearchOrganizationName] = useState('');
   const debouncedFilterByOrganizationName = useDebounceText(
     searchOrganizationName,
@@ -83,6 +102,9 @@ const ListOrganizations = () => {
     search: '',
     page: 1,
   });
+  const [previewAvatarUrl, setPreviewAvatarUrl] = useState<string | null>(null);
+  const [avatarImgFile, setAvatarImgFile] = useState<File | null>(null);
+
   useEffect(() => {
     setDebouncedParams((prev) => ({
       ...prev,
@@ -107,10 +129,17 @@ const ListOrganizations = () => {
   const handleEditOrganization = async (data: {
     uuid: string | number;
     name: string;
+    avatarImgFile?: File | null;
   }) => {
-    return await api.patch(apiRouters.ORGANIZATION_DETAIL(String(data.uuid)), {
-      name: data.name,
-    });
+    const formData = new FormData();
+    formData.append('uuid', String(data.uuid));
+    formData.append('name', data.name);
+    if (data.avatarImgFile) formData.append('icon', data.avatarImgFile);
+
+    return await api.patch(
+      apiRouters.ORGANIZATION_DETAIL(String(data.uuid)),
+      formData,
+    );
   };
 
   const { mutate: editOrganization } = useMutation(
@@ -131,6 +160,8 @@ const ListOrganizations = () => {
           action: '',
           showError: false,
         });
+        setPreviewAvatarUrl(null);
+        setAvatarImgFile(null);
         refetchOrganizationList();
         isEditingRef.current = false;
       },
@@ -151,8 +182,14 @@ const ListOrganizations = () => {
   const handleCreateOrganization = async (data: {
     uuid: string;
     name: string;
+    avatarImgFile?: File | null;
   }) => {
-    return await api.post(apiRouters.ORGANIZATION_LIST, data);
+    const formData = new FormData();
+    formData.append('uuid', String(data.uuid));
+    formData.append('name', data.name);
+    if (data.avatarImgFile) formData.append('icon', data.avatarImgFile);
+
+    return await api.post(apiRouters.ORGANIZATION_LIST, formData);
   };
 
   const { mutate: createOrganization } = useMutation(
@@ -174,6 +211,8 @@ const ListOrganizations = () => {
           showError: false,
         });
         refetchOrganizationList();
+        setPreviewAvatarUrl(null);
+        setAvatarImgFile(null);
         isCreatingRef.current = false;
       },
       onError: (error: AxiosError<any>) => {
@@ -252,11 +291,14 @@ const ListOrganizations = () => {
               (category) => category.uuid == selectedOrganizationToUpdate.uuid,
             )?.name || '';
           if (
-            oldCategoryName.trim() != selectedOrganizationToUpdate.name.trim()
+            oldCategoryName.trim() !=
+              selectedOrganizationToUpdate.name.trim() ||
+            avatarImgFile
           ) {
             editOrganization({
               uuid: selectedOrganizationToUpdate.uuid,
               name: selectedOrganizationToUpdate.name,
+              avatarImgFile: avatarImgFile ? avatarImgFile : undefined,
             });
           } else {
             setSelectedOrganizationToUpdate({
@@ -273,6 +315,7 @@ const ListOrganizations = () => {
             createOrganization({
               uuid: String(selectedOrganizationToUpdate.uuid),
               name: selectedOrganizationToUpdate.name,
+              avatarImgFile: avatarImgFile ? avatarImgFile : undefined,
             });
           } else {
             setSelectedOrganizationToUpdate((prev) => {
@@ -295,7 +338,32 @@ const ListOrganizations = () => {
     selectedOrganizationToUpdate.uuid,
     selectedOrganizationToUpdate.name,
     selectedOrganizationToUpdate.action,
+    avatarImgFile,
   ]);
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > MAX_AVATAR_IMAGE_FILE_SIZE) {
+      setOpenErrorUploadFileModal(true);
+      return;
+    }
+
+    const newFile = new File([file], file.name, {
+      type: file.type,
+    });
+
+    setAvatarImgFile(newFile);
+
+    const url = URL.createObjectURL(newFile);
+    setPreviewAvatarUrl(url);
+  };
 
   return (
     <Fragment>
@@ -366,10 +434,50 @@ const ListOrganizations = () => {
               dataOrganizations.map((element, index) => (
                 <tr key={index} className="text-black">
                   <td className="text-left w-[calc(100%_-_50px)] max-w-[calc(100%_-_50px)]">
-                    <div className="flex justify-between items-center gap-3 ">
-                      {selectedOrganizationToUpdate.uuid == element.uuid &&
-                      selectedOrganizationToUpdate.status ? (
-                        <div ref={organizationNameInputRef} className="w-full">
+                    {selectedOrganizationToUpdate.uuid == element.uuid &&
+                    selectedOrganizationToUpdate.status ? (
+                      <div
+                        ref={organizationNameInputRef}
+                        className="flex items-center gap-[6px]">
+                        <div className="relative w-10 h-10 inline-block ml-[-7px]">
+                          <div className="relative">
+                            {previewAvatarUrl ? (
+                              <CustomUserAvatar
+                                avatarUrl={previewAvatarUrl || ''}
+                                avatarColor={''}
+                                size={40}
+                              />
+                            ) : (
+                              <div className="relative ml-[7px] mt-[6px] scale-[1.4285]">
+                                <GroupIconWithDynamicColor
+                                  color={element.iconColor || '#228CDB'}
+                                  classname="z-10"
+                                />
+                              </div>
+                            )}
+                            <p
+                              className="absolute inset-0 flex items-center justify-center text-white text-sm font-semibold z-30"
+                              onClick={() => {
+                                fileInputRef.current?.click();
+                              }}>
+                              変更
+                            </p>
+                          </div>
+
+                          <input
+                            type="file"
+                            accept={ALLOWED_IMAGE_TYPES.join(',')}
+                            ref={fileInputRef}
+                            className="hidden"
+                            onChange={(e) => {
+                              handleFileChange(e);
+                            }}
+                          />
+                          <div
+                            className={`absolute top-0 left-0 w-10 h-10 ${previewAvatarUrl ? 'bg-black/30' : 'bg-black/50'} rounded-full z-20 pointer-events-none`}
+                          />
+                        </div>
+                        <div className="w-[calc(100%_-_30px)]">
                           <Input
                             placeholder="チーム名を入力"
                             className={`!border-[1px] !border-[#77858F] ${selectedOrganizationToUpdate.showError && '!border-error'} !w-full !text-sm !h-[34px]`}
@@ -384,12 +492,26 @@ const ListOrganizations = () => {
                             }}
                           />
                         </div>
-                      ) : (
-                        <p className="break-all max-w-[100%] text-[16px] font-medium text-[#000000]">
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-[6px]">
+                        {element.icon ? (
+                          <CustomUserAvatar
+                            avatarUrl={element.icon || ''}
+                            avatarColor={''}
+                            size={24}
+                          />
+                        ) : (
+                          <GroupIconWithDynamicColor
+                            color={element.iconColor || '#228CDB'}
+                            classname="scale-[0.857]"
+                          />
+                        )}{' '}
+                        <p className="break-all w-[calc(100%_-_50px)] text-[16px] font-medium text-[#000000]">
                           {element.name}
                         </p>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </td>
                   <td>
                     <div className="flex w-[50px] break-words gap-3 justify-center">
@@ -435,6 +557,7 @@ const ListOrganizations = () => {
                                   return updatedCategories;
                                 });
                               }
+                              setPreviewAvatarUrl(element.icon || null);
                               setSelectedOrganizationToUpdate({
                                 uuid: element.uuid || '',
                                 name: element.name,
@@ -560,6 +683,16 @@ const ListOrganizations = () => {
           message="紐づいている階層からも削除されます。"
           onConfirm={handleConfirmDeleteOrganization}
           onClose={() => setOpenConfirmDeleteModal(false)}
+        />
+      )}
+
+      {openErrorUploadFileModal && (
+        <ErrorUploadFileValidationModal
+          open={true}
+          message={UPLOAD_AVATAR_FILE_MAXIMUM_SIZE}
+          onClose={() => {
+            setOpenErrorUploadFileModal(false);
+          }}
         />
       )}
     </Fragment>

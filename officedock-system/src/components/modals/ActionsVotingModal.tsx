@@ -117,7 +117,8 @@ const ActionsVotingModal = ({
               fullName: org.name,
               type: EventParticipantType.ORGANIZATION,
               userIds: org.users ? org.users.map((user) => user.id) : [],
-              color: org.iconColor || '#0068B6',
+              color: org.iconColor || '#228CDB',
+              avatarUrl: org.icon || '',
             }))
           : [];
       }
@@ -595,11 +596,21 @@ const ActionsVotingModal = ({
                         <>{renderAvatar(String(member.id))}</>
                       )}
                       {member.type == EventParticipantType.ORGANIZATION && (
-                        <div className="scale-110">
-                          <GroupIconWithDynamicColor
-                            color={member.color || '#0068B6'}
-                          />
-                        </div>
+                        <>
+                          {member.avatarUrl ? (
+                            <CustomUserAvatar
+                              avatarUrl={member?.avatarUrl || ''}
+                              avatarColor={member?.color || ''}
+                              size={30}
+                            />
+                          ) : (
+                            <div className="scale-[1.0714]">
+                              <GroupIconWithDynamicColor
+                                color={member.color || '#228CDB'}
+                              />
+                            </div>
+                          )}
+                        </>
                       )}
                       <div className="!w-full">
                         <p className="line-clamp-3 break-all font-medium text-[15px] text-black">
