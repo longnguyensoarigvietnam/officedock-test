@@ -224,25 +224,19 @@ class ChatFileSerializer(serializers.ModelSerializer):
 class BaseChatFileDetailSerializer(serializers.ModelSerializer):
     """Serializer for chat file detail"""
 
-    chat_message_id = serializers.IntegerField(
-        source="chat_message.id", read_only=True
-    )
-    chat_message_uuid = serializers.UUIDField(
-        source="chat_message.uuid", read_only=True
-    )
+    chat_messages = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ChatFile
         fields = [
             "id",
             "uuid",
-            "chat_message_id",
-            "chat_message_uuid",
             "file_name",
             "original_file",
             "file_type",
             "file_size",
             "created_at",
+            "chat_messages",
         ]
 
     def to_representation(self, instance):
@@ -256,16 +250,14 @@ class BaseChatFileDetailSerializer(serializers.ModelSerializer):
 
         return representation
 
+    def get_chat_messages(self, obj):
+        """Get list chat messages of file"""
+        return obj.chat_messages.values("id", "uuid")
+
 
 class ChatFileDetailSerializer(BaseChatFileDetailSerializer):
     """Serializer for chat file detail"""
 
-    chat_message_id = serializers.IntegerField(
-        source="chat_message.id", read_only=True
-    )
-    chat_message_uuid = serializers.UUIDField(
-        source="chat_message.uuid", read_only=True
-    )
     files = serializers.SerializerMethodField()
 
     class Meta:
@@ -273,14 +265,13 @@ class ChatFileDetailSerializer(BaseChatFileDetailSerializer):
         fields = [
             "id",
             "uuid",
-            "chat_message_id",
-            "chat_message_uuid",
             "file_name",
             "original_file",
             "file_type",
             "file_size",
             "created_at",
             "files",
+            "chat_messages",
         ]
 
     def get_files(self, obj):
@@ -289,8 +280,6 @@ class ChatFileDetailSerializer(BaseChatFileDetailSerializer):
         chat_files = ChatFile.objects.filter(
             Q(file_type__icontains="image") | Q(file_type__icontains="pdf"),
             chat_room=obj.chat_room,
-            chat_message__isnull=False,
-            chat_message__deleted_at__isnull=True,
         ).order_by("id")
         next_file = chat_files.filter(id__gt=obj.id).first()
         previous_file = chat_files.filter(id__lt=obj.id).last()
