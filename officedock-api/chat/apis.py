@@ -704,6 +704,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer_data = serializer.validated_data
             file_uuids = serializer_data.pop("file_uuids", [])
+            serializer_data.pop("quote", [])
             message = serializer.save(
                 sender=user, chat_room=chat_room, company_id=user.company_id
             )
@@ -825,6 +826,73 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         return self.response_ok()
 
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="leave_group",
+        serializer_class=None,
+    )
+    def leave_group(self, request, code=None):
+        """
+        Handle leave group chat
+        """
+        instance = self.get_object()
+        user = request.user
+        participant = instance.chat_rooms_participants.filter(user=user).first()
+
+        if participant is None:
+            raise ValidationError(
+                {
+                    "chat_room_participant": [
+                        ERROR_MESSAGES["participant_does_not_exist"]
+                    ]
+                }
+            )
+        user.bookmarks.filter(chat_message__chat_room=instance).all().delete()
+        # Handle case realtime when hide chat
+        send_web_socket_event(
+            {
+                "action": WebSocketEventType.HIDE_ROOM.value,
+                "user": user.id,
+                "chat_room": ChatRoomsParticipantsWebSocketSerializer(
+                    participant
+                ).data,
+            },
+            user,
+        )
+        participant.delete()
+        return self.response_ok()
+
+    def perform_destroy(self, instance):
+        """
+        Handle destroy chatroom
+        """
+        instance = self.get_object()
+        user = self.request.user
+        participant = instance.chat_rooms_participants.filter(user=user).first()
+
+        if participant is None:
+            raise ValidationError(
+                {
+                    "chat_room_participant": [
+                        ERROR_MESSAGES["participant_does_not_exist"]
+                    ]
+                }
+            )
+        # Handle case realtime when hide chat
+        send_web_socket_event(
+            {
+                "action": WebSocketEventType.HIDE_ROOM.value,
+                "user": user.id,
+                "chat_room": ChatRoomsParticipantsWebSocketSerializer(
+                    participant
+                ).data,
+            },
+            user,
+        )
+
+        return super().perform_destroy(instance)
+
 
 @extend_schema(tags=["System > Chat Message"])
 class ChatMessageViewSet(
@@ -894,11 +962,9 @@ class ChatMessageViewSet(
                     messages.annotate(clean_message=StripTags(F("message")))
                     .filter(
                         Q(task__title__icontains=message)
-                        | Q(
-                            Q(schedule__title__icontains=message)
-                            | Q(clean_message__icontains=message)
-                        )
-                        | Q(Q(submit_level__skill__name__icontains=message))
+                        | Q(schedule__title__icontains=message)
+                        | Q(clean_message__icontains=message)
+                        | Q(submit_level__skill__name__icontains=message)
                     )
                     .order_by("-bookmarks__bookmark_at")
                     .distinct()
@@ -906,7 +972,12 @@ class ChatMessageViewSet(
             else:
                 messages = (
                     messages.annotate(clean_message=StripTags(F("message")))
-                    .filter(clean_message__icontains=message)
+                    .filter(
+                        Q(task__title__icontains=message)
+                        | Q(schedule__title__icontains=message)
+                        | Q(clean_message__icontains=message)
+                        | Q(submit_level__skill__name__icontains=message)
+                    )
                     .order_by("-created_at")
                 )
 
@@ -1122,11 +1193,7 @@ class ChatFileViewSet(
         )
 
         if chat_room_code := self.request.query_params.get("chat_room_code"):
-            queryset = queryset.filter(
-                chat_room__code=chat_room_code,
-                chat_message__isnull=False,
-                chat_message__deleted_at__isnull=True,
-            )
+            queryset = queryset.filter(chat_room__code=chat_room_code)
 
         return queryset
 

@@ -230,12 +230,10 @@ class ChatFile(BaseModel):
     chat_room = models.ForeignKey(
         ChatRoom, on_delete=models.CASCADE, related_name="chat_files"
     )
-    chat_message = models.ForeignKey(
+    chat_messages = models.ManyToManyField(
         ChatMessage,
-        on_delete=models.CASCADE,
         related_name="chat_files",
-        null=True,
-        blank=True,
+        through="ChatFileChatMessage",
     )
     file_name = models.CharField(max_length=255)
     original_file = models.FileField(upload_to=chat_file_upload_path)
@@ -252,6 +250,19 @@ class ChatFile(BaseModel):
         """
         try:
             for uuid in uuids:
+                # Get ChatFile if exists uuid
+                chat_file = ChatFile.objects.filter(
+                    uuid=uuid, company_id=company_id
+                ).first()
+                if (
+                    chat_file
+                    and not chat_file.chat_messages.filter(
+                        id=message.id
+                    ).exists()
+                ):
+                    with transaction.atomic():
+                        chat_file.chat_messages.add(message.id)
+                    continue
                 # Fetch all chunks
                 chunk_files = ChunkFile.objects.filter(file_uuid=uuid).order_by(
                     "chunk_index"
@@ -295,18 +306,18 @@ class ChatFile(BaseModel):
 
                 # Create ChatFile record in a transaction
                 with transaction.atomic():
-                    ChatFile.objects.create(
+                    chat_file = ChatFile.objects.create(
                         uuid=uuid,
                         company_id=company_id,
                         chat_room=room,
-                        chat_message=message,
                         file_name=file_name,
                         original_file=gcs_path,
                         compressed_file=compressed_file,
                         file_type=file_type,
                         file_size=file_size,
                     )
-
+                    if chat_file:
+                        chat_file.chat_messages.add(message.id)
                     # Delete chunk files after merging
                     for chunk in chunk_files:
                         delete_file(chunk.chunk_file.name)
@@ -376,3 +387,20 @@ class ChunkFile(BaseModel):
     chunk_index = models.IntegerField()
     total_chunks = models.IntegerField()
     chunk_file = models.FileField(upload_to=CHUNK_FILES_FOLDER_UPLOAD)
+
+
+class ChatFileChatMessage(BaseModel):
+    """
+    Chat file chat message model
+    """
+
+    chat_file = models.ForeignKey(
+        ChatFile,
+        on_delete=models.CASCADE,
+        related_name="chat_file_chat_messages",
+    )
+    chat_message = models.ForeignKey(
+        ChatMessage,
+        on_delete=models.CASCADE,
+        related_name="chat_file_chat_messages",
+    )
