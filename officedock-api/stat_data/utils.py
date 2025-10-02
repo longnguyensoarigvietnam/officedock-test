@@ -969,12 +969,15 @@ def process_team_tags(
             }
 
     return _handle_structure_data_for_team(
-        team_data.values(), main_organization, calendar_organization
+        team_data.values(),
+        main_organization,
+        calendar_organization,
+        total_duration,
     )
 
 
 def _handle_structure_data_for_team(
-    team_data, main_organization, calendar_organization
+    team_data, main_organization, calendar_organization, total_duration=None
 ):
     """
     Formatted data and restructure
@@ -1032,8 +1035,12 @@ def _handle_structure_data_for_team(
     percent = 0
     for index, data in enumerate(data_list):
         last_element = index == len(response_data) - 1
-        data["duration"] = format_duration(data["duration"])
+        if total_duration:
+            data["percent"] = percentage_calculation_of_duration(
+                total_duration.total_seconds(), data["duration"].total_seconds()
+            )
         percent += data["percent"]
+        data["duration"] = format_duration(data["duration"])
         if last_element and percent < 100:
             data["percent"] += 100 - percent
         if data.get("percent") > 100:

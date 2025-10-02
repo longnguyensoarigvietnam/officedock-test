@@ -1610,8 +1610,6 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         teams.sort(
             key=lambda x: priority_order.get(x["organization_name"], 999)
         )
-
-        # data["data"] = teams
         data["data"] = normalize_percentages(teams, id_field="organization_id")
         # Normalize percent of users
         if user_ids and option:
