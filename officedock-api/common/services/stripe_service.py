@@ -9,7 +9,7 @@ from companies.constants import (
     CompanyTransactionTypes,
     TransactionStatus,
 )
-from companies.models import Company, CompanyTransaction
+from companies.models import Company, CompanyPlan, CompanyTransaction
 from core import settings
 from base.messages import ERROR_MESSAGES
 from rest_framework.exceptions import ValidationError
@@ -52,22 +52,27 @@ class StripeService:
         tax_rate = Tax.objects.filter(
             percentage=percentage, name=tax_name
         ).first()
-        if tax_rate:
-            return tax_rate.stripe_tax_id
-
-        # 2. If not yet → create new
-        new_tax = stripe.TaxRate.create(
-            display_name=tax_name,
-            percentage=percentage,
-            inclusive=False,  # Taxes added, not included in price
-            description=f"{percentage}% 税率",
-        )
-        Tax.objects.create(
-            name=tax_name,
-            percentage=percentage,
-            stripe_tax_id=new_tax.id,
-        )
-        return new_tax.id
+        try:
+            if stripe.TaxRate.retrieve(tax_rate.stripe_tax_id):
+                return tax_rate.stripe_tax_id
+        except stripe.error.StripeError as e:
+            # 2. If not yet → create new
+            new_tax = stripe.TaxRate.create(
+                display_name=tax_name,
+                percentage=percentage,
+                inclusive=False,  # Taxes added, not included in price
+                description=f"{percentage}% 税率",
+            )
+            if tax_rate:
+                tax_rate.stripe_tax_id = new_tax.id
+                tax_rate.save()
+            else:
+                Tax.objects.create(
+                    name=tax_name,
+                    percentage=percentage,
+                    stripe_tax_id=new_tax.id,
+                )
+            return new_tax.id
 
     def create_product_with_price(
         self, name, amount, currency, interval=None, meter_id=None
@@ -87,6 +92,11 @@ class StripeService:
                 - stripe.Product: The created product object
                 - stripe.Price: The created price object
         """
+        if products := stripe.Product.search(query=f"name:'{name}'"):
+            product_ids = [product["id"] for product in products["data"]]
+            prices = stripe.Price.search(query=f"product:'{product_ids[0]}'")
+            return products["data"][0], prices["data"][0]
+
         product = stripe.Product.create(name=name)
 
         price_data = {
@@ -180,11 +190,8 @@ class StripeService:
             # 5. Set default if it's the first one
             is_default = not company.payment_methods.exists()
             if is_default:
-                stripe.Customer.modify(
-                    customer_id,
-                    invoice_settings={
-                        "default_payment_method": payment_method_id
-                    },
+                self.modify_default_payment_method(
+                    customer_id, payment_method_id
                 )
 
             return {
@@ -192,9 +199,8 @@ class StripeService:
                 "exp_month": payment_method.card.exp_month,
                 "exp_year": payment_method.card.exp_year,
                 "brand": payment_method.card.brand,
-                "fingerprint": payment_method.card.fingerprint,
+                "stripe_fingerprint": payment_method.card.fingerprint,
                 "is_default": is_default,
-                "cardholder_name": payment_method.billing_details.name,
             }
         except stripe.CardError:
             # Stripe declined for card-side reasons
@@ -208,18 +214,15 @@ class StripeService:
                 {"detail": f"{e.user_message or 'Unknown error'}"}
             )
 
-    def create_postpaid_subscription_with_invoice(
-        self, company: Company, start_date
-    ):
+    def create_postpaid_subscription_with_invoice(self, company: Company):
         """
         Create a postpaid (metered billing) subscription for the given company.
-        The usage cycle starts from `start_date` (day 01) until the end of the month.
+        The usage cycle starts from (day 01) until the end of the month.
         An invoice will be generated at the end of the cycle and is due on the 5th
         of the following month.
 
         Args:
             company (Company): The company for which to create the subscription.
-            start_date (int): The billing cycle anchor (Unix timestamp), e.g., 01/09.
 
         Returns:
             stripe.Subscription: The created Stripe subscription object.
@@ -231,12 +234,6 @@ class StripeService:
                     {"detail": ERROR_MESSAGES["stripe_customer_id_missing"]}
                 )
             company_plan = company.company_plan
-            if company_plan.stripe_subscription_id:
-                stripe_subs = stripe.Subscription.retrieve(
-                    company_plan.stripe_subscription_id
-                )
-                if stripe_subs:
-                    return stripe_subs
             price = stripe.Price.retrieve(company_plan.plan.stripe_price_id)
             # Create fixed subscription billing at the end of the month
             tax = Tax.objects.first()
@@ -385,3 +382,129 @@ class StripeService:
             return stripe.Invoice.finalize_invoice(invoice_id)
         except stripe.error.StripeError as e:
             return False
+
+    def change_price_of_subscription(self, company, plan):
+        """
+        Change the price of an existing Stripe subscription for a company.
+
+        Args:
+            company (Company): The company whose subscription will be updated.
+            plan (Plan): The new plan containing the Stripe price ID.
+
+        Returns:
+            dict: The updated Stripe subscription object.
+
+        Raises:
+            ValidationError: If the customer, plan, or subscription is invalid, or if Stripe raises an error.
+        """
+        try:
+            customer_id = company.stripe_customer_id
+            if not customer_id:
+                raise ValidationError(
+                    {"detail": ERROR_MESSAGES["stripe_customer_id_missing"]}
+                )
+            company_plan = company.company_plan
+            price = stripe.Price.retrieve(plan.stripe_price_id)
+            stripe_subs = stripe.Subscription.retrieve(
+                company_plan.stripe_subscription_id
+            )
+            if stripe_subs and price:
+                subscription_item_id = stripe_subs["items"]["data"][0]["id"]
+                # Create fixed subscription billing at the end of the month
+                subscription = stripe.Subscription.modify(
+                    stripe_subs.id,
+                    items=[
+                        {
+                            "id": subscription_item_id,
+                            "price": price,
+                        }
+                    ],
+                    proration_behavior="none",  # No prorate for current month
+                )
+
+            return True
+
+        except stripe.error.CardError as e:
+            raise ValidationError({"detail": f"{ERROR_MESSAGES['card_error']}"})
+        except stripe.error.StripeError as e:
+            raise ValidationError({"detail": f"{e}"})
+        except Exception as e:
+            raise ValidationError({"detail": f"{e}"})
+
+    def retrieve_subscription(self, stripe_subscription_id):
+        """
+        Retrieve a subscription from Stripe.
+
+        Args:
+            stripe_subscription_id (str): The Stripe subscription ID.
+
+        Returns:
+            dict | None: The subscription object if found, otherwise None.
+
+        Side effects:
+            - If the subscription cannot be retrieved (e.g., deleted in Stripe),
+            the local CompanyPlan.stripe_subscription_id will be cleared.
+        """
+        try:
+            if not stripe_subscription_id:
+                return None
+            stripe_subs = stripe.Subscription.retrieve(stripe_subscription_id)
+            return stripe_subs
+        except stripe.error.InvalidRequestError as e:
+            # Subscription not found on Stripe → clean up local DB
+            CompanyPlan.objects.filter(
+                stripe_subscription_id=stripe_subscription_id
+            ).update(stripe_subscription_id=None)
+            return None
+
+        except stripe.error.StripeError as e:
+            # Other Stripe-related errors (API, auth, rate limits, etc.)
+            raise ValidationError(
+                {"detail": e.user_message or "Unable to retrieve subscription"}
+            )
+        except Exception as e:
+            # Unexpected system-level errors
+            raise ValidationError({"detail": str(e)})
+
+    def modify_default_payment_method(
+        self, stripe_customer_id, payment_method_id
+    ):
+        """
+        Update the default payment method for a Stripe customer.
+
+        Args:
+            stripe_customer_id (str): The ID of the Stripe customer.
+            payment_method_id (str): The ID of the payment method to set as default.
+
+        Returns:
+            dict: The updated Stripe customer object.
+
+        Raises:
+            ValidationError: If the card is declined or Stripe returns an error.
+        """
+        try:
+            stripe.Customer.modify(
+                stripe_customer_id,
+                invoice_settings={"default_payment_method": payment_method_id},
+            )
+        except stripe.CardError:
+            # Stripe declined for card-side reasons
+            raise ValidationError({"detail": ERROR_MESSAGES["card_declined"]})
+        except stripe.error.StripeError as e:
+            # Other errors from Stripe (connection, authentication...)
+            raise ValidationError(
+                {"detail": f"{e.user_message or 'Unknown error'}"}
+            )
+
+    def detach_payment_method(self, payment_method_id):
+        """Detach a payment method from a Stripe customer."""
+        try:
+            stripe.PaymentMethod.detach(payment_method_id)
+        except stripe.CardError as e:
+            # Stripe declined for card-side reasons
+            raise ValidationError({"detail": e.message})
+        except stripe.error.StripeError as e:
+            # Other errors from Stripe (connection, authentication...)
+            raise ValidationError(
+                {"detail": f"{e.user_message or 'Unknown error'}"}
+            )

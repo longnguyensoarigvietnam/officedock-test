@@ -107,6 +107,11 @@ class CompanyPaymentMethod(BaseModel):
     stripe_payment_method_id = models.CharField(null=True, blank=True)
     stripe_fingerprint = models.CharField(null=True, blank=True)
     is_default = models.BooleanField(default=False)
+    is_retry_failed = models.BooleanField(default=False)
+    brand = models.CharField(null=True, blank=True)
+    last4 = models.CharField(null=True, blank=True)
+    exp_month = models.CharField(null=True, blank=True)
+    exp_year = models.CharField(null=True, blank=True)
 
 
 class CompanyTransaction(BaseModel):

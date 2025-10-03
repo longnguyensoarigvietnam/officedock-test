@@ -1,3 +1,4 @@
+from rest_framework.exceptions import ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets, mixins
@@ -5,6 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 
+from base.messages import ERROR_MESSAGES
 from base.permissions import IsApiKeyValid, IsOperationAdminOnly
 from base.apis import BaseAPIViewSet
 
@@ -20,6 +22,7 @@ from companies.services import CompanyService
 from .filters import CompanyFilter
 from .models import Company, CompanyPaymentMethod, CompanyPlan, Contract
 from .serializers import (
+    AddCardSerializer,
     BaseCompanySerializer,
     CompanySerializer,
     CompanySettingSerializer,
@@ -27,6 +30,7 @@ from .serializers import (
     ContractSerializer,
     CreationCompanySerializer,
     RetrieveCompanySerializer,
+    SetDefaultCardSerializer,
 )
 
 
@@ -282,8 +286,7 @@ class SystemCompanyViewSet(
             company=company,
             type=payment_method,
             stripe_payment_method_id=stripe_payment_method_id,
-            stripe_fingerprint=stripe_payment["fingerprint"],
-            is_default=True,
+            **stripe_payment
         )
 
         # Create plan of company
@@ -317,4 +320,135 @@ class SystemCompanyViewSet(
             "is_show_holidays_calendar", False
         )
         company.save()
+        return self.response_ok()
+
+
+@extend_schema(tags=["System > Management Payment"])
+class ManagePaymentViewSet(
+    BaseAPIViewSet,
+):
+    """
+    API endpoint for management payment method.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="add-card",
+        serializer_class=AddCardSerializer,
+    )
+    @transaction.atomic()
+    def add_card_to_company(self, request):
+        """
+        Add a new payment card to the authenticated user's company.
+
+        Steps:
+        - Ensure the company has a Stripe customer ID (create if missing).
+        - Attach the provided payment method to the customer in Stripe.
+        - Save the payment method details in the local database.
+        - If no active subscription exists, create a new postpaid subscription.
+        - Retry unpaid invoices after successfully adding the card.
+        """
+        # Get the company associated with the authenticated user
+        company = request.user.company
+
+        # Validate the incoming request data using the serializer
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+        stripe_payment_method_id = validated_data.pop(
+            "stripe_payment_method_id"
+        )
+        payment_method = validated_data.pop("payment_method")
+
+        # Create Stripe customer and attach payment method to customer
+        StripeService().get_or_create_customer(company)
+        stripe_payment = StripeService().attach_payment_method_to_customer(
+            company, stripe_payment_method_id
+        )
+        # Create payment method of company
+        CompanyPaymentMethod.objects.create(
+            company=company,
+            type=payment_method,
+            stripe_payment_method_id=stripe_payment_method_id,
+            **stripe_payment
+        )
+        # Check exists subscription
+        if (
+            StripeService().retrieve_subscription(
+                company.company_plan.stripe_subscription_id
+            )
+            is None
+        ):
+            # Create subscription
+            subscription = (
+                StripeService().create_postpaid_subscription_with_invoice(
+                    company
+                )
+            )
+            company.company_plan.stripe_subscription_id = subscription.id
+            company.company_plan.save(
+                update_fields=[
+                    "stripe_subscription_id",
+                ]
+            )
+        # TODO: Retry unpaid invoices here using handle_invoice_base_on_status
+
+        return self.response_ok()
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="set-default-card",
+        serializer_class=SetDefaultCardSerializer,
+    )
+    @transaction.atomic()
+    def set_default_card(self, request):
+        """Set a payment method as the default card for the authenticated user's company."""
+        # Get the company associated with the authenticated user
+        company = request.user.company
+
+        # Validate the incoming request data using the serializer
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+        payment_method = validated_data.pop("payment_method")
+        # Change default payment method of Stripe
+        StripeService().modify_default_payment_method(
+            company.stripe_customer_id, payment_method.stripe_payment_method_id
+        )
+        # Update default card of company
+        company.payment_methods.update(is_default=False)
+        payment_method.is_default = True
+        payment_method.save(update_fields=["is_default"])
+
+        return self.response_ok()
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="remove-card",
+        serializer_class=SetDefaultCardSerializer,
+    )
+    @transaction.atomic()
+    def remove_a_card_of_company(self, request):
+        """Remove a payment card from the authenticated user's company."""
+        # Validate the incoming request data using the serializer
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+        payment_method = validated_data.pop("payment_method")
+        if payment_method.is_default:
+            raise ValidationError(
+                {"detail": ERROR_MESSAGES["cannot_remove_card"]}
+            )
+        # Change default payment method of Stripe
+        StripeService().detach_payment_method(
+            payment_method.stripe_payment_method_id
+        )
+        # Delete from local DB
+        payment_method.delete()
+
         return self.response_ok()

@@ -31,6 +31,7 @@ from common.utils import (
     send_web_socket_event,
 )
 from companies.models import Company, Contract
+from plans.models import Plan
 from submit_levels.models import SubmitLevelHistory
 from users.constants import (
     RoleTypes,
@@ -845,12 +846,25 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         # Handle check max user
         company_user_count = company.users.count()
+        current_plan = company.company_plan.plan
         if company_user_count > company.max_user_in_contract_period:
             company.max_user_in_contract_period = company_user_count
             company.max_user_at = datetime.now()
             company.save(
                 update_fields=["max_user_in_contract_period", "max_user_at"]
             )
+        if (
+            21 >= company_user_count > current_plan.limit_person
+        ):  # TODO: Maybe change limit person later
+            filter = Q()
+            if company_user_count <= 10:
+                filter = Q(limit_person=10)
+            elif company_user_count <= 20:
+                filter = Q(limit_person=20)
+            else:
+                filter = Q(limit_person=30)
+            Plan.objects.filter(filter).first()
+            # CompanyService().upgrade_plan(company, plan) # TODO: Implement upgrade later
 
         # Log user create
         UserActivityLog.log_user_creation(

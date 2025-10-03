@@ -7,7 +7,7 @@ from calendars.apis import (
     ScheduleViewSet,
     ScheduleTeamdockViewSet,
 )
-from companies.apis import SystemCompanyViewSet
+from companies.apis import ManagePaymentViewSet, SystemCompanyViewSet
 from shop_items.apis import ShopItemViewSet, UserItemViewSet
 from stat_data.apis import StatDataViewSet
 from skills.apis import (
@@ -179,6 +179,9 @@ api_router.register(
 )
 api_router.register("shop-items", ShopItemViewSet, basename="shop_items")
 api_router.register("webhook", WebhookView, basename="webhook")
+api_router.register(
+    "payment-management", ManagePaymentViewSet, basename="payment_management"
+)
 
 if settings.DEBUG:
     api_router.register("testing", TestingViewset, basename="testing")

@@ -4,7 +4,6 @@ from datetime import timezone
 from django.utils.timezone import now
 from rest_framework.fields import ValidationError
 from base.messages import ERROR_MESSAGES
-from common.services import stripe_service
 from common.services.stripe_service import StripeService
 from common.utils import (
     format_date,
@@ -25,6 +24,12 @@ from utils.mail import PaymentMailService
 
 
 class CompanyService:
+    def __init__(self):
+        """
+        Initialize the Stripe service by setting the Stripe secret API key.
+        """
+        self.stripe_service = StripeService()
+
     def active_company(self, request, company: Company):
         """
         Activate a company by creating its admin user, assigning roles,
@@ -35,7 +40,6 @@ class CompanyService:
             raise ValidationError(
                 {"detail": ERROR_MESSAGES["company_not_match"]}
             )
-        stripe = StripeService()
         contract = company.contract
         user_data = {}
         # Prepare profile and login data for the system admin user
@@ -73,29 +77,21 @@ class CompanyService:
             get_user_agent(request),
         )
 
-        # Send welcome email with login credentials to the admin
-        mail_service = PaymentMailService()
-        mail_service.send_account_issued(
-            recipient=company.responsible_person_mail,
-            user_email=company.responsible_person_mail,
-            password=user_data["password"],
-            company_name=company.name,
-            responsible_name=company.responsible_person_name,
-        )
-
         # Update contract dates relative to the current time
         related_date = generate_contract_related_date_base_on_now()
         contract.__dict__.update(related_date)
         contract.save(update_fields=related_date.keys())
         company.transactions.create(
-            plan_start_at=related_date["start_date"],
+            plan_start_at=now(),
             plan=company.company_plan.plan,
             type=CompanyTransactionTypes.PLAN.value,
         )
 
         # Create Stripe postpaid subscription and save IDs to company plan
-        subscription = stripe.create_postpaid_subscription_with_invoice(
-            company, start_date=related_date["start_date"]
+        subscription = (
+            self.stripe_service.create_postpaid_subscription_with_invoice(
+                company
+            )
         )
         company.company_plan.stripe_subscription_id = subscription.id
         company.company_plan.save(
@@ -113,6 +109,15 @@ class CompanyService:
                 "max_user_in_contract_period",
                 "max_user_at",
             ]
+        )
+        # Send welcome email with login credentials to the admin
+        mail_service = PaymentMailService()
+        mail_service.send_account_issued(
+            recipient=company.responsible_person_mail,
+            user_email=company.responsible_person_mail,
+            password=user_data["password"],
+            company_name=company.name,
+            responsible_name=company.responsible_person_name,
         )
 
     def handle_contract_renewal(self, company, day):
@@ -156,13 +161,19 @@ class CompanyService:
         Raises:
             Exception: If Stripe subscription creation fails.
         """
-        stripe = StripeService()
-        related_date = generate_contract_related_date_base_on_now()
 
-        # Create Stripe postpaid subscription and save IDs to company plan
-        subscription = stripe.create_postpaid_subscription_with_invoice(
-            company, start_date=related_date["start_date"]
-        )
+        if (
+            self.stripe_service.retrieve_subscription(
+                company.company_plan.stripe_subscription_id
+            )
+            is None
+        ):
+            # Create Stripe postpaid subscription and save IDs to company plan
+            subscription = (
+                self.stripe_service.create_postpaid_subscription_with_invoice(
+                    company
+                )
+            )
         company.company_plan.stripe_subscription_id = subscription.id
         company.company_plan.save(
             update_fields=[
@@ -191,7 +202,7 @@ class CompanyService:
         subscription_cancel_at = datetime.datetime.combine(
             contract.end_date, datetime.time.max, tzinfo=timezone.utc
         )
-        stripe_service.StripeService().handle_cancel_subscription(
+        self.stripe_service.handle_cancel_subscription(
             subscription_id=company.company_plan.stripe_subscription_id,
             cancel_at=subscription_cancel_at,
         )
@@ -209,10 +220,26 @@ class CompanyService:
         ).all()
         if invoices:
             for invoice in invoices:
-                stripe_invoice = stripe_service.StripeService().get_invoice(
+                stripe_invoice = self.stripe_service.get_invoice(
                     invoice.stripe_invoice_id
                 )
                 if stripe_invoice:
-                    stripe_service.StripeService().update_invoice_finalize(
+                    self.stripe_service.update_invoice_finalize(
                         stripe_invoice, company
                     )
+
+    def upgrade_plan(self, company, plan):
+        """"""
+        # Update new plan
+        company.company_plan.plan = plan
+        company.company_plan.save(update_fields=["plan"])
+        # Update history use plan
+        company.transactions.filter(
+            type=CompanyTransactionTypes.PLAN.value, plan_end_at__isnull=True
+        ).update(plan_end_at=now())
+        company.transactions.create(
+            type=CompanyTransactionTypes.PLAN.value,
+            plan_start_at=now(),
+            plan=plan,
+        )
+        # TODO: Implement logic create new invoice
