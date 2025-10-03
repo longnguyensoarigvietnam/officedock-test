@@ -39,15 +39,17 @@ class Command(BaseCommand):
                 .order_by("user__created_at")
                 .first()
             ):
-                company.responsible_person_mail = (
-                    admin_user.user.email
-                    or admin_user.user.two_factor_auth_email
-                )
-                company.responsible_person_name = (
-                    admin_user.user.profile.full_name
-                )
-            company.contract.__dict__.update(contract_data)
-            company.contract.save(update_fields=contract_data.keys())
+                if company.responsible_person_mail is None:
+                    company.responsible_person_mail = (
+                        admin_user.user.email
+                        or admin_user.user.two_factor_auth_email
+                    )
+                    company.responsible_person_name = (
+                        admin_user.user.profile.full_name
+                    )
+            if company.contract.next_renewal_at is None:
+                company.contract.__dict__.update(contract_data)
+                company.contract.save(update_fields=contract_data.keys())
             # # Seed data Company plan
             if not CompanyPlan.objects.filter(company=company).exists():
                 if total_user <= 10:
@@ -64,13 +66,14 @@ class Command(BaseCommand):
                     plan_start_at=datetime.now(),
                     plan=plan,
                 )
-            company.max_user_at = datetime.now()
-            company.max_user_in_contract_period = total_user
-            company.status = (
-                CompanyStatus.TEMPORARY_USAGE.value
-                if total_user > 0
-                else CompanyStatus.PENDING_APPROVAL.value
-            )
+            if company.max_user_at is None:
+                company.max_user_at = datetime.now()
+                company.max_user_in_contract_period = total_user
+                company.status = (
+                    CompanyStatus.TEMPORARY_USAGE.value
+                    if total_user > 0
+                    else CompanyStatus.PENDING_APPROVAL.value
+                )
             company.save(
                 update_fields=[
                     "max_user_at",
@@ -80,8 +83,7 @@ class Command(BaseCommand):
                     "responsible_person_name",
                 ]
             )
-            if not company.stripe_customer_id:
-                stripe_service.StripeService().get_or_create_customer(company)
+            stripe_service.StripeService().get_or_create_customer(company)
 
         self.stdout.write(
             self.style.SUCCESS(

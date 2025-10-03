@@ -1,7 +1,13 @@
 from django.db import transaction
 from rest_framework import serializers
 
-from companies.models import Company, CompanyTransaction, Contract
+from companies.constants import PaymentTypes
+from companies.models import (
+    Company,
+    CompanyPaymentMethod,
+    CompanyTransaction,
+    Contract,
+)
 from base.messages import ERROR_MESSAGES
 from plans.models import Plan
 from plans.serializers import PlanSerializer
@@ -238,3 +244,22 @@ class CompanyTransactionSerializer(serializers.ModelSerializer):
             "paid_at",
             "plan",
         ]
+
+
+class AddCardSerializer(serializers.Serializer):
+    """
+    Serializer for add card to company
+    """
+
+    stripe_payment_method_id = serializers.CharField()
+    payment_method = serializers.ChoiceField(choices=PaymentTypes.choices())
+
+
+class SetDefaultCardSerializer(serializers.Serializer):
+    """
+    Serializer for set default card to company
+    """
+
+    payment_method_id = serializers.PrimaryKeyRelatedField(
+        source="payment_method", queryset=CompanyPaymentMethod.objects.all()
+    )

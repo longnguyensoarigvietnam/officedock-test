@@ -58,3 +58,7 @@ class Industry(EnumChoices):
     PLANNING_PRODUCTION = "企画・制作"
     PROFESSIONAL_SERVICES = "士業、専門・技術サービス業"
     OTHER = "その他（自由記述）"
+
+
+class PaymentTypes(EnumChoices):
+    CREDIT_CARD = "クレジットカード"
