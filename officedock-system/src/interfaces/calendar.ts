@@ -110,8 +110,8 @@ export interface EventRequest {
   weekDay?: number | null;
   monthDay?: number | null;
   month?: number | null;
-  recurringEventOption?: string
-  repeatScheduleId?: number
+  recurringEventOption?: string;
+  repeatScheduleId?: number;
 }
 
 export interface CreationDataEventCalendar {
@@ -205,20 +205,22 @@ export interface EventWorkCategoryOption {
   id?: number;
 }
 
+export interface CalendarPopoverEvent {
+  eventId: string;
+  repeatScheduleId: string;
+  title: string;
+  start?: Date;
+  end?: Date;
+  type?: EventCalendarType;
+  participants?: EventParticipant[];
+  selectOrganizations?: number[];
+  location?: LocationEventType;
+  allDay?: boolean;
+}
+
 export interface CalendarPopoverInfo {
   date: Date;
-  events: Array<{
-    eventId: string;
-    repeatScheduleId: string;
-    title: string;
-    start?: Date;
-    end?: Date;
-    type?: EventCalendarType;
-    participants?: EventParticipant[];
-    selectOrganizations?: number[];
-    location?: LocationEventType;
-    allDay?: boolean;
-  }>;
+  events: Array<CalendarPopoverEvent>;
   left?: number;
   top?: number;
 }

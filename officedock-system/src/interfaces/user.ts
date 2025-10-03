@@ -121,6 +121,8 @@ export interface MemoDetailData {
 export interface UserOrganization {
   id: number;
   name: string;
+  icon: string | null;
+  iconColor: string;
   users: {
     id: number;
     fullName: string;

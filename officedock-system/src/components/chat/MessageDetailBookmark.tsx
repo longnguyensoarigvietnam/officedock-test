@@ -291,8 +291,8 @@ export const MessageDetailBookmark = ({
           <div className="flex gap-2">
             <p className="text-primary font-medium text-sm max-w-full break-all">
               {isSearchingMessages && allRoomChatMsgSearch
-                ? `${highlightTitleBySearchTerm(skillName, allRoomChatMsgSearch)}`
-                : `${skillName}`}
+                ? highlightTitleBySearchTerm(skillName, allRoomChatMsgSearch)
+                : skillName} {' '}
               <span className="text-black text-sm font-normal">
                 のスキルがレベルアップしました！
               </span>
@@ -304,8 +304,8 @@ export const MessageDetailBookmark = ({
           <div className="flex gap-2">
             <p className="text-primary font-medium text-sm max-w-full break-all">
               {isSearchingMessages && allRoomChatMsgSearch
-                ? `${highlightTitleBySearchTerm(skillName, allRoomChatMsgSearch)}`
-                : `${skillName}`}
+                ? highlightTitleBySearchTerm(skillName, allRoomChatMsgSearch)
+                : skillName} {' '}
               <span className="text-black text-sm font-normal">
                 のレベルアップの申請についてコメントが届いています。
               </span>

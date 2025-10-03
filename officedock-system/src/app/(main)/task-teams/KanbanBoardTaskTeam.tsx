@@ -2467,18 +2467,18 @@ const KanbanBoardTaskTeam = () => {
       <div
         className={`pt-[30px] pr-10 h-[calc(100vh_-_76px)] !overflow-hidden ${isDragging ? 'overflow-hidden' : 'overflow-y-auto'}   font-medium  w-full pb-10`}>
         <div className="mb-[30px] flex items-center justify-between">
-          <div className="flex items-center gap-5 ">
+          <div className="flex items-center">
             <div className="flex gap-1 items-center">
               {selectedOrganization?.imgComponent && (
                 <div className="w-[34px] h-[34px] flex justify-center items-center">
                   {selectedOrganization.imgComponent}
                 </div>
               )}
-              <p className="text-[26px] font-medium relative top-[0px] line-clamp-3 max-w-[350px] ">
+              <p className="text-[26px] font-medium relative top-[0px] line-clamp-3 max-w-[350px] break-all ml-[10px] ">
                 {selectedOrganization?.label}
               </p>
             </div>
-            <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ">
+            <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ml-5 ">
               <Button
                 variant={'primary'}
                 className={`!py-0 !px-0 font-bold w-[90px] h-7

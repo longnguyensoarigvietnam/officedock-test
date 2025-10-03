@@ -132,7 +132,7 @@ const ActionsAddMembersModal = memo(
           <CustomUserAvatar
             avatarUrl={memberInfo?.avatar || ''}
             avatarColor={memberInfo?.avatarColor || ''}
-            size={33}
+            size={30}
           />
         </div>
       );
@@ -467,11 +467,21 @@ const ActionsAddMembersModal = memo(
                       <>{renderAvatar(member.id as string)}</>
                     )}
                     {member.type == ChatParticipantType.ORGANIZATION && (
-                      <div className="scale-110 min-w-[33px]">
-                        <GroupIconWithDynamicColor
-                          color={member.color || '#0068B6'}
-                        />
-                      </div>
+                      <>
+                        {member.avatarUrl ? (
+                          <CustomUserAvatar
+                            avatarUrl={member?.avatarUrl || ''}
+                            avatarColor={member?.color || ''}
+                            size={30}
+                          />
+                        ) : (
+                          <div className="scale-[1.0714]">
+                            <GroupIconWithDynamicColor
+                              color={member.color || '#0068B6'}
+                            />
+                          </div>
+                        )}
+                      </>
                     )}
                     <p
                       className={`break-all font-medium text-[15px] max-w-[430px] text-black`}>
