@@ -337,8 +337,9 @@ class StripeService:
                 stripe_customer_id=invoice.customer,
                 status=CompanyStatus.TEMPORARY_USAGE.value,
             ).exists()
+            metadata = invoice.get("metadata", {})
             # Pay the invoice via Stripe
-            if is_skip_payment:
+            if is_skip_payment or metadata.get("voided") == "true":
                 # Update transaction status
                 CompanyTransaction.objects.filter(
                     stripe_invoice_id=invoice.id
@@ -508,3 +509,80 @@ class StripeService:
             raise ValidationError(
                 {"detail": f"{e.user_message or 'Unknown error'}"}
             )
+
+    def replace_invoice_subscription(self, company, plan):
+        """
+        Create and replace an invoice for a company in Stripe and local DB.
+
+        Steps:
+        1. Retrieve the current unpaid invoice for the company.
+        2. Void the existing Stripe invoice (if any).
+        3. Create a new invoice with updated plan and tax info.
+        4. Attach line items for billing.
+        5. Update the local CompanyTransaction record.
+        """
+        try:
+            tax = Tax.objects.first()
+            customer_id = company.stripe_customer_id
+            # Get current invoice unpaid
+            current_local_invoice = CompanyTransaction.objects.filter(
+                company=company,
+                paid_at__isnull=True,
+                type=CompanyTransactionTypes.INVOICE.value,
+                status=TransactionStatus.UNPAID.value,
+            ).last()
+            if not current_local_invoice:
+                return
+            # Void the old invoice safely
+            finalizes_at = int(
+                get_a_day_in_next_month(
+                    date=current_local_invoice.invoice_target, target_date=5
+                ).timestamp()
+            )
+            # Update invoice with metadata, and turn off automatic payment
+            stripe.Invoice.modify(
+                current_local_invoice.stripe_invoice_id,
+                metadata={"voided": "true"},
+                auto_advance=False,
+            )
+            # Finalize invoice
+            self.finalize_invoice(current_local_invoice.stripe_invoice_id)
+            # Create a new invoice
+            new_invoice = stripe.Invoice.create(
+                customer=customer_id,
+                auto_advance=True,
+                automatically_finalizes_at=finalizes_at,
+                currency="jpy",
+            )
+            # Update current transaction
+            CompanyTransaction.objects.filter(
+                id=current_local_invoice.id
+            ).update(
+                status=TransactionStatus.UNPAID.value,
+                stripe_invoice_id=new_invoice.id,
+            )
+            # Create line items
+            line_items = [
+                {
+                    "amount": int(plan.monthly_fee),  # subtotal
+                    "currency": "jpy",
+                    "description": f"1 × {plan.name} (at ¥{int(plan.monthly_fee)}/ month)",
+                    "tax_rates": [tax.stripe_tax_id],
+                }
+            ]
+
+            for item in line_items:
+                stripe.InvoiceItem.create(
+                    customer=customer_id,
+                    invoice=new_invoice.id,
+                    amount=item["amount"],
+                    currency=item["currency"],
+                    description=item["description"],
+                    tax_rates=item["tax_rates"],
+                )
+            return True
+
+        except stripe.error.StripeError as e:
+            raise ValidationError(e)
+        except Exception as e:
+            raise ValidationError(e)
