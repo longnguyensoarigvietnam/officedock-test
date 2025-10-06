@@ -580,7 +580,7 @@ class StripeService:
                     description=item["description"],
                     tax_rates=item["tax_rates"],
                 )
-            return True
+            return self.get_invoice(new_invoice.id)
 
         except stripe.error.StripeError as e:
             raise ValidationError(e)

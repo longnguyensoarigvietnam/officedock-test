@@ -13,6 +13,7 @@ from common.utils import (
     get_client_ip,
     get_user_agent,
     get_username_alias,
+    to_datetime,
 )
 from companies.constants import (
     CompanyStatus,
@@ -256,6 +257,12 @@ class CompanyService:
         4. Replace or regenerate the related invoice to reflect the new plan
         """
         try:
+            old_plan = company.company_plan.plan.name
+            self.stripe_service.change_price_of_subscription(company, plan)
+            invoice = self.stripe_service.replace_invoice_subscription(
+                company, plan
+            )
+            start_month = to_datetime(invoice.created)
             with transaction.atomic():
                 # Update new plan
                 company.company_plan.plan = plan
@@ -264,14 +271,21 @@ class CompanyService:
                 company.transactions.filter(
                     type=CompanyTransactionTypes.PLAN.value,
                     plan_end_at__isnull=True,
-                ).update(plan_end_at=now())
+                ).update(plan_end_at=start_month)
                 company.transactions.create(
                     type=CompanyTransactionTypes.PLAN.value,
-                    plan_start_at=now(),
+                    plan_start_at=start_month,
                     plan=plan,
                 )
-            self.stripe_service.change_price_of_subscription(company, plan)
-            self.stripe_service.replace_invoice_subscription(company, plan)
+            PaymentMailService().send_plan_auto_upgrade(
+                recipient=company.responsible_person_mail,
+                company_name=company.name,
+                responsible_name=company.responsible_person_name,
+                old_plan=old_plan,
+                new_plan=plan.name,
+                start_month=format_date(start_month, style="jp_month_year"),
+                new_price=format(invoice.amount_due, ","),
+            )
             return True
         except stripe.error.StripeError as e:
             raise ValidationError({"detail": e.user_message or str(e)})
