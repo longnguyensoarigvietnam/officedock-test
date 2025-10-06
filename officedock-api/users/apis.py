@@ -39,6 +39,7 @@ from users.constants import (
     DEFAULT_OTP_ATTEMPTS,
     LoginTypes,
     CurrencyEnums,
+    TransactionTypes,
 )
 from users.filters import AdminUserFilter, SystemUserFilter
 from users.models import (
@@ -67,6 +68,7 @@ from users.serializers import (
     SystemLoginSerializer,
     SystemUserInviteSerializer,
     TokenVerificationSerializer,
+    TransactionManagementSerializer,
     UserListSerializer,
     UserRegisterSerializer,
     UserSerializer,
@@ -1240,3 +1242,55 @@ class SystemPointHistoryViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+
+
+@extend_schema(tags=["System > Point Management"])
+class SystemPointManagementViewSet(BaseAPIViewSet, mixins.ListModelMixin):
+    """
+    API endpoint for point management for user admin.
+    """
+
+    queryset = TransactionHistory.objects.order_by("-id")
+    serializer_class = TransactionManagementSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = CustomCursorPagination
+    ordering = "-id"
+
+    def get_queryset(self):
+        """
+        Filtering memos by company.
+        """
+
+        user = self.request.user
+        queryset = (
+            super()
+            .get_queryset()
+            .filter(
+                currency=CurrencyEnums.COIN.value,
+                company_id=user.company_id,
+                transaction_type__in=[
+                    TransactionTypes.PLAN_AUTO.value,
+                    TransactionTypes.PLAN_AUTO_EXPIRE.value,
+                    TransactionTypes.EXCHANGE.value,
+                ],
+            )
+        )
+
+        return queryset
+
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="coins-status",
+    )
+    def get_current_coins_status(self, request):
+        user = request.user
+        company = user.company
+        return self.response_ok(
+            {
+                "total_coins": company.total_coins,
+                "target_user_count": company.target_user_count,
+                "exchangeable_coins_per_user": company.total_coins
+                // company.target_user_count,
+            }
+        )

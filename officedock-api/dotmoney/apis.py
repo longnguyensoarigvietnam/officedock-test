@@ -106,11 +106,6 @@ class DotMoneyViewSet(BaseAPIViewSet):
             # User must have enough coins to exchange
             if user.coin < amount or user.exchangeable_coin < amount:
                 return redirect_complete(ExchangeStatus.NG.value, user_obj=user)
-
-            # Deduct user's coin balance atomically
-            user.use_coin(
-                amount=amount, transaction_type=TransactionTypes.EXCHANGE.value
-            )
         except Exception:
             return redirect_complete(ExchangeStatus.NG.value)
 
@@ -121,6 +116,10 @@ class DotMoneyViewSet(BaseAPIViewSet):
             return redirect_complete(ExchangeStatus.NG.value, user_obj=user)
 
         # 7. Everything OK → redirect success
+        # Deduct user's coin balance atomically
+        user.use_coin(
+            amount=amount, transaction_type=TransactionTypes.EXCHANGE.value
+        )
         return redirect_complete(ExchangeStatus.OK.value, user_obj=user)
 
     @extend_schema(

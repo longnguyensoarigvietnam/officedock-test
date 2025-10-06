@@ -103,6 +103,10 @@ class TransactionTypes(EnumChoices):
     BUY_ITEM = "アイテム交換"
     OTHER = "その他"  # Other
 
+    # Company types
+    PLAN_AUTO = "プラン自動付与"  # Plan Auto Grant
+    PLAN_AUTO_EXPIRE = "プラン自動付与コイン失効"  # Plan Auto Grant / Coin Expiration
+
 
 class CurrencyEnums(EnumChoices):
     COIN = "COIN"

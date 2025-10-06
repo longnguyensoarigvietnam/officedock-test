@@ -34,6 +34,7 @@ from terms.apis import SystemTermViewSet
 from tweets.apis import TweetsView
 from users.apis import (
     SystemAuthViewSet,
+    SystemPointManagementViewSet,
     SystemUserMemoViewSet,
     SystemUserViewSet,
     SystemPointHistoryViewSet,
@@ -176,6 +177,11 @@ api_router.register("mvp-vote", MVPVoteViewSet, basename="mvp_vote")
 api_router.register("dotmoney", DotMoneyViewSet, basename="dotmoney")
 api_router.register(
     "point-histories", SystemPointHistoryViewSet, basename="point_histories"
+)
+api_router.register(
+    "point-management",
+    SystemPointManagementViewSet,
+    basename="point_management",
 )
 api_router.register("shop-items", ShopItemViewSet, basename="shop_items")
 api_router.register("webhook", WebhookView, basename="webhook")

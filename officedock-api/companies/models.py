@@ -30,6 +30,13 @@ class Company(BaseModel):
     responsible_person_name = models.CharField(null=True, blank=True)
     responsible_person_mail = models.EmailField(null=True, blank=True)
 
+    # Current total coins (can be computed as the sum of valid CompanyCoin records)
+    total_coins = models.IntegerField(default=0)
+    coins_remaining = models.IntegerField(default=0)
+
+    # Number of users currently assigned coins (used to calculate coins per user)
+    target_user_count = models.IntegerField(default=0)
+
     def __str__(self):
         return self.name
 

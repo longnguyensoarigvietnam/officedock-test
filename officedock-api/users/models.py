@@ -456,6 +456,7 @@ class TransactionHistory(BaseModel):
     amount_used = models.IntegerField(default=0, blank=True, null=True)
     amount_received = models.IntegerField(default=0, blank=True, null=True)
     balance_after = models.IntegerField(blank=True, null=True)
+    company_balance_after = models.IntegerField(blank=True, null=True)
     transaction_type = models.CharField(
         max_length=50,
         choices=TransactionTypes.choices(),
@@ -464,7 +465,11 @@ class TransactionHistory(BaseModel):
     memo = models.CharField(max_length=255, blank=True, null=True)
 
     user = models.ForeignKey(
-        User, related_name="transaction_histories", on_delete=models.CASCADE
+        User,
+        related_name="transaction_histories",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
     )
     company = models.ForeignKey(
         "companies.Company",
