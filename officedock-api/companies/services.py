@@ -1,8 +1,11 @@
 import datetime
 from django.contrib.auth.base_user import get_random_string
 from datetime import timezone
+from django.db import transaction
+from django.db.models import Q
 from django.utils.timezone import now
 from rest_framework.fields import ValidationError
+import stripe
 from base.messages import ERROR_MESSAGES
 from common.services.stripe_service import StripeService
 from common.utils import (
@@ -18,6 +21,7 @@ from companies.constants import (
 )
 from companies.models import Company, CompanyTransaction
 from companies.utils import generate_contract_related_date_base_on_now
+from plans.models import Plan
 from users.constants import LoginTypes, RoleTypes
 from users.models import Profile, Role, User, UserActivityLog
 from utils.mail import PaymentMailService
@@ -135,6 +139,19 @@ class CompanyService:
             )
             print(f"✅ Company : {company.id} pending contract at: {day}")
             return True
+        # Handle check max user
+        company_user_count = company.users.count()
+        current_plan = company.company_plan.plan
+        filter = Q()
+        if company_user_count <= 10:
+            filter = Q(limit_person=10)
+        elif company_user_count <= 20:
+            filter = Q(limit_person=20)
+        else:
+            filter = Q(limit_person=30)
+        plan = Plan.objects.filter(filter).first()
+        if plan != current_plan:
+            self.stripe_service.change_price_of_subscription(company, plan)
         related_date = generate_contract_related_date_base_on_now(
             contract.next_renewal_at
         )
@@ -229,17 +246,35 @@ class CompanyService:
                     )
 
     def upgrade_plan(self, company, plan):
-        """"""
-        # Update new plan
-        company.company_plan.plan = plan
-        company.company_plan.save(update_fields=["plan"])
-        # Update history use plan
-        company.transactions.filter(
-            type=CompanyTransactionTypes.PLAN.value, plan_end_at__isnull=True
-        ).update(plan_end_at=now())
-        company.transactions.create(
-            type=CompanyTransactionTypes.PLAN.value,
-            plan_start_at=now(),
-            plan=plan,
-        )
-        # TODO: Implement logic create new invoice
+        """
+        Upgrade the company's plan both locally and in Stripe.
+
+        Steps:
+        1. Validate that the new plan differs from the current one.
+        2. Update the company's local plan and transaction history.
+        3. Update the Stripe subscription to the new plan price.
+        4. Replace or regenerate the related invoice to reflect the new plan
+        """
+        try:
+            with transaction.atomic():
+                # Update new plan
+                company.company_plan.plan = plan
+                company.company_plan.save(update_fields=["plan"])
+                # Update history use plan
+                company.transactions.filter(
+                    type=CompanyTransactionTypes.PLAN.value,
+                    plan_end_at__isnull=True,
+                ).update(plan_end_at=now())
+                company.transactions.create(
+                    type=CompanyTransactionTypes.PLAN.value,
+                    plan_start_at=now(),
+                    plan=plan,
+                )
+            self.stripe_service.change_price_of_subscription(company, plan)
+            self.stripe_service.replace_invoice_subscription(company, plan)
+            return True
+        except stripe.error.StripeError as e:
+            raise ValidationError({"detail": e.user_message or str(e)})
+
+        except Exception as e:
+            raise ValidationError({"detail": str(e)})
