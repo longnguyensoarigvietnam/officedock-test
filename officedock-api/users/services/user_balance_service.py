@@ -20,11 +20,14 @@ class UserService:
         """
         from users.models import TransactionHistory, UserBalance
 
+        company = user.company
+        coins_remaining = company.coins_remaining
+
         with transaction.atomic():
             # Get or create user balance
             user_balance, created = UserBalance.objects.get_or_create(
                 user=user,
-                company=user.company,
+                company=company,
             )
 
             # Determine field name and current balance
@@ -41,6 +44,9 @@ class UserService:
                     user_balance.exchangeable_coin = max(
                         user_balance.exchangeable_coin - amount, 0
                     )
+                    coins_remaining = max(coins_remaining - amount, 0)
+                    company.coins_remaining = coins_remaining
+                    company.save(update_fields=["coins_remaining"])
 
                 new_balance = max(current_balance - amount, 0)
                 amount_used = amount
@@ -60,6 +66,7 @@ class UserService:
                 amount_used=amount_used,
                 amount_received=amount_received,
                 balance_after=new_balance,
+                company_balance_after=coins_remaining,
                 transaction_type=transaction_type,
                 memo=memo,
                 user=user,

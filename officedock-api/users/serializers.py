@@ -853,6 +853,29 @@ class TransactionHistorySerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
+class TransactionManagementSerializer(serializers.ModelSerializer):
+    """
+    Serializer for transaction history management
+    """
+
+    user = BaseUserSerializer()
+
+    class Meta:
+        model = TransactionHistory
+        fields = [
+            "id",
+            "user",
+            "currency",
+            "amount_used",
+            "amount_received",
+            "company_balance_after",
+            "transaction_type",
+            "memo",
+            "created_at",
+        ]
+        read_only_fields = ["id"]
+
+
 class UserBalanceSerializer(serializers.ModelSerializer):
     """
     Serializer for user balance

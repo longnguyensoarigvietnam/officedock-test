@@ -10,7 +10,8 @@ from companies.constants import (
 )
 from companies.models import Company, CompanyTransaction
 from plans.models import Tax
-from users.models import UserBalance
+from users.models import TransactionHistory, UserBalance
+from users.constants import CurrencyEnums, TransactionTypes
 from utils.mail import PaymentMailService
 
 
@@ -89,10 +90,51 @@ class CronJobService:
 
                 # Update exchangeable coin for user
                 user_exchangeable_amount = 0
+                exchangeable_amount = company.exchangeable_amount
                 if company_users_count > 0:
                     user_exchangeable_amount = (
-                        company.exchangeable_amount // company_users_count
+                        exchangeable_amount // company_users_count
                     )
+
+                data_to_create = []
+                # Reset coin
+                data_to_create.append(
+                    TransactionHistory(
+                        currency=CurrencyEnums.COIN.value,
+                        amount_used=company.coins_remaining,
+                        amount_received=0,
+                        company_balance_after=0,
+                        transaction_type=TransactionTypes.PLAN_AUTO_EXPIRE.value,
+                        memo=TransactionTypes.PLAN_AUTO_EXPIRE.value,
+                        company=company,
+                    )
+                )
+
+                # Receive coin
+                data_to_create.append(
+                    TransactionHistory(
+                        currency=CurrencyEnums.COIN.value,
+                        amount_used=0,
+                        amount_received=exchangeable_amount,
+                        company_balance_after=exchangeable_amount,
+                        transaction_type=TransactionTypes.PLAN_AUTO.value,
+                        memo=TransactionTypes.PLAN_AUTO.value,
+                        company=company,
+                    )
+                )
+                TransactionHistory.objects.bulk_create(data_to_create)
+
+                # Update company balance after creating transaction history
+                company.total_coins = exchangeable_amount
+                company.coins_remaining = exchangeable_amount
+                company.target_user_count = company_users_count
+                company.save(
+                    update_fields=[
+                        "total_coins",
+                        "coins_remaining",
+                        "target_user_count",
+                    ]
+                )
 
                 for user in company_users:
                     # Reward coins for thanks messages (top voted)
