@@ -1,5 +1,5 @@
 'use client';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { AxiosError } from 'axios';
@@ -39,6 +39,7 @@ const useSurveyDetail = ({
     data: surveyDetail,
     refetch: refetchSurveyDetail,
     isFetching: isFetchingSurveyDetail,
+    isFetched: isFetchedSurveyDetail,
   } = useQuery({
     queryKey: ['getSurveyDetail', surveyId],
     queryFn: getSurveyDetail,
@@ -63,6 +64,7 @@ const useSurveyDetail = ({
     surveyDetail,
     refetchSurveyDetail,
     isFetchingSurveyDetail,
+    isFetchedSurveyDetail,
   };
 };
 

@@ -95,6 +95,8 @@ import {
   hasPermissionInArray,
   trimUnnecessaryLineBreaks,
   extractAndRemoveMsgQuotes,
+  getRootPSpanData,
+  attachUuidToAllP,
 } from '@utils';
 
 import {
@@ -117,6 +119,7 @@ import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import api from '@base/api';
+import ConfirmLeaveGroupModal from '@components/modals/ConfirmLeaveGroupModal';
 
 interface dataProps {
   chatRoomCode: string;
@@ -137,6 +140,7 @@ interface dataProps {
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
   handleRemoveChatRoomParam: () => void;
+  handleSetChatRoomParam: (code: string) => void;
   setFilteredChatList: Dispatch<SetStateAction<ChatRoomItem[]>>;
 }
 const ChatDetail = ({
@@ -155,6 +159,7 @@ const ChatDetail = ({
   setLastItemId,
   setDataChatList,
   handleRemoveChatRoomParam,
+  handleSetChatRoomParam,
   setSearchChatMsg,
   setFilteredChatList,
 }: dataProps) => {
@@ -295,6 +300,9 @@ const ChatDetail = ({
     hasNext?: boolean;
   }>();
   const isSearchingMessagesRef = useRef(false);
+
+  // STATE
+  const [isShowConfirmLeaveGroup, setShowConfirmLeaveGroup] = useState(false);
 
   //Task
   const [dataFileAddList, setDataFileAddList] = useState<DataChatFileMemo[]>(
@@ -452,6 +460,22 @@ const ChatDetail = ({
       onError: ({ response }: AxiosError) => {
         if (response?.status === ServerStatusCode.NOT_FOUND) {
           handleRemoveChatRoomParam();
+        } else {
+          if (dataChatList.length > 0) {
+            if (dataChatList[0].code != chatRoomCode) {
+              handleSetChatRoomParam(dataChatList[0].code);
+            } else {
+              if (dataChatList.length > 1) {
+                if (dataChatList[1].code != chatRoomCode) {
+                  handleSetChatRoomParam(dataChatList[1].code);
+                } else {
+                  handleRemoveChatRoomParam();
+                }
+              }
+            }
+          } else {
+            handleRemoveChatRoomParam();
+          }
         }
       },
     },
@@ -1245,6 +1269,10 @@ const ChatDetail = ({
     },
   });
 
+  function collectAllUuids(data: ChatMessageResponse[]): string[] {
+    return data.flatMap((item) => item.chatFiles.map((file) => file.uuid));
+  }
+
   const handleConfirmSendMessage = () => {
     const uuidMsg = uuidv4();
     const newMsg = trimUnnecessaryLineBreaks(message) as string;
@@ -1285,10 +1313,17 @@ const ChatDetail = ({
         allMsgIds.includes(item.uuid),
       );
     }
+    const listFiles = chatUploadFiles.map((item) => item.uuid);
 
+    const newFilterMsg = attachUuidToAllP(filterMsg, listFiles);
+    const dataMsgQuote = getRootPSpanData(filterMsg);
+
+    const listChatFiles = dataMsgQuote.data.flatMap((item) => item.chatFiles);
+
+    const dataUuidQuote = collectAllUuids(dataMsgQuote.data);
     const newMessageDetail = {
       uuid: uuidMsg,
-      message: filterMsg,
+      message: newFilterMsg,
       createdAt: getCurrentTimeInJapan(),
       deletedAt: null,
       bookmarkAt: null,
@@ -1305,11 +1340,10 @@ const ChatDetail = ({
       },
       mentions: mentionIds,
       isBookmark: false,
-      chatFiles: chatUploadFiles,
+      chatFiles: [...chatUploadFiles, ...listChatFiles],
       quote: allMsgIds && allMsgIds.length > 0 ? matchedMessagesQuote : null,
       // TODO: Update sava data msg detail of reply in onsuccess API "reply"
     };
-
     if (!hasMoreDetailOnScrollDown) {
       setDataMessageDetail([newMessageDetail, ...dataMessageDetail]);
     } else {
@@ -1332,11 +1366,11 @@ const ChatDetail = ({
     }
     const quote = matchedMessagesQuote.map((msg) => msg.uuid);
     handleSendMsgChat({
-      data: filterMsg,
+      data: newFilterMsg,
       uuid: uuidMsg,
       mentionIds,
       files: uploadFiles.map((file) => file.file),
-      fileUuids: uploadFiles.map((file) => file.uuid),
+      fileUuids: [...uploadFiles.map((file) => file.uuid), ...dataUuidQuote],
       replyUuid: replyUuid ? replyUuid : undefined,
       quote: quote,
     });
@@ -1829,16 +1863,28 @@ const ChatDetail = ({
     },
     [editor],
   );
-  const handleQuoteMsgIcon = (data: { uuid: string; title: string }) => {
+  const handleQuoteMsgIcon = (payload: {
+    data: ChatMessageResponse;
+    title?: string;
+  }) => {
     if (!editor) return;
+
+    const title = payload.title ?? '';
+
+    // Save the whole object instead of just getting the message field
+    const messageAttr =
+      typeof payload.data === 'string'
+        ? payload.data
+        : JSON.stringify(payload.data);
+
     editor
       .chain()
       .focus()
       .insertContent({
         type: 'msgQuote',
         attrs: {
-          id: data.uuid.toString(),
-          title: data.title,
+          data: messageAttr, // <--- change to data instead of message
+          title,
         },
       })
       .run();
@@ -2204,7 +2250,48 @@ const ChatDetail = ({
     };
   }, []);
 
-  if (!editor) return null;
+  // Leave group
+  const postActionLeaveGroup = async () => {
+    setIsLoading(true);
+    const { data: response } = await api.post(
+      apiRouters.LEAVE_GROUP(`${chatRoomDetail?.code}`),
+    );
+    return response;
+  };
+  const { mutate: actionLeaveGroup } = useMutation(postActionLeaveGroup, {
+    onSuccess: async () => {
+      setDataChatList((prev) => {
+        return prev.filter((item) => item.code != chatRoomCode);
+      });
+      setFilteredChatList((prev) =>
+        prev.filter((item) => item.code != chatRoomCode),
+      );
+      setShowConfirmLeaveGroup(false);
+      if (dataChatList.length > 0) {
+        if (dataChatList[0].code != chatRoomCode) {
+          handleSetChatRoomParam(dataChatList[0].code);
+        } else {
+          if (dataChatList.length > 1) {
+            if (dataChatList[1].code != chatRoomCode) {
+              handleSetChatRoomParam(dataChatList[1].code);
+            } else {
+              handleRemoveChatRoomParam();
+            }
+          }
+        }
+      } else {
+        handleRemoveChatRoomParam();
+      }
+    },
+    onError: () => {},
+    onSettled: () => {
+      setIsLoading(false);
+    },
+  });
+
+  const handleConfirmLeaveGroup = () => {
+    actionLeaveGroup();
+  };
 
   return (
     <>
@@ -2444,7 +2531,11 @@ const ChatDetail = ({
                                         </div>
                                         {chatRoomDetail?.type !=
                                           ChatRoomType.PRIVATE && (
-                                          <div className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
+                                          <div
+                                            onClick={() =>
+                                              setShowConfirmLeaveGroup(true)
+                                            }
+                                            className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
                                             グループを退会
                                           </div>
                                         )}
@@ -3164,6 +3255,13 @@ const ChatDetail = ({
           isLoadingMute={isLoadingMute}
           onClose={() => setShowModalMuteChat(false)}
           onConfirm={handleConfirmMuteChat}
+        />
+      )}
+      {isShowConfirmLeaveGroup && (
+        <ConfirmLeaveGroupModal
+          open={isShowConfirmLeaveGroup}
+          onClose={() => setShowConfirmLeaveGroup(false)}
+          onConfirm={handleConfirmLeaveGroup}
         />
       )}
     </>

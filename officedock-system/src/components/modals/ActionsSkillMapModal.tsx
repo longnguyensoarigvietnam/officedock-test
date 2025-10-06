@@ -338,7 +338,7 @@ const ActionsSkillMapModal = ({
         }, 0);
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [skillMapEditDetail, dataOrganizationCategories]);
 
   const stepMap: Record<number, StepKey> = {
@@ -404,7 +404,6 @@ const ActionsSkillMapModal = ({
       });
     },
   });
-
   // Submit form data
   const onSubmitData: SubmitHandler<SkillMapFormData> = async (data) => {
     // Validate duplicate category

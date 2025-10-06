@@ -325,6 +325,7 @@ const KanbanBoardTask = () => {
       get_user_setting: true,
       get_organizations_of_user_by_screen: ScreenName.MY_TASK,
       get_task_status: true,
+      get_all_members: true,
     },
     onSuccess: (data) => {
       if (data.taskStatus) {

@@ -1652,6 +1652,7 @@ const TimeSchedule = memo(
               handleUpdateItemStart={handleUpdateItemStart}
               handleChangeStartTime={handleChangeStartTime}
               handleChangeEndTime={handleChangeEndTime}
+              creationDataCommonData={creationDataCommonData}
               isModalShow={openConfirmDeleteEventModal}
               onDeleteEvent={(data) => {
                 setDataEventEditLocal(data);

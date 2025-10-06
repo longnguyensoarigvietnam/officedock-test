@@ -150,6 +150,7 @@ const BoardChat = () => {
               });
             }
           }
+
           handleUpdateLocalByCode(data.chatRoom);
           break;
       }
@@ -163,6 +164,7 @@ const BoardChat = () => {
   }, [clientId]);
 
   const handleSetChatRoomParam = (code: string) => {
+    setLastItemId(null);
     if (code) {
       params.set('room', code);
       router.push(`?${params.toString()}`);
@@ -413,6 +415,7 @@ const BoardChat = () => {
         setHasMoreDetailOnScrollDown={setHasMoreDetailOnScrollDown}
         setSearchChatMsg={setSearchChatMsg}
         handleSetChatRoomParam={handleSetChatRoomParam}
+        handleRemoveChatRoomParam={handleRemoveChatRoomParam}
       />
       {chatRoomCode && chatRoomCode !== BOOKMARK_ROUTER_NAME && (
         <ChatDetail
@@ -433,6 +436,7 @@ const BoardChat = () => {
           setDataChatList={setDataChatList}
           setFilteredChatList={setFilteredChatList}
           handleRemoveChatRoomParam={handleRemoveChatRoomParam}
+          handleSetChatRoomParam={handleSetChatRoomParam}
         />
       )}
       {chatRoomCode && chatRoomCode === BOOKMARK_ROUTER_NAME && (

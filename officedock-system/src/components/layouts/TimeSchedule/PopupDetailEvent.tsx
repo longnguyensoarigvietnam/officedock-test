@@ -2,7 +2,7 @@ import { isSameDay } from 'date-fns';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
@@ -27,29 +27,28 @@ import {
   formatShowDeadline,
   getJapaneseWeekDay,
 } from '@utils/date';
-
-import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+import { CreationDataCommon } from '@interfaces/common';
 
 type Props = {
   dataEvent: DataDetailEventType;
+  creationDataCommonData: CreationDataCommon | undefined;
   onDelete?: (values: EventEditFormData) => void;
 };
 
-const PopupDetailEvent = ({ dataEvent, onDelete }: Props) => {
+const PopupDetailEvent = ({
+  dataEvent,
+  creationDataCommonData,
+  onDelete,
+}: Props) => {
   const { data: session } = useSessionCache();
   const router = useRouter();
   const [dashboardMemberList, setDashboardMemberList] = useState<Profile[]>([]);
 
-  useCreationDataCommon({
-    options: {
-      get_all_members: true,
-    },
-    onSuccess: (data) => {
-      if (data.allMembers) {
-        setDashboardMemberList(data.allMembers);
-      }
-    },
-  });
+  useEffect(() => {
+    if (creationDataCommonData && creationDataCommonData.allMembers) {
+      setDashboardMemberList(creationDataCommonData.allMembers);
+    }
+  }, [creationDataCommonData]);
 
   const checkShowUserAvatar = () => {
     return !(

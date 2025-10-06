@@ -43,7 +43,6 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import {
   displayRepetitiveEventTime,
   formatWithParagraphTags,
-  getFileURL,
   renderEventDatetimeInChat,
   renderScheduleChangeInCalendarRoom,
 } from '@utils';
@@ -56,8 +55,10 @@ import { MessageDetailQuoteChild } from './MessageDetailQuoteChild';
 import MessageDetailQuoteText from './MessageDetailQuoteText';
 import { Profile } from '@interfaces/user';
 import { DELETED_EVENT_TITLE } from '@constants/message';
+import RenderFiles from '../renderFiles/RenderFiles';
 
 export type MessageDetailProps = {
+  uuidList: any[];
   chatRoomDetail: ChatRoomDetail | undefined;
   messageDetail: ChatMessageResponse;
   uuidQuote: string;
@@ -78,6 +79,7 @@ export type MessageDetailProps = {
 };
 
 export const MessageDetailQuote = ({
+  uuidList,
   chatRoomDetail,
   messageDetail,
   dashboardMemberList,
@@ -225,10 +227,10 @@ export const MessageDetailQuote = ({
           }
 
           if (el.dataset.quoteMsg) {
-            const msgId = el.dataset.msgId;
-            const foundQuote = messageDetail.quote?.find(
-              (q) => q.uuid === msgId,
-            );
+            const raw = el.dataset.msgData;
+            const foundQuote: ChatMessageResponse = raw
+              ? JSON.parse(raw)
+              : null;
             if (foundQuote) {
               children.push(
                 <div className={``}>
@@ -237,6 +239,7 @@ export const MessageDetailQuote = ({
                     chatRoomDetail={chatRoomDetail}
                     messageDetail={foundQuote}
                     uuidQuote={uuidQuote}
+                    uuidList={uuidList}
                     dashboardMemberList={dashboardMemberList}
                     highlightedMessageId={highlightedMessageId}
                     setDataPreviewFile={setDataPreviewFile}
@@ -511,78 +514,13 @@ export const MessageDetailQuote = ({
                               )}
                               <div className="flex flex-col gap-2 !w-[100%]">
                                 {messageDetail?.chatFiles &&
-                                  messageDetail?.chatFiles.length > 0 &&
-                                  messageDetail?.chatFiles.map(
-                                    (file, index) => {
-                                      return (
-                                        <div
-                                          key={index}
-                                          className="flex justify-between items-center !w-[100%]">
-                                          <div className="bg-white border-[#D2DBE1] border-[1px] rounded-[6px] p-[14px] flex gap-2 items-center !w-[calc(100%_-_100px)]">
-                                            {file.fileType.includes(
-                                              'image',
-                                            ) && (
-                                              <div>
-                                                <Image
-                                                  src={getFileURL(
-                                                    file?.compressedFile || '',
-                                                  )}
-                                                  alt="Image"
-                                                  unoptimized={true}
-                                                  width={150}
-                                                  height={100}
-                                                />
-                                              </div>
-                                            )}
-                                            <p
-                                              className={`text-primary font-medium text-[14px] break-all max-w-full ${
-                                                file.fileType.includes('image')
-                                                  ? 'max-w-[calc(100%_-_200px)]'
-                                                  : 'max-w-[calc(100%)]'
-                                              }`}>
-                                              {file.fileName}
-                                            </p>
-                                          </div>
-                                          {(file.fileType.includes('image') ||
-                                            file.fileType.includes('pdf')) && (
-                                            <Button
-                                              onClick={() => {
-                                                const memberInfo =
-                                                  dashboardMemberList.find(
-                                                    (member) =>
-                                                      member.id ===
-                                                      messageDetail.sender.id,
-                                                  );
-                                                setDataPreviewFile({
-                                                  msgId:
-                                                    String(messageDetail.id) ||
-                                                    '',
-                                                  createAt: String(
-                                                    messageDetail.createdAt,
-                                                  ),
-                                                  user: {
-                                                    id: messageDetail.sender
-                                                      ?.id,
-                                                    avatarColor:
-                                                      memberInfo?.avatarColor ||
-                                                      '',
-                                                    avatarUrl:
-                                                      memberInfo?.avatar || '',
-                                                    fullName:
-                                                      messageDetail.sender
-                                                        ?.fullName,
-                                                  },
-                                                  file: file,
-                                                });
-                                              }}
-                                              className="font-medium w-[84px] h-[30px] !rounded-[6px] text-xs !px-0"
-                                              variant="outline">
-                                              プレビュー
-                                            </Button>
-                                          )}
-                                        </div>
-                                      );
-                                    },
+                                  messageDetail?.chatFiles.length > 0 && (
+                                    <RenderFiles
+                                      dashboardMemberList={dashboardMemberList}
+                                      uuidList={uuidList}
+                                      messageDetail={messageDetail}
+                                      setDataPreviewFile={setDataPreviewFile}
+                                    />
                                   )}
                               </div>
                             </div>

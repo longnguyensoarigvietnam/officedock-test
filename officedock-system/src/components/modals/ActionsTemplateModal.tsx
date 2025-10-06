@@ -1122,7 +1122,7 @@ const ActionsTemplateModal = ({
                                         rows={3}
                                         className="resize-none focus:outline-none focus:shadow-none focus:border-none focus:ring-0 placeholder-gray-300 border-[#F8FAFC] bg-[#F8FAFC] shadow-none w-full rounded-md"
                                       />
-                                      <div className="mt-[2.5px] ml-2 flex items-center">
+                                      <div className="mt-[2.5px]  ml-2 flex items-center">
                                         {!isCheckActionPermission && (
                                           <ImageRound
                                             className="!w-fit !h-fit hover:cursor-pointer"

@@ -26,7 +26,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     let retryTimeout: NodeJS.Timeout;
     let retryAttempts = 0;
-    const MAX_RETRY = 10;
+    let totalWaitTime = 0;
+    const MAX_TOTAL_TIME = 60 * 60 * 1000;
 
     const token = session.accessToken;
     const chatUrl =
@@ -40,6 +41,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       ws.onopen = () => {
         clearTimeout(retryTimeout);
         retryAttempts = 0;
+        totalWaitTime = 0;
       };
 
       ws.onmessage = (event) => {
@@ -52,22 +54,21 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       };
 
       ws.onclose = (event) => {
-        // If 403 (token expired / invalid) then signOut immediately, no retry
         if (event.code === 4003 || event.code === 1008) {
           setShowReloadModal(true);
           return;
         }
 
-        if (retryAttempts >= MAX_RETRY) {
+        if (totalWaitTime >= MAX_TOTAL_TIME) {
           setShowReloadModal(true);
           return;
         }
 
-        // Exponential backoff + jitter
-        const baseDelay = Math.min(30000, 1000 * 2 ** retryAttempts); // max 30s
-        const jitter = Math.random() * 1000; // 0–1s
+        const baseDelay = Math.min(30000, 1000 * 2 ** retryAttempts);
+        const jitter = Math.random() * 1000;
         const delay = baseDelay + jitter;
 
+        totalWaitTime += delay;
         retryAttempts++;
 
         retryTimeout = setTimeout(connectWebSocket, delay);

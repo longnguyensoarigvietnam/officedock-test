@@ -8,7 +8,26 @@ export const MsgQuote = Node.create({
 
   addAttributes() {
     return {
-      id: { default: null },
+      data: {
+        default: null,
+        parseHTML: (element) => {
+          const raw = element.getAttribute('data-msg-data');
+          try {
+            return raw ? JSON.parse(raw) : null;
+          } catch {
+            return raw;
+          }
+        },
+        renderHTML: (attributes) => {
+          if (!attributes.data) return {};
+          return {
+            'data-msg-data':
+              typeof attributes.data === 'string'
+                ? attributes.data
+                : JSON.stringify(attributes.data),
+          };
+        },
+      },
       title: { default: '' },
     };
   },
@@ -16,9 +35,9 @@ export const MsgQuote = Node.create({
   parseHTML() {
     return [
       {
-        tag: 'span[data-msg-id]',
+        tag: 'span[data-message]',
         getAttrs: (dom: HTMLElement) => ({
-          id: dom.getAttribute('data-msg-id'),
+          message: dom.getAttribute('data-message') || '',
           title:
             dom.getAttribute('data-title') ||
             dom.textContent?.replace('[引用] ', ''),
@@ -31,7 +50,7 @@ export const MsgQuote = Node.create({
     return [
       'span',
       mergeAttributes(HTMLAttributes, {
-        'data-msg-id': HTMLAttributes.id,
+        'data-message': HTMLAttributes.message,
         'data-title': HTMLAttributes.title,
         'data-quote-msg': 'true',
         class: 'inline-msg-quote',

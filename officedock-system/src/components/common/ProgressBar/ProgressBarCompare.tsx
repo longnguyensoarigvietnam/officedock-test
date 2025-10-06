@@ -121,7 +121,7 @@ const PercentageBarCompare = ({
                                   style={{
                                     backgroundColor: mergeItem.categoryColor,
                                   }}
-                                  className="w-3 h-3 rounded-full"></div>
+                                  className="w-3 h-3 rounded-full flex-shrink-0"></div>
                                 <span className="truncate max-w-[180px] font-bold text-base text-black">
                                   {mergeItem.categoryName}
                                 </span>
@@ -184,7 +184,7 @@ const PercentageBarCompare = ({
                             style={{
                               backgroundColor: item.color,
                             }}
-                            className="w-3 h-3 rounded-full"></div>
+                            className="w-3 h-3 rounded-full flex-shrink-0"></div>
 
                           <span className="truncate max-w-[180px] font-bold text-base text-black">
                             {item.label}
@@ -294,7 +294,7 @@ const PercentageBarCompare = ({
                                   style={{
                                     backgroundColor: mergeItem.categoryColor,
                                   }}
-                                  className="w-3 h-3 rounded-full"></div>
+                                  className="w-3 h-3 rounded-full flex-shrink-0"></div>
                                 <span className="truncate max-w-[180px] font-bold text-base text-black">
                                   {mergeItem.categoryName}
                                 </span>
@@ -368,7 +368,7 @@ const PercentageBarCompare = ({
                             style={{
                               backgroundColor: item.color,
                             }}
-                            className="w-3 h-3 rounded-full"></div>
+                            className="w-3 h-3 rounded-full flex-shrink-0"></div>
                           <span className="truncate font-bold text-base text-black">
                             {item.label}
                           </span>
