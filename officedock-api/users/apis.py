@@ -1,6 +1,7 @@
 import random
 from datetime import datetime
 
+from dateutil.relativedelta import relativedelta
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
@@ -24,6 +25,7 @@ from chat.constants import ChatRoomTypes, WebSocketEventType
 from chat.models import ChatRoom
 from common.serializers import EmptySerializer
 from common.utils import (
+    calculate_company_dates,
     generate_file_name,
     get_client_ip,
     get_user_agent,
@@ -1252,9 +1254,10 @@ class SystemPointManagementViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
     queryset = TransactionHistory.objects.order_by("-id")
     serializer_class = TransactionManagementSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [ActionPermission]
     pagination_class = CustomCursorPagination
     ordering = "-id"
+    screen_name = Screens.POINT_MANAGEMENT.value
 
     def get_queryset(self):
         """
@@ -1284,13 +1287,23 @@ class SystemPointManagementViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         url_path="coins-status",
     )
     def get_current_coins_status(self, request):
+        """
+        Return current coin status for the company, including issue and expiration dates.
+        """
         user = request.user
         company = user.company
+        today = datetime.now().date()
+
+        # Calculate key company-related dates
+        company_dates = calculate_company_dates(company, today)
+        date_after_closing = company_dates["date_after_closing"]
+
         return self.response_ok(
             {
                 "total_coins": company.total_coins,
                 "target_user_count": company.target_user_count,
-                "exchangeable_coins_per_user": company.total_coins
-                // company.target_user_count,
+                "exchangeable_coins_per_user": company.total_coins,
+                "issue_date": date_after_closing,
+                "expiration_date": date_after_closing + relativedelta(months=1),
             }
         )

@@ -8,6 +8,7 @@ from tasks.models import TaskDuration
 from users.models import RoleDetail, User
 from skills.models import Skill, SkillMap, StatisticCategory
 from organizations.models import Organization
+from surveys.models import Survey
 
 
 class FilterByPermission(DjangoFilterBackend):
@@ -97,6 +98,8 @@ class FilterByPermission(DjangoFilterBackend):
                 return queryset.filter(id=user_logged.id)
             elif queryset.model in [SkillMap, SubmitLevelHistory]:
                 return queryset.filter(staff=user_logged.id)
+            elif queryset.model in [Survey]:
+                return queryset.filter(created_by_id=user_logged.id)
         elif (
             SelectionResultOptions.ALLOWED_WITHOUT_OWN_DATA.value
             in selection_results

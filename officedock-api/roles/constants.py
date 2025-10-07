@@ -37,6 +37,10 @@ class Screens(EnumChoices):
     THANKS_MESSAGE_MANAGEMENT = "thanks_message_management"
     MVP_VOTING_MANAGEMENT = "mvp_voting_management"
 
+    POINT_MANAGEMENT = "point_management"
+    PAYMENT_MANAGEMENT = "payment_management"
+    SURVEY_MANAGEMENT = "survey_management"
+
 
 class Actions(EnumChoices):
     """Enum for defining available actions."""
@@ -72,6 +76,7 @@ class PermissionOptions(EnumChoices):
     NOT_ALLOWED = "不可"
     ALL_ORGANIZATION = "全チーム参加"
     LOGGED_ORGANIZATION = "自チームと下位チームのみ参加"
+    ONLY_DELETE_DATA_LOGGED = "自分のみ編集可"
 
 
 # Define base permission allowed full actions
@@ -114,6 +119,14 @@ ONLY_DATA_ORGANIZATION_ACTIONS = {
     Actions.DELETE.value: SelectionResultOptions.ONLY_DATA_ORGANIZATION.value,
 }
 
+# Define base permission actions to only delete data logged
+ONLY_DELETE_DATA_LOGGED_ACTIONS = {
+    Actions.VIEW.value: SelectionResultOptions.ALLOWED.value,
+    Actions.ADD.value: SelectionResultOptions.ALLOWED.value,
+    Actions.UPDATE.value: SelectionResultOptions.ALLOWED.value,
+    Actions.DELETE.value: SelectionResultOptions.ONLY_DATA_OWN.value,
+}
+
 # Define permissions for role SYSTEM ADMIN and MANAGER
 SYSTEM_ADMIN_AND_MANAGER_PERMISSIONS = {
     Screens.MY_TASK.value: ALLOWED_FULL_ACTIONS,
@@ -145,6 +158,9 @@ SYSTEM_ADMIN_AND_MANAGER_PERMISSIONS = {
     # Define permission new UI
     Screens.THANKS_MESSAGE_MANAGEMENT.value: ALLOWED_FULL_ACTIONS,
     Screens.MVP_VOTING_MANAGEMENT.value: ALLOWED_FULL_ACTIONS,
+    Screens.POINT_MANAGEMENT.value: ALLOWED_FULL_ACTIONS,
+    Screens.PAYMENT_MANAGEMENT.value: ALLOWED_FULL_ACTIONS,
+    Screens.SURVEY_MANAGEMENT.value: ALLOWED_FULL_ACTIONS,
 }
 
 # Define permissions for role DEPARTMENT MANAGER
@@ -178,6 +194,9 @@ DEPARTMENT_MANAGER_PERMISSIONS = {
     # Define permission new UI
     Screens.THANKS_MESSAGE_MANAGEMENT.value: ONLY_DATA_ORGANIZATION_ACTIONS,
     Screens.MVP_VOTING_MANAGEMENT.value: NOT_ALLOWED_ACTIONS,
+    Screens.POINT_MANAGEMENT.value: NOT_ALLOWED_ACTIONS,
+    Screens.PAYMENT_MANAGEMENT.value: NOT_ALLOWED_ACTIONS,
+    Screens.SURVEY_MANAGEMENT.value: ONLY_DELETE_DATA_LOGGED_ACTIONS,
 }
 
 # Define permissions for role GENERAL
@@ -211,6 +230,9 @@ GENERAL_PERMISSIONS = {
     # Define permission new UI
     Screens.THANKS_MESSAGE_MANAGEMENT.value: NOT_ALLOWED_ACTIONS,
     Screens.MVP_VOTING_MANAGEMENT.value: NOT_ALLOWED_ACTIONS,
+    Screens.POINT_MANAGEMENT.value: NOT_ALLOWED_ACTIONS,
+    Screens.PAYMENT_MANAGEMENT.value: NOT_ALLOWED_ACTIONS,
+    Screens.SURVEY_MANAGEMENT.value: ONLY_DELETE_DATA_LOGGED_ACTIONS,
 }
 
 # Define base role permissions
@@ -230,6 +252,7 @@ ROLE_PERMISSION_BY_OPTIONS = {
     PermissionOptions.LOGGED_ORGANIZATION.value: ONLY_DATA_ORGANIZATION_ACTIONS,
     PermissionOptions.ONLY_VIEW_ORGANIZATION.value: ALLOWED_VIEW_ORGANIZATION_ACTIONS,
     PermissionOptions.ALL_ORGANIZATION.value: ALLOWED_FULL_ACTIONS,
+    PermissionOptions.ONLY_DELETE_DATA_LOGGED.value: ONLY_DELETE_DATA_LOGGED_ACTIONS,
 }
 
 # Define teamdock role permission by options
