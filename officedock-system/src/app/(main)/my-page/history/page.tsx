@@ -5,7 +5,7 @@ import { PermissionsSystem } from '@constants/enums';
 
 import HistoryListPage from './list';
 
-const ShopPage = () => {
+const PointHistoryPage = () => {
   return (
     <MainLayout
       title={pageRouters.HISTORY_POINT.name}
@@ -17,4 +17,4 @@ const ShopPage = () => {
   );
 };
 
-export default ShopPage;
+export default PointHistoryPage;

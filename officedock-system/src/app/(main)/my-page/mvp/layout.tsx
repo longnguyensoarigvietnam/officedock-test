@@ -52,23 +52,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="absolute flex w-full justify-between items-center z-10">
           {/* Header */}
           <div className="flex gap-5 items-center">
-            <div className="h-[80px] bg-white w-[230px] font-medium flex items-center justify-center gap-5 rounded-br-[30px]">
+            <div className="h-[80px] bg-white w-[230px] font-medium flex items-center justify-center rounded-br-[30px]">
               <div
                 className="flex items-center"
                 onClick={() => router.push(pageRouters.MY_PAGE.href)}>
                 <ImageRound
                   name="Left icon"
                   src={'/icons/chevron-left.svg'}
-                  className={`w-[8px] h-[16px] mr-3 cursor-pointer`}
+                  className={`w-[8px] h-[16px] mr-[10px] cursor-pointer`}
                 />
                 <p className="text-sm font-medium hover:cursor-pointer">戻る</p>
               </div>
               <ImageRound
                 name="MVP Crown"
                 src={'/icons/mvp-crown.svg'}
-                className="w-6 h-6 cursor-pointer"
+                className="w-[26px] h-[26px] ml-5 cursor-pointer"
               />
-              <p className="text-[22px] font-medium">MVP</p>
+              <p className="text-[22px] font-medium ml-[10px]">MVP</p>
             </div>
             <div className="flex justify-between items-center px-[6px] h-[40px] bg-white w-[218px] rounded-[20px]">
               <Link href={pageRouters.MVP_VOTING.href}>

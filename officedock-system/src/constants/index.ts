@@ -25,6 +25,7 @@ export const DATE_TEXT_FORMAT = 'yyyy年 MM月 dd日';
 export const DATE_FORMAT_SERVER = 'yyyy-MM-dd';
 export const DATE_TIME_FORMAT = 'yyyy/MM/dd/HH:mm';
 export const TIME_COUNTER_FORMAT = 'HH:mm:ss';
+export const MONTH_DATE_TEXT_FORMAT = 'MM月 dd日';
 
 export const DATE_TIME_LOCAL = 'yyyy-MM-dd HH:mm';
 export const DATE_SCHEDULE_FORMAT = 'yyyy年 M月 d日 (E)';

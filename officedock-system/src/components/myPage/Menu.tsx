@@ -49,10 +49,10 @@ export const MyPageMenu = ({
                 background: 'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
                 boxShadow: '0px 4px 0px 0px #0028A140',
               }}
-              className="relative w-[110px] cursor-pointer hover:opacity-80 h-fit rounded-[10px] pb-[15px] pt-[30px] flex flex-col justify-end items-center text-white text-[13px] font-bold">
-              <div className="flex flex-col items-center">
+              className="relative w-[110px] cursor-pointer hover:opacity-80 h-fit rounded-[10px] pb-[15px] pt-[38px] flex flex-col justify-end items-center text-white text-[13px] font-bold">
+              <div className="flex flex-col gap-1 items-center">
                 {page.name.split(' ').map((section, index) => (
-                  <p key={index}>{section}</p>
+                  <p key={index} className='leading-none'>{section}</p>
                 ))}
               </div>
               {/* Child */}
@@ -60,7 +60,7 @@ export const MyPageMenu = ({
                 ((page.name == pageRouters.SURVEY.name && isOpenSurveys) ||
                   (page.name == pageRouters.MVP.name && isHasMvpVoting)) && (
                   <>
-                    <p className="text-[10px]  bg-[#FFEE6F] mt-[3px] text-black rounded-full w-[70px] h-5 flex items-center justify-center">
+                    <p className="text-[10px]  bg-[#FFEE6F] mt-[7px] text-black rounded-full w-[70px] h-5 flex items-center justify-center">
                       {' '}
                       投票受付中
                     </p>
@@ -90,7 +90,7 @@ export const MyPageMenu = ({
                           onClickSettingSurvey();
                         }
                       }}
-                      className={`px-2 py-[10px] hover:opacity-85 hover:text-primary cursor-pointer w-fit ${item.name == pageRouters.CUSTOMIZE_ITEM.name && '!w-[200px]'}`}>
+                      className={`px-2 py-[10px] hover:opacity-85 w-full hover:text-primary cursor-pointer ${item.name == pageRouters.CUSTOMIZE_ITEM.name && '!w-[200px]'}`}>
                       {item.name}{' '}
                       {item.displayCount && unAnsweredSurveyCount ? (
                         <span className="bg-[#FFEE6F] ml-1 py-[5px] px-[6px] w-[38px] text-[13px] rounded-[100px] text-black font-bold">

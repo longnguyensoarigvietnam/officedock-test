@@ -423,6 +423,11 @@ export const pageRouters = {
     name: 'MVP投票状況',
     href: `/mvp-management/voting-status`,
   },
+  // POINT
+  POINT_MANAGEMENT: {
+    name: 'コイン設定',
+    href: `/points`,
+  },
 };
 
 // For the API routers
@@ -681,6 +686,10 @@ export const apiRouters = {
   // POINT HISTORY
   POINT_HISTORY: '/point-histories/',
   CURRENT_POINT: '/users/current-point/',
+
+  // POINT MANAGEMENT
+  COIN_STATUS: '/point-management/coins-status/',
+  POINT_LIST: '/point-management/',
 
   // SHOP ITEM
   SHOP_ITEMS: '/shop-items/',
