@@ -337,7 +337,12 @@ class ManagePaymentViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         # Get the company associated with the authenticated user
         company = self.request.user.company
 
-        return super().get_queryset().filter(company=company)
+        return (
+            super()
+            .get_queryset()
+            .filter(company=company)
+            .order_by("-created_at")
+        )
 
     @action(
         methods=["POST"],
@@ -375,7 +380,7 @@ class ManagePaymentViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             company, stripe_payment_method_id
         )
         # Create payment method of company
-        CompanyPaymentMethod.objects.create(
+        payment_method = CompanyPaymentMethod.objects.create(
             company=company,
             type=payment_method,
             stripe_payment_method_id=stripe_payment_method_id,
@@ -401,14 +406,29 @@ class ManagePaymentViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 ]
             )
         # Check if all payment methods failed retry
-        if not company.payment_methods.filter(is_retry_failed=False).exists():
-            CompanyService().handle_invoice_base_on_status(
+        if (
+            not company.payment_methods.filter(is_retry_failed=False)
+            .exclude(id=payment_method.id)
+            .exists()
+        ):
+            CompanyService().handle_pay_invoice_failed_retry(
                 company, stripe_payment_method_id
             )
+            # Update default card of company
+            company.payment_methods.update(is_default=False)
+            payment_method.is_default = True
+            payment_method.save(update_fields=["is_default"])
 
-        return self.response_ok()
+        return self.response_ok(
+            CompanyPaymentMethodSerializer(payment_method).data
+        )
 
-    @action(methods=["POST"], detail=True, url_path="set-default-card")
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="set-default-card",
+        serializer_class=EmptySerializer,
+    )
     @transaction.atomic()
     def set_default_card(self, request, pk=None):
         """Set a payment method as the default card for the authenticated user's company."""

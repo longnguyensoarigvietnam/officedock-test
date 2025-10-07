@@ -263,6 +263,7 @@ class CompanyPaymentMethodSerializer(serializers.ModelSerializer):
     class Meta:
         model = CompanyPaymentMethod
         fields = [
+            "id",
             "type",
             "stripe_payment_method_id",
             "is_default",

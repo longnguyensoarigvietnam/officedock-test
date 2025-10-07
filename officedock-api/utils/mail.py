@@ -463,7 +463,7 @@ class PaymentMailService(MailService):
         message = f"""
             <p>{company_name}<br>{responsible_name} 様</p>
             <p>いつも{self.SYSTEM_NAME}をご利用いただき、ありがとうございます。</p>
-            <p>お支払い情報の更新と未払い料金の決済が確認できました。</p>
+            <p>お支払い情報の更新と、未払い料金の決済が確認できました。</p>
             <p>一時停止しておりましたサービスの利用を、本日より再開いたしましたのでお知らせいたします。</p>
             <p>この度はご対応いただき、誠にありがとうございました。</p>
             <p>引き続き{self.SYSTEM_NAME}をよろしくお願い申し上げます。</p>
