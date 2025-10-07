@@ -300,9 +300,6 @@ class OrganizationHierarchyForCreateSerializer(serializers.Serializer):
     organizations = BaseOrganizationHierarchySerializer(
         many=True, required=False
     )
-    delete_uuids = serializers.ListField(
-        child=serializers.UUIDField(), allow_null=True, required=False
-    )
 
     def validate(self, data):
         """

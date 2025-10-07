@@ -164,6 +164,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         serializer_class=OrganizationHierarchyForCreateSerializer,
         screen_name=Screens.ORGANIZATION_HIERARCHY.value,
     )
+    @transaction.atomic()
     def hierarchy(self, request):
         """
         Handle hierarchy organization
@@ -217,8 +218,8 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 """
                 Handle create or update organization
                 """
-                if uuid in created_map:
-                    return created_map[uuid]  # Already processed
+                if uuid in updated_map:
+                    return updated_map[uuid]  # Already processed
 
                 org_data = org_map.get(uuid)
                 if not org_data:
@@ -249,14 +250,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         setattr(org_instance, key, value)
                     org_instance.superior = parent
                     org_instance.save()
-                else:
-                    org_instance = Organization.objects.create(
-                        **org_data,
-                        superior=parent,
-                        company_id=request.user.company_id,
-                    )
-
-                created_map[uuid] = org_instance
+                    updated_map[uuid] = org_instance
                 return org_instance
 
             # Handle logic create organization hierarchy
@@ -265,27 +259,25 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             validated_data = serializer.validated_data
 
             organizations = validated_data.get("organizations", [])
-            delete_uuids = validated_data.get("delete_uuids", [])
 
             # Build a map of uuid to data
             org_map = {
                 org["uuid"]: org for org in organizations if "uuid" in org
             }
-            created_map = {}  # Track created/updated objects by uuid
+
+            # Clear hierarchy for organization
+            Organization.objects.filter(
+                company_id=request.user.company_id
+            ).exclude(uuid__in=list(org_map.keys())).update(
+                superior=None,
+                hierarchize_at=None,
+                type=OrganizationTypes.NORMAL.value,
+            )
+
+            updated_map = {}  # Track created/updated objects by uuid
 
             for uuid in org_map:
                 _create_or_update(uuid)
-
-            # Handle delete
-            if delete_uuids:
-                if not isinstance(delete_uuids, list):
-                    delete_uuids = [delete_uuids]
-
-                orgs = Organization.objects.filter(uuid__in=delete_uuids).all()
-                for org in orgs:
-                    if org.icon:
-                        org.icon.delete()
-                orgs.delete()
 
             return self.response_ok()
 
