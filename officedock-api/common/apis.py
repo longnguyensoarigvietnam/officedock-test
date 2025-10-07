@@ -773,13 +773,33 @@ class WebhookView(BaseAPIViewSet):
             stripe_customer_id=invoice.customer
         ).first()
         if attempt_count == 1:
-            self.mail_service.send_payment_failed_first(
-                recipient=company.responsible_person_mail,
-                company_name=company.name,
-                responsible_name=company.responsible_person_name,
-                usage_month=format_date(period_start, style="jp_month_year"),
-                payment_url=None,
+            payment_methods = company.payment_methods
+            # Set default payment method is false
+            current_pm = payment_methods.filter(is_default=True).update(
+                is_retry_failed=True, is_default=False
             )
+            next_pm = payment_methods.filter(is_retry_failed=False).first()
+            # Retry if have another card
+            if next_pm:
+                next_pm.is_default = True
+                next_pm.save(update_fields=["is_default"])
+                self.stripe_service.modify_default_payment_method(
+                    company.stripe_customer_id, next_pm.stripe_payment_method_id
+                )
+                self.stripe_service.handle_pay_invoice(
+                    invoice, next_pm.stripe_payment_method_id
+                )
+            else:
+                # Send email when all cards failed
+                self.mail_service.send_payment_failed_first(
+                    recipient=company.responsible_person_mail,
+                    company_name=company.name,
+                    responsible_name=company.responsible_person_name,
+                    usage_month=format_date(
+                        period_start, style="jp_month_year"
+                    ),
+                    payment_url=None,
+                )
         if attempt_count == 4:
             self.mail_service.send_payment_failed_final(
                 recipient=company.responsible_person_mail,

@@ -1,7 +1,7 @@
 from rest_framework.exceptions import ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import viewsets, mixins
+from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
@@ -24,13 +24,13 @@ from .models import Company, CompanyPaymentMethod, CompanyPlan, Contract
 from .serializers import (
     AddCardSerializer,
     BaseCompanySerializer,
+    CompanyPaymentMethodSerializer,
     CompanySerializer,
     CompanySettingSerializer,
     CompanyTransactionSerializer,
     ContractSerializer,
     CreationCompanySerializer,
     RetrieveCompanySerializer,
-    SetDefaultCardSerializer,
 )
 
 
@@ -324,14 +324,20 @@ class SystemCompanyViewSet(
 
 
 @extend_schema(tags=["System > Management Payment"])
-class ManagePaymentViewSet(
-    BaseAPIViewSet,
-):
+class ManagePaymentViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     """
     API endpoint for management payment method.
     """
 
+    queryset = CompanyPaymentMethod.objects.all()
     permission_classes = [IsAuthenticated]
+    serializer_class = CompanyPaymentMethodSerializer
+
+    def get_queryset(self):
+        # Get the company associated with the authenticated user
+        company = self.request.user.company
+
+        return super().get_queryset().filter(company=company)
 
     @action(
         methods=["POST"],
@@ -394,27 +400,21 @@ class ManagePaymentViewSet(
                     "stripe_subscription_id",
                 ]
             )
-        # TODO: Retry unpaid invoices here using handle_invoice_base_on_status
+        # Check if all payment methods failed retry
+        if not company.payment_methods.filter(is_retry_failed=False).exists():
+            CompanyService().handle_invoice_base_on_status(
+                company, stripe_payment_method_id
+            )
 
         return self.response_ok()
 
-    @action(
-        methods=["POST"],
-        detail=False,
-        url_path="set-default-card",
-        serializer_class=SetDefaultCardSerializer,
-    )
+    @action(methods=["POST"], detail=True, url_path="set-default-card")
     @transaction.atomic()
-    def set_default_card(self, request):
+    def set_default_card(self, request, pk=None):
         """Set a payment method as the default card for the authenticated user's company."""
         # Get the company associated with the authenticated user
         company = request.user.company
-
-        # Validate the incoming request data using the serializer
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        validated_data = serializer.validated_data
-        payment_method = validated_data.pop("payment_method")
+        payment_method = self.get_object()
         # Change default payment method of Stripe
         StripeService().modify_default_payment_method(
             company.stripe_customer_id, payment_method.stripe_payment_method_id
@@ -426,20 +426,11 @@ class ManagePaymentViewSet(
 
         return self.response_ok()
 
-    @action(
-        methods=["POST"],
-        detail=False,
-        url_path="remove-card",
-        serializer_class=SetDefaultCardSerializer,
-    )
+    @action(methods=["DELETE"], detail=True, url_path="remove-card")
     @transaction.atomic()
-    def remove_a_card_of_company(self, request):
+    def remove_a_card_of_company(self, request, pk=None):
         """Remove a payment card from the authenticated user's company."""
-        # Validate the incoming request data using the serializer
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        validated_data = serializer.validated_data
-        payment_method = validated_data.pop("payment_method")
+        payment_method = self.get_object()
         if payment_method.is_default:
             raise ValidationError(
                 {"detail": ERROR_MESSAGES["cannot_remove_card"]}
@@ -451,4 +442,4 @@ class ManagePaymentViewSet(
         # Delete from local DB
         payment_method.delete()
 
-        return self.response_ok()
+        return self.response(status_code=status.HTTP_204_NO_CONTENT)

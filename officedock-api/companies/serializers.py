@@ -255,11 +255,20 @@ class AddCardSerializer(serializers.Serializer):
     payment_method = serializers.ChoiceField(choices=PaymentTypes.choices())
 
 
-class SetDefaultCardSerializer(serializers.Serializer):
+class CompanyPaymentMethodSerializer(serializers.ModelSerializer):
     """
     Serializer for set default card to company
     """
 
-    payment_method_id = serializers.PrimaryKeyRelatedField(
-        source="payment_method", queryset=CompanyPaymentMethod.objects.all()
-    )
+    class Meta:
+        model = CompanyPaymentMethod
+        fields = [
+            "type",
+            "stripe_payment_method_id",
+            "is_default",
+            "is_retry_failed",
+            "brand",
+            "last4",
+            "exp_month",
+            "exp_year",
+        ]
