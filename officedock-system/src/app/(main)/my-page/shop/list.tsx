@@ -207,23 +207,23 @@ const ShopItemPage = () => {
           }}
           className=" relative  h-[calc(100vh-120px)] w-full">
           <div className="flex absolute top-0 left-0 ">
-            <div className="h-20 z-[30] bg-white w-fit px-10 py-4 text-[#77858F] font-medium flex items-center gap-[10px] rounded-br-[30px]">
+            <div className="h-20 z-[30] bg-white w-[358px] py-4 text-[#77858F] font-medium flex items-center justify-center rounded-br-[30px]">
               <div
                 onClick={() => router.push(pageRouters.MY_PAGE.href)}
                 className="flex items-center gap-[10px]">
                 <ImageRound
                   name="Left icon"
                   src={'/icons/chevron-left.svg'}
-                  className={`w-fit h-fit !cursor-pointer`}
+                  className={`w-[8px] h-[16px] !cursor-pointer`}
                 />
                 <span className="text-sm text-black cursor-pointer">戻る</span>
               </div>
               <ImageRound
                 name="Shop icon"
-                src={'/icons/shop.svg'}
-                className={`w-fit h-fit ml-[10px]`}
+                src={'/icons/shopping-bag.svg'}
+                className={`w-[26px] h-[26px] ml-5`}
               />
-              <span className="text-[22px] text-black ml-1">
+              <span className="text-[22px] text-black ml-[10px]">
                 アイテムショップ
               </span>
             </div>

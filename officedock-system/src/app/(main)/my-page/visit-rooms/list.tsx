@@ -46,22 +46,27 @@ const RoomList = () => {
             width: '100%',
             height: '100%',
           }}
-          className=" relative  h-[calc(100vh-120px)] w-full">
-          <div className="relative  pr-[30px] flex w-full justify-between items-center h-full">
+          className="rounded-bl-[30px] relative rounded-r-[30px] h-[calc(100vh-120px)] w-full">
+          <div className="relative pr-[30px] flex w-full justify-between items-center h-full">
             {/* Header */}
-            <div className="flex absolute top-0 left-0 shadow-common  rounded-br-[30px]">
-              <div className="h-[92px] bg-white w-[402px] py-4 font-medium flex items-center justify-center gap-5 rounded-br-[30px]">
+            <div className="flex absolute top-0 left-0 shadow-common rounded-br-[30px]">
+              <div className="h-[80px] bg-white w-[426px] py-4 font-medium flex items-center justify-center gap-[10px] rounded-br-[30px]">
                 <div
                   className="flex items-center"
                   onClick={() => router.push(pageRouters.MY_PAGE.href)}>
                   <ImageRound
                     name="Left icon"
                     src={'/icons/chevron-left.svg'}
-                    className={`w-[8px] h-[16px] mr-3 cursor-pointer`}
+                    className={`w-[8px] h-[16px] mr-[10px] cursor-pointer`}
                   />
                   <p className="text-sm font-medium hover:cursor-pointer">
                     戻る
                   </p>
+                  <ImageRound
+                    name="Visit room icon"
+                    src={'/icons/visit-room.svg'}
+                    className={`w-[26px] h-[26px] ml-5 cursor-pointer`}
+                  />
                 </div>
                 <p className="text-[22px] font-medium">
                   他の人の部屋へ出かける

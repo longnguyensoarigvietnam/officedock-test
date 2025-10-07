@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import {
   DATE_FORMAT_SERVER,
+  DATE_TEXT_FORMAT,
   DATE_TIME_FORMAT,
   DATE_TIME_LOCAL,
   DEFAULT_TIME_TEXT,
@@ -1784,4 +1785,12 @@ export const formatJapaneseDateRange = (
       : `${showYear ? `${endYear}年` : ''}${endMonth}月${endDay}日`;
 
   return `${startStr}〜${endStr}`;
+};
+
+export const renderDate = (
+  date: string | undefined,
+  formatType = DATE_TEXT_FORMAT,
+) => {
+  if (!date) return '';
+  return format(parseISO(date || ''), formatType);
 };

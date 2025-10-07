@@ -201,6 +201,13 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     companyMenu: true,
     requiredPermission: PermissionsSystem.MVP_VOTING_MANAGEMENT_VIEW,
   },
+  {
+    ...pageRouters.POINT_MANAGEMENT,
+    name: pageRouters.POINT_MANAGEMENT.name,
+    current: false,
+    companyMenu: true,
+    requiredPermission: PermissionsSystem.VIEW_ALL,
+  },
 ];
 export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
   {

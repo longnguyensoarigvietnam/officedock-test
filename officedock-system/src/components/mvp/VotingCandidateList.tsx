@@ -9,7 +9,10 @@ import { CurrentMVPVotingDetail, MVPOrganization } from '@interfaces/mvp';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
-import { convertDateToJapaneseFormat, formatShowDateJapanese } from '@utils/date';
+import {
+  convertDateToJapaneseFormat,
+  formatShowDateJapanese,
+} from '@utils/date';
 
 interface VotingCandidateListProps {
   memberListByOrganization: {
@@ -74,7 +77,10 @@ export const VotingCandidateList = ({
           <>
             <p className="bg-white leading-none w-fit py-[9px] px-3 rounded-[6px] font-semibold text-[15px] text-[#B58F42]">
               投票期間{' '}
-              {formatShowDateJapanese(String(currentMVPVotingDetail?.startDate))} ~{' '}
+              {formatShowDateJapanese(
+                String(currentMVPVotingDetail?.startDate),
+              )}{' '}
+              ~{' '}
               {convertDateToJapaneseFormat(
                 new Date(currentMVPVotingDetail?.endDate || new Date()),
               )}
@@ -88,16 +94,18 @@ export const VotingCandidateList = ({
         )}
       </div>
       <div
-        className={`flex flex-col max-h-[calc(100%_-_130px)] gap-5 overflow-y-auto customized-scrollbar`}>
+        className={`flex flex-col max-h-[calc(100%_-_130px)] gap-[26px] overflow-y-auto customized-scrollbar`}>
         {memberListByOrganization?.map((organization) => {
           return (
             <div
               key={organization.orgInfo.id}
-              className="border-b-[1px] border-white pb-5">
-              <div className="flex items-center justify-between mb-5">
+              className="border-b-[1px] border-white pb-[26px]">
+              <div
+                className={`flex items-center justify-between ${!organization.collapseStatus || (organization.collapseStatus && organization.orgInfo.candidates.length == 0) ? 'mb-0' : 'mb-5'}`}>
                 <p className="font-medium text-base max-w-full break-all">
                   {organization.orgInfo.name}{' '}
-                  <span className={`text-xs font-medium ${organization.orgInfo.name && 'ml-4'}`}>
+                  <span
+                    className={`text-xs font-medium ${organization.orgInfo.name && 'ml-4'}`}>
                     メンバー{organization.orgInfo.candidates.length}人
                   </span>
                 </p>
@@ -128,7 +136,7 @@ export const VotingCandidateList = ({
                             ? '0px 2px 8px 0px #0000001A'
                             : 'none',
                         }}
-                        className={`w-[157px] ${candidate.isVoted ? 'bg-[#FFE9CD] !border-[2px] !border-[#C69B44]' : 'bg-white'} ${candidate.id == session?.user.id || (currentMVPVotingDetail?.isVoted && !candidate.isVoted) ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} rounded-[14px] h-[50px] px-[20px] py-[10px] flex items-center gap-2`}
+                        className={`w-[157px] ${candidate.isVoted ? 'bg-[#FFE9CD] !border-[2px] !border-[#C69B44]' : 'bg-white'} ${candidate.id == session?.user.id || (currentMVPVotingDetail?.isVoted && !candidate.isVoted) ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} rounded-[14px] h-[50px] px-[14px] py-[10px] flex items-center gap-2`}
                         onClick={() => {
                           session?.user.id != candidate.id &&
                             !currentMVPVotingDetail?.isVoted &&

@@ -34,13 +34,14 @@ export const MemberListByOrganization = ({
         boxShadow: '0px 4px 10px 0px #0000000D',
       }}
       className="w-[750px] h-[90%] p-[26px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
-      <div className="flex flex-col max-h-[calc(100%_-_20px)] gap-5 overflow-y-auto customized-scrollbar">
+      <div className="flex flex-col max-h-[calc(100%_-_20px)] gap-[26px] overflow-y-auto customized-scrollbar">
         {memberListByOrganization?.map((organization) => {
           return (
             <div
               key={organization.orgInfo.id}
-              className="border-b-[1px] border-white pb-5">
-              <div className="flex items-center justify-between mb-5">
+              className="border-b-[1px] border-white pb-[26px]">
+              <div
+                className={`flex items-center justify-between ${!organization.collapseStatus || (organization.collapseStatus && organization.orgInfo.users.length == 0) ? 'mb-0' : 'mb-5'}`}>
                 <p className="font-medium text-[16px] max-w-full break-all">
                   {organization.orgInfo.name}{' '}
                   <span className="text-xs font-medium ml-4">
@@ -69,7 +70,7 @@ export const MemberListByOrganization = ({
                     return (
                       <div
                         key={`${organization.orgInfo.id}-${user.id}`}
-                        className="w-[157px] bg-white rounded-[14px] h-[50px] px-[20px] flex items-center gap-2 hover:cursor-pointer"
+                        className="w-[157px] bg-white rounded-[14px] h-[50px] px-[14px] flex items-center gap-[10px] hover:cursor-pointer"
                         onClick={() =>
                           router.push(
                             pageRouters.VISIT_ROOM_DETAIL.href(String(user.id)),

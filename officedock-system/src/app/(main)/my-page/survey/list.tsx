@@ -258,25 +258,25 @@ const SurveyListPage = () => {
             width: '100%',
             height: '100%',
           }}
-          className="rounded-bl-[30px] relative rounded-tr-[30px] rounded-br-[30px] h-[calc(100vh-120px)] w-full">
-          <div className="flex absolute top-0 left-0 shadow-common rounded-br-[30px] ">
-            <div className="h-20 z-[30] bg-white w-fit px-10 py-4 text-[#77858F] font-medium flex items-center gap-[10px] rounded-br-[30px]">
+          className="rounded-bl-[30px] relative rounded-r-[30px] h-[calc(100vh-120px)] w-full">
+          <div className="flex absolute top-0 left-0 shadow-common rounded-br-[30px]">
+            <div className="h-20 w-[294px] z-[30] bg-white py-4 text-[#77858F] font-medium flex items-center justify-center rounded-br-[30px]">
               <div
                 onClick={() => router.push(pageRouters.MY_PAGE.href)}
                 className="flex items-center gap-[10px]">
                 <ImageRound
                   name="Left icon"
                   src={'/icons/chevron-left.svg'}
-                  className={`w-fit h-fit !cursor-pointer`}
+                  className={`w-[8px] h-[16px] !cursor-pointer`}
                 />
                 <span className="text-sm text-black cursor-pointer">戻る</span>
               </div>
               <ImageRound
-                name="Room icon"
-                src={'/icons/room-profile.svg'}
-                className={`w-fit h-fit ml-[10px]`}
+                name="Survey icon"
+                src={'/icons/survey.svg'}
+                className={`w-[26px] h-[26px] ml-5`}
               />
-              <span className="text-[22px] text-black ml-1">
+              <span className="text-[22px] text-black ml-[10px]">
                 {pageRouters.SURVEY.name}
               </span>
             </div>
