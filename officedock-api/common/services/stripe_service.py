@@ -317,7 +317,7 @@ class StripeService:
                 auto_advance=False,
             )
 
-    def handle_pay_invoice(self, invoice):
+    def handle_pay_invoice(self, invoice, payment_method_id=None):
         """
         Attempt to pay the given invoice using Stripe.
 
@@ -345,6 +345,8 @@ class StripeService:
                     stripe_invoice_id=invoice.id
                 ).update(status=TransactionStatus.SKIP_PAYMENT.value)
                 stripe.Invoice.void_invoice(invoice.id)
+            elif payment_method_id:
+                stripe.Invoice.pay(invoice.id, payment_method=payment_method_id)
         except Exception as e:
             # Wrap Stripe error (or any other) into a DRF ValidationError
             print(f"❌ Pay invoice failed {e}")

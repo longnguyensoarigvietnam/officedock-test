@@ -225,7 +225,7 @@ class CompanyService:
             cancel_at=subscription_cancel_at,
         )
 
-    def handle_invoice_base_on_status(self, company):
+    def handle_invoice_base_on_status(self, company, stripe_pm_id=None):
         """
         Handle all unpaid invoices for a company by checking their status in Stripe
         and finalizing them if necessary.
@@ -241,7 +241,11 @@ class CompanyService:
                 stripe_invoice = self.stripe_service.get_invoice(
                     invoice.stripe_invoice_id
                 )
-                if stripe_invoice:
+                if stripe_invoice and stripe_pm_id:
+                    self.stripe_service.handle_pay_invoice(
+                        stripe_invoice, stripe_pm_id
+                    )
+                elif stripe_invoice:
                     self.stripe_service.update_invoice_finalize(
                         stripe_invoice, company
                     )
