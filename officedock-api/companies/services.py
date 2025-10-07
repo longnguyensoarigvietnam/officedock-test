@@ -10,6 +10,7 @@ from base.messages import ERROR_MESSAGES
 from common.services.stripe_service import StripeService
 from common.utils import (
     format_date,
+    get_a_day_in_next_month,
     get_client_ip,
     get_user_agent,
     get_username_alias,
@@ -34,6 +35,7 @@ class CompanyService:
         Initialize the Stripe service by setting the Stripe secret API key.
         """
         self.stripe_service = StripeService()
+        self.mail_service = PaymentMailService()
 
     def active_company(self, request, company: Company):
         """
@@ -116,8 +118,7 @@ class CompanyService:
             ]
         )
         # Send welcome email with login credentials to the admin
-        mail_service = PaymentMailService()
-        mail_service.send_account_issued(
+        self.mail_service.send_account_issued(
             recipient=company.responsible_person_mail,
             user_email=company.responsible_person_mail,
             password=user_data["password"],
@@ -209,7 +210,7 @@ class CompanyService:
         contract = company.contract
         contract.cancel_at = now()
         contract.save(update_fields=["cancel_at"])
-        PaymentMailService().send_contract_cancellation_request(
+        self.mail_service.send_contract_cancellation_request(
             recipient=company.responsible_person_mail,
             company_name=company.name,
             responsible_name=company.responsible_person_name,
@@ -225,7 +226,7 @@ class CompanyService:
             cancel_at=subscription_cancel_at,
         )
 
-    def handle_invoice_base_on_status(self, company, stripe_pm_id=None):
+    def handle_invoice_base_on_status(self, company):
         """
         Handle all unpaid invoices for a company by checking their status in Stripe
         and finalizing them if necessary.
@@ -241,13 +242,29 @@ class CompanyService:
                 stripe_invoice = self.stripe_service.get_invoice(
                     invoice.stripe_invoice_id
                 )
+                if stripe_invoice:
+                    self.stripe_service.update_invoice_finalize(
+                        stripe_invoice, company
+                    )
+
+    def handle_pay_invoice_failed_retry(self, company, stripe_pm_id=None):
+        """
+        Handle all payment failed invoices for a company by checking their status in Stripe
+        and pay them.
+        """
+        invoices = CompanyTransaction.objects.filter(
+            company=company,
+            type=CompanyTransactionTypes.INVOICE.value,
+            status=TransactionStatus.PAYMENT_FAILED.value,
+        ).all()
+        if invoices:
+            for invoice in invoices:
+                stripe_invoice = self.stripe_service.get_invoice(
+                    invoice.stripe_invoice_id
+                )
                 if stripe_invoice and stripe_pm_id:
                     self.stripe_service.handle_pay_invoice(
                         stripe_invoice, stripe_pm_id
-                    )
-                elif stripe_invoice:
-                    self.stripe_service.update_invoice_finalize(
-                        stripe_invoice, company
                     )
 
     def upgrade_plan(self, company, plan):
@@ -281,7 +298,7 @@ class CompanyService:
                     plan_start_at=start_month,
                     plan=plan,
                 )
-            PaymentMailService().send_plan_auto_upgrade(
+            self.mail_service.send_plan_auto_upgrade(
                 recipient=company.responsible_person_mail,
                 company_name=company.name,
                 responsible_name=company.responsible_person_name,
@@ -296,3 +313,67 @@ class CompanyService:
 
         except Exception as e:
             raise ValidationError({"detail": str(e)})
+
+    def process_company_status_after_successful_payment(
+        self, company, invoice, period_start
+    ):
+        """Handle company status transitions and notifications after a successful payment."""
+        contract = company.contract
+        # Terminate the contract when the last invoice is paid
+        if company.status == CompanyStatus.CANCELLATION_PENDING.value and (
+            get_a_day_in_next_month(contract.end_date, target_date=5).date()
+            == to_datetime(invoice.effective_at).date()
+        ):
+            # Update company status
+            self.change_status_of_company(
+                company, CompanyStatus.CONTRACT_TERMINATED.value
+            )
+            self.mail_service.send_contract_cancelled(
+                recipient=company.responsible_person_mail,
+                company_name=company.name,
+                responsible_name=company.responsible_person_name,
+                end_date=format_date(contract.end_date, style="jp_date"),
+            )
+        elif invoice.attempt_count > 1 and company.status not in [
+            CompanyStatus.CONTRACT_TERMINATED.value,
+            CompanyStatus.ACTIVE_CONTRACT.value,
+        ]:
+            # Check status of invoice in company
+            is_exists_past_due_invoice = CompanyTransaction.objects.filter(
+                company=company,
+                type=CompanyTransactionTypes.INVOICE.value,
+                status=TransactionStatus.PAYMENT_FAILED.value,
+            ).exists()
+            # If haven't any past due invoice and company status is suspended
+            if (
+                not is_exists_past_due_invoice
+                and company.status == CompanyStatus.SUSPENDED.value
+            ):
+                # Send mail notify service restore
+                self.mail_service.send_service_restored(
+                    recipient=company.responsible_person_mail,
+                    company_name=company.name,
+                    responsible_name=company.responsible_person_name,
+                )
+                # Update company status
+                self.change_status_of_company(
+                    company,
+                    (
+                        CompanyStatus.CANCELLATION_PENDING.value
+                        if contract.cancel_at
+                        and contract.cancel_at <= period_start
+                        else CompanyStatus.ACTIVE_CONTRACT.value
+                    ),
+                )
+            # If company in retry period, change status
+            if company.status == CompanyStatus.RETRY_PAYMENT.value:
+                # Update company status
+                self.change_status_of_company(
+                    company,
+                    (
+                        CompanyStatus.CANCELLATION_PENDING.value
+                        if contract.cancel_at
+                        and contract.cancel_at <= period_start
+                        else CompanyStatus.ACTIVE_CONTRACT.value
+                    ),
+                )

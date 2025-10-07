@@ -21,6 +21,8 @@ from calendars.models import Schedule
 from chat.constants import WebSocketEventType
 from common.constants import (
     RETRY_PAYMENT_MAX,
+    THE_FIRST_RETRY_FAILED,
+    THE_LAST_RETRY_FAILED,
     InvoiceStatus,
     SubscriptionStatus,
 )
@@ -88,7 +90,6 @@ from .serializers import (
 from .utils import (
     check_task_overtime,
     format_date,
-    get_a_day_in_next_month,
     send_web_socket_event,
     to_datetime,
     to_snake_case,
@@ -710,7 +711,6 @@ class WebhookView(BaseAPIViewSet):
         if not company or not company_transaction:
             print(f"❌ Cannot find company of customer {invoice.customer}")
             return
-        contract = company.contract
         line = invoice.lines.data[0]
         period_start = to_datetime(line.period.start)
         period_end = to_datetime(line.period.end)
@@ -727,38 +727,13 @@ class WebhookView(BaseAPIViewSet):
             amount=format(invoice.amount_paid, ","),
             period=period,
         )
-        # Terminate the contract when the last invoice is paid
-        if company.status == CompanyStatus.CANCELLATION_PENDING.value and (
-            get_a_day_in_next_month(contract.end_date, target_date=5).date()
-            == to_datetime(invoice.effective_at).date()
-        ):
-            # Update company status
-            self.company_service.change_status_of_company(
-                company, CompanyStatus.CONTRACT_TERMINATED.value
-            )
-            self.mail_service.send_contract_cancelled(
-                recipient=company.responsible_person_mail,
-                company_name=company.name,
-                responsible_name=company.responsible_person_name,
-                end_date=format_date(contract.end_date, style="jp_date"),
-            )
-        elif invoice.attempt_count > 1 and company.status not in [
-            CompanyStatus.CONTRACT_TERMINATED.value,
-            CompanyStatus.ACTIVE_CONTRACT.value,
-        ]:
-            # Update company status
-            self.company_service.change_status_of_company(
-                company,
-                (
-                    CompanyStatus.CANCELLATION_PENDING.value
-                    if contract.cancel_at and contract.cancel_at <= period_start
-                    else CompanyStatus.ACTIVE_CONTRACT.value
-                ),
-            )
         # Update transaction status
         company_transaction.status = TransactionStatus.PAID.value
         company_transaction.paid_at = paid_at
         company_transaction.save(update_fields=["status", "paid_at"])
+        self.company_service.process_company_status_after_successful_payment(
+            company, invoice, period_start
+        )
 
     def handle_payment_failed(self, invoice):
         """
@@ -772,7 +747,7 @@ class WebhookView(BaseAPIViewSet):
         company = Company.objects.filter(
             stripe_customer_id=invoice.customer
         ).first()
-        if attempt_count == 1:
+        if attempt_count == THE_FIRST_RETRY_FAILED:
             payment_methods = company.payment_methods
             # Set default payment method is false
             current_pm = payment_methods.filter(is_default=True).update(
@@ -800,7 +775,7 @@ class WebhookView(BaseAPIViewSet):
                     ),
                     payment_url=None,
                 )
-        if attempt_count == 4:
+        if attempt_count == THE_LAST_RETRY_FAILED:
             self.mail_service.send_payment_failed_final(
                 recipient=company.responsible_person_mail,
                 company_name=company.name,
@@ -808,15 +783,19 @@ class WebhookView(BaseAPIViewSet):
                 usage_month=format_date(period_start, style="jp_month_year"),
                 payment_url=None,
             )
-        # Update company status
-        self.company_service.change_status_of_company(
-            company,
-            (
-                CompanyStatus.SUSPENDED.value
-                if attempt_count > RETRY_PAYMENT_MAX
-                else CompanyStatus.RETRY_PAYMENT.value
-            ),
-        )
+        if company.status != CompanyStatus.SUSPENDED.value and (
+            attempt_count == THE_FIRST_RETRY_FAILED
+            or attempt_count == THE_LAST_RETRY_FAILED
+        ):
+            # Update company status
+            self.company_service.change_status_of_company(
+                company,
+                (
+                    CompanyStatus.SUSPENDED.value
+                    if attempt_count > RETRY_PAYMENT_MAX
+                    else CompanyStatus.RETRY_PAYMENT.value
+                ),
+            )
 
         # Update transaction status
         CompanyTransaction.objects.filter(stripe_invoice_id=invoice.id).update(
