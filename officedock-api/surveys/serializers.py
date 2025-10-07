@@ -5,6 +5,8 @@ from base.messages import ERROR_MESSAGES
 from common.serializers import CreationDataUserSerializer
 from surveys.models import Survey, SurveyAnswer, SurveyQuestion
 from surveys.utils import is_open_survey
+from roles.constants import Actions, Screens, SelectionResultOptions
+from roles.utils import get_permission_for_user
 
 
 class SurveyQuestionSerializer(serializers.ModelSerializer):
@@ -64,6 +66,7 @@ class SurveyListSerializer(serializers.ModelSerializer):
 
     status = serializers.SerializerMethodField()
     is_answered = serializers.SerializerMethodField()
+    actions = serializers.SerializerMethodField()
     created_by = CreationDataUserSerializer(read_only=True)
 
     class Meta:
@@ -76,7 +79,26 @@ class SurveyListSerializer(serializers.ModelSerializer):
             "is_answered",
             "created_at",
             "created_by",
+            "actions",
         ]
+
+    def get_actions(self, obj):
+        """
+        Get unique role permissions for the given object.
+        """
+
+        user = self.context.get("request").user
+        if (
+            SelectionResultOptions.ONLY_DATA_OWN.value
+            == get_permission_for_user(
+                user,
+                f"{Screens.SURVEY_MANAGEMENT.value}_{Actions.DELETE.value}",
+            )
+            and obj.created_by_id != user.id
+        ):
+            return {Actions.DELETE.value: False}
+
+        return {Actions.DELETE.value: True}
 
     def get_status(self, obj):
         """

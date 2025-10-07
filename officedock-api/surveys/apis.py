@@ -3,12 +3,11 @@ from django.utils.timezone import now
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import IsAuthenticated
 
 from base.apis import BaseAPIViewSet
-from base.messages import ERROR_MESSAGES
+from base.filters import FilterByPermission
 from base.paginations import CustomCursorPagination
+from base.permissions import ActionPermission
 from surveys.serializers import (
     SurveyDetailSerializer,
     SurveyListSerializer,
@@ -18,6 +17,7 @@ from surveys.serializers import (
 from surveys.models import Survey, SurveyAnswer, SurveyQuestion
 from surveys.constants import SurveyFilterTypes
 from surveys.utils import is_open_survey, view_survey_result
+from roles.constants import Screens
 
 
 @extend_schema(tags=["System > Surveys"])
@@ -34,9 +34,11 @@ class SurveyViewSet(
 
     queryset = Survey.objects.all()
     serializer_class = SurveySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [ActionPermission]
+    filter_backends = [FilterByPermission]
     pagination_class = CustomCursorPagination
     ordering = ("-end_at", "-id")
+    screen_name = Screens.SURVEY_MANAGEMENT.value
 
     def get_queryset(self):
         """
@@ -151,12 +153,3 @@ class SurveyViewSet(
                 defaults={"question": question},
             )
         return self.response_ok()
-
-    def perform_destroy(self, instance):
-        """Cannot delete surveys created by others."""
-        if instance.created_by_id != self.request.user.id:
-            raise ValidationError(
-                {"detail": ERROR_MESSAGES["cannot_delete_other_survey"]}
-            )
-
-        return super().perform_destroy(instance)

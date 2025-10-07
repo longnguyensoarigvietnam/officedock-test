@@ -52,6 +52,10 @@ class PermissionForCreateSerializer(serializers.Serializer):
     thanks_message_management = BaseActionsSerializer()
     mvp_voting_management = BaseActionsSerializer()
 
+    point_management = BaseActionsSerializer()
+    payment_management = BaseActionsSerializer()
+    survey_management = BaseActionsSerializer()
+
 
 class RolePermissionForCreateSerializer(serializers.ModelSerializer):
     """

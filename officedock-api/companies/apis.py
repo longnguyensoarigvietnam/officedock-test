@@ -7,7 +7,11 @@ from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 
 from base.messages import ERROR_MESSAGES
-from base.permissions import IsApiKeyValid, IsOperationAdminOnly
+from base.permissions import (
+    ActionPermission,
+    IsApiKeyValid,
+    IsOperationAdminOnly,
+)
 from base.apis import BaseAPIViewSet
 
 from common.filters import CustomOrderFilter
@@ -19,6 +23,8 @@ from companies.constants import (
     CompanyTransactionTypes,
 )
 from companies.services import CompanyService
+
+from roles.constants import Screens
 from .filters import CompanyFilter
 from .models import Company, CompanyPaymentMethod, CompanyPlan, Contract
 from .serializers import (
@@ -330,8 +336,9 @@ class ManagePaymentViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     """
 
     queryset = CompanyPaymentMethod.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [ActionPermission]
     serializer_class = CompanyPaymentMethodSerializer
+    screen_name = Screens.PAYMENT_MANAGEMENT.value
 
     def get_queryset(self):
         # Get the company associated with the authenticated user
