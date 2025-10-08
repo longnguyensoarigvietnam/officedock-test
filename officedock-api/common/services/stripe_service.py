@@ -535,6 +535,9 @@ class StripeService:
             ).last()
             if not current_local_invoice:
                 return
+            subscription_invoice = self.get_invoice(
+                current_local_invoice.stripe_invoice_id
+            )
             # Void the old invoice safely
             finalizes_at = int(
                 get_a_day_in_next_month(
@@ -563,6 +566,7 @@ class StripeService:
                 status=TransactionStatus.UNPAID.value,
                 stripe_invoice_id=new_invoice.id,
             )
+            line = subscription_invoice.lines.data[0]
             # Create line items
             line_items = [
                 {
@@ -570,6 +574,10 @@ class StripeService:
                     "currency": "jpy",
                     "description": f"1 × {plan.name} (at ¥{int(plan.monthly_fee)}/ month)",
                     "tax_rates": [tax.stripe_tax_id],
+                    "period": {
+                        "start": line.period.start,
+                        "end": line.period.end,
+                    },
                 }
             ]
 
@@ -581,6 +589,7 @@ class StripeService:
                     currency=item["currency"],
                     description=item["description"],
                     tax_rates=item["tax_rates"],
+                    period=item["period"],
                 )
             return self.get_invoice(new_invoice.id)
 
