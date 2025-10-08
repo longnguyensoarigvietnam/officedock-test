@@ -164,3 +164,8 @@ export type CreationDataCommon = {
   itemsOfUser?: ItemUser[];
   organizationsOfAllTeamStatistic?: CreationStatisticType[];
 };
+export interface OptionRadioButtonType {
+  value: string | number;
+  label?: string;
+  description?: string;
+}

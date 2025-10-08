@@ -428,6 +428,11 @@ export const pageRouters = {
     name: 'コイン設定',
     href: `/points`,
   },
+  // PAYMENT
+  PAYMENT_MANAGEMENT: {
+    name: 'お支払い管理',
+    href: '/payment',
+  },
 };
 
 // For the API routers
@@ -696,4 +701,12 @@ export const apiRouters = {
 
   // ITEM CUSTOMIZE
   LIST_ITEM_CUSTOMIZE: `/users/items/`,
+
+  // PAYMENT
+  PAYMENT_METHOD: '/payment-management/',
+  ADD_PAYMENT_METHOD: '/payment-management/add-card/',
+  GET_PAYMENT_SECRET: '/stripe-config/setup-intent/',
+  REMOVE_CARD: (id: number) => `/payment-management/${id}/remove-card/`,
+  SET_DEFAULT_CARD: (id: number) =>
+    `/payment-management/${id}/set-default-card/`,
 };
