@@ -86,8 +86,7 @@ const ListUsers = () => {
 
   const [resetOrganizationFields, setResetOrganizationFields] =
     useState<boolean>(false);
-  const [resetRoleField, setResetRoleField] =
-    useState<boolean>(false);
+  const [resetRoleField, setResetRoleField] = useState<boolean>(false);
 
   // Error messages
   const [errorMessages, setErrorMessages] = useState<{
@@ -138,35 +137,36 @@ const ListUsers = () => {
     }));
   }, [debouncedSearch]);
 
-  const { creationDataCommonData } = useCreationDataCommon({
-    options: {
-      get_roles: true,
-      get_all_organizations: true,
-      get_company: true,
-    },
-    onSuccess: (data) => {
-      setRoleUserOptions([
-        {
-          label: '選択',
-          value: '',
-        },
-        ...(data.roles?.map((org) => ({
-          label: org.name,
-          value: org.id,
-        })) || []),
-      ]);
-      setOrganizationUserOptions([
-        {
-          label: '選択',
-          value: '',
-        },
-        ...(data.allOrganizations?.map((item) => ({
-          label: item.name,
-          value: Number(item.id),
-        })) || []),
-      ]);
-    },
-  });
+  const { creationDataCommonData, refetchCreationDataCommon } =
+    useCreationDataCommon({
+      options: {
+        get_roles: true,
+        get_all_organizations: true,
+        get_company: true,
+      },
+      onSuccess: (data) => {
+        setRoleUserOptions([
+          {
+            label: '選択',
+            value: '',
+          },
+          ...(data.roles?.map((org) => ({
+            label: org.name,
+            value: org.id,
+          })) || []),
+        ]);
+        setOrganizationUserOptions([
+          {
+            label: '選択',
+            value: '',
+          },
+          ...(data.allOrganizations?.map((item) => ({
+            label: item.name,
+            value: Number(item.id),
+          })) || []),
+        ]);
+      },
+    });
 
   const { userList, refetchUserList } = useUserList(
     {
@@ -225,6 +225,7 @@ const ListUsers = () => {
       } else {
         refetchUserList();
       }
+      refetchCreationDataCommon();
       setOpenConfirmDeleteModal(false);
     },
     onError: (error: AxiosError<any>) => {
@@ -334,7 +335,7 @@ const ListUsers = () => {
           fullName: '',
         });
         setResetOrganizationFields(false);
-        setResetRoleField(false)
+        setResetRoleField(false);
       }
     },
     onError: ({
@@ -369,7 +370,7 @@ const ListUsers = () => {
           description: ERROR_UPDATE_ORGANIZATION_MESSAGE,
         });
       } else if (detail) {
-        setResetRoleField(true)
+        setResetRoleField(true);
         showToast({
           variant: 'error',
           description: detail?.[0] || ERROR_UPDATE_MESSAGE,
@@ -464,7 +465,8 @@ const ListUsers = () => {
           fullName: '',
         });
         setResetOrganizationFields(false);
-        setResetRoleField(false)
+        setResetRoleField(false);
+        refetchCreationDataCommon();
       },
       onError: ({
         response,
@@ -864,7 +866,7 @@ const ListUsers = () => {
                 fullName: '',
               });
               setResetOrganizationFields(false);
-              setResetRoleField(false)
+              setResetRoleField(false);
             }}
             onDelete={(userToDelete: User) => {
               handleOpenDeleteUserModal(userToDelete);

@@ -3,4 +3,5 @@ export interface Contract {
   startDate: string;
   endDate: string;
   status: string;
+  nextRenewalAt?: string;
 }

@@ -21,6 +21,8 @@ import {
 } from '@constants/message';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { PaymentMethod } from '@interfaces/payment';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+import { formatShowDateJapanese } from '@utils/date';
 
 const PaymentDetail = () => {
   const { showToast } = useToast();
@@ -37,6 +39,12 @@ const PaymentDetail = () => {
   const { paymentList } = useGetListPaymentCard();
   const { removePaymentCard, updateDefaultCard, addCardPayment } =
     useUpdatePaymentCardCache();
+
+  const { creationDataCommonData } = useCreationDataCommon({
+    options: {
+      get_company: true,
+    },
+  });
 
   const handleRemovePaymentCard = async (id: number) => {
     setIsLoading(true);
@@ -58,6 +66,7 @@ const PaymentDetail = () => {
       },
       onError: () => {
         showToast({
+          variant: 'error',
           description: ERROR_DELETE_MESSAGE,
         });
       },
@@ -89,6 +98,7 @@ const PaymentDetail = () => {
       },
       onError: () => {
         showToast({
+          variant: 'error',
           description: ERROR_UPDATE_MESSAGE,
         });
       },
@@ -97,19 +107,39 @@ const PaymentDetail = () => {
       },
     },
   );
+  const allFailed = paymentList?.results.every(
+    (card) => card.isRetryFailed === true,
+  );
+
   return (
     <>
       <div>
         <p className="font-medium text-[26px]">お支払い管理</p>
         {/* History payment */}
         <div className="mt-[30px] bg-[#F8FAFC] rounded-[30px] p-[30px]">
-          <p className="text-[18px] font-medium">契約履歴</p>
+          <div className="flex items-center gap-5">
+            <p className="text-[18px] font-medium">契約履歴</p>
+            {allFailed && (
+              <div className="p-[14px] bg-[#F75356] rounded-md flex items-center gap-2">
+                <ImageRound
+                  src={`/icons/warning-payment.svg`}
+                  name="delete"
+                  className="w-fit h-fit hover:opacity-70 cursor-pointer !rounded-none"
+                />
+                <p className="text-white font-bold text-sm">
+                  クレジットカード決済に失敗しました
+                </p>
+              </div>
+            )}
+          </div>
           <div className="mt-10 flex flex-col gap-8">
             <div className="flex items-center gap-5 ">
               <p className="w-[100px] text-[#77858F] font-medium text-sm">
                 契約プラン
               </p>
-              <p className="text-black font-medium text-base">1〜10人プラン</p>
+              <p className="text-black font-medium text-base">
+                {creationDataCommonData?.company?.plan?.name}
+              </p>
             </div>
             <div className="h-[1px] bg-[#D2DBE1]"> </div>
             {/* Date start */}
@@ -117,7 +147,13 @@ const PaymentDetail = () => {
               <p className="w-[100px] text-[#77858F] font-medium text-sm">
                 契約期間
               </p>
-              <p className="text-black font-medium text-base">2026年9月</p>
+              <p className="text-black font-medium text-base">
+                {' '}
+                {creationDataCommonData?.company?.contract.startDate &&
+                  formatShowDateJapanese(
+                    creationDataCommonData?.company?.contract.startDate,
+                  )}
+              </p>
             </div>
             <div className="h-[1px] bg-[#D2DBE1]"> </div>
             {/* Date end */}
@@ -125,7 +161,13 @@ const PaymentDetail = () => {
               <p className="w-[100px] text-[#77858F] font-medium text-sm">
                 契約更新予定日
               </p>
-              <p className="text-black font-medium text-base">2026年9月</p>
+              <p className="text-black font-medium text-base">
+                {' '}
+                {creationDataCommonData?.company?.contract.nextRenewalAt &&
+                  formatShowDateJapanese(
+                    creationDataCommonData?.company?.contract.nextRenewalAt,
+                  )}
+              </p>
             </div>
           </div>
         </div>
@@ -158,15 +200,15 @@ const PaymentDetail = () => {
           </div>
           {/* List card */}
           <div className="mt-10 flex flex-col gap-5">
-            {paymentList?.results.map((card) => (
+            {paymentList?.results.map((card, index) => (
               <div
                 key={card.id}
-                className="rounded-[10px] border border-[#D2DBE1] overflow-hidden">
+                className={`rounded-[10px] border ${card.isRetryFailed ? 'border-[#F75356]' : 'border-[#D2DBE1]'}  overflow-hidden`}>
                 <div className="border-b border-[#D2DBE1] flex items-center gap-4 p-[18px]">
                   <p className="text-xs font-medium text-[#77858F]">
-                    クレジットカード情報 1
+                    クレジットカード情報 {index + 1}
                   </p>
-                  {paymentList?.results.length > 1 && (
+                  {paymentList?.results.length > 1 && !card.isDefault && (
                     <ImageRound
                       onClick={() => {
                         setOpenDeleteCardModal(true);
@@ -180,12 +222,24 @@ const PaymentDetail = () => {
                       className="w-fit h-fit hover:opacity-70 cursor-pointer"
                     />
                   )}
+                  {card.isRetryFailed && (
+                    <div className="p-[14px] bg-[#F75356] rounded-md flex items-center gap-2">
+                      <ImageRound
+                        src={`/icons/warning-payment.svg`}
+                        name="delete"
+                        className="w-fit h-fit hover:opacity-70 cursor-pointer !rounded-none"
+                      />
+                      <p className="text-white font-bold text-sm">
+                        決済でエラーが発生しました。このカードでは決済ができません。{' '}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center bg-white border-b border-[#D2DBE1]">
                   <div className="w-[319px] border-r border-[#D2DBE1] py-9 px-[18px]">
                     カード会社
                   </div>
-                  <div className="flex-grow py-9 px-[18px] break-all">
+                  <div className="flex-grow py-9 px-[18px] break-all capitalize">
                     {card.brand}
                   </div>
                 </div>
