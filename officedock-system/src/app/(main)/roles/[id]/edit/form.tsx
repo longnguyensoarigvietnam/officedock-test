@@ -264,6 +264,10 @@ const EditRoleForm = () => {
             </div>
           </div>
           {rows.map((row, index) => {
+            const permissionList = getPermissionOptionDropdown(
+              row.screenValue as ScreenName,
+              PERMISSION_OPTIONS,
+            );
             return (
               <div
                 key={index}
@@ -276,21 +280,12 @@ const EditRoleForm = () => {
                     className="w-full !h-10"
                     valueClassName="rounded-[6px] !border-[#77858F]"
                     labelOptionClass="ml-0"
-                    options={getPermissionOptionDropdown(
-                      row.screenValue as ScreenName,
-                      PERMISSION_OPTIONS,
-                    )}
+                    options={permissionList}
                     minDropdownHeight={200}
-                    disabled={
-                      getPermissionOptionDropdown(
-                        row.screenValue as ScreenName,
-                        PERMISSION_OPTIONS,
-                      ).length == 0
-                    }
-                    selectedOption={getPermissionOptionDropdown(
-                      row.screenValue as ScreenName,
-                      PERMISSION_OPTIONS,
-                    ).find((option) => option.label == row.actions)}
+                    disabled={permissionList.length == 0}
+                    selectedOption={permissionList.find(
+                      (option) => option.label == row.actions,
+                    )}
                     onChange={(selectedOption: any) => {
                       const value = selectedOption.value;
                       handleEditFieldInline(row.screenLabel, value);

@@ -55,6 +55,8 @@ const CreateRoleForm = () => {
 
   const getDefaultScreenAction = (screenName: string) => {
     if (screenName == ScreenName.TEAM_DOCK) return PermissionType.TEAM_AND_SUB;
+    if (screenName == ScreenName.SURVEY_MANAGEMENT)
+      return PermissionType.ONLY_SELF_CAN_EDIT;
     return PermissionType.NOT_ALLOWED;
   };
 
@@ -208,6 +210,10 @@ const CreateRoleForm = () => {
             </div>
           </div>
           {rows.map((row, index) => {
+            const permissionList = getPermissionOptionDropdown(
+              row.screenValue as ScreenName,
+              PERMISSION_OPTIONS,
+            );
             return (
               <div
                 key={index}
@@ -219,21 +225,12 @@ const CreateRoleForm = () => {
                   <TableDropdown
                     className="w-full !h-10"
                     valueClassName="rounded-[6px] !border-[#77858F]"
-                    options={getPermissionOptionDropdown(
-                      row.screenValue as ScreenName,
-                      PERMISSION_OPTIONS,
-                    )}
+                    options={permissionList}
                     minDropdownHeight={200}
-                    disabled={
-                      getPermissionOptionDropdown(
-                        row.screenValue as ScreenName,
-                        PERMISSION_OPTIONS,
-                      ).length == 0
-                    }
-                    selectedOption={getPermissionOptionDropdown(
-                      row.screenValue as ScreenName,
-                      PERMISSION_OPTIONS,
-                    ).find((option) => option.label == row.actions)}
+                    disabled={permissionList.length == 0}
+                    selectedOption={permissionList.find(
+                      (option) => option.label == row.actions,
+                    )}
                     labelOptionClass="ml-0"
                     onChange={(selectedOption: any) => {
                       const value = selectedOption.value;

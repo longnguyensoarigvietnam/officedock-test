@@ -134,7 +134,7 @@ export const ReceiveAndSendThanksMessageTable = ({
         ref={resultsContainerRef}
         className={`overflow-y-auto overflow-x-hidden h-fit max-h-[calc(100%_-_105px)] w-full mt-3 flex flex-col gap-[2px]  ${!isLoadingList && !thanksMessageList.length ? 'bg-white h-full w-full' : 'customized-scrollbar'}`}>
         {isLoadingList ? (
-          <div className='pl-3'>
+          <div className="pl-3">
             <RowSkeleton
               numberOfRows={6}
               className="h-[125px] !rounded-[14px] w-[calc(100%_-_10px)]"
@@ -161,12 +161,9 @@ export const ReceiveAndSendThanksMessageTable = ({
                     )}
                     {/* Date column */}
                     <p className="w-[109px] text-xs pl-5 pr-2 flex items-center text-nowrap py-[15px]">
-                      {activeTab == ThanksMessageType.RECEIVED
-                        ? message.readAt
-                          ? formatShowDateJapanese(message.readAt)
-                          : formatShowDateJapanese(new Date())
-                        : message.createdAt &&
-                          formatShowDateJapanese(message.createdAt)}
+                      {message.createdAt
+                        ? formatShowDateJapanese(message.createdAt)
+                        : formatShowDateJapanese(new Date())}
                     </p>
                     <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
                     <div className="w-[154px] flex flex-col gap-2 -ml-1 py-[15px]">

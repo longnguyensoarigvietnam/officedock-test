@@ -194,6 +194,21 @@ export const SCREEN_LIST = [
     value: 'mvpVotingManagement',
     show: true,
   },
+  {
+    name: 'コイン設定',
+    value: 'pointManagement',
+    show: true,
+  },
+  {
+    name: 'お支払い管理',
+    value: 'paymentManagement',
+    show: true,
+  },
+  {
+    name: 'アンケート',
+    value: 'surveyManagement',
+    show: true,
+  },
 ];
 
 export const PERMISSION_OPTIONS = [
@@ -224,6 +239,10 @@ export const PERMISSION_OPTIONS = [
   {
     label: PermissionType.TEAM_AND_SUB,
     value: PermissionType.TEAM_AND_SUB,
+  },
+  {
+    label: PermissionType.ONLY_SELF_CAN_EDIT,
+    value: PermissionType.ONLY_SELF_CAN_EDIT,
   },
 ];
 
