@@ -127,6 +127,55 @@ export default function EditNode() {
       return;
     }
   };
+  // Handle delete sibling node
+  const deleteSiblingNode = (targetUuId: string) => {
+    if (!root) return;
+
+    // find the node to delete
+    const targetNode = root.first(
+      (node: any) => node.model.uuid === targetUuId,
+    );
+    if (!targetNode || !targetNode.parent) return;
+
+    // 1) Collect all deleted nodes (including the root node and all descendants)
+    const nodesToRestore: { label: string; value: string }[] = [];
+    targetNode.walk((n: any) => {
+      const m = n.model;
+      // Only take nodes with valid values (not the placeholder 'treeNode') and not the root
+      if (m && m.uuid !== 'root' && m.value !== 'treeNode') {
+        const already = nodesToRestore.some((it) => it.value === m.uuid);
+        if (!already) {
+          nodesToRestore.push({
+            label: m.name || '',
+            value: m.uuid,
+          });
+        }
+      }
+      return true;
+    });
+
+    // 2) Remove the node from the parent's children list
+    const parent = targetNode.parent;
+    parent.model.children = parent.model.children.filter(
+      (child: ConfigNode) => child.uuid !== targetUuId,
+    );
+
+    // 3) Rebuild the tree and update the state
+    const tree = new TreeModel();
+    const updatedTree = tree.parse(root.model);
+    setRoot(updatedTree);
+    // 4) Restore the collected options back to optionsTreeNode (avoid duplicates)
+    if (nodesToRestore.length > 0) {
+      setOptionsTreeNode((prev) => {
+        const next = [...prev];
+        nodesToRestore.forEach((item) => {
+          const exists = next.some((opt) => opt.value === item.value);
+          if (!exists) next.push(item);
+        });
+        return next;
+      });
+    }
+  };
 
   // Handle add node sibling
   const addSiblingNode = (targetUuId: string) => {
@@ -425,7 +474,7 @@ export default function EditNode() {
               if (item.value === 'treeNode') return;
               addChildToNode(item.uuid);
             }}
-            className="absolute  z-[10] right-[-40px] top-[5px]  w-6 h-6 rounded-full ">
+            className="absolute  z-[10] right-[-70px] top-[5px]  w-6 h-6 rounded-full ">
             <Button
               sz="sm"
               disabled={item.value === 'treeNode'}
@@ -457,6 +506,22 @@ export default function EditNode() {
             </Button>
           </div>
         )}
+        {/* Delete sibling   */}
+        <div
+          onClick={() => deleteSiblingNode(item.uuid)}
+          className="absolute bottom-[4px] right-[-32px] transform z-[100]  w-6 h-6 rounded-full ">
+          <Button
+            sz="sm"
+            variant="outline"
+            className="w-6 h-6  text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
+            type="button">
+            <ImageRound
+              src="/icons/delete-node.svg"
+              name="Delete organization"
+              className="!h-fit !w-fit"
+            />
+          </Button>
+        </div>
       </div>
     );
   };
@@ -500,7 +565,7 @@ export default function EditNode() {
       </div>
       <div className=" flex mt-5 flex-col gap-5 h-[calc(100vh_-_215px)] overflow-y-auto">
         <div className="px-10">
-          <div className="bg-white p-[30px] overflow-auto max-w-[calc(100vw_-_288px)] min-h-[538px] min-w-[1152px]  rounded-[30px]">
+          <div className="bg-[#F8FAFC] p-[30px] overflow-auto max-w-[calc(100vw_-_288px)] min-h-[538px] min-w-[1152px]  rounded-[30px]">
             <p className="text-base font-medium text-[#77858F] mb-[30px]">
               チーム階層
             </p>
