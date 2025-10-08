@@ -54,6 +54,7 @@ body * {
 
 .hr-teams .item__parent__element.has-children::after {
   left: 100%;
+  width: 60px;
 }
 
 .hr-teams .item__parent__element.has-parent::before {
@@ -67,7 +68,7 @@ body * {
 }
 
 .hr-teams .item__children {
-  margin-left: 40px;
+  margin-left: 80px;
   position: relative;
   flex: 1;
 }
