@@ -490,6 +490,8 @@ export const getPermissionOptionDropdown = (
       ScreenName.ROLE,
       ScreenName.CALENDAR_MANAGEMENT,
       ScreenName.MVP_VOTING_MANAGEMENT,
+      ScreenName.PAYMENT_MANAGEMENT,
+      ScreenName.POINT_MANAGEMENT
     ].includes(screen)
   ) {
     return includePermissions([
@@ -527,6 +529,16 @@ export const getPermissionOptionDropdown = (
       PermissionType.EDITABLE,
       PermissionType.TEAM_AND_SUB_EDIT,
       PermissionType.NOT_ALLOWED,
+    ]);
+  }
+  if (
+    [ScreenName.SURVEY_MANAGEMENT].includes(
+      screen,
+    )
+  ) {
+    return includePermissions([
+      PermissionType.EDITABLE,
+      PermissionType.ONLY_SELF_CAN_EDIT,
     ]);
   }
   return includePermissions([

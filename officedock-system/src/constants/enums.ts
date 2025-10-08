@@ -403,6 +403,24 @@ export enum PermissionsSystem {
   THANKS_MESSAGE_MANAGEMENT_ADD = 'thanks_message_management_add',
   THANKS_MESSAGE_MANAGEMENT_UPDATE = 'thanks_message_management_update',
   THANKS_MESSAGE_MANAGEMENT_DELETE = 'thanks_message_management_delete',
+
+  // Point Management Permissions
+  POINT_MANAGEMENT_VIEW = 'point_management_view',
+  POINT_MANAGEMENT_ADD = 'point_management_add',
+  POINT_MANAGEMENT_UPDATE = 'point_management_update',
+  POINT_MANAGEMENT_DELETE = 'point_management_delete',
+
+  // Payment Management Permissions
+  PAYMENT_MANAGEMENT_VIEW = 'payment_management_view',
+  PAYMENT_MANAGEMENT_ADD = 'payment_management_add',
+  PAYMENT_MANAGEMENT_UPDATE = 'payment_management_update',
+  PAYMENT_MANAGEMENT_DELETE = 'payment_management_delete',
+
+  // Survey Management Permissions
+  SURVEY_MANAGEMENT_VIEW = 'survey_management_view',
+  SURVEY_MANAGEMENT_ADD = 'survey_management_add',
+  SURVEY_MANAGEMENT_UPDATE = 'survey_management_update',
+  SURVEY_MANAGEMENT_DELETE = 'survey_management_delete',
 }
 
 export enum ScreenAction {
@@ -440,6 +458,9 @@ export enum ScreenName {
   THANKS_MESSAGE = 'thanks_message',
   THANKS_MESSAGE_MANAGEMENT = 'thanksMessageManagement',
   MVP_VOTING_MANAGEMENT = 'mvpVotingManagement',
+  POINT_MANAGEMENT = 'pointManagement',
+  PAYMENT_MANAGEMENT = 'paymentManagement',
+  SURVEY_MANAGEMENT = 'surveyManagement',
 }
 
 export enum PermissionType {
@@ -450,6 +471,7 @@ export enum PermissionType {
   NOT_ALLOWED = '不可',
   ALL_TEAMS = '全チーム参加',
   TEAM_AND_SUB = '自チームと下位チームのみ参加',
+  ONLY_SELF_CAN_EDIT = '自分のみ編集可'
 }
 
 export enum CurrentScreen {

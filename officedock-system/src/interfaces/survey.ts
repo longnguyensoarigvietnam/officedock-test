@@ -26,6 +26,9 @@ export type Survey = {
     mySurvey: boolean;
     open: boolean;
   };
+  actions: {
+    delete: boolean;
+  }
 };
 export type SurveyDetailType = {
   id: number;

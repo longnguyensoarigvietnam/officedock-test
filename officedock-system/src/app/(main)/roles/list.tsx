@@ -2,18 +2,20 @@
 import Link from 'next/link';
 import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { useMutation } from 'react-query';
-import { useSessionCache } from '@providers/SessionCacheProvider';
-
 import { AxiosError } from 'axios';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 import Pagination from '@components/common/Pagination';
+import Dropdown from '@components/common/Dropdown';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
+import InputSearch from '@components/common/InputSearch';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
+import { RoleStateContext } from '@providers/RoleProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import { PermissionsSystem } from '@constants/enums';
@@ -23,15 +25,15 @@ import {
   SUCCESS_DELETE_MESSAGE,
 } from '@constants/message';
 
-import useRoleList from '@hooks/useRoleList';
-import { RoleDetail } from '@interfaces/role';
-import { RoleStateContext } from '@providers/RoleProvider';
-import { hasPermissionInArray } from '@utils';
-import api from '@base/api';
-import { useErrorToast } from '@hooks/useErrorToast';
-import InputSearch from '@components/common/InputSearch';
 import useDebounceText from '@hooks/useDebounceText';
-import Dropdown from '@components/common/Dropdown';
+import useRoleList from '@hooks/useRoleList';
+import { useErrorToast } from '@hooks/useErrorToast';
+
+import { RoleDetail } from '@interfaces/role';
+
+import { hasPermissionInArray } from '@utils';
+
+import api from '@base/api';
 
 const ListRoles = () => {
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);

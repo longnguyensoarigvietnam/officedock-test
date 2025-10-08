@@ -206,14 +206,14 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     name: pageRouters.POINT_MANAGEMENT.name,
     current: false,
     companyMenu: true,
-    requiredPermission: PermissionsSystem.VIEW_ALL,
+    requiredPermission: PermissionsSystem.POINT_MANAGEMENT_VIEW,
   },
   {
     ...pageRouters.PAYMENT_MANAGEMENT,
     name: pageRouters.PAYMENT_MANAGEMENT.name,
     current: false,
     companyMenu: true,
-    requiredPermission: PermissionsSystem.VIEW_ALL,
+    requiredPermission: PermissionsSystem.PAYMENT_MANAGEMENT_VIEW,
   },
 ];
 export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
