@@ -282,10 +282,6 @@ class BaseOrganizationHierarchySerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "uuid",
-            "type",
-            "name",
-            "icon",
-            "icon_color",
             "parent_uuid",
             "is_hierarchy",
             "type",
