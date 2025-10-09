@@ -1297,14 +1297,17 @@ class SystemPointManagementViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         # Calculate key company-related dates
         company_dates = calculate_company_dates(company, today)
         date_after_closing = company_dates["date_after_closing"]
+        exchangeable_coins_per_user = (
+            (company.total_coins // company.target_user_count)
+            if company.target_user_count > 0
+            else 0
+        )
 
         return self.response_ok(
             {
                 "total_coins": company.total_coins,
                 "target_user_count": company.target_user_count,
-                "exchangeable_coins_per_user": (
-                    company.total_coins // company.target_user_count
-                ),
+                "exchangeable_coins_per_user": exchangeable_coins_per_user,
                 "issue_date": date_after_closing,
                 "expiration_date": date_after_closing + relativedelta(months=1),
             }

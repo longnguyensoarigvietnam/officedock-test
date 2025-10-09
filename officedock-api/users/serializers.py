@@ -430,7 +430,7 @@ class UserSerializer(BaseUserSerializer):
         sorted_orgs = [
             item.organization
             for item in UsersOrganizations.objects.filter(user=obj).order_by(
-                "-is_main"
+                "-is_main", "id"
             )
         ]
         return OrganizationForUserSerializer(
@@ -700,20 +700,32 @@ class SystemUserInviteSerializer(BaseUserSerializer):
 
         if instance and value is not None:
             # Collect the set of organization IDs provided in the input
+            old_org = set(instance.organizations.values_list("id", flat=True))
             orgs_to_update = set(item["organization"].id for item in value)
-            # Collect the set of organization IDs where the user is in charge of tasks
-            orgs_with_tasks = set(
-                instance.in_charge_tasks.filter(
-                    organization__isnull=False, deleted_at__isnull=True
-                ).values_list("organization", flat=True)
-            )
-            # Find organizations with tasks that are being removed
-            orgs_being_removed = orgs_with_tasks - orgs_to_update
 
-            if orgs_being_removed:
-                raise serializers.ValidationError(
-                    ERROR_MESSAGES["organization_linked_to_task"]
+            if orgs_to_update != old_org:
+                # Collect the set of organization IDs where the user is in charge of tasks
+                orgs_with_tasks = set(
+                    instance.in_charge_tasks.filter(
+                        organization__isnull=False, deleted_at__isnull=True
+                    ).values_list("organization", flat=True)
                 )
+                # Find organizations with tasks that are being removed
+                orgs_being_removed = orgs_with_tasks - orgs_to_update
+
+                if orgs_being_removed:
+                    names = (
+                        Organization.objects.filter(
+                            id__in=list(orgs_being_removed)
+                        )
+                        .order_by("created_at")
+                        .values_list("name", flat=True)
+                    )
+                    raise serializers.ValidationError(
+                        ERROR_MESSAGES["organization_linked_to_task"].format(
+                            name=", ".join(list(names))
+                        )
+                    )
 
         return super().validate(value)
 
