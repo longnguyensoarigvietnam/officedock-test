@@ -95,16 +95,14 @@ class UserService:
         """
         if not user:
             return False
+        company_status = user.company.status
         # Just allow user have permission access to Payment Management page when company suspended
-        if user.company.status == CompanyStatus.SUSPENDED.value:
-            for role in user.roles.all():
-                if role.permissions.filter(
-                    name__startswith=Screens.PAYMENT_MANAGEMENT.value,
-                    role_details__selection_result=SelectionResultOptions.ALLOWED.value,
-                ).exists():
-                    return True
-
-        return user.company.status not in [
+        if company_status == CompanyStatus.SUSPENDED.value:
+            return user.roles.filter(
+                permissions__name__startswith=Screens.PAYMENT_MANAGEMENT.value,
+                role_details__selection_result=SelectionResultOptions.ALLOWED.value,
+            ).exists()
+        return company_status not in [
             CompanyStatus.SUSPENDED.value,
             CompanyStatus.CONTRACT_TERMINATED.value,
             CompanyStatus.PENDING_APPROVAL.value,
