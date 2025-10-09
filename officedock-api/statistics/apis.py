@@ -389,6 +389,7 @@ class StatisticViewSet(BaseAPIViewSet):
             small_id=small_category_id,
             tags=tag_ids,
         )
+
         data = {"durations": []}
         if not check_is_not_none_category(
             large_category_id, medium_category_id, small_category_id
@@ -479,6 +480,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 TaskCategoryTypes.LARGE.value,
                 durations=durations,
             )
+
         return self.response_ok(data)
 
     @extend_schema(
@@ -1110,7 +1112,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         """
         Return data of statistic category each user
         """
-        organization = self.get_object()
         large_category_id = request.query_params.get("large_category_id")
         medium_category_id = request.query_params.get("medium_category_id")
         small_category_id = request.query_params.get("small_category_id")
@@ -1126,6 +1127,9 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         )
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
+        organization = (
+            Organization.objects.filter(id=pk).only("id", "type").first()
+        )
         users = split_id_from_string(user_ids)
         if users:
             users = User.objects.filter(id__in=users).all()
@@ -1161,13 +1165,13 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                     }
                 ]
             )
-
         filter_with_category_durations = get_list_durations_by_users(
             durations=durations,
             large_id=large_category_id,
             medium_id=medium_category_id,
             small_id=small_category_id,
         )
+
         user_serialized_map = {
             user["id"]: {
                 "id": user["id"],
@@ -1181,37 +1185,10 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 "id", "profile__full_name", "avatar", "avatar_color"
             )
         }
-        for user in users:
-            filter_durations = get_list_durations_by_users(
-                durations=filter_with_category_durations,
-                users=[user],
-            )
-            if not filter_durations:
-                continue
-            user_total_duration = get_total_durations(filter_durations)
-            user_durations = self._get_durations_by_range(
-                filter_durations, ranges, filter_with_category_durations
-            )
-            data.append(
-                {
-                    "id": user.id,
-                    "user": user_serialized_map.get(user.id),
-                    "total_duration": format_duration(user_total_duration),
-                    "durations": user_durations,
-                }
-            )
-
-        return self.response_ok(self._normalize_percent_per_range(data))
-
-    def _get_durations_by_range(self, filter_durations, ranges, root_durations):
-        """
-        Handle get duration by durations filter by category, tag...
-        """
-        durations = []
+        total_duration_by_range = {}
         for index, (start, end) in enumerate(ranges):
             start_date_min = datetime.combine(start, time.min)
             end_date_max = datetime.combine(end, time.max)
-            duration = timedelta(0)
             # Get duration by range
             if start <= now().date() <= end:
                 filters = Q(
@@ -1226,30 +1203,81 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                     )
                 )
                 # Get all durations per range for calculate total duration in this time
-                root_durations_per_range = root_durations.filter(filters)
-                # Get all durations per range by USER
-                if filter_durations:
-                    filter_duration_by_range = filter_durations.filter(filters)
-                    duration = get_total_durations(filter_duration_by_range)
+                root_durations_per_range = (
+                    filter_with_category_durations.filter(filters)
+                )
             else:
                 # Get all durations per range for calculate total duration in this time
-                root_durations_per_range = root_durations.filter(
-                    started_at__gte=start_date_min,
-                    paused_at__lte=end_date_max,
-                )
-                # Get all durations per range by USER
-                if filter_durations:
-                    filter_duration_by_range = filter_durations.filter(
+                root_durations_per_range = (
+                    filter_with_category_durations.filter(
                         started_at__gte=start_date_min,
                         paused_at__lte=end_date_max,
                     )
-                    duration = get_total_durations(filter_duration_by_range)
-            # Get total duration of root dutions per range
-            total_duration = (
+                )
+            # Get total duration of root duration per range
+            total_duration_by_range[index] = (
                 get_total_durations(root_durations_per_range)
                 if root_durations_per_range
                 else timedelta(0)
             )
+
+        for user in users:
+            filter_durations = get_list_durations_by_users(
+                durations=filter_with_category_durations,
+                users=[user],
+            )
+            if not filter_durations:
+                continue
+            user_total_duration = get_total_durations(filter_durations)
+            user_durations = self._get_durations_by_range(
+                filter_durations, ranges, total_duration_by_range
+            )
+            data.append(
+                {
+                    "id": user.id,
+                    "user": user_serialized_map.get(user.id),
+                    "total_duration": format_duration(user_total_duration),
+                    "durations": user_durations,
+                }
+            )
+        return self.response_ok(self._normalize_percent_per_range(data))
+
+    def _get_durations_by_range(
+        self, filter_durations, ranges, total_duration_by_range
+    ):
+        """
+        Handle get duration by durations filter by category, tag...
+        """
+        durations = []
+        for index, (start, end) in enumerate(ranges):
+            start_date_min = datetime.combine(start, time.min)
+            end_date_max = datetime.combine(end, time.max)
+            if total_duration_by_range[index] == timedelta(0):
+                continue
+            duration = timedelta(0)
+            # Get duration by range
+            if start <= now().date() <= end:
+                filters = Q(
+                    Q(
+                        Q(started_at__gte=start_date_min)
+                        & Q(paused_at__lte=end_date_max)
+                    )
+                    | Q(
+                        Q(started_at__lte=end_date_max)
+                        & Q(started_at__gte=start_date_min)
+                        & Q(paused_at__isnull=True)
+                    )
+                )
+                filter_duration_by_range = filter_durations.filter(filters)
+                duration = get_total_durations(filter_duration_by_range)
+            else:
+                filter_duration_by_range = filter_durations.filter(
+                    started_at__gte=start_date_min,
+                    paused_at__lte=end_date_max,
+                )
+                duration = get_total_durations(filter_duration_by_range)
+            # Get total duration of root duration per range
+            total_duration = total_duration_by_range[index]
 
             # Calculate the percentage of a user's duration relative to the total duration within a time range
             percent_per_range = percentage_calculation_of_duration(
