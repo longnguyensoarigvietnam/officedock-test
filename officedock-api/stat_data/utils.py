@@ -114,7 +114,11 @@ def get_list_durations_by_users(
     if durations:
         qs_tasks = durations.filter(filter_tasks).values_list("id", flat=True)
         qs_events = durations.filter(filter_events).values_list("id", flat=True)
-        result = TaskDuration.objects.filter(id__in=qs_tasks.union(qs_events))
+        result = (
+            TaskDuration.objects.filter(id__in=qs_tasks.union(qs_events))
+            .select_related("user", "task", "schedule")
+            .only("task", "schedule", "user", "started_at", "paused_at")
+        )
     else:
         if not start_of_day and not end_of_day:
             return TaskDuration.objects.none()
@@ -130,7 +134,11 @@ def get_list_durations_by_users(
         qs_tasks = durations.filter(filter_tasks).values_list("id", flat=True)
         qs_events = durations.filter(filter_events).values_list("id", flat=True)
 
-        result = TaskDuration.objects.filter(id__in=qs_tasks.union(qs_events))
+        result = (
+            TaskDuration.objects.filter(id__in=qs_tasks.union(qs_events))
+            .select_related("user", "task", "schedule")
+            .only("task", "schedule", "user", "started_at", "paused_at")
+        )
 
     return result
 
@@ -215,6 +223,7 @@ def aggregate_durations(
                 ),
             ),
         )
+        .only("id", "categories", "organization", "tags")
     )
     schedules = (
         Schedule.objects.filter(id__in=schedule_ids)
@@ -231,6 +240,7 @@ def aggregate_durations(
                 ),
             ),
         )
+        .only("id", "categories", "organization", "tags")
     )
 
     tasks_map = {}
@@ -256,10 +266,14 @@ def aggregate_durations(
             )
 
     # Fetch organization-category metadata (e.g. color) in a single query
-    org_cats = OrganizationsStatisticCategories.objects.filter(
-        organization_id__in=all_org_ids,
-        large_statistic_category_id__in=all_category_ids,
-    ).values("organization_id", "large_statistic_category_id", "color", "id")
+    org_cats = (
+        OrganizationsStatisticCategories.objects.filter(
+            organization_id__in=all_org_ids,
+            large_statistic_category_id__in=all_category_ids,
+        )
+        .only("organization_id", "large_statistic_category_id", "color", "id")
+        .values("organization_id", "large_statistic_category_id", "color", "id")
+    )
     # Map organization-category pairs to their metadata for fast lookup
     org_cat_map = {
         (oc["organization_id"], oc["large_statistic_category_id"]): oc
@@ -392,7 +406,7 @@ def process_categories(
                     durations=durations,
                     **{filter_key: category_id},
                     organizations=[org_id],
-                )
+                ).all()
             else:
                 base_filter = Q(task__organization_id=org_id) | Q(
                     schedule__organization_id=org_id
@@ -441,21 +455,45 @@ def get_list_basic_task_or_event_of_durations(durations):
     """
     Handle get task or event of duration and return list of it
     """
-    tasks = {}
-    for filter_duration in durations:
-        # Limit just 3 cards return
-        if len(tasks) >= 3:
-            break
-        model_object = filter_duration.task or filter_duration.schedule
-        if model_object.id not in tasks:
-            tasks[model_object.id] = {
-                "id": model_object.id,
-                "title": model_object.title,
-                "type": CalendarTypes.SCHEDULE.value
-                if filter_duration.schedule
-                else CalendarTypes.TASK.value,
+    # FIXME: This code below is for get top 3 task, remove it if not have require from client
+    # list_task = get_list_task_with_total_duration(durations)
+    # sorted_data = sorted(list_task.items(), key=lambda x: x[1], reverse=True)
+    # task_ids = [k for k, v in sorted_data[:3]]
+    # tasks = Task.objects.filter(id__in=task_ids).values(
+    #     "id", "title"
+    # )
+
+    tasks = (
+        durations.filter(task__isnull=False)
+        .distinct()
+        .values("task__title", "task__id")[:3]
+    )
+    data = []
+    for task in tasks:
+        data.append(
+            {
+                "id": task["task__id"],
+                "title": task["task__title"],
+                "type": CalendarTypes.TASK.value,
             }
-    return list(tasks.values())
+        )
+    if len(tasks) < 3:
+        events = (
+            durations.filter(schedule__isnull=False)
+            .distinct()
+            .values("schedule__title", "schedule__id")[:3]
+        )
+        for event in events:
+            if len(data) == 3:
+                break
+            data.append(
+                {
+                    "id": event["schedule__id"],
+                    "title": event["schedule__title"],
+                    "type": CalendarTypes.SCHEDULE.value,
+                }
+            )
+    return data
 
 
 def process_users(total_duration, durations):
@@ -485,7 +523,7 @@ def process_users(total_duration, durations):
             task_ids.add(d.task_id)
         elif d.schedule_id:
             user_schedules[d.user_id].add(d.schedule_id)
-            schedule_ids.add(d.task_id)
+            schedule_ids.add(d.schedule_id)
 
     # Prefetch all users
     user_ids = list(user_durations.keys())
@@ -505,20 +543,18 @@ def process_users(total_duration, durations):
 
     combined_task_map = {
         **{
-            task["id"]: task
-            for task in Task.objects.filter(id__in=task_ids).values(
-                "id", "title"
-            )
+            task.id: {"id": task.id, "title": task.title}
+            for task in Task.objects.filter(id__in=task_ids).only("id", "title")
         },
         **{
-            sch["id"]: sch
-            for sch in Schedule.objects.filter(id__in=schedule_ids).values(
+            sch.id: {"id": sch.id, "title": sch.title}
+            for sch in Schedule.objects.filter(id__in=schedule_ids).only(
                 "id", "title"
             )
         },
     }
     sorted_users = list(user_durations.items())
-    for (uid, duration) in sorted_users:
+    for uid, duration in sorted_users:
         serialized_user = user_serialized_map.get(uid)
         combined_ids = list(user_tasks[uid]) + list(user_schedules[uid])
         tasks = [
