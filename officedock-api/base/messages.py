@@ -110,7 +110,7 @@ _ERROR_MESSAGES = {
             "New password must not be the same as the old password."
         ),
         "organization_linked_to_task": _(
-            "This organization is linked to a task and cannot be deleted."
+            "This organization {name} is linked to a task and cannot be deleted."
         ),
         # Survey
         "end_time_in_future": _(
@@ -224,7 +224,7 @@ _ERROR_MESSAGES = {
         "schedule_not_in_the_past": _("実施予定日時は未来の日時を選択してください。"),
         "cannot_select_category_other_team": _("他のチームのカテゴリーを選択できません。"),
         "password_not_same": _("現在のパスワードと同じパスワードは使用できません。"),
-        "organization_linked_to_task": _("この組織はタスクに紐づいているため、削除できません。"),
+        "organization_linked_to_task": _("{name}はタスクに紐づいているため、削除できません。"),
         # Survey
         "end_time_in_future": _("現時刻より後の時刻に設定してください。"),
         "cannot_view_open_survey": _("受付中のアンケートの詳細を見ることはできません。"),
