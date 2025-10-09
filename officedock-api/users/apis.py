@@ -1302,7 +1302,9 @@ class SystemPointManagementViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             {
                 "total_coins": company.total_coins,
                 "target_user_count": company.target_user_count,
-                "exchangeable_coins_per_user": company.total_coins,
+                "exchangeable_coins_per_user": (
+                    company.total_coins // company.target_user_count
+                ),
                 "issue_date": date_after_closing,
                 "expiration_date": date_after_closing + relativedelta(months=1),
             }
