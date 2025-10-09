@@ -3167,7 +3167,7 @@ const KanbanBoardTask = () => {
 
   return (
     <>
-      <div className="flex flex-row flex-grow h-[calc(100vh_-_76px)] gap-0 bg-[#F8FAFC] ">
+      <div className="flex flex-row flex-grow h-[calc(100vh_-_76px)] gap-0 bg-white">
         <TimeSchedule
           exEvents={exEvents}
           creationDataCommonData={creationDataCommonData}
@@ -3326,12 +3326,12 @@ const KanbanBoardTask = () => {
                     </>
                     <InputSearch
                       className="w-[300px] h-[34px] py-0 bg-[#EBF1F7] !rounded-[20px]"
-                      inputClassName="h-[34px] bg-[#EBF1F7] border-none !rounded-[20px] text-sm"
+                      inputClassName="h-[34px] bg-[#EBF1F7] border-none !rounded-[20px] text-sm placeholder-[#77858F]"
                       iconClassName="w-[14px] h-[14px]"
                       placeholder="タスク、キーワードを検索"
                     />
                   </div>
-                  <div className="w-fit min-w-[200px] flex items-center gap-5">
+                  <div className="w-fit min-w-[200px] flex items-center gap-3">
                     <div>
                       <DynamicTooltip
                         content="タスクを新規作成"
@@ -3366,7 +3366,8 @@ const KanbanBoardTask = () => {
                       </DynamicTooltip>
                     </div>
 
-                    <div className={` hover:cursor-pointer  z-20`}>
+                    <div
+                      className={` hover:cursor-pointer  z-20 flex items-center justify-start`}>
                       <DynamicTooltip
                         content={
                           isListView ? 'タスクを看板表示' : 'タスクをリスト表示'

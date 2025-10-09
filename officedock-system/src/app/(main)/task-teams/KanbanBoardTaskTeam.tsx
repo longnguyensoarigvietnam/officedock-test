@@ -2654,7 +2654,7 @@ const KanbanBoardTaskTeam = () => {
 
             <InputSearch
               className="w-[300px] h-[34px] py-0 bg-white !rounded-[20px]"
-              inputClassName="h-[34px] bg-white border-none !rounded-[20px] text-sm"
+              inputClassName="h-[34px] bg-white border-none !rounded-[20px] text-sm placeholder-[#77858F]"
               iconClassName="w-[14px] h-[14px]"
               placeholder="タスク、キーワードを検索"
             />
