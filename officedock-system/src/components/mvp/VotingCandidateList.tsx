@@ -103,9 +103,9 @@ export const VotingCandidateList = ({
               <div
                 className={`flex items-center justify-between ${!organization.collapseStatus || (organization.collapseStatus && organization.orgInfo.candidates.length == 0) ? 'mb-0' : 'mb-5'}`}>
                 <p className="font-medium text-base max-w-full break-all">
-                  {organization.orgInfo.name}{' '}
+                  {organization.orgInfo.name}
                   <span
-                    className={`text-xs font-medium ${organization.orgInfo.name && 'ml-4'}`}>
+                    className={`text-xs font-medium ${organization.orgInfo.name && 'ml-[18px]'}`}>
                     メンバー{organization.orgInfo.candidates.length}人
                   </span>
                 </p>

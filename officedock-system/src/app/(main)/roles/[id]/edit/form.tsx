@@ -19,7 +19,7 @@ import {
   SUCCESS_SAVE_MESSAGE,
 } from '@constants/message';
 
-import { getPermissionOptionDropdown } from '@utils';
+import { getErrorMessageByField, getPermissionOptionDropdown } from '@utils';
 
 import { RoleDetail, RoleFormData } from '@interfaces/role';
 
@@ -163,6 +163,9 @@ const EditRoleForm = () => {
         isEditingRef.current = false;
       },
       onError: (error: AxiosError<any>) => {
+        if (getErrorMessageByField(error, 'name')) {
+          setError(getErrorMessageByField(error, 'name'));
+        }
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
         isEditingRef.current = false;
       },
@@ -239,7 +242,7 @@ const EditRoleForm = () => {
               required
               label=""
               placeholder="入力してください"
-              className="!w-[220px] rounded-[6px] text-sm !h-[34px] !border-[1px] !border-[#77858F]"
+              className={`!w-[220px] rounded-[6px] text-sm !h-[34px] !border-[1px] ${error ? '!border-error' : '!border-[#77858F]'} `}
               value={roleName}
               onChange={(e) => {
                 setRoleName(e.target.value);

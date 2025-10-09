@@ -205,7 +205,7 @@ export const SCREEN_LIST = [
     show: true,
   },
   {
-    name: 'アンケート',
+    name: 'アンケート管理',
     value: 'surveyManagement',
     show: true,
   },

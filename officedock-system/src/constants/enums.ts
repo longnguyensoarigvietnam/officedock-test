@@ -705,3 +705,8 @@ export enum PointHistoryActiveTab {
   COIN = 'COIN',
   PEARL = 'PEARL'
 }
+export enum TransactionType { 
+  PLAN_AUTO_ASSIGNMENT = 'プラン自動付与',
+  PLAN_AUTO_GRANTED_COIN_EXPIRATION = 'プラン自動付与コイン失効',
+  POINT_EXCHANGE = 'ポイント交換',
+}

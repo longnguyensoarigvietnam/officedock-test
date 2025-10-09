@@ -35,18 +35,18 @@ export const MemberListByOrganization = ({
         background: 'rgba(53, 153, 216, 0.8)',
         boxShadow: '0px 4px 10px 0px #0000000D',
       }}
-      className="w-[750px] h-[calc(100vh_-_246px)] min-h-[715px] p-[26px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
+      className="w-[720px] h-[90%] p-[30px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
       <div className="flex flex-col max-h-[calc(100%_-_20px)] gap-[26px] overflow-y-auto customized-scrollbar">
-        {memberListByOrganization?.map((organization) => {
+        {memberListByOrganization?.map((organization, index) => {
           return (
             <div
               key={organization.orgInfo.id}
-              className="border-b-[1px] border-white pb-[26px]">
+              className={`border-b-[1px] border-white pb-[26px] ${index == memberListByOrganization.length - 1 && 'mb-[1px]'}`}>
               <div
                 className={`flex items-center justify-between ${!organization.collapseStatus || (organization.collapseStatus && organization.orgInfo.users.length == 0) ? 'mb-0' : 'mb-5'}`}>
                 <p className="font-medium text-[16px] max-w-full break-all">
-                  {organization.orgInfo.name}{' '}
-                  <span className="text-xs font-medium ml-4">
+                  {organization.orgInfo.name}
+                  <span className="text-xs font-medium ml-[18px]">
                     メンバー{organization.orgInfo.users.length}人
                   </span>
                 </p>

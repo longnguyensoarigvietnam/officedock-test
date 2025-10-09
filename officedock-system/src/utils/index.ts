@@ -1,6 +1,7 @@
 import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
 import { format, isSameDay } from 'date-fns';
+import { AxiosError } from 'axios';
 
 import {
   AllTeamStatisticOption,
@@ -2481,3 +2482,27 @@ export function attachUuidToAllP(html: string, listFiles: string[]): string {
   // get back full HTML inside body
   return doc.body.innerHTML;
 }
+export const getErrorMessageByField = (
+  error: AxiosError<any>,
+  field?: string
+): string => {
+  if (!error.response?.data) return 'Unknown error occurred.';
+
+  const data = error.response.data;
+
+  // If field specified, try to get message for that field
+  if (field && data[field]) {
+    return Array.isArray(data[field]) ? data[field][0] : data[field];
+  }
+
+  // Fallback to a generic message or the first error field
+  const firstKey = Object.keys(data)[0];
+  if (firstKey && data[firstKey]) {
+    return Array.isArray(data[firstKey]) ? data[firstKey][0] : data[firstKey];
+  }
+
+  // If backend sends a general message field
+  if (data.message) return data.message;
+
+  return 'Unexpected error occurred.';
+};

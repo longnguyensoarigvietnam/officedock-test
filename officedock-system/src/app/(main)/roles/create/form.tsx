@@ -18,7 +18,10 @@ import {
   SUCCESS_SAVE_MESSAGE,
 } from '@constants/message';
 
-import { getPermissionOptionDropdown } from '@utils';
+import {
+  getErrorMessageByField,
+  getPermissionOptionDropdown,
+} from '@utils';
 
 import { RoleFormData } from '@interfaces/role';
 
@@ -109,6 +112,9 @@ const CreateRoleForm = () => {
         isCreatingRef.current = false;
       },
       onError: (error: AxiosError<any>) => {
+        if (getErrorMessageByField(error, 'name')) {
+          setError(getErrorMessageByField(error, 'name'));
+        }
         showErrorToast(error, ERROR_CREATE_MESSAGE);
         isCreatingRef.current = false;
       },
@@ -185,14 +191,13 @@ const CreateRoleForm = () => {
               required
               label=""
               placeholder="入力してください"
-              className="!w-[220px] rounded-[6px] text-sm !h-[34px] !border-[1px] !border-[#77858F]"
+              className={`!w-[220px] rounded-[6px] text-sm !h-[34px] !border-[1px] ${error ? '!border-error' : '!border-[#77858F]'} `}
               onChange={(e) => {
                 setRoleName(e.target.value);
                 if (e.target.value != '') {
                   setError('');
                 }
               }}
-              error={error ? true : false}
             />
           </div>
 
