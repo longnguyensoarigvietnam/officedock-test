@@ -68,7 +68,7 @@ export default function ReceiveEnvelopeAnimationOverlay({
 
     tl.to(flapEl, {
       rotateX: 180,
-      duration: 3,
+      duration: 1.5,
       transformOrigin: 'bottom center',
       ease: 'power2.inOut',
       onUpdate: function () {
@@ -82,7 +82,7 @@ export default function ReceiveEnvelopeAnimationOverlay({
     })
       .to(contentEl, {
         y: -150,
-        duration: 2,
+        duration: 1.5,
         ease: 'power2.out',
         onStart: () => {
           if (contentEl) contentEl.style.zIndex = '30';
@@ -110,36 +110,24 @@ export default function ReceiveEnvelopeAnimationOverlay({
 
     safeReadThanksMessage(receivedThanksMessageList[index].id);
 
-    gsap.set(envelopeEl, { x: 2000, y: -1000, opacity: 0 });
-    gsap.set(birdEl, { x: 2000, y: -1000, opacity: 0 });
+    gsap.set(envelopeEl, { x: window.innerWidth * 1.5, y: -window.innerHeight, opacity: 0 });
+    gsap.set(birdEl, { x: window.innerWidth * 1.5, y: -window.innerHeight, opacity: 0 });
 
     const tl = gsap.timeline({
       defaults: { duration: 0.8, ease: 'power2.out' },
-    });
-
-    const shakeTl = gsap.to(envelopeEl, {
-      rotateZ: 10,
-      duration: 0.1,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut',
-      paused: true,
     });
 
     tl.to([birdEl, envelopeEl], {
       x: window.innerWidth * 0.1,
       y: -window.innerHeight * 0.5,
       opacity: 1,
-      duration: 2,
+      duration: 1.5,
       ease: 'power1.inOut',
-      onStart: () => {
-        shakeTl.play();
-      },
     })
       .to(birdEl, {
-        x: 600,
-        y: -1000,
-        duration: 2,
+        x: window.innerWidth,
+        y: -window.innerHeight,
+        duration: 1.5,
         ease: 'power1.inOut',
       })
       .to(
@@ -147,10 +135,9 @@ export default function ReceiveEnvelopeAnimationOverlay({
         {
           x: 0,
           y: 0,
-          duration: 2,
+          duration: 1.5,
           ease: 'power2.out',
           onComplete: () => {
-            shakeTl.pause();
             gsap.to(envelopeEl, {
               rotateZ: 0,
               duration: 0.2,
@@ -206,7 +193,7 @@ export default function ReceiveEnvelopeAnimationOverlay({
 
       tl.to(envelopeEl, {
         x: -2000,
-        duration: 2,
+        duration: 1.5,
         ease: 'bounce.out',
         onStart: () => {
           if (envelopeEl) envelopeEl.style.display = 'block';
