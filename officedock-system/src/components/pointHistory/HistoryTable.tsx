@@ -83,7 +83,6 @@ export const HistoryTable = ({
       clearTimeout(debounceTimer);
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
   return (
     <div
       style={{
@@ -125,7 +124,7 @@ export const HistoryTable = ({
       {/* Table */}
       <div
         ref={resultsContainerRef}
-        className={`overflow-y-auto overflow-x-hidden customized-scrollbar h-fit max-h-[calc(100%_-_80px)] w-full mt-3 flex flex-col gap-[2px] ${!isLoadingList && !historyList.length ? 'bg-white h-full' : ''}`}>
+        className={`overflow-y-auto overflow-x-hidden customized-scrollbar h-fit max-h-[calc(100%_-_80px)] w-full mt-3 flex flex-col gap-[2px] ${!isLoadingList && !historyList.length ? 'h-full' : ''}`}>
         {isLoadingList ? (
           <div>
             <RowSkeleton

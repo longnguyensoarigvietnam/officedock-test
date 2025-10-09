@@ -68,7 +68,7 @@ export const MyPageMenu = ({
                     </p>
                   </>
                 )}
-              <div className="w-fit h-fit absolute top-0 left-1/2 transform -translate-y-1/2 -translate-x-1/2">
+              <div className="w-[48px] h-[48px] absolute -top-[20px] left-1/2 transform -translate-x-1/2">
                 <ImageRound
                   name={page.iconName}
                   src={page.iconSrc}

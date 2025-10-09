@@ -8,6 +8,8 @@ import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import usePointHistoryList from '@hooks/usePointHistoryList';
 
+import { TransactionType } from '@constants/enums';
+
 import { formatShowDateJapanese } from '@utils/date';
 
 const PointHistory = () => {
@@ -106,9 +108,17 @@ const PointHistory = () => {
                       </div>
                       <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
                       <div className="w-[21%] py-[6px]">
-                        <p className="text-sm font-medium">
-                          {history.transactionType}
-                        </p>
+                        {history.transactionType ==
+                        TransactionType.PLAN_AUTO_GRANTED_COIN_EXPIRATION ? (
+                          <div className="text-sm font-medium">
+                            <p>プラン自動付与</p>
+                            <p>コイン失効</p>
+                          </div>
+                        ) : (
+                          <p className="text-sm font-medium">
+                            {history.transactionType}
+                          </p>
+                        )}
                       </div>
                       <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
                       <div className="w-[21%] py-[6px]">

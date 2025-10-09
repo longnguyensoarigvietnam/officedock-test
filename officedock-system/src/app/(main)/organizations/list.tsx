@@ -439,7 +439,7 @@ const ListOrganizations = () => {
                       <div
                         ref={organizationNameInputRef}
                         className="flex items-center gap-[6px]">
-                        <div className="relative w-10 h-10 inline-block ml-[-7px]">
+                        <div className="relative w-10 h-10 inline-block hover:cursor-pointer ml-[-7px]">
                           <div className="relative">
                             {previewAvatarUrl ? (
                               <CustomUserAvatar
