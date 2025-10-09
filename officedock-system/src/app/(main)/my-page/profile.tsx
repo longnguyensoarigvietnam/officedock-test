@@ -403,13 +403,13 @@ const MyPage = () => {
                 }}
                 className="absolute top-[calc(100%_-_531px)] left-[555px] p-[10px] rounded-[14px] w-[258px] h-fit ">
                 <p className="text-white text-[13px] font-bold">マイルくん</p>
-                <div className="mt-[10px] w-full bg-white rounded-[5px] p-4 text-[13px] font-semibold text-black">
+                <div className="mt-[10px] w-full bg-white rounded-[5px] p-3 text-[13px] font-semibold text-black">
                   {receivedThanksMessageList?.length
                     ? '新しいサンクスメッセージが届いているよ！'
                     : 'ポイントが貯まると、素敵な商品と交換できるよ！'}
                 </div>
               </div>
-              <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[25px] w-[22px] top-[calc(100%_-_417px)] left-[585px]"></div>
+              <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[25px] w-[22px] top-[calc(100%_-_425px)] left-[585px]"></div>
             </>
             {/* Seagull icon */}
             {receivedThanksMessageList?.length ? (
@@ -429,7 +429,7 @@ const MyPage = () => {
           <ImageRound
             name="Tweet icon"
             src={'/icons/tweet.svg'}
-            className={`w-[88px] h-[94px] z-10 hover:cursor-pointer absolute bottom-[0px] right-[20px]`}
+            className={`w-[88px] h-[94px] z-10 hover:cursor-pointer absolute bottom-0 right-[20px]`}
             onClick={() => setOpenCreateTweetModal(true)}
           />
         </div>

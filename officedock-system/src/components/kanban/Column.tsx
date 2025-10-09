@@ -439,7 +439,7 @@ const Column = ({
                     : 'calc(100vh - 280px)',
               }}
               className={`flex-grow overflow-y-auto w-[100%]
-                ${isMyRoutine && 'bg-[#EBF1F7] '}
+                ${isMyRoutine && 'bg-[#EBF1F7] rounded-bl-[14px] rounded-br-[14px] '}
                  overflow-x-hidden scrollbar-gutter-stable ${
                    snapshot.isDraggingOver ? 'bg-gray-200' : ''
                  }`}>

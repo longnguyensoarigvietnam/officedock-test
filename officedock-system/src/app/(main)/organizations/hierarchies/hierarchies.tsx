@@ -1,16 +1,18 @@
 'use client';
 import TreeModel from 'tree-model';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import '../../../../components/TreeNode/styles/treeNode.css';
 
 import { TeamItem } from '@components/TreeNode/TeamItem';
 
 import { ConfigNode } from '@interfaces/organization';
 import useDetailHierarchiesOrganization from '@hooks/useDetailHierarchiesOrganization';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 export default function HierarchyOrganization() {
   const [root, setRoot] = useState<any>(null);
   const [listItemRoot, setListItemRoot] = useState<ConfigNode[]>([]);
+  const { expanded } = useContext(GlobalStateContext);
 
   useDetailHierarchiesOrganization({
     onSuccess: (data) => {
@@ -41,7 +43,8 @@ export default function HierarchyOrganization() {
 
   return (
     <>
-      <div className="bg-white p-[30px] overflow-auto max-w-[calc(100vw_-_288px)] min-h-[538px] min-w-[1152px]  rounded-[30px]">
+      <div
+        className={`bg-white p-[30px] overflow-auto ${expanded ? 'max-w-[calc(100vw_-_288px)]' : 'max-w-[calc(100vw_-_172px)]'} min-h-[538px] min-w-[1152px]  rounded-[30px]`}>
         <p className="text-base font-medium text-[#77858F] mb-[30px]">
           チーム階層
         </p>

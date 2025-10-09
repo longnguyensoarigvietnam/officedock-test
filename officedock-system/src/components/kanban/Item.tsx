@@ -391,7 +391,7 @@ const Item = ({
                     handleClick();
                   }
                 }}>
-                <div className="flex gap-1 items-start">
+                <div className="flex gap-2 items-start">
                   {isShowSchedule ? (
                     <div className="w-fit flex-shrink-0">
                       <ClockIconColor color={largeColor} />
@@ -460,7 +460,7 @@ const Item = ({
                               ? '13px'
                               : '10px',
                         }}
-                        className="flex gap-2 items-center">
+                        className="flex gap-1 items-center">
                         締切
                         <span
                           className={`hover:cursor-pointer ${checkDeadline && 'text-primary'}`}>
@@ -499,7 +499,7 @@ const Item = ({
                   </div>
                 )}
                 {selectedOptionZoom.value !== 50 && (
-                  <div className="flex justify-between items-center mt-[2px]">
+                  <div className="flex justify-between items-center mt-[6px]">
                     <DynamicTooltip content="ステータスを変更" placement="top">
                       <div
                         className="w-20 max-w-20 h-[21px] rounded"

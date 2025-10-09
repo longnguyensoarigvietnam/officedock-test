@@ -673,6 +673,8 @@ const TaskPageDataHeader = () => {
                 <Dropdown
                   options={optionsTaskMe.filter((item) => item.type)}
                   className={`!w-[220px] h-full !p-2 !rounded-[6px] !border-[1px] !border-[#63B7EE] !text-sm !font-semibold`}
+                  labelOptionClass="!text-sm"
+                  classNameOption="!rounded-[6px]"
                   placeholder="打ち合わせ"
                   disabled={!isTaskPage || isTaskTeamPage}
                   searchOption

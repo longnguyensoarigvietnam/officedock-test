@@ -1030,7 +1030,7 @@ const ActionsTaskModal = ({
               ? formatShowDateJapanese(dataTask.createdAt)
               : formatShowDateJapanese(new Date())}
           </p>
-          <div className=" h-3 mt-[2px] border-solid  border border-white"></div>
+          <div className=" h-3 mt-[2px] border-solid  border-r border-white"></div>
           <p className="">
             実施時間{' '}
             {action === 'EDIT' && dataTask?.taskDuration
@@ -1077,7 +1077,7 @@ const ActionsTaskModal = ({
         ref={modalRef}
         onSubmit={handleSubmit(onSubmitData)}
         className="px-8 pb-8 !h-[calc(100vh_-_150px)] overflow-y-auto">
-        <header className="flex sticky z-[999] top-[0px] pb-5 pt-[30px] items-center gap-2 justify-between bg-white">
+        <header className="flex sticky z-[999] top-[0px] pb-5 pt-[30px] items-center gap-5 justify-between bg-white">
           {/* Prevent default focus with fake input */}
           <input
             id="someOtherElement"
@@ -1108,7 +1108,7 @@ const ActionsTaskModal = ({
               (action === ActionTask.COPY || action === ActionTask.CREATE) && (
                 <Button
                   type="submit"
-                  className="w-[82px] h-[36px] !text-[12px] !px-2">
+                  className="w-[86px] h-[36px] !text-sm !px-2">
                   保存
                 </Button>
               )}
@@ -1116,7 +1116,7 @@ const ActionsTaskModal = ({
               <Button
                 type="submit"
                 disabled={!isFormTouched}
-                className="w-[82px] h-[36px] !text-[12px] !px-2">
+                className="w-[86px] h-[36px] !text-sm !px-0">
                 保存
               </Button>
             )}
@@ -1124,26 +1124,26 @@ const ActionsTaskModal = ({
               variant="outline"
               type="button"
               onClick={onClose}
-              className="w-[82px] !rounded-md  h-[34px] !text-[12px] !px-2">
+              className="w-[86px] !rounded-md  h-[34px] !text-sm !px-0">
               キャンセル
             </Button>
           </div>
         </header>
-        <div className="text-xs font-normal flex flex-col gap-4">
+        <div className="text-xs font-normal flex flex-col gap-[35px]">
           {/* Organization */}
           <div className="flex gap-[10px] items-center">
             <div className="w-full max-w-[100px]"></div>
-            <div className="w-full max-w-[515px]">
+            <div className="w-full max-w-[525px]">
               <Controller
                 control={control}
                 name={'organization'}
                 rules={{ required: ORGANIZATION_REQUIRED_MESSAGE }}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-[34px] !py-1 text-xs max-w-[515px] rounded-md !border-none !shadow-none !w-fit !pl-0"
-                    classNameTextData="!text-xs !w-fit"
-                    classNameOption="!text-xs !w-fit max-w-[515px] !z-[998]"
-                    classNameError="!text-xs !w-fit"
+                    className="h-[34px] !py-1 text-sm max-w-[525px] rounded-md !border-none !shadow-none !w-fit !pl-0"
+                    classNameTextData="!text-sm !w-fit"
+                    classNameOption="!text-sm !w-fit max-w-[525px] !z-[998]"
+                    classNameError="!text-sm !w-fit"
                     placeholder="選択してください"
                     disabled={isCheckActionPermission}
                     options={dataOptionsOrganizations}
@@ -1177,7 +1177,7 @@ const ActionsTaskModal = ({
             <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
               業務の種類
             </div>
-            <div className="w-full max-w-[515px] flex flex-col gap-4">
+            <div className="w-full max-w-[525px] flex flex-col gap-2">
               {/* Category large */}
               <Controller
                 control={control}
@@ -1185,11 +1185,11 @@ const ActionsTaskModal = ({
                 render={({ field: { value, onChange } }) => {
                   return (
                     <Dropdown
-                      placeholder="大カテゴリー"
-                      className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F] rounded-md"
-                      classNameTextData="!text-xs"
-                      classNameOption="!text-xs !z-[998]"
-                      classNameError="!text-xs"
+                      placeholder="大カテゴリ"
+                      className="h-[34px] !py-1 text-sm !border-[1px] !border-[#77858F] rounded-md !shadow-none"
+                      classNameTextData="!text-sm"
+                      classNameOption="!text-sm !z-[998]"
+                      classNameError="!text-sm"
                       isLoading={isFetchingCreationDataCommon}
                       disabled={isCheckActionPermission}
                       options={dataOptionsCategoryLarge}
@@ -1225,10 +1225,10 @@ const ActionsTaskModal = ({
                       return (
                         <Dropdown
                           placeholder="中カテゴリ"
-                          className="h-[34px] !py-1 text-xs "
-                          classNameTextData="!text-xs"
-                          classNameOption="!text-xs !z-[998]"
-                          classNameError="!text-xs"
+                          className="h-[34px] !py-1 text-sm !shadow-none "
+                          classNameTextData="!text-sm"
+                          classNameOption="!text-sm !z-[998]"
+                          classNameError="!text-sm"
                           isLoading={isFetchingCreationDataCommon}
                           disabled={isCheckActionPermission}
                           options={dataOptionsCategoryMedium}
@@ -1260,10 +1260,10 @@ const ActionsTaskModal = ({
                     name={'categories.SMALL'}
                     render={({ field: { value, onChange } }) => (
                       <Dropdown
-                        className="h-[34px] !py-1 text-xs "
-                        classNameTextData="!text-xs"
-                        classNameOption="!text-xs !z-[998]"
-                        classNameError="!text-xs"
+                        className="h-[34px] !py-1 text-sm !shadow-none "
+                        classNameTextData="!text-sm"
+                        classNameOption="!text-sm !z-[998]"
+                        classNameError="!text-sm"
                         isLoading={isFetchingCreationDataCommon}
                         disabled={isCheckActionPermission}
                         options={dataOptionsCategorySmall}
@@ -1292,9 +1292,9 @@ const ActionsTaskModal = ({
                 <div className="w-[461px]">
                   <MultiSelectDropdown
                     className="!h-[34px]"
-                    labelClass="!min-h-0"
-                    valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"
-                    optionClassName="!border-[1px] !border-[#77858F] z-[998]"
+                    labelClass="!min-h-0 !text-sm"
+                    valueClassName="!border-[1px] !text-sm !border-[#77858F] !py-0 flex items-center"
+                    optionClassName="!border-[1px] !text-sm !border-[#77858F] z-[998]"
                     disabled={isCheckActionPermission}
                     options={dataOptionsTagIds}
                     isLoading={isFetchingCreationDataCommon}
@@ -1305,7 +1305,7 @@ const ActionsTaskModal = ({
                         : UNREGISTERED
                     }
                     noDataClass="w-[461px]"
-                    labelOptionClass="break-words w-[410px]"
+                    labelOptionClass="break-words !text-sm w-[410px]"
                     selectedOptions={watch('tagIds') ?? []}
                     onChange={(selected) => {
                       let updatedTagIds = [];
@@ -1332,7 +1332,7 @@ const ActionsTaskModal = ({
                           return (
                             <div
                               key={tag.value}
-                              className="rounded-xl max-w-[515px] bg-[#EBF2F7] px-2.5 py-1.5 flex gap-2">
+                              className="rounded-xl max-w-[525px] bg-[#EBF2F7] px-2.5 py-1.5 flex gap-2">
                               <p className="w-full break-all">{tag.label}</p>
                               <button
                                 type="button"
@@ -1457,7 +1457,7 @@ const ActionsTaskModal = ({
                 <div className="w-full max-w-[100px] text-[14px] font-medium">
                   締切日時
                 </div>
-                <div className="w-full max-w-[515px] items-start flex gap-1 justify-between">
+                <div className="w-full max-w-[525px] items-start flex gap-1 justify-between">
                   <div className="max-w-[315px]">
                     <div className="flex gap-1 items-center">
                       <div className="w-[140px]">
@@ -1695,13 +1695,13 @@ const ActionsTaskModal = ({
                   <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
                     実施予定日時
                   </div>
-                  <div className="w-full max-w-[515px] flex flex-col gap-1 items-start ">
+                  <div className="w-full max-w-[525px] flex flex-col gap-1 items-start ">
                     {planFields.map((field, index) => {
                       return (
                         <div
                           key={field.id}
                           style={{ zIndex: planFields.length - index }}
-                          className="w-full max-w-[515px] flex gap-2 items-start">
+                          className="w-full max-w-[525px] flex gap-2 items-start">
                           <div className="max-w-[220px]">
                             <div className="flex gap-1">
                               <div className="w-[140px]">
@@ -2153,7 +2153,7 @@ const ActionsTaskModal = ({
                   <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
                     実施予定日時
                   </div>
-                  <div className="w-full max-w-[515px] flex flex-col gap-3 items-start">
+                  <div className="w-full max-w-[525px] flex flex-col gap-3 items-start">
                     <div className="w-full flex justify-between">
                       <div className="flex gap-3">
                         <div className="w-[140px]" style={{ zIndex: 500 }}>
@@ -2492,13 +2492,13 @@ const ActionsTaskModal = ({
                     </div>
                     {watch('repeatType') &&
                     watch('repeatType')?.label == TaskRepetitiveType.ONCE ? (
-                      <div className="w-full max-w-[515px] flex flex-col gap-1 items-start ">
+                      <div className="w-full max-w-[525px] flex flex-col gap-1 items-start ">
                         {planFields.map((field, index) => {
                           return (
                             <div
                               key={field.id}
                               style={{ zIndex: planFields.length - index }}
-                              className="w-full max-w-[515px] flex gap-2 items-start">
+                              className="w-full max-w-[525px] flex gap-2 items-start">
                               <div className="max-w-[220px]">
                                 <div className="flex gap-1">
                                   <div className="w-[140px]">
@@ -3183,7 +3183,7 @@ const ActionsTaskModal = ({
                                                 {!isCheckActionPermission &&
                                                 todo.isChecked ? (
                                                   <ImageRound
-                                                    className="w-[19px] h-[17px] cursor-grab hover:cursor-pointer"
+                                                    className="w-fit h-fit cursor-grab hover:cursor-pointer"
                                                     src="/icons/complete-blue.svg"
                                                     name="complete item"
                                                     onClick={() => {
@@ -3192,7 +3192,7 @@ const ActionsTaskModal = ({
                                                   />
                                                 ) : (
                                                   <ImageRound
-                                                    className="w-[19px] h-[17px] cursor-grab hover:cursor-pointer"
+                                                    className="w-fit h-fit cursor-grab hover:cursor-pointer"
                                                     src="/icons/complete.svg"
                                                     name="complete item"
                                                     onClick={() => {
@@ -3229,7 +3229,7 @@ const ActionsTaskModal = ({
                                                   }
                                                 }}
                                                 rows={3}
-                                                className="resize-none focus:outline-none focus:shadow-none focus:border-none focus:ring-0 placeholder-gray-300 border-[#F8FAFC] bg-[#F8FAFC] shadow-none w-full rounded-md"
+                                                className={`resize-none  ${todo.isChecked && 'line-through'} line-through focus:outline-none focus:shadow-none focus:border-none focus:ring-0 placeholder-gray-300 border-[#F8FAFC] bg-[#F8FAFC] shadow-none w-full rounded-md`}
                                               />
                                               <div className="mt-[2.5px] ml-2 flex items-center">
                                                 {!isCheckActionPermission && (
@@ -3309,7 +3309,7 @@ const ActionsTaskModal = ({
                   <div className="flex justify-center">
                     <Button
                       type="submit"
-                      className="w-[200px] !rounded-md h-[46] !text-[15px] !px-2">
+                      className="w-[200px] !rounded-md h-[46] !text-sm !px-2">
                       保存
                     </Button>
                   </div>
@@ -3319,7 +3319,7 @@ const ActionsTaskModal = ({
                   <Button
                     type="submit"
                     disabled={!isFormTouched}
-                    className="w-[200px] !rounded-md h-[46] !text-[15px] !px-2">
+                    className="w-[200px] !rounded-md h-[46] !text-sm !px-2">
                     保存
                   </Button>
                 </div>

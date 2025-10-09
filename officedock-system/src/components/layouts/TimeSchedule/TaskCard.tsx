@@ -556,7 +556,7 @@ const TaskCard = ({
                 {!isEvent && resourcePlan == true && (
                   <div
                     style={{ backgroundColor: largeColor || 'white' }}
-                    className="w-2 h-2 rounded-full mt-[5px] flex-shrink-0"></div>
+                    className="w-2 h-2 rounded-full  flex-shrink-0"></div>
                 )}
                 <p
                   style={{
@@ -618,7 +618,7 @@ const TaskCard = ({
                   {!isEvent && resourcePlan && isShowSmallData && (
                     <div
                       style={{ backgroundColor: largeColor || 'white' }}
-                      className="w-2 h-2 rounded-full mt-[5px] flex-shrink-0"></div>
+                      className="w-2 h-2 rounded-full flex-shrink-0"></div>
                   )}
                   {!isShowSmallData ? (
                     <p>...</p>

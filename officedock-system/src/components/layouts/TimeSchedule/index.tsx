@@ -3788,13 +3788,13 @@ const TimeSchedule = memo(
                         </DynamicTooltip>
                       </div>
 
-                      <div className="absolute w-7 z-50 right-[50px] top-[10px] time-schedule">
+                      <div className="absolute w-7 z-50 right-[50px] top-1/2 transform -translate-y-1/2 time-schedule">
                         <DatePicker
                           className="h-10 z-50 "
                           isShowInput={false}
                           selected={displayHeaderDateStart}
                           tooltipMsg="カレンダーから日付を選択"
-                          iconClassName="!static !w-8"
+                          iconClassName=" !w-fit !h-fit rounded-none"
                           disabled={isLoadingSchedule}
                           onChange={(e) => {
                             if (!isLoadingSchedule) {
@@ -3837,7 +3837,7 @@ const TimeSchedule = memo(
                           </div>
                         </DynamicTooltip>
                       </div>
-                      <Heading as="h4" className="text-sm font-medium">
+                      <Heading as="h4" className="text-[20px] font-medium">
                         {isExtendCalendar
                           ? `${formattedStartDate} - ${formattedEndDate}`
                           : formattedCurrentDate}
@@ -4059,7 +4059,7 @@ const TimeSchedule = memo(
           </div>
           {!isLoadingSchedule && (
             <div
-              className={`w-[180px] px-3 z-20 h-[38px] absolute rounded-[100px] ${isExtendCalendar ? 'right-32 bottom-[13px]' : 'right-[10px] bottom-[5px]'} bg-white flex items-center `}>
+              className={`w-[180px] px-3 z-20 h-[38px] absolute rounded-[100px] right-5 bottom-5 bg-white flex items-center `}>
               <RangeSlider
                 min={18}
                 max={100}

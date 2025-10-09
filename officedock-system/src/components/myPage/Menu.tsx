@@ -52,7 +52,9 @@ export const MyPageMenu = ({
               className="relative w-[110px] cursor-pointer hover:opacity-80 h-fit rounded-[10px] pb-[15px] pt-[38px] flex flex-col justify-end items-center text-white text-[13px] font-bold">
               <div className="flex flex-col gap-1 items-center">
                 {page.name.split(' ').map((section, index) => (
-                  <p key={index} className='leading-none'>{section}</p>
+                  <p key={index} className="leading-none">
+                    {section}
+                  </p>
                 ))}
               </div>
               {/* Child */}
@@ -66,7 +68,7 @@ export const MyPageMenu = ({
                     </p>
                   </>
                 )}
-              <div className="w-[48px] h-[48px] absolute -top-[20px] left-1/2 transform -translate-x-1/2">
+              <div className="w-fit h-fit absolute top-0 left-1/2 transform -translate-y-1/2 -translate-x-1/2">
                 <ImageRound
                   name={page.iconName}
                   src={page.iconSrc}

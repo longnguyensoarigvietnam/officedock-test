@@ -11,6 +11,7 @@ import ConfirmBuyItemUserModal from '@components/modals/ConfirmBuyItemUserModal'
 import { RenderAccessoriesPreview } from '@components/custom/UserCustomizePreview';
 import ActionModalSuccessItem from '@components/modals/ActionModalSuccessItem';
 import { TwinklingIcon } from '@components/common/TwinklingIcon';
+import BackToPage from '@components/custom/BackToPage';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ItemAvatarType, TabTypeShopItem } from '@constants/enums';
@@ -205,29 +206,22 @@ const ShopItemPage = () => {
             width: '100%',
             height: '100%',
           }}
-          className=" relative  h-[calc(100vh-120px)] w-full">
+          className=" relative  h-[calc(100vh-120px)] w-full rounded-bl-[30px] rounded-r-[30px]">
           <div className="flex absolute top-0 left-0 ">
-            <div className="h-20 z-[30] bg-white w-[358px] py-4 text-[#77858F] font-medium flex items-center justify-center rounded-br-[30px]">
-              <div
-                onClick={() => router.push(pageRouters.MY_PAGE.href)}
-                className="flex items-center gap-[10px]">
+            <div className="h-20 z-[30] bg-white w-[358px] py-4 text-[#77858F] font-medium flex gap-5 items-center justify-center rounded-br-[30px]">
+              <BackToPage />
+              <div className="flex items-center gap-[10px]">
                 <ImageRound
-                  name="Left icon"
-                  src={'/icons/chevron-left.svg'}
-                  className={`w-[8px] h-[16px] !cursor-pointer`}
+                  name="Shop icon"
+                  src={'/icons/shopping-bag-title.svg'}
+                  className={`w-fit h-fit rounded-none `}
                 />
-                <span className="text-sm text-black cursor-pointer">戻る</span>
+                <span className="text-[22px] text-black ">
+                  アイテムショップ
+                </span>
               </div>
-              <ImageRound
-                name="Shop icon"
-                src={'/icons/shopping-bag.svg'}
-                className={`w-[26px] h-[26px] ml-5`}
-              />
-              <span className="text-[22px] text-black ml-[10px]">
-                アイテムショップ
-              </span>
             </div>
-            <div className="w-fit mt-5 ml-5 px-5 z-[30] font-bold text-base bg-white rounded-full h-10 flex items-center justify-center gap-[9px]">
+            <div className="w-fit mt-5 ml-5 px-5 z-[30] font-bold text-base bg-white rounded-full h-10 flex items-center justify-center gap-[10px]">
               <ImageRound
                 name="Pearl icon"
                 src={'/icons/pearl.svg'}
@@ -266,7 +260,7 @@ const ShopItemPage = () => {
                             : '#EBF1F7',
                         }}
                         variant={isActive ? 'primary' : 'outline'}
-                        className={`font-bold  !border-none w-fit h-[30px] text-xs  !rounded-[20px] !py-0 !px-[18px] ${
+                        className={`font-bold  !border-none w-fit h-[25px] text-xs  !rounded-[20px] !py-0 !px-[18px] ${
                           isActive ? '' : '!text-[#77858F]  !border-none'
                         }`}>
                         {tab.name}

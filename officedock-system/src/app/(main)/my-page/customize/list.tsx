@@ -22,6 +22,7 @@ import { CustomizeItemResponse, ItemUser } from '@interfaces/shop';
 import api from '@base/api';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
+import BackToPage from '@components/custom/BackToPage';
 
 const CustomizeItemPage = () => {
   const router = useRouter();
@@ -161,27 +162,20 @@ const CustomizeItemPage = () => {
             width: '100%',
             height: '100%',
           }}
-          className=" relative  h-[calc(100vh-120px)] w-full">
+          className=" relative  h-[calc(100vh-120px)] w-full rounded-bl-[30px] rounded-r-[30px]">
           <div className="flex absolute top-0 left-0 ">
-            <div className="h-20 z-[30] bg-white w-fit px-10 py-4 text-[#77858F] font-medium flex items-center gap-[10px] rounded-br-[30px]">
-              <div
-                onClick={() => router.push(pageRouters.SHOP_ITEM.href)}
-                className="flex items-center gap-[10px]">
+            <div className="h-20 z-[30] w-[468px] bg-white pl-8 pr-10 py-4 text-[#77858F] font-medium flex items-center gap-5 rounded-br-[30px]">
+              <BackToPage />
+              <div className="flex items-center gap-[10px]">
                 <ImageRound
-                  name="Left icon"
-                  src={'/icons/chevron-left.svg'}
-                  className={`w-fit h-fit !cursor-pointer`}
+                  name="Shop icon"
+                  src={'/icons/shopping-bag-title.svg'}
+                  className={`w-fit h-fit rounded-none `}
                 />
-                <span className="text-sm text-black cursor-pointer">戻る</span>
+                <span className="text-[22px] text-black">
+                  所持アイテムをカスタマイズ
+                </span>
               </div>
-              <ImageRound
-                name="Shop icon"
-                src={'/icons/shop.svg'}
-                className={`w-fit h-fit ml-[10px]`}
-              />
-              <span className="text-[22px] text-black ml-1">
-                所持アイテムをカスタマイズ
-              </span>
             </div>
             <div className="w-fit mt-5 ml-5 px-5 z-[30] font-bold text-base bg-white rounded-full h-10 flex items-center justify-center gap-[9px]">
               <ImageRound

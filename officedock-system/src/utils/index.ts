@@ -491,7 +491,7 @@ export const getPermissionOptionDropdown = (
       ScreenName.CALENDAR_MANAGEMENT,
       ScreenName.MVP_VOTING_MANAGEMENT,
       ScreenName.PAYMENT_MANAGEMENT,
-      ScreenName.POINT_MANAGEMENT
+      ScreenName.POINT_MANAGEMENT,
     ].includes(screen)
   ) {
     return includePermissions([
@@ -531,11 +531,7 @@ export const getPermissionOptionDropdown = (
       PermissionType.NOT_ALLOWED,
     ]);
   }
-  if (
-    [ScreenName.SURVEY_MANAGEMENT].includes(
-      screen,
-    )
-  ) {
+  if ([ScreenName.SURVEY_MANAGEMENT].includes(screen)) {
     return includePermissions([
       PermissionType.EDITABLE,
       PermissionType.ONLY_SELF_CAN_EDIT,
@@ -2342,19 +2338,15 @@ export function generateVerticalGradient(hexColor: string): string {
   const adjustColor = (
     color: { r: number; g: number; b: number },
     amount: number,
-  ) => {
-    return {
-      r: Math.min(255, Math.max(0, color.r + amount)),
-      g: Math.min(255, Math.max(0, color.g + amount)),
-      b: Math.min(255, Math.max(0, color.b + amount)),
-    };
-  };
+  ) => ({
+    r: Math.min(255, Math.max(0, color.r + amount)),
+    g: Math.min(255, Math.max(0, color.g + amount)),
+    b: Math.min(255, Math.max(0, color.b + amount)),
+  });
 
   const rgb = hexToRgb(hexColor);
-  const dark = rgbToHex(adjustColor(rgb, -20));
-  const light = rgbToHex(adjustColor(rgb, 30));
-
-  return `linear-gradient(to bottom, ${dark} 0%, ${hexColor} 50%, ${light} 100%)`;
+  const lighter = rgbToHex(adjustColor(rgb, 50));
+  return `linear-gradient(180deg, ${hexColor} 0%, ${lighter} 100%)`;
 }
 
 // Get total day remaining

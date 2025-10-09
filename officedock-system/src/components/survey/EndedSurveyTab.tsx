@@ -129,7 +129,7 @@ const EndedSurveyTab = ({ handleAnswer, handleDelete }: EndedSurveyTabProp) => {
                       {item.status.mySurvey && (
                         <Button
                           variant="outline"
-                          className="w-[104px] h-[22px] !px-0 !bg-[#EBF1F7] !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none ]">
+                          className="w-[104px] h-[22px] !cursor-default !px-0 !bg-[#EBF1F7] !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none ]">
                           マイアンケート
                         </Button>
                       )}
@@ -137,7 +137,7 @@ const EndedSurveyTab = ({ handleAnswer, handleDelete }: EndedSurveyTabProp) => {
                         <>
                           <Button
                             variant="option"
-                            className="w-[104px] h-[22px] !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none !bg-[#FFEE6F]">
+                            className="w-[104px] h-[22px] !cursor-default !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none !bg-[#FFEE6F]">
                             受付中
                           </Button>
                           <p className="text-[#77858F]">
@@ -149,7 +149,7 @@ const EndedSurveyTab = ({ handleAnswer, handleDelete }: EndedSurveyTabProp) => {
                         <>
                           <Button
                             variant="outline"
-                            className="w-[104px] h-[22px] !px-0 !bg-[#EBF1F7] !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none ]">
+                            className="w-[104px] h-[22px] !cursor-default !px-0 !bg-[#EBF1F7] !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none ]">
                             受付終了
                           </Button>
                         </>
