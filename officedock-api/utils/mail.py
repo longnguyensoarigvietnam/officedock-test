@@ -326,7 +326,7 @@ class PaymentMailService(MailService):
         message = f"""
             <p>{company_name}<br>{responsible_name} 様</p>
             <p>いつも{self.SYSTEM_NAME}をご利用いただき、ありがとうございます。</p>
-            <p>ご利用アカウント数の増加に伴い、貴社のご契約プランが以下の通り自動でアップグレードされました。</p>
+            <p>ご利用アカウント数の増加に伴い、貴社のご契約プランが以下の通り自動でアップグレードされましたことをお知らせいたします。</p>
             <p>
                 ■ プラン変更内容<br>
                 変更前プラン： {old_plan}<br>
