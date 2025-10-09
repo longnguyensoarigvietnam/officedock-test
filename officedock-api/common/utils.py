@@ -861,67 +861,78 @@ def get_user_organizations_with_descendants(user: User) -> list[int]:
 
 def calculate_company_dates(company, reference_date=None):
     """
-    Calculate closing date and deadline date for a company.
+    Calculate important accounting-related dates for a company.
+
+    Logic:
+    - Determines the company's monthly closing date.
+    - Calculates the date right after closing.
+    - Determines the deadline for post-closing data edits.
+    - Calculates the start date for next-month calculations.
+    - Handles edge cases like months with fewer days (e.g., February).
 
     Args:
-        company: Company instance
+        company: Company instance with `close_date` and `editable_after_closing` attributes.
+        reference_date (date, optional): The base date for calculation (defaults to today).
 
     Returns:
         dict: {
-            'close_date': date,
-            "date_after_closing": date,
-            'date_after_data_edit_deadline': date,
-            'start_date_calculation_deadline': date,
+            'close_date': date,                       # Closing date of the current month
+            'date_after_closing': date,               # Day after closing date
+            'date_after_data_edit_deadline': date,    # Last day allowed for editing data
+            'start_date_calculation_deadline': date,  # Start of next calculation period
         }
     """
+
+    # Step 1: Define the reference date
     if reference_date is None:
         reference_date = timezone.now().date()
 
-    # Company-specific config (with fallback to global settings)
+    # Step 2: Get company-specific or default settings
     company_close_day = int(
         getattr(company, "close_date", settings.CLOSING_DATE)
     )
     company_editable_after_closing = int(
         getattr(
-            company,
-            "editable_after_closing",
-            settings.EDITABLE_AFTER_CLOSING,
+            company, "editable_after_closing", settings.EDITABLE_AFTER_CLOSING
         )
     )
 
-    # Last day of current month (avoid invalid date like Feb 30)
+    # Step 3: Calculate current month's closing date
+    # Prevent invalid dates (e.g., Feb 30)
     last_day_of_month = monthrange(reference_date.year, reference_date.month)[1]
     close_day = min(company_close_day, last_day_of_month)
-
-    # Closing date for this month
     close_date = date(reference_date.year, reference_date.month, close_day)
 
-    # The day right after the closing date
+    # Step 4: Calculate previous month's closing date
+    reference_date_prev = reference_date - relativedelta(months=1)
+    last_day_of_prev_month = monthrange(
+        reference_date_prev.year, reference_date_prev.month
+    )[1]
+    close_day_prev = min(company_close_day, last_day_of_prev_month)
+    close_date_prev_month = date(
+        reference_date_prev.year, reference_date_prev.month, close_day_prev
+    )
+
+    # Step 5: Calculate derived dates
     date_after_closing = close_date + timedelta(days=1)
 
-    # Deadline date = closing date + editable days
+    # Deadline for editing data (after closing date)
     date_after_data_edit_deadline = close_date + timedelta(
         days=company_editable_after_closing + 1
     )
+    date_after_data_edit_deadline_prev_month = (
+        close_date_prev_month
+        + timedelta(days=company_editable_after_closing + 1)
+    )
 
-    # Previous period start date logic
-    # - If close_date is not the last day of month: previous start = (close_date - 1 month) + 1 day
-    # - If close_date is the last day of month: previous start = first day of current month
-    is_end_of_month = close_date.day == last_day_of_month
-    if is_end_of_month:
-        close_date = close_date - relativedelta(months=1)
-        date_after_closing = date_after_closing - relativedelta(months=1)
-        date_after_data_edit_deadline = (
-            date_after_data_edit_deadline - relativedelta(months=1)
-        )
-        start_date_calculation_deadline = date(
-            reference_date.year, reference_date.month, 1
-        ) - relativedelta(months=1)
-    else:
-        start_date_calculation_deadline = (
-            close_date - relativedelta(months=1)
-        ) + timedelta(days=1)
+    # The first day after last month’s closing date → marks start of new calculation period
+    start_date_calculation_deadline = close_date_prev_month + timedelta(days=1)
 
+    # Step 6: Handle edge case where current reference date falls into previous month’s edit window
+    if reference_date <= date_after_data_edit_deadline_prev_month:
+        date_after_data_edit_deadline = date_after_data_edit_deadline_prev_month
+
+    # Step 7: Return all calculated dates
     return {
         "close_date": close_date,
         "date_after_closing": date_after_closing,

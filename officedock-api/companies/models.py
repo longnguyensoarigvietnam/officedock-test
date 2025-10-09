@@ -37,6 +37,10 @@ class Company(BaseModel):
     # Number of users currently assigned coins (used to calculate coins per user)
     target_user_count = models.IntegerField(default=0)
 
+    # Define close date and editable after closing
+    close_date = models.IntegerField(default=1)
+    editable_after_closing = models.IntegerField(default=10)
+
     def __str__(self):
         return self.name
 
