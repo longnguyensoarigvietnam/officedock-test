@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { useMutation } from 'react-query';
-import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 
 import Button from '@components/common/Button';
 import Modal from '@components/common/Modal';
@@ -60,6 +60,10 @@ const ActionSettingSurvey = ({ open, onClose, onSuccess }: Props) => {
     control,
     name: 'answers',
   });
+  const listAnswersData = useWatch({
+    control,
+    name: 'answers',
+  });
 
   // Create location API
   const handleCreateSurvey = async (data: SurveyRequestData) => {
@@ -101,10 +105,14 @@ const ActionSettingSurvey = ({ open, onClose, onSuccess }: Props) => {
     });
   };
 
+  const hasEmptyValue = listAnswersData.some(
+    (item) => !item.value || item.value === '' || item.value === '<p></p>',
+  );
+
   return (
     <Modal
       open={open}
-      className="font-primary bg-white w-[500px] max-h-[620px] overflow-y-auto !rounded-lg !py-10 px-[30px]"
+      className="font-primary bg-white w-[500px] max-h-[620px] overflow-y-auto !rounded-[20px] !py-10 px-[30px]"
       isOutSideAction={false}
       onClose={onClose}>
       <form className="survey-custom" onSubmit={handleSubmit(onSubmit)}>
@@ -263,7 +271,16 @@ const ActionSettingSurvey = ({ open, onClose, onSuccess }: Props) => {
             className="h-9 w-[100px] !px-0">
             キャンセル
           </Button>
-          <Button variant="post" type="submit" className="h-9 w-[100px] !px-0">
+          <Button
+            variant="post"
+            type="submit"
+            disabled={
+              !watch('question') ||
+              !watch('endDate') ||
+              !watch('endTime') ||
+              hasEmptyValue
+            }
+            className="h-9 w-[100px] !px-0">
             投稿する
           </Button>
         </div>

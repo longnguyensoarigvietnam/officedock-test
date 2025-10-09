@@ -24,12 +24,14 @@ import useDetailHierarchiesOrganization from '@hooks/useDetailHierarchiesOrganiz
 import api from '@base/api';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 export default function EditNode() {
   const router = useRouter();
   const { showToast } = useToast();
 
   const { setIsLoading } = useContext(LoadingContext);
+  const { expanded } = useContext(GlobalStateContext);
 
   const [root, setRoot] = useState<any>(null);
   const [optionsTreeNode, setOptionsTreeNode] = useState<OptionDropdownType[]>(
@@ -344,18 +346,7 @@ export default function EditNode() {
       }))
       .filter((item) => item.value !== 'treeNode');
 
-    const dataOption = optionsTreeNode.map((item) => ({
-      name: item.label,
-      uuid: item.value as string,
-      type: 'NORMAL',
-      parentUuid: null,
-    }));
-
-    editHierarchyOrganization([
-      ...dataOrganization,
-      ...dataProject,
-      ...dataOption,
-    ]);
+    editHierarchyOrganization([...dataOrganization, ...dataProject]);
   };
 
   const handleResetNode = () => {
@@ -390,6 +381,9 @@ export default function EditNode() {
       children: [],
     };
     setListProject([...listProject, newItem]);
+  };
+  const handleDeleteProject = (uuid: string) => {
+    setListProject((prev) => prev.filter((item) => item.uuid !== uuid));
   };
   // Project hierarchy update item
   const updateItemProject = ({
@@ -565,7 +559,8 @@ export default function EditNode() {
       </div>
       <div className=" flex mt-5 flex-col gap-5 h-[calc(100vh_-_215px)] overflow-y-auto">
         <div className="px-10">
-          <div className="bg-[#F8FAFC] p-[30px] overflow-auto max-w-[calc(100vw_-_288px)] min-h-[538px] min-w-[1152px]  rounded-[30px]">
+          <div
+            className={`bg-[#F8FAFC] p-[30px] overflow-auto ${expanded ? 'max-w-[calc(100vw_-_288px)]' : 'max-w-[calc(100vw_-_172px)]'}  min-h-[538px] min-w-[1152px]  rounded-[30px]`}>
             <p className="text-base font-medium text-[#77858F] mb-[30px]">
               チーム階層
             </p>
@@ -593,49 +588,68 @@ export default function EditNode() {
               )}
             </div>
           </div>
-          <div className="bg-white p-[30px] mt-5 w-full min-h-[190px] rounded-[30px] mb-10">
+          <div className="bg-[#F8FAFC] p-[30px] mt-5 w-full min-h-[190px] rounded-[30px] mb-10">
             <p className="text-base font-medium text-[#77858F] mb-[30px] ">
               プロジェクトチーム
             </p>
             <div className="flex flex-wrap gap-4 w-full">
               {listProject.length > 0 ? (
                 listProject.map((item, index) => (
-                  <div key={index} className={`w-[203px] relative `}>
-                    <Dropdown
-                      options={optionsTreeNode}
-                      className="h-[34px] !py-0  !rounded-md border !border-[#77858F]"
-                      classNameOption={`!z-[30]  bottom-[40px]`}
-                      placeholder="選択してください"
-                      selectedOption={{
-                        label: item.name || '',
-                        value: item.uuid,
-                      }}
-                      placeholderClass="!text-black text-sm font-normal"
-                      onChange={(e) => {
-                        handleSelectChange({
-                          newSelected: {
-                            label: item.name || '',
-                            value:
-                              item.value && item.value === 'treeNode'
-                                ? item.value
-                                : item.uuid,
-                          },
-                          oldSelected: e,
-                        });
-                        updateItemProject({
-                          uuid: item.uuid,
-                          name: e.label,
-                          value: e.value as string,
-                        });
-                      }}
-                    />
+                  <div
+                    key={index}
+                    className={`${index === listProject.length - 1 ? 'w-[248px] ' : 'w-[204px] '} relative flex items-center gap-[10px] `}>
+                    <div className="w-[170px]">
+                      <Dropdown
+                        options={optionsTreeNode}
+                        className="h-[34px] !py-0  !rounded-md border !border-[#77858F]"
+                        classNameOption={`!z-[30]  bottom-[40px]`}
+                        placeholder="選択してください"
+                        selectedOption={{
+                          label: item.name || '',
+                          value: item.uuid,
+                        }}
+                        placeholderClass="!text-black text-sm font-normal"
+                        onChange={(e) => {
+                          handleSelectChange({
+                            newSelected: {
+                              label: item.name || '',
+                              value:
+                                item.value && item.value === 'treeNode'
+                                  ? item.value
+                                  : item.uuid,
+                            },
+                            oldSelected: e,
+                          });
+                          updateItemProject({
+                            uuid: item.uuid,
+                            name: e.label,
+                            value: e.value as string,
+                          });
+                        }}
+                      />
+                    </div>
+                    <div
+                      onClick={() => handleDeleteProject(item.uuid)}
+                      className=" transform z-[100]  w-6 h-6 rounded-full ">
+                      <Button
+                        sz="sm"
+                        variant="outline"
+                        className="w-6 h-6  text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
+                        type="button">
+                        <ImageRound
+                          src="/icons/delete-node.svg"
+                          name="Delete organization"
+                          className="!h-fit !w-fit"
+                        />
+                      </Button>
+                    </div>
                     {index === listProject.length - 1 && (
                       <div
                         onClick={() => {
                           if (item.value === 'treeNode') return;
                           handleAddProjectTeam();
                         }}
-                        className="absolute  z-[30] right-[-36px] top-[5px]  w-6 h-6 rounded-full ">
+                        className=" w-6 h-6 rounded-full ">
                         <Button
                           sz="sm"
                           disabled={item.value === 'treeNode'}

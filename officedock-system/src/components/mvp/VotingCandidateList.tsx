@@ -71,7 +71,7 @@ export const VotingCandidateList = ({
         background: '#DFAEAECC',
         boxShadow: '0px 4px 10px 0px #0000000D',
       }}
-      className="w-[720px] h-[90%] p-[30px] pr-[12px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
+      className="w-[720px] h-[calc(100vh_-_246px)] min-h-[715px]  p-[30px] pr-[12px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
       <div className="space-y-[14px] mb-10">
         {currentMVPVotingDetail ? (
           <>

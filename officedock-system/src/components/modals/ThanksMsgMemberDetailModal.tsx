@@ -146,9 +146,9 @@ const ThanksMsgMemberDetailModal = ({ open, userDetailId, onClose }: Props) => {
           <CustomUserAvatar
             avatarUrl={userDetailId?.avatar || ''}
             avatarColor={userDetailId?.avatarColor || ''}
-            size={63}
+            size={60}
           />
-          <span className="text-[#77858F] break-all flex-shrink-0 line-clamp-2  max-w-[150px] ">
+          <span className="text-[#77858F] ml-[10px] break-all flex-shrink-0 line-clamp-2  max-w-[150px] ">
             {userDetailId?.orgName}
           </span>
           <span className="text-black break-all line-clamp-2 ml-[10px] flex-grow">
@@ -220,13 +220,13 @@ const ThanksMsgMemberDetailModal = ({ open, userDetailId, onClose }: Props) => {
                   className={`py-4 px-5    ${index !== thankDetailList.length - 1 && 'border-b'} border-[#D2DBE1]`}>
                   <div
                     className={`w-full ${openDeleteIds.includes(item.id) || item.deletedAt ? 'opacity-40' : ''} bg-white h-full py-[14px] rounded-[14px]`}>
-                    <div className="flex items-baseline bg-white text-black text-xs font-normal ">
+                    <div className="flex items-stretch  bg-white text-black text-xs font-normal ">
                       {/* Date column */}
-                      <div className="w-[124px] flex items-center">
+                      <div className="w-[124px] flex items-start pt-2">
                         {item.createdAt &&
                           formatShowDateJapanese(item.createdAt)}
                       </div>
-                      <div className="w-[1px] border-l border-[#D2DBE1] -my-[15px]"></div>
+                      <div className="w-[1px] border-l  border-[#D2DBE1] -my-[15px]"></div>
                       <div className="w-[179px] px-[15px] flex items-center justify-between">
                         <div className="flex items-start gap-[10px]">
                           <CustomUserAvatar
@@ -260,7 +260,7 @@ const ThanksMsgMemberDetailModal = ({ open, userDetailId, onClose }: Props) => {
                       <div className="w-[1px] border-l border-[#D2DBE1] -my-[15px]"></div>
                       <div className="px-5 w-[588px] flex items-start gap-3 justify-between">
                         <p
-                          className="break-all text-sm font-normal"
+                          className="break-all text-sm font-normal pt-2"
                           dangerouslySetInnerHTML={{
                             __html: formatWithParagraphTags(item.message),
                           }}></p>
@@ -319,7 +319,7 @@ const ThanksMsgMemberDetailModal = ({ open, userDetailId, onClose }: Props) => {
             </div>
           )}
         </div>
-        <div className="flex justify-center mt-[30px]">
+        <div className="flex justify-center mt-6">
           <Button onClick={onClose} variant="text">
             閉じる
           </Button>

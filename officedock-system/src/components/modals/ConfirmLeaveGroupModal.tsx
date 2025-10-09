@@ -18,7 +18,7 @@ const ConfirmLeaveGroupModal = memo(
         isOutSideAction={false}
         onClose={onClose}>
         <div className="text-center mb-10">
-          <p className="text-sm text-black leading-6 text-neutral-02">{`"本当にグループを退会しますか？`}</p>
+          <p className="text-sm text-black leading-6 text-neutral-02">{`本当にグループを退会しますか？`}</p>
         </div>
         <div className="flex justify-center gap-3  items-center">
           <Button

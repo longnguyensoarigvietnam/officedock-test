@@ -63,7 +63,7 @@ const ItemGroupCard = ({
         </div>
 
         {/* Right: colors + price */}
-        <div className="flex items-center justify-between gap-3 flex-grow flex-shrink-0">
+        <div className="flex items-center justify-end gap-[42px] flex-grow flex-shrink-0">
           <div className="grid grid-cols-5 gap-[3px] w-[132px] flex-shrink-0">
             {group.items.map((item) => {
               return selectedItem?.id === item.id ? (

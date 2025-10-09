@@ -19,7 +19,10 @@ type ReceivingSurveyTabProp = {
   handleDelete: (id: number) => void;
 };
 
-const ReceivingSurveyTab = ({ handleAnswer, handleDelete }: ReceivingSurveyTabProp) => {
+const ReceivingSurveyTab = ({
+  handleAnswer,
+  handleDelete,
+}: ReceivingSurveyTabProp) => {
   const {
     surveyList,
     fetchNextPage,
@@ -127,7 +130,7 @@ const ReceivingSurveyTab = ({ handleAnswer, handleDelete }: ReceivingSurveyTabPr
                       {item.status.mySurvey && (
                         <Button
                           variant="outline"
-                          className="w-[104px] h-[22px] !px-0 !bg-[#EBF1F7] !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none ]">
+                          className="w-[104px] h-[22px] !cursor-default !px-0 !bg-[#EBF1F7] !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none ]">
                           マイアンケート
                         </Button>
                       )}
@@ -135,7 +138,7 @@ const ReceivingSurveyTab = ({ handleAnswer, handleDelete }: ReceivingSurveyTabPr
                         <>
                           <Button
                             variant="option"
-                            className="w-[104px] h-[22px] !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none !bg-[#FFEE6F]">
+                            className="w-[104px] h-[22px] !cursor-default !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none !bg-[#FFEE6F]">
                             受付中
                           </Button>
                           <p className="text-[#77858F]">
@@ -147,7 +150,7 @@ const ReceivingSurveyTab = ({ handleAnswer, handleDelete }: ReceivingSurveyTabPr
                         <>
                           <Button
                             variant="outline"
-                            className="w-[104px] h-[22px] !px-0 !bg-[#EBF1F7] !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none ]">
+                            className="w-[104px] h-[22px] !cursor-default !px-0 !bg-[#EBF1F7] !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none ]">
                             受付終了
                           </Button>
                         </>

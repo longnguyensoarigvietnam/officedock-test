@@ -18,6 +18,7 @@ import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import api from '@base/api';
+import BackToPage from '@components/custom/BackToPage';
 
 const HistoryListPage = () => {
   const router = useRouter();
@@ -90,16 +91,7 @@ const HistoryListPage = () => {
           {/* Page title */}
           <div className="flex absolute top-0 left-0 shadow-common rounded-br-[30px]">
             <div className="h-20 z-[30] bg-white w-fit px-10 py-4 text-[#77858F] font-medium flex items-center gap-[10px] rounded-br-[30px]">
-              <div
-                onClick={() => router.push(pageRouters.MY_PAGE.href)}
-                className="flex items-center gap-[10px]">
-                <ImageRound
-                  name="Left icon"
-                  src={'/icons/chevron-left.svg'}
-                  className={`w-fit h-fit !cursor-pointer`}
-                />
-                <span className="text-sm text-black cursor-pointer">戻る</span>
-              </div>
+              <BackToPage />
               <span className="text-[22px] text-black ml-1">
                 {pageRouters.HISTORY_POINT.name}
               </span>
@@ -157,7 +149,8 @@ const HistoryListPage = () => {
                         ? totalCoins || 0
                         : totalPearls || 0}
                     </p>
-                    <p className={`text-[22px] leading-[22px] relative`}>
+                    <p
+                      className={`text-[22px] mb-[3px] leading-[22px] relative`}>
                       {activeTab == PointHistoryActiveTab.COIN
                         ? 'コイン'
                         : 'パール'}

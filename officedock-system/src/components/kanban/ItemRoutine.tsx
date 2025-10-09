@@ -422,7 +422,7 @@ const ItemRoutine = ({
                     handleClick();
                   }
                 }}>
-                <div className="flex gap-1 items-start">
+                <div className="flex gap-2 items-start">
                   {isShowSchedule ? (
                     <div className="w-fit flex-shrink-0">
                       <ClockIconColor color={largeColor} />

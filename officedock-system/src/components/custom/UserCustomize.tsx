@@ -10,9 +10,13 @@ import { updateAvatarUrl } from '@utils';
 
 interface props {
   isPodium?: boolean;
+  isBoat?: boolean;
 }
 
-export const RenderAccessories = ({ isPodium = false }: props) => {
+export const RenderAccessories = ({
+  isPodium = false,
+  isBoat = false,
+}: props) => {
   const { dataItems, setDataItem } = useContext(GlobalStateContext);
 
   const { isFetchingCreationDataCommon } = useCreationDataCommon({
@@ -38,6 +42,14 @@ export const RenderAccessories = ({ isPodium = false }: props) => {
           src={`/images/users/podium.png`}
           name={'podium'}
           className={`absolute top-[94%] left-[24px] !w-fit !h-fit inset-0  object-contain pointer-events-none`}
+          style={{ zIndex: 0 }}
+        />
+      )}
+      {isBoat && (
+        <ImageRound
+          src={`/images/users/boat.png`}
+          name={'podium'}
+          className={`absolute bottom-0 left-0 !w-fit !h-fit inset-0  object-contain pointer-events-none`}
           style={{ zIndex: 0 }}
         />
       )}

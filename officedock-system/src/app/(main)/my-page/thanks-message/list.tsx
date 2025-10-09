@@ -1,13 +1,13 @@
 'use client';
 import React, { useRef, useState } from 'react';
 import { useMutation } from 'react-query';
-import { useRouter } from 'next/navigation';
 
 import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
 import { SendThanksMessageList } from '@components/thanksMessage/SendThanksMessageList';
 import SendEnvelopeAnimationOverlay from '@components/thanksMessage/SendEnvelopeAnimationOverlay';
 import { ReceiveAndSendThanksMessageTable } from '@components/thanksMessage/ReceiveAndSendThanksMessageTable';
+import BackToPage from '@components/custom/BackToPage';
 
 import useMemberOrganizationList from '@hooks/userMemberOrganizationList';
 import useRemainingQuota from '@hooks/useRemainingQuota';
@@ -15,7 +15,7 @@ import useThanksMessageInfiniteList from '@hooks/useThanksMessageInfiniteList';
 
 import { UserOrganization } from '@interfaces/user';
 
-import { apiRouters, pageRouters } from '@constants/routers';
+import { apiRouters } from '@constants/routers';
 import { ScreenName, ThanksMessageType } from '@constants/enums';
 
 import api from '@base/api';
@@ -45,7 +45,6 @@ const ThanksMessageListPage = () => {
     ThanksMessageType.RECEIVED,
   );
   const hasReadAllMessages = useRef(false);
-  const router = useRouter();
 
   useMemberOrganizationList({
     search: '',
@@ -122,28 +121,18 @@ const ThanksMessageListPage = () => {
           <div className="relative pr-[30px] flex w-full justify-between items-center h-full !overflow-hidden rounded-b-[30px]">
             {/* Header */}
             <div className="flex absolute top-0 left-0">
-              <div className="h-[80px] bg-white w-[381px] py-4 font-medium flex items-center justify-center rounded-br-[30px]">
-                <div
-                  className="flex items-center"
-                  onClick={() => router.push(pageRouters.MY_PAGE.href)}>
+              <div className="h-[80px] bg-white w-[381px] py-4 font-medium flex gap-5 items-center justify-center rounded-br-[30px]">
+                <BackToPage />
+                <div className="flex items-center gap-[10px]">
                   <ImageRound
-                    name="Left icon"
-                    src={'/icons/chevron-left.svg'}
-                    className={`w-[8px] h-[16px] mr-[10px] cursor-pointer`}
+                    name="Heart icon"
+                    src={'/icons/blue-heart-title.svg'}
+                    className={`!w-fit !h-fit !rounded-none`}
                   />
-                  <p className="text-sm font-medium hover:cursor-pointer">
-                    戻る
-                  </p>
+                  <span className="text-[22px] font-medium">
+                    サンクスメッセージ
+                  </span>
                 </div>
-
-                <ImageRound
-                  name="Heart icon"
-                  src={'/icons/blue-heart.svg'}
-                  className={`w-[28px] h-[26px] ml-5 mr-[10px]`}
-                />
-                <span className="text-[22px] font-medium">
-                  サンクスメッセージ
-                </span>
               </div>
             </div>
             {/* Number of remaining thanks messages */}

@@ -1,19 +1,16 @@
 'use client';
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 import ImageRound from '@components/common/ImageRound';
 import { MemberListByOrganization } from '@components/visitRoom/MemberListByOrganization';
 import { RenderAccessories } from '@components/custom/UserCustomize';
+import BackToPage from '@components/custom/BackToPage';
 
 import useMemberOrganizationList from '@hooks/userMemberOrganizationList';
 
 import { UserOrganization } from '@interfaces/user';
 
-import { pageRouters } from '@constants/routers';
-
 const RoomList = () => {
-  const router = useRouter();
   const [memberListByOrganization, setMemberListByOrganization] = useState<
     {
       orgInfo: UserOrganization;
@@ -50,33 +47,24 @@ const RoomList = () => {
           <div className="relative pr-[30px] flex w-full justify-between items-center h-full">
             {/* Header */}
             <div className="flex absolute top-0 left-0 shadow-common rounded-br-[30px]">
-              <div className="h-[80px] bg-white w-[426px] py-4 font-medium flex items-center justify-center gap-[10px] rounded-br-[30px]">
-                <div
-                  className="flex items-center"
-                  onClick={() => router.push(pageRouters.MY_PAGE.href)}>
-                  <ImageRound
-                    name="Left icon"
-                    src={'/icons/chevron-left.svg'}
-                    className={`w-[8px] h-[16px] mr-[10px] cursor-pointer`}
-                  />
-                  <p className="text-sm font-medium hover:cursor-pointer">
-                    戻る
-                  </p>
+              <div className="h-[80px] bg-white w-[426px] py-4 font-medium flex items-center gap-5 justify-center  rounded-br-[30px]">
+                <BackToPage />
+                <div className="flex items-center gap-[10px]">
                   <ImageRound
                     name="Visit room icon"
                     src={'/icons/visit-room.svg'}
-                    className={`w-[26px] h-[26px] ml-5 cursor-pointer`}
+                    className={`w-[26px] h-[26px]  cursor-pointer`}
                   />
+                  <p className="text-[22px] font-medium">
+                    他の人の部屋へ出かける
+                  </p>
                 </div>
-                <p className="text-[22px] font-medium">
-                  他の人の部屋へ出かける
-                </p>
               </div>
             </div>
             <div className="absolute -bottom-[115px] w-[calc(100%_-_780px)]">
               <div className="flex-grow">
                 <div className="h-[424px] w-[336px] left-1/2 -translate-x-1/2 relative">
-                  <RenderAccessories />
+                  <RenderAccessories isBoat />
                 </div>
               </div>
             </div>

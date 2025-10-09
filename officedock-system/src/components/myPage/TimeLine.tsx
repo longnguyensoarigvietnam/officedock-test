@@ -83,10 +83,12 @@ export const TimeLine = ({
   };
 
   return (
-    <div className="w-[352px] h-[90%] py-[31px] px-[19px] absolute top-1/2 -translate-y-1/2 right-[30px] border-[1px] border-white bg-[#3599D8CC] rounded-[24px] space-y-5">
+    <div className="w-[352px] h-[calc(100vh_-_264px)] min-h-[715px] py-[31px] px-[19px] absolute top-1/2 -translate-y-1/2 right-[30px] border-[1px] border-white bg-[#3599D8CC] rounded-[24px] space-y-5">
       {/* Header */}
       <div className="border-b-[1px] border-b-white pb-3">
-        <p className="text-[18px] text-white">OFFICE DOCK タイムライン</p>
+        <p className="text-[18px] text-white font-semibold">
+          OFFICE DOCK タイムライン
+        </p>
       </div>
 
       {/* Messages */}

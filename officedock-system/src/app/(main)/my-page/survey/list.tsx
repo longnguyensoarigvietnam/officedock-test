@@ -16,6 +16,7 @@ import ActionSettingSurvey from '@components/modals/ActionSettingSurvey';
 import SuccessSurveyActionModal from '@components/modals/SuccessSurveyActionModal';
 import CreateTweetModal from '@components/modals/CreateTweetModal';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
+import BackToPage from '@components/custom/BackToPage';
 
 import { TabTypeSurvey, TabTypeSurveyValue } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
@@ -259,26 +260,19 @@ const SurveyListPage = () => {
             height: '100%',
           }}
           className="rounded-bl-[30px] relative rounded-r-[30px] h-[calc(100vh-120px)] w-full">
-          <div className="flex absolute top-0 left-0 shadow-common rounded-br-[30px]">
-            <div className="h-20 w-[294px] z-[30] bg-white py-4 text-[#77858F] font-medium flex items-center justify-center rounded-br-[30px]">
-              <div
-                onClick={() => router.push(pageRouters.MY_PAGE.href)}
-                className="flex items-center gap-[10px]">
+          <div className="flex absolute top-0 left-0  rounded-br-[30px]">
+            <div className="h-20 w-[294px] z-[30] bg-white py-4 text-[#77858F] font-medium flex gap-5 items-center justify-center rounded-br-[30px]">
+              <BackToPage />
+              <div className="flex items-center gap-[10px]">
                 <ImageRound
-                  name="Left icon"
-                  src={'/icons/chevron-left.svg'}
-                  className={`w-[8px] h-[16px] !cursor-pointer`}
+                  name="Survey icon"
+                  src={'/icons/survey-title.svg'}
+                  className={`w-fit h-fit rounded-none `}
                 />
-                <span className="text-sm text-black cursor-pointer">戻る</span>
+                <span className="text-[22px] text-black">
+                  {pageRouters.SURVEY.name}
+                </span>
               </div>
-              <ImageRound
-                name="Survey icon"
-                src={'/icons/survey.svg'}
-                className={`w-[26px] h-[26px] ml-5`}
-              />
-              <span className="text-[22px] text-black ml-[10px]">
-                {pageRouters.SURVEY.name}
-              </span>
             </div>
           </div>
           <div className="relative  pr-[30px] flex w-full justify-between items-center h-full">
@@ -326,7 +320,7 @@ const SurveyListPage = () => {
                 background: 'rgba(53, 153, 216, 0.8)',
                 boxShadow: '0px 4px 10px 0px #0000000D',
               }}
-              className="w-[720px] h-[calc(100vh_-_260px)] font-medium text-white border border-white rounded-3xl py-[30px]">
+              className="w-[720px] h-[calc(100vh_-_246px)] min-h-[715px]  font-medium text-white border border-white rounded-3xl py-[30px]">
               {/* Button switch */}
               <div className="flex px-[30px] items-center justify-between">
                 <p className="text-[18px]">アンケート一覧</p>
