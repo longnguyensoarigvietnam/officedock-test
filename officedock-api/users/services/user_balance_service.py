@@ -1,5 +1,6 @@
 from django.db import transaction
 from companies.constants import CompanyStatus
+from roles.constants import Screens, SelectionResultOptions
 from users.constants import TransactionTypes
 
 
@@ -94,6 +95,15 @@ class UserService:
         """
         if not user:
             return False
+        # Just allow user have permission access to Payment Management page when company suspended
+        if user.company.status == CompanyStatus.SUSPENDED.value:
+            for role in user.roles.all():
+                if role.permissions.filter(
+                    name__startswith=Screens.PAYMENT_MANAGEMENT.value,
+                    role_details__selection_result=SelectionResultOptions.ALLOWED.value,
+                ).exists():
+                    return True
+
         return user.company.status not in [
             CompanyStatus.SUSPENDED.value,
             CompanyStatus.CONTRACT_TERMINATED.value,

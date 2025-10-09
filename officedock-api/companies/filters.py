@@ -21,7 +21,7 @@ class CompanyFilter(django_filters.FilterSet):
         field_name="contract__created_at", lookup_expr="date"
     )
     plan = django_filters.CharFilter(
-        field_name="plan__plan__name", lookup_expr="exact"
+        field_name="company_plan__plan__name", lookup_expr="exact"
     )
     user_amount = django_filters.NumberFilter(method="filter_amount_user")
 
