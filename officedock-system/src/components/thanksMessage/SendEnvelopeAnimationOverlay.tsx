@@ -82,16 +82,7 @@ export default function SendEnvelopeAnimationOverlay({
       defaults: { duration: 0.8, ease: 'power2.out' },
     });
 
-    const shakeTl = gsap.to(envelopeEl, {
-      rotateZ: 10,
-      duration: 0.1,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut',
-      paused: true,
-    });
-
-    tl.to(contentRef.current, { y: -100, duration: 2, ease: 'power2.out' })
+    tl.to(contentRef.current, { y: -100, duration: 1, ease: 'power2.out' })
       .to(contentRef.current, {
         y: 80,
         duration: 0.8,
@@ -102,7 +93,7 @@ export default function SendEnvelopeAnimationOverlay({
       })
       .to(flapRef.current, {
         rotateX: -180,
-        duration: 3,
+        duration: 1.5,
         transformOrigin: 'bottom center',
         ease: 'power2.inOut',
         onStart: () => {
@@ -119,7 +110,11 @@ export default function SendEnvelopeAnimationOverlay({
         },
       })
       .to(birdEl, {
-        x: 50,
+        // Move left from its initial position by 1/4 of the screen width, then shift slightly right by 250px
+        // → negative x = move left, positive = move right
+        x: -window.innerWidth / 4 + 250,
+        // Move downward by 280px from its starting vertical position
+        // → positive y = move down, negative = move up
         y: 280,
         duration: 1.5,
         ease: 'power2.out',
@@ -127,28 +122,24 @@ export default function SendEnvelopeAnimationOverlay({
       .to(
         envelopeEl,
         {
-          x: 500,
-          y: -window.innerHeight / 2 + 150,
-          rotateZ: 40,
+          // Move right from its initial position by 1/4 of the screen width, plus an extra 50px
+          // → creates a symmetrical approach from the opposite side
+          x: window.innerWidth / 4 + 50,
+          // Move upward by half the screen height, then slightly down (120px below top edge)
+          // → negative y = move up toward the top
+          y: -window.innerHeight / 2 + 120,
+          rotateZ: 22,
           duration: 1.5,
-          ease: 'power2.out',
-          onStart: () => {
-            shakeTl.play();
-          },
         },
         '<',
       )
       .to([birdEl, envelopeEl], {
-        x: 6000,
-        y: -9000,
+        x: window.innerWidth, // move horizontally by one screen width
+        y: -window.innerHeight, // move upward by one screen height
         opacity: 1,
-        duration: 2,
+        duration: 1,
         ease: 'power1.inOut',
-        onStart: () => {
-          shakeTl.play();
-        },
         onComplete: () => {
-          shakeTl.pause();
           setShowFinishMessage(true);
         },
       });
@@ -247,7 +238,7 @@ export default function SendEnvelopeAnimationOverlay({
           )}
         </div>
       </div>
-      <div ref={birdRef} className="absolute top-[-300px] left-[1200px] z-50">
+      <div ref={birdRef} className="absolute -top-[300px] right-0 z-50">
         <div className="relative w-[300px] h-[260px]">
           <Image
             src="/icons/bird.svg"
