@@ -76,10 +76,10 @@ const EndedSurveyTab = ({ handleAnswer, handleDelete }: EndedSurveyTabProp) => {
         <div className="w-[125px]">日付</div>
         <div className="w-[317px]  flex justify-between items-center">
           <div className="h-[9px] w-[1px] border-l border-[#D2DBE1]"></div>
-          <div className="flex-grow px-5">質問</div>
+          <div className="flex-grow px-[14px]">質問</div>
           <div className="h-[9px] w-[1px] border-l border-[#D2DBE1]"></div>
         </div>
-        <div className="flex-grow px-5">ステータス</div>
+        <div className="flex-grow px-[14px]">ステータス</div>
       </div>
       {/* Table */}
       <div

@@ -317,7 +317,7 @@ const MyPage = () => {
   );
 
   return (
-    <div className="h-full w-full relative">
+    <div className="h-full w-full relative min-h-[772px]">
       <div
         style={{
           backgroundImage: 'url("/images/bg-profile.jpg")',
@@ -326,9 +326,9 @@ const MyPage = () => {
           width: '100%',
           height: '100%',
         }}
-        className="h-[calc(100vh-120px)] w-full flex flex-col rounded-bl-[30px] rounded-r-[30px]">
+        className="w-full flex flex-col rounded-bl-[30px] rounded-r-[30px]">
         <div className="flex ">
-          <div className="h-20 bg-white w-fit px-5 py-4 text-[#77858F] font-medium flex items-center gap-5  shadow-common rounded-br-[30px]">
+          <div className="h-20 bg-white w-fit px-5 py-4 text-[#77858F] font-medium flex items-center gap-5 rounded-br-[30px]">
             <div>{session?.user.id && renderBoxUser()}</div>
             <div className="flex items-center gap-[10px]">
               <p className="break-all max-w-[100px] line-clamp-2 text-sm">
@@ -374,21 +374,20 @@ const MyPage = () => {
             setOpenConfirmDeleteSkillModal={setOpenConfirmDeleteSkillModal}
           />
         </div>
-        <div className=" relative ml-[30px] mb-[40px] flex items-end flex-grow">
-          <div className="mt-[74px]">
-            {/* Menu */}
-            <MyPageMenu
-              onClickSettingSurvey={() => setOpenSettingSurvey(true)}
-              isOpenSurveys={
-                creationDataCommonData?.unansweredCount?.isOpenSurveys || false
-              }
-              unAnsweredSurveyCount={
-                creationDataCommonData?.unansweredCount?.count || 0
-              }
-              isHasMvpVoting={creationDataCommonData?.isHasMvpVoting || false}
-            />
-          </div>
-
+        <div className="absolute bottom-[30px] left-[30px] z-50">
+          {/* Menu */}
+          <MyPageMenu
+            onClickSettingSurvey={() => setOpenSettingSurvey(true)}
+            isOpenSurveys={
+              creationDataCommonData?.unansweredCount?.isOpenSurveys || false
+            }
+            unAnsweredSurveyCount={
+              creationDataCommonData?.unansweredCount?.count || 0
+            }
+            isHasMvpVoting={creationDataCommonData?.isHasMvpVoting || false}
+          />
+        </div>
+        <div className="relative ml-[30px] mb-[40px] flex items-end flex-grow">
           <div className="flex-grow">
             <div className="h-[424px] w-[336px] ml-[200px] relative">
               <RenderAccessories />

@@ -8,12 +8,14 @@ export type CustomUserAvatarProps = {
   avatarColor: string;
   size: number;
   customClassName?: string;
+  avatarClassName?: string;
   isCalendarScreen?: boolean;
 };
 const CustomUserAvatar = memo(({
   avatarUrl,
   avatarColor,
   size,
+  avatarClassName,
   customClassName,
 }: CustomUserAvatarProps) => {
   const clipId = useMemo(() => `clip-${Math.random()}`, []);
@@ -26,7 +28,7 @@ const CustomUserAvatar = memo(({
           style={{ width: size, height: size }}>
           <Image
             src={getFileURL(avatarUrl)}
-            className="hover:cursor-pointer object-cover object-center"
+            className={`hover:cursor-pointer object-cover object-center ${avatarClassName}`}
             fill
             alt="avatar"
             unoptimized={true}

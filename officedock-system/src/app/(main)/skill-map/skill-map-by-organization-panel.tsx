@@ -350,8 +350,7 @@ export const SkillMapByOrganizationPanel = ({
 
   return (
     <div
-      className={`w-full py-5 ${settingSkillAction ? 'px-4' : 'px-10'} bg-[#F8FAFC] rounded-[30px] mb-6`}
-      style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
+      className={`w-full py-5 ${settingSkillAction ? 'px-4' : 'px-10'} bg-[#F8FAFC]`}>
       <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
         {skillMapDetail.organizationName}
       </p>
@@ -429,38 +428,38 @@ export const SkillMapByOrganizationPanel = ({
                   return (
                     <div
                       key={skill.id ?? `${index}-${idx}`}
-                      className={`relative hover:cursor-pointer flex items-center ${isLast ? 'w-[calc(33.33333%_-_30px)]' : 'w-[calc(33.33333%_+_15px)]'}`}
-                      onClick={async () => {
-                        if (isLocked || !skill.id) return;
-
-                        if (settingSkillAction === ActionsModal.CREATE) {
-                          onOpenConfirmSettingSkillInfo &&
-                            onOpenConfirmSettingSkillInfo(skill);
-                          return;
-                        }
-
-                        if (settingSkillAction === ActionsModal.EDIT) {
-                          onEditSettingSkill &&
-                            onEditSettingSkill(String(skill.id));
-
-                          return;
-                        }
-
-                        if (!stepCompleted) {
-                          setSelectedSkillMapToSubmitLevelUp(skill.id);
-                          setOpenSubmitLevelUpModal(true);
-                        }
-                      }}>
+                      className={`relative flex items-center ${isLast ? 'w-[calc(33.33333%_-_30px)]' : 'w-[calc(33.33333%_+_15px)]'}`}>
                       {!skill.id ? (
                         <div
                           className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} bg-white w-full rounded-[14px]`}></div>
                       ) : (
                         <div
-                          className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} flex gap-3 bg-white items-center w-full rounded-[14px] relative`}
+                          className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} hover:cursor-pointer flex gap-3 bg-white items-center w-full rounded-[14px] relative`}
                           style={{
                             boxShadow: showTwinklingStars
                               ? '0px 0px 20px 0px #36ACDE80'
                               : '0px 2px 8px 0px #0000001A',
+                          }}
+                          onClick={async () => {
+                            if (isLocked || !skill.id) return;
+
+                            if (settingSkillAction === ActionsModal.CREATE) {
+                              onOpenConfirmSettingSkillInfo &&
+                                onOpenConfirmSettingSkillInfo(skill);
+                              return;
+                            }
+
+                            if (settingSkillAction === ActionsModal.EDIT) {
+                              onEditSettingSkill &&
+                                onEditSettingSkill(String(skill.id));
+
+                              return;
+                            }
+
+                            if (!stepCompleted) {
+                              setSelectedSkillMapToSubmitLevelUp(skill.id);
+                              setOpenSubmitLevelUpModal(true);
+                            }
                           }}>
                           {showTwinklingStars && (
                             <>
@@ -478,32 +477,32 @@ export const SkillMapByOrganizationPanel = ({
                               <TwinklingIcon
                                 className="absolute top-[-10px] left-[-10px]"
                                 delay={0}
-                                iconUrl='/icons/blue-star.svg'
+                                iconUrl="/icons/blue-star.svg"
                               />
                               <TwinklingIcon
                                 className="absolute top-[5px] right-[-15px]"
                                 delay={0.5}
-                                iconUrl='/icons/blue-star.svg'
+                                iconUrl="/icons/blue-star.svg"
                               />
                               <TwinklingIcon
                                 className="absolute top-[-15px] right-[5px]"
                                 delay={0.8}
-                                iconUrl='/icons/blue-star.svg'
+                                iconUrl="/icons/blue-star.svg"
                               />
                               <TwinklingIcon
                                 className="absolute bottom-[5px] left-[-15px]"
                                 delay={1}
-                                iconUrl='/icons/blue-star.svg'
+                                iconUrl="/icons/blue-star.svg"
                               />
                               <TwinklingIcon
                                 className="absolute bottom-[-15px] left-[5px]"
                                 delay={1.2}
-                                iconUrl='/icons/blue-star.svg'
+                                iconUrl="/icons/blue-star.svg"
                               />
                               <TwinklingIcon
                                 className="absolute bottom-[-10px] right-[-10px]"
                                 delay={1.5}
-                                iconUrl='/icons/blue-star.svg'
+                                iconUrl="/icons/blue-star.svg"
                               />
                             </div>
                           )}

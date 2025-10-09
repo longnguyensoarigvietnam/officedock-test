@@ -144,7 +144,7 @@ const RoomDetail = () => {
         style={{
           backgroundImage: 'url("/images/bg-visit-room-detail.jpg")',
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundPosition: 'top center',
           width: '100%',
           height: '100%',
         }}
@@ -309,7 +309,7 @@ const RoomDetail = () => {
         <div className="absolute bottom-[50px] left-[200px]">
           <div className="flex-grow">
             <div className="h-[424px] w-[336px] ml-[200px] relative">
-              <RenderAccessories isPodium />
+              <RenderAccessories />
             </div>
           </div>
         </div>

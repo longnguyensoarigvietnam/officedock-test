@@ -9,7 +9,7 @@ const ShopPage = () => {
     <MainLayout
       title={pageRouters.SHOP_ITEM.name}
       permission={PermissionsSystem.VIEW_ALL}
-      className="pl-8 pt-8 !overflow-x-auto"
+      className="pl-[41px] pt-6 !overflow-x-auto"
       showFooter={false}>
       <ShopItemPage />
     </MainLayout>

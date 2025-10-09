@@ -152,9 +152,9 @@ export const VotingListPage = () => {
 
   return (
     <div
-      className={`relative w-full h-full ${currentMVPVotingDetail && 'min-h-[800px]'}`}>
-      <div className="relative w-[calc(100%_-_800px)] h-full">
-        <div className="absolute bottom-10 left-[110px]">
+      className={`relative w-full h-full ${currentMVPVotingDetail && 'min-h-[768px]'}`}>
+      <div className="relative w-[calc(100%_-_750px)] h-full">
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
           <div className="flex-grow">
             <div className="h-[424px] w-[336px] relative">
               <RenderAccessories isPodium />
@@ -169,23 +169,28 @@ export const VotingListPage = () => {
                 background: 'linear-gradient(180deg, #C59941 0%, #D0AA5A 100%)',
                 boxShadow: '0px 4px 0px 0px #355AC940',
               }}
-              className="absolute bottom-[485px] left-[110px] p-[10px] rounded-[14px] w-[310px] h-fit">
+              className="absolute bottom-[480px] left-1/2 -translate-x-1/2 p-[10px] rounded-[14px] w-[310px] h-[194px]">
               <div className="relative">
-                <p className="text-white text-[13px] font-bold">マイルくん</p>
-                <div className="mt-[10px] w-full bg-white rounded-[5px] p-4 text-[13px] font-semibold text-black space-y-[3px]">
-                  <p> 今回のMVPテーマは、</p>
-                  <p className="text-lg text-[#B58F42]">
+                <p className="text-white text-[13px] font-bold leading-none">
+                  マイルくん
+                </p>
+                <div className="mt-[10px] w-full h-[151px] bg-white rounded-[5px] py-[17px] pl-[15px] text-[13px] font-semibold text-black space-y-[6px]">
+                  <p className="text-sm leading-none"> 今回のMVPテーマは、</p>
+                  <p className="text-lg text-[#B58F42] leading-none">
                     {currentMVPVotingDetail.title}{' '}
                     <span className="text-black text-sm">だよ！</span>
                   </p>
-                  <p> 見事MVPに輝いた方には、</p>
-                  <div className="flex items-center gap-1">
+                  <p className="text-sm leading-none">
+                    {' '}
+                    見事MVPに輝いた方には、
+                  </p>
+                  <div className="flex items-center gap-1 leading-none">
                     <ImageRound
                       name="Coin"
                       src={'/icons/golden-coin.svg'}
                       className="w-5 h-5"
                     />
-                    <p>
+                    <p className="text-sm">
                       {' '}
                       <span className="text-base text-[#B58F42] font-bold">
                         200
@@ -193,7 +198,7 @@ export const VotingListPage = () => {
                       コインを贈呈するよ！
                     </p>
                   </div>
-                  <p>
+                  <p className="text-sm leading-none">
                     {' '}
                     投票期間は、
                     <span className="text-base text-[#B58F42] text-nowrap">

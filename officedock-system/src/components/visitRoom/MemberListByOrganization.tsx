@@ -6,6 +6,7 @@ import ImageRound from '@components/common/ImageRound';
 import { pageRouters } from '@constants/routers';
 
 import { UserOrganization } from '@interfaces/user';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 interface MemberListByOrganizationProps {
   memberListByOrganization: {
@@ -27,6 +28,7 @@ export const MemberListByOrganization = ({
   setMemberListByOrganization,
 }: MemberListByOrganizationProps) => {
   const router = useRouter();
+  const { data: session } = useSessionCache();
   return (
     <div
       style={{
@@ -70,8 +72,9 @@ export const MemberListByOrganization = ({
                     return (
                       <div
                         key={`${organization.orgInfo.id}-${user.id}`}
-                        className="w-[157px] bg-white rounded-[14px] h-[50px] px-[14px] flex items-center gap-[10px] hover:cursor-pointer"
+                        className={`w-[157px] bg-white rounded-[14px] h-[50px] px-[14px] flex items-center gap-[10px] hover:cursor-pointer ${user.id == session?.user.id && 'opacity-50 hover:!cursor-not-allowed'}`}
                         onClick={() =>
+                          user.id != session?.user.id &&
                           router.push(
                             pageRouters.VISIT_ROOM_DETAIL.href(String(user.id)),
                           )

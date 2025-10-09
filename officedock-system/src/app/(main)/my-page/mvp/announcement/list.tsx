@@ -56,7 +56,7 @@ export const AnnouncementListPage = () => {
     <div className="relative customized-scrollbar w-full max-h-[calc(100vh_-_230px)] mt-[100px] overflow-y-auto">
       {mvpAnnouncementDetail ? (
         <div className="space-y-[14px] mb-[80px] flex flex-col items-center mt-[20px]">
-          <div className="text-white font-medium flex gap-[10px] items-end">
+          <div className="text-white font-medium flex gap-[10px] items-center">
             <p className="text-xs">投票期間</p>
             <p className="text-sm">
               {formatJapaneseDateRange(

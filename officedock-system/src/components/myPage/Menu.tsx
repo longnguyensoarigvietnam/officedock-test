@@ -31,7 +31,7 @@ export const MyPageMenu = ({
     : lodash.cloneDeep(MY_PAGE_MENU);
 
   return (
-    <div className="flex flex-col gap-[35px]">
+    <div className="flex flex-col gap-[30px]">
       {menuItemsClone.map((page: MyPageMenuItem, index) => {
         return (
           <div
@@ -66,11 +66,11 @@ export const MyPageMenu = ({
                     </p>
                   </>
                 )}
-              <div className="w-fit h-fit absolute top-[-30%] left-1/2 transform -translate-x-1/2">
+              <div className="w-[48px] h-[48px] absolute -top-[20px] left-1/2 transform -translate-x-1/2">
                 <ImageRound
                   name={page.iconName}
                   src={page.iconSrc}
-                  className={`w-fit h-fit `}
+                  className={`w-[48px] h-[48px]`}
                 />
               </div>
             </Link>
