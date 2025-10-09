@@ -14,6 +14,7 @@ from common.constants import (
     AVATAR_GCS_EXPIRATION_SECONDS,
     USER_AVATAR_UPLOAD_MAX_SIZE,
 )
+from companies.constants import CompanyStatus
 from companies.serializers import CompanySerializer
 from organizations.models import UsersOrganizations, Organization
 from organizations.serializers import (
@@ -505,8 +506,13 @@ class UserLoginSerializer(BaseUserSerializer):
                     role_details__selection_result=SelectionResultOptions.NOT_ALLOWED.value
                 )
                 | Q(role_details__selection_result__isnull=True)
-            ).values_list("name", flat=True)
-            permissions.update(perms)
+            )
+            # Just allow access to Payment Management page when company suspended
+            if obj.company.status == CompanyStatus.SUSPENDED.value:
+                perms = perms.filter(
+                    name__startswith=Screens.PAYMENT_MANAGEMENT.value
+                )
+            permissions.update(perms.values_list("name", flat=True))
 
         return list(permissions)
 
