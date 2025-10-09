@@ -18,6 +18,7 @@ from django.db.models import (
     DurationField,
     F,
 )
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from django.utils.translation import trim_whitespace
@@ -76,6 +77,8 @@ from tasks.models import Task
 from users.models import User
 from roles.constants import Screens
 from base.permissions import ActionPermission
+from statistics.services.export import ExportTaskService
+from statistics.constants import ExportType
 
 
 @extend_schema(tags=["System > Statistics"])
@@ -111,6 +114,9 @@ class StatisticViewSet(BaseAPIViewSet):
             OpenApiParameter(name="cursor", type=str),
             OpenApiParameter(name="cursor_id", type=int),
             OpenApiParameter(name="is_tag_page", type=bool),
+            OpenApiParameter(
+                name="export_type", type=str, enum=ExportType.values()
+            ),
         ]
     )
     @action(
@@ -311,6 +317,26 @@ class StatisticViewSet(BaseAPIViewSet):
                     ):
                         new_qs.append(x)
         new_qs = normalize_percentages(new_qs)
+
+        export_type = request.query_params.get("export_type")
+        if export_type:
+            service = ExportTaskService(
+                request,
+                new_qs,
+                export_type,
+            )
+            excel_file = service.export_task_statistic()
+            filename = service.get_filename()
+
+            response = HttpResponse(
+                excel_file.getvalue(),
+                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+            response[
+                "Content-Disposition"
+            ] = f'attachment; filename="{filename}"'
+            return response
+
         paginator = self.pagination_class()
         paginated_data = paginator.paginate_queryset(new_qs, request)
         return paginator.get_paginated_response(
