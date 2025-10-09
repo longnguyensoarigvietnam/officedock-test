@@ -1,7 +1,9 @@
 from rest_framework import permissions
 
+from base.exceptions import LockedError
+from companies.constants import CompanyStatus
 from core import settings
-from roles.constants import Actions, Screens
+from roles.constants import Actions, Screens, SelectionResultOptions
 from users.constants import RoleTypes
 from users.models import User
 from common.utils import to_camel_case, check_permission_exists
@@ -50,6 +52,15 @@ class ActionPermission(BasePermission):
 
         if not screen_name:
             return False  # Deny access if `screen_name` is not defined
+
+        # Just allow user access to Payment Management page when company suspended
+        if request.user.company.status == CompanyStatus.SUSPENDED.value:
+            if screen_name != Screens.PAYMENT_MANAGEMENT.value:
+                raise LockedError()
+            return request.user.roles.filter(
+                permissions__name__startswith=Screens.PAYMENT_MANAGEMENT.value,
+                role_details__selection_result=SelectionResultOptions.ALLOWED.value,
+            ).exists()
 
         # Allow `GET` requests if fetching data for a screen different from the current screen
         if current_screen and to_camel_case(current_screen) != to_camel_case(
