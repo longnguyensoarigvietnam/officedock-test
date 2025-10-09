@@ -54,7 +54,7 @@ export const SettingSkillModal = ({
             : 'スキルセットを変更する'}
         </p>
         {/* Skill map by organizations */}
-        <div className="overflow-y-auto max-h-[550px] !w-full">
+        <div className="overflow-y-auto max-h-[550px] !w-full !rounded-[20px]">
           {skillMapByOrganizations.length > 0 &&
             skillMapByOrganizations.map((skillMap, index) => (
               <SkillMapByOrganizationPanel

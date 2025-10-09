@@ -122,12 +122,12 @@ export const ReceiveAndSendThanksMessageTable = ({
         </Button>
       </div>
       {/* Header */}
-      <div className="h-fit flex items-center text-white text-xs font-medium gap-5">
+      <div className="h-fit flex items-center text-white text-xs font-medium gap-[14px]">
         <p className="w-[108px]">日付</p>
         <div className="w-[1px] h-[9px] bg-[#D2DBE1]"></div>
-        <p className="w-[140px]">名前</p>
+        <p className="w-[148px]">名前</p>
         <div className="w-[1px] h-[9px] bg-[#D2DBE1]"></div>
-        <p className="w-[calc(100%_-_300px)]">サンクスメッセージ</p>
+        <p className="w-[calc(100%_-_314px)]">サンクスメッセージ</p>
       </div>
       {/* Table */}
       <div
@@ -166,14 +166,14 @@ export const ReceiveAndSendThanksMessageTable = ({
                         : formatShowDateJapanese(new Date())}
                     </p>
                     <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
-                    <div className="w-[154px] flex flex-col gap-2 -ml-1 py-[15px]">
+                    <div className="w-[154px] flex flex-col gap-2 py-[15px]">
                       <p
                         className={`${activeTab == ThanksMessageType.RECEIVED && !message.readAt ? 'bg-[#FFDAEC] text-[#D85A9D]' : 'bg-[#EBF1F7] text-primary'} text-[11px] font-medium w-fit rounded-[2px] py-[4px] px-[5px] leading-none`}>
                         {activeTab == ThanksMessageType.RECEIVED
                           ? 'From'
                           : 'To'}
                       </p>
-                      <div className="flex items-start justify-center gap-2">
+                      <div className="flex items-center justify-center gap-2">
                         <CustomUserAvatar
                           avatarUrl={
                             activeTab == ThanksMessageType.RECEIVED

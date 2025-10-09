@@ -27,7 +27,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <MainLayout
       title={pageTitle}
       permission={PermissionsSystem.VIEW_ALL}
-      className={`pl-8 pt-8 pb-8 overflow-x-hidden ${pathName == pageRouters.MVP_VOTING.href ? 'overflow-y-auto' : 'overflow-y-hidden'}`}
+      className={`pl-[41px] pt-6 pb-[21px] overflow-x-hidden ${pathName == pageRouters.MVP_VOTING.href ? 'overflow-y-auto' : 'overflow-y-hidden'}`}
       showFooter={false}>
       <div
         style={{

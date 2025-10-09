@@ -76,6 +76,7 @@ export const TimeLine = ({
           avatarUrl={avatarUrl || ''}
           avatarColor={avatarColor || ''}
           size={30}
+          avatarClassName={'hover:!cursor-default'}
         />
       </div>
     );
@@ -122,7 +123,7 @@ export const TimeLine = ({
                         <ImageRound
                           name="Blue company"
                           src={'/icons/blue-company.svg'}
-                          className={`w-[30px] h-[30px] hover:cursor-pointer`}
+                          className={`w-[30px] h-[30px]`}
                         />
                       ) : (
                         renderAvatar(

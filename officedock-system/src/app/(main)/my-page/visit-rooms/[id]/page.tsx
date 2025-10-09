@@ -9,7 +9,7 @@ const RoomDetailPage = () => {
     <MainLayout
       title={pageRouters.VISIT_ROOM.name}
       permission={PermissionsSystem.VIEW_ALL}
-      className="pl-8 pt-8 !overflow-x-auto"
+      className="pl-[41px] pt-6 !overflow-x-auto"
       showFooter={false}>
       <RoomDetail />
     </MainLayout>

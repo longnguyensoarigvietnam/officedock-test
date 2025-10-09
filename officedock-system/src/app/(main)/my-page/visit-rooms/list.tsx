@@ -73,18 +73,18 @@ const RoomList = () => {
                 </p>
               </div>
             </div>
+            <div className="absolute -bottom-[115px] w-[calc(100%_-_780px)]">
+              <div className="flex-grow">
+                <div className="h-[424px] w-[336px] left-1/2 -translate-x-1/2 relative">
+                  <RenderAccessories />
+                </div>
+              </div>
+            </div>
 
             <MemberListByOrganization
               memberListByOrganization={memberListByOrganization}
               setMemberListByOrganization={setMemberListByOrganization}
             />
-          </div>
-          <div className="absolute -bottom-[115px] -left-[150px]">
-            <div className="flex-grow">
-              <div className="h-[424px] w-[336px] ml-[200px] relative">
-                <RenderAccessories />
-              </div>
-            </div>
           </div>
         </div>
       </div>

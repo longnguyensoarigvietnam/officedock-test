@@ -10,7 +10,7 @@ const ThanksMessagePage = () => {
     <MainLayout
       title={pageRouters.THANKS_MESSAGE.name}
       permission={PermissionsSystem.VIEW_ALL}
-      className="pl-8 pt-8 !overflow-x-auto"
+      className="pl-[41px] pt-6 !overflow-x-auto"
       showFooter={false}>
       <ThanksMessageListPage />
     </MainLayout>

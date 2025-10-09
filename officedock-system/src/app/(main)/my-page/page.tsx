@@ -9,7 +9,7 @@ const TagPage = () => {
     <MainLayout
       title={pageRouters.MY_PAGE.name}
       permission={PermissionsSystem.VIEW_ALL}
-      className="pl-8 pt-8 !overflow-x-auto"
+      className="pl-[41px] pt-6 !overflow-x-auto"
       showFooter={false}>
       <MyPage />
     </MainLayout>

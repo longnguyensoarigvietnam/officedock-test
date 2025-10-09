@@ -1037,20 +1037,20 @@ const Header = ({ className }: HeaderProps) => {
             />
             <TaskPageDataHeader />
           </div>
-          <div className="flex items-center w-fit">
+          <div className="flex items-center gap-4 w-fit pr-3">
             <Popover className="relative">
               {({ open, close }) => (
                 <>
                   <div className="flex gap-2 items-center">
                     <PopoverButton
-                      className={`flex w-full px-3 py-2 items-center rounded-full focus:outline-none
+                      className={`flex w-full items-center rounded-full focus:outline-none
                 ${open ? 'text-primary ' : ''}
                 `}>
                       {authenticatedUser && (
                         <CustomUserAvatar
                           avatarUrl={authenticatedUser?.avatar || ''}
                           avatarColor={authenticatedUser?.avatarColor || ''}
-                          size={40}
+                          size={36}
                         />
                       )}
                     </PopoverButton>
@@ -1125,11 +1125,11 @@ const Header = ({ className }: HeaderProps) => {
                 <>
                   <div className="flex gap-2 items-center">
                     <PopoverButton
-                      className={`flex w-full px-3 py-2 items-center rounded-full focus:outline-none
+                      className={`flex w-full items-center rounded-full focus:outline-none
                 ${open ? 'text-primary ' : ''}
                 `}>
                       <ImageRound
-                        className="w-10 h-10 hover:opacity-70"
+                        className="w-9 h-9 hover:opacity-70"
                         src="/icons/company.svg"
                         border="full"
                         name="Company"
