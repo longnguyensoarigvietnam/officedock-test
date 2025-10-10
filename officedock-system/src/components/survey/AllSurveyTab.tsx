@@ -85,7 +85,7 @@ const AllSurveyTab = ({ handleAnswer, handleDelete }: AllSurveyTabProp) => {
         {/* Table */}
         <div
           ref={resultsContainerRef}
-          className="h-full max-h-[calc(100vh_-_415px)]  pr-[10px]  overflow-y-auto   mt-[14px]">
+          className="h-full max-h-[calc(100%_-_90px)]  pr-[10px]  overflow-y-auto   mt-[14px]">
           <div className="w-full bg-white h-full py-[14px] rounded-[14px]">
             {isLoadingList && (
               <div>

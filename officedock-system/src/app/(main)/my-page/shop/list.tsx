@@ -208,7 +208,7 @@ const ShopItemPage = () => {
           }}
           className=" relative  h-[calc(100vh-120px)] w-full rounded-bl-[30px] rounded-r-[30px]">
           <div className="flex absolute top-0 left-0 ">
-            <div className="h-20 z-[30] bg-white w-[358px] py-4 text-[#77858F] font-medium flex gap-5 items-center justify-center rounded-br-[30px]">
+            <div className="h-20 z-[30] bg-white w-[358px] py-4 text-[#77858F] font-medium flex gap-5 items-center justify-start pl-10 rounded-br-[30px]">
               <BackToPage />
               <div className="flex items-center gap-[10px]">
                 <ImageRound

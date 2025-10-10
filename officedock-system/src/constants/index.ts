@@ -548,3 +548,9 @@ export const listAvatar = [
 export const JAPANESE_TIME_ZONE = 'Asia/Tokyo';
 
 export const STATISTIC_MAX_PERCENTAGE = 100;
+export const ONLY_PAYMENT_PERMISSIONS = [
+  'payment_management_delete',
+  'payment_management_view',
+  'payment_management_update',
+  'payment_management_add',
+] as const;

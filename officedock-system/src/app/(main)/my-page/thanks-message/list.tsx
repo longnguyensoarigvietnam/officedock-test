@@ -121,7 +121,7 @@ const ThanksMessageListPage = () => {
           <div className="relative pr-[30px] flex w-full justify-between items-center h-full !overflow-hidden rounded-b-[30px]">
             {/* Header */}
             <div className="flex absolute top-0 left-0">
-              <div className="h-[80px] bg-white w-[381px] py-4 font-medium flex gap-5 items-center justify-center rounded-br-[30px]">
+              <div className="h-[80px] bg-white w-[381px] py-4 font-medium flex gap-5 items-center justify-start pl-10 rounded-br-[30px]">
                 <BackToPage />
                 <div className="flex items-center gap-[10px]">
                   <ImageRound

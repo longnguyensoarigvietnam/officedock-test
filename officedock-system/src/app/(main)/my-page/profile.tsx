@@ -389,7 +389,7 @@ const MyPage = () => {
         </div>
         <div className="relative ml-[30px] mb-[40px] flex items-end flex-grow">
           <div className="flex-grow">
-            <div className="h-[424px] w-[336px] ml-[200px] relative">
+            <div className="h-[424px] w-[336px] ml-[337px] relative">
               <RenderAccessories />
             </div>
 

@@ -19,6 +19,7 @@ const useTeamList = ({
   onSuccess,
   onError,
   onSettled,
+  condition,
   screenName,
 }: useTeamListProps) => {
   const { data: session } = useSessionCache();
@@ -41,7 +42,7 @@ const useTeamList = ({
     queryKey: ['getTeamList', screenName],
     queryFn: getTeamList,
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (response: Organizations[]) => {
