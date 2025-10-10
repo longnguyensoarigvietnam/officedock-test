@@ -243,6 +243,7 @@ class CompanyTransactionSerializer(serializers.ModelSerializer):
             "status",
             "paid_at",
             "plan",
+            "stripe_invoice_id",
         ]
 
 
