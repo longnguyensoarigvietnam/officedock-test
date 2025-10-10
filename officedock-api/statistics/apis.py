@@ -78,7 +78,7 @@ from users.models import User
 from roles.constants import Screens
 from base.permissions import ActionPermission
 from statistics.services.export import ExportTaskService
-from statistics.constants import ExportType
+from statistics.constants import ExportType, PeriodClassification
 
 
 @extend_schema(tags=["System > Statistics"])
@@ -116,6 +116,11 @@ class StatisticViewSet(BaseAPIViewSet):
             OpenApiParameter(name="is_tag_page", type=bool),
             OpenApiParameter(
                 name="export_type", type=str, enum=ExportType.values()
+            ),
+            OpenApiParameter(
+                name="period_classification",
+                type=str,
+                enum=PeriodClassification.keys(),
             ),
         ]
     )
@@ -328,9 +333,14 @@ class StatisticViewSet(BaseAPIViewSet):
             excel_file = service.export_task_statistic()
             filename = service.get_filename()
 
+            if export_type == ExportType.CSV.value:
+                content_type = "text/csv"
+            elif export_type == ExportType.XLSX.value:
+                content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
             response = HttpResponse(
                 excel_file.getvalue(),
-                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                content_type=content_type,
             )
             response[
                 "Content-Disposition"

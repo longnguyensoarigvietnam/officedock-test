@@ -5,7 +5,10 @@ import csv
 
 from openpyxl import load_workbook
 
-from statistics.constants import ExportType
+from users.models import User
+from statistics.constants import ExportType, PeriodClassification
+from tags.models import Tag
+from skills.models import StatisticCategory
 
 
 class ExportTaskService:
@@ -67,22 +70,131 @@ class ExportTaskService:
             reader = csv.reader(f)
             rows = list(reader)
 
-        # TODO: Write actual data here
-        # Example: append data rows from queryset (customize as needed)
-        # Assuming each task object has: id, name, status
-        # for task in self.queryset:
-        #     rows.append([
-        #         getattr(task, "id", ""),
-        #         getattr(task, "name", ""),
-        #         getattr(task, "status", ""),
-        #     ])
+        # Extract query params (outside loop for efficiency)
+        from_date = self.request.query_params.get("from_date")
+        end_date = self.request.query_params.get("end_date")
+        large_category_id = self.request.query_params.get("large_category_id")
+        medium_category_id = self.request.query_params.get("medium_category_id")
+        small_category_id = self.request.query_params.get("small_category_id")
+        tag_ids = [
+            t
+            for t in self.request.query_params.get("tag_ids", "").split(",")
+            if t
+        ]
+
+        # Get user name
+        user_id = self.request.query_params.get("user_id")
+        user = self.request.user
+        if user_id:
+            user = User.objects.filter(id=user_id).first()
+        full_name = getattr(user, "full_name", "")
+
+        # Period classification
+        period = self.request.query_params.get("period_classification")
+        period_classification = (
+            PeriodClassification.COMPARISON.value
+            if period == PeriodClassification.COMPARISON.name
+            else PeriodClassification.BASE.value
+        )
+
+        # ----------------------------------------------------------------
+        # Pre-fetch tag filter names (query only once)
+        # ----------------------------------------------------------------
+        tag_names_filter = ""
+        if tag_ids:
+            tag_names = Tag.objects.filter(id__in=tag_ids).values_list(
+                "name", flat=True
+            )
+            tag_names_filter = " ".join(f"#{name}" for name in tag_names)
+
+        # ----------------------------------------------------------------
+        # Pre-fetch category names (query only once)
+        # ----------------------------------------------------------------
+        category_ids = [
+            cid
+            for cid in [
+                large_category_id,
+                medium_category_id,
+                small_category_id,
+            ]
+            if cid
+        ]
+        category_map = {}
+        if category_ids:
+            categories = StatisticCategory.objects.filter(
+                id__in=category_ids
+            ).values_list("id", "name")
+            category_map = {str(cid): cname for cid, cname in categories}
+
+        large_category_name = category_map.get(str(large_category_id), "-")
+        medium_category_name = category_map.get(str(medium_category_id), "-")
+        small_category_name = category_map.get(str(small_category_id), "-")
+
+        # ----------------------------------------------------------------
+        # Build CSV rows
+        # ----------------------------------------------------------------
+        for idx, task in enumerate(self.queryset, 1):
+            # Extract data from task dict
+            title = task.get("title", "")
+            total_duration = task.get("total_duration", "00:00")
+            percent = int(task.get("percent", 0)) / 100
+
+            # Organization
+            org = task.get("organization", {})
+            organization_name = (
+                org.get("name", "") if isinstance(org, dict) else ""
+            )
+
+            # Categories (list of dicts)
+            large_name = medium_name = small_name = ""
+            categories = task.get("categories", [])
+            if isinstance(categories, list):
+                for c in categories:
+                    ctype = c.get("type")
+                    if ctype == "LARGE":
+                        large_name = c.get("name", "")
+                    elif ctype == "MEDIUM":
+                        medium_name = c.get("name", "")
+                    elif ctype == "SMALL":
+                        small_name = c.get("name", "")
+
+            # Tags (list of dicts or strings)
+            tags = task.get("tags", [])
+            tag_names = ""
+            if isinstance(tags, list):
+                for t in tags:
+                    if isinstance(t, dict):
+                        tag_names += f"#{t.get('name', '')} "
+
+            # Append CSV row
+            rows.append(
+                [
+                    from_date,
+                    end_date,
+                    period_classification,
+                    full_name,
+                    f"{large_category_name} > {medium_category_name} > {small_category_name}",
+                    tag_names_filter,
+                    idx,
+                    title,
+                    total_duration,
+                    percent,
+                    organization_name,
+                    large_name,
+                    medium_name,
+                    small_name,
+                    tag_names.strip(),
+                ]
+            )
 
         # Write CSV to memory
         output = StringIO()
         writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
         writer.writerows(rows)
 
-        return output
+        csv_bytes = ("\ufeff" + output.getvalue()).encode("utf-8")
+
+        return BytesIO(csv_bytes)
 
     def _export_excel(self):
         """

@@ -7,6 +7,10 @@ from django.utils import timezone
 
 class EnumChoices(Enum):
     @classmethod
+    def keys(cls):
+        return [choice.name for choice in cls]
+
+    @classmethod
     def values(cls):
         return [choice.value for choice in cls]
 
