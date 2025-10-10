@@ -4,6 +4,7 @@ from pathlib import Path
 import csv
 
 from openpyxl import load_workbook
+from openpyxl.styles import Alignment, Border, Side
 
 from users.models import User
 from statistics.constants import ExportType, PeriodClassification
@@ -19,10 +20,10 @@ class ExportTaskService:
     and then returns the resulting file as an in-memory object for download.
     """
 
-    XLSX_TEMPLATE_PATH = "templates/export/tasks.xlsx"
-    CSV_TEMPLATE_PATH = "templates/export/tasks.csv"
+    XLSX_TEMPLATE_PATH = Path("templates/export/tasks.xlsx")
+    CSV_TEMPLATE_PATH = Path("templates/export/tasks.csv")
 
-    def __init__(self, request, queryset, export_type):
+    def __init__(self, request, queryset, export_type, sum_total_duration):
         """
         Initialize the export service.
 
@@ -34,7 +35,80 @@ class ExportTaskService:
         self.request = request
         self.queryset = queryset
         self.export_type = export_type
+        self.sum_total_duration = sum_total_duration
 
+        # Parse query params once
+        q = request.query_params
+        self.from_date = q.get("from_date")
+        self.end_date = q.get("end_date")
+        self.large_category_id = q.get("large_category_id")
+        self.medium_category_id = q.get("medium_category_id")
+        self.small_category_id = q.get("small_category_id")
+        self.tag_ids = [t for t in q.get("tag_ids", "").split(",") if t]
+        self.user_id = q.get("user_id")
+        self.period = q.get("period_classification")
+
+        # Preload all needed info
+        self.user = self._get_user()
+        self.full_name = getattr(self.user, "full_name", "")
+        self.period_classification = (
+            PeriodClassification.COMPARISON.value
+            if self.period == PeriodClassification.COMPARISON.name
+            else PeriodClassification.BASE.value
+        )
+        self.tag_names_filter = self._get_tag_filter_names()
+        self.category_names = self._get_category_names()
+
+    # ------------------------------------------------------------------ #
+    # Internal helpers
+    # ------------------------------------------------------------------ #
+    def _get_user(self):
+        if self.user_id:
+            return (
+                User.objects.filter(id=self.user_id).first()
+                or self.request.user
+            )
+        return self.request.user
+
+    def _get_tag_filter_names(self):
+        if not self.tag_ids:
+            return "-"
+        tag_names = Tag.objects.filter(id__in=self.tag_ids).values_list(
+            "name", flat=True
+        )
+        return " ".join(f"#{name}" for name in tag_names)
+
+    def _get_category_names(self):
+        category_ids = [
+            cid
+            for cid in [
+                self.large_category_id,
+                self.medium_category_id,
+                self.small_category_id,
+            ]
+            if cid
+        ]
+        if not category_ids:
+            return {"large": "-", "medium": "-", "small": "-"}
+        cats = StatisticCategory.objects.filter(
+            id__in=category_ids
+        ).values_list("id", "name")
+        cmap = {str(cid): cname for cid, cname in cats}
+        return {
+            "large": cmap.get(str(self.large_category_id), "-"),
+            "medium": cmap.get(str(self.medium_category_id), "-"),
+            "small": cmap.get(str(self.small_category_id), "-"),
+        }
+
+    def format_date(self, date_str):
+        try:
+            return datetime.strptime(date_str, "%Y-%m-%d").strftime("%Y/%m/%d")
+        except Exception:
+            return date_str or ""
+
+    # ------------------------------------------------------------------ #
+    # Public
+    # ------------------------------------------------------------------ #
     def get_filename(self):
         """
         Generate a timestamped filename for the exported file.
@@ -55,137 +129,25 @@ class ExportTaskService:
             return self._export_csv()
         elif self.export_type == ExportType.XLSX.value:
             return self._export_excel()
-        else:
-            raise ValueError(f"Unsupported export type: {self.export_type}")
+        raise ValueError(f"Unsupported export type: {self.export_type}")
 
+    # ------------------------------------------------------------------ #
+    # CSV Export
+    # ------------------------------------------------------------------ #
     def _export_csv(self):
         """
         Export data using a CSV template.
         The template provides the header row and structure.
         """
-        template_path = Path(self.CSV_TEMPLATE_PATH)
 
-        # Load the CSV template header
-        with open(template_path, "r", encoding="utf-8") as f:
+        # Load header template
+        with open(self.CSV_TEMPLATE_PATH, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
-        # Extract query params (outside loop for efficiency)
-        from_date = self.request.query_params.get("from_date")
-        end_date = self.request.query_params.get("end_date")
-        large_category_id = self.request.query_params.get("large_category_id")
-        medium_category_id = self.request.query_params.get("medium_category_id")
-        small_category_id = self.request.query_params.get("small_category_id")
-        tag_ids = [
-            t
-            for t in self.request.query_params.get("tag_ids", "").split(",")
-            if t
-        ]
-
-        # Get user name
-        user_id = self.request.query_params.get("user_id")
-        user = self.request.user
-        if user_id:
-            user = User.objects.filter(id=user_id).first()
-        full_name = getattr(user, "full_name", "")
-
-        # Period classification
-        period = self.request.query_params.get("period_classification")
-        period_classification = (
-            PeriodClassification.COMPARISON.value
-            if period == PeriodClassification.COMPARISON.name
-            else PeriodClassification.BASE.value
-        )
-
-        # ----------------------------------------------------------------
-        # Pre-fetch tag filter names (query only once)
-        # ----------------------------------------------------------------
-        tag_names_filter = ""
-        if tag_ids:
-            tag_names = Tag.objects.filter(id__in=tag_ids).values_list(
-                "name", flat=True
-            )
-            tag_names_filter = " ".join(f"#{name}" for name in tag_names)
-
-        # ----------------------------------------------------------------
-        # Pre-fetch category names (query only once)
-        # ----------------------------------------------------------------
-        category_ids = [
-            cid
-            for cid in [
-                large_category_id,
-                medium_category_id,
-                small_category_id,
-            ]
-            if cid
-        ]
-        category_map = {}
-        if category_ids:
-            categories = StatisticCategory.objects.filter(
-                id__in=category_ids
-            ).values_list("id", "name")
-            category_map = {str(cid): cname for cid, cname in categories}
-
-        large_category_name = category_map.get(str(large_category_id), "-")
-        medium_category_name = category_map.get(str(medium_category_id), "-")
-        small_category_name = category_map.get(str(small_category_id), "-")
-
-        # ----------------------------------------------------------------
-        # Build CSV rows
-        # ----------------------------------------------------------------
+        # Build data rows
         for idx, task in enumerate(self.queryset, 1):
-            # Extract data from task dict
-            title = task.get("title", "")
-            total_duration = task.get("total_duration", "00:00")
-            percent = int(task.get("percent", 0)) / 100
-
-            # Organization
-            org = task.get("organization", {})
-            organization_name = (
-                org.get("name", "") if isinstance(org, dict) else ""
-            )
-
-            # Categories (list of dicts)
-            large_name = medium_name = small_name = ""
-            categories = task.get("categories", [])
-            if isinstance(categories, list):
-                for c in categories:
-                    ctype = c.get("type")
-                    if ctype == "LARGE":
-                        large_name = c.get("name", "")
-                    elif ctype == "MEDIUM":
-                        medium_name = c.get("name", "")
-                    elif ctype == "SMALL":
-                        small_name = c.get("name", "")
-
-            # Tags (list of dicts or strings)
-            tags = task.get("tags", [])
-            tag_names = ""
-            if isinstance(tags, list):
-                for t in tags:
-                    if isinstance(t, dict):
-                        tag_names += f"#{t.get('name', '')} "
-
-            # Append CSV row
-            rows.append(
-                [
-                    from_date,
-                    end_date,
-                    period_classification,
-                    full_name,
-                    f"{large_category_name} > {medium_category_name} > {small_category_name}",
-                    tag_names_filter,
-                    idx,
-                    title,
-                    total_duration,
-                    percent,
-                    organization_name,
-                    large_name,
-                    medium_name,
-                    small_name,
-                    tag_names.strip(),
-                ]
-            )
+            rows.append(self._build_row(idx, task))
 
         # Write CSV to memory
         output = StringIO()
@@ -196,25 +158,108 @@ class ExportTaskService:
 
         return BytesIO(csv_bytes)
 
+    # ------------------------------------------------------------------ #
+    # Excel Export
+    # ------------------------------------------------------------------ #
     def _export_excel(self):
         """
         Export data using an Excel (.xlsx) template.
         """
-        template_path = Path(self.XLSX_TEMPLATE_PATH)
-        wb = load_workbook(template_path)
-        wb.active
 
-        # TODO: Write actual data here
-        # Example: write data starting from row 2
-        # row_index = 2
-        # for task in self.queryset:
-        #     ws.cell(row=row_index, column=1, value=getattr(task, "id", ""))
-        #     ws.cell(row=row_index, column=2, value=getattr(task, "name", ""))
-        #     ws.cell(row=row_index, column=3, value=getattr(task, "status", ""))
-        #     row_index += 1
+        wb = load_workbook(self.XLSX_TEMPLATE_PATH)
+        ws = wb.active
 
+        # Fill header info
+        ws[
+            "B4"
+        ] = f"{self.format_date(self.from_date)} - {self.format_date(self.end_date)}"
+        ws["B5"] = self.period_classification
+        ws["B6"] = self.full_name
+        ws[
+            "B7"
+        ] = f"{self.category_names['large']} > {self.category_names['medium']} > {self.category_names['small']}"
+        ws["B8"] = self.tag_names_filter
+        ws["B9"] = self.sum_total_duration
+
+        # Fill data rows
+        thin_border = Border(
+            left=Side(style="thin", color="000000"),
+            right=Side(style="thin", color="000000"),
+            top=Side(style="thin", color="000000"),
+            bottom=Side(style="thin", color="000000"),
+        )
+        left_align = Alignment(horizontal="left", vertical="center")
+        start_row = 13
+        for idx, task in enumerate(self.queryset, 1):
+            data = self._build_row(idx, task)
+            row_values = [
+                data[6],
+                data[7],
+                data[8],
+                data[9],
+                data[10],
+                data[11],
+                data[12],
+                data[13],
+                data[14],
+            ]
+            for col_idx, value in enumerate(row_values, start=1):
+                cell = ws.cell(row=start_row, column=col_idx, value=value)
+                cell.border = thin_border
+                if col_idx == 4:
+                    cell.number_format = "0.00%"
+                    cell.alignment = left_align
+
+            start_row += 1
+
+        # Save to BytesIO
         excel_file = BytesIO()
         wb.save(excel_file)
         excel_file.seek(0)
-
         return excel_file
+
+    # ------------------------------------------------------------------ #
+    # Shared Row Builder
+    # ------------------------------------------------------------------ #
+    def _build_row(self, idx, task):
+        title = task.get("title", "")
+        total_duration = task.get("total_duration", "00:00")
+        percent = int(task.get("percent", 0)) / 100
+        org = task.get("organization", {}) or {}
+        organization_name = org.get("name", "") if isinstance(org, dict) else ""
+
+        large_name = medium_name = small_name = ""
+        for c in task.get("categories", []) or []:
+            if not isinstance(c, dict):
+                continue
+            ctype = c.get("type")
+            if ctype == "LARGE":
+                large_name = c.get("name", "")
+            elif ctype == "MEDIUM":
+                medium_name = c.get("name", "")
+            elif ctype == "SMALL":
+                small_name = c.get("name", "")
+
+        tag_names = " ".join(
+            f"#{t.get('name', '')}"
+            for t in task.get("tags", [])
+            if isinstance(t, dict)
+        ).strip()
+
+        return [
+            self.from_date,
+            self.end_date,
+            self.period_classification,
+            self.full_name,
+            f"{self.category_names['large']} > {self.category_names['medium']} > {self.category_names['small']}",
+            self.tag_names_filter,
+            idx,
+            title,
+            total_duration,
+            percent,
+            organization_name,
+            large_name,
+            medium_name,
+            small_name,
+            tag_names,
+        ]
