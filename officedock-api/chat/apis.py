@@ -1112,10 +1112,6 @@ class ChatMessageViewSet(
             if uuid not in uuids_to_create and uuid not in uuids_exists:
                 uuids_to_create.append(uuid)
 
-        # Delete chat files
-        chat_files = instance.chat_files.exclude(uuid__in=file_uuids).update(
-            chat_message=None
-        )
         # TODO: Not delete file to use for quote and reply
         # remove_chat_files(chat_files)
 

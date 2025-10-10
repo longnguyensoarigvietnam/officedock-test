@@ -4,6 +4,7 @@ import math
 from collections import defaultdict
 from datetime import datetime, time, timedelta
 from itertools import chain
+from urllib.parse import quote
 
 from django.db.models import (
     Q,
@@ -322,13 +323,14 @@ class StatisticViewSet(BaseAPIViewSet):
                     ):
                         new_qs.append(x)
         new_qs = normalize_percentages(new_qs)
+        sum_total_duration = (
+            format_duration(total_duration) if new_qs else DEFAULT_TIME
+        )
 
         export_type = request.query_params.get("export_type")
         if export_type:
             service = ExportTaskService(
-                request,
-                new_qs,
-                export_type,
+                request, new_qs, export_type, sum_total_duration
             )
             excel_file = service.export_task_statistic()
             filename = service.get_filename()
@@ -344,16 +346,16 @@ class StatisticViewSet(BaseAPIViewSet):
             )
             response[
                 "Content-Disposition"
-            ] = f'attachment; filename="{filename}"'
+            ] = f"attachment; filename*=UTF-8''{quote(filename)}"
+            response["Content-Transfer-Encoding"] = "binary"
+
             return response
 
         paginator = self.pagination_class()
         paginated_data = paginator.paginate_queryset(new_qs, request)
         return paginator.get_paginated_response(
             paginated_data,
-            total_duration=format_duration(total_duration)
-            if new_qs
-            else DEFAULT_TIME,
+            total_duration=sum_total_duration,
         )
 
     @extend_schema(
