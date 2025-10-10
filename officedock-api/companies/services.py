@@ -141,19 +141,6 @@ class CompanyService:
             )
             print(f"✅ Company : {company.id} pending contract at: {day}")
             return True
-        # Handle check max user
-        company_user_count = company.users.count()
-        current_plan = company.company_plan.plan
-        filter = Q()
-        if company_user_count <= 10:
-            filter = Q(limit_person=10)
-        elif company_user_count <= 20:
-            filter = Q(limit_person=20)
-        else:
-            filter = Q(limit_person=30)
-        plan = Plan.objects.filter(filter).first()
-        if plan != current_plan:
-            self.stripe_service.change_price_of_subscription(company, plan)
         related_date = generate_contract_related_date_base_on_now(
             contract.next_renewal_at
         )
@@ -377,3 +364,43 @@ class CompanyService:
                         else CompanyStatus.ACTIVE_CONTRACT.value
                     ),
                 )
+
+    def downgrade_plan(self, company, updated_at):
+        """
+        Automatically downgrade a company's plan based on the number of users.
+        Args:
+            company (Company): The company whose plan will be downgraded.
+            updated_at (datetime, optional): The timestamp for the downgrade.
+
+        Returns:
+            bool: True if a downgrade occurred, False if no change was needed.
+
+        Raises:
+            ValidationError: If Stripe fails to update the subscription or any unexpected error occurs.
+        """
+        # Handle check max user
+        company_user_count = company.users.count()
+        current_plan = company.company_plan.plan
+        filter = Q()
+        if company_user_count <= 10:
+            filter = Q(limit_person=10)
+        elif company_user_count <= 20:
+            filter = Q(limit_person=20)
+        else:
+            filter = Q(limit_person=30)
+        plan = Plan.objects.filter(filter).first()
+        if plan != current_plan:
+            self.stripe_service.change_price_of_subscription(company, plan)
+            company.company_plan.plan = plan
+            company.company_plan.save(update_fields=["plan"])
+            # Update history use plan
+            company.transactions.filter(
+                type=CompanyTransactionTypes.PLAN.value,
+                plan_end_at__isnull=True,
+            ).update(plan_end_at=updated_at)
+            company.transactions.create(
+                type=CompanyTransactionTypes.PLAN.value,
+                plan_start_at=updated_at,
+                plan=plan,
+            )
+        return True
