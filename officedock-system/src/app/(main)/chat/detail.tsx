@@ -1863,19 +1863,25 @@ const ChatDetail = ({
     },
     [editor],
   );
+  const tryParse = (maybeString: any) => {
+    if (typeof maybeString !== 'string') return maybeString;
+    try {
+      return JSON.parse(maybeString);
+    } catch {
+      return maybeString;
+    }
+  };
+
   const handleQuoteMsgIcon = (payload: {
     data: ChatMessageResponse;
     title?: string;
   }) => {
     if (!editor) return;
-
     const title = payload.title ?? '';
 
-    // Save the whole object instead of just getting the message field
-    const messageAttr =
-      typeof payload.data === 'string'
-        ? payload.data
-        : JSON.stringify(payload.data);
+    // if payload.data is already an object then keep it as is, if it is a string then parse it
+
+    const messageObj = tryParse(payload.data);
 
     editor
       .chain()
@@ -1883,12 +1889,13 @@ const ChatDetail = ({
       .insertContent({
         type: 'msgQuote',
         attrs: {
-          data: messageAttr, // <--- change to data instead of message
+          data: messageObj, // to be an object (TipTap will stringify when renderingHTML)
           title,
         },
       })
       .run();
 
+    // insert paragraph to new line
     editor.chain().focus().insertContent({ type: 'paragraph' }).run();
   };
 
