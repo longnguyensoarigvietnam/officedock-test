@@ -699,8 +699,8 @@ const ActionsTemplateModal = ({
       <form
         ref={modalRef}
         onSubmit={handleSubmit(onSubmitData)}
-        className="px-8 pb-8 !h-[calc(100vh_-_150px)] overflow-y-auto">
-        <header className="flex sticky z-[100] top-[0px] pb-5 pt-[30px] items-center gap-2 justify-between bg-white">
+        className="px-9 pb-8 !h-[calc(100vh_-_150px)] overflow-y-auto">
+        <header className="flex sticky z-[100] top-[0px] pb-[35px] pt-10 items-center gap-2 justify-between bg-white">
           {/* Prevent default focus with fake input */}
           <input
             id="someOtherElement"
@@ -732,7 +732,7 @@ const ActionsTemplateModal = ({
               <Button
                 type="submit"
                 disabled={action === TemplateAction.EDIT && !isFormTouched}
-                className="w-[82px] h-[36px] !text-[12px] !px-2">
+                className="w-[86px] h-[36px] !text-sm !px-0">
                 保存
               </Button>
             )}
@@ -740,12 +740,12 @@ const ActionsTemplateModal = ({
               variant="outline"
               type="button"
               onClick={onClose}
-              className="w-[82px] !rounded-md  h-[34px] !text-[12px] !px-2">
+              className="w-[86px] !rounded-md  h-[34px] !text-sm !px-0">
               キャンセル
             </Button>
           </div>
         </header>
-        <div className="text-xs font-normal flex flex-col gap-4">
+        <div className="text-xs font-normal flex flex-col gap-[35px]">
           {/* Organization */}
           <div className="flex gap-[10px] items-center">
             <div className="w-full max-w-[100px]"></div>
@@ -755,9 +755,9 @@ const ActionsTemplateModal = ({
                 name={'organization'}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-[34px] !py-1 text-xs max-w-[515px] border-[#77858F] rounded-md !border-none !shadow-none !w-fit !pl-0"
-                    classNameTextData="!text-xs !w-fit"
-                    classNameOption="!text-xs !w-fit max-w-[515px]"
+                    className="h-[34px] !py-1 text-sm max-w-[515px] border-[#77858F] rounded-md !border-none !shadow-none !w-fit !pl-0"
+                    classNameTextData="!text-sm !w-fit"
+                    classNameOption="!text-sm !w-fit max-w-[515px]"
                     classNameError="!text-xs !w-fit"
                     placeholder="選択してください"
                     disabled={isCheckActionPermission}
@@ -786,7 +786,7 @@ const ActionsTemplateModal = ({
           {/* Category */}
           <div className="flex  gap-[10px] items-start">
             <div className="w-full max-w-[100px] mt-2">業務の種類</div>
-            <div className="w-full max-w-[515px] flex flex-col gap-4">
+            <div className="w-full max-w-[515px] flex flex-col gap-2">
               {/* Category large */}
               <Controller
                 control={control}
@@ -795,9 +795,9 @@ const ActionsTemplateModal = ({
                   return (
                     <Dropdown
                       placeholder="大カテゴリー"
-                      className="h-[34px] !py-1 text-xs !border-[#77858F] rounded-md"
-                      classNameTextData="!text-xs"
-                      classNameOption="!text-xs"
+                      className="h-[34px] !py-1 text-sm !border-[#77858F] rounded-md !shadow-none"
+                      classNameTextData="!text-sm"
+                      classNameOption="!text-sm"
                       classNameError="!text-xs"
                       disabled={isCheckActionPermission}
                       options={removeDuplicateOptions(dataOptionsCategoryLarge)}
@@ -833,9 +833,9 @@ const ActionsTemplateModal = ({
                       return (
                         <Dropdown
                           placeholder="中カテゴリ"
-                          className="h-[34px] !py-1 text-xs"
-                          classNameTextData="!text-xs"
-                          classNameOption="!text-xs"
+                          className="h-[34px] !py-1 text-sm !shadow-none"
+                          classNameTextData="!text-sm"
+                          classNameOption="!text-sm"
                           classNameError="!text-xs"
                           disabled={isCheckActionPermission}
                           options={removeDuplicateOptions(
@@ -869,9 +869,9 @@ const ActionsTemplateModal = ({
                     name={'categories.SMALL'}
                     render={({ field: { value, onChange } }) => (
                       <Dropdown
-                        className="h-[34px] !py-1 text-xs"
-                        classNameTextData="!text-xs"
-                        classNameOption="!text-xs"
+                        className="h-[34px] !py-1 text-sm !shadow-none"
+                        classNameTextData="!text-sm"
+                        classNameOption="!text-sm"
                         classNameError="!text-xs"
                         disabled={isCheckActionPermission}
                         options={removeDuplicateOptions(
@@ -900,6 +900,7 @@ const ActionsTemplateModal = ({
                 <div className="w-[461px]">
                   <MultiSelectDropdown
                     className="!h-[34px]"
+                    labelClass="!min-h-0 !text-sm"
                     valueClassName="!border-[#77858F]"
                     disabled={isCheckActionPermission}
                     options={dataOptionsTagIds}
@@ -987,7 +988,7 @@ const ActionsTemplateModal = ({
             {showDescriptionSection ? (
               <>
                 <div
-                  className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
+                  className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-[14px] hover:cursor-pointer"
                   onClick={() => setShowDescriptionSection(false)}>
                   <ImageRound
                     className="w-[17px] h-[17px] hover:cursor-pointer"
@@ -1024,7 +1025,7 @@ const ActionsTemplateModal = ({
             {showTodoSection ? (
               <>
                 <div
-                  className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
+                  className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-[14px] hover:cursor-pointer"
                   onClick={() => setShowTodoSection(false)}>
                   <ImageRound
                     className="w-[17px] h-[17px] hover:cursor-pointer"
@@ -1034,7 +1035,7 @@ const ActionsTemplateModal = ({
                   <p className="text-primary">To Do リストを作成</p>
                 </div>
                 <div>
-                  <div className="mb-4">
+                  <div className="mb-[14px]">
                     <Button
                       disabled={isCheckActionPermission}
                       type="button"
@@ -1063,7 +1064,7 @@ const ActionsTemplateModal = ({
                                 const draggableElement = (
                                   <>
                                     <li
-                                      className={`mb-2 gap-3 flex items-center px-2.5 rounded-md bg-[#F8FAFC] ${snapshot.isDragging ? 'dragging' : ''}`}
+                                      className={`mb-[6px] gap-3 flex items-center px-2.5 rounded-md bg-[#F8FAFC] ${snapshot.isDragging ? 'dragging' : ''}`}
                                       ref={provided.innerRef}
                                       {...provided.draggableProps}>
                                       <div
@@ -1120,7 +1121,7 @@ const ActionsTemplateModal = ({
                                           }
                                         }}
                                         rows={3}
-                                        className="resize-none focus:outline-none focus:shadow-none focus:border-none focus:ring-0 placeholder-gray-300 border-[#F8FAFC] bg-[#F8FAFC] shadow-none w-full rounded-md"
+                                        className={`resize-none focus:outline-none ${todo.isChecked && 'line-through'} focus:shadow-none focus:border-none focus:ring-0 placeholder-gray-300 border-[#F8FAFC] bg-[#F8FAFC] shadow-none w-full rounded-md`}
                                       />
                                       <div className="mt-[2.5px]  ml-2 flex items-center">
                                         {!isCheckActionPermission && (
@@ -1190,7 +1191,7 @@ const ActionsTemplateModal = ({
               <Button
                 type="submit"
                 disabled={action === ActionTask.EDIT && !isFormTouched}
-                className="w-[200px] !rounded-md h-[46px] !text-[15px] !px-2">
+                className="w-[200px] !rounded-md h-[46px] !text-sm !px-2">
                 保存
               </Button>
             </div>

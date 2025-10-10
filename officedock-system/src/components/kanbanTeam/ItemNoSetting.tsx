@@ -304,7 +304,7 @@ const ItemNoSetting = ({
                     handleClick();
                   }
                 }}>
-                <div className="flex gap-1 items-start">
+                <div className="flex gap-2 items-start">
                   {isShowSchedule ? (
                     <div
                       style={{

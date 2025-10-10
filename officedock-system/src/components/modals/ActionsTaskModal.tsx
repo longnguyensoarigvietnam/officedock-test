@@ -1076,8 +1076,8 @@ const ActionsTaskModal = ({
       <form
         ref={modalRef}
         onSubmit={handleSubmit(onSubmitData)}
-        className="px-8 pb-8 !h-[calc(100vh_-_150px)] overflow-y-auto">
-        <header className="flex sticky z-[999] top-[0px] pb-5 pt-[30px] items-center gap-5 justify-between bg-white">
+        className="px-9 pb-8 !h-[calc(100vh_-_150px)] overflow-y-auto">
+        <header className="flex sticky z-[999] top-[0px] pb-[35px] pt-10 items-center gap-5 justify-between bg-white">
           {/* Prevent default focus with fake input */}
           <input
             id="someOtherElement"
@@ -1143,7 +1143,7 @@ const ActionsTaskModal = ({
                     className="h-[34px] !py-1 text-sm max-w-[525px] rounded-md !border-none !shadow-none !w-fit !pl-0"
                     classNameTextData="!text-sm !w-fit"
                     classNameOption="!text-sm !w-fit max-w-[525px] !z-[998]"
-                    classNameError="!text-sm !w-fit"
+                    classNameError="!text-xs !w-fit"
                     placeholder="選択してください"
                     disabled={isCheckActionPermission}
                     options={dataOptionsOrganizations}
@@ -1189,7 +1189,7 @@ const ActionsTaskModal = ({
                       className="h-[34px] !py-1 text-sm !border-[1px] !border-[#77858F] rounded-md !shadow-none"
                       classNameTextData="!text-sm"
                       classNameOption="!text-sm !z-[998]"
-                      classNameError="!text-sm"
+                      classNameError="!text-xs"
                       isLoading={isFetchingCreationDataCommon}
                       disabled={isCheckActionPermission}
                       options={dataOptionsCategoryLarge}
@@ -1228,7 +1228,7 @@ const ActionsTaskModal = ({
                           className="h-[34px] !py-1 text-sm !shadow-none "
                           classNameTextData="!text-sm"
                           classNameOption="!text-sm !z-[998]"
-                          classNameError="!text-sm"
+                          classNameError="!text-xs"
                           isLoading={isFetchingCreationDataCommon}
                           disabled={isCheckActionPermission}
                           options={dataOptionsCategoryMedium}
@@ -1263,7 +1263,7 @@ const ActionsTaskModal = ({
                         className="h-[34px] !py-1 text-sm !shadow-none "
                         classNameTextData="!text-sm"
                         classNameOption="!text-sm !z-[998]"
-                        classNameError="!text-sm"
+                        classNameError="!text-xs"
                         isLoading={isFetchingCreationDataCommon}
                         disabled={isCheckActionPermission}
                         options={dataOptionsCategorySmall}
@@ -3081,7 +3081,7 @@ const ActionsTaskModal = ({
                 {showDescriptionSection ? (
                   <>
                     <div
-                      className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
+                      className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-[14px] hover:cursor-pointer"
                       onClick={() => setShowDescriptionSection(false)}>
                       <ImageRound
                         className="w-[17px] h-[17px] hover:cursor-pointer"
@@ -3124,7 +3124,7 @@ const ActionsTaskModal = ({
                     {showTodoSection ? (
                       <>
                         <div
-                          className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
+                          className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-[14px] hover:cursor-pointer"
                           onClick={() => setShowTodoSection(false)}>
                           <ImageRound
                             className="w-[17px] h-[17px] hover:cursor-pointer"
@@ -3136,7 +3136,7 @@ const ActionsTaskModal = ({
                           </p>
                         </div>
                         <div>
-                          <div className="mb-4">
+                          <div className="mb-[14px]">
                             <Button
                               disabled={isCheckActionPermission}
                               type="button"
@@ -3167,7 +3167,7 @@ const ActionsTaskModal = ({
                                         const draggableElement = (
                                           <>
                                             <li
-                                              className={`mb-2 gap-3 flex items-center px-2.5 rounded-md bg-[#F8FAFC] ${snapshot.isDragging ? 'dragging' : ''}`}
+                                              className={`mb-[6px] gap-3 flex items-center px-2.5 rounded-md bg-[#F8FAFC] ${snapshot.isDragging ? 'dragging' : ''}`}
                                               ref={provided.innerRef}
                                               {...provided.draggableProps}>
                                               <div
@@ -3229,7 +3229,7 @@ const ActionsTaskModal = ({
                                                   }
                                                 }}
                                                 rows={3}
-                                                className={`resize-none  ${todo.isChecked && 'line-through'} line-through focus:outline-none focus:shadow-none focus:border-none focus:ring-0 placeholder-gray-300 border-[#F8FAFC] bg-[#F8FAFC] shadow-none w-full rounded-md`}
+                                                className={`resize-none  ${todo.isChecked && 'line-through'}  focus:outline-none focus:shadow-none focus:border-none focus:ring-0 placeholder-gray-300 border-[#F8FAFC] bg-[#F8FAFC] shadow-none w-full rounded-md`}
                                               />
                                               <div className="mt-[2.5px] ml-2 flex items-center">
                                                 {!isCheckActionPermission && (
