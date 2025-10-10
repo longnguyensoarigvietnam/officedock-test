@@ -5,15 +5,18 @@ export const MsgQuote = Node.create({
   group: 'inline',
   inline: true,
   atom: true,
+  selectable: false,
 
   addAttributes() {
     return {
+      // internally called `data`, HTML attribute is `data-msg-data`
       data: {
         default: null,
-        parseHTML: (element) => {
-          const raw = element.getAttribute('data-msg-data');
+        parseHTML: (el: HTMLElement) => {
+          const raw = el.getAttribute('data-msg-data');
+          if (!raw) return null;
           try {
-            return raw ? JSON.parse(raw) : null;
+            return JSON.parse(raw);
           } catch {
             return raw;
           }
@@ -32,36 +35,30 @@ export const MsgQuote = Node.create({
     };
   },
 
+  // match both class and attribute to be robust
+
   parseHTML() {
-    return [
-      {
-        tag: 'span[data-message]',
-        getAttrs: (dom: HTMLElement) => ({
-          message: dom.getAttribute('data-message') || '',
-          title:
-            dom.getAttribute('data-title') ||
-            dom.textContent?.replace('[引用] ', ''),
-        }),
-      },
-    ];
+    return [{ tag: 'span.inline-msg-quote' }, { tag: 'span[data-msg-data]' }];
   },
 
   renderHTML({ HTMLAttributes }) {
+    // addAttributes.renderHTML will add data-msg-data if attrs.data exists,
+    // so here just merge title / class / data-quote-msg
+
     return [
       'span',
       mergeAttributes(HTMLAttributes, {
-        'data-message': HTMLAttributes.message,
-        'data-title': HTMLAttributes.title,
+        'data-title': HTMLAttributes.title || '',
         'data-quote-msg': 'true',
         class: 'inline-msg-quote',
       }),
       ['span', { style: 'color: #77858F;' }, '[引用]'],
       ' ',
-      ['span', { style: 'color: #0068B7;' }, HTMLAttributes.title],
+      ['span', { style: 'color: #0068B7;' }, HTMLAttributes.title || ''],
     ];
   },
 
   renderText({ node }) {
-    return `[引用] ${node.attrs.title}`;
+    return `[引用] ${node.attrs.title || ''}`;
   },
 });
