@@ -429,7 +429,7 @@ const MyPage = () => {
           <ImageRound
             name="Tweet icon"
             src={'/icons/tweet.svg'}
-            className={`w-[88px] h-[94px] z-10 hover:cursor-pointer absolute bottom-0 right-[10px]`}
+            className={`w-[92px] h-[99px] z-10 hover:cursor-pointer absolute -bottom-[20px] right-[10px]`}
             onClick={() => setOpenCreateTweetModal(true)}
           />
         </div>

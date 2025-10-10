@@ -12,6 +12,7 @@ type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   sz?: ButtonSize;
+  style?: React.CSSProperties;
 };
 
 const Button = ({
@@ -19,6 +20,7 @@ const Button = ({
   sz = 'md',
   className,
   children,
+  style,
   ...props
 }: ButtonProps) => {
   let variantClassNames = '';
@@ -70,6 +72,7 @@ const Button = ({
     <button
       style={{
         background: backgroundStyle,
+        ...style,
       }}
       className={`inline-flex rounded-lg justify-center font-medium items-center disabled:cursor-not-allowed disabled:opacity-50 hover:cursor-pointer transition-all duration-300 ${variantClassNames} ${sizeClassNames} ${className}`}
       {...props}>

@@ -98,9 +98,13 @@ const HistoryListPage = () => {
             </div>
           </div>
           <div className="relative pr-[30px] flex w-full h-full">
-            {/* User */}
+            {/* Tabs */}
             <div className="w-[calc(100%_-_720px)] flex-shrink-0 flex-grow h-full flex items-center justify-center">
-              <div className="w-[402px] h-[383px] flex flex-col items-center justify-between bg-white shadow-common rounded-3xl p-[6px] pb-[48px]">
+              <div
+                className="w-[402px] h-[383px] flex flex-col items-center justify-between bg-white rounded-3xl p-[6px] pb-[48px]"
+                style={{
+                  boxShadow: '0px 2px 15px 0px #0000001A',
+                }}>
                 <div className="flex items-center gap-[6px] justify-center">
                   <Button
                     variant={`${activeTab == PointHistoryActiveTab.COIN ? 'post' : 'secondary'}`}
@@ -143,7 +147,7 @@ const HistoryListPage = () => {
                       className={`w-[60px] h-[60px]`}
                     />
                   </div>
-                  <div className="flex items-end justify-center mt-[10px] gap-2 text-black font-medium">
+                  <div className="flex items-end justify-center mt-[10px] gap-[6px] text-black font-medium">
                     <p className="text-[40px] leading-10">
                       {activeTab == PointHistoryActiveTab.COIN
                         ? totalCoins || 0
@@ -192,6 +196,7 @@ const HistoryListPage = () => {
                     }
                     variant="post"
                     className="w-[200px] h-[46px] text-sm font-medium rounded-md"
+                    style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
                     disabled={
                       activeTab == PointHistoryActiveTab.COIN &&
                       (!exchangableCoins || !totalCoins)

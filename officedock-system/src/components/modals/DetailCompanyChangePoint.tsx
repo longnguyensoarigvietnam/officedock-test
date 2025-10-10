@@ -20,13 +20,13 @@ const DataCompanyPointChangeModal = ({ open, onClose, onNavigateToDotMoney }: Pr
         <ImageRound
           name="Badge icon"
           src={'/icons/badge.svg'}
-          className={`w-7 h-7`}
+          className={`w-[30px] h-[30px]`}
         />
       </div>
-      <p className="text-sm font-normal text-center mt-5">
+      <p className="text-sm font-normal text-center mt-5 leading-none">
         コインを交換しますか？
       </p>
-      <p className="text-sm font-normal text-center mt-1">
+      <p className="text-sm font-normal text-center mt-1 leading-none">
         様々なポイントに交換できます！
       </p>
       <div
