@@ -35,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="jp">
+    <html lang="ja">
       {/* TODO: Config font and using in here */}
       <body
         className={`${fontPrimary.variable} font-primary bg-[#EBF1F7] overflow-y-hidden overflow-x-auto scrollbar-gutter-stable`}>

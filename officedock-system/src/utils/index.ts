@@ -23,6 +23,7 @@ import {
   DEFAULT_TIME_TEXT,
   MAX_HEX_COLOR_VALUE,
   MENTION_ALL_MEMBERS,
+  ONLY_PAYMENT_PERMISSIONS,
   SKILL_MAP_LEVEL_COUNT,
   SKILL_MAP_STEP_COUNT,
   SKILL_MAP_STEPS,
@@ -2484,7 +2485,7 @@ export function attachUuidToAllP(html: string, listFiles: string[]): string {
 }
 export const getErrorMessageByField = (
   error: AxiosError<any>,
-  field?: string
+  field?: string,
 ): string => {
   if (!error.response?.data) return 'Unknown error occurred.';
 
@@ -2506,3 +2507,12 @@ export const getErrorMessageByField = (
 
   return 'Unexpected error occurred.';
 };
+
+export function hasFullPaymentPermissions(permissions: string[]): boolean {
+  if (permissions.length !== ONLY_PAYMENT_PERMISSIONS.length) return false;
+  const allMatch = ONLY_PAYMENT_PERMISSIONS.every((perm) =>
+    permissions.includes(perm),
+  );
+
+  return allMatch;
+}
