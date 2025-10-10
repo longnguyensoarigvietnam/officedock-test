@@ -92,10 +92,10 @@ export const MyPageMenu = ({
                           onClickSettingSurvey();
                         }
                       }}
-                      className={`px-2 py-[10px] hover:opacity-85 w-full hover:text-primary cursor-pointer ${item.name == pageRouters.CUSTOMIZE_ITEM.name && '!w-[200px]'}`}>
+                      className={`px-2 py-[10px] flex hover:opacity-85 w-full hover:text-primary cursor-pointer ${item.name == pageRouters.CUSTOMIZE_ITEM.name && '!w-[200px]'}`}>
                       {item.name}{' '}
                       {item.displayCount && unAnsweredSurveyCount ? (
-                        <span className="bg-[#FFEE6F] ml-1 py-[5px] px-[6px] w-[38px] text-[13px] rounded-[100px] text-black font-bold">
+                        <span className="bg-[#FFEE6F] ml-1 h-5 flex items-center justify-center flex-shrink-0 w-[38px] text-[13px] rounded-[100px] text-black font-bold">
                           {unAnsweredSurveyCount > MAXIMUM_VISIBLE_COUNT
                             ? `${MAXIMUM_VISIBLE_COUNT}+`
                             : unAnsweredSurveyCount}
