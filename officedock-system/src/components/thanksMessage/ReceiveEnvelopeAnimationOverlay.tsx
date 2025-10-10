@@ -89,7 +89,7 @@ export default function ReceiveEnvelopeAnimationOverlay({
         },
       })
       .to(contentEl, {
-        y: -10,
+        y: -110,
         duration: 0.8,
         ease: 'bounce.out',
         onStart: () => {
@@ -342,12 +342,12 @@ export default function ReceiveEnvelopeAnimationOverlay({
                   iconUrl="/icons/twinkling-heart.svg"
                 />
                 <TwinklingIcon
-                  className="absolute top-[-15px] right-[5px] w-[44px] h-[40px] z-[100]"
+                  className="absolute top-[-50px] right-[5px] w-[44px] h-[40px] z-[100]"
                   delay={0.8}
                   iconUrl="/icons/twinkling-heart.svg"
                 />
                 <TwinklingIcon
-                  className="absolute bottom-[-50px] left-[-55px] w-[44px] h-[40px] z-[100]"
+                  className="absolute bottom-[-50px] left-[-35px] w-[44px] h-[40px] z-[100]"
                   delay={1}
                   iconUrl="/icons/twinkling-heart.svg"
                 />
@@ -391,7 +391,7 @@ export default function ReceiveEnvelopeAnimationOverlay({
                 </Button>
               </div>
               {receivedThanksMessageList.length > 1 ? (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-[10px]">
                   <Button
                     variant="option"
                     className="w-[60px] !rounded-full h-[60px] !bg-white !p-0"

@@ -83,10 +83,10 @@ export const TimeLine = ({
   };
 
   return (
-    <div className="w-[352px] h-[calc(100vh_-_264px)] min-h-[715px] py-[31px] px-[19px] absolute top-1/2 -translate-y-1/2 right-[30px] border-[1px] border-white bg-[#3599D8CC] rounded-[24px] space-y-5">
+    <div className="w-[352px] h-[calc(100%_-_60px)] py-[31px] px-[19px] absolute top-1/2 -translate-y-1/2 right-[30px] border-[1px] border-white bg-[#3599D8CC] rounded-[24px] space-y-5">
       {/* Header */}
-      <div className="border-b-[1px] border-b-white pb-3">
-        <p className="text-[18px] text-white font-semibold">
+      <div className="border-b-[1px] border-b-white pb-[17px]">
+        <p className="text-[18px] text-white font-semibold leading-none">
           OFFICE DOCK タイムライン
         </p>
       </div>
@@ -94,7 +94,7 @@ export const TimeLine = ({
       {/* Messages */}
       <div
         ref={resultsContainerRef}
-        className={`customized-scrollbar ${isLoadingList && tweetList.length == 0 ? 'overflow-y-hidden' : 'overflow-y-auto'}  max-h-[calc(100%_-_50px)] flex flex-col-reverse gap-10 !w-full`}>
+        className={`customized-scrollbar ${isLoadingList && tweetList.length == 0 ? 'overflow-y-hidden' : 'overflow-y-auto'} max-h-[calc(100%_-_50px)] flex flex-col-reverse gap-10 !w-full`}>
         {isLoadingList && tweetList.length == 0 ? (
           <div className="flex flex-col items-start ml-3 space-y-2">
             <RowSkeleton className={`!h-[100px] w-[180px] !bg-[#248bcacc]`} />

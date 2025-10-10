@@ -107,17 +107,17 @@ export const ConfirmSettingSkillModal = ({
   return (
     <Modal
       open={open}
-      className={`font-primary bg-white w-[400px] h-[318px] !rounded-[20px] !py-[40px] !px-[20px]`}
+      className={`font-primary bg-white w-[400px] h-[296px] !rounded-[20px] !py-[40px] !px-[20px]`}
       contentClass="!rounded-[20px]"
       isOutSideAction={false}
       onClose={onClose}>
-      <div className="flex flex-col items-center gap-8">
-        <div className="space-y-4">
-          <p className="text-[18px] font-medium text-center">確認</p>
-          <p className="text-sm text-center">{message}</p>
+      <div className="flex flex-col items-center">
+        <div className="space-y-[26px] mb-[26px]">
+          <p className="text-[18px] font-medium text-center leading-none">確認</p>
+          <p className="text-sm text-center leading-none">{message}</p>
         </div>
 
-        <div className="bg-[#E9EEF3] rounded-[20px] p-[10px] w-[265px] h-[75px]">
+        <div className="bg-[#E9EEF3] rounded-[20px] p-[10px] w-[265px] h-[75px] mb-[30px]">
           <div
             className="flex gap-3 bg-white items-center rounded-[14px] relative w-full h-full px-[20px] py-[12px]"
             style={{

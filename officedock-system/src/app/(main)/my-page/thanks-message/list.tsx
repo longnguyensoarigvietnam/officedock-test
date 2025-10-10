@@ -150,14 +150,14 @@ const ThanksMessageListPage = () => {
                 </p>
               </div>
               <Button
-                className="text-white !text-[13px] !rounded-[10px] font-bold hover:cursor-pointer w-full"
+                className="text-white !text-[13px] !rounded-[10px] !font-bold hover:cursor-pointer w-full"
                 style={{
                   background:
                     'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
                   boxShadow: '0px 4px 0px 0px #0028A140',
                 }}
                 onClick={() => setOpenSendThanksMessageTable((prev) => !prev)}>
-                <div className="w-[28px] h-[28px] mr-2 bg-white rounded-full flex items-center justify-center">
+                <div className="w-[28px] h-[28px] mr-[10px] bg-white rounded-full flex items-center justify-center">
                   <ImageRound
                     name="Heart icon"
                     src={'/icons/blue-heart.svg'}

@@ -59,7 +59,7 @@ export const SendThanksMessageList = ({
               key={organization.orgInfo.id}
               className={`border-b-[1px] border-white pb-[26px] ${index == memberListByOrganization.length - 1 && 'mb-[1px]'}`}>
               <div className={`flex items-center justify-between ${!organization.collapseStatus || (organization.collapseStatus && organization.orgInfo.users.length == 0) ? 'mb-0' : 'mb-5'}`}>
-                <p className="font-medium text-[16px] max-w-full break-all">
+                <p className="font-medium text-base max-w-full break-all leading-none">
                   {organization.orgInfo.name}
                   <span className="text-xs font-medium ml-[18px]">
                     メンバー{organization.orgInfo.users.length}人
@@ -87,7 +87,7 @@ export const SendThanksMessageList = ({
                     return (
                       <div
                         key={`${organization.orgInfo.id}-${user.id}`}
-                        className={`w-[157px] bg-white rounded-[14px] h-[50px] px-[14px] py-[10px] flex items-center gap-2 ${!remainingQuota?.remainingQuota || session?.user.id == user.id ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
+                        className={`w-[157px] bg-white rounded-[14px] h-[50px] px-[14px] py-[10px] flex items-center gap-[10px] ${!remainingQuota?.remainingQuota || session?.user.id == user.id ? 'opacity-50 hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
                         onClick={() => {
                           remainingQuota?.remainingQuota &&
                             session?.user.id != user.id &&

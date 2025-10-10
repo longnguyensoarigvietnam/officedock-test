@@ -374,7 +374,7 @@ const MyPage = () => {
             setOpenConfirmDeleteSkillModal={setOpenConfirmDeleteSkillModal}
           />
         </div>
-        <div className="absolute bottom-[30px] left-[30px] z-50">
+        <div className="absolute bottom-[30px] left-[30px] z-[1]">
           {/* Menu */}
           <MyPageMenu
             onClickSettingSurvey={() => setOpenSettingSurvey(true)}
@@ -429,7 +429,7 @@ const MyPage = () => {
           <ImageRound
             name="Tweet icon"
             src={'/icons/tweet.svg'}
-            className={`w-[88px] h-[94px] z-10 hover:cursor-pointer absolute bottom-0 right-[20px]`}
+            className={`w-[88px] h-[94px] z-10 hover:cursor-pointer absolute bottom-0 right-[10px]`}
             onClick={() => setOpenCreateTweetModal(true)}
           />
         </div>

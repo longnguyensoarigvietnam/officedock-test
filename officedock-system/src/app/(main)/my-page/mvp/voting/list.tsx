@@ -167,7 +167,7 @@ export const VotingListPage = () => {
             <div
               style={{
                 background: 'linear-gradient(180deg, #C59941 0%, #D0AA5A 100%)',
-                boxShadow: '0px 4px 0px 0px #355AC940',
+                boxShadow: '0px 4px 0px 0px #C87B1E40',
               }}
               className="absolute bottom-[480px] left-1/2 -translate-x-1/2 p-[10px] rounded-[14px] w-[310px] h-[194px]">
               <div className="relative">
@@ -214,7 +214,7 @@ export const VotingListPage = () => {
                   </p>
                 </div>
                 <div
-                  className="bg-[#D0A95A] absolute h-[25px] w-[22px] -bottom-[25px] left-[270px]"
+                  className="bg-[#D0A95A] absolute h-[22px] w-[25.69px] -bottom-[25px] left-[264px]"
                   style={{
                     clipPath: 'polygon(100% 0, 33% 0, 0 100%)',
                   }}></div>

@@ -238,7 +238,7 @@ export const SkillSetting = ({
           style={{
             boxShadow: '0px 0px 7px 0px #00000080',
           }}
-          className="w-[245px] min-w-[245px] h-[55px] bg-transparent border border-white rounded-[14px] hover:opacity-70 flex items-center cursor-pointer justify-center text-white text-center font-medium text-sm"
+          className="w-[245px] min-w-[245px] h-[52px] bg-transparent border border-white rounded-[14px] hover:opacity-70 flex items-center cursor-pointer justify-center text-white text-center font-medium text-sm"
           onClick={() => setOpenSetSkillModal(true)}>
           <p>＋ スキルをセットできます</p>
         </div>

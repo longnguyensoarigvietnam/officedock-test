@@ -71,7 +71,7 @@ export const VotingCandidateList = ({
         background: '#DFAEAECC',
         boxShadow: '0px 4px 10px 0px #0000000D',
       }}
-      className="w-[720px] h-[calc(100vh_-_246px)] min-h-[715px]  p-[30px] pr-[12px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
+      className="w-[720px] h-[calc(100%_-_60px)] p-[30px] pr-[12px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
       <div className="space-y-[14px] mb-10">
         {currentMVPVotingDetail ? (
           <>
@@ -102,7 +102,7 @@ export const VotingCandidateList = ({
               className="border-b-[1px] border-white pb-[26px]">
               <div
                 className={`flex items-center justify-between ${!organization.collapseStatus || (organization.collapseStatus && organization.orgInfo.candidates.length == 0) ? 'mb-0' : 'mb-5'}`}>
-                <p className="font-medium text-base max-w-full break-all">
+                <p className="font-medium text-base max-w-full break-all leading-none">
                   {organization.orgInfo.name}
                   <span
                     className={`text-xs font-medium ${organization.orgInfo.name && 'ml-[18px]'}`}>
@@ -136,7 +136,7 @@ export const VotingCandidateList = ({
                             ? '0px 2px 8px 0px #0000001A'
                             : 'none',
                         }}
-                        className={`w-[157px] ${candidate.isVoted ? 'bg-[#FFE9CD] !border-[2px] !border-[#C69B44]' : 'bg-white'} ${candidate.id == session?.user.id || (currentMVPVotingDetail?.isVoted && !candidate.isVoted) ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} rounded-[14px] h-[50px] px-[14px] py-[10px] flex items-center gap-2`}
+                        className={`w-[157px] ${candidate.isVoted ? 'bg-[#FFE9CD] !border-[2px] !border-[#C69B44]' : 'bg-white'} ${candidate.id == session?.user.id || (currentMVPVotingDetail?.isVoted && !candidate.isVoted) ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} rounded-[14px] h-[50px] px-[14px] py-[10px] flex items-center gap-[10px]`}
                         onClick={() => {
                           session?.user.id != candidate.id &&
                             !currentMVPVotingDetail?.isVoted &&

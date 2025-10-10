@@ -152,7 +152,7 @@ export const HonoredUsersVotingReasonsModal = ({
         <div className="flex justify-center mt-[30px]">
           <Button
             variant="text"
-            className="!text-[13px] !p-0 font-medium"
+            className="!text-sm !p-0 font-medium"
             onClick={onClose}>
             閉じる
           </Button>

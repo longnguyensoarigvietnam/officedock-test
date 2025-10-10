@@ -33,10 +33,10 @@ export const EnvelopeContent = ({
         <ImageRound
           name="Heart icon"
           src={'/icons/blue-heart.svg'}
-          className={`w-[24px] h-[22px]`}
+          className={`w-[22px] h-[20px]`}
         />
 
-        <p className="font-medium text-[22px]">サンクスメッセージ</p>
+        <p className="font-medium text-[22px] leading-none">サンクスメッセージ</p>
       </div>
       <p>
         <div className="flex items-center justify-center gap-2 w-full">

@@ -82,9 +82,9 @@ export default function SendEnvelopeAnimationOverlay({
       defaults: { duration: 0.8, ease: 'power2.out' },
     });
 
-    tl.to(contentRef.current, { y: -100, duration: 1, ease: 'power2.out' })
+    tl.to(contentRef.current, { y: -140, duration: 1, ease: 'power2.out' })
       .to(contentRef.current, {
-        y: 80,
+        y: 100,
         duration: 0.8,
         ease: 'bounce.out',
         onStart: () => {
@@ -181,7 +181,7 @@ export default function SendEnvelopeAnimationOverlay({
 
         <div
           ref={contentRef}
-          className={`absolute inset-0 z-30 top-[80px] left-[60px] ${!showEnvelopeContent && 'hidden'}`}>
+          className={`absolute inset-0 z-30 top-[45px] left-[60px] ${!showEnvelopeContent && 'hidden'}`}>
           {showEnvelopeContent && (
             <EnvelopeContent
               content={envelopeMessage}
@@ -250,13 +250,13 @@ export default function SendEnvelopeAnimationOverlay({
       </div>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
         {showFinishMessage && (
-          <div className="w-[400px] h-[130px] bg-white rounded-[20px]  flex flex-col gap-[30px] items-center justify-center">
-            <p className="text-sm !leading-none">
+          <div className="w-[400px] h-[130px] bg-white rounded-[20px] flex flex-col gap-[30px] items-center justify-center">
+            <p className="text-sm !leading-none mt-[10px]">
               サンクスメッセージを送りました
             </p>
             <Button
               variant="text"
-              className={`w-[100px] rounded-[8px] !p-0`}
+              className={`w-[100px] rounded-[8px] !text-[13px] !p-0`}
               onClick={onFinish}>
               閉じる
             </Button>

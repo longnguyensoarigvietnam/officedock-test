@@ -87,7 +87,7 @@ const RoomDetail = () => {
       <CustomUserAvatar
         avatarUrl={memberInfo?.avatar || ''}
         avatarColor={memberInfo?.avatarColor || ''}
-        size={36}
+        size={46}
       />
     );
   };
@@ -148,11 +148,11 @@ const RoomDetail = () => {
           width: '100%',
           height: '100%',
         }}
-        className="h-[calc(100vh-120px)] w-full rounded-bl-[30px]  rounded-tr-[30px] rounded-br-[30px]">
-        <div className="flex ">
-          <div className="h-20 bg-white w-fit px-5 py-4 text-[#77858F] font-medium flex items-center gap-5 rounded-br-[30px]">
-            <div>{params.id && renderBoxUser(String(params.id))}</div>
-            <p className="break-all max-w-[100px] line-clamp-2">名前</p>
+        className="h-[calc(100vh-120px)] w-full rounded-bl-[30px] rounded-tr-[30px] rounded-br-[30px]">
+        <div className="h-20 w-fit bg-white px-5 py-[17px] text-[#77858F] font-medium flex items-center gap-5 rounded-br-[30px]">
+          <div>{params.id && renderBoxUser(String(params.id))}</div>
+          <div className="flex items-center gap-[10px]">
+            <p className="break-all max-w-[100px] line-clamp-2 text-sm">名前</p>
             <p className="break-all text-[22px] text-black max-w-[100px] line-clamp-2">
               {
                 dashboardMemberList.find(
@@ -160,20 +160,21 @@ const RoomDetail = () => {
                 )?.fullName
               }
             </p>
-            <div className="h-full border-l border-[#D2DBE1]"></div>
-            <div className="flex items-center text-sm font-medium gap-[10px]">
-              <p>ID</p>
-              <p className="text-base text-black">
-                {
-                  dashboardMemberList.find(
-                    (member) => String(member.id) == String(params.id),
-                  )?.id
-                }
-              </p>
-            </div>
+          </div>
+          <div className="h-[16px] border-l border-[#D2DBE1]"></div>
+          <div className="flex items-center text-sm font-medium gap-[10px]">
+            <p>ID</p>
+            <p className="text-base text-black">
+              {
+                dashboardMemberList.find(
+                  (member) => String(member.id) == String(params.id),
+                )?.id
+              }
+            </p>
           </div>
         </div>
-        <div className="mt-[30px] ml-[30px] flex item-center gap-[14px]">
+        <div
+          className={`${myPageSkillList?.length && 'mt-[30px] ml-[30px] flex item-center gap-[14px]'}`}>
           {myPageSkillList?.map((skill) => {
             const isLocked = skill.isLocked;
             const step = skill.skill.step
@@ -284,7 +285,8 @@ const RoomDetail = () => {
             );
           })}
         </div>
-        <div className="mt-[120px] ml-[30px]">
+        <div
+          className={`${myPageSkillList?.length ? 'mt-[74px]' : 'mt-[159px]'} ml-[30px]`}>
           <MyPageMenu
             onClickSettingSurvey={() => {}}
             isVisitRoom={true}

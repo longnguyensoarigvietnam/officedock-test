@@ -94,7 +94,7 @@ export const ReceiveAndSendThanksMessageTable = ({
         background: 'rgba(53, 153, 216, 0.8)',
         boxShadow: '0px 4px 10px 0px #0000000D',
       }}
-      className="w-[720px] h-[calc(100vh_-_246px)] min-h-[715px]  overflow-y-hidden overflow-x-hidden p-5 absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
+      className="w-[720px] h-[calc(100%_-_60px)] overflow-y-hidden overflow-x-hidden p-[30px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
       <div className="flex gap-2 items-center mb-7 bg-white w-fit p-[6px] rounded-[20px]">
         <Button
           variant="secondary"
@@ -134,14 +134,14 @@ export const ReceiveAndSendThanksMessageTable = ({
         ref={resultsContainerRef}
         className={`overflow-y-auto overflow-x-hidden h-fit max-h-[calc(100%_-_105px)] w-full mt-3 flex flex-col gap-[2px]  ${!isLoadingList && !thanksMessageList.length ? 'bg-white h-full w-full' : 'customized-scrollbar'}`}>
         {isLoadingList ? (
-          <div className="pl-3">
+          <div className="">
             <RowSkeleton
               numberOfRows={6}
-              className="h-[125px] !rounded-[14px] w-[calc(100%_-_10px)]"
+              className="h-[125px] !rounded-[14px] w-[calc(100%)]"
             />
           </div>
         ) : (
-          <div className="pr-[10px]">
+          <div>
             {thanksMessageList.map((message, index) => {
               return (
                 <>
@@ -221,7 +221,7 @@ export const ReceiveAndSendThanksMessageTable = ({
           <div className="mt-2">
             <RowSkeleton
               numberOfRows={2}
-              className="h-[125px] !rounded-[14px] w-[calc(100%_-_10px)]"
+              className="h-[125px] !rounded-[14px] w-[calc(100%)]"
             />
           </div>
         )}

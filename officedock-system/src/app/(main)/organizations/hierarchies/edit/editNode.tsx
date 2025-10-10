@@ -383,7 +383,29 @@ export default function EditNode() {
     setListProject([...listProject, newItem]);
   };
   const handleDeleteProject = (uuid: string) => {
-    setListProject((prev) => prev.filter((item) => item.uuid !== uuid));
+    setListProject((prev) => {
+      const deletedProject = prev.find((item) => item.uuid === uuid);
+      if (
+        deletedProject &&
+        deletedProject.uuid &&
+        deletedProject.uuid !== 'treeNode'
+      ) {
+        setOptionsTreeNode((prevOptions) => {
+          const exists = prevOptions.some(
+            (opt) => opt.value === deletedProject.uuid,
+          );
+          if (exists) return prevOptions;
+          return [
+            ...prevOptions,
+            {
+              label: deletedProject.name || '',
+              value: deletedProject.uuid,
+            },
+          ];
+        });
+      }
+      return prev.filter((item) => item.uuid !== uuid);
+    });
   };
   // Project hierarchy update item
   const updateItemProject = ({
