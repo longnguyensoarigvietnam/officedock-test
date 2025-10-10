@@ -525,7 +525,7 @@ export default function EditNode() {
         {/* Delete sibling   */}
         <div
           onClick={() => deleteSiblingNode(item.uuid)}
-          className="absolute bottom-[4px] right-[-32px] transform z-[100]  w-6 h-6 rounded-full ">
+          className="absolute bottom-[4px] right-[-32px] transform z-[30]  w-6 h-6 rounded-full ">
           <Button
             sz="sm"
             variant="outline"
@@ -652,7 +652,7 @@ export default function EditNode() {
                     </div>
                     <div
                       onClick={() => handleDeleteProject(item.uuid)}
-                      className=" transform z-[100]  w-6 h-6 rounded-full ">
+                      className=" transform z-[30]  w-6 h-6 rounded-full ">
                       <Button
                         sz="sm"
                         variant="outline"
