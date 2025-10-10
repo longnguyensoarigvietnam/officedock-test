@@ -8,6 +8,7 @@ import DataCountPointChangeModal from '@components/modals/DataCountPointChangeMo
 import DataCompanyPointChangeModal from '@components/modals/DetailCompanyChangePoint';
 import Button from '@components/common/Button';
 import { HistoryTable } from '@components/pointHistory/HistoryTable';
+import BackToPage from '@components/custom/BackToPage';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import { PointHistoryActiveTab } from '@constants/enums';
@@ -18,7 +19,6 @@ import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import api from '@base/api';
-import BackToPage from '@components/custom/BackToPage';
 
 const HistoryListPage = () => {
   const router = useRouter();
@@ -90,9 +90,9 @@ const HistoryListPage = () => {
           className="rounded-bl-[30px] relative rounded-tr-[30px] rounded-br-[30px] h-[calc(100vh-120px)] w-full">
           {/* Page title */}
           <div className="flex absolute top-0 left-0 shadow-common rounded-br-[30px]">
-            <div className="h-20 z-[30] bg-white w-fit pr-10 py-4 text-[#77858F] font-medium flex items-center gap-[10px] rounded-br-[30px]">
+            <div className="h-20 z-[30] bg-white w-[343px] py-4 text-[#77858F] font-medium flex items-center justify-center gap-[10px] rounded-br-[30px]">
               <BackToPage />
-              <span className="text-[22px] text-black ml-1">
+              <span className="text-[22px] text-black">
                 {pageRouters.HISTORY_POINT.name}
               </span>
             </div>

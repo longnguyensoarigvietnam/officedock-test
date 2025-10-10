@@ -43,12 +43,12 @@ export const SettingSkillModal = ({
   return (
     <Modal
       open={open}
-      className="font-primary bg-white w-[915px] h-[705px] !rounded-[20px] !p-[30px]"
+      className="font-primary bg-white w-[915px] h-[683px] !rounded-[20px] !p-[30px] !py-[40px]"
       contentClass="!rounded-[20px]"
       isOutSideAction={false}
       onClose={onClose}>
-      <div className="flex flex-col items-center gap-5 h-full">
-        <p className="text-[18px] font-medium text-center">
+      <div className="flex flex-col items-center gap-[30px] h-full">
+        <p className="text-[18px] font-medium text-center leading-none">
           {action == ActionsModal.CREATE
             ? 'スキルセット'
             : 'スキルセットを変更する'}
@@ -69,7 +69,7 @@ export const SettingSkillModal = ({
         </div>
 
         <div className="mt-auto">
-          <Button variant="text" onClick={onClose}>
+          <Button variant="text" className='!p-0' onClick={onClose}>
             閉じる
           </Button>
         </div>

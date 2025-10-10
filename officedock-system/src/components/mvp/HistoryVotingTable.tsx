@@ -88,7 +88,7 @@ export const HistoryVotingTable = ({
         background: '#DFAEAECC',
         boxShadow: '0px 4px 10px 0px #0000000D',
       }}
-      className="w-[720px] h-[calc(100vh_-_246px)] min-h-[715px]  p-[30px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
+      className="w-[720px] h-[calc(100%_-_60px)] p-[30px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
       {/* Header */}
       <div className="h-fit flex items-center text-white text-xs font-medium gap-[14px] mb-[14px]">
         <p className="w-[121px]">投票期間</p>

@@ -1,18 +1,18 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import MainLayout from '@components/layouts/MainLayout';
+import BackToPage from '@components/custom/BackToPage';
 
 import { PermissionsSystem } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
   const pathName = usePathname();
 
   const pageTitle =
@@ -53,16 +53,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {/* Header */}
           <div className="flex gap-5 items-center">
             <div className="h-[80px] bg-white w-[230px] font-medium flex items-center justify-center rounded-br-[30px]">
-              <div
-                className="flex items-center"
-                onClick={() => router.push(pageRouters.MY_PAGE.href)}>
-                <ImageRound
-                  name="Left icon"
-                  src={'/icons/chevron-left.svg'}
-                  className={`w-[8px] h-[16px] mr-[10px] cursor-pointer`}
-                />
-                <p className="text-sm font-medium hover:cursor-pointer">戻る</p>
-              </div>
+              <BackToPage />
               <ImageRound
                 name="MVP Crown"
                 src={'/icons/mvp-crown.svg'}

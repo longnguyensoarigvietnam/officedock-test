@@ -34,20 +34,20 @@ export const EnvelopeForm = ({
     : 0;
 
   return (
-    <div className="w-[500px] h-[366px] bg-white rounded-[20px] shadow py-[50px] px-[60px] text-sm">
+    <div className="w-[500px] h-[366px] bg-white rounded-[20px] shadow pt-[50px] px-[60px] text-sm">
       <div className="flex items-center justify-center gap-2 w-full">
         <CustomUserAvatar
           avatarUrl={userInfo?.avatar || ''}
           avatarColor={userInfo?.avatarColor || ''}
           size={30}
         />
-        <p className="text-black text-[15px] font-medium max-w-[calc(100%_-_40px)] break-all line-clamp-2">
+        <p className="text-black text-[15px] font-medium max-w-[calc(100%_-_40px)] break-all line-clamp-2 leading-none">
           {userInfo.fullName}
           <span className="text-xs ml-1">さんへ</span>
         </p>
       </div>
-      <div className="my-3">
-        <p className="text-sm font-medium mb-2">メッセージ</p>
+      <div className="mb-5 mt-[26px]">
+        <p className="text-sm font-medium mb-[14px]">メッセージ</p>
         <TextAreaLink
           className="w-[380px] h-[130px] rounded-[6px] tweet-form"
           onChange={(data) => setEnvelopeMessage && setEnvelopeMessage(data)}
