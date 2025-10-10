@@ -199,7 +199,8 @@ class CronJobService:
             today (date, required): The date to check for renewals.
         """
         companies = Company.objects.filter(
-            contract__next_renewal_at__date=today,
+            contract__start_date__day=today.day,
+            contract__start_date__month=today.month,
             status__in=[
                 CompanyStatus.ACTIVE_CONTRACT.value,
                 CompanyStatus.TEMPORARY_USAGE.value,

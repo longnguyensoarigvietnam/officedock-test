@@ -248,7 +248,7 @@ class StripeService:
                 billing_cycle_anchor_config={
                     "day_of_month": 1,
                     "hour": 0,
-                    "minute": 0,
+                    "minute": 10,  # Delay 10 minutes before create invoice
                 },
                 proration_behavior="none",  # No prorate for current month
                 collection_method="charge_automatically",
