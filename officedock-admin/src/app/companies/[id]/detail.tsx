@@ -17,7 +17,11 @@ import {
   SUCCESS_SAVE_MESSAGE,
   UNREGISTERED,
 } from '@constants/message';
-import { CompanyStatus, ServerStatusCode } from '@constants/enums';
+import {
+  CompanyStatus,
+  CompanyTransactionType,
+  ServerStatusCode,
+} from '@constants/enums';
 import {
   JAPAN_DATE_FORMAT,
   JAPAN_DATE_WITH_TIME_FORMAT,
@@ -25,11 +29,14 @@ import {
 } from '@constants';
 
 import useCompanyDetail from '@hooks/useDetailCompany';
+import useListCompanyTransactions from '@hooks/useListCompanyTransactions';
 
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 
 import { renderDate } from '@utils';
+
+import { CompanyTransaction } from '@interfaces/company';
 
 import api from '@base/api';
 
@@ -40,6 +47,25 @@ const CompanyDetailInfo = () => {
   const { setIsLoading } = useContext(LoadingContext);
   const [openConfirmTerminateModal, setOpenConfirmTerminateModal] =
     useState(false);
+
+  // Plan transactions
+  const [currentPlanTransactionPage, setCurrentPlanTransactionPage] =
+    useState<number>(1);
+  const [planList, setPlanList] = useState<CompanyTransaction[]>([]);
+  const [totalPlanTransactionPages, setTotalPlanTransactionPages] =
+    useState<number>(1);
+
+  const { refetchCompanyTransactionList } = useListCompanyTransactions({
+    page: currentPlanTransactionPage,
+    filter: {
+      id: Number(params.id),
+      type: CompanyTransactionType.PLAN,
+    },
+    onSuccess: (data) => {
+      setPlanList(data.results);
+      setTotalPlanTransactionPages(data.numPages);
+    },
+  });
 
   // Call and handle API get company detail
   const { companyDetail, refetchCompanyDetail } = useCompanyDetail({
@@ -70,6 +96,7 @@ const CompanyDetailInfo = () => {
           description: SUCCESS_SAVE_MESSAGE,
         });
         refetchCompanyDetail();
+        refetchCompanyTransactionList();
         setIsLoading(false);
       },
       onError: () => {
@@ -219,7 +246,12 @@ const CompanyDetailInfo = () => {
           },
         ]}
       />
-      <UsageHistory />
+      <UsageHistory
+        currentPlanTransactionPage={currentPlanTransactionPage}
+        setCurrentPlanTransactionPage={setCurrentPlanTransactionPage}
+        planList={planList}
+        totalPlanTransactionPages={totalPlanTransactionPages}
+      />
       <InformationSection
         name="その他"
         infoArr={[
@@ -275,7 +307,7 @@ const CompanyDetailInfo = () => {
 
       <ConfirmDeleteModal
         open={openConfirmTerminateModal}
-        type=''
+        type=""
         customMessage="本当に解約予約を行いますか？"
         onConfirm={terminateContract}
         onClose={() => setOpenConfirmTerminateModal(false)}

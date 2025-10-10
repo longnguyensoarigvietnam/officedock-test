@@ -1,36 +1,27 @@
-import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 
 import Pagination from '@components/common/Pagination';
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 
-import { CompanyTransactionType } from '@constants/enums';
 import { NO_DATA_AVAILABLE } from '@constants/message';
-
-import useListCompanyTransactions from '@hooks/useListCompanyTransactions';
 
 import { CompanyTransaction } from '@interfaces/company';
 
 import { formatJapaneseDateRange } from '@utils';
 
-export const UsageHistory = () => {
-  const params = useParams<{ id: string }>();
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [planList, setPlanList] = useState<CompanyTransaction[]>([]);
-  const [totalPages, setTotalPages] = useState<number>(1);
+interface UsageHistoryProps {
+  setCurrentPlanTransactionPage: Dispatch<SetStateAction<number>>;
+  currentPlanTransactionPage: number;
+  planList: CompanyTransaction[];
+  totalPlanTransactionPages: number;
+}
 
-  useListCompanyTransactions({
-    page: currentPage,
-    filter: {
-      id: Number(params.id),
-      type: CompanyTransactionType.PLAN,
-    },
-    onSuccess: (data) => {
-      setPlanList(data.results);
-      setTotalPages(data.numPages);
-    },
-  });
-
+export const UsageHistory = ({
+  planList,
+  currentPlanTransactionPage,
+  totalPlanTransactionPages,
+  setCurrentPlanTransactionPage,
+}: UsageHistoryProps) => {
   return (
     <div className="w-full flex flex-col gap-5 bg-white shadow-common rounded-lg p-4">
       {/* Header */}
@@ -52,7 +43,12 @@ export const UsageHistory = () => {
               {planList && planList.length ? (
                 planList.map((plan, index) => (
                   <tr key={index}>
-                    <td className="text-left w-1/2 truncate">{formatJapaneseDateRange(plan.planStartAt, plan.planEndAt)}</td>
+                    <td className="text-left w-1/2 truncate">
+                      {formatJapaneseDateRange(
+                        plan.planStartAt,
+                        plan.planEndAt,
+                      )}
+                    </td>
                     <td className="text-left w-1/2 truncate">{plan.plan}</td>
                   </tr>
                 ))
@@ -70,9 +66,11 @@ export const UsageHistory = () => {
         <div className="flex justify-center">
           {planList && planList.length ? (
             <Pagination
-              onChange={(pageNumber) => setCurrentPage(pageNumber)}
-              currentPage={currentPage}
-              totalPages={totalPages}
+              onChange={(pageNumber) =>
+                setCurrentPlanTransactionPage(pageNumber)
+              }
+              currentPage={currentPlanTransactionPage}
+              totalPages={totalPlanTransactionPages}
             />
           ) : null}
         </div>
