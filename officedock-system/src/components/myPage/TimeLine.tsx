@@ -83,7 +83,7 @@ export const TimeLine = ({
   };
 
   return (
-    <div className="w-[352px] h-[calc(100%_-_60px)] py-[31px] px-[19px] absolute top-1/2 -translate-y-1/2 right-[30px] border-[1px] border-white bg-[#3599D8CC] rounded-[24px] space-y-5">
+    <div className="w-[352px] h-[calc(100%_-_78px)] py-[31px] px-[19px] absolute top-1/2 -translate-y-1/2 right-[30px] border-[1px] border-white bg-[#3599D8CC] rounded-[24px] space-y-5">
       {/* Header */}
       <div className="border-b-[1px] border-b-white pb-[17px]">
         <p className="text-[18px] text-white font-semibold leading-none">
@@ -117,7 +117,7 @@ export const TimeLine = ({
             }
             // const showDeleteIcon = tweet.user.id == session?.user.id;
             return (
-              <div key={tweet.id} className="space-y-2 text-white !w-full">
+              <div key={tweet.id} className="space-y-[10px] text-white !w-full px-[10px]">
                 <div className="flex items-center justify-between">
                   <div className={`flex gap-[9px] items-center`}>
                     <div className="h-[30px]">

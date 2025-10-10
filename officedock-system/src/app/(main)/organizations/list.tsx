@@ -382,7 +382,8 @@ const ListOrganizations = () => {
             PermissionsSystem.ORGANIZATION_ADD,
           ) && (
             <Button
-              className="w-[100px] !p-0 "
+              className="w-[100px] !p-0 !border-none "
+              style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
               onClick={() => {
                 const hasEmptyOrganization = dataOrganizations.some(
                   (org) => org.name.trim() === '',
@@ -433,7 +434,13 @@ const ListOrganizations = () => {
             {dataOrganizations && dataOrganizations.length ? (
               dataOrganizations.map((element, index) => (
                 <tr key={index} className="text-black">
-                  <td className="text-left w-[calc(100%_-_50px)] max-w-[calc(100%_-_50px)]">
+                  <td
+                    className={`text-left w-[calc(100%_-_50px)] max-w-[calc(100%_-_50px)] ${
+                      selectedOrganizationToUpdate.uuid == element.uuid &&
+                      selectedOrganizationToUpdate.status
+                        ? '!py-[5px]'
+                        : '!py-[13px]'
+                    }`}>
                     {selectedOrganizationToUpdate.uuid == element.uuid &&
                     selectedOrganizationToUpdate.status ? (
                       <div
@@ -507,7 +514,7 @@ const ListOrganizations = () => {
                             classname="scale-[0.857]"
                           />
                         )}{' '}
-                        <p className="break-all w-[calc(100%_-_50px)] text-[16px] font-medium text-[#000000]">
+                        <p className="break-all w-[calc(100%_-_50px)] text-[16px] font-medium text-[#000000] leading-none">
                           {element.name}
                         </p>
                       </div>
