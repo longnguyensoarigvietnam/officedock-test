@@ -1,7 +1,6 @@
 import random
 from datetime import datetime
 
-from dateutil.relativedelta import relativedelta
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
@@ -1297,6 +1296,9 @@ class SystemPointManagementViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         # Calculate key company-related dates
         company_dates = calculate_company_dates(company, today)
         date_after_closing = company_dates["date_after_closing"]
+        start_date_calculation_deadline = company_dates[
+            "start_date_calculation_deadline"
+        ]
         exchangeable_coins_per_user = (
             (company.total_coins // company.target_user_count)
             if company.target_user_count > 0
@@ -1308,7 +1310,7 @@ class SystemPointManagementViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 "total_coins": company.total_coins,
                 "target_user_count": company.target_user_count,
                 "exchangeable_coins_per_user": exchangeable_coins_per_user,
-                "issue_date": date_after_closing,
-                "expiration_date": date_after_closing + relativedelta(months=1),
+                "issue_date": start_date_calculation_deadline,
+                "expiration_date": date_after_closing,
             }
         )
