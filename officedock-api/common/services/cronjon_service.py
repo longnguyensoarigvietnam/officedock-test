@@ -75,6 +75,12 @@ class CronJobService:
 
         transaction_service = TransactionService()
         for company in companies.prefetch_related("users"):
+            company_users = company.users.all()
+            company_users_count = company_users.count()
+
+            if company_users_count <= 0:
+                continue
+
             company_dates = calculate_company_dates(company, today)
             date_after_closing = company_dates["date_after_closing"]
             start_date_calculation_deadline = company_dates[
@@ -86,16 +92,11 @@ class CronJobService:
 
             # --- Case 1: Closing day ---
             if today.day == date_after_closing.day:
-                company_users = company.users.all()
-                company_users_count = company_users.count()
-
                 # Update exchangeable coin for user
-                user_exchangeable_amount = 0
                 exchangeable_amount = company.exchangeable_amount
-                if company_users_count > 0:
-                    user_exchangeable_amount = (
-                        exchangeable_amount // company_users_count
-                    )
+                user_exchangeable_amount = (
+                    exchangeable_amount // company_users_count
+                )
 
                 data_to_create = []
                 # Reset coin
@@ -176,9 +177,6 @@ class CronJobService:
             elif today.day == date_after_data_edit_deadline.day:
                 # Process working time rewards for all users in the company
                 # This runs at 00:00 of the day after the deadline
-                # Get all users in the company
-                company_users = company.users.all()
-
                 # Process working time rewards for each user for the entire month
                 for user in company_users:
                     # Calculate total working time rewards for the entire month

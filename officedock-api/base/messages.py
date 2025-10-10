@@ -147,6 +147,14 @@ _ERROR_MESSAGES = {
         "cannot_remove_card": _("Cannot remove this card"),
         # Validate
         "must_be_array": _("{field} must be a array."),
+        "cannot_edit_close_date": _(
+            "Cannot update 'close_date' when the instance already has assigned users."
+        ),
+        "cannot_edit_editable_date": _(
+            "Cannot update 'editable_after_closing' when the instance already has assigned users."
+        ),
+        "close_date_range_1_to_31": _("Must be between 1 and 31."),
+        "editable_range_1_to_10": _("Must be between 1 and 10."),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -248,6 +256,10 @@ _ERROR_MESSAGES = {
         "cannot_remove_card": _("使用しているカードは削除できません。"),
         # Validate
         "must_be_array": _("{field}は配列でなければなりません。"),
+        "cannot_edit_close_date": _("締日を変更できません。"),
+        "cannot_edit_editable_date": _("修正可能な期間を変更できません。"),
+        "close_date_range_1_to_31": _("締日は1日から31日まで選択してください。"),
+        "editable_range_1_to_10": _("修正可能な期間は1日間から10日間まで選択してください。"),
     },
 }
 

@@ -101,6 +101,8 @@ class CompanySerializer(serializers.ModelSerializer):
             "status",
             "responsible_person_mail",
             "responsible_person_name",
+            "close_date",
+            "editable_after_closing",
         ]
         read_only_fields = ["is_show_holidays_calendar"]
 
@@ -113,6 +115,54 @@ class CompanySerializer(serializers.ModelSerializer):
 
     def get_total_users(self, obj):
         return obj.users.count()
+
+    def validate(self, attrs):
+        """
+        Custom validation for update and field range checks.
+
+        Rules:
+        1. If the instance already has users:
+        - Do not allow updating 'close_date' or 'editable_after_closing'.
+        2. Validate:
+        - 'close_date' must be between 1 and 31.
+        - 'editable_after_closing' must be between 1 and 10.
+        """
+
+        # Case 1: Prevent restricted field updates if instance has users
+        if instance := self.instance:
+            user_count = instance.users.count()
+            if user_count > 0:
+                if "close_date" in attrs:
+                    raise serializers.ValidationError(
+                        {"detail": ERROR_MESSAGES["cannot_edit_close_date"]}
+                    )
+
+                if "editable_after_closing" in attrs:
+                    raise serializers.ValidationError(
+                        {"detail": ERROR_MESSAGES["cannot_edit_editable_date"]}
+                    )
+
+        # Case 2: Validate numeric ranges
+        close_date = attrs.get("close_date")
+        editable_after_closing = attrs.get("editable_after_closing")
+
+        if close_date is not None and not (1 <= close_date <= 31):
+            raise serializers.ValidationError(
+                {"close_date": ERROR_MESSAGES["close_date_range_1_to_31"]}
+            )
+
+        if editable_after_closing is not None and not (
+            1 <= editable_after_closing <= 10
+        ):
+            raise serializers.ValidationError(
+                {
+                    "editable_after_closing": ERROR_MESSAGES[
+                        "editable_range_1_to_10"
+                    ]
+                }
+            )
+
+        return attrs
 
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -214,6 +264,8 @@ class RetrieveCompanySerializer(CompanySerializer):
             "payment_method",
             "responsible_person_mail",
             "responsible_person_name",
+            "close_date",
+            "editable_after_closing",
         ]
 
     def get_payment_method(self, instance):
