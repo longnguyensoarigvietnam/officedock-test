@@ -599,6 +599,10 @@ class CronJobViewSet(BaseAPIViewSet):
             self.cronjob_service.handle_send_email_renewal_company_contract(
                 today
             )
+            self.cronjob_service.handle_downgrade_plan_after_renewal_contract(
+                today
+            )
+
         # 4. Get company have status Temporary Usage and void the invoice before auto pay
         if today.day == 5:
             self.cronjob_service.handle_cancel_the_invoice_of_company_temporary_usage(
@@ -978,6 +982,9 @@ class TestingViewset(BaseAPIViewSet):
         if today.day == 1:
             self.cronjob_service.handle_send_email_renewal_company_contract(
                 today, all_companies
+            )
+            self.cronjob_service.handle_downgrade_plan_after_renewal_contract(
+                today
             )
 
         # 4. Get company have status Temporary Usage and void the invoice before auto pay

@@ -9,6 +9,7 @@ from companies.constants import (
     TransactionStatus,
 )
 from companies.models import Company, CompanyTransaction
+from companies.services import CompanyService
 from plans.models import Tax
 from users.models import TransactionHistory, UserBalance
 from users.constants import CurrencyEnums, TransactionTypes
@@ -186,3 +187,26 @@ class CronJobService:
                         date_after_closing,
                         user,
                     )
+
+    def handle_downgrade_plan_after_renewal_contract(self, today):
+        """
+        Handle automatic plan downgrades for companies on their contract renewal date.
+
+        This method:
+            1. Finds all active or temporary-use companies whose `next_renewal_at` date is today.
+            2. For each company, checks whether a downgrade is required based on user count.
+            3. Performs the downgrade process safely with transaction control and logging.
+
+        Args:
+            today (date, required): The date to check for renewals.
+        """
+        companies = Company.objects.filter(
+            contract__next_renewal_at__date=today,
+            status__in=[
+                CompanyStatus.ACTIVE_CONTRACT.value,
+                CompanyStatus.TEMPORARY_USAGE.value,
+            ],
+        ).all()
+        if companies:
+            for company in companies:
+                CompanyService().downgrade_plan(company, today)
