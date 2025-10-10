@@ -1,6 +1,6 @@
 import datetime
 from django.contrib.auth.base_user import get_random_string
-from datetime import timezone
+from datetime import timedelta, timezone
 from django.db import transaction
 from django.db.models import Q
 from django.utils.timezone import now
@@ -393,14 +393,18 @@ class CompanyService:
             self.stripe_service.change_price_of_subscription(company, plan)
             company.company_plan.plan = plan
             company.company_plan.save(update_fields=["plan"])
+            # First day of next month
+            next_month = get_a_day_in_next_month(updated_at, 1)
+            # Last day of current month
+            last_day = next_month - timedelta(days=1)
             # Update history use plan
             company.transactions.filter(
                 type=CompanyTransactionTypes.PLAN.value,
                 plan_end_at__isnull=True,
-            ).update(plan_end_at=updated_at)
+            ).update(plan_end_at=last_day)
             company.transactions.create(
                 type=CompanyTransactionTypes.PLAN.value,
-                plan_start_at=updated_at,
+                plan_start_at=next_month,
                 plan=plan,
             )
         return True
