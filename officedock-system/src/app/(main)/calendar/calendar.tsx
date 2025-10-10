@@ -650,9 +650,7 @@ const EventCalendar = () => {
   };
 
   // Check to show user's avatar
-  const checkShowUserAvatar = (
-    participants?: EventParticipant[],
-  ) => {
+  const checkShowUserAvatar = (participants?: EventParticipant[]) => {
     const filteredUserIds = selectedScheduleUserIds
       .split(',')
       .map((num) => num.trim())
@@ -663,8 +661,7 @@ const EventCalendar = () => {
         participants.find(
           (participant: EventParticipant) => participant.id == session?.user.id,
         )
-      ) &&
-      filteredUserIds.length > 0
+      ) && filteredUserIds.length > 0
     );
   };
 
@@ -2845,7 +2842,7 @@ const EventCalendar = () => {
               watch('calendarView').value != CalendarViewOptions.VIEW_BY_YEAR &&
               !isEventRendering && (
                 <div
-                  className={`w-[180px] px-3 z-[20] h-[38px] absolute rounded-[100px] right-[50px] bottom-[30px] bg-white flex items-center `}>
+                  className={`w-[180px] px-3 z-[20] h-[38px] absolute rounded-[100px] right-5 bottom-5 bg-white flex items-center `}>
                   <RangeSlider
                     min={18}
                     max={100}

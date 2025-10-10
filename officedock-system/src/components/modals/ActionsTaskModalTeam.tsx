@@ -1195,8 +1195,8 @@ const ActionsTaskModalTeam = ({
       <form
         ref={modalRef}
         onSubmit={handleSubmit(onSubmitData)}
-        className="px-8 pb-8 h-[calc(100vh_-_150px)] overflow-y-auto">
-        <header className="flex sticky z-[999] top-[0px] pb-5 pt-[30px] items-center gap-5 justify-between bg-white">
+        className="px-9 pb-8 h-[calc(100vh_-_150px)] overflow-y-auto">
+        <header className="flex sticky z-[999] top-[0px] pb-[35px] pt-10 items-center gap-5 justify-between bg-white">
           {/* Prevent default focus with fake input */}
           <input
             id="someOtherElement"
@@ -1261,9 +1261,9 @@ const ActionsTaskModalTeam = ({
                 name={'peopleInChart'}
                 render={({ field: { value, onChange } }) => (
                   <PeopleDropdown
-                    className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F] rounded-md"
-                    classNameTextData="!text-xs"
-                    classNameOption="!text-xs"
+                    className="h-[34px] !py-1 text-sm !border-[1px] !border-[#77858F] rounded-md"
+                    classNameTextData="!text-sm"
+                    classNameOption="!text-sm"
                     classNameError="!text-xs"
                     disabled={
                       dataTask?.isStart ||
@@ -1296,9 +1296,9 @@ const ActionsTaskModalTeam = ({
                 rules={{ required: ORGANIZATION_REQUIRED_MESSAGE }}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-[34px] !py-1 text-xs max-w-[525px] rounded-md !border-none !shadow-none !w-fit !pl-0"
-                    classNameTextData="!text-xs !w-fit"
-                    classNameOption="!text-xs !w-fit max-w-[525px] !z-[998]"
+                    className="h-[34px] !py-1 text-sm max-w-[525px] rounded-md !border-none !shadow-none !w-fit !pl-0"
+                    classNameTextData="!text-sm !w-fit"
+                    classNameOption="!text-sm !w-fit max-w-[525px] !z-[998]"
                     classNameError="!text-xs !w-fit"
                     placeholder="選択してください"
                     disabled
@@ -1342,9 +1342,9 @@ const ActionsTaskModalTeam = ({
                   return (
                     <Dropdown
                       placeholder="大カテゴリ"
-                      className="h-[34px] !py-1 text-xs !border-[1px] !shadow-none !border-[#77858F] rounded-md"
-                      classNameTextData="!text-xs"
-                      classNameOption="!text-xs !z-[998]"
+                      className="h-[34px] !py-1 text-sm !border-[1px] !shadow-none !border-[#77858F] rounded-md"
+                      classNameTextData="!text-sm"
+                      classNameOption="!text-sm !z-[998]"
                       classNameError="!text-xs"
                       isLoading={isFetchingCreationDataCommon}
                       disabled={isCheckActionPermission}
@@ -1381,9 +1381,9 @@ const ActionsTaskModalTeam = ({
                       return (
                         <Dropdown
                           placeholder="中カテゴリ"
-                          className="h-[34px] !py-1 text-xs !shadow-none "
-                          classNameTextData="!text-xs"
-                          classNameOption="!text-xs !z-[998]"
+                          className="h-[34px] !py-1 text-sm !shadow-none "
+                          classNameTextData="!text-sm"
+                          classNameOption="!text-sm !z-[998]"
                           classNameError="!text-xs"
                           isLoading={isFetchingCreationDataCommon}
                           disabled={isCheckActionPermission}
@@ -1416,9 +1416,9 @@ const ActionsTaskModalTeam = ({
                     name={'categories.SMALL'}
                     render={({ field: { value, onChange } }) => (
                       <Dropdown
-                        className="h-[34px] !py-1 text-xs !shadow-none"
-                        classNameTextData="!text-xs"
-                        classNameOption="!text-xs !z-[998]"
+                        className="h-[34px] !py-1 text-sm !shadow-none"
+                        classNameTextData="!text-sm"
+                        classNameOption="!text-sm !z-[998]"
                         classNameError="!text-xs"
                         isLoading={isFetchingCreationDataCommon}
                         disabled={isCheckActionPermission}
@@ -1448,7 +1448,7 @@ const ActionsTaskModalTeam = ({
                 <div className="w-[461px]">
                   <MultiSelectDropdown
                     className="!h-[34px]"
-                    labelClass="!min-h-0"
+                    labelClass="!min-h-0 !text-sm"
                     valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"
                     optionClassName="!border-[1px] !border-[#77858F]"
                     disabled={isCheckActionPermission}
@@ -1546,9 +1546,9 @@ const ActionsTaskModalTeam = ({
                   name={'statusId'}
                   render={({ field: { value, onChange } }) => (
                     <Dropdown
-                      className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F] rounded-md"
-                      classNameTextData="!text-xs"
-                      classNameOption="!text-xs"
+                      className="h-[34px] !py-1 text-sm !border-[1px] !border-[#77858F] rounded-md"
+                      classNameTextData="!text-sm"
+                      classNameOption="!text-sm"
                       classNameError="!text-xs"
                       disabled={
                         isCheckActionPermission ||
@@ -3256,7 +3256,7 @@ const ActionsTaskModalTeam = ({
                 {showDescriptionSection ? (
                   <>
                     <div
-                      className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
+                      className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-[14px] hover:cursor-pointer"
                       onClick={() => setShowDescriptionSection(false)}>
                       <ImageRound
                         className="w-[17px] h-[17px] hover:cursor-pointer"
@@ -3280,7 +3280,7 @@ const ActionsTaskModalTeam = ({
                   </>
                 ) : (
                   <div
-                    className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
+                    className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-[14px] hover:cursor-pointer"
                     onClick={() => setShowDescriptionSection(true)}>
                     <ImageRound
                       className="w-[17px] h-[17px] hover:cursor-pointer"
@@ -3309,7 +3309,7 @@ const ActionsTaskModalTeam = ({
                         </p>
                       </div>
                       <div>
-                        <div className="mb-4">
+                        <div className="[14px]">
                           <Button
                             disabled={isCheckActionPermission}
                             type="button"
@@ -3340,7 +3340,7 @@ const ActionsTaskModalTeam = ({
                                       const draggableElement = (
                                         <>
                                           <li
-                                            className={`mb-2 gap-3 flex items-center px-2.5 rounded-md bg-[#F8FAFC] ${snapshot.isDragging ? 'dragging' : ''}`}
+                                            className={`mb-[6px] gap-3 flex items-center px-2.5 rounded-md bg-[#F8FAFC] ${snapshot.isDragging ? 'dragging' : ''}`}
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}>
                                             <div
