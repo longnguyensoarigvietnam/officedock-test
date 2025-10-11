@@ -193,9 +193,9 @@ export const SkillMapByOrganizationPanel = ({
     };
 
     const renderLevelText = () => (
-      <div className="flex gap-1 items-baseline">
-        <p className="text-sm font-medium">Lv.</p>
-        <p className="text-[30px] font-medium">{level}</p>
+      <div className="flex gap-[2px] items-baseline">
+        <p className="text-[15px] font-medium">Lv.</p>
+        <p className="text-[26px] font-medium">{level}</p>
       </div>
     );
 
@@ -434,7 +434,7 @@ export const SkillMapByOrganizationPanel = ({
                           className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} bg-white w-full rounded-[14px]`}></div>
                       ) : (
                         <div
-                          className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} hover:cursor-pointer flex gap-3 bg-white items-center w-full rounded-[14px] relative`}
+                          className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} ${stepCompleted && '!pr-[5px]'} hover:cursor-pointer flex gap-3 bg-white items-center w-full rounded-[14px] relative`}
                           style={{
                             boxShadow: showTwinklingStars
                               ? '0px 0px 20px 0px #36ACDE80'
@@ -473,45 +473,83 @@ export const SkillMapByOrganizationPanel = ({
                           )}
 
                           {showTwinklingStars && (
-                            <div>
-                              <TwinklingIcon
-                                className="absolute top-[-10px] left-[-10px]"
-                                delay={0}
-                                iconUrl="/icons/blue-star.svg"
-                              />
-                              <TwinklingIcon
-                                className="absolute top-[5px] right-[-15px]"
-                                delay={0.5}
-                                iconUrl="/icons/blue-star.svg"
-                              />
-                              <TwinklingIcon
-                                className="absolute top-[-15px] right-[5px]"
-                                delay={0.8}
-                                iconUrl="/icons/blue-star.svg"
-                              />
-                              <TwinklingIcon
-                                className="absolute bottom-[5px] left-[-15px]"
-                                delay={1}
-                                iconUrl="/icons/blue-star.svg"
-                              />
-                              <TwinklingIcon
-                                className="absolute bottom-[-15px] left-[5px]"
-                                delay={1.2}
-                                iconUrl="/icons/blue-star.svg"
-                              />
-                              <TwinklingIcon
-                                className="absolute bottom-[-10px] right-[-10px]"
-                                delay={1.5}
-                                iconUrl="/icons/blue-star.svg"
-                              />
-                            </div>
+                            <>
+                              {' '}
+                              {settingSkillAction ? (
+                                <>
+                                  <TwinklingIcon
+                                    className="absolute top-[10px] left-[-3px] w-[5px] h-[5px]"
+                                    delay={0}
+                                    iconUrl="/icons/blue-star.svg"
+                                  />
+                                  <TwinklingIcon
+                                    className="absolute top-[3px] left-[5px] w-[5px] h-[5px]"
+                                    delay={0.5}
+                                    iconUrl="/icons/blue-star.svg"
+                                  />
+                                  <TwinklingIcon
+                                    className="absolute top-[10px] -right-[3px] w-[5px] h-[5px]"
+                                    delay={0.8}
+                                    iconUrl="/icons/blue-star.svg"
+                                  />
+                                  <TwinklingIcon
+                                    className="absolute bottom-[5px] left-[-3px] w-[5px] h-[5px]"
+                                    delay={1}
+                                    iconUrl="/icons/blue-star.svg"
+                                  />
+                                  <TwinklingIcon
+                                    className="absolute bottom-[5px] -right-[3px] w-[5px] h-[5px]"
+                                    delay={1.2}
+                                    iconUrl="/icons/blue-star.svg"
+                                  />
+                                  <TwinklingIcon
+                                    className="absolute -bottom-[3px] right-[5px] w-[5px] h-[5px]"
+                                    delay={1.5}
+                                    iconUrl="/icons/blue-star.svg"
+                                  />
+                                </>
+                              ) : (
+                                <>
+                                  <TwinklingIcon
+                                    className="absolute top-[-10px] left-[-10px]"
+                                    delay={0}
+                                    iconUrl="/icons/blue-star.svg"
+                                  />
+                                  <TwinklingIcon
+                                    className="absolute top-[5px] right-[-15px]"
+                                    delay={0.5}
+                                    iconUrl="/icons/blue-star.svg"
+                                  />
+                                  <TwinklingIcon
+                                    className="absolute top-[-15px] right-[5px]"
+                                    delay={0.8}
+                                    iconUrl="/icons/blue-star.svg"
+                                  />
+                                  <TwinklingIcon
+                                    className="absolute bottom-[5px] left-[-15px]"
+                                    delay={1}
+                                    iconUrl="/icons/blue-star.svg"
+                                  />
+                                  <TwinklingIcon
+                                    className="absolute bottom-[-15px] left-[5px]"
+                                    delay={1.2}
+                                    iconUrl="/icons/blue-star.svg"
+                                  />
+                                  <TwinklingIcon
+                                    className="absolute bottom-[-10px] right-[-10px]"
+                                    delay={1.5}
+                                    iconUrl="/icons/blue-star.svg"
+                                  />
+                                </>
+                              )}
+                            </>
                           )}
 
-                          <div className="w-[calc(100%_-_72px)]">
+                          <div className="w-[calc(100%_-_49px)]">
                             <div
                               className={`flex justify-between items-start ${settingSkillAction ? 'mb-1' : 'mb-4'}`}>
                               <p
-                                className={`text-[16px] font-medium ${settingSkillAction ? 'max-w-[calc(100%_-_5px)]' : 'max-w-[calc(100%_-_20px)]'} line-clamp-1 break-all ${stepCompleted ? 'text-[#B3B3B3]' : 'text-black'}`}>
+                                className={`text-[15px] font-medium ${settingSkillAction ? 'max-w-[calc(100%_-_5px)]' : 'max-w-[calc(100%_-_20px)]'} line-clamp-1 break-all ${stepCompleted ? 'text-[#B3B3B3]' : 'text-black'}`}>
                                 {skill.skill?.name}
                               </p>
                               {!settingSkillAction && hasComment ? (
@@ -540,7 +578,7 @@ export const SkillMapByOrganizationPanel = ({
                               />
                             </div>
                           </div>
-                          <div className="w-[60px] flex justify-end">
+                          <div className="flex justify-end">
                             {' '}
                             {renderTreasureForStep(
                               Boolean(isLocked),

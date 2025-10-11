@@ -1,5 +1,5 @@
 .calendar-custom .fc-daygrid-day-frame {
-  height: 150px !important;
+  height: 134px !important;
   border-bottom: 1.5px solid #d2dbe1;
 }
 .calendar-custom .fc-scroller {
@@ -55,8 +55,8 @@
 }
 .calendar-custom .fc-daygrid-day-number {
   font-size: 14px;
-  font-weight: 500;
-  color: #414142;
+  font-weight: 400;
+  color: black !important;
 }
 .calendar-custom .fc .fc-daygrid-day-frame,
 .calendar-custom .fc .fc-scrollgrid-sync-inner .fc-daygrid-day-events {

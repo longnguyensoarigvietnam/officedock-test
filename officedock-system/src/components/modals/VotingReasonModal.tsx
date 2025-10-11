@@ -37,21 +37,21 @@ export const VotingReasonModal = ({
         onClose();
       }}>
       <div className="w-[500px] h-[363px] bg-white rounded-[20px] shadow py-[40px] px-[30px] text-sm">
-        <div className="flex items-center justify-center gap-2 w-full">
+        <div className="flex items-center justify-center gap-[9.42px] w-full">
           <CustomUserAvatar
             avatarUrl={userInfo?.avatar || ''}
             avatarColor={userInfo?.avatarColor || ''}
-            size={30}
+            size={34}
           />
-          <p className="text-black text-[15px] font-medium max-w-[calc(100%_-_40px)] break-all line-clamp-2">
+          <p className="text-black text-[16.95px] font-medium max-w-[calc(100%_-_40px)] break-all line-clamp-2">
             {userInfo.fullName}
-            <span className="text-xs ml-1">さんへ投票</span>
+            <span className="ml-[9.45px]">さんへ投票</span>
           </p>
         </div>
         <div className="my-[30px]">
-          <p className="text-sm font-medium mb-2 text-black">投票理由</p>
+          <p className="text-sm font-medium mb-[14px] leading-none text-black">投票理由</p>
           <TextAreaLink
-            className="w-[440px] h-[130px] rounded-[6px] tweet-form"
+            className="w-[440px] h-[130px] rounded-[6px] tweet-form text-black"
             onChange={(data) => setVotingReason && setVotingReason(data)}
             initialValue={votingReason}
           />

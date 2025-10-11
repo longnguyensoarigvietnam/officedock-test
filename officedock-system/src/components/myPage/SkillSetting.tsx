@@ -70,9 +70,9 @@ export const SkillSetting = ({
     }
 
     const renderLevelText = () => (
-      <div className="flex gap-1 items-baseline">
-        <p className="text-sm font-medium">Lv.</p>
-        <p className="text-[30px] font-medium">{level}</p>
+      <div className="flex gap-[2px] items-baseline">
+        <p className="text-[15px] font-medium">Lv.</p>
+        <p className="text-[26px] font-medium">{level}</p>
       </div>
     );
 
@@ -128,48 +128,48 @@ export const SkillSetting = ({
                       className="w-[245px] h-[55px] relative bg-white px-5 py-3 flex items-center gap-[10px] justify-center  rounded-[14px]">
                       {showTwinklingStars && (
                         <>
-                          <div className="absolute -top-[20px] left-[20px] bg-primary rounded-[20px] w-[140px] h-[20px] flex items-center justify-center">
-                            <p className="text-white text-xs font-bold">
+                          <div className="absolute -top-[19px] left-[20px] bg-primary rounded-[20px] w-[126px] h-[19px] flex items-center justify-center">
+                            <p className="text-white text-[11px] font-bold">
                               レベルアップ申請可能
                             </p>
                           </div>
-                          <div className="bg-primary absolute clip-diagonal-left h-[7px] w-[7px] top-0 left-[38px]"></div>
+                          <div className="bg-primary absolute clip-diagonal-left h-[7px] w-[7px] top-0 left-[40px]"></div>
                         </>
                       )}
 
                       {showTwinklingStars && (
-                        <div>
+                        <>
                           <TwinklingIcon
-                            className="absolute top-[-10px] left-[-10px]"
+                            className="absolute top-[10px] left-[-3px] w-[5px] h-[5px]"
                             delay={0}
                             iconUrl="/icons/blue-star.svg"
                           />
                           <TwinklingIcon
-                            className="absolute top-[5px] right-[-15px]"
+                            className="absolute top-[3px] left-[5px] w-[5px] h-[5px]"
                             delay={0.5}
                             iconUrl="/icons/blue-star.svg"
                           />
                           <TwinklingIcon
-                            className="absolute top-[-15px] right-[5px]"
+                            className="absolute top-[10px] -right-[3px] w-[5px] h-[5px]"
                             delay={0.8}
                             iconUrl="/icons/blue-star.svg"
                           />
                           <TwinklingIcon
-                            className="absolute bottom-[5px] left-[-15px]"
+                            className="absolute bottom-[5px] left-[-3px] w-[5px] h-[5px]"
                             delay={1}
                             iconUrl="/icons/blue-star.svg"
                           />
                           <TwinklingIcon
-                            className="absolute bottom-[-15px] left-[5px]"
+                            className="absolute bottom-[5px] -right-[3px] w-[5px] h-[5px]"
                             delay={1.2}
                             iconUrl="/icons/blue-star.svg"
                           />
                           <TwinklingIcon
-                            className="absolute bottom-[-10px] right-[-10px]"
+                            className="absolute -bottom-[3px] right-[5px] w-[5px] h-[5px]"
                             delay={1.5}
                             iconUrl="/icons/blue-star.svg"
                           />
-                        </div>
+                        </>
                       )}
 
                       <div className="w-fit h-fit">
@@ -204,9 +204,9 @@ export const SkillSetting = ({
                     leaveFrom="opacity-100 translate-y-0"
                     leaveTo="opacity-0 translate-y-1">
                     <PopoverPanel className="absolute left-0 z-10 min-w-[155px] max-w-[155px] transform">
-                      <div className="bg-white !border-primary border-[1px] text-black rounded-[6px] mt-2 text-sm font-medium text-center">
+                      <div className="bg-white !border-primary border-[1px] text-black rounded-[6px] mt-[6px] p-1 text-sm font-medium text-center">
                         <p
-                          className="hover:cursor-pointer py-[10px] border-b-[1px] border-[#EBF1F7]"
+                          className="hover:cursor-pointer py-[12px] border-b-[1px] border-[#EBF1F7] !leading-none"
                           onClick={() => {
                             setSkillIdToUpdate(skill.id);
                             setOpenSetSkillModal(true);
@@ -215,7 +215,7 @@ export const SkillSetting = ({
                           スキル変更
                         </p>
                         <p
-                          className="hover:cursor-pointer py-[10px]"
+                          className="hover:cursor-pointer py-[12px] !leading-none"
                           onClick={() => {
                             setConfirmDeleteSkillInfo(skill);
                             setOpenConfirmDeleteSkillModal(true);
@@ -232,7 +232,7 @@ export const SkillSetting = ({
           </Popover>
         );
       })}
-      {/* Skill add */}
+      {/* Skill creation button */}
       {myPageSkillList && myPageSkillList.length < MAX_MY_PAGE_SET_SKILLS ? (
         <div
           style={{
@@ -240,7 +240,7 @@ export const SkillSetting = ({
           }}
           className="w-[245px] min-w-[245px] h-[52px] bg-transparent border border-white rounded-[14px] hover:opacity-70 flex items-center cursor-pointer justify-center text-white text-center font-medium text-sm"
           onClick={() => setOpenSetSkillModal(true)}>
-          <p>＋ スキルをセットできます</p>
+          <p className='font-medium'>＋ スキルをセットできます</p>
         </div>
       ) : (
         <></>

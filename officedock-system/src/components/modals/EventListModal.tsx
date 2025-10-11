@@ -166,7 +166,7 @@ export const EventListModal = ({
     if (count === 1) return renderUserAvatar(participantList[0]);
 
     return (
-      <div className="mt-[-7px] mr-1 flex items-center">
+      <div className="flex items-center">
         {participantList
           .slice(0, count > 2 ? 1 : 2)
           .map((p, i) => renderUserAvatar(p, i))}
@@ -192,7 +192,7 @@ export const EventListModal = ({
     if (count === 1) return renderOrgAvatar(orgIds[0]);
 
     return (
-      <div className="mt-[-7px] mr-1 flex items-center">
+      <div className="flex items-center">
         {orgIds
           .slice(0, count > 2 ? 1 : 2)
           .map((orgId, i) => renderOrgAvatar(orgId, i))}
@@ -243,12 +243,13 @@ export const EventListModal = ({
   return (
     <div className="z-50">
       <div
-        className={`px-[6px] py-4 bg-white border custom-popover w-[250px] border-gray-200 shadow-lg font-primary max-h-[330px] overflow-y-auto !rounded-[14px]`}
+        className={`px-[6px] pt-5 pb-[14px] bg-white custom-popover w-[230px] font-primary overflow-y-auto !rounded-[14px]`}
         ref={popoverRef}
         style={{
           position: 'absolute',
           top: `${popoverInfoLoading ? popupPosition.top - 70 : popupPosition.top}px`,
           left: `${popupPosition.left}px`,
+          boxShadow: '0px 2px 8px 0px #0000001A'
         }}>
         <div
           className="hover:bg-[#EBF1F4] absolute p-1.5 right-2 top-2 hover:rounded-full hover:cursor-pointer"
@@ -262,7 +263,7 @@ export const EventListModal = ({
           />
         </div>
         {eventListModalInfo && (
-          <h3 className="text-center mb-4">
+          <h3 className="text-center mb-5">
             {eventListModalInfo.date
               ? (() => {
                   const { day, dayOfWeek, month } = getDateInfo(
@@ -270,10 +271,10 @@ export const EventListModal = ({
                   );
                   return (
                     <>
-                      <span className="text-md font-semibold mr-1">
+                      <span className="text-base font-medium mr-2 leading-none">
                         {month}月{day}日
                       </span>
-                      <span className="text-sm font-medium">({dayOfWeek})</span>
+                      <span className="text-xs font-medium leading-none">({dayOfWeek})</span>
                     </>
                   );
                 })()
@@ -281,7 +282,7 @@ export const EventListModal = ({
           </h3>
         )}
 
-        <ul className="list-disc max-h-[195px] overflow-y-auto">
+        <ul className="flex flex-col gap-1 max-h-[256px] overflow-y-auto">
           {eventListModalInfo &&
             eventListModalInfo?.events
               ?.sort((preEvent, nextEvent) => {
@@ -312,7 +313,7 @@ export const EventListModal = ({
                 return (
                   <li
                     key={event.eventId}
-                    className={`text-xs list-none mb-1 bg-[#EBF1F7] text-[#444546] !rounded-[8px] pl-1.5 pt-1 ${event.repeatScheduleId.includes('holiday') && 'hover:cursor-not-allowed'}`}
+                    className={`text-xs bg-[#EBF1F7] text-[#444546] flex items-center !rounded-[8px] pl-[10px] h-[48px] ${event.repeatScheduleId.includes('holiday') && 'hover:cursor-not-allowed'}`}
                     onClick={() => {
                       if (!event.repeatScheduleId.includes('holiday')) {
                         setEventListModalInfo(null);
@@ -322,20 +323,20 @@ export const EventListModal = ({
                         );
                       }
                     }}>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-[10px]">
                       {event ? showEventAvatars(event) : <></>}
-                      <div className="mb-2">
-                        <div
-                          className={`font-semibold max-w-[170px] min-h-4 truncate ${event.repeatScheduleId.includes('holiday') && 'text-error'}`}>
+                      <div className="flex flex-col gap-[10px]">
+                        <p
+                          className={`font-semibold max-w-[150px] truncate ${event.repeatScheduleId.includes('holiday') && 'text-error'}`}>
                           {event.title || ''}
-                        </div>
+                        </p>
                         <div className="flex gap-1">
                           <div className="flex">
                             {event && event.allDay && (
-                              <p className="text-[11px] mr-1">終日</p>
+                              <p className="text-[11px] mr-1 leading-none">終日</p>
                             )}
                             <p
-                              className={`text-[11px] ${
+                              className={`text-[11px] leading-none ${
                                 event?.start &&
                                 event?.end &&
                                 !isSameDay(
@@ -357,7 +358,7 @@ export const EventListModal = ({
                               !event.allDay &&
                               event.start &&
                               event.end && (
-                                <div className="flex gap-1 items-center text-[11px]">
+                                <div className="flex gap-1 items-center text-[11px] leading-none">
                                   <p>
                                     {formatHoursAndMinutesForDateTime(
                                       new Date(event.start),
@@ -372,7 +373,7 @@ export const EventListModal = ({
                                 </div>
                               )}
                           </div>
-                          <p className="text-[11px] truncate max-w-[90px]">
+                          <p className="text-[11px] truncate max-w-[78px] leading-none">
                             {event.location?.name}
                           </p>
                         </div>
@@ -393,7 +394,7 @@ export const EventListModal = ({
           ) && (
             <DynamicTooltip content={'予定を新規作成'} placement="top">
               <div
-                className={`mx-auto mt-3 w-fit hover:cursor-pointer hover:rounded-full p-[6px] hover:bg-gray-200 border-[1px] border-transparent`}
+                className={`mx-auto mt-2 w-fit hover:cursor-pointer hover:rounded-full p-[6px] hover:bg-gray-200 border-[1px] border-transparent`}
                 onClick={() => {
                   setEventListModalInfo(null);
                   handleCreateNewEventFromPopup();
@@ -401,7 +402,7 @@ export const EventListModal = ({
                 <ImageRound
                   src={`/icons/add.svg`}
                   name="Add"
-                  className="!w-4 !h-4 text-"
+                  className="!w-3 !h-3"
                 />
               </div>
             </DynamicTooltip>

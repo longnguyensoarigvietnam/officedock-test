@@ -127,9 +127,9 @@ export const SkillMapDetailByUser = ({
     };
 
     const renderLevelText = () => (
-      <div className="flex gap-1 items-baseline">
-        <p className="text-sm font-medium">Lv.</p>
-        <p className="text-[30px] font-medium">{level}</p>
+      <div className="flex gap-[2px] items-baseline">
+        <p className="text-[15px] font-medium">Lv.</p>
+        <p className="text-[26px] font-medium">{level}</p>
       </div>
     );
 

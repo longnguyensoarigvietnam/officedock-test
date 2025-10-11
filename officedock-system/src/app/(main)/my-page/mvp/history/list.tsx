@@ -99,7 +99,7 @@ export const MVPHistoryList = () => {
             <></>
           )}
 
-          <div className="flex flex-col items-center gap-[70px] mb-10">
+          <div className="flex flex-col items-center gap-[60px] mb-10">
             {/* First Ranking */}
             {firstUsers.map((user) => (
               <HonoredUser
@@ -113,7 +113,7 @@ export const MVPHistoryList = () => {
 
             {/* Second & Third Grouping */}
             {shouldMergeSecondAndThird ? (
-              <div className="flex flex-wrap justify-center gap-x-10 gap-y-10">
+              <div className="flex flex-wrap justify-center gap-x-10 gap-y-[30px]">
                 {[...secondUsers, ...thirdUsers].map((user) => (
                   <HonoredUser
                     key={user.id}
@@ -127,7 +127,7 @@ export const MVPHistoryList = () => {
             ) : (
               <>
                 {secondUsers.length > 0 && (
-                  <div className="flex flex-wrap justify-center gap-x-10 gap-y-10">
+                  <div className="flex flex-wrap justify-center gap-x-10 gap-y-[30px]">
                     {secondUsers.map((user) => (
                       <HonoredUser
                         key={user.id}
@@ -141,7 +141,7 @@ export const MVPHistoryList = () => {
                 )}
 
                 {thirdUsers.length > 0 && (
-                  <div className="flex flex-wrap justify-center gap-x-10 gap-y-10">
+                  <div className="flex flex-wrap justify-center gap-x-10 gap-y-[30px]">
                     {thirdUsers.map((user) => (
                       <HonoredUser
                         key={user.id}

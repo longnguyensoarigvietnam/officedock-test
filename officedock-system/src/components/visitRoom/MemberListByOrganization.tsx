@@ -35,7 +35,7 @@ export const MemberListByOrganization = ({
         background: 'rgba(53, 153, 216, 0.8)',
         boxShadow: '0px 4px 10px 0px #0000000D',
       }}
-      className="w-[720px] h-[90%] p-[30px] pr-[12px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
+      className="w-[720px] h-[calc(100%_-_60px)] p-[30px] pr-[12px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
       <div className="flex flex-col max-h-[calc(100%_-_20px)] gap-[26px] overflow-y-auto customized-scrollbar">
         {memberListByOrganization?.map((organization, index) => {
           return (

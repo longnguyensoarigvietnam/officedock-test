@@ -28,42 +28,42 @@ export const EnvelopeContent = ({
   const { data: session } = useSessionCache();
 
   return (
-    <div className="w-[500px] h-[282px] bg-white rounded-[20px] pt-[50px] pb-[10px] px-[60px] text-sm space-y-5">
-      <div className="flex items-center gap-3 justify-center">
+    <div className="w-[500px] h-[282px] bg-white rounded-[20px] pt-[50px] pb-[10px] px-[60px] text-sm">
+      <div className="flex items-center gap-[10px] justify-center mb-[30px]">
         <ImageRound
           name="Heart icon"
           src={'/icons/blue-heart.svg'}
           className={`w-[22px] h-[20px]`}
         />
 
-        <p className="font-medium text-[22px] leading-none">サンクスメッセージ</p>
+        <p className="font-medium text-[22px] leading-none">
+          サンクスメッセージ
+        </p>
       </div>
-      <p>
-        <div className="flex items-center justify-center gap-2 w-full">
-          {isSendThanksMessage ? (
-            <CustomUserAvatar
-              avatarUrl={authenticatedUser?.avatar || ''}
-              avatarColor={authenticatedUser?.avatarColor || ''}
-              size={24}
-            />
-          ) : (
-            <CustomUserAvatar
-              avatarUrl={userInfo?.avatar || ''}
-              avatarColor={userInfo?.avatarColor || ''}
-              size={24}
-            />
-          )}
+      <div className="flex items-center justify-center gap-2 w-full mb-[20px]">
+        {isSendThanksMessage ? (
+          <CustomUserAvatar
+            avatarUrl={authenticatedUser?.avatar || ''}
+            avatarColor={authenticatedUser?.avatarColor || ''}
+            size={24}
+          />
+        ) : (
+          <CustomUserAvatar
+            avatarUrl={userInfo?.avatar || ''}
+            avatarColor={userInfo?.avatarColor || ''}
+            size={24}
+          />
+        )}
 
-          <p className="text-black text-sm font-medium max-w-[calc(100%_-_40px)] break-all line-clamp-3">
-            {isSendThanksMessage
-              ? session?.user.profile.fullName
-              : userInfo.fullName}
-            <span className="text-xs text-[#77858F] font-medium ml-1">
-              さんからサンクスメッセージが届きました！
-            </span>
-          </p>
-        </div>
-      </p>
+        <p className="text-black text-sm font-medium max-w-[calc(100%_-_40px)] break-all line-clamp-3">
+          {isSendThanksMessage
+            ? session?.user.profile.fullName
+            : userInfo.fullName}
+          <span className="text-xs text-[#77858F] font-medium ml-1">
+            さんからサンクスメッセージが届きました！
+          </span>
+        </p>
+      </div>
       <p
         className="overflow-y-auto max-h-[96px] break-all max-w-full text-sm"
         dangerouslySetInnerHTML={{

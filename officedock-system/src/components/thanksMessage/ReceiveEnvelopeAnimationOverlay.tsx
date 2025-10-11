@@ -110,7 +110,7 @@ export default function ReceiveEnvelopeAnimationOverlay({
 
     safeReadThanksMessage(receivedThanksMessageList[index].id);
 
-    gsap.set(envelopeEl, { x: window.innerWidth * 1.5, y: -window.innerHeight, opacity: 0 });
+    gsap.set(envelopeEl, { x: window.innerWidth * 1.5, y: -window.innerHeight, opacity: 0, rotateZ: 22, });
     gsap.set(birdEl, { x: window.innerWidth * 1.5, y: -window.innerHeight, opacity: 0 });
 
     const tl = gsap.timeline({
@@ -137,6 +137,7 @@ export default function ReceiveEnvelopeAnimationOverlay({
           y: 0,
           duration: 1.5,
           ease: 'power2.out',
+          rotateZ: 0,
           onComplete: () => {
             gsap.to(envelopeEl, {
               rotateZ: 0,
@@ -382,7 +383,7 @@ export default function ReceiveEnvelopeAnimationOverlay({
                 </Button>
                 <Button
                   variant="text"
-                  className="bg-transparent w-[100px] rounded-[8px] h-[36px] !p-0"
+                  className="bg-transparent w-[100px] rounded-[8px] h-[36px] !p-0 !text-[13px]"
                   onClick={() => {
                     readIdsRef.current = new Set();
                     onFinish();

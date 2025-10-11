@@ -72,7 +72,7 @@ const PointHistory = () => {
       </div>
       <div className="!w-full">
         {/* Header */}
-        <div className="h-fit flex items-center text-xs font-medium gap-[16px] mb-[14px] !w-[calc(100%_-_5px)]">
+        <div className="h-fit flex items-center text-xs font-medium gap-[16px] mb-[14px] !w-[calc(100%_-_6px)]">
           <p className="w-[18%]">日付</p>
           <div className="w-[1px] h-[9px] bg-[#D2DBE1]"></div>
           <p className="w-[21%]">内容</p>
@@ -95,13 +95,13 @@ const PointHistory = () => {
               />
             </div>
           ) : (
-            <div className="bg-[#e6e7e9] rounded-[14px] !w-[calc(100%_+_5px)]">
+            <div className="bg-[#e6e7e9] rounded-[14px] !w-[calc(100%_+_2px)] flex flex-col divide-y-[2px] divide-[#e6e7e9]">
               {pointHistoryList.map((history, index) => {
                 return (
                   <>
                     <div
                       key={index}
-                      className={`relative !w-full hover:cursor-pointer ${index == 0 && 'rounded-t-[14px]'} ${index == pointHistoryList.length - 1 ? 'rounded-b-[14px]' : 'mb-1'} bg-white flex items-center text-black font-normal gap-[16px] py-[10px]`}>
+                      className={`relative !w-full hover:cursor-pointer ${index == 0 && 'rounded-t-[14px]'} ${index == pointHistoryList.length - 1 ? 'rounded-b-[14px]' : ''} bg-white flex items-center text-black font-normal gap-[16px] py-[10px]`}>
                       {/* Date column */}
                       <div className="w-[18%] text-xs py-[6px] text-nowrap leading-none pl-5 box-border">
                         <p>{formatShowDateJapanese(`${history.createdAt}`)}</p>
@@ -110,19 +110,19 @@ const PointHistory = () => {
                       <div className="w-[21%] py-[6px]">
                         {history.transactionType ==
                         TransactionType.PLAN_AUTO_GRANTED_COIN_EXPIRATION ? (
-                          <div className="text-sm font-medium">
+                          <div className="text-sm">
                             <p>プラン自動付与</p>
                             <p>コイン失効</p>
                           </div>
                         ) : (
-                          <p className="text-sm font-medium">
+                          <p className="text-sm">
                             {history.transactionType}
                           </p>
                         )}
                       </div>
                       <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
                       <div className="w-[21%] py-[6px]">
-                        <p className="text-sm font-medium">
+                        <p className="text-sm">
                           {history.user ? (
                             <div className="flex items-center justify-center gap-[10px]">
                               <CustomUserAvatar
@@ -131,7 +131,7 @@ const PointHistory = () => {
                                 size={20}
                               />
 
-                              <p className="text-black font-medium text-sm max-w-full break-all">
+                              <p className="text-black text-sm max-w-full break-all">
                                 {history.user.profile.fullName}
                               </p>
                             </div>

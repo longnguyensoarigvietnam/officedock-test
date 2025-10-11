@@ -215,7 +215,7 @@ export default function SendEnvelopeAnimationOverlay({
               <p className="text-sm">
                 受け取り側にはこのように表示されます。この内容で送りますか？
               </p>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-[10px]">
                 <Button
                   variant="outline"
                   className="bg-transparent w-[100px] rounded-[8px] h-[36px] !p-0"

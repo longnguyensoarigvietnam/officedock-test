@@ -802,7 +802,7 @@ const EventCalendar = () => {
             return (
               <div className="rounded-sm hover:cursor-pointer mb-1 overflow-hidden">
                 <p
-                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-[#E95062] px-1 text-[12px]`}>
+                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-[#E95062] font-semibold px-1 text-[12px]`}>
                   {eventContent.event.title != 'null'
                     ? eventContent.event.title
                     : ''}
@@ -907,7 +907,7 @@ const EventCalendar = () => {
             return (
               <div className="rounded-sm hover:cursor-pointer mb-1 overflow-hidden">
                 <p
-                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-[#E95062] px-1 text-[12px]`}>
+                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-[#E95062] font-semibold px-1 text-[12px]`}>
                   {eventContent.event.title != 'null'
                     ? eventContent.event.title
                     : ''}
@@ -997,7 +997,7 @@ const EventCalendar = () => {
             return (
               <div className="rounded-sm hover:cursor-pointer mb-1 overflow-hidden">
                 <p
-                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-[#E95062] px-1 text-[12px]`}>
+                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-[#E95062] font-semibold px-1 text-[12px]`}>
                   {eventContent.event.title != 'null'
                     ? eventContent.event.title
                     : ''}
@@ -2483,38 +2483,40 @@ const EventCalendar = () => {
   }, [views]);
   return (
     <Fragment>
-      <div className="flex mb-3 overflow-y-hidden pt-5" ref={containerRef}>
-        <div className={`${showSidebar ? 'w-[76%] mr-3' : 'w-full'}`}>
+      <div className="flex mb-3 overflow-y-hidden" ref={containerRef}>
+        <div
+          className={`${showSidebar ? 'w-[calc(100%_-_320px)] pr-5' : 'w-full'} pt-[18px]`}>
           <div className="flex items-center justify-between mb-3 pl-10">
-            <div className="flex items-center ml-[-1rem] gap-4">
+            <div className="flex items-center ml-[-20px] gap-4">
               <ImageRound
                 name="Chevron left"
                 src={'/icons/chevron-left-calendar.svg'}
                 onClick={handlePrev}
                 className="!w-[8px] !h-[10px] hover:cursor-pointer"
               />
-              <div className="flex items-end font-normal gap-2">
+              <div className="flex items-baseline font-normal gap-[6px]">
                 {searchParams.get('view') != ViewOptions.DAY && (
                   <p
                     className={`${
                       searchParams.get('view') == ViewOptions.YEAR
-                        ? 'text-[25px]'
-                        : 'text-[18px]'
-                    }  mb-[5px] text-[#5B6770] font-medium`}>
+                        ? 'text-[20px]'
+                        : 'text-[14px]'
+                    } text-[#5B6770] font-medium`}>
                     {displayYear}年
                   </p>
                 )}
                 {searchParams.get('view') !== ViewOptions.YEAR && (
-                  <p className="text-[30px] text-[#5B6770] font-medium">
+                  <p
+                    className={`${searchParams.get('view') == ViewOptions.DAY ? 'text-[20px]' : 'text-[24px]'} text-[#5B6770] font-medium`}>
                     {displayMonth}月
                   </p>
                 )}
                 {searchParams.get('view') == ViewOptions.DAY && (
                   <>
-                    <p className="text-[30px] text-[#5B6770] font-medium">
+                    <p className="text-[20px] text-[#5B6770] font-medium">
                       {displayDay}日
                     </p>
-                    <p className="text-[18px] mb-[5px] text-[#5B6770] font-medium">
+                    <p className="text-[14px] text-[#5B6770] font-medium">
                       (
                       {getJapaneseDayName(
                         calendarRef.current
@@ -2568,7 +2570,8 @@ const EventCalendar = () => {
               <InputSearch
                 placeholder="予定、キーワードを検索"
                 value={keySearch}
-                inputClassName="!w-[300px] !py-2 !rounded-[20px] text-sm !bg-white border-none placeholder-[#77858F99]"
+                iconClassName="!w-[14px] !h-[14px]"
+                inputClassName="!w-[300px] !h-[34px] !py-2 !rounded-[20px] text-sm !bg-white border-none !placeholder-[#77858F99]"
                 onChange={(e) => {
                   setKeySearch(e.target.value);
                 }}
@@ -2584,7 +2587,7 @@ const EventCalendar = () => {
                       selectedOption={calendarViewOptions.find(
                         (element) => element.value === value?.value,
                       )}
-                      className="h-[34px] !w-full !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
+                      className="h-[30px] !w-full !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
                       classNameTextData="!text-xs"
                       classActive="!text-sm"
                       classNameOption="!text-sm"
@@ -2600,7 +2603,7 @@ const EventCalendar = () => {
                 />
               </div>
             </div>
-            <div className="fixed top-[90px] right-0">
+            <div className="fixed top-[93px] right-0">
               {!showSidebar && (
                 <DynamicTooltip
                   content={'表示するメンバー'}
@@ -2612,13 +2615,13 @@ const EventCalendar = () => {
                     className="bg-white w-[60px] h-[46px] rounded-l-[30px] flex items-center shadow-md hover:cursor-pointer"
                     onClick={() => setShowSidebar((prev) => !prev)}>
                     <ImageRound
-                      className="w-8 h-8 ml-2"
+                      className="w-9 h-9 ml-[6px]"
                       src="/icons/calendar-multi-users.svg"
                       border="full"
                       name="Calendar multiple users"
                     />
                     <ImageRound
-                      className="w-4 h-4 -rotate-90 ml-1"
+                      className="w-4 h-4 -rotate-90 ml-[2px]"
                       src={'/icons/arrow-down.svg'}
                       name="Arrow down"
                     />
@@ -2629,7 +2632,7 @@ const EventCalendar = () => {
           </div>
 
           <div
-            className={`w-full ${!isDayOrWeekView() && 'pl-6'} relative calendar-custom ${searchParams.get('view') || ''} ${getAllDayEventCountText(events)} !overflow-hidden ${showSidebar ? '' : 'pr-8'}`}
+            className={`w-full ${!isDayOrWeekView() && 'pl-10'} relative calendar-custom ${searchParams.get('view') || ''} ${getAllDayEventCountText(events)} !overflow-hidden ${showSidebar ? (!isDayOrWeekView() ? 'pr-5' : '') : (!isDayOrWeekView() ? 'pr-10' : '')}`}
             style={{ overflowX: 'auto', width: '100%' }}>
             {calendarLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-[#E6F3FB] z-10"></div>
@@ -2708,9 +2711,10 @@ const EventCalendar = () => {
                   <div
                     className="custom-more-link border-none"
                     style={{
-                      fontWeight: '700',
+                      fontWeight: '600',
+                      fontSize: '12px',
                     }}>
-                    {'他 ' + args.num + ' 件'}
+                    {'他' + args.num + '件'}
                   </div>
                 );
               }}
@@ -2861,7 +2865,10 @@ const EventCalendar = () => {
           </div>
         </div>
         <div
-          className={`${showSidebar ? 'w-[24%] relative py-6 px-4 h-[1000px] shadow-lg shadow-slate-900/20 shadow-l-2 bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
+          style={{
+            boxShadow: '-4px 0px 8px 0px #0000000D',
+          }}
+          className={`${showSidebar ? 'w-[320px] rounded-l-[30px] relative py-6 px-4 h-[calc(100vh_-_76px)] bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
           <CalendarSidebar
             calendarRef={calendarRef}
             keySearch={keySearch}

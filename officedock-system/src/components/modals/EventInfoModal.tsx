@@ -153,7 +153,7 @@ const EventInfoModal = memo(
     const showUserAvatars = (participantList: EventParticipant[]) => {
       return (
         <div className="mt-3">
-          <p className="text-[#77858F] flex-none text-[12px] mb-3">
+          <p className="text-[#77858F] flex-none text-[12px] mb-[10px] leading-none">
             参加メンバー {participantList?.length}人
           </p>
           <div className="flex flex-wrap">
@@ -243,7 +243,7 @@ const EventInfoModal = memo(
 
       return (
         <div className="mt-3">
-          <p className="text-[#77858F] flex-none text-[12px] mb-3">
+          <p className="text-[#77858F] flex-none text-[12px] mb-[10px] leading-none">
             参加メンバー {orgIds.length}チーム
           </p>
 
@@ -328,12 +328,13 @@ const EventInfoModal = memo(
     return (
       <div className="z-50">
         <div
-          className="font-primary shadow-lg bg-white w-[250px] !rounded-[14px] z-50 p-4"
+          className="font-primary bg-white w-[250px] !rounded-[14px] z-50 px-5 py-[10px]"
           ref={popoverRef}
           style={{
             position: 'absolute',
             top: `${popupPosition.top}px`,
             left: `${popupPosition.left}px`,
+            boxShadow: '0px 2px 8px 0px #0000001A'
           }}>
           <div className="flex items-center justify-between">
             <p className="font-medium text-xs text-[#77858F]">予定</p>
@@ -455,9 +456,9 @@ const EventInfoModal = memo(
           )}
 
           {/* Location */}
-          <div className="flex items-center gap-3 mt-3">
+          <div className="flex items-center gap-[6px] mt-3">
             <p className="flex-none text-[14px]">場所</p>
-            <p className="bg-[#EBF1F7] rounded-[4px] px-[5px] py-[6px] truncate max-w-[175px] text-[14px]">
+            <p className="bg-[#EBF1F7] h-[22px] rounded-[4px] px-[5px] truncate max-w-[175px] text-[14px]">
               {(dataEvent?.location as LocationEventType)?.name ||
                 `${NO_SETTING}`}
             </p>
