@@ -252,14 +252,14 @@ export const EventListModal = ({
           boxShadow: '0px 2px 8px 0px #0000001A'
         }}>
         <div
-          className="hover:bg-[#EBF1F4] absolute p-1.5 right-2 top-2 hover:rounded-full hover:cursor-pointer"
+          className="absolute right-[6px] top-[6px]"
           onClick={() => {
             closePopover();
           }}>
           <ImageRound
             name="Close"
-            src={'/icons/close.svg'}
-            className="w-[18px] h-[18px] hover:cursor-pointer"
+            src={'/icons/close-with-bg.svg'}
+            className="w-[24px] h-[24px] hover:cursor-pointer"
           />
         </div>
         {eventListModalInfo && (

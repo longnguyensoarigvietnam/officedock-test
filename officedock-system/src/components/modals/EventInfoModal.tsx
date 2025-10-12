@@ -152,8 +152,8 @@ const EventInfoModal = memo(
     // Show user avatars
     const showUserAvatars = (participantList: EventParticipant[]) => {
       return (
-        <div className="mt-3">
-          <p className="text-[#77858F] flex-none text-[12px] mb-[10px] leading-none">
+        <div className="mt-5">
+          <p className="text-[#77858F] flex-none text-[12px] mb-[10px] leading-none font-medium">
             参加メンバー {participantList?.length}人
           </p>
           <div className="flex flex-wrap">
@@ -242,8 +242,8 @@ const EventInfoModal = memo(
       if (!orgIds?.length) return null;
 
       return (
-        <div className="mt-3">
-          <p className="text-[#77858F] flex-none text-[12px] mb-[10px] leading-none">
+        <div className="mt-5">
+          <p className="text-[#77858F] flex-none text-[12px] mb-[10px] leading-none font-medium">
             参加メンバー {orgIds.length}チーム
           </p>
 
@@ -328,17 +328,17 @@ const EventInfoModal = memo(
     return (
       <div className="z-50">
         <div
-          className="font-primary bg-white w-[250px] !rounded-[14px] z-50 px-5 py-[10px]"
+          className="font-primary bg-white w-[250px] !rounded-[14px] z-50 pl-5 pr-[10px] py-[10px]"
           ref={popoverRef}
           style={{
             position: 'absolute',
             top: `${popupPosition.top}px`,
             left: `${popupPosition.left}px`,
-            boxShadow: '0px 2px 8px 0px #0000001A'
+            boxShadow: '0px 2px 8px 0px #0000001A',
           }}>
           <div className="flex items-center justify-between">
             <p className="font-medium text-xs text-[#77858F]">予定</p>
-            <div className="flex gap-1 justify-end items-center">
+            <div className="flex justify-end items-center">
               {session?.user.permissions &&
                 hasPermissionInArray(
                   session?.user.permissions,
@@ -353,7 +353,7 @@ const EventInfoModal = memo(
                       <ImageRound
                         name="Edit"
                         src={'/icons/edit-task.svg'}
-                        className="w-[13px] h-[13px] hover:cursor-pointer"
+                        className="w-[12px] h-[12px] hover:cursor-pointer"
                       />
                     </div>
                   </DynamicTooltip>
@@ -384,7 +384,7 @@ const EventInfoModal = memo(
                 ) && (
                   <DynamicTooltip content={'予定を削除'} placement="top">
                     <div
-                      className="hover:bg-[#EBF1F4] px-2 py-1.5 hover:rounded-full hover:cursor-pointer opacity-25 hover:opacity-100"
+                      className="hover:bg-[#EBF1F4] px-1.5 py-[5px] mr-1 hover:rounded-full hover:cursor-pointer opacity-25 hover:opacity-100"
                       onClick={() => {
                         onDelete && onDelete(dataEvent as EventEditFormData);
                       }}>
@@ -396,15 +396,12 @@ const EventInfoModal = memo(
                     </div>
                   </DynamicTooltip>
                 )}
-              <div
-                className="hover:bg-[#EBF1F4] p-1.5 hover:rounded-full hover:cursor-pointer"
-                onClick={onClose}>
-                <ImageRound
-                  name="Close"
-                  src={'/icons/close.svg'}
-                  className="w-[15px] h-[15px] hover:cursor-pointer"
-                />
-              </div>
+              <ImageRound
+                name="Close"
+                src={'/icons/close-with-bg.svg'}
+                className="w-[24px] h-[24px] hover:cursor-pointer"
+                onClick={onClose}
+              />
             </div>
           </div>
 
@@ -418,7 +415,7 @@ const EventInfoModal = memo(
           ) : (
             <>
               <div className="flex">
-                <p className="">
+                <p className="leading-none mb-[14px]">
                   {dataEvent?.startDate &&
                     dataEvent?.endDate &&
                     (isSameDay(
@@ -436,14 +433,14 @@ const EventInfoModal = memo(
                 dataEvent.startDate &&
                 dataEvent.endDate && (
                   <div className="flex gap-1 items-center text-[14px]">
-                    <p className="text-[12px]">開始</p>
+                    <p className="text-[12px] font-medium text-[#77858F]">開始</p>
                     <p>
                       {formatHoursAndMinutesForDateTime(
                         new Date(dataEvent.startDate),
                       )}
                     </p>
-                    <p className="text-[12px]">~</p>
-                    <p className="text-[12px]">終了</p>
+                    <p className="text-[12px] mx-[2px]">~</p>
+                      <p className="text-[12px] font-medium text-[#77858F]">終了</p>
                     <p>
                       {formatHoursAndMinutesForDateTime(
                         new Date(dataEvent.endDate),

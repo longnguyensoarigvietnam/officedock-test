@@ -166,6 +166,7 @@
 .calendar-custom .fc-timegrid-axis-cushion {
   font-size: 12px;
   color: #77858f;
+  font-weight: 500 !important;
   width: 100%;
   text-align: center;
   visibility: hidden;
@@ -355,7 +356,9 @@
   padding: 2px 5px 2px 5px;
   background-color: #3cabf3;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  margin-left: 6px;
 }
 .calendar-custom .fc-v-event {
   background-color: #fff;
@@ -382,6 +385,8 @@
 }
 .calendar-custom.year .fc-day-header {
   color: #77858f;
+  font-size: 10px;
+  font-weight: 400;
 }
 .calendar-custom
   .fc
@@ -395,7 +400,7 @@
   text-align: left;
   margin-left: 10px;
   padding-top: 0;
-  padding-bottom: 26px;
+  padding-bottom: 18px;
 }
 .calendar-custom .fc-multimonth-month {
   background-color: #f8fafc !important;
@@ -445,7 +450,7 @@
   border: none;
 }
 .calendar-custom .fc-multimonth-month .fc-daygrid-day {
-  height: 40px;
+  height: 29px;
 }
 .calendar-custom .fc-direction-ltr .fc-timegrid-col-events {
   margin-right: 0 !important;
