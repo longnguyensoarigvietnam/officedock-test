@@ -666,7 +666,7 @@
 .schedule-custom .fc-daygrid-day-frame .fc-event-main {
   left: 0 !important;
 }
-.fc-resource:nth-of-type(1) .fc-event {
+.schedule-custom .fc-resource:nth-of-type(1) .fc-event {
   left: 10px !important;
 }
 .schedule-custom .fc-timeGridWeek-view .fc-timegrid-col-events {
@@ -684,6 +684,6 @@
 .schedule-custom.fc-timeGridWeek-view.fc-day-header {
   font-size: 20px !important;
 }
-.fc-day-header {
+.schedule-custom .fc-day-header {
   font-size: 20px !important;
 }

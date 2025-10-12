@@ -793,6 +793,7 @@ const EventCalendar = () => {
               }) => participant.id == session?.user.id,
             )
           : false;
+      const timeText = eventContent.timeText?.replace(' - ', '~') || '';
 
       if (currentView === CalendarViewOptions.VIEW_BY_WEEK) {
         if (eventContent.event.allDay) {
@@ -847,7 +848,7 @@ const EventCalendar = () => {
         }
         return (
           <div
-            className={`overflow-hidden p-1.5 ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-event'} ${isMySchedule && isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
+            className={`overflow-hidden p-3 ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-event'} ${isMySchedule && isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
             {checkShowUserAvatar(
               eventContent.event.extendedProps.participants,
             ) &&
@@ -858,14 +859,14 @@ const EventCalendar = () => {
                 true,
                 false,
               )}
-            <div className={` text-black text-[14px] font-medium px-1`}>
+            <div className={`text-black text-[14px] font-medium`}>
               <p className="font-semibold min-h-5">
                 {eventContent.event.title != 'null'
                   ? eventContent.event.title
                   : ''}
               </p>
             </div>
-            <div className={` text-black text-[12px] font-normal px-1`}>
+            <div className={`text-black text-[11px] font-normal`}>
               {new Date(
                 new Date(eventContent.event.start).setHours(0, 0, 0, 0),
               ).getTime() !==
@@ -873,13 +874,13 @@ const EventCalendar = () => {
                 new Date(eventContent.event.end).setHours(0, 0, 0, 0),
               ).getTime() ? (
                 <>
-                  <p className="whitespace-nowrap">
-                    {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
-                    ~{' '}
+                  <p className="whitespace-nowrap text-nowrap">
+                    {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}
+                    ~
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                   </p>
                   <p
-                    className={` text-black text-[12px] font-normal break-all`}>
+                    className={`text-black text-[11px] font-normal break-all`}>
                     {eventContent.event.extendedProps?.location?.name}
                   </p>
                 </>
@@ -887,9 +888,9 @@ const EventCalendar = () => {
                 <>
                   {isMoreThanThirtyMinutes(eventContent.timeText) && (
                     <>
-                      <p>{eventContent.timeText}</p>
+                      <p>{timeText}</p>
                       <p
-                        className={`text-black text-[12px] font-normal break-all`}>
+                        className={`text-black text-[11px] font-normal break-all`}>
                         {eventContent.event.extendedProps?.location?.name}
                       </p>
                     </>
@@ -943,36 +944,36 @@ const EventCalendar = () => {
 
         return (
           <div
-            className={`overflow-hidden ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-event'} ${isMySchedule && isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
-            <div className={` text-black font-medium px-2 pt-1 text-[14px]`}>
+            className={`overflow-hidden p-3 ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-event'} ${isMySchedule && isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
+            <div className={`text-black font-medium text-[14px]`}>
               <p className="truncate max-w-[calc(100%)] font-semibold min-h-5">
                 {eventContent.event.title != 'null'
                   ? eventContent.event.title
                   : ''}
               </p>
             </div>{' '}
-            <div className={` text-black text-[12px] font-normal px-2`}>
+            <div className={` text-black text-[11px] font-normal`}>
               {new Date(
                 new Date(eventContent.event.start).setHours(0, 0, 0, 0),
               ).getTime() !==
               new Date(
                 new Date(eventContent.event.end).setHours(0, 0, 0, 0),
               ).getTime() ? (
-                <>
+                <div className='flex gap-[10px]'>
                   <p className="whitespace-nowrap">
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
                     ~{' '}
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                   </p>
-                  <p className="text-black text-[12px] font-normal break-all">
+                  <p className="text-black text-[11px] font-normal break-all">
                     {eventContent.event.extendedProps?.location?.name}
                   </p>
-                </>
+                </div>
               ) : (
                 <>
                   {isMoreThanThirtyMinutes(eventContent.timeText) && (
-                    <div className="text-black text-[12px] font-normal break-all">
-                      <p>{eventContent.timeText}</p>
+                    <div className="text-black text-[11px] font-normal break-all flex gap-[10px]">
+                      <p className='text-nowrap'>{timeText}</p>
                       <p>{eventContent.event.extendedProps?.location?.name}</p>
                     </div>
                   )}
@@ -2687,9 +2688,9 @@ const EventCalendar = () => {
                     <CustomUserAvatar
                       avatarUrl={memberInfo?.avatar || ''}
                       avatarColor={memberInfo?.avatarColor || ''}
-                      size={36}
+                      size={30}
                     />
-                    <p className="max-w-[100%] break-all text-left line-clamp-2 text-[15px] font-medium text-black">
+                    <p className="max-w-[100%] break-all text-left line-clamp-2 text-sm font-medium text-black">
                       {resource.resource.title}
                     </p>
                   </div>
@@ -2738,8 +2739,8 @@ const EventCalendar = () => {
                 if (viewType === 'timeGridWeek') {
                   return (
                     <div className="fc-day-header text-[#5B6770] font-medium">
-                      <span className="text-[18px] mr-1">{day}日</span>
-                      <span className="text-[12px]">({weekday})</span>
+                      <span className="text-[20px] mr-[6px]">{day}日</span>
+                      <span className="text-[14px]">({weekday})</span>
                     </div>
                   );
                 } else {
@@ -2820,7 +2821,7 @@ const EventCalendar = () => {
 
                     return (
                       <div
-                        className={`text-[14px] ${isSelectedDate && 'bg-[#E2E9EE] ml-[-5px] !w-[29px] !h-[29px] mt-[-8px] mr-[-5px] rounded-full flex items-center justify-center'}`}>
+                        className={`text-[12px] ${isSelectedDate && 'bg-[#E2E9EE] ml-[-5px] !w-[29px] !h-[29px] mt-[-8px] mr-[-5px] rounded-full flex items-center justify-center'}`}>
                         {date.getDate()}
                       </div>
                     );
