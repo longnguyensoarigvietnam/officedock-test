@@ -2701,7 +2701,7 @@ const EventCalendar = () => {
               locale={'ja-JP'}
               height={'80vh'}
               dayMinWidth={
-                searchParams.get('view') === ViewOptions.DAY ? 250 : undefined
+                searchParams.get('view') === ViewOptions.DAY ? 220 : undefined
               }
               stickyFooterScrollbar={true}
               events={modifyEvents(events)}
@@ -2749,7 +2749,7 @@ const EventCalendar = () => {
               }}
               multiMonthMaxColumns={4}
               eventContent={handleEventContent}
-              multiMonthMinWidth={200}
+              multiMonthMinWidth={150}
               showNonCurrentDates={true}
               fixedWeekCount={false}
               dayCellDidMount={handleDayCellMount}
