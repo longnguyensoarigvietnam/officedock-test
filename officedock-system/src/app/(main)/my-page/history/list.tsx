@@ -90,7 +90,7 @@ const HistoryListPage = () => {
           className="rounded-bl-[30px] relative rounded-tr-[30px] rounded-br-[30px] h-[calc(100vh-120px)] w-full">
           {/* Page title */}
           <div className="flex absolute top-0 left-0 shadow-common rounded-br-[30px]">
-            <div className="h-20 z-[30] bg-white w-[343px] py-4 text-[#77858F] font-medium flex items-center justify-center gap-[10px] rounded-br-[30px]">
+            <div className="h-20 z-[30] bg-white w-[343px] py-4 text-[#77858F] font-medium flex items-center justify-center gap-5 rounded-br-[30px]">
               <BackToPage />
               <span className="text-[22px] text-black">
                 {pageRouters.HISTORY_POINT.name}

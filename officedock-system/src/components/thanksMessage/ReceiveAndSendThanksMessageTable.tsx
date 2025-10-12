@@ -95,7 +95,7 @@ export const ReceiveAndSendThanksMessageTable = ({
         boxShadow: '0px 4px 10px 0px #0000000D',
       }}
       className="w-[720px] h-[calc(100%_-_60px)] overflow-y-hidden overflow-x-hidden p-[30px] absolute top-1/2 -translate-y-1/2 right-[30px] font-medium text-white border border-white rounded-3xl">
-      <div className="flex gap-2 items-center mb-7 bg-white w-fit p-[6px] rounded-[20px]">
+      <div className="flex gap-[6px] items-center mb-5 bg-white w-fit p-[6px] rounded-[20px]">
         <Button
           variant="secondary"
           className={`w-[200px] !p-0 text-xs h-[30px] !font-bold ${activeTab == ThanksMessageType.RECEIVED ? 'text-white' : '!text-[#77858F] !bg-[#EBF1F7] border-none'}  !rounded-[20px]`}
@@ -132,7 +132,7 @@ export const ReceiveAndSendThanksMessageTable = ({
       {/* Table */}
       <div
         ref={resultsContainerRef}
-        className={`overflow-y-auto overflow-x-hidden h-fit max-h-[calc(100%_-_105px)] w-full mt-3 flex flex-col gap-[2px]  ${!isLoadingList && !thanksMessageList.length ? 'bg-white h-full w-full' : 'customized-scrollbar'}`}>
+        className={`overflow-y-auto overflow-x-hidden h-fit max-h-[calc(100%_-_90px)] w-full mt-3 flex flex-col gap-[2px]  ${!isLoadingList && !thanksMessageList.length ? 'bg-white h-full w-full' : 'customized-scrollbar'}`}>
         {isLoadingList ? (
           <div className="">
             <RowSkeleton

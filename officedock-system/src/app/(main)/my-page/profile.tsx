@@ -413,7 +413,7 @@ const MyPage = () => {
             </>
             {/* Seagull icon */}
             {receivedThanksMessageList?.length ? (
-              <div className="absolute bottom-0 left-[610px]">
+              <div className="absolute bottom-0 left-[620px]">
                 <ImageRound
                   name="Seagull"
                   src="/icons/seagull.svg"
@@ -429,7 +429,7 @@ const MyPage = () => {
           <ImageRound
             name="Tweet icon"
             src={'/icons/tweet.svg'}
-            className={`w-[92px] h-[99px] z-10 hover:cursor-pointer absolute -bottom-[20px] right-[10px]`}
+            className={`w-[92px] h-[99px] z-10 hover:cursor-pointer absolute -bottom-[10px] right-[10px]`}
             onClick={() => setOpenCreateTweetModal(true)}
           />
         </div>

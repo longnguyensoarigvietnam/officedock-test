@@ -15,14 +15,14 @@ const DataCountPointChangeModal = ({ open, onClose }: Props) => {
       className="font-primary bg-white w-[678px]  text-black overflow-y-auto !rounded-[20px] !py-10 px-[115px]"
       isOutSideAction={false}
       onClose={onClose}>
-      <p className="text-center text-[18px] font-medium text-black">
+      <p className="text-center text-[18px] font-medium text-black leading-none">
         今月交換可能なコイン数
       </p>
-      <p className="text-sm font-normal mt-10 ">
+      <p className="text-sm font-normal mt-10 leading-none">
         交換可能なコイン数は、会社の総保有コイン数に応じて毎月変動します
       </p>
       <p className="text-sm font-medium text-primary mt-5">計算内容</p>
-      <div className="w-full mt-[10px] py-5 bg-[#EBF1F7] rounded-lg gap-2 flex items-center justify-center text-[22px] text-primary font-medium">
+      <div className="w-full mt-[10px] py-5 bg-[#EBF1F7] rounded-lg gap-2 flex items-center justify-center text-[22px] text-primary font-medium leading-none">
         <p>会社の総保有コイン</p>
         <p className="text-black">÷</p>
         <p>従業員数</p>
@@ -45,12 +45,12 @@ const DataCountPointChangeModal = ({ open, onClose }: Props) => {
           </div>
         </div>
       </div>
-      <div className="text-sm font-medium flex items-center mt-5">
+      <div className="text-sm font-medium flex items-center mt-5 leading-none">
         <p>上記例の場合、</p>
         <p className="text-primary">従業員一人当たり100コイン交換</p>
         <p>できます。</p>
       </div>
-      <div className="text-sm font-medium text-[#77858F]  mt-3">
+      <div className="text-sm font-medium text-[#77858F] mt-3 leading-none">
         <p>※交換可能なコイン数は翌月に繰り越しません</p>
         <p className="mt-1">
           ※交換可能なコイン数は締め日の次の日に更新されます

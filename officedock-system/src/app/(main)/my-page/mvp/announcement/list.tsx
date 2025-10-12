@@ -66,7 +66,7 @@ export const AnnouncementListPage = () => {
               )}
             </p>
           </div>
-          <p className="text-[#B58F42] w-fit font-medium text-[20px] bg-white rounded-[6px] py-[8px] px-[14px] leading-none">
+          <p className="text-[#B58F42] w-fit max-w-[400px] truncate font-medium text-[20px] bg-white rounded-[6px] py-[8px] px-[14px] leading-none">
             {mvpAnnouncementDetail?.title}
           </p>
         </div>

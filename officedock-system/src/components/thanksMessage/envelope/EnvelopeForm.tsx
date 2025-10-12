@@ -55,7 +55,7 @@ export const EnvelopeForm = ({
         />
       </div>
 
-      <div className="flex items-center justify-center gap-3">
+      <div className="flex items-center justify-center gap-[10px]">
         <Button
           variant="outline"
           className="bg-transparent w-[100px] rounded-[8px] h-[36px] !p-0"

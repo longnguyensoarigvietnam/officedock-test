@@ -164,7 +164,7 @@ export const HistoryTable = ({
                     </div>
                     <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
                     <div className="w-[calc(100%_-_525px)] px-5 py-[11px]">
-                      <p className="text-sm font-medium break-all">
+                      <p className="text-sm break-all">
                         {history.memo}
                       </p>
                     </div>

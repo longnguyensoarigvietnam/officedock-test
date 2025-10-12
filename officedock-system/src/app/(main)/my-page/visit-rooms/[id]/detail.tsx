@@ -127,9 +127,9 @@ const RoomDetail = () => {
     }
 
     const renderLevelText = () => (
-      <div className="flex gap-1 items-baseline">
-        <p className="text-sm font-medium">Lv.</p>
-        <p className="text-[30px] font-medium">{level}</p>
+      <div className="flex gap-[2px] items-baseline">
+        <p className="text-[15px] font-medium">Lv.</p>
+        <p className="text-[26px] font-medium">{level}</p>
       </div>
     );
 
@@ -143,12 +143,13 @@ const RoomDetail = () => {
       <div
         style={{
           backgroundImage: 'url("/images/bg-visit-room-detail.jpg")',
-          backgroundSize: 'cover',
+          backgroundSize: '100% 100%',
+          backgroundRepeat: 'no-repeat',
           backgroundPosition: 'top center',
           width: '100%',
           height: '100%',
         }}
-        className="h-[calc(100vh-120px)] w-full rounded-bl-[30px] rounded-tr-[30px] rounded-br-[30px]">
+        className="w-full min-h-[700px] rounded-bl-[30px] rounded-tr-[30px] rounded-br-[30px]">
         <div className="h-20 w-fit bg-white px-5 py-[17px] text-[#77858F] font-medium flex items-center gap-5 rounded-br-[30px]">
           <div>{params.id && renderBoxUser(String(params.id))}</div>
           <div className="flex items-center gap-[10px]">
@@ -226,38 +227,38 @@ const RoomDetail = () => {
                 )}
 
                 {showTwinklingStars && (
-                  <div>
+                  <>
                     <TwinklingIcon
-                      className="absolute top-[-10px] left-[-10px]"
+                      className="absolute top-[10px] left-[-3px] w-[5px] h-[5px]"
                       delay={0}
                       iconUrl="/icons/blue-star.svg"
                     />
                     <TwinklingIcon
-                      className="absolute top-[5px] right-[-15px]"
+                      className="absolute top-[3px] left-[5px] w-[5px] h-[5px]"
                       delay={0.5}
                       iconUrl="/icons/blue-star.svg"
                     />
                     <TwinklingIcon
-                      className="absolute top-[-15px] right-[5px]"
+                      className="absolute top-[10px] -right-[3px] w-[5px] h-[5px]"
                       delay={0.8}
                       iconUrl="/icons/blue-star.svg"
                     />
                     <TwinklingIcon
-                      className="absolute bottom-[5px] left-[-15px]"
+                      className="absolute bottom-[5px] left-[-3px] w-[5px] h-[5px]"
                       delay={1}
                       iconUrl="/icons/blue-star.svg"
                     />
                     <TwinklingIcon
-                      className="absolute bottom-[-15px] left-[5px]"
+                      className="absolute bottom-[5px] -right-[3px] w-[5px] h-[5px]"
                       delay={1.2}
                       iconUrl="/icons/blue-star.svg"
                     />
                     <TwinklingIcon
-                      className="absolute bottom-[-10px] right-[-10px]"
+                      className="absolute -bottom-[3px] right-[5px] w-[5px] h-[5px]"
                       delay={1.5}
                       iconUrl="/icons/blue-star.svg"
                     />
-                  </div>
+                  </>
                 )}
 
                 <div className="w-fit h-fit">
@@ -286,7 +287,7 @@ const RoomDetail = () => {
           })}
         </div>
         <div
-          className={`${myPageSkillList?.length ? 'mt-[74px]' : 'mt-[159px]'} ml-[30px]`}>
+          className={`${myPageSkillList?.length ? 'mt-[74px]' : 'mt-[159px]'} ml-[30px] w-fit`}>
           <MyPageMenu
             onClickSettingSurvey={() => {}}
             isVisitRoom={true}
@@ -308,7 +309,7 @@ const RoomDetail = () => {
             }}
           />
         </div>
-        <div className="absolute bottom-[50px] left-[200px]">
+        <div className="absolute bottom-[42px] left-[120px]">
           <div className="flex-grow">
             <div className="h-[424px] w-[336px] ml-[200px] relative">
               <RenderAccessories />

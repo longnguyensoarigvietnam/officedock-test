@@ -76,14 +76,16 @@ export const VotingCandidateList = ({
         {currentMVPVotingDetail ? (
           <>
             <p className="bg-white leading-none w-fit py-[9px] px-3 rounded-[6px] font-semibold text-[15px] text-[#B58F42]">
-              投票期間{' '}
-              {formatShowDateJapanese(
-                String(currentMVPVotingDetail?.startDate),
-              )}{' '}
-              ~{' '}
-              {convertDateToJapaneseFormat(
-                new Date(currentMVPVotingDetail?.endDate || new Date()),
-              )}
+              投票期間
+              <span className="ml-[10px]">
+                {formatShowDateJapanese(
+                  String(currentMVPVotingDetail?.startDate),
+                )}{' '}
+                ~{' '}
+                {convertDateToJapaneseFormat(
+                  new Date(currentMVPVotingDetail?.endDate || new Date()),
+                )}
+              </span>
             </p>
             <p className="text-[24px] font-semibold">
               {currentMVPVotingDetail?.title || ''}

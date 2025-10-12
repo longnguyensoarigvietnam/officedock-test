@@ -38,7 +38,7 @@ const CurrentStatus = () => {
           <ImageRound
             name="Badge icon"
             src={'/icons/badge.svg'}
-            className={`w-[19px] h-[19px]`}
+            className={`w-5 h-5`}
           />
           {/* Format Japanese number, for example: 10000 → 10,000 */}
           <p className="text-lg font-medium ml-[6px] leading-none">

@@ -24,7 +24,7 @@ const SuccessMVPVotingModal = ({ open, onClose }: Props) => {
           <Button
             variant="text"
             onClick={onClose}
-            className="bg-transparent !text-[#B58F42] !leading-none w-[100px] rounded-lg !p-0">
+            className="bg-transparent !text-[#B58F42] !text-[13px] !leading-none w-[100px] rounded-lg !p-0">
             閉じる
           </Button>
         </div>

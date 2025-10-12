@@ -87,15 +87,15 @@ export const ConfirmSettingSkillModal = ({
         <ImageRound
           name={`Step ${step} treasure`}
           src={treasureIcons[step]}
-          className={`w-[50px] h-[50px] cursor-pointer`}
+          className={`w-[40px] h-[40px] cursor-pointer`}
         />
       );
     }
 
     const renderLevelText = () => (
-      <div className="flex gap-1 items-baseline">
-        <p className="text-sm font-medium">Lv.</p>
-        <p className="text-[30px] font-medium">{level}</p>
+      <div className="flex gap-[2px] items-baseline">
+        <p className="text-[15px] font-medium">Lv.</p>
+        <p className="text-[26px] font-medium">{level}</p>
       </div>
     );
 
@@ -113,13 +113,15 @@ export const ConfirmSettingSkillModal = ({
       onClose={onClose}>
       <div className="flex flex-col items-center">
         <div className="space-y-[26px] mb-[26px]">
-          <p className="text-[18px] font-medium text-center leading-none">確認</p>
+          <p className="text-[18px] font-medium text-center leading-none">
+            確認
+          </p>
           <p className="text-sm text-center leading-none">{message}</p>
         </div>
 
         <div className="bg-[#E9EEF3] rounded-[20px] p-[10px] w-[265px] h-[75px] mb-[30px]">
           <div
-            className="flex gap-3 bg-white items-center rounded-[14px] relative w-full h-full px-[20px] py-[12px]"
+            className={`flex gap-3 bg-white items-center rounded-[14px] relative w-full h-full px-[20px] ${stepCompleted && '!pr-[5px]'} py-[12px]`}
             style={{
               boxShadow: showTwinklingStars
                 ? '0px 0px 20px 0px #36ACDE80'
@@ -137,43 +139,43 @@ export const ConfirmSettingSkillModal = ({
             )}
 
             {showTwinklingStars && (
-              <div>
+              <>
                 <TwinklingIcon
-                  className="absolute top-[-10px] left-[-10px]"
+                  className="absolute top-[10px] left-[-3px] w-[5px] h-[5px]"
                   delay={0}
-                  iconUrl='/icons/blue-star.svg'
+                  iconUrl="/icons/blue-star.svg"
                 />
                 <TwinklingIcon
-                  className="absolute top-[5px] right-[-15px]"
+                  className="absolute top-[3px] left-[5px] w-[5px] h-[5px]"
                   delay={0.5}
-                  iconUrl='/icons/blue-star.svg'
+                  iconUrl="/icons/blue-star.svg"
                 />
                 <TwinklingIcon
-                  className="absolute top-[-15px] right-[5px]"
+                  className="absolute top-[10px] -right-[3px] w-[5px] h-[5px]"
                   delay={0.8}
-                  iconUrl='/icons/blue-star.svg'
+                  iconUrl="/icons/blue-star.svg"
                 />
                 <TwinklingIcon
-                  className="absolute bottom-[5px] left-[-15px]"
+                  className="absolute bottom-[5px] left-[-3px] w-[5px] h-[5px]"
                   delay={1}
-                  iconUrl='/icons/blue-star.svg'
+                  iconUrl="/icons/blue-star.svg"
                 />
                 <TwinklingIcon
-                  className="absolute bottom-[-15px] left-[5px]"
+                  className="absolute bottom-[5px] -right-[3px] w-[5px] h-[5px]"
                   delay={1.2}
-                  iconUrl='/icons/blue-star.svg'
+                  iconUrl="/icons/blue-star.svg"
                 />
                 <TwinklingIcon
-                  className="absolute bottom-[-10px] right-[-10px]"
+                  className="absolute -bottom-[3px] right-[5px] w-[5px] h-[5px]"
                   delay={1.5}
-                  iconUrl='/icons/blue-star.svg'
+                  iconUrl="/icons/blue-star.svg"
                 />
-              </div>
+              </>
             )}
-            <div className="w-[calc(100%_-_72px)]">
-              <div className={`flex justify-between items-start mb-1`}>
+            <div className="w-[calc(100%_-_49px)]">
+              <div className={`flex justify-between items-start mb-[10px]`}>
                 <p
-                  className={`text-[16px] font-medium max-w-[calc(100%_-_5px)] line-clamp-1 break-all ${stepCompleted ? 'text-[#B3B3B3]' : 'text-black'}`}>
+                  className={`text-[15px] leading-none font-medium max-w-[calc(100%_-_5px)] line-clamp-1 break-all ${stepCompleted ? 'text-[#B3B3B3]' : 'text-black'}`}>
                   {confirmSettingSkillInfo.skill?.name}
                 </p>
               </div>
@@ -187,7 +189,7 @@ export const ConfirmSettingSkillModal = ({
                 />
               </div>
             </div>
-            <div className="w-[60px] flex justify-end">
+            <div className="flex justify-end">
               {' '}
               {renderTreasureForStep(
                 Boolean(isLocked),
@@ -199,7 +201,7 @@ export const ConfirmSettingSkillModal = ({
           </div>
         </div>
 
-        <div className="gap-3 flex justify-center">
+        <div className="gap-[10px] flex justify-center">
           <Button
             variant="outline"
             onClick={onClose}

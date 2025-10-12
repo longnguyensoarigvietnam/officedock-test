@@ -136,12 +136,12 @@ export const CalendarSidebar = ({
       <div className="flex flex-col mb-5">
         <div className="flex items-center">
           <ImageRound
-            className="w-10 h-10"
+            className="w-9 h-9"
             src="/icons/calendar-multi-users.svg"
             border="full"
             name="Avatar user"
           />
-          <p className="text-[16px] font-medium text-[#77858F] ml-1">
+          <p className="text-[16px] font-medium text-[#77858F] ml-3">
             メンバーの予定を見る
           </p>
           <div
@@ -155,30 +155,32 @@ export const CalendarSidebar = ({
           </div>
         </div>
       </div>
-      <div className="py-3 mb-2 rounded-md shadow-md bg-white">
+      <div className="py-3 mb-5 rounded-md bg-white" style={{
+        boxShadow: '0px 4px 8px 0px #0000000F'
+      }}>
         <InputSearch
           placeholder="名前で検索"
           className="w-[100%] px-3"
-          inputClassName="!py-2 placeholder-[#BABABA] !border-[1px] !border-[#77858F]"
+          inputClassName="!py-2 !placeholder-[#BABABA] !border-[1px] !border-[#77858F]"
           onChange={(e) => setSearchName(e.target.value)}
         />
         <div className="flex justify-between my-2 px-3">
           <p
-            className="text-[#77858F] text-xs hover:cursor-pointer hover:text-gray-700"
+            className="text-[#77858F] text-xs hover:cursor-pointer font-medium hover:text-gray-700"
             onClick={() =>
               handleGetAllMemberSchedules(dataOptionsParticipants)
             }>
             全てをチェック
           </p>
           <p
-            className="text-[#77858F] text-xs hover:cursor-pointer hover:text-gray-700"
+            className="text-[#77858F] text-xs hover:cursor-pointer font-medium hover:text-gray-700"
             onClick={() =>
               handleRemoveAllMemberSchedules(dataOptionsParticipants)
             }>
             全てのチェックをクリア
           </p>
         </div>
-        <div className="pt-3 max-h-[calc(80vh_-_200px)] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
+        <div className="pt-3 max-h-[calc(100vh_-_320px)] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
           {dataOptionsParticipants &&
             dataOptionsParticipants.filter((member) =>
               member.fullName.toLowerCase().includes(searchName.toLowerCase()),
@@ -238,10 +240,10 @@ export const CalendarSidebar = ({
                 return (
                   <div
                     key={member.id}
-                    className={`flex items-center px-3 ${
+                    className={`flex items-center gap-[14px] px-3 ${
                       checkIsParticipantSelected(member) && 'bg-[#EBF1F7]'
                     }`}>
-                    <div className="w-5">
+                    <div className="w-4">
                       <Checkbox
                         label=""
                         className="mr-2"
@@ -255,7 +257,7 @@ export const CalendarSidebar = ({
                       />
                     </div>
                     <div
-                      className={`flex flex-1 gap-3 items-center p-1.5 hover:cursor-pointer !w-full`}>
+                      className={`flex flex-1 gap-[10px] items-center p-2 pl-0 hover:cursor-pointer !w-full`}>
                       {member.type == EventParticipantType.USER && (
                         <>{renderAvatar(String(member.id))}</>
                       )}
@@ -277,7 +279,7 @@ export const CalendarSidebar = ({
                         </>
                       )}
                       <div className="!w-full">
-                        <p className="line-clamp-3 break-all font-medium text-[15px] text-black">
+                        <p className="line-clamp-3 break-all font-medium leading-none text-[15px] text-black">
                           {member.fullName}
                           <span className="text-[#77858F] text-xs ml-1">
                             {member.mainOrganization}
@@ -293,7 +295,8 @@ export const CalendarSidebar = ({
       <div className="ml-[13px]">
         <Checkbox
           label="自分をメンバーから外す"
-          classLabel="text-[15px] text-black"
+          classLabel="text-[15px] !text-black"
+          boxLabelClass="!ml-[14px]"
           onChange={(state) => {
             setRemoveMyselfOption(state);
 

@@ -123,7 +123,7 @@ export const HonoredUsersVotingReasonsModal = ({
             </p>
           </div>
         </div>
-        <p className="text-xs text-[#B58F42] font-medium mb-3">投票理由</p>
+        <p className="text-xs text-[#B58F42] font-medium">投票理由</p>
         {isLoadingList ? (
           <Spinner className="!h-fit py-3" iconClassName="h-6 w-6" />
         ) : (
@@ -132,7 +132,7 @@ export const HonoredUsersVotingReasonsModal = ({
 
         <div
           ref={resultsContainerRef}
-          className={`max-h-[389px] w-[440px] overflow-y-auto border-[1px] border-[#D2DBE1] rounded-[6px] ${!mvpVotingReasonList?.length && 'hidden'}`}>
+          className={`max-h-[389px] w-[440px] mt-3 overflow-y-auto border-[1px] border-[#D2DBE1] rounded-[6px] ${!mvpVotingReasonList?.length && 'hidden'}`}>
           {mvpVotingReasonList?.length > 0 &&
             mvpVotingReasonList.map((reason) => (
               <p
