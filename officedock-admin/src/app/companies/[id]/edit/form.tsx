@@ -72,6 +72,8 @@ interface EditCompanyType {
     systemMainPurpose?: OptionDropdownType[];
     department?: OptionDropdownType[];
   };
+  closeDate?: OptionDropdownType;
+  editableAfterClosing?: OptionDropdownType;
 }
 
 const EditCompanyForm = () => {
@@ -157,6 +159,14 @@ const EditCompanyForm = () => {
   } = useForm<EditCompanyType>({
     mode: 'onSubmit',
   });
+  const closingDayOptions = Array.from({ length: 31 }, (_, i) => ({
+    label: `${i + 1}日`,
+    value: i + 1,
+  }));
+  const editableAfterClosingOptions = Array.from({ length: 10 }, (_, i) => ({
+    label: `${i + 1}日間`,
+    value: i + 1,
+  }));
 
   const defaultValues = useMemo<EditCompanyType>(() => {
     const value: EditCompanyType = {
@@ -173,6 +183,9 @@ const EditCompanyForm = () => {
         department: undefined,
         systemMainPurpose: undefined,
       },
+      closeDate: closingDayOptions[closingDayOptions.length - 1],
+      editableAfterClosing:
+        editableAfterClosingOptions[editableAfterClosingOptions.length - 1],
     };
 
     if (companyDetail) {
@@ -301,6 +314,8 @@ const EditCompanyForm = () => {
           item.value == OTHER_OPTION_VALUE ? item.other || '' : item.value,
         ) as string[],
       },
+      closeDate: data.closeDate?.value as number,
+      editableAfterClosing: data.editableAfterClosing?.value as number,
     });
   };
 
@@ -519,7 +534,9 @@ const EditCompanyForm = () => {
             value={
               Array.isArray(value)
                 ? value.map((v) =>
-                    v.other ? OTHER_OPTION_VALUE : normalizeJapaneseText(String(v.value)),
+                    v.other
+                      ? OTHER_OPTION_VALUE
+                      : normalizeJapaneseText(String(v.value)),
                   )
                 : []
             }
@@ -553,6 +570,7 @@ const EditCompanyForm = () => {
         )}
         rules={{ required: SYSTEM_MAIN_PURPOSE_REQUIRED_MESSAGE }}
       />
+
       <Controller
         control={control}
         name="contract.department"
@@ -587,7 +605,9 @@ const EditCompanyForm = () => {
               value={
                 Array.isArray(value)
                   ? value.map((v) =>
-                      v.other ? OTHER_OPTION_VALUE : normalizeJapaneseText(String(v.value)),
+                      v.other
+                        ? OTHER_OPTION_VALUE
+                        : normalizeJapaneseText(String(v.value)),
                     )
                   : []
               }
@@ -656,6 +676,56 @@ const EditCompanyForm = () => {
         }}
         rules={{ required: DEPARTMENT_REQUIRED_MESSAGE }}
       />
+      {/* Close Date */}
+      <Controller
+        control={control}
+        name="closeDate"
+        render={({ field: { onChange, value } }) => {
+          return (
+            <Dropdown
+              label="締日"
+              selectedOption={
+                closingDayOptions.find((item) => item.value == value?.value) ||
+                undefined
+              }
+              disabled={
+                (companyDetail?.totalUsers && companyDetail?.totalUsers > 0) ||
+                false
+              }
+              options={closingDayOptions}
+              onChange={(e) => {
+                onChange(e);
+              }}
+            />
+          );
+        }}
+      />
+      {/* editableAfterClosing */}
+      <Controller
+        control={control}
+        name="editableAfterClosing"
+        render={({ field: { onChange, value } }) => {
+          return (
+            <Dropdown
+              label="修正可能期間"
+              selectedOption={
+                editableAfterClosingOptions.find(
+                  (item) => item.value == value?.value,
+                ) || undefined
+              }
+              disabled={
+                (companyDetail?.totalUsers && companyDetail?.totalUsers > 0) ||
+                false
+              }
+              options={editableAfterClosingOptions}
+              onChange={(e) => {
+                onChange(e);
+              }}
+            />
+          );
+        }}
+      />
+
       <div className="flex justify-center">
         <div className="flex flex-col items-center gap-4 my-[60px]">
           <Button className="w-[426px]" variant="primary" type="submit">
