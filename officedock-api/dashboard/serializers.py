@@ -1,4 +1,3 @@
-from datetime import datetime, time
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.timezone import now
@@ -9,7 +8,6 @@ from base.messages import ERROR_MESSAGES
 from calendars.constants import CalendarTypes, ScheduleTypes
 from calendars.models import Schedule
 from common.utils import (
-    calculate_company_dates,
     get_common_categories,
     format_duration,
 )
@@ -19,6 +17,7 @@ from tags.models import Tag
 from tags.serializers import BaseTagSerializer
 from tasks.models import Task, TaskDuration
 from tasks.serializers import CategoryForCreationTaskSerializer
+from dashboard.utils import validate_editable_actual_duration
 
 
 class DurationCalculatorSerializer(serializers.Serializer):
@@ -219,6 +218,8 @@ class UpdateDurationSerializer(serializers.ModelSerializer):
         started_at = data.get("started_at", None)
         paused_at = data.get("paused_at")
 
+        # Validate range editable after close date
+        validate_editable_actual_duration(instance, started_at, paused_at)
         check_valid_duration(started_at, paused_at, instance)
 
         # Exclude the current instance when updating
@@ -332,30 +333,7 @@ class ActualDurationCreationSerializer(serializers.ModelSerializer):
         user = self.context.get("request").user
 
         # Validate range editable after close date
-        if instance:
-            date_now = now().date()
-            instance_started_at = instance.started_at
-            instance_paused_at = instance.paused_at
-            company_dates = calculate_company_dates(instance.company)
-            date_after_closing = company_dates["date_after_closing"]
-            start_of_day = company_dates["start_date_calculation_deadline"]
-            date_after_data_edit_deadline = company_dates[
-                "date_after_data_edit_deadline"
-            ]
-
-            if date_now >= date_after_data_edit_deadline:
-                start_of_day = date_after_closing
-
-            if instance_started_at < datetime.combine(
-                start_of_day, time.min, tzinfo=instance_started_at.tzinfo
-            ):
-                if (
-                    instance_started_at != started_at
-                    or instance_paused_at != paused_at
-                ):
-                    raise ValidationError(
-                        {"detail": ERROR_MESSAGES["cannot_edit_duration"]}
-                    )
+        validate_editable_actual_duration(instance, started_at, paused_at)
 
         if task is None and schedule is None:
             raise ValidationError(

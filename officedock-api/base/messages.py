@@ -216,7 +216,7 @@ _ERROR_MESSAGES = {
         "role_exists": "このロールがすでに存在しています。",
         "tag_exists": "このタグがすでに存在しています。",
         "exists_duration": "この計測時間がすでに存在しています。",
-        "cannot_edit_duration": _("この実績データは修正できません。"),
+        "cannot_edit_duration": _("修正可能期間を超えているため、修正・削除できません。"),
         "exists_task_schedule": "実施予定日時が重複しています。",
         "task_and_event_not_exists": _("タスクと予定は存在しません。"),
         "date_invalid": _("日は無効です。"),
