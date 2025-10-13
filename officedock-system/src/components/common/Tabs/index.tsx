@@ -171,8 +171,10 @@ const Tabs = ({
                 }}>
                 <div>
                   <Switch
-                    className="!gap-0 ml-1 "
-                    customTranslate="!translate-x-[115%]"
+                    className="!gap-0 ml-1"
+                    sizeClassName="!h-[28px] !w-[48px]"
+                    toggleClassName="!h-5 !w-5"
+                    customTranslate="!translate-x-[100%] !ml-0"
                     enableColor={showToggleButtonColorByTime()}
                     disableColor="#182A4B33"
                     enable={isTeamDockMenu}

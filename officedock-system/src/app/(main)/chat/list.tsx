@@ -893,7 +893,7 @@ const ListChatUsers = ({
     if (item.type === AvatarChat.GROUP) {
       return (
         <ImageRound
-          className="w-8 h-8"
+          className="w-[30px] h-[30px]"
           src="/icons/multi-users.svg"
           border="full"
           name="Avatar user"
@@ -904,7 +904,7 @@ const ListChatUsers = ({
     if (item.type === AvatarChat.TASK) {
       return (
         <ImageRound
-          className="w-8 h-8"
+          className="w-[30px] h-[30px]"
           src="/icons/document.svg"
           border="full"
           name="Task"
@@ -915,7 +915,7 @@ const ListChatUsers = ({
     if (item.type === AvatarChat.SKILL) {
       return (
         <ImageRound
-          className="w-8 h-8"
+          className="w-[30px] h-[30px]"
           src="/icons/skill-room.svg"
           border="full"
           name="Skill"
@@ -926,7 +926,7 @@ const ListChatUsers = ({
     if (item.type === AvatarChat.CALENDAR) {
       return (
         <ImageRound
-          className="w-8 h-8"
+          className="w-[30px] h-[30px]"
           src="/icons/calendar-room.svg"
           border="full"
           name="Calendar"
@@ -947,11 +947,11 @@ const ListChatUsers = ({
     });
 
     return (
-      <div className="h-6">
+      <div className="h-[30px]">
         <CustomUserAvatar
           avatarUrl={memberInfo?.avatar || ''}
           avatarColor={memberInfo?.avatarColor || ''}
-          size={33}
+          size={30}
         />
       </div>
     );
@@ -1088,12 +1088,12 @@ const ListChatUsers = ({
 
   return (
     <aside
-      className={`w-[270px] max-w-[270px] min-w-[270px] !h-[calc(100vh_-_76px)] ${expanded ? '!rounded-r-[60px]' : '!rounded-r-[30px]'} overflow-y-hidden !bg-[#E6F3FB] pl-4 pt-5`}>
-      <div className="relative mb-5 pr-4" ref={searchSectionRef}>
+      className={`w-[270px] max-w-[270px] min-w-[270px] !h-[calc(100vh_-_76px)] ${expanded ? '!rounded-r-[60px]' : '!rounded-r-[30px]'} !bg-[#E6F3FB] pl-4 pt-5`}>
+      <div className="relative mb-[10px] pr-4" ref={searchSectionRef}>
         <InputSearch
           placeholder="全体のキーワードを検索"
           className="w-full"
-          inputClassName="!py-2 !border-[#77858F]"
+          inputClassName="!py-2 !border-[#77858F] !placeholder-[#BABABA] !h-[36px] !text-sm"
           value={roomNameSearch}
           onChange={(e) => {
             setHasMoreSearch(true);
@@ -1180,7 +1180,7 @@ const ListChatUsers = ({
           <></>
         )}
       </div>
-      <div className="flex items-center mb-5 pr-6 pl-1">
+      <div className="flex items-center mb-[10px] pr-4">
         <div
           onClick={goToBookmark}
           className={`${room === BOOKMARK_ROUTER_NAME && 'bg-white'} h-[36px] p-3 cursor-pointer rounded-md flex items-center gap-1 flex-grow`}>
@@ -1218,10 +1218,10 @@ const ListChatUsers = ({
                     leave="transition ease-in duration-150"
                     leaveFrom="opacity-100 translate-y-0"
                     leaveTo="opacity-0 translate-y-1">
-                    <PopoverPanel className="absolute left-0 z-10 min-w-[196px] max-w-[196px] transform">
+                    <PopoverPanel className="absolute left-0 z-10 min-w-[204px] max-w-[204px] transform">
                       <div className="bg-[#5B6770] text-white rounded-[10px] p-[6px] space-y-1 mt-2 text-sm font-medium">
                         <p
-                          className={`py-[7px] px-[14px] hover:bg-[#7D8A94] rounded-[6px] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == '' && 'bg-[#7D8A94]'}`}
+                          className={`p-[12px] hover:bg-[#7D8A94] leading-none rounded-[6px] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == '' && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             if (!initialLoadSearch) {
                               setSearchRoomType('');
@@ -1231,7 +1231,7 @@ const ListChatUsers = ({
                           すべてのチャット
                         </p>
                         <p
-                          className={`py-[7px] px-[14px] hover:bg-[#7D8A94] rounded-[6px] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == ChatRoomType.UNREAD && 'bg-[#7D8A94]'}`}
+                          className={`p-[12px] hover:bg-[#7D8A94] leading-none rounded-[6px] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == ChatRoomType.UNREAD && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             if (!initialLoadSearch) {
                               setSearchRoomType(ChatRoomType.UNREAD);
@@ -1241,7 +1241,7 @@ const ListChatUsers = ({
                           未読があるチャット
                         </p>
                         <p
-                          className={`py-[7px] px-[14px] hover:bg-[#7D8A94] rounded-[6px] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == ChatRoomType.GROUP && 'bg-[#7D8A94]'}`}
+                          className={`p-[12px] hover:bg-[#7D8A94] leading-none rounded-[6px] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == ChatRoomType.GROUP && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             if (!initialLoadSearch) {
                               setSearchRoomType(ChatRoomType.GROUP);
@@ -1251,7 +1251,7 @@ const ListChatUsers = ({
                           グループチャット
                         </p>
                         <p
-                          className={`py-[7px] px-[14px] hover:bg-[#7D8A94] rounded-[6px] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == ChatRoomType.PRIVATE && 'bg-[#7D8A94]'}`}
+                          className={`p-[12px] hover:bg-[#7D8A94] leading-none rounded-[6px] ${initialLoadSearch ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'} ${searchRoomType == ChatRoomType.PRIVATE && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             if (!initialLoadSearch) {
                               setSearchRoomType(ChatRoomType.PRIVATE);
@@ -1279,11 +1279,11 @@ const ListChatUsers = ({
                 customOffset={{
                   top: -8,
                 }}>
-                <div>
+                <div className='w-[36px] h-[36px] flex items-center justify-center'>
                   <ImageRound
                     src="/icons/add-chat.svg"
                     name="Add icon"
-                    className="!w-[17px] !h-[17px] text-gray-400 hover:cursor-pointer cursor-pointer"
+                    className="!w-[18px] !h-[18px] text-gray-400 hover:cursor-pointer cursor-pointer"
                     onClick={() => setIsModalOpen(true)}
                   />
                 </div>
@@ -1293,12 +1293,12 @@ const ListChatUsers = ({
       </div>
       {!searchRoomType && (
         <div
-          className={`flex-grow w-full pr-4 mt-3 h-[calc(100vh_-_210px)] ${dataChatList.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden !h-[calc(100vh_-_200px)]'} overflow-x-hidden scrollbar-gutter-stable`}>
+          className={`flex-grow w-full pr-4 mt-3 h-[calc(100vh_-_205px)] ${dataChatList.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden !h-[calc(100vh_-_200px)]'} overflow-x-hidden scrollbar-gutter-stable`}>
           {dataChatList && dataChatList.length > 0 ? (
             dataChatList.map((item) => (
               <div
                 key={item?.code}
-                className={`flex relative w-full group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
+                className={`flex mb-1 relative w-full group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
                 onClick={() => {
                   if (item.code !== chatRoomCode) {
                     handleRoomChange(item);
@@ -1318,7 +1318,7 @@ const ListChatUsers = ({
                         });
                       }}>
                       <ImageRound
-                        className="w-[14px] h-[16px] hover:cursor-pointer"
+                        className="w-[13px] h-[15px] hover:cursor-pointer"
                         src="/icons/pin-chat.svg"
                         border="full"
                         name="Pin chat"
@@ -1330,7 +1330,7 @@ const ListChatUsers = ({
                 <div className="!w-8 !h-8">{renderAvatar(item)}</div>
 
                 <p
-                  className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? (item.isMuted ? 'w-[calc(100%_-_100px)]' : 'w-[calc(100%_-_70px)]') : item.isMuted ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium `}>
+                  className={`ml-2 text-[15px] break-all ${item?.unreadMessages > 0 ? (item.isMuted ? 'w-[calc(100%_-_100px)]' : 'w-[calc(100%_-_70px)]') : item.isMuted ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium `}>
                   {item.code &&
                   chatRoomNameEditing.find(
                     (room) => room.roomCode === item.code,
@@ -1353,7 +1353,7 @@ const ListChatUsers = ({
                 )}
 
                 {item?.unreadMessages > 0 && (
-                  <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full w-[20px] pt-[2px] h-[20px] bg-[#E95062] text-[10px] text-center text-white leading-4">
+                  <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full w-[20px] pt-[2px] h-[20px] bg-[#E95062] text-[10px] font-medium text-center text-white leading-4">
                     {item?.unreadMessages}
                   </p>
                 )}
@@ -1382,12 +1382,12 @@ const ListChatUsers = ({
       {searchRoomType && (
         <>
           <div
-            className={`flex-grow w-full pr-4 mt-3 h-[calc(100vh_-_210px)]  ${filteredChatList.length > 0 && !initialLoadSearch ? 'overflow-y-auto' : 'overflow-y-hidden'} overflow-x-hidden scrollbar-gutter-stable`}>
+            className={`flex-grow w-full pr-4 mt-3 h-[calc(100vh_-_205px)]  ${filteredChatList.length > 0 && !initialLoadSearch ? 'overflow-y-auto' : 'overflow-y-hidden'} overflow-x-hidden scrollbar-gutter-stable`}>
             {filteredChatList && filteredChatList.length > 0 ? (
               filteredChatList.map((item) => (
                 <div
                   key={item?.code}
-                  className={`flex relative w-full group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
+                  className={`flex mb-1 relative w-full group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
                   onClick={() => {
                     setLastItemId(null);
                     handleSetChatRoomParam(item.code);
@@ -1405,7 +1405,7 @@ const ListChatUsers = ({
                       });
                     }}>
                     <ImageRound
-                      className="w-[14px] h-[16px] hover:cursor-pointer"
+                      className="w-[13px] h-[15px] hover:cursor-pointer"
                       src="/icons/pin-chat.svg"
                       border="full"
                       name="Pin chat"
@@ -1413,7 +1413,7 @@ const ListChatUsers = ({
                   </div>
                   <div className="!w-8 !h-8">{renderAvatar(item)}</div>
                   <p
-                    className={`ml-2 text-sm break-all ${item?.unreadMessages > 0 ? (item.isMuted ? 'w-[calc(100%_-_100px)]' : 'w-[calc(100%_-_70px)]') : item.isMuted ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium `}>
+                    className={`ml-2 text-[15px] break-all ${item?.unreadMessages > 0 ? (item.isMuted ? 'w-[calc(100%_-_100px)]' : 'w-[calc(100%_-_70px)]') : item.isMuted ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium `}>
                     {item.code &&
                     chatRoomNameEditing.find(
                       (room) => room.roomCode === item.code,
@@ -1434,7 +1434,7 @@ const ListChatUsers = ({
                     </div>
                   )}
                   {item?.unreadMessages > 0 && (
-                    <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full w-[20px] pt-[2px] h-[20px] bg-[#E95062] text-[10px] text-center text-white leading-4">
+                    <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full w-[20px] pt-[2px] h-[20px] bg-[#E95062] text-[10px] font-medium text-center text-white leading-4">
                       {item?.unreadMessages}
                     </p>
                   )}

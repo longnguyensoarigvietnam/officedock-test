@@ -205,7 +205,7 @@ const ListTaskUserChat = ({
           <ImageRound
             name="Quote checker"
             src="/icons/quote-checker.svg"
-            className="w-[18px] h-[18px]"
+            className="w-[16px] h-[16px]"
           />
         </div>
       </DynamicTooltip>

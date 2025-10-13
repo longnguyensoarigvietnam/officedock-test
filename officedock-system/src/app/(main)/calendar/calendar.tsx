@@ -2937,7 +2937,7 @@ const EventCalendar = () => {
                 if (viewType === 'timeGridWeek') {
                   return (
                     <div className="fc-day-header text-[#5B6770] font-medium">
-                      <span className="text-[20px] mr-[6px]">{day}日</span>
+                      <span className="text-[20px] mr-[4px]">{day}日</span>
                       <span className="text-[14px]">({weekday})</span>
                     </div>
                   );
