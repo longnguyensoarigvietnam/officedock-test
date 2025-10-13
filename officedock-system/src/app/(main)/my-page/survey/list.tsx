@@ -250,7 +250,7 @@ const SurveyListPage = () => {
 
   return (
     <>
-      <div className="h-full w-full">
+      <div className="h-full w-full min-h-[768px]">
         <div
           style={{
             backgroundImage: 'url("/images/bg-profile.jpg")',
@@ -259,7 +259,7 @@ const SurveyListPage = () => {
             width: '100%',
             height: '100%',
           }}
-          className="rounded-bl-[30px] relative rounded-r-[30px] h-[calc(100vh-120px)] w-full">
+          className="rounded-bl-[30px] relative rounded-r-[30px] w-full">
           <div className="flex absolute top-0 left-0  rounded-br-[30px]">
             <div className="h-20 w-[294px] z-[30] bg-white py-4 text-[#77858F] font-medium flex gap-5 items-center justify-center rounded-br-[30px]">
               <BackToPage />
@@ -277,10 +277,13 @@ const SurveyListPage = () => {
           </div>
           <div className="relative  pr-[30px] flex w-full justify-between items-center h-full">
             {/* User */}
-            <div className="flex-shrink-0 h-full">
-              <div className="h-[424px] w-[336px] ml-[123px] mt-[325px] relative">
-                <RenderAccessories />
+            <div>
+              <div className="absolute bottom-10 left-[117px]">
+                <div className="h-[424px] w-[336px] relative">
+                  <RenderAccessories />
+                </div>
               </div>
+
               {/* Message user */}
               <div
                 style={{
@@ -288,31 +291,33 @@ const SurveyListPage = () => {
                     'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
                   boxShadow: '0px 4px 0px 0px #355AC940',
                 }}
-                className="absolute top-[116px] left-[117px] p-[10px] rounded-[14px] w-[323px] h-fit] ">
-                <p className="text-white text-[13px] font-bold">マイルくん</p>
-                <div className=" mt-[5px] w-full bg-white rounded-[5px] flex flex-col items-center px-3 py-[17px] text-[13px] font-semibold text-black">
-                  <p>
-                    {' '}
-                    みんなの声を聞くために、新しくアンケートを作ってみるのはどうかな？
-                  </p>
-                  <div
-                    onClick={() => setOpenSettingSurvey(true)}
-                    style={{
-                      background:
-                        'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
-                      boxShadow: '0px 4px 0px 0px #355AC940',
-                    }}
-                    className="flex mt-4 w-[194px] h-[52px] cursor-pointer hover:opacity-80 rounded-[10px] text-white items-center justify-center gap-[10px]">
-                    <ImageRound
-                      name="Heart icon"
-                      src={'/icons/heart.svg'}
-                      className={`w-7 h-7 `}
-                    />
-                    <p>アンケートを作る</p>
+                className="absolute bottom-[485px] left-[117px] p-[10px] rounded-[14px] w-[323px] h-fit] ">
+                <div className="relative">
+                  <p className="text-white text-[13px] font-bold">マイルくん</p>
+                  <div className=" mt-[5px] w-full bg-white rounded-[5px] flex flex-col items-center px-3 py-[17px] text-[13px] font-semibold text-black">
+                    <p>
+                      {' '}
+                      みんなの声を聞くために、新しくアンケートを作ってみるのはどうかな？
+                    </p>
+                    <div
+                      onClick={() => setOpenSettingSurvey(true)}
+                      style={{
+                        background:
+                          'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
+                        boxShadow: '0px 4px 0px 0px #355AC940',
+                      }}
+                      className="flex mt-4 w-[194px] h-[52px] cursor-pointer hover:opacity-80 rounded-[10px] text-white items-center justify-center gap-[10px]">
+                      <ImageRound
+                        name="Heart icon"
+                        src={'/icons/heart.svg'}
+                        className={`w-7 h-7 `}
+                      />
+                      <p>アンケートを作る</p>
+                    </div>
                   </div>
-                </div>
+                  <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[37px] w-[20px] -bottom-[40px] left-[250px]"></div>
+                </div>{' '}
               </div>
-              <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[37px] w-[20px] top-[295px] left-[375px]"></div>
             </div>
             {/* List survey  */}
             <div
@@ -320,7 +325,7 @@ const SurveyListPage = () => {
                 background: 'rgba(53, 153, 216, 0.8)',
                 boxShadow: '0px 4px 10px 0px #0000000D',
               }}
-              className="w-[720px] h-[calc(100vh_-_246px)] min-h-[715px]  font-medium text-white border border-white rounded-3xl py-[30px]">
+              className="w-[720px] h-[calc(100%_-_60px)] font-medium absolute top-1/2 -translate-y-1/2 right-[30px] text-white border border-white rounded-3xl py-[30px]">
               {/* Button switch */}
               <div className="flex px-[30px] items-center justify-between">
                 <p className="text-[18px]">アンケート一覧</p>
