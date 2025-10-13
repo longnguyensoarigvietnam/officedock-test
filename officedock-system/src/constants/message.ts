@@ -73,6 +73,7 @@ export const SUCCESS_PIN_MESSAGE = 'タスクをピン止めしました。';
 export const SUCCESS_UNPIN_MESSAGE = 'ピン止めを解除しました。';
 
 export const SUCCESS_SAVE_MESSAGE = '保存に成功しました。';
+export const SUCCESS_EXPORT_MESSAGE = 'ファイルを正常にエクスポートしました。';
 
 // Error
 export const ERROR_LOGIN_MESSAGE = 'ログインに失敗しました。';
@@ -105,6 +106,7 @@ export const ERROR_EXTEND_COLUMN = 'タブの拡大縮小のエラーが出ま�
 export const ERROR_DUPLICATE_LOCATION = 'この場所名はすでに存在しています';
 export const ERROR_WRONG_DATE_SURVEY = '現時刻より後の時刻に設定してください。';
 export const ERROR_BUY_ITEM_USER = '交換に失敗しました。';
+export const ERROR_FILE_DOWNLOAD = 'ファイルのダウンロードに失敗しました。'
 
 // Toast message
 export const SUCCESS_TITLE_MESSAGE = '成功';
