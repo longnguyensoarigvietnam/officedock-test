@@ -92,26 +92,42 @@ export const options: NextAuthOptions = {
       return true;
     },
     async jwt(params) {
-      const { token, trigger, session } = params;
-      const user = params.user as unknown as any;
-      const dataToken = token.user as UserAuth;
-      if (trigger === 'update' && session && token) {
-        dataToken.unreadTerms = session.user.unreadTerms?.map((term: any) => ({
-          ...term,
-        }));
+      const { token, trigger, session, user } = params;
+      const dataToken = token.user as UserAuth | undefined;
+
+      //  When calling session.update (update permissions, unreadTerms)
+      if (trigger === 'update' && session && dataToken) {
+        if (session.user?.unreadTerms) {
+          dataToken.unreadTerms = [...session.user.unreadTerms];
+        }
+        if (session.user?.permissions) {
+          dataToken.permissions = [...session.user.permissions];
+        }
+
+        token.user = dataToken;
+        return token;
       }
+
+      // When user logs in for the first time
       if (user) {
-        token.user = user;
+        const customUser = user as unknown as UserAuth;
+
+        token.user = customUser;
+
+        if (customUser.accessToken) {
+          token.accessToken = customUser.accessToken;
+          token.refreshToken = customUser.refreshToken;
+        }
+
+        if (customUser.remember) {
+          token.exp = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // 30 days
+        }
+
+        return { ...token, ...user }; // Only merge when there is a user
       }
-      if (user?.access) {
-        token.user = user;
-        token.accessToken = user.access;
-        token.refreshToken = user.refreshToken;
-      }
-      if (user?.remember) {
-        token.exp = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
-      }
-      return { ...token, ...user };
+
+      // Keep token if there is no user (avoid logout)
+      return token;
     },
     async session({ session, token }) {
       session.user = token.user as UserAuth;

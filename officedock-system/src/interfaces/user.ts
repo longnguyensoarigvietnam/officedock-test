@@ -25,6 +25,7 @@ export interface UserAuth {
   refreshToken?: string;
   sessionId?: string;
   unreadTerms?: TermsStep[] | [];
+  remember?: boolean;
 }
 
 export interface UserRoleType {

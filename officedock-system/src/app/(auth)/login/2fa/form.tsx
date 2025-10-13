@@ -23,7 +23,11 @@ import {
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
-import { handlePreventInputText, handleRemoveText } from '@utils';
+import {
+  handlePreventInputText,
+  handleRemoveText,
+  hasFullPaymentPermissions,
+} from '@utils';
 
 type LoginFormInputs = {
   token: string;
@@ -132,7 +136,14 @@ const LoginForm2FA = () => {
               router.push(me.exchangeUrl);
             }
           } else {
-            router.push(pageRouters.MY_PAGE.href);
+            if (
+              session &&
+              hasFullPaymentPermissions(session.user.permissions)
+            ) {
+              router.push(pageRouters.PAYMENT_MANAGEMENT.href);
+            } else {
+              router.push(pageRouters.MY_PAGE.href);
+            }
           }
         }
         if (data?.status === ServerStatusCode.UNAUTHORIZED) {

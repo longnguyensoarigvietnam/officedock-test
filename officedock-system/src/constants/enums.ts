@@ -156,6 +156,7 @@ export enum SocketActions {
   RESET_STATUS_SORT_TASK = 'RESET_STATUS_SORT_TASK',
   DURATION_OVERTIME_WARNING = 'DURATION_OVERTIME_WARNING',
   SKILL_LEVEL_UP_COMPLETED = 'SKILL_LEVEL_UP_COMPLETED',
+  UPDATE_PERMISSIONS = 'UPDATE_PERMISSIONS',
 }
 
 export enum WebSocketState {
@@ -471,7 +472,7 @@ export enum PermissionType {
   NOT_ALLOWED = '不可',
   ALL_TEAMS = '全チーム参加',
   TEAM_AND_SUB = '自チームと下位チームのみ参加',
-  ONLY_SELF_CAN_EDIT = '自分のみ編集可'
+  ONLY_SELF_CAN_EDIT = '自分のみ編集可',
 }
 
 export enum CurrentScreen {
@@ -703,9 +704,9 @@ export enum ItemAvatarType {
 }
 export enum PointHistoryActiveTab {
   COIN = 'COIN',
-  PEARL = 'PEARL'
+  PEARL = 'PEARL',
 }
-export enum TransactionType { 
+export enum TransactionType {
   PLAN_AUTO_ASSIGNMENT = 'プラン自動付与',
   PLAN_AUTO_GRANTED_COIN_EXPIRATION = 'プラン自動付与コイン失効',
   POINT_EXCHANGE = 'ポイント交換',

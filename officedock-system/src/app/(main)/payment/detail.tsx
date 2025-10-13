@@ -23,14 +23,10 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { PaymentMethod } from '@interfaces/payment';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import { formatShowDateJapanese } from '@utils/date';
-import { User } from '@interfaces/user';
-import { hasFullPaymentPermissions } from '@utils';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 
 const PaymentDetail = () => {
   const { showToast } = useToast();
   const { setIsLoading } = useContext(LoadingContext);
-  const { data: session } = useSessionCache();
 
   // STATE
   const [openAddCard, setOpenAddCard] = useState(false);
@@ -114,36 +110,6 @@ const PaymentDetail = () => {
   const allFailed = paymentList?.results.every(
     (card) => card.isRetryFailed === true,
   );
-
-  const handleGetPermission = async () => {
-    setIsLoading(true);
-    const apiUrl = apiRouters.AUTHENTICATED_USER;
-
-    return await api.get<User>(apiUrl);
-  };
-
-  // Handle change card default
-  const { mutate: getDataPermission } = useMutation(
-    'handleGetPermission',
-    handleGetPermission,
-    {
-      onSuccess: async () => {},
-      onError: () => {
-        showToast({
-          variant: 'error',
-          description: ERROR_UPDATE_MESSAGE,
-        });
-      },
-      onSettled: () => {
-        setIsLoading(false);
-      },
-    },
-  );
-  const handleUpdatePermission = () => {
-    if (session && hasFullPaymentPermissions(session.user.permissions)) {
-      getDataPermission();
-    }
-  };
 
   return (
     <>
@@ -314,7 +280,6 @@ const PaymentDetail = () => {
           onClose={() => setOpenAddCard(false)}
           onCreate={(newCard: PaymentMethod) => {
             addCardPayment(newCard);
-            handleUpdatePermission();
           }}
         />
       )}

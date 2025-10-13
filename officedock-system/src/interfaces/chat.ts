@@ -1,6 +1,7 @@
 import {
   ChatParticipantType,
   MessageType,
+  PermissionsSystem,
   SubmitLevelStatus,
 } from '@constants/enums';
 
@@ -227,6 +228,10 @@ export interface WebSocketMessageData extends DataSkillReward {
   remindCountdown?: number;
   remindType?: string;
   title?: string;
+  user?: {
+    id: number;
+    permissions?: PermissionsSystem[];
+  };
 }
 interface DataSkillReward {
   skill: {

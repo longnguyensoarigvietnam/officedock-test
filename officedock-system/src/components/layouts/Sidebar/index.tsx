@@ -390,7 +390,7 @@ const Sidebar = ({ className }: Props) => {
         full
         className="h-full [&_.tab-button]:!text-xs [&_.tab-button]:!font-bold [&_.tab-button]:!py-[unset] [&_.tab-button]:!px-[unset] [&_.tab-button>span]:py-2">
         <TabPanel key={0} className={'h-full relative'}>
-          <nav className="flex flex-col  w-full mb-5  h-full max-h-[70%]">
+          <nav className="flex flex-col  w-full mb-5  justify-between  h-full max-h-[calc(100%_-_150px)]">
             <ul role="list" className="flex flex-col gap-y-6 list-none">
               <li className="flex-1">
                 <ul role="list" className="list-none pl-2">
@@ -500,67 +500,66 @@ const Sidebar = ({ className }: Props) => {
                 </ul>
               </li>
             </ul>
-          </nav>
-          {memberOption && (
-            <div
-              className={`absolute ${expanded ? 'bottom-[135px]' : 'bottom-[185px]'}  left-0 w-full`}>
-              <ul
-                role="list"
-                className="flex max-h-20 flex-col gap-y-6 list-none">
-                <li className="flex-1">
-                  <ul role="list" className="list-none pl-2">
-                    <DynamicTooltip
-                      content={`${memberOption.name}`}
-                      disabled={expanded}
-                      key={memberOption.name}
-                      placement="right">
-                      <li className={`text-sm relative`}>
-                        <div
-                          className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${memberOption.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
-                          onClick={() => {
-                            if (isHasTerm) return;
-                            if (isChatFilesUploading) {
-                              setPendingPageChange(memberOption.href);
-                              setPendingNavigationType(
-                                PendingNavigationType.MEMBER,
-                              );
-                              setShowWarningChatUploadingModal(true);
-                              return;
-                            }
-                            handleNavigateToMemberPage(memberOption.href);
-                          }}>
-                          {memberOption.iconUrl && (
-                            <ImageRound
-                              className={`w-5 h-5 ${!expanded && 'ml-2 my-1'}`}
-                              src={memberOption.iconUrl(memberOption.current)}
-                              name={`Icon ${memberOption.name} menu`}
-                            />
-                          )}
-                          {!expanded &&
-                            memberOption.iconUrl &&
-                            memberOption.iconUrl(true).includes('chat') &&
-                            totalNotifications > 0 && (
-                              <div className="notification-dot absolute bg-error w-1 h-1 rounded-full right-4 top-4" />
+            {memberOption && (
+              <div className={` w-full ${!expanded && 'mb-10'}`}>
+                <ul
+                  role="list"
+                  className="flex max-h-20 flex-col gap-y-6 list-none">
+                  <li className="flex-1">
+                    <ul role="list" className="list-none pl-2">
+                      <DynamicTooltip
+                        content={`${memberOption.name}`}
+                        disabled={expanded}
+                        key={memberOption.name}
+                        placement="right">
+                        <li className={`text-sm relative`}>
+                          <div
+                            className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${memberOption.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
+                            onClick={() => {
+                              if (isHasTerm) return;
+                              if (isChatFilesUploading) {
+                                setPendingPageChange(memberOption.href);
+                                setPendingNavigationType(
+                                  PendingNavigationType.MEMBER,
+                                );
+                                setShowWarningChatUploadingModal(true);
+                                return;
+                              }
+                              handleNavigateToMemberPage(memberOption.href);
+                            }}>
+                            {memberOption.iconUrl && (
+                              <ImageRound
+                                className={`w-5 h-5 ${!expanded && 'ml-2 my-1'}`}
+                                src={memberOption.iconUrl(memberOption.current)}
+                                name={`Icon ${memberOption.name} menu`}
+                              />
                             )}
-                          {expanded && (
-                            <>
-                              <p
-                                className={`opacity-100 text-left font-medium w-fit text-white ${memberOption.current && !memberSelected && !tagSelected && '!text-black'}`}>
-                                {memberOption.name}
-                              </p>
-                            </>
-                          )}
-                        </div>
-                      </li>
-                    </DynamicTooltip>
-                  </ul>
-                </li>
-              </ul>
-            </div>
-          )}
+                            {!expanded &&
+                              memberOption.iconUrl &&
+                              memberOption.iconUrl(true).includes('chat') &&
+                              totalNotifications > 0 && (
+                                <div className="notification-dot absolute bg-error w-1 h-1 rounded-full right-4 top-4" />
+                              )}
+                            {expanded && (
+                              <>
+                                <p
+                                  className={`opacity-100 text-left font-medium w-fit text-white ${memberOption.current && !memberSelected && !tagSelected && '!text-black'}`}>
+                                  {memberOption.name}
+                                </p>
+                              </>
+                            )}
+                          </div>
+                        </li>
+                      </DynamicTooltip>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+            )}
+          </nav>
         </TabPanel>
-        <TabPanel key={1}>
-          <nav className="flex flex-col  w-full mb-5  h-full max-h-[70%]">
+        <TabPanel key={1} className={'h-full relative'}>
+          <nav className="flex flex-col  w-full mb-5 justify-between  h-full  max-h-[calc(100%_-_150px)]">
             <ul role="list" className="flex flex-col gap-y-6 list-none">
               <li className="flex-1">
                 <ul role="list" className="list-none pl-2">
@@ -716,66 +715,65 @@ const Sidebar = ({ className }: Props) => {
                 </ul>
               </li>
             </ul>
-          </nav>
-          {memberOption && (
-            <div
-              className={`absolute ${expanded ? 'bottom-[35px]' : 'bottom-[60px]'}  left-0 w-full`}>
-              <ul
-                role="list"
-                className="flex max-h-20 flex-col gap-y-6 list-none">
-                <li className="flex-1">
-                  <ul role="list" className="list-none pl-2">
-                    <DynamicTooltip
-                      content={`${memberOption.name}`}
-                      disabled={expanded}
-                      key={memberOption.name}
-                      placement="right">
-                      <li
+            {memberOption && (
+              <div className={` w-full ${!expanded && 'mb-10'}`}>
+                <ul
+                  role="list"
+                  className="flex max-h-20 flex-col gap-y-6 list-none">
+                  <li className="flex-1">
+                    <ul role="list" className="list-none pl-2">
+                      <DynamicTooltip
+                        content={`${memberOption.name}`}
+                        disabled={expanded}
                         key={memberOption.name}
-                        className={`text-sm relative`}>
-                        <div
-                          className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${memberOption.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
-                          onClick={() => {
-                            if (isHasTerm) return;
-                            if (isChatFilesUploading) {
-                              setPendingPageChange(memberOption.href);
-                              setPendingNavigationType(
-                                PendingNavigationType.MEMBER,
-                              );
-                              setShowWarningChatUploadingModal(true);
-                              return;
-                            }
-                            handleNavigateToMemberPage(memberOption.href);
-                          }}>
-                          {memberOption.iconUrl && (
-                            <ImageRound
-                              className={`w-5 h-5 ${!expanded && 'ml-2 my-1'}`}
-                              src={memberOption.iconUrl(memberOption.current)}
-                              name={`Icon ${memberOption.name} menu`}
-                            />
-                          )}
-                          {!expanded &&
-                            memberOption.iconUrl &&
-                            memberOption.iconUrl(true).includes('chat') &&
-                            totalNotifications > 0 && (
-                              <div className="notification-dot absolute bg-error w-1 h-1 rounded-full right-4 top-4" />
+                        placement="right">
+                        <li
+                          key={memberOption.name}
+                          className={`text-sm relative`}>
+                          <div
+                            className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${memberOption.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
+                            onClick={() => {
+                              if (isHasTerm) return;
+                              if (isChatFilesUploading) {
+                                setPendingPageChange(memberOption.href);
+                                setPendingNavigationType(
+                                  PendingNavigationType.MEMBER,
+                                );
+                                setShowWarningChatUploadingModal(true);
+                                return;
+                              }
+                              handleNavigateToMemberPage(memberOption.href);
+                            }}>
+                            {memberOption.iconUrl && (
+                              <ImageRound
+                                className={`w-5 h-5 ${!expanded && 'ml-2 my-1'}`}
+                                src={memberOption.iconUrl(memberOption.current)}
+                                name={`Icon ${memberOption.name} menu`}
+                              />
                             )}
-                          {expanded && (
-                            <>
-                              <p
-                                className={`opacity-100 text-left font-medium w-fit text-white ${memberOption.current && !memberSelected && !tagSelected && '!text-black'}`}>
-                                {memberOption.name}
-                              </p>
-                            </>
-                          )}
-                        </div>
-                      </li>
-                    </DynamicTooltip>
-                  </ul>
-                </li>
-              </ul>
-            </div>
-          )}
+                            {!expanded &&
+                              memberOption.iconUrl &&
+                              memberOption.iconUrl(true).includes('chat') &&
+                              totalNotifications > 0 && (
+                                <div className="notification-dot absolute bg-error w-1 h-1 rounded-full right-4 top-4" />
+                              )}
+                            {expanded && (
+                              <>
+                                <p
+                                  className={`opacity-100 text-left font-medium w-fit text-white ${memberOption.current && !memberSelected && !tagSelected && '!text-black'}`}>
+                                  {memberOption.name}
+                                </p>
+                              </>
+                            )}
+                          </div>
+                        </li>
+                      </DynamicTooltip>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+            )}
+          </nav>
         </TabPanel>
         <div
           className="absolute bottom-5 right-5"

@@ -22,6 +22,7 @@ import { useToast } from '@providers/ToastProvider';
 import { passwordLoginRules } from '@utils/validators';
 import api from '@base/api';
 import { ServerStatusCode } from '@constants/enums';
+import { hasFullPaymentPermissions } from '@utils';
 
 type LoginFormInputs = {
   username: string;
@@ -71,7 +72,14 @@ const LoginForm = () => {
               router.push(me.exchangeUrl);
             }
           } else {
-            router.push(pageRouters.MY_PAGE.href);
+            if (
+              session &&
+              hasFullPaymentPermissions(session.user.permissions)
+            ) {
+              router.push(pageRouters.PAYMENT_MANAGEMENT.href);
+            } else {
+              router.push(pageRouters.MY_PAGE.href);
+            }
           }
         }
       },

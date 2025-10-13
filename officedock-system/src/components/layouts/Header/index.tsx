@@ -178,7 +178,7 @@ const Header = ({ className }: HeaderProps) => {
     useState<boolean>(false);
 
   const router = useRouter();
-  const { data: session } = useSessionCache();
+  const { data: session, update } = useSessionCache();
   const [isShowModalTask, setShowModalTask] = useState<boolean>(false);
   const [openCreateEventModal, setOpenCreateEventModal] =
     useState<boolean>(false);
@@ -237,6 +237,12 @@ const Header = ({ className }: HeaderProps) => {
   );
   const companyItems = updateCurrent(companySettingItemsClone, pathname);
 
+  const handleUpdatePermissions = async (newPermissions: string[]) => {
+    await update({
+      user: { permissions: newPermissions },
+    });
+  };
+
   // Socket
   useEffect(() => {
     const handleSocketMessage = (data: WebSocketMessageData) => {
@@ -253,6 +259,11 @@ const Header = ({ className }: HeaderProps) => {
         case SocketActions.SKILL_LEVEL_UP_COMPLETED:
           setDataRewardSkill(data);
           setOpenRewardModal(true);
+          break;
+
+        case SocketActions.UPDATE_PERMISSIONS:
+          handleUpdatePermissions(data.user?.permissions || []);
+          break;
       }
     };
 

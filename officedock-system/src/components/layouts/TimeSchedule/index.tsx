@@ -3807,7 +3807,7 @@ const TimeSchedule = memo(
                   ) : (
                     <>
                       <div
-                        className={`flex items-center ml-8 gap-3 ${isLoadingSchedule && '!opacity-45'}`}>
+                        className={`flex items-center flex-shrink-0 ml-8 gap-3 ${isLoadingSchedule && '!opacity-45'}`}>
                         <DynamicTooltip content="前日" placement="top">
                           <div>
                             <ImageRound
@@ -3837,7 +3837,9 @@ const TimeSchedule = memo(
                           </div>
                         </DynamicTooltip>
                       </div>
-                      <Heading as="h4" className="text-[20px] font-medium">
+                      <Heading
+                        as="h4"
+                        className="text-[20px] font-medium pr-4 line-clamp-2">
                         {isExtendCalendar
                           ? `${formattedStartDate} - ${formattedEndDate}`
                           : formattedCurrentDate}
