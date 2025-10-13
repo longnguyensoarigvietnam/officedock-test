@@ -1,27 +1,38 @@
-import { Dispatch, SetStateAction } from 'react';
+import { useState } from 'react';
+import { useParams } from 'next/navigation';
 
 import Pagination from '@components/common/Pagination';
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 
 import { NO_DATA_AVAILABLE } from '@constants/message';
+import { CompanyTransactionType } from '@constants/enums';
 
 import { CompanyTransaction } from '@interfaces/company';
 
 import { formatJapaneseDateRange } from '@utils';
 
-interface UsageHistoryProps {
-  setCurrentPlanTransactionPage: Dispatch<SetStateAction<number>>;
-  currentPlanTransactionPage: number;
-  planList: CompanyTransaction[];
-  totalPlanTransactionPages: number;
-}
+import useListCompanyTransactions from '@hooks/useListCompanyTransactions';
 
-export const UsageHistory = ({
-  planList,
-  currentPlanTransactionPage,
-  totalPlanTransactionPages,
-  setCurrentPlanTransactionPage,
-}: UsageHistoryProps) => {
+export const UsageHistory = () => {
+  const params = useParams<{ id: string }>();
+
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [planList, setPlanList] = useState<CompanyTransaction[]>([]);
+  const [totalPages, setTotalPages] =
+    useState<number>(1);
+
+  useListCompanyTransactions({
+    page: currentPage,
+    filter: {
+      id: Number(params.id),
+      type: CompanyTransactionType.PLAN,
+    },
+    onSuccess: (data) => {
+      setPlanList(data.results);
+      setTotalPages(data.numPages);
+    },
+  });
+
   return (
     <div className="w-full flex flex-col gap-5 bg-white shadow-common rounded-lg p-4">
       {/* Header */}
@@ -66,11 +77,9 @@ export const UsageHistory = ({
         <div className="flex justify-center">
           {planList && planList.length ? (
             <Pagination
-              onChange={(pageNumber) =>
-                setCurrentPlanTransactionPage(pageNumber)
-              }
-              currentPage={currentPlanTransactionPage}
-              totalPages={totalPlanTransactionPages}
+              onChange={(pageNumber) => setCurrentPage(pageNumber)}
+              currentPage={currentPage}
+              totalPages={totalPages}
             />
           ) : null}
         </div>

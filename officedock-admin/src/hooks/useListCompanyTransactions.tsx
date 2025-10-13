@@ -60,7 +60,7 @@ const useListCompanyTransactions = ({
     refetch: refetchCompanyTransactionList,
     isFetched: isFetchedCompanyTransactions,
   } = useQuery({
-    queryKey: ['getCompanyTransactionList', [page, filter]],
+    queryKey: ['getCompanyTransactionList', filter?.type, page],
     queryFn: getCompanyTransactionList,
     retry: 0,
     enabled: !!token,
