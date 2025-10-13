@@ -17,7 +17,11 @@ import {
   SUCCESS_SAVE_MESSAGE,
   UNREGISTERED,
 } from '@constants/message';
-import { CompanyStatus, CompanyTransactionType, ServerStatusCode } from '@constants/enums';
+import {
+  CompanyStatus,
+  CompanyTransactionType,
+  ServerStatusCode,
+} from '@constants/enums';
 import {
   JAPAN_DATE_FORMAT,
   JAPAN_DATE_WITH_TIME_FORMAT,
@@ -136,6 +140,14 @@ const CompanyDetailInfo = () => {
           {
             label: 'ステータス',
             value: companyDetail?.status || '',
+          },
+          {
+            label: '締日',
+            value: `${companyDetail?.closeDate}日` || '',
+          },
+          {
+            label: '修正可能期間',
+            value: `${companyDetail?.editableAfterClosing}日間` || '',
           },
         ]}
       />

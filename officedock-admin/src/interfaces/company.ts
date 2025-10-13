@@ -11,7 +11,7 @@ export interface Company {
     limitPerson: number;
     monthlyFee: number;
     name: string;
-  }
+  };
   maxUserAt?: string | null;
   maxUserInContractPeriod?: number;
   paymentMethod?: string | null;
@@ -29,6 +29,8 @@ export interface Company {
   };
   responsiblePersonMail?: string | null;
   responsiblePersonName?: string | null;
+  closeDate?: number;
+  editableAfterClosing?: number;
 }
 
 export interface CreateCompanyFormData {
@@ -70,4 +72,6 @@ export interface EditCompanyRequest {
     systemMainPurpose?: string[] | null;
     department?: string[] | null;
   };
+  closeDate?: number;
+  editableAfterClosing?: number;
 }
