@@ -45,6 +45,7 @@ from dashboard.serializers import (
 from dashboard.utils import (
     separate_duration,
     separate_duration_while_keep_running,
+    validate_editable_actual_duration,
 )
 from roles.constants import Screens
 from stat_data.utils import get_total_durations
@@ -363,6 +364,9 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         """
         Handle delete actual duration
         """
+
+        validate_editable_actual_duration(instance, is_deleted=True)
+
         model = instance.task or instance.schedule
         if model and model.is_start and instance.paused_at is None:
             model.is_start = False
@@ -941,6 +945,9 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         Handle delete actual duration
         """
+
+        validate_editable_actual_duration(instance, is_deleted=True)
+
         model = instance.task or instance.schedule
         if model and model.is_start and instance.paused_at is None:
             model.is_start = False

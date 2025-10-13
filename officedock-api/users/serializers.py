@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from base.messages import ERROR_MESSAGES
-from common.utils import get_signed_url
+from common.utils import calculate_company_dates, get_signed_url
 from common.constants import (
     AVATAR_GCS_EXPIRATION_SECONDS,
     USER_AVATAR_UPLOAD_MAX_SIZE,
@@ -38,6 +38,7 @@ from users.models import (
     TransactionHistory,
 )
 from users.constants import RoleTypes
+from companies.models import Company
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -472,12 +473,48 @@ class UserSerializer(BaseUserSerializer):
             return data
 
 
+class CompanyLoginSerializer(serializers.ModelSerializer):
+    """
+    Return data for company when login
+    """
+
+    start_editable_date = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Company
+        fields = [
+            "id",
+            "name",
+            "close_date",
+            "editable_after_closing",
+            "start_editable_date",
+        ]
+
+    def get_start_editable_date(self, obj):
+        """
+        Get start editable date of actual duration
+        """
+        date_now = now().date()
+        company_dates = calculate_company_dates(obj)
+        date_after_closing = company_dates["date_after_closing"]
+        start_editable_date = company_dates["start_date_calculation_deadline"]
+        date_after_data_edit_deadline = company_dates[
+            "date_after_data_edit_deadline"
+        ]
+
+        if date_now >= date_after_data_edit_deadline:
+            start_editable_date = date_after_closing
+
+        return datetime.combine(start_editable_date, time.min)
+
+
 class UserLoginSerializer(BaseUserSerializer):
     """
     Serializer for the User model.
     """
 
     profile = ProfileSerializer()
+    company = CompanyLoginSerializer()
     unread_terms = serializers.SerializerMethodField(read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
 
@@ -485,6 +522,7 @@ class UserLoginSerializer(BaseUserSerializer):
         model = User
         fields = [
             "id",
+            "company",
             "username",
             "email",
             "is_two_factor_auth",
