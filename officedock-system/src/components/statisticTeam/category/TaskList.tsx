@@ -1,4 +1,10 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { Fragment, useContext, useEffect, useState } from 'react';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
 
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
@@ -7,12 +13,14 @@ import Checkbox from '@components/common/Checkbox';
 import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import TableChart from './TableChart';
+import FilterTeamStatistic from './filter/FilterTeamStatistic';
 
 import useStatisticTask from '@hooks/useStatisticTask';
 import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
+import { useTaskListDownload } from '@hooks/useTaskListDownload';
 
 import { DEFAULT_TIME_TEXT, PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
-import { OrganizationStatisticType } from '@constants/enums';
+import { ExportType, OrganizationStatisticType } from '@constants/enums';
 
 import {
   CreationStatisticType,
@@ -20,10 +28,11 @@ import {
   StatisticsCategories,
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
+
 import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
-import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
-import FilterTeamStatistic from './filter/FilterTeamStatistic';
 import { removeDuplicateOptions } from '@utils';
+
+import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 
 type Props = {
   isCheckCompare: boolean;
@@ -144,6 +153,7 @@ const TaskListTeamStatistic = ({
       pageSize: pageSize,
       tagIds: orderingOptions?.tag_ids,
       isCompare: isCheckCompare && isShowCompare,
+      user_ids: orderingOptions?.user_ids,
       user_id: selectedMember as number,
     },
     conditions: [listMemberTeam.length !== 0],
@@ -156,6 +166,33 @@ const TaskListTeamStatistic = ({
           setTaskListCompare(data.results);
         }
       }
+    },
+  });
+
+  const { downloadTaskListFile } = useTaskListDownload({
+    isTeam: true,
+    filter: {
+      fromDate:
+        isCheckCompare && isShowCompare
+          ? formatDateToYMD(startDateCompare) || ''
+          : formatDateToYMD(startDate) || '',
+      endDate:
+        isCheckCompare && isShowCompare
+          ? formatDateToYMD(`${endDateCompare}`) || ''
+          : formatDateToYMD(`${endDate}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: selectedLarge?.value as number,
+      mediumCategoryId:
+        selectedOrganization?.type == OrganizationStatisticType.CALENDAR &&
+        dataMediumCalendar
+          ? (dataMediumCalendar?.value as number)
+          : (selectedMedium?.value as number),
+      smallCategoryId: selectedSmall?.value as number,
+      ordering: ordering,
+      user_id: selectedMember as number,
+      user_ids: orderingOptions?.user_ids,
+      tagIds: orderingOptions?.tag_ids,
+      isCompare: isCheckCompare && isShowCompare,
     },
   });
 
@@ -206,6 +243,56 @@ const TaskListTeamStatistic = ({
           </div>
           {/* Filter modal */}
           <FilterTeamStatistic isFilterMember={false} />
+          {/* Download button */}
+          <Popover className="relative">
+            {({ close }) => {
+              return (
+                <>
+                  <PopoverButton className={`focus:outline-none`}>
+                    <div className="w-[120px] h-[34px] relative bg-[#77858F] pl-[10px] flex items-center gap-[6px] rounded-[8px]">
+                      <p className="text-sm font-medium text-white">
+                        ダウンロード
+                      </p>
+                      <ImageRound
+                        name="Arrow down icon"
+                        src={'/icons/white-arrow-down.svg'}
+                        className="w-[8px] h-[4px] cursor-pointer"
+                      />
+                    </div>
+                  </PopoverButton>
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-200"
+                    enterFrom="opacity-0 translate-y-1"
+                    enterTo="opacity-100 translate-y-0"
+                    leave="transition ease-in duration-150"
+                    leaveFrom="opacity-100 translate-y-0"
+                    leaveTo="opacity-0 translate-y-1">
+                    <PopoverPanel className="absolute left-0 z-10 min-w-[120px] max-w-[120px] transform">
+                      <div className="bg-white !border-[#77858F] border-[1px] text-black rounded-[6px] mt-[6px] p-1 text-sm font-medium">
+                        <p
+                          className="hover:cursor-pointer py-[10px] pl-2 border-b-[1px] border-[#EBF1F7] !leading-none"
+                          onClick={() => {
+                            downloadTaskListFile(ExportType.CSV);
+                            close();
+                          }}>
+                          CSV
+                        </p>
+                        <p
+                          className="hover:cursor-pointer py-[10px] pl-2 !leading-none"
+                          onClick={() => {
+                            downloadTaskListFile(ExportType.XLSX);
+                            close();
+                          }}>
+                          Excel
+                        </p>
+                      </div>
+                    </PopoverPanel>
+                  </Transition>
+                </>
+              );
+            }}
+          </Popover>
         </div>
         <ImageRound
           src="/icons/extend-calendar.svg"

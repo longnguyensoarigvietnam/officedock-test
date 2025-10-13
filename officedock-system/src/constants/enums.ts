@@ -711,3 +711,11 @@ export enum TransactionType {
   PLAN_AUTO_GRANTED_COIN_EXPIRATION = 'プラン自動付与コイン失効',
   POINT_EXCHANGE = 'ポイント交換',
 }
+export enum ExportType {
+  CSV = 'csv',
+  XLSX = 'xlsx'
+}
+export enum PeriodClassification {
+  BASE = 'BASE',
+  COMPARISON = 'COMPARISON'
+}
