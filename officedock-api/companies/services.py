@@ -7,6 +7,7 @@ from django.utils.timezone import now
 from rest_framework.fields import ValidationError
 import stripe
 from base.messages import ERROR_MESSAGES
+from chat.constants import WebSocketEventType
 from common.services.stripe_service import StripeService
 from common.utils import (
     format_date,
@@ -14,6 +15,7 @@ from common.utils import (
     get_client_ip,
     get_user_agent,
     get_username_alias,
+    send_web_socket_event,
     to_datetime,
 )
 from companies.constants import (
@@ -24,8 +26,10 @@ from companies.constants import (
 from companies.models import Company, CompanyTransaction
 from companies.utils import generate_contract_related_date_base_on_now
 from plans.models import Plan
+from roles.constants import Screens, SelectionResultOptions
 from users.constants import LoginTypes, RoleTypes
 from users.models import Profile, Role, User, UserActivityLog
+from users.serializers import UserPermissionsSerializer
 from utils.mail import PaymentMailService
 
 
@@ -352,6 +356,8 @@ class CompanyService:
                         else CompanyStatus.ACTIVE_CONTRACT.value
                     ),
                 )
+                self.reload_users_permissions(company)
+
             # If company in retry period, change status
             if company.status == CompanyStatus.RETRY_PAYMENT.value:
                 # Update company status
@@ -408,3 +414,18 @@ class CompanyService:
                 plan=plan,
             )
         return True
+
+    def reload_users_permissions(self, company):
+        """Reload and broadcast updated permissions for users in a given company."""
+        users = company.users.filter(
+            roles__permissions__name__startswith=Screens.PAYMENT_MANAGEMENT.value,
+            roles__role_details__selection_result=SelectionResultOptions.ALLOWED.value,
+        ).all()
+        for user in users:
+            send_web_socket_event(
+                {
+                    "user": UserPermissionsSerializer(user).data,
+                    "action": WebSocketEventType.UPDATE_PERMISSIONS.value,
+                },
+                user=user,
+            )

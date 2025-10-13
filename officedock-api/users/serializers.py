@@ -902,3 +902,13 @@ class UserBalanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserBalance
         fields = ["id", "coin", "pearl", "exchangeable_coin"]
+
+
+class UserPermissionsSerializer(UserSerializer):
+    """
+    Serializer for user permissions
+    """
+
+    class Meta:
+        model = User
+        fields = ["id", "permissions"]
