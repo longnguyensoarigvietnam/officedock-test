@@ -476,8 +476,8 @@ const TaskCard = ({
     <>
       <div
         style={{
-          paddingTop: `${(slotHeight / baseHeight) * 7}px`,
-          paddingBottom: `${(slotHeight / baseHeight) * 8}px`,
+          paddingTop: `${Math.min((slotHeight / baseHeight) * 7, 8)}px`,
+          paddingBottom: `${Math.min((slotHeight / baseHeight) * 8, 8)}px`,
           background: resourcePlan
             ? 'white'
             : largeColor
@@ -692,11 +692,11 @@ const TaskCard = ({
                     <ImageRound
                       src={`/icons/lock.svg`}
                       name="icon lock"
-                      className={` w-3 h-3 relative   top-[-5px]`}
+                      className={` w-3 h-3 relative   top-[-5px] `}
                     />
                   )}
                   <div
-                    className={`w-[30px] h-[30px] flex items-center justify-center relative top-[5px]`}>
+                    className={`w-[30px] h-[30px] flex items-center justify-center relative top-[5px] right-[-5px]`}>
                     <ImageRound
                       src={`/icons/${isStart ? 'pause-task' : 'play-task'}.svg`}
                       name="Start task"
