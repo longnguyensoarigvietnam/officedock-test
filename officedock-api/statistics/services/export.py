@@ -44,7 +44,9 @@ class ExportTaskService:
         self.large_category_id = q.get("large_category_id")
         self.medium_category_id = q.get("medium_category_id")
         self.small_category_id = q.get("small_category_id")
-        self.tag_ids = [t for t in q.get("tag_ids", "").split(",") if t]
+        self.tag_ids = [
+            t for t in q.get("tag_ids", "").split(",") if t and str(t).isdigit()
+        ]
         self.user_id = q.get("user_id")
         self.period = q.get("period_classification")
 
@@ -63,7 +65,7 @@ class ExportTaskService:
     # Internal helpers
     # ------------------------------------------------------------------ #
     def _get_user(self):
-        if self.user_id:
+        if self.user_id and str(self.user_id).isdigit():
             return (
                 User.objects.filter(id=self.user_id).first()
                 or self.request.user
@@ -86,7 +88,7 @@ class ExportTaskService:
                 self.medium_category_id,
                 self.small_category_id,
             ]
-            if cid
+            if cid and str(cid).isdigit()
         ]
         if not category_ids:
             return {"large": "-", "medium": "-", "small": "-"}
