@@ -1,3 +1,4 @@
+from datetime import datetime, time
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.timezone import now
@@ -7,7 +8,11 @@ from rest_framework.exceptions import ValidationError
 from base.messages import ERROR_MESSAGES
 from calendars.constants import CalendarTypes, ScheduleTypes
 from calendars.models import Schedule
-from common.utils import get_common_categories, format_duration
+from common.utils import (
+    calculate_company_dates,
+    get_common_categories,
+    format_duration,
+)
 from roles.constants import Actions, Screens
 from roles.utils import has_permission
 from tags.models import Tag
@@ -325,6 +330,33 @@ class ActualDurationCreationSerializer(serializers.ModelSerializer):
         model = task or schedule
         instance = self.instance
         user = self.context.get("request").user
+
+        # Validate range editable after close date
+        if instance:
+            date_now = now().date()
+            instance_started_at = instance.started_at
+            instance_paused_at = instance.paused_at
+            company_dates = calculate_company_dates(instance.company)
+            date_after_closing = company_dates["date_after_closing"]
+            start_of_day = company_dates["start_date_calculation_deadline"]
+            date_after_data_edit_deadline = company_dates[
+                "date_after_data_edit_deadline"
+            ]
+
+            if date_now >= date_after_data_edit_deadline:
+                start_of_day = date_after_closing
+
+            if instance_started_at < datetime.combine(
+                start_of_day, time.min, tzinfo=instance_started_at.tzinfo
+            ):
+                if (
+                    instance_started_at != started_at
+                    or instance_paused_at != paused_at
+                ):
+                    raise ValidationError(
+                        {"detail": ERROR_MESSAGES["cannot_edit_duration"]}
+                    )
+
         if task is None and schedule is None:
             raise ValidationError(
                 {"detail": ERROR_MESSAGES["task_and_event_not_exists"]}
