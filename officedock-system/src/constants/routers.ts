@@ -431,7 +431,7 @@ export const pageRouters = {
   // PAYMENT
   PAYMENT_MANAGEMENT: {
     name: 'お支払い管理',
-    href: '/payment',
+    href: '/payment-management',
   },
 };
 

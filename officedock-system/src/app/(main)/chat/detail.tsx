@@ -460,22 +460,6 @@ const ChatDetail = ({
       onError: ({ response }: AxiosError) => {
         if (response?.status === ServerStatusCode.NOT_FOUND) {
           handleRemoveChatRoomParam();
-        } else {
-          if (dataChatList.length > 0) {
-            if (dataChatList[0].code != chatRoomCode) {
-              handleSetChatRoomParam(dataChatList[0].code);
-            } else {
-              if (dataChatList.length > 1) {
-                if (dataChatList[1].code != chatRoomCode) {
-                  handleSetChatRoomParam(dataChatList[1].code);
-                } else {
-                  handleRemoveChatRoomParam();
-                }
-              }
-            }
-          } else {
-            handleRemoveChatRoomParam();
-          }
         }
       },
     },

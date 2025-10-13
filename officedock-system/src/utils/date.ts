@@ -1794,3 +1794,19 @@ export const renderDate = (
   if (!date) return '';
   return format(parseISO(date || ''), formatType);
 };
+
+export const isCheckPermissionWithCloseDate = ({
+  dateA,
+  dateB,
+}: {
+  dateA: Date | string;
+  dateB: Date | string;
+}): boolean => {
+  const d1 = new Date(dateA);
+  const d2 = new Date(dateB);
+
+  d1.setHours(0, 0, 0, 0);
+  d2.setHours(0, 0, 0, 0);
+
+  return d1.getTime() >= d2.getTime();
+};

@@ -139,6 +139,7 @@ import {
   formatTimeInput,
   getDateInfo,
   getNext30MinuteSlot,
+  isCheckPermissionWithCloseDate,
   isDateInFutureOrToday,
   isDateLessThanToday,
   isMidnight,
@@ -616,6 +617,11 @@ const TimeSchedule = memo(
                   task.categories.find(
                     (item) => item.type === EventWorkCategory.LARGE,
                   )?.color;
+                const isPermissionCloseDate = isCheckPermissionWithCloseDate({
+                  dateA: task.planStartDate as string,
+                  dateB: session?.user.company.startEditableDate || '',
+                });
+
                 if (task.type === ItemStartType.TASK) {
                   return {
                     title: task.title,
@@ -630,7 +636,9 @@ const TimeSchedule = memo(
                     planEndDate: task.planEndDate
                       ? task.planEndDate
                       : `${endTimeCustom}`,
-                    startEditable: task.planEndDate ? true : false,
+                    startEditable: task.planEndDate
+                      ? isPermissionCloseDate
+                      : false,
                     resourceId: ItemScheduleType.ACTUAL,
                     type: ItemStartType.TASK,
                     isMyTask: false,
@@ -652,7 +660,9 @@ const TimeSchedule = memo(
                     planEndDate: task.planEndDate
                       ? task.planEndDate
                       : `${endTimeCustom}`,
-                    startEditable: task.planEndDate ? true : false,
+                    startEditable: task.planEndDate
+                      ? isPermissionCloseDate
+                      : false,
                     resourceId: ItemScheduleType.ACTUAL,
                     type: ItemStartType.SCHEDULE_ACTUAL,
                     scheduleId: task.scheduleId,
@@ -1720,6 +1730,10 @@ const TimeSchedule = memo(
       const uuidData = uuidv4();
 
       const isLessThanToday = isDateLessThanToday(newEvent.start);
+      const isPermissionCloseDate = isCheckPermissionWithCloseDate({
+        dateA: newEvent.start,
+        dateB: session?.user.company.startEditableDate || '',
+      });
 
       if (!info.draggedEl) {
         info.event.remove();
@@ -1737,6 +1751,14 @@ const TimeSchedule = memo(
           : isLessThanToday
             ? false
             : true;
+      const resourceData =
+        searchParams.get('view') === ViewOptions.WEEK
+          ? isLessThanToday
+            ? ItemScheduleType.ACTUAL
+            : ItemScheduleType.PLANS
+          : resourcePlan
+            ? ItemScheduleType.PLANS
+            : ItemScheduleType.ACTUAL;
 
       if (!newEventId || newEventId === '') {
         info.view.calendar.refetchEvents();
@@ -1795,7 +1817,10 @@ const TimeSchedule = memo(
                       ? ItemScheduleType.PLANS
                       : ItemScheduleType.ACTUAL,
 
-                startEditable: true,
+                startEditable:
+                  resourceData == ItemScheduleType.PLANS
+                    ? true
+                    : isPermissionCloseDate,
                 planStartDate: String(newEvent.start) || '',
                 planEndDate: String(newEvent.end) || '',
                 largeColor: newEvent.extendedProps.largeColor,
@@ -1913,6 +1938,17 @@ const TimeSchedule = memo(
     const handleEventResize = async (info: EventResizeDoneArg) => {
       const resizedEvent = info.event as any;
       const isActualCalculate = info.event.extendedProps.isCalculation;
+
+      if (resizedEvent.startEditable == false) {
+        const oldStart = info.oldEvent.start;
+        const oldEnd = info.oldEvent.end;
+
+        info.event.setDates(oldStart as Date, oldEnd);
+        setTimeout(() => setIsInteracting(false), 200);
+
+        return;
+      }
+
       const isLessThanToday = isDateLessThanToday(resizedEvent.start);
       const resourcePlanDay =
         resizedEvent._def.resourceIds?.length &&
@@ -2063,6 +2099,7 @@ const TimeSchedule = memo(
     // Event drag & drop schedule
     const handleEventDrop = async (info: EventDropArg) => {
       const droppedEvent = info.event;
+
       const startDrop = new Date(droppedEvent.start || new Date());
       const endDrop = new Date(droppedEvent.end || new Date());
       const isLessThanToday = isDateLessThanToday(startDrop);
@@ -2073,6 +2110,35 @@ const TimeSchedule = memo(
         droppedEvent._def.resourceIds[0] === ItemScheduleType.PLANS;
       const draggedResourceId = info.oldResource?.id;
       const dropResourceId = info.newResource?.id;
+      // Check Permission close Date
+      if (droppedEvent.startEditable == false) {
+        // Case Change resource with check permission close date
+        if (
+          draggedResourceId &&
+          dropResourceId &&
+          draggedResourceId !== dropResourceId &&
+          searchParams.get('view') !== ViewOptions.WEEK
+        ) {
+          const oldStart = info.oldEvent.start;
+          const oldEnd = info.oldEvent.end;
+
+          const oldResource = info.oldEvent.getResources()?.[0];
+
+          info.event.setStart(oldStart as Date);
+          info.event.setEnd(oldEnd as Date);
+
+          if (oldResource) {
+            info.event.setResources([oldResource.id]);
+          }
+        }
+        const oldStart = info.oldEvent.start;
+        const oldEnd = info.oldEvent.end;
+
+        info.event.setDates(oldStart as Date, oldEnd);
+        setTimeout(() => setIsInteracting(false), 200);
+
+        return;
+      }
       if (
         draggedResourceId &&
         dropResourceId &&
@@ -2246,6 +2312,11 @@ const TimeSchedule = memo(
                     });
                     if (!hasOverlap) {
                       const newUuid = uuidv4();
+                      const isNewPermissionCloseDate =
+                        isCheckPermissionWithCloseDate({
+                          dateA: newStartChange as Date,
+                          dateB: session?.user.company.startEditableDate || '',
+                        });
                       setTaskTimeScheduleList([
                         ...taskTimeScheduleList,
                         {
@@ -2261,9 +2332,9 @@ const TimeSchedule = memo(
                           planEndDate: String(newEndChange) || '',
                           resourceId: ItemScheduleType.ACTUAL,
                           largeColor: droppedEvent.extendedProps.largeColor,
+                          startEditable: isNewPermissionCloseDate,
                         },
                       ]);
-
                       createActualDuration({
                         taskId: droppedEvent.extendedProps.taskId,
                         uuid: newUuid,
