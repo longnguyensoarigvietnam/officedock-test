@@ -274,15 +274,13 @@ const PaymentDetail = () => {
           </div>
         </div>
       </div>
-      {openAddCard && (
-        <ActionAddCreditCardModal
-          open={openAddCard}
-          onClose={() => setOpenAddCard(false)}
-          onCreate={(newCard: PaymentMethod) => {
-            addCardPayment(newCard);
-          }}
-        />
-      )}
+      <ActionAddCreditCardModal
+        open={openAddCard}
+        onClose={() => setOpenAddCard(false)}
+        onCreate={(newCard: PaymentMethod) => {
+          addCardPayment(newCard);
+        }}
+      />
       {openDeleteCardModal && selectedCardId && (
         <ConfirmDeletePaymentModal
           name={selectedCardId.name}

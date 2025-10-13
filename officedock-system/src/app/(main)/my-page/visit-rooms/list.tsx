@@ -61,7 +61,7 @@ const RoomList = () => {
                 </div>
               </div>
             </div>
-            <div className="absolute -bottom-[115px] w-[calc(100%_-_780px)]">
+            <div className="absolute -bottom-[115px] w-[calc(100%_-_750px)]">
               <div className="flex-grow">
                 <div className="h-[424px] w-[336px] left-1/2 -translate-x-1/2 relative">
                   <RenderAccessories isBoat />

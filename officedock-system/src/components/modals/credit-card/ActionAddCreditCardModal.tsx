@@ -183,6 +183,7 @@ export default function ActionAddCreditCardModal({
       <Elements
         stripe={stripePromise}
         options={{
+          locale: 'ja',
           appearance: {
             theme: 'stripe',
           },
