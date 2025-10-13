@@ -41,6 +41,7 @@ import { EventListModal } from '@components/modals/EventListModal';
 import RangeSlider from '@components/common/RangeSlider';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 import EventActionTypeModal from '@components/modals/EventActionTypeModal';
 
 import useDebounceText from '@hooks/useDebounceText';
@@ -666,13 +667,17 @@ const EventCalendar = () => {
   };
 
   // Show user's avatar
-  const showUserAvatars = (
-    participantList: EventParticipant[],
-    avatarSize: number,
-    borderClassName: string,
-    isWeekView?: boolean,
-    isWeekViewAllDaySection?: boolean,
-  ) => {
+  const showUserAvatars = ({
+    participantList,
+    avatarSize,
+    isWeekView,
+    isWeekViewAllDaySection,
+  }: {
+    participantList: EventParticipant[];
+    avatarSize: number;
+    isWeekView?: boolean;
+    isWeekViewAllDaySection?: boolean;
+  }) => {
     if (participantList && participantList.length > 0) {
       if (participantList.length == 1) {
         const memberInfo = dashboardMemberList.find(
@@ -683,7 +688,7 @@ const EventCalendar = () => {
             content={`${participantList[0].fullName}`}
             placement="top">
             <div
-              className={`border-[1px] relative border-white rounded-full ${borderClassName}`}>
+              className={`relative`}>
               <CustomUserAvatar
                 avatarUrl={memberInfo?.avatar || ''}
                 avatarColor={memberInfo?.avatarColor || ''}
@@ -707,7 +712,7 @@ const EventCalendar = () => {
                   placement="top"
                   key={participant.id}>
                   <div
-                    className={`border-[1px] relative border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
+                    className={`relative ${index != 0 && 'ml-[-7px]'}`}>
                     <CustomUserAvatar
                       avatarUrl={memberInfo?.avatar || ''}
                       avatarColor={memberInfo?.avatarColor || ''}
@@ -736,7 +741,7 @@ const EventCalendar = () => {
                     placement="top"
                     key={participant.id}>
                     <div
-                      className={`border-[1px] relative border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
+                      className={`relative ${index != 0 && 'ml-[-7px]'}`}>
                       <CustomUserAvatar
                         avatarUrl={memberInfo?.avatar || ''}
                         avatarColor={memberInfo?.avatarColor || ''}
@@ -754,7 +759,7 @@ const EventCalendar = () => {
                     content={`他に${participantList.length - 5}人の表示があります`}
                     placement="top">
                     <div
-                      className={`text-[#77858F] relative text-[11px] font-medium ml-[-12px] ${isWeekView && 'border-[1px] !ml-[-12px] border-white text-white rounded-full shrink-0 !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'}`}>
+                      className={`text-[#77858F] relative text-[11px] font-medium ml-[-12px] ${isWeekView && 'border-[1px] !ml-[-12px] border-white text-white rounded-full shrink-0 !w-[26px] !h-[26px] bg-[#77858F] flex items-center justify-center'}`}>
                       +{participantList.length - 5}
                     </div>
                   </DynamicTooltip>
@@ -776,6 +781,195 @@ const EventCalendar = () => {
     }
   };
 
+  // Show organization's avatar
+  const showOrgAvatars = ({
+    selectOrganizations,
+    avatarSize,
+    isWeekView,
+    isWeekViewAllDaySection,
+  }: {
+    selectOrganizations: number[];
+    avatarSize: number;
+    isWeekView?: boolean;
+    isWeekViewAllDaySection?: boolean;
+  }) => {
+    const avaScale = avatarSize / 28;
+    if (selectOrganizations && selectOrganizations.length > 0) {
+      if (selectOrganizations.length == 1) {
+        const orgInfo = dataOptionsOrganizations.find(
+          (org) => org.id === selectOrganizations[0],
+        );
+        return (
+          <DynamicTooltip content={`${orgInfo?.fullName}`} placement="top">
+            <div
+              className={`relative`}>
+              {orgInfo?.avatarUrl ? (
+                <CustomUserAvatar
+                  avatarUrl={orgInfo?.avatarUrl || ''}
+                  avatarColor={orgInfo?.color || ''}
+                  size={avatarSize}
+                  isCalendarScreen={true}
+                />
+              ) : (
+                <div style={{ transform: `scale(${avaScale})` }}>
+                  <GroupIconWithDynamicColor
+                    color={orgInfo?.color || '#228CDB'}
+                  />
+                </div>
+              )}
+            </div>
+          </DynamicTooltip>
+        );
+      } else if (selectOrganizations.length === 2) {
+        return (
+          <div className="mr-1 flex items-center">
+            {selectOrganizations.map((orgId, index) => {
+              const orgInfo = dataOptionsOrganizations.find(
+                (org) => org.id === orgId,
+              );
+
+              return (
+                <DynamicTooltip
+                  content={`${orgInfo?.fullName}`}
+                  placement="top"
+                  key={orgInfo?.id}>
+                  <div
+                    className={`relative ${index != 0 && 'ml-[-7px]'}`}>
+                    {orgInfo?.avatarUrl ? (
+                      <CustomUserAvatar
+                        avatarUrl={orgInfo?.avatarUrl || ''}
+                        avatarColor={orgInfo?.color || ''}
+                        size={avatarSize}
+                        isCalendarScreen={true}
+                      />
+                    ) : (
+                      <div style={{ transform: `scale(${avaScale})` }}>
+                        <GroupIconWithDynamicColor
+                          color={orgInfo?.color || '#228CDB'}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </DynamicTooltip>
+              );
+            })}
+          </div>
+        );
+      } else if (selectOrganizations.length > 2) {
+        return (
+          <div className={`mr-1 flex items-center ${!isWeekView && 'gap-1'}`}>
+            {selectOrganizations
+              .slice(0, isWeekView ? 5 : 1)
+              .map((orgId, index) => {
+                const orgInfo = dataOptionsOrganizations.find(
+                  (org) => org.id === orgId,
+                );
+
+                return (
+                  <DynamicTooltip
+                    content={`${orgInfo?.fullName}`}
+                    placement="top"
+                    key={orgInfo?.id}>
+                    <div
+                      className={`relative ${index != 0 && 'ml-[-7px]'}`}>
+                      {orgInfo?.avatarUrl ? (
+                        <CustomUserAvatar
+                          avatarUrl={orgInfo?.avatarUrl || ''}
+                          avatarColor={orgInfo?.color || ''}
+                          size={avatarSize}
+                          isCalendarScreen={true}
+                        />
+                      ) : (
+                        <div style={{ transform: `scale(${avaScale})` }}>
+                          <GroupIconWithDynamicColor
+                            color={orgInfo?.color || '#228CDB'}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </DynamicTooltip>
+                );
+              })}
+            {isWeekView
+              ? selectOrganizations &&
+                selectOrganizations.length > 5 && (
+                  <DynamicTooltip
+                    content={`他に${selectOrganizations.length - 5}チームの表示があります`}
+                    placement="top">
+                    <div
+                      className={`text-[#77858F] relative text-[11px] font-medium ml-[-12px] ${isWeekView && 'border-[1px] !ml-[-12px] border-white text-white rounded-full shrink-0 !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'}`}>
+                      +{selectOrganizations.length - 5}
+                    </div>
+                  </DynamicTooltip>
+                )
+              : selectOrganizations &&
+                selectOrganizations.length > 1 && (
+                  <DynamicTooltip
+                    content={`他に${selectOrganizations.length - 1}チームの表示があります`}
+                    placement="top">
+                    <div
+                      className={`text-[#77858F] relative text-[11px] font-medium ${isWeekViewAllDaySection && 'border-[1px] !ml-[-12px] !text-[9px] text-white shrink-0 border-white rounded-full !w-[21px] !h-[21px] bg-[#77858F] flex items-center justify-center'} `}>
+                      +{selectOrganizations.length - 1}
+                    </div>
+                  </DynamicTooltip>
+                )}
+          </div>
+        );
+      }
+    }
+  };
+
+  // Show avatars depending on event
+  const showEventAvatars = ({
+    participantList,
+    selectOrganizations,
+    avatarSize,
+    isWeekView,
+    isWeekViewAllDaySection,
+  }: {
+    participantList: EventParticipant[];
+    selectOrganizations: number[];
+    avatarSize: number;
+    isWeekView?: boolean;
+    isWeekViewAllDaySection?: boolean;
+  }) => {
+    const organizationIds = selectOrganizations || [];
+    const userIds = participantList?.map((user) => Number(user.id)) || [];
+
+    // Start by assuming we show organization avatars only if there are selected orgs
+    let showOrganizationAvatar = organizationIds.length > 0;
+
+    if (showOrganizationAvatar) {
+      // Collect all userIds that belong to the selected organizations
+      const selectedOrgUserIds = dataOptionsOrganizations
+        .filter((org) => organizationIds.includes(Number(org.id)))
+        .flatMap((org) => org.userIds);
+
+      // If any participant is not in any selected organization, disable org avatars
+      const hasOutsideUser = userIds.some(
+        (userId) => !selectedOrgUserIds.includes(userId),
+      );
+
+      if (hasOutsideUser) {
+        showOrganizationAvatar = false;
+      }
+    }
+
+    if (showOrganizationAvatar)
+      return showOrgAvatars({
+        selectOrganizations,
+        avatarSize,
+        isWeekView,
+        isWeekViewAllDaySection,
+      });
+    return showUserAvatars({
+      participantList,
+      avatarSize,
+      isWeekView,
+      isWeekViewAllDaySection,
+    });
+  };
+
   const handleEventContent = (eventContent: any) => {
     if (eventContent.event.id.startsWith('loading')) {
       return <RowSkeleton className="w-full h-[31px] mb-1" />;
@@ -794,7 +988,7 @@ const EventCalendar = () => {
             )
           : false;
       const timeText = eventContent.timeText?.replace(' - ', '~') || '';
-
+      
       if (currentView === CalendarViewOptions.VIEW_BY_WEEK) {
         if (eventContent.event.allDay) {
           if (
@@ -822,13 +1016,15 @@ const EventCalendar = () => {
                   eventContent.event.extendedProps.participants,
                 ) ? (
                   <div className="flex items-center gap-1">
-                    {showUserAvatars(
-                      eventContent.event.extendedProps.participants,
-                      21,
-                      '!w-[21px] !h-[21px]',
-                      false,
-                      true,
-                    )}
+                    {showEventAvatars({
+                      participantList:
+                        eventContent.event.extendedProps.participants,
+                      selectOrganizations:
+                        eventContent.event.extendedProps.selectOrganizations,
+                      avatarSize: 21,
+                      isWeekView: false,
+                      isWeekViewAllDaySection: true,
+                    })}
                     <p className="truncate max-w-[100%] font-semibold mt-0.5 pt-0.5 h-[25px]">
                       {eventContent.event.title !== 'null'
                         ? eventContent.event.title
@@ -852,13 +1048,14 @@ const EventCalendar = () => {
             {checkShowUserAvatar(
               eventContent.event.extendedProps.participants,
             ) &&
-              showUserAvatars(
-                eventContent.event.extendedProps.participants,
-                24,
-                '!w-[24px] !h-[24px]',
-                true,
-                false,
-              )}
+              showEventAvatars({
+                participantList: eventContent.event.extendedProps.participants,
+                selectOrganizations:
+                  eventContent.event.extendedProps.selectOrganizations,
+                avatarSize: 24,
+                isWeekView: true,
+                isWeekViewAllDaySection: false,
+              })}
             <div className={`text-black text-[14px] font-medium`}>
               <p className="font-semibold min-h-5">
                 {eventContent.event.title != 'null'
@@ -879,8 +1076,7 @@ const EventCalendar = () => {
                     ~
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                   </p>
-                  <p
-                    className={`text-black text-[11px] font-normal break-all`}>
+                  <p className={`text-black text-[11px] font-normal break-all`}>
                     {eventContent.event.extendedProps?.location?.name}
                   </p>
                 </>
@@ -959,7 +1155,7 @@ const EventCalendar = () => {
               new Date(
                 new Date(eventContent.event.end).setHours(0, 0, 0, 0),
               ).getTime() ? (
-                <div className='flex gap-[10px]'>
+                <div className={`${currentResources.length == 1 && 'flex gap-[10px]'}`}>
                   <p className="whitespace-nowrap">
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
                     ~{' '}
@@ -972,8 +1168,8 @@ const EventCalendar = () => {
               ) : (
                 <>
                   {isMoreThanThirtyMinutes(eventContent.timeText) && (
-                    <div className="text-black text-[11px] font-normal break-all flex gap-[10px]">
-                      <p className='text-nowrap'>{timeText}</p>
+                    <div className={`text-black text-[11px] font-normal break-all ${currentResources.length == 1 && 'flex gap-[10px]'}`}>
+                      <p className="text-nowrap">{timeText}</p>
                       <p>{eventContent.event.extendedProps?.location?.name}</p>
                     </div>
                   )}
@@ -1017,13 +1213,15 @@ const EventCalendar = () => {
                   eventContent.event.extendedProps.participants,
                 ) ? (
                   <div className="flex items-center gap-1">
-                    {showUserAvatars(
-                      eventContent.event.extendedProps.participants,
-                      21,
-                      '!w-[21px] !h-[21px]',
-                      false,
-                      false,
-                    )}
+                    {showEventAvatars({
+                      participantList:
+                        eventContent.event.extendedProps.participants,
+                      selectOrganizations:
+                        eventContent.event.extendedProps.selectOrganizations,
+                      avatarSize: 21,
+                      isWeekView: false,
+                      isWeekViewAllDaySection: false,
+                    })}
                     <p className="truncate max-w-[100%] font-semibold mt-0.5 pt-0.5 h-[25px]">
                       {eventContent.event.title !== 'null'
                         ? eventContent.event.title
@@ -2633,7 +2831,7 @@ const EventCalendar = () => {
           </div>
 
           <div
-            className={`w-full ${!isDayOrWeekView() && 'pl-10'} relative calendar-custom ${searchParams.get('view') || ''} ${getAllDayEventCountText(events)} !overflow-hidden ${showSidebar ? (!isDayOrWeekView() ? 'pr-5' : '') : (!isDayOrWeekView() ? 'pr-10' : '')}`}
+            className={`w-full ${!isDayOrWeekView() && 'pl-10'} relative calendar-custom ${searchParams.get('view') || ''} ${getAllDayEventCountText(events)} !overflow-hidden ${showSidebar ? (!isDayOrWeekView() ? 'pr-5' : '') : !isDayOrWeekView() ? 'pr-10' : ''}`}
             style={{ overflowX: 'auto', width: '100%' }}>
             {calendarLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-[#E6F3FB] z-10"></div>
