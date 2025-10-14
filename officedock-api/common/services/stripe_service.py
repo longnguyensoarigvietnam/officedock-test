@@ -146,8 +146,9 @@ class StripeService:
         """Update a Stripe customer with the latest company information."""
         if not company.stripe_customer_id:
             return
+        customer_id = self.get_or_create_customer(company)
         stripe.Customer.modify(
-            company.stripe_customer_id,
+            customer_id,
             name=company.name,
             email=company.responsible_person_mail,
         )
@@ -248,7 +249,7 @@ class StripeService:
                 billing_cycle_anchor_config={
                     "day_of_month": 1,
                     "hour": 0,
-                    "minute": 10,  # Delay 10 minutes before create invoice
+                    "minute": 0,
                 },
                 proration_behavior="none",  # No prorate for current month
                 collection_method="charge_automatically",

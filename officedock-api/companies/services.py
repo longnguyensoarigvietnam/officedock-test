@@ -25,7 +25,7 @@ from companies.constants import (
 )
 from companies.models import Company, CompanyTransaction
 from companies.utils import generate_contract_related_date_base_on_now
-from plans.models import Plan
+from plans.models import Plan, Tax
 from roles.constants import Screens, SelectionResultOptions
 from users.constants import LoginTypes, RoleTypes
 from users.models import Profile, Role, User, UserActivityLog
@@ -274,7 +274,10 @@ class CompanyService:
             invoice = self.stripe_service.replace_invoice_subscription(
                 company, plan
             )
-            start_month = to_datetime(invoice.created)
+            start_month = to_datetime(invoice.created) if invoice else now()
+            tax = Tax.objects.first()
+            new_price = plan.monthly_fee * (1 + tax.percentage / 100)
+
             with transaction.atomic():
                 # Update new plan
                 company.company_plan.plan = plan
@@ -296,7 +299,9 @@ class CompanyService:
                 old_plan=old_plan,
                 new_plan=plan.name,
                 start_month=format_date(start_month, style="jp_month_year"),
-                new_price=format(invoice.amount_due, ","),
+                new_price=format(
+                    invoice.amount_due if invoice else int(new_price), ","
+                ),
             )
             return True
         except stripe.error.StripeError as e:
@@ -310,11 +315,6 @@ class CompanyService:
     ):
         """Handle company status transitions and notifications after a successful payment."""
         contract = company.contract
-        payment_methods = company.payment_methods
-        # Update default payment method when it have status failed retry
-        payment_methods.filter(is_default=True, is_retry_failed=True).update(
-            is_retry_failed=False
-        )
         # Terminate the contract when the last invoice is paid
         if company.status == CompanyStatus.CANCELLATION_PENDING.value and (
             get_a_day_in_next_month(contract.end_date, target_date=5).date()
