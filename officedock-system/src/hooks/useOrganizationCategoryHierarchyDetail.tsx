@@ -12,6 +12,7 @@ import { OrganizationCategoryHierarchyDetail } from '@interfaces/hierarchy';
 
 interface UseOrganizationCategoryHierarchyDetailProps {
   organizationId: number;
+  currentScreen?: string;
   conditions?: boolean[];
   onSuccess?: (success: OrganizationCategoryHierarchyDetail) => void;
   onError?: (error: AxiosError) => void;
@@ -20,6 +21,7 @@ interface UseOrganizationCategoryHierarchyDetailProps {
 
 const useOrganizationCategoryHierarchyDetail = ({
   organizationId,
+  currentScreen,
   conditions,
   onSuccess,
   onError,
@@ -33,7 +35,7 @@ const useOrganizationCategoryHierarchyDetail = ({
   // Handle call API get organization category hierarchy detail
   const getOrganizationCategoryHierarchyDetail = async () => {
     setIsLoading(true);
-    const apiUrl = `${apiRouters.ORGANIZATION_CATEGORY_HIERARCHY_DETAIL(organizationId)}`;
+    const apiUrl = `${apiRouters.ORGANIZATION_CATEGORY_HIERARCHY_DETAIL(organizationId)}${currentScreen ? `?current_screen=${currentScreen}` : ''}`;
 
     const { data } = await api.get<OrganizationCategoryHierarchyDetail>(apiUrl);
     return data;

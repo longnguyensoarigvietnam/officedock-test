@@ -462,6 +462,7 @@ export enum ScreenName {
   POINT_MANAGEMENT = 'pointManagement',
   PAYMENT_MANAGEMENT = 'paymentManagement',
   SURVEY_MANAGEMENT = 'surveyManagement',
+  ALL = 'all'
 }
 
 export enum PermissionType {

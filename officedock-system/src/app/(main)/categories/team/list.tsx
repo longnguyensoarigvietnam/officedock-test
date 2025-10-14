@@ -8,7 +8,11 @@ import Dropdown from '@components/common/Dropdown';
 
 import { pageRouters } from '@constants/routers';
 import { ALL_TEAMS_OPTION } from '@constants';
-import { AddCategoryHierarchyType, PermissionsSystem } from '@constants/enums';
+import {
+  AddCategoryHierarchyType,
+  PermissionsSystem,
+  ScreenName,
+} from '@constants/enums';
 
 import { hasPermissionInArray } from '@utils';
 
@@ -103,6 +107,7 @@ const ListHierarchy = () => {
 
   useOrganizationCategoryHierarchyDetail({
     organizationId: Number(selectedOrganizationOption.value),
+    currentScreen: ScreenName.ALL,
     conditions: [Boolean(selectedOrganizationOption.value)],
     onSuccess: async (data) => {
       const statisticCategories = data.statisticCategories.map((org) => ({
@@ -145,7 +150,7 @@ const ListHierarchy = () => {
 
   useOrganizationCategoryHierarchyList({
     conditions: [Boolean(selectedOrganizationOption.value == '')],
-    currentScreen: 'all',
+    currentScreen: ScreenName.ALL,
     onSuccess: async (data) => {
       const receivedHierarchyList = data.map((result) => ({
         id: result.id,
