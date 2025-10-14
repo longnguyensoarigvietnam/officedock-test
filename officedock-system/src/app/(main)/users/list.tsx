@@ -227,6 +227,7 @@ const ListUsers = () => {
       }
       refetchCreationDataCommon();
       setOpenConfirmDeleteModal(false);
+      setOriginalUserCount(originalUserCount - 1);
     },
     onError: (error: AxiosError<any>) => {
       showErrorToast(error, ERROR_DELETE_MESSAGE);
@@ -467,6 +468,7 @@ const ListUsers = () => {
         setResetOrganizationFields(false);
         setResetRoleField(false);
         refetchCreationDataCommon();
+        setOriginalUserCount(originalUserCount + 1);
       },
       onError: ({
         response,
