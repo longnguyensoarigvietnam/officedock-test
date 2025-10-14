@@ -99,7 +99,7 @@ class CronJobService:
                 )
 
                 data_to_create = []
-                if company.target_user_count <= 0:
+                if company.target_user_count > 0:
                     # Reset coin
                     data_to_create.append(
                         TransactionHistory(

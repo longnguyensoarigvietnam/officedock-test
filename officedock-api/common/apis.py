@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 import stripe
 
 from base.apis import BaseAPIViewSet
-from base.permissions import IsCronJob
+from base.permissions import ActionPermission, IsCronJob
 from calendars.constants import (
     ScheduleTypes,
     CalendarTypes,
@@ -92,10 +92,12 @@ from .utils import (
     check_task_overtime,
     format_date,
     send_web_socket_event,
+    to_camel_case,
     to_datetime,
     to_snake_case,
     validate_company_organization,
 )
+from base.filters import FilterByPermission
 
 
 @extend_schema(tags=["System > Creation Data"])
@@ -104,10 +106,23 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
     API endpoint for CreationData.
     """
 
+    filter_backends = [FilterByPermission]
     permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        """
+        Filter data by current screen
+        """
+        screen_name = self.request.query_params.get("screen_name")
+        defined_screens = [to_camel_case(item.value) for item in Screens]
+        if screen_name and to_camel_case(screen_name) in defined_screens:
+            self.screen_name = to_snake_case(screen_name)
+            return [ActionPermission()]
+        return super().get_permissions()
 
     @extend_schema(
         parameters=[
+            OpenApiParameter("screen_name", type=str),
             OpenApiParameter("organization_id", type=int),
             OpenApiParameter("user_id", type=int),
             OpenApiParameter("get_roles", type=bool),
@@ -166,10 +181,14 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             response_data["company"] = CompanySerializer(company).data
         if "get_all_organizations" in request.query_params:
             organizations = get_all_organizations(company, organizations)
+
+            # Filter oganization by permission with imput screen_name in params
+            filtered_organizations = self.filter_queryset(organizations)
+
             response_data[
                 "all_organizations"
             ] = CreationDataOrganizationSerializer(
-                organizations, many=True
+                filtered_organizations, many=True
             ).data
         if "get_roles" in request.query_params:
             response_data["roles"] = get_roles(company)
@@ -190,7 +209,8 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         if "get_event_locations" in request.query_params:
             response_data["event_locations"] = get_event_locations(company)
         if "get_organization_skills" in request.query_params:
-            organizations = get_all_organizations(company, organizations)
+            if not organizations:
+                organizations = get_all_organizations(company, organizations)
             response_data["organization_skills"] = get_organization_skills(
                 organizations, organization
             )
@@ -215,13 +235,13 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 user, screen_name, action
             )
         if "get_organization_with_categories" in request.query_params:
-            organizations = get_all_organizations(
-                company, organizations
-            ).filter(users=user)
+            if not organizations:
+                organizations = get_all_organizations(company, organizations)
+            filtered_organizations = organizations.filter(users=user)
             response_data[
                 "organization_categories"
             ] = get_organization_with_categories(
-                organizations, organization, user
+                filtered_organizations, organization, user
             )
         if "get_organization_for_team_statistic" in request.query_params:
             response_data[
@@ -230,29 +250,31 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 user, company, organization
             )
         if "get_organization_for_my_statistic" in request.query_params:
-            organizations = get_all_organizations(company, organizations)
+            if not organizations:
+                organizations = get_all_organizations(company, organizations)
             response_data["my_statistics"] = get_data_organization_my_statistic(
                 user, organizations, company
             )
         if "get_user_setting" in request.query_params:
             response_data["user_setting"] = get_user_setting(user)
         if "get_filter_organization_categories" in request.query_params:
-            organizations = (
-                get_all_organizations(company, organizations)
-                .filter(Q(users=user) | Q(id=organization))
+            if not organizations:
+                organizations = get_all_organizations(company, organizations)
+            filtered_organizations = (
+                organizations.filter(Q(users=user) | Q(id=organization))
                 .order_by("-created_at")
                 .all()
             )
             response_data[
                 "filter_organizations_categories"
-            ] = get_filter_organization_categories(organizations)
+            ] = get_filter_organization_categories(filtered_organizations)
             response_data["user_setting"] = get_user_setting(user)
         if "get_organization_with_users" in request.query_params:
-            organizations = get_all_organizations(
-                company, organizations
-            ).filter(users=user)
+            if not organizations:
+                organizations = get_all_organizations(company, organizations)
+            filtered_organizations = organizations.filter(users=user)
             response_data["organization_users"] = get_organization_with_users(
-                organizations
+                filtered_organizations
             )
         if "get_items_of_user" in request.query_params:
             response_data["items_of_user"] = get_items_of_user(user)
