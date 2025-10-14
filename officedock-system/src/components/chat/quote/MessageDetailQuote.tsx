@@ -444,7 +444,6 @@ export const MessageDetailQuote = ({
       </>
     );
   };
-
   return (
     <Fragment>
       {messageDetail && (
@@ -516,6 +515,7 @@ export const MessageDetailQuote = ({
                                 {messageDetail?.chatFiles &&
                                   messageDetail?.chatFiles.length > 0 && (
                                     <RenderFiles
+                                      key={messageDetail.uuid}
                                       dashboardMemberList={dashboardMemberList}
                                       uuidList={uuidList}
                                       messageDetail={messageDetail}

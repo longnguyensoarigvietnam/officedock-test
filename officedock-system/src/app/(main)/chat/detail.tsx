@@ -1305,6 +1305,7 @@ const ChatDetail = ({
     const listChatFiles = dataMsgQuote.data.flatMap((item) => item.chatFiles);
 
     const dataUuidQuote = collectAllUuids(dataMsgQuote.data);
+
     const newMessageDetail = {
       uuid: uuidMsg,
       message: newFilterMsg,
@@ -2894,7 +2895,7 @@ const ChatDetail = ({
                                       className="w-[100px] h-9 border-none"
                                       type="submit"
                                       style={{
-                                        boxShadow: '0px 1px 5px 0px #00000033'
+                                        boxShadow: '0px 1px 5px 0px #00000033',
                                       }}
                                       onClick={() => {
                                         if (msgIdUpdated) {

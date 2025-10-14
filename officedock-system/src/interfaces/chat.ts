@@ -271,8 +271,10 @@ export interface DataChatFileMemo {
   fileSize: number;
   fileType: string;
   originalFile: string;
-  chatMessageUuid: string;
-  chatMessageId: number;
+  chatMessages: {
+    id: number;
+    uuid: string;
+  }[];
   uuid: string;
 }
 export interface ChatFileDetailResponse {

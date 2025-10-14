@@ -74,11 +74,11 @@ export function useUpdatePaymentCardCache() {
         if (Array.isArray(oldData.results)) {
           return {
             ...oldData,
-            results: [newCard, ...oldData.results],
+            results: [...oldData.results, newCard],
           };
         }
         if (Array.isArray(oldData)) {
-          return [newCard, ...oldData];
+          return [...oldData, newCard];
         }
 
         return oldData;
