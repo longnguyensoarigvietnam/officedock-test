@@ -55,7 +55,7 @@ class StripeService:
         try:
             if stripe.TaxRate.retrieve(tax_rate.stripe_tax_id):
                 return tax_rate.stripe_tax_id
-        except stripe.error.StripeError as e:
+        except Exception:
             # 2. If not yet → create new
             new_tax = stripe.TaxRate.create(
                 display_name=tax_name,
