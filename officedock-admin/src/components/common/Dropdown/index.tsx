@@ -88,7 +88,7 @@ const Dropdown = ({
             <>
               <div className={`relative ${label ? 'mt-1' : ''}`}>
                 <ListboxButton
-                  className={`relative w-full cursor-default leading-5.5 rounded-md bg-white py-2.5 pl-3.5 pr-10 text-left text-gray-900 shadow-sm border text-base focus-visible:!outline-none focus-visible:!shadow-none ${errorClasses} ${className}`}>
+                  className={`relative w-full cursor-default leading-5.5 rounded-md bg-white py-2.5 pl-3.5 pr-10 text-left text-gray-900 shadow-sm border text-base focus-visible:!outline-none focus-visible:!shadow-none disabled:opacity-50 ${errorClasses} ${className}`}>
                   <span className="flex items-center">
                     {selected ? (
                       <>
