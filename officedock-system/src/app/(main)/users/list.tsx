@@ -590,11 +590,9 @@ const ListUsers = () => {
             </span>
           </div>
           <div className="flex gap-[10px] font-medium items-center">
-            <p className="text-xs ">
-              {creationDataCommonData?.company?.plan?.name}
-            </p>
+            <p className="text-xs ">現在のプラン</p>
             <div className="w-[100px] h-[34px] cursor-pointer  bg-white rounded-lg text-black text-xs flex items-center justify-center ">
-              スタンダード
+              {creationDataCommonData?.company?.plan?.name}
             </div>
           </div>
         </div>

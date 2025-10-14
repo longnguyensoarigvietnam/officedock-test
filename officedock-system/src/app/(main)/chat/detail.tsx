@@ -1571,9 +1571,9 @@ const ChatDetail = ({
     switch (type) {
       case ChatRoomType.GROUP:
         return (
-          <div className="rounded-full w-[48px] h-[48px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+          <div className="rounded-full w-[36px] h-[36px] border-[2px] border-white flex items-center justify-center overflow-hidden">
             <ImageRound
-              className="w-12 h-12 rounded-full"
+              className="w-[36px] h-[36px] rounded-full"
               src="/icons/multi-users.svg"
               border="full"
               name="Multi users"
@@ -1582,9 +1582,9 @@ const ChatDetail = ({
         );
       case ChatRoomType.TASK:
         return (
-          <div className="rounded-full w-[48px] h-[48px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+          <div className="rounded-full w-[36px] h-[36px] border-[2px] border-white flex items-center justify-center overflow-hidden">
             <ImageRound
-              className="w-12 h-12"
+              className="w-[36px] h-[36px]"
               src="/icons/document.svg"
               border="full"
               name="Task room"
@@ -1593,9 +1593,9 @@ const ChatDetail = ({
         );
       case ChatRoomType.SKILL:
         return (
-          <div className="rounded-full w-[48px] h-[48px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+          <div className="rounded-full w-[36px] h-[36px] border-[2px] border-white flex items-center justify-center overflow-hidden">
             <ImageRound
-              className="w-12 h-12"
+              className="w-[36px] h-[36px]"
               src="/icons/skill-room.svg"
               border="full"
               name="Skill room"
@@ -1604,9 +1604,9 @@ const ChatDetail = ({
         );
       case ChatRoomType.CALENDAR:
         return (
-          <div className="rounded-full w-[48px] h-[48px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+          <div className="rounded-full w-[36px] h-[36px] border-[2px] border-white flex items-center justify-center overflow-hidden">
             <ImageRound
-              className="w-12 h-12"
+              className="w-[36px] h-[36px]"
               src="/icons/calendar-room.svg"
               border="full"
               name="Calendar room"
@@ -1628,15 +1628,13 @@ const ChatDetail = ({
     });
 
     return (
-      <div className="rounded-full w-[48px] h-[48px] border-[2px] border-white flex items-center justify-center overflow-hidden">
-        <div className="scale-150">
-          <CustomUserAvatar
-            avatarUrl={memberInfo?.avatar || ''}
-            avatarColor={memberInfo?.avatarColor || ''}
-            size={33}
-            customClassName={`${!memberInfo?.avatar && 'mt-0.5 ml-0.5'}`}
-          />
-        </div>
+      <div className="rounded-full w-[36px] h-[36px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+        <CustomUserAvatar
+          avatarUrl={memberInfo?.avatar || ''}
+          avatarColor={memberInfo?.avatarColor || ''}
+          size={36}
+          customClassName={`${!memberInfo?.avatar && 'mt-0.5 ml-0.5'}`}
+        />
       </div>
     );
   };
@@ -1656,19 +1654,19 @@ const ChatDetail = ({
           );
           return (
             <div
-              className="ml-[-10px] border-[1px] border-white rounded-full h-[35px] w-[35px]"
+              className={`${index > 0 && 'ml-[-10px]'} border-[1px] flex items-center justify-center border-white rounded-full h-[31.5px] w-[31.5px]`}
               key={index}>
               <CustomUserAvatar
                 avatarUrl={memberInfo?.avatar || ''}
                 avatarColor={memberInfo?.avatarColor || ''}
-                size={33}
+                size={30}
                 customClassName={`${!memberInfo?.avatar && '!mt-0'}`}
               />
             </div>
           );
         })}
         {remainingCount > 0 && (
-          <div className="ml-[-10px] flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[35px] h-[35px]">
+          <div className="ml-[-10px] relative flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[31.5px] h-[31.5px]">
             +{remainingCount}
           </div>
         )}
@@ -2321,17 +2319,17 @@ const ChatDetail = ({
               style={{
                 background: 'linear-gradient(to right, #289BF2, #73CCDF)',
               }}>
-              <div className={`flex items-center w-[62%] gap-2`}>
+              <div className={`flex items-center w-[62%]`}>
                 {chatRoomDetail && (
                   <>
-                    <div className="!min-w-[48px]">
+                    <div className="!min-w-[36px] mr-[10px]">
                       {renderImageRound(
                         chatRoomDetail?.type,
                         chatRoomDetail?.participants || [],
                       )}
                     </div>
                     <p
-                      className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-fit max-w-[100%]' : 'max-w-[calc(100%_-_380px)]'}   ml-3`}
+                      className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-fit max-w-[100%]' : 'max-w-[calc(100%_-_380px)]'}`}
                       style={{
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
@@ -2357,11 +2355,16 @@ const ChatDetail = ({
                     </p>
                   </>
                 )}
-                <div className="max-w-[280px] w-[280px] ml-3">
+                <div
+                  className={`${
+                    chatRoomDetail &&
+                    chatRoomDetail.type === ChatRoomType.GROUP &&
+                    'max-w-[280px] w-[280px] ml-5'
+                  }`}>
                   {chatRoomDetail &&
                     chatRoomDetail.type === ChatRoomType.GROUP && (
-                      <div className="flex gap-2 items-center">
-                        <p className="text-[13px] mr-3 text-[#FFFFFFB2] text-nowrap">
+                      <div className="flex gap-3 items-center">
+                        <p className="text-[13px] text-[#FFFFFFB2] text-nowrap">
                           メンバー
                           {chatRoomDetail &&
                           chatRoomParticipantsEditing.find(
@@ -2414,9 +2417,9 @@ const ChatDetail = ({
                   {chatRoomDetail?.isMuted &&
                     chatRoomDetail &&
                     chatRoomDetail.type !== ChatRoomType.GROUP && (
-                      <div className={`flex-shrink-0`}>
+                      <div className={`flex-shrink-0 ml-5`}>
                         <ImageRound
-                          className={` w-fit h-fit hover:cursor-pointer`}
+                          className={`w-fit h-fit hover:cursor-pointer`}
                           src="/icons/mute-white.svg"
                           name="mute icon"
                         />
@@ -2426,7 +2429,7 @@ const ChatDetail = ({
                 {chatRoomDetail?.isMuted &&
                   chatRoomDetail &&
                   chatRoomDetail.type === ChatRoomType.GROUP && (
-                    <div className={`flex-shrink-0 w-fit ml-3`}>
+                    <div className={`flex-shrink-0 w-fit ml-5`}>
                       <ImageRound
                         className={` w-fit h-fit hover:cursor-pointer`}
                         src="/icons/mute-white.svg"
@@ -2436,11 +2439,11 @@ const ChatDetail = ({
                   )}
               </div>
 
-              <div className="flex gap-2 items-center">
+              <div className="flex gap-5 items-center">
                 <InputSearch
                   placeholder="チャットルーム内のキーワードを検索"
                   customSearchIconUrl="/icons/search-white.svg"
-                  inputClassName="!w-[290px] !py-2 !rounded-[30px] text-sm !bg-[#F6F9FA4D] border-none placeholder-white"
+                  inputClassName="!w-[300px] !py-2 !rounded-[30px] !text-sm !bg-[#F6F9FA4D] border-none !placeholder-[#FFFFFF99]"
                   value={searchChatMsg}
                   onChange={(e) => setSearchChatMsg(e.target.value)}
                   onKeyDown={(e: any) => {
@@ -2479,7 +2482,7 @@ const ChatDetail = ({
                               {() => (
                                 <>
                                   <PopoverButton
-                                    className={`flex w-full px-3 py-2 items-center rounded-md focus:outline-none`}>
+                                    className={`flex w-[24px] py-2 items-center rounded-md focus:outline-none`}>
                                     <div>
                                       <DynamicTooltip
                                         content={'設定'}
@@ -2488,7 +2491,7 @@ const ChatDetail = ({
                                           left: -40,
                                         }}>
                                         <ImageRound
-                                          className="w-[26px] h-[26px] hover:cursor-pointer"
+                                          className="w-[24px] h-[24px] hover:cursor-pointer"
                                           src="/icons/setting-chat.svg"
                                           border="full"
                                           name="Setting icon"
@@ -2508,18 +2511,18 @@ const ChatDetail = ({
                                       style={{
                                         boxShadow: '0px 2px 8px 0px #0000001A',
                                       }}
-                                      className="absolute bg-[#5B6770] py-[6px] rounded-md text-white text-sm  font-medium  top-10 right-0 z-10  transform">
+                                      className="absolute bg-[#5B6770] p-[6px] !rounded-[10px] text-white text-sm  font-medium  top-10 right-0 z-10  transform">
                                       <div
                                         className={`${
                                           chatRoomDetail?.type ==
                                           ChatRoomType.PRIVATE
-                                            ? 'w-[160px]'
-                                            : 'w-[126px]'
+                                            ? 'w-[150px]'
+                                            : 'w-[122px]'
                                         }`}>
                                         {chatRoomDetail?.type !=
                                           ChatRoomType.PRIVATE && (
                                           <div
-                                            className="py-[10px] px-[14px] cursor-pointer hover:opacity-70"
+                                            className="p-[12px] hover:bg-[#7D8A94] leading-none rounded-[6px] hover:cursor-pointer"
                                             onClick={() => {
                                               setOpenSettingBox(true);
                                               // Refetch to get the latest room name
@@ -2533,7 +2536,7 @@ const ChatDetail = ({
                                           onClick={() =>
                                             setShowModalMuteChat(true)
                                           }
-                                          className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
+                                          className="p-[12px] hover:bg-[#7D8A94] leading-none rounded-[6px] hover:cursor-pointer">
                                           通知
                                         </div>
                                         {chatRoomDetail?.type !=
@@ -2542,11 +2545,11 @@ const ChatDetail = ({
                                             onClick={() =>
                                               setShowConfirmLeaveGroup(true)
                                             }
-                                            className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
+                                            className="p-[12px] hover:bg-[#7D8A94] leading-none rounded-[6px] hover:cursor-pointer">
                                             グループを退会
                                           </div>
                                         )}
-                                        <div className="py-[10px] px-[14px] cursor-pointer hover:opacity-70">
+                                        <div className="p-[12px] hover:bg-[#7D8A94] leading-none rounded-[6px] hover:cursor-pointer">
                                           {chatRoomDetail?.type !=
                                           ChatRoomType.PRIVATE
                                             ? 'グループ'
@@ -2752,9 +2755,9 @@ const ChatDetail = ({
                         chatRoomDetail?.type == type && (
                           <div
                             key={type}
-                            className="px-8 pt-1 py-3 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
+                            className="px-8 pt-[14px] pb-3 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
                             <div className="flex justify-between items-center">
-                              <div className="flex gap-1 items-center">
+                              <div className="flex items-center">
                                 {chatRoomDetail?.type == ChatRoomType.GROUP && (
                                   <>
                                     <ChatMentionMembersList
@@ -2875,7 +2878,7 @@ const ChatDetail = ({
                                 </DynamicTooltip>
                               </div>
 
-                              <div className="flex items-center gap-3 mt-2">
+                              <div className="flex items-center gap-[14px]">
                                 {session?.user.permissions &&
                                   hasPermissionInArray(
                                     session?.user.permissions,
@@ -2904,8 +2907,11 @@ const ChatDetail = ({
                                     PermissionsSystem.CHAT_ADD,
                                   ) && (
                                     <Button
-                                      className="w-[100px] h-9"
+                                      className="w-[100px] h-9 border-none"
                                       type="submit"
+                                      style={{
+                                        boxShadow: '0px 1px 5px 0px #00000033'
+                                      }}
                                       onClick={() => {
                                         if (msgIdUpdated) {
                                           handleConfirmUpdateMsg(msgIdUpdated);
@@ -2923,11 +2929,11 @@ const ChatDetail = ({
                                   )}
                               </div>
                             </div>
-                            <div className="mt-5 !max-w-full">
+                            <div className="mt-[14px] !max-w-full">
                               <EditorContent
                                 editor={editor}
                                 key={chatRoomCode}
-                                className="w-full break-all whitespace-pre-wrap chat"
+                                className="w-full break-all whitespace-pre-wrap chat text-sm"
                               />
                             </div>
                           </div>
@@ -2935,9 +2941,9 @@ const ChatDetail = ({
                     )}
                   </>
                 ) : (
-                  <div className="px-8 py-1 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
+                  <div className="px-8 pt-[14px] pb-3 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
                     <div className="flex justify-between items-center">
-                      <div className="flex gap-1 items-center">
+                      <div className="flex items-center">
                         <DynamicTooltip content={'メンション'} placement="top">
                           <div className="hover:bg-[#77858F26] rounded-full p-[7px] flex items-center justify-center hover:cursor-pointer">
                             <ImageRound
@@ -2976,7 +2982,7 @@ const ChatDetail = ({
                             <ImageRound
                               name="Quote checker"
                               src="/icons/quote-checker.svg"
-                              className="w-[18px] h-[18px]"
+                              className="w-[16px] h-[16px]"
                             />
                           </div>
                         </DynamicTooltip>

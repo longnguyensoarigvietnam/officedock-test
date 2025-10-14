@@ -358,9 +358,9 @@ export const MessageDetailBookmark = ({
           chatRoomInfo?.type === ChatRoomType.GROUP ||
           chatRoomInfo?.type === ChatRoomType.SELF) && (
           <div
-            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
+            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
             {renderAvatar(messageDetail.sender.id)}
-            <div className={`ml-3 !w-full`}>
+            <div className={`ml-[10px] !w-full`}>
               <div className="flex justify-between items-baseline pb-2">
                 <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                   <p className="max-w-full break-all">
@@ -718,7 +718,7 @@ export const MessageDetailBookmark = ({
         )}
         {chatRoomInfo?.type === ChatRoomType.TASK && (
           <div
-            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
+            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
             {messageDetail.type !== MessageType.MESSAGE ? (
               <ImageRound
                 className="w-10 h-10"
@@ -729,7 +729,7 @@ export const MessageDetailBookmark = ({
             ) : (
               <div>{renderAvatar(messageDetail.sender.id)}</div>
             )}
-            <div className={`ml-3 !w-full`}>
+            <div className={`ml-[10px] !w-full`}>
               <div className="flex justify-between items-baseline pb-2">
                 <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                   {messageDetail.type !== MessageType.MESSAGE ? (
@@ -852,9 +852,9 @@ export const MessageDetailBookmark = ({
         )}
         {chatRoomInfo?.type === ChatRoomType.SKILL && (
           <div
-            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
+            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
             <div>{renderAvatar(messageDetail.sender.id)}</div>
-            <div className={`ml-3 w-full`}>
+            <div className={`ml-[10px] w-full`}>
               <div className="flex justify-between items-baseline pb-2">
                 <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                   <p className="max-w-full break-all">
@@ -953,9 +953,9 @@ export const MessageDetailBookmark = ({
         )}
         {chatRoomInfo?.type === ChatRoomType.CALENDAR && (
           <div
-            className={`flex !box-border ${!isLastItem && 'border-b border-[#D2DBE1]'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
+            className={`flex !box-border ${!isLastItem && 'border-b border-[#D2DBE1]'} group-hover:bg-[#FFFFFF] py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
             <div>{renderAvatar(messageDetail.sender.id)}</div>
-            <div className={`ml-3 w-full`}>
+            <div className={`ml-[10px] w-full`}>
               <div className="flex justify-between items-baseline pb-2">
                 <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                   <p className="max-w-full break-all">

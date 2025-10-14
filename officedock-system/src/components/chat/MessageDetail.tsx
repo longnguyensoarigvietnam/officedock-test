@@ -655,16 +655,15 @@ export const MessageDetail = ({
             chatRoomDetail?.type === ChatRoomType.GROUP ||
             chatRoomDetail?.type === ChatRoomType.SELF) && (
             <div
-              className={`flex !box-border group-hover:bg-[#FFFFFF] ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} py-3 ml-5 mr-3 group-hover:rounded-md`}>
+              className={`flex !box-border group-hover:bg-[#FFFFFF] ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
               {renderAvatar(messageDetail.sender.id)}
-              <div className={`ml-3 !w-full`}>
+              <div className={`ml-[10px] !w-full`}>
                 <div className="flex w-full justify-between items-baseline pb-2">
                   <div className="flex flex-grow  gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <div
                       data-id={messageDetail.uuid}
                       className="flex-grow min-w-0 flex items-center gap-1 break-all whitespace-normal line-clamp-3">
                       {messageDetail.sender.fullName}
-                      {messageDetail.id}
                       <span
                         data-id={messageDetail.uuid}
                         className="font-medium text-xs text-[#77858F]">
@@ -1072,7 +1071,7 @@ export const MessageDetail = ({
           )}
           {chatRoomDetail?.type === ChatRoomType.TASK && (
             <div
-              className={`flex !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
+              className={`flex !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
               <div>
                 {messageDetail?.organization?.icon ? (
                   <CustomUserAvatar
@@ -1088,7 +1087,7 @@ export const MessageDetail = ({
                   />
                 )}
               </div>
-              <div className={`ml-3 mt-[6px] !w-full`}>
+              <div className={`ml-[10px] mt-[6px] !w-full`}>
                 <div className="flex justify-between items-baseline pb-2">
                   <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <p className="max-w-full font-medium break-all">
@@ -1286,9 +1285,9 @@ export const MessageDetail = ({
           )}
           {chatRoomDetail?.type === ChatRoomType.SKILL && (
             <div
-              className={`flex !box-border  ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
+              className={`flex !box-border  ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
               <div>{renderAvatar(messageDetail.sender.id)}</div>
-              <div className={`ml-3 w-full`}>
+              <div className={`ml-[10px] w-full`}>
                 <div className="flex justify-between items-baseline pb-2">
                   <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <p className="max-w-full break-all">
@@ -1413,9 +1412,9 @@ export const MessageDetail = ({
           )}
           {chatRoomDetail?.type === ChatRoomType.CALENDAR && (
             <div
-              className={`flex !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
+              className={`flex !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
               <div>{renderAvatar(messageDetail.sender.id)}</div>
-              <div className={`ml-3 w-full`}>
+              <div className={`ml-[10px] w-full`}>
                 <div className="flex justify-between items-baseline pb-2">
                   <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <p className="max-w-full break-all">
