@@ -819,6 +819,13 @@ class WebhookView(BaseAPIViewSet):
                 invoice = stripe.Invoice.retrieve(transaction.stripe_invoice_id)
                 # Set the finalize of invoice
                 self.stripe_service.update_invoice_finalize(invoice, company)
+            # Clean up stripe_subscription_id in local DB
+            company.company_plan.stripe_subscription_id = None
+            company.company_plan.save(
+                update_fields=[
+                    "stripe_subscription_id",
+                ]
+            )
             print(f"✅ Company {company.id} cancel subscription")
 
     def handle_update_the_last_invoice(self, invoice):
@@ -973,7 +980,6 @@ class TestingViewset(BaseAPIViewSet):
         self.cronjob_service.iterate_over_all_companies_to_closing(
             today, all_companies
         )
-
         # 3. Send mail notify renewal contract
         if today.day == 1:
             self.cronjob_service.handle_send_email_renewal_company_contract(

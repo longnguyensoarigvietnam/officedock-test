@@ -408,9 +408,10 @@ class StripeService:
                 )
             company_plan = company.company_plan
             price = stripe.Price.retrieve(plan.stripe_price_id)
-            stripe_subs = stripe.Subscription.retrieve(
+            stripe_subs = self.retrieve_subscription(
                 company_plan.stripe_subscription_id
             )
+
             if stripe_subs and price:
                 subscription_item_id = stripe_subs["items"]["data"][0]["id"]
                 # Create fixed subscription billing at the end of the month
