@@ -143,11 +143,13 @@ const CompanyDetailInfo = () => {
           },
           {
             label: '締日',
-            value: `${companyDetail?.closeDate}日` || '',
+            value: `${companyDetail ? companyDetail?.closeDate : ''}日` || '',
           },
           {
             label: '修正可能期間',
-            value: `${companyDetail?.editableAfterClosing}日間` || '',
+            value:
+              `${companyDetail ? companyDetail.editableAfterClosing : ''}日間` ||
+              '',
           },
         ]}
       />
