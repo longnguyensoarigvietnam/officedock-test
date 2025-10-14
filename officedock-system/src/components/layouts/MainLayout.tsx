@@ -2,15 +2,14 @@
 import { useMutation } from 'react-query';
 import { ReactNode, useContext, useEffect, useState } from 'react';
 import { signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import Metadata from '@components/common/Metadata';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import { PermissionsSystem, SessionStatus } from '@constants/enums';
-import { SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
 
-import { hasPermissionInArray } from '@utils';
+import { hasFullPaymentPermissions, hasPermissionInArray } from '@utils';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
@@ -35,6 +34,7 @@ const MainLayout = ({
 }: MainLayoutProps) => {
   const { totalNotifications } = useContext(GlobalStateContext);
   const { data: session, status, update } = useSessionCache();
+  const pathName = usePathname();
   const router = useRouter();
 
   const [isShow, setIsShow] = useState(false);
@@ -54,26 +54,47 @@ const MainLayout = ({
         return;
       }
       if (permission) {
+        if (session && hasFullPaymentPermissions(session.user.permissions)) {
+          router.push(pageRouters.PAYMENT_MANAGEMENT.href);
+        }
+      }
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, status, permission, pathName]);
+
+  useEffect(() => {
+    if (session && status === SessionStatus.AUTHENTICATED) {
+      if (new Date(session.expires) <= new Date()) {
+        window.location.href = pageRouters.LOGIN.href;
+        return;
+      }
+      if (permission) {
         if (session?.user.permissions && session?.user.permissions.length > 0) {
           const isPermission = hasPermissionInArray(
             session?.user.permissions,
             permission,
           );
-
           if (!isPermission) {
             setIsShow(false);
-
-            const firstViewPath = SYSTEM_PERMISSIONS_MENU.filter((menu) =>
-              session.user.permissions.includes(menu.requiredPermission),
-            ).map((menu) => menu.href)[0];
-
-            if (firstViewPath) {
-              router.push(firstViewPath);
+            if (
+              session &&
+              hasFullPaymentPermissions(session.user.permissions)
+            ) {
+              router.push(pageRouters.PAYMENT_MANAGEMENT.href);
             } else {
-              router.push(pageRouters.DEFAULT.href);
+              router.push(pageRouters.MY_PAGE.href);
             }
           } else {
-            setIsShow(true);
+            if (
+              session &&
+              hasFullPaymentPermissions(session.user.permissions) &&
+              pathName !== pageRouters.PAYMENT_MANAGEMENT.href
+            ) {
+              setIsShow(false);
+            } else {
+              setIsShow(true);
+            }
           }
         } else {
           handleSignOut();

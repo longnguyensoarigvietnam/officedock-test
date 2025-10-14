@@ -656,6 +656,7 @@ const ListChatUsers = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    chatRoomCode,
     handleAddParticipantLocal,
     handleCreateChatRoomLocal,
     handleUpdateDatePin,

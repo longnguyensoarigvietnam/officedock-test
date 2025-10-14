@@ -49,6 +49,7 @@ import { DEFAULT_TASK_SCHEDULE_DURATION, NO_SETTING } from '@constants';
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { TaskContext } from '@providers/TaskProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import {
   addTimeToDate,
@@ -59,6 +60,7 @@ import {
   formatTimeInput,
   generateTimeOptionsAsObjects,
   getTimeDifference,
+  isCheckPermissionWithCloseDate,
 } from '@utils/date';
 import { removeDuplicateOptions } from '@utils';
 
@@ -67,6 +69,7 @@ import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const EditActualDurationsForm = () => {
   const { statusTaskSelected, setStatusTaskSelected } = useContext(TaskContext);
+  const { data: session } = useSessionCache();
 
   // Params
   const params = useParams();
@@ -440,7 +443,7 @@ const EditActualDurationsForm = () => {
       }
     }
     return value;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultTaskScheduleData]);
 
   useEffect(() => {
@@ -718,6 +721,10 @@ const EditActualDurationsForm = () => {
       });
     }
   };
+  const isPermissionCloseDate = isCheckPermissionWithCloseDate({
+    dateA: actualDurationDetail?.startedAt as Date,
+    dateB: session?.user.company.startEditableDate || '',
+  });
 
   return (
     <div className="flex flex-col justify-between h-full">
@@ -944,6 +951,7 @@ const EditActualDurationsForm = () => {
                             className="h-[46px] !text-sm !pt-2 !pl-8 !pr-0 text-left"
                             customizedClassName="customized-datepicker"
                             selected={value ? new Date(value) : null}
+                            disabled={!isPermissionCloseDate}
                             onChange={(e) => {
                               onChange(e);
                               if (e !== null) {
@@ -974,6 +982,7 @@ const EditActualDurationsForm = () => {
                     <div className="w-[115px] relative">
                       <Input
                         isShowClockIcon={true}
+                        disabled={!isPermissionCloseDate}
                         valueInput={watch(`startedAtTime`)}
                         register={register('startedAtTime', {
                           required:
@@ -1044,6 +1053,7 @@ const EditActualDurationsForm = () => {
                             minDate={
                               minDatePlan || (watch('startedAtDate') as Date)
                             }
+                            disabled={!isPermissionCloseDate}
                             onChange={(e) => {
                               onChange(e);
                               if (!getValues('pausedAtTime')) {
@@ -1066,6 +1076,7 @@ const EditActualDurationsForm = () => {
                     <div className="w-[115px] relative">
                       <Input
                         isShowClockIcon={true}
+                        disabled={!isPermissionCloseDate}
                         valueInput={watch(`pausedAtTime`)}
                         register={register('pausedAtTime', {
                           required:

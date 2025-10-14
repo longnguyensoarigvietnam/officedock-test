@@ -21,6 +21,7 @@ export interface UserAuth {
   authenticationType: AuthenticationTypes;
   profile: Profile;
   permissions: PermissionsSystem[];
+  company: Company;
   accessToken?: string;
   refreshToken?: string;
   sessionId?: string;

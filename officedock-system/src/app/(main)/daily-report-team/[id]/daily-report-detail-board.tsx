@@ -99,6 +99,7 @@ import {
   formatTimeInput,
   getDateInfoFull,
   getTimeDifference,
+  isCheckPermissionWithCloseDate,
   isTimeEarlier,
   isTodaySchedule,
   isYesterdaySchedule,
@@ -891,6 +892,11 @@ const DailyReportDetailBoard = () => {
 
     return smallCategories;
   }
+  // Check permission with close date
+  const isPermissionCloseDate = isCheckPermissionWithCloseDate({
+    dateA: dataDatePicker,
+    dateB: session?.user.company.startEditableDate || '',
+  });
 
   const columns: ColumnDef<dataTaskDailyTable>[] = [
     {
@@ -1374,7 +1380,11 @@ const DailyReportDetailBoard = () => {
                           : `${rowData.startedAt}`
                       }
                       type="text"
-                      disabled={!isPermissionAction || isRowParent}
+                      disabled={
+                        !isPermissionAction ||
+                        isRowParent ||
+                        !isPermissionCloseDate
+                      }
                       onBlur={(e) => {
                         if (e.target.value === rowData.startedAt) return;
                         const data = isTimeEarlier(
@@ -1414,7 +1424,8 @@ const DailyReportDetailBoard = () => {
                       disabled={
                         !isPermissionAction ||
                         isRowParent ||
-                        row.original.isRunning
+                        row.original.isRunning ||
+                        !isPermissionCloseDate
                       }
                       defaultValue={
                         isRowParent

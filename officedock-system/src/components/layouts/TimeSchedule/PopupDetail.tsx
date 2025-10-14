@@ -25,6 +25,7 @@ import { TaskTimeSchedule } from '@interfaces/task';
 type Props = {
   title: string;
   isCalculation: boolean;
+  startEditable?: boolean;
   largeColor: string;
   resourcePlan: boolean | 0 | undefined;
   isShowAction: boolean;
@@ -77,6 +78,7 @@ const PopupDetail = ({
   largeColor,
   resourcePlan,
   isShowAction,
+  startEditable,
   taskTimeScheduleList,
   setIsShowAction,
   handleChangeStartTime,
@@ -157,6 +159,11 @@ const PopupDetail = ({
               onChange={(e) => {
                 setValueStart(e.target.value);
               }}
+              disabled={
+                startEditable == false &&
+                resourcePlan == false &&
+                !isCalculation
+              }
               onBlur={(e) => {
                 if (resourcePlan) {
                   const data = isTimeEarlier(
@@ -244,6 +251,7 @@ const PopupDetail = ({
                 onChange={(e) => {
                   setValueEnd(e.target.value);
                 }}
+                disabled={startEditable == false && resourcePlan == false}
                 onBlur={(e) => {
                   if (!resourcePlan) {
                     if (isCalculation) {

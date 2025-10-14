@@ -12,5 +12,7 @@ export interface Company {
     limitPerson: number;
     monthlyFee: number;
     name: string;
-  }
+  };
+  closeDate?: number;
+  startEditableDate?: string;
 }

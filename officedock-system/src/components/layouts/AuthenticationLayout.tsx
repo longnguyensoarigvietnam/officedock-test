@@ -12,6 +12,7 @@ import { apiRouters, pageRouters } from '@constants/routers';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import api from '@base/api';
+import { hasFullPaymentPermissions } from '@utils';
 
 type AuthenticationLayoutProps = {
   children?: ReactNode;
@@ -67,10 +68,24 @@ const AuthenticationLayout = ({
                 return;
               }
             } catch (error) {
-              router.push(pageRouters.MY_PAGE.href);
+              if (
+                session &&
+                hasFullPaymentPermissions(session.user.permissions)
+              ) {
+                router.push(pageRouters.PAYMENT_MANAGEMENT.href);
+              } else {
+                router.push(pageRouters.MY_PAGE.href);
+              }
             }
           } else {
-            router.push(pageRouters.MY_PAGE.href);
+            if (
+              session &&
+              hasFullPaymentPermissions(session.user.permissions)
+            ) {
+              router.push(pageRouters.PAYMENT_MANAGEMENT.href);
+            } else {
+              router.push(pageRouters.MY_PAGE.href);
+            }
           }
         }
       }

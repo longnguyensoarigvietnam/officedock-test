@@ -400,6 +400,7 @@ const TaskCard = ({
             largeColor={largeColor}
             resourcePlan={resourcePlan}
             isShowAction={isShowAction}
+            startEditable={event.event?.startEditable}
             planStartDate={event.event?.extendedProps.planStartDate}
             planEndDate={event.event?.extendedProps.planEndDate}
             checkDeadline={checkDeadline}
