@@ -21,6 +21,7 @@ CROP_ITEM_FOLDER_UPLOAD = (
     "items/crop_items"  # Folder for crop item in shop items
 )
 ITEM_FOLDER_UPLOAD = "items/full_items"  # Folder for item in shop items
+SYSTEM_PAYMENT_ENDPOINT = "payment-management"  # Folder for item in shop items
 ALLOW_IMAGE_FORMATS = [
     "jpg",
     "jpeg",

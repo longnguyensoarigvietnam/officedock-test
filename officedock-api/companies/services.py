@@ -310,6 +310,11 @@ class CompanyService:
     ):
         """Handle company status transitions and notifications after a successful payment."""
         contract = company.contract
+        payment_methods = company.payment_methods
+        # Update default payment method when it have status failed retry
+        payment_methods.filter(is_default=True, is_retry_failed=True).update(
+            is_retry_failed=False
+        )
         # Terminate the contract when the last invoice is paid
         if company.status == CompanyStatus.CANCELLATION_PENDING.value and (
             get_a_day_in_next_month(contract.end_date, target_date=5).date()
@@ -325,7 +330,7 @@ class CompanyService:
                 responsible_name=company.responsible_person_name,
                 end_date=format_date(contract.end_date, style="jp_date"),
             )
-        elif invoice.attempt_count > 1 and company.status not in [
+        elif company.status not in [
             CompanyStatus.CONTRACT_TERMINATED.value,
             CompanyStatus.ACTIVE_CONTRACT.value,
         ]:

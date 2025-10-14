@@ -421,15 +421,6 @@ class ManagePaymentViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             CompanyService().handle_pay_invoice_failed_retry(
                 company, stripe_payment_method_id
             )
-            # Change default payment method of Stripe
-            StripeService().modify_default_payment_method(
-                company.stripe_customer_id,
-                payment_method.stripe_payment_method_id,
-            )
-            # Update default card of company
-            company.payment_methods.update(is_default=False)
-            payment_method.is_default = True
-            payment_method.save(update_fields=["is_default"])
 
         return self.response_ok(
             CompanyPaymentMethodSerializer(payment_method).data
