@@ -79,7 +79,12 @@ from tasks.constants import (
 )
 from roles.constants import Actions, Screens
 from chat.models import ChatRoom
-from companies.models import Company, CompanyPlan, CompanyTransaction
+from companies.models import (
+    Company,
+    CompanyPaymentMethod,
+    CompanyPlan,
+    CompanyTransaction,
+)
 from base.messages import ERROR_MESSAGES
 from common.services.transaction_service import TransactionService
 from common.services.cleanup_data_service import CleanupDataService
@@ -718,6 +723,11 @@ class WebhookView(BaseAPIViewSet):
             self.handle_subscription_deleted(subscription)
         elif event.type == "invoice.updated":
             self.handle_update_the_last_invoice(event.data.object)
+        elif event.type in [
+            "payment_intent.payment_failed",
+            "payment_intent.succeeded",
+        ]:
+            self.handle_status_retry_failed_of_payment_method(event.data.object)
         else:
             print(f"Unhandled event type: {event.type}")
 
@@ -728,7 +738,6 @@ class WebhookView(BaseAPIViewSet):
         Handle successful invoice payment.
         - Example: update subscription status, log event, notify user, etc.
         """
-        print(f"✅ Payment succeeded for invoice {invoice.id}")
         company_transaction = CompanyTransaction.objects.filter(
             stripe_invoice_id=invoice.id
         ).first()
@@ -761,6 +770,7 @@ class WebhookView(BaseAPIViewSet):
         self.company_service.process_company_status_after_successful_payment(
             company, invoice, period_start
         )
+        print(f"✅ Payment succeeded for invoice {invoice.id}")
 
     def handle_payment_failed(self, invoice):
         """
@@ -776,10 +786,6 @@ class WebhookView(BaseAPIViewSet):
         ).first()
         if attempt_count == THE_FIRST_RETRY_FAILED:
             payment_methods = company.payment_methods
-            # Set default payment method is false
-            current_pm = payment_methods.filter(is_default=True).update(
-                is_retry_failed=True
-            )
             next_pm = payment_methods.filter(is_retry_failed=False).first()
             # Retry if have another card
             if next_pm:
@@ -841,13 +847,7 @@ class WebhookView(BaseAPIViewSet):
                 invoice = stripe.Invoice.retrieve(transaction.stripe_invoice_id)
                 # Set the finalize of invoice
                 self.stripe_service.update_invoice_finalize(invoice, company)
-            # Clean up stripe_subscription_id in local DB
-            company.company_plan.stripe_subscription_id = None
-            company.company_plan.save(
-                update_fields=[
-                    "stripe_subscription_id",
-                ]
-            )
+
             print(f"✅ Company {company.id} cancel subscription")
 
     def handle_update_the_last_invoice(self, invoice):
@@ -866,7 +866,7 @@ class WebhookView(BaseAPIViewSet):
         company_plan = CompanyPlan.objects.filter(
             company=transaction.company
         ).first()
-        subscription = stripe.Subscription.retrieve(
+        subscription = self.stripe_service.retrieve_subscription(
             company_plan.stripe_subscription_id
         )
         if (
@@ -883,6 +883,23 @@ class WebhookView(BaseAPIViewSet):
             # Set the finalize of invoice
             self.stripe_service.update_invoice_finalize(invoice, company)
             print(f"✅ Turn on automatic payment of last invoice ")
+
+    def handle_status_retry_failed_of_payment_method(self, payment_intent):
+        """Handle and update the retry failure status of a company's payment method based on a Stripe PaymentIntent."""
+        if payment_intent.get(
+            "last_payment_error"
+        ) and payment_intent.last_payment_error.get("payment_method"):
+            last_error_pm = payment_intent.last_payment_error.get(
+                "payment_method"
+            )
+            CompanyPaymentMethod.objects.filter(
+                stripe_payment_method_id=last_error_pm["id"]
+            ).update(is_retry_failed=True)
+        elif payment_intent.payment_method:
+            CompanyPaymentMethod.objects.filter(
+                stripe_payment_method_id=payment_intent.payment_method,
+                is_retry_failed=True,
+            ).update(is_retry_failed=False)
 
 
 @extend_schema(tags=["Admin > Creation Data"])

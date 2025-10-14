@@ -348,7 +348,7 @@ class ManagePaymentViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             super()
             .get_queryset()
             .filter(company=company)
-            .order_by("-created_at")
+            .order_by("created_at")
         )
 
     @action(
