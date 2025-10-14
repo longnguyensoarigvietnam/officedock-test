@@ -21,6 +21,7 @@ from calendars.models import Schedule
 from chat.constants import WebSocketEventType
 from common.constants import (
     RETRY_PAYMENT_MAX,
+    SYSTEM_PAYMENT_ENDPOINT,
     THE_FIRST_RETRY_FAILED,
     THE_LAST_RETRY_FAILED,
     InvoiceStatus,
@@ -755,16 +756,11 @@ class WebhookView(BaseAPIViewSet):
             payment_methods = company.payment_methods
             # Set default payment method is false
             current_pm = payment_methods.filter(is_default=True).update(
-                is_retry_failed=True, is_default=False
+                is_retry_failed=True
             )
             next_pm = payment_methods.filter(is_retry_failed=False).first()
             # Retry if have another card
             if next_pm:
-                next_pm.is_default = True
-                next_pm.save(update_fields=["is_default"])
-                self.stripe_service.modify_default_payment_method(
-                    company.stripe_customer_id, next_pm.stripe_payment_method_id
-                )
                 self.stripe_service.handle_pay_invoice(
                     invoice, next_pm.stripe_payment_method_id
                 )
@@ -777,7 +773,7 @@ class WebhookView(BaseAPIViewSet):
                     usage_month=format_date(
                         period_start, style="jp_month_year"
                     ),
-                    payment_url=None,
+                    payment_url=SYSTEM_PAYMENT_ENDPOINT,
                 )
         if attempt_count == THE_LAST_RETRY_FAILED:
             self.mail_service.send_payment_failed_final(
@@ -785,7 +781,7 @@ class WebhookView(BaseAPIViewSet):
                 company_name=company.name,
                 responsible_name=company.responsible_person_name,
                 usage_month=format_date(period_start, style="jp_month_year"),
-                payment_url=None,
+                payment_url=SYSTEM_PAYMENT_ENDPOINT,
             )
         if company.status != CompanyStatus.SUSPENDED.value and (
             attempt_count == THE_FIRST_RETRY_FAILED

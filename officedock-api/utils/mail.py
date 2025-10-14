@@ -418,7 +418,7 @@ class PaymentMailService(MailService):
             <p>お手数ですが、下記よりお支払い情報をご確認・ご変更いただきますようお願いいたします。</p>
             <p>
                 ▼お支払い方法の確認・変更はこちら<br>
-                <a href="{payment_url}">{payment_url}</a>
+                <a href="{settings.SYSTEM_WEBAPP_URL}/{payment_url}">{settings.SYSTEM_WEBAPP_URL}/{payment_url}</a>
             </p>
             <p>なお、本メール配信後、システムによる決済の再試行（リトライ）が自動的に開始されます。<br>
             リトライ期間中にお支払いが確認できない場合、サービスが一時的に停止されることがございますので、お早めにご対応ください。 <br>
@@ -449,7 +449,7 @@ class PaymentMailService(MailService):
             </p>
             <p>
                 ▼お支払い手続きはこちら<br>
-                <a href="{payment_url}">{payment_url}</a>
+                <a href="{settings.SYSTEM_WEBAPP_URL}/{payment_url}">{settings.SYSTEM_WEBAPP_URL}/{payment_url}</a>
             </p>
             <p>何卒、ご理解ご協力いただけますようお願い申し上げます。</p>
         """
