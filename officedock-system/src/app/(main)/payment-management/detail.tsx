@@ -153,7 +153,7 @@ const PaymentDetail = () => {
                   formatShowDateJapanese(
                     creationDataCommonData?.company?.contract.startDate,
                   )}{' '}
-                -
+                -{' '}
                 {creationDataCommonData?.company?.contract.endDate &&
                   formatShowDateJapanese(
                     creationDataCommonData?.company?.contract.endDate,

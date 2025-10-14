@@ -271,11 +271,10 @@ const EventInfoModal = memo(
                           size={26}
                         />
                       ) : (
-                        <div className="scale-[0.9285]">
-                          <GroupIconWithDynamicColor
-                            color={orgInfo?.color || '#228CDB'}
-                          />
-                        </div>
+                        <GroupIconWithDynamicColor
+                          color={orgInfo?.color || '#228CDB'}
+                          size={26}
+                        />
                       )}
                     </div>
                   </DynamicTooltip>
@@ -433,14 +432,18 @@ const EventInfoModal = memo(
                 dataEvent.startDate &&
                 dataEvent.endDate && (
                   <div className="flex gap-1 items-center text-[14px]">
-                    <p className="text-[12px] font-medium text-[#77858F]">開始</p>
+                    <p className="text-[12px] font-medium text-[#77858F]">
+                      開始
+                    </p>
                     <p>
                       {formatHoursAndMinutesForDateTime(
                         new Date(dataEvent.startDate),
                       )}
                     </p>
                     <p className="text-[12px] mx-[2px]">~</p>
-                      <p className="text-[12px] font-medium text-[#77858F]">終了</p>
+                    <p className="text-[12px] font-medium text-[#77858F]">
+                      終了
+                    </p>
                     <p>
                       {formatHoursAndMinutesForDateTime(
                         new Date(dataEvent.endDate),

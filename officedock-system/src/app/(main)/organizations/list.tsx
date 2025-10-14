@@ -423,19 +423,19 @@ const ListOrganizations = () => {
         style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
         <Table className="bg-white !rounded-[10px] relative table-fixed">
           <TableHeader className="!bg-[#F8FAFC]">
-            <th className="text-left w-[calc(100%_-_50px)]">
+            <th className="text-left w-[calc(100%_-_40px)]">
               <span className="text-[#77858F] text-[12px] font-medium">
                 チーム名
               </span>
             </th>
-            <th className="text-left w-[50px] min-w-[50px]"></th>
+            <th className="text-left w-[40px] min-w-[40px]"></th>
           </TableHeader>
           <TableBody>
             {dataOrganizations && dataOrganizations.length ? (
               dataOrganizations.map((element, index) => (
                 <tr key={index} className="text-black">
                   <td
-                    className={`text-left w-[calc(100%_-_50px)] max-w-[calc(100%_-_50px)] ${
+                    className={`text-left w-[calc(100%_-_40px)] max-w-[calc(100%_-_40px)] !px-[18px] ${
                       selectedOrganizationToUpdate.uuid == element.uuid &&
                       selectedOrganizationToUpdate.status
                         ? '!py-[5px]'
@@ -446,7 +446,7 @@ const ListOrganizations = () => {
                       <div
                         ref={organizationNameInputRef}
                         className="flex items-center gap-[6px]">
-                        <div className="relative w-10 h-10 inline-block hover:cursor-pointer ml-[-7px]">
+                        <div className="relative w-10 h-10 inline-block hover:cursor-pointer ml-[-8px]">
                           <div className="relative">
                             {previewAvatarUrl ? (
                               <CustomUserAvatar
@@ -455,10 +455,11 @@ const ListOrganizations = () => {
                                 size={40}
                               />
                             ) : (
-                              <div className="relative ml-[7px] mt-[6px] scale-[1.4285]">
+                              <div className="relative">
                                 <GroupIconWithDynamicColor
                                   color={element.iconColor || '#228CDB'}
                                   classname="z-10"
+                                  size={40}
                                 />
                               </div>
                             )}
@@ -511,7 +512,7 @@ const ListOrganizations = () => {
                         ) : (
                           <GroupIconWithDynamicColor
                             color={element.iconColor || '#228CDB'}
-                            classname="scale-[0.857]"
+                            size={24}
                           />
                         )}{' '}
                         <p className="break-all w-[calc(100%_-_50px)] text-[16px] font-medium text-[#000000] leading-none">
@@ -521,7 +522,7 @@ const ListOrganizations = () => {
                     )}
                   </td>
                   <td>
-                    <div className="flex w-[50px] break-words gap-3 justify-center">
+                    <div className="flex w-[40px] break-words gap-2 justify-center">
                       {session?.user.permissions &&
                       !(
                         selectedOrganizationToUpdate.action ==
@@ -536,7 +537,7 @@ const ListOrganizations = () => {
                           <ImageRound
                             name="Edit"
                             src={'/icons/edit-gray.svg'}
-                            className={`w-3.5 h-3.5 edit-icon ${
+                            className={`w-3 h-3 edit-icon ${
                               selectedOrganizationToUpdate.uuid !=
                                 element.uuid &&
                               selectedOrganizationToUpdate.status
@@ -576,7 +577,7 @@ const ListOrganizations = () => {
                           />
                         </button>
                       ) : (
-                        <div className="w-3.5"></div>
+                        <div className="w-3"></div>
                       )}
                       {session?.user.permissions &&
                       hasPermissionInArray(
@@ -586,7 +587,7 @@ const ListOrganizations = () => {
                         <ImageRound
                           name="Delete"
                           src={'/icons/delete-gray.svg'}
-                          className={`w-[13px] h-[15px] delete-icon ${
+                          className={`w-[12px] h-[14px] delete-icon ${
                             selectedOrganizationToUpdate.uuid != element.uuid &&
                             selectedOrganizationToUpdate.status
                               ? 'hover:cursor-not-allowed'

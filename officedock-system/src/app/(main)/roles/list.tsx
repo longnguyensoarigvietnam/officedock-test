@@ -199,7 +199,7 @@ const ListRoles = () => {
                     </p>
                   </td>
                   <td className="w-[220px]">
-                    <div className="flex w-full gap-4 justify-end pr-3 items-center">
+                    <div className="flex w-full gap-2 justify-end pr-3 items-center">
                       {showUpdateIcon(element?.systemRole || false) ? (
                         <Link
                           onClick={() => {
@@ -208,22 +208,22 @@ const ListRoles = () => {
                           href={pageRouters.EDIT_ROLE.href(`${element.id}`)}>
                           <ImageRound
                             name="Edit"
-                            src={'/icons/edit-gray.svg'}
-                            className={`w-3.5 h-3.5 hover:cursor-pointer opacity-45`}
+                            src={'/icons/edit.svg'}
+                            className={`w-3 h-3 hover:cursor-pointer opacity-45`}
                           />
                         </Link>
                       ) : (
-                        <div className="w-3.5 h-3.5"></div>
+                        <div className="w-3 h-3"></div>
                       )}
                       {showDeleteIcon(element?.systemRole || false) ? (
                         <ImageRound
                           name="Delete"
-                          src={'/icons/delete-gray.svg'}
-                          className="w-[13px] h-[15px] hover:cursor-pointer"
+                          src={'/icons/delete.svg'}
+                          className="w-[12px] h-[14px] hover:cursor-pointer"
                           onClick={() => handleOpenDeleteRoleModal(element)}
                         />
                       ) : (
-                        <div className="w-[13px]"></div>
+                        <div className="w-[12px]"></div>
                       )}
                       <Link
                         href={pageRouters.DETAIL_ROLE.href(`${element.id}`)}>
@@ -234,7 +234,7 @@ const ListRoles = () => {
                           <ImageRound
                             name="Detail"
                             src={'/icons/detail-gray.svg'}
-                            className="w-[13px] h-[15px] hover:cursor-pointer"
+                            className="w-[18px] h-[18px] hover:cursor-pointer"
                           />
                         </div>
                       </Link>

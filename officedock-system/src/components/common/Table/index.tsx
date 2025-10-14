@@ -18,7 +18,7 @@ export const TableHeader = ({
   return (
     <thead className={`bg-gray-100 static top-0 ${className}`}>
       <tr
-        className={`[&>th]:text-gray-700 [&>th]:font-medium [&>th]:text-base [&>th]:py-3 [&>th]:pr-2 [&>th]:pl-4 ${classCustom}`}>
+        className={`[&>th]:text-gray-700 [&>th]:font-medium [&>th]:text-base [&>th]:py-3 [&>th]:pr-2 [&>th]:pl-[18px] ${classCustom}`}>
         {children}
       </tr>
     </thead>

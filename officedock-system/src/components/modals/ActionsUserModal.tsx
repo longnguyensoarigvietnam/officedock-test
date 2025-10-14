@@ -493,6 +493,7 @@ const ActionsUserModal = ({
                   const currentTitle = getValues('name');
                   if (action == ActionsEvent.CREATE) {
                     reset();
+                    setSelectedRoleOptions([])
                     setValue('name', currentTitle);
                     setSelectedOrganizationOptions([]);
                     setOptionEmail(true);
@@ -514,8 +515,8 @@ const ActionsUserModal = ({
 
                   if (action == ActionsEvent.CREATE) {
                     reset();
+                    setSelectedRoleOptions([])
                     setValue('name', currentTitle);
-
                     setSelectedOrganizationOptions([]);
                     setOptionEmail(false);
                   }

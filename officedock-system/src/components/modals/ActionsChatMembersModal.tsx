@@ -508,11 +508,10 @@ const ActionsChatMembersModal = memo(
                                   size={30}
                                 />
                               ) : (
-                                <div className="scale-[1.0714]">
-                                  <GroupIconWithDynamicColor
-                                    color={member.color || '#0068B6'}
-                                  />
-                                </div>
+                                <GroupIconWithDynamicColor
+                                  color={member.color || '#228CDB'}
+                                  size={30}
+                                />
                               )}
                             </>
                           )}

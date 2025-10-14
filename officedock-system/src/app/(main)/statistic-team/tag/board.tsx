@@ -591,7 +591,7 @@ const StatisticTeamTagBoard = () => {
       <div className="flex items-start justify-between">
         <div className="flex items-start">
           {selectedOrganizationSideBar?.imgComponent && (
-            <div className="rounded-full w-[34px] h-[34px] scale-125 min-w-[34px] flex items-center justify-center overflow-hidden">
+            <div className="rounded-full w-[34px] h-[34px] scale-[1.4167] min-w-[34px] flex items-center justify-center overflow-hidden">
               {selectedOrganizationSideBar?.imgComponent}
             </div>
           )}

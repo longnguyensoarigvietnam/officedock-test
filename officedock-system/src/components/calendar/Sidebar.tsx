@@ -155,9 +155,11 @@ export const CalendarSidebar = ({
           </div>
         </div>
       </div>
-      <div className="py-3 mb-5 rounded-md bg-white" style={{
-        boxShadow: '0px 4px 8px 0px #0000000F'
-      }}>
+      <div
+        className="py-3 mb-5 rounded-md bg-white"
+        style={{
+          boxShadow: '0px 4px 8px 0px #0000000F',
+        }}>
         <InputSearch
           placeholder="名前で検索"
           className="w-[100%] px-3"
@@ -262,7 +264,7 @@ export const CalendarSidebar = ({
                         <>{renderAvatar(String(member.id))}</>
                       )}
                       {member.type == EventParticipantType.ORGANIZATION && (
-                        <>
+                        <div className='w-[30px]'>
                           {member.avatarUrl ? (
                             <CustomUserAvatar
                               avatarUrl={member?.avatarUrl || ''}
@@ -270,13 +272,12 @@ export const CalendarSidebar = ({
                               size={30}
                             />
                           ) : (
-                            <div className="scale-[1.0714]">
-                              <GroupIconWithDynamicColor
-                                color={member.color || '#0068B6'}
-                              />
-                            </div>
+                            <GroupIconWithDynamicColor
+                              color={member.color || '#0068B6'}
+                              size={30}
+                            />
                           )}
-                        </>
+                        </div>
                       )}
                       <div className="!w-full">
                         <p className="line-clamp-3 break-all font-medium leading-none text-[15px] text-black">

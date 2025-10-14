@@ -172,10 +172,13 @@ const Sidebar = ({ className }: Props) => {
             <CustomUserAvatar
               avatarUrl={org.icon}
               avatarColor={org.iconColor || '#228CDB'}
-              size={28}
+              size={24}
             />
           ) : (
-            <GroupIconWithDynamicColor color={org.iconColor || '#228CDB'} />
+            <GroupIconWithDynamicColor
+              color={org.iconColor || '#228CDB'}
+              size={24}
+            />
           ),
         })),
       ]);
@@ -187,10 +190,13 @@ const Sidebar = ({ className }: Props) => {
             <CustomUserAvatar
               avatarUrl={org.icon}
               avatarColor={org.iconColor || '#228CDB'}
-              size={28}
+              size={24}
             />
           ) : (
-            <GroupIconWithDynamicColor color={org.iconColor || '#228CDB'} />
+            <GroupIconWithDynamicColor
+              color={org.iconColor || '#228CDB'}
+              size={24}
+            />
           ),
         })),
       ]);

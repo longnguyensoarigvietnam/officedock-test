@@ -33,7 +33,10 @@ const GroupMember = ({ item, onClickMember }: DataGroupMemberProps) => {
               size={30}
             />
           ) : (
-              <GroupIconWithDynamicColor color={item.iconColor || '#228CDB'} />
+            <GroupIconWithDynamicColor
+              color={item.iconColor || '#228CDB'}
+              size={30}
+            />
           )}
 
           <p className="text-[18px] break-all line-clamp-3 max-w-[500px]">
