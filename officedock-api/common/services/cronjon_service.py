@@ -99,18 +99,19 @@ class CronJobService:
                 )
 
                 data_to_create = []
-                # Reset coin
-                data_to_create.append(
-                    TransactionHistory(
-                        currency=CurrencyEnums.COIN.value,
-                        amount_used=company.coins_remaining,
-                        amount_received=0,
-                        company_balance_after=0,
-                        transaction_type=TransactionTypes.PLAN_AUTO_EXPIRE.value,
-                        memo=TransactionTypes.PLAN_AUTO_EXPIRE.value,
-                        company=company,
+                if company.target_user_count <= 0:
+                    # Reset coin
+                    data_to_create.append(
+                        TransactionHistory(
+                            currency=CurrencyEnums.COIN.value,
+                            amount_used=company.coins_remaining,
+                            amount_received=0,
+                            company_balance_after=0,
+                            transaction_type=TransactionTypes.PLAN_AUTO_EXPIRE.value,
+                            memo=TransactionTypes.PLAN_AUTO_EXPIRE.value,
+                            company=company,
+                        )
                     )
-                )
 
                 # Receive coin
                 data_to_create.append(
