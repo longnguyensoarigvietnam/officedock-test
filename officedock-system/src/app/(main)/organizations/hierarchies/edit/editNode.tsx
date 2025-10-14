@@ -574,7 +574,8 @@ export default function EditNode() {
           <Button
             type="button"
             onClick={handleSaveChangeNode}
-            className="w-[100px] h-[34px] !text-[14px] !px-2 ">
+            className="w-[100px] h-[34px] !text-[14px] !px-2 "
+            style={{ boxShadow: '0px 1px 5px 0px #00000033' }}>
             保存
           </Button>
         </div>

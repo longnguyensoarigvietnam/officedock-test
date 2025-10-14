@@ -50,6 +50,7 @@ const ListData = () => {
     options: {
       get_all_organizations: true,
     },
+    screenName: 'team_daily_report',
     onSuccess: (data) => {
       if (data.allOrganizations) {
         setOrganizationList([

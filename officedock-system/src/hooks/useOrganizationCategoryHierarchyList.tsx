@@ -34,7 +34,7 @@ const useOrganizationCategoryHierarchyList = ({
   const getOrganizationCategoryHierarchyList = async () => {
     setIsLoading(true);
 
-    const apiUrl = `${apiRouters.ORGANIZATION_CATEGORY_HIERARCHY_LIST}?current_screen=all`;
+    const apiUrl = `${apiRouters.ORGANIZATION_CATEGORY_HIERARCHY_LIST}`;
 
     const { data } =
       await api.get<OrganizationCategoryHierarchyDetail[]>(apiUrl);

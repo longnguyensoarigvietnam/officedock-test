@@ -338,7 +338,10 @@ const ListLocation = () => {
           <p className="text-[#77858F] font-medium text-sm pl-1">
             予定場所登録
           </p>
-          <Button className="w-[100px] !p-0 !h-[34px]" onClick={handleCreate}>
+          <Button
+            className="w-[100px] h-[34px] !text-sm !text-nowrap !text-white border-none"
+            style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
+            onClick={handleCreate}>
             <ImageRound
               src="/icons/add-with-background.svg"
               name="Add icon"
@@ -384,11 +387,11 @@ const ListLocation = () => {
                     </div>
                   </td>
                   <td>
-                    <div className="flex w-[50px] break-words gap-3 justify-center">
+                    <div className="flex w-[50px] break-words gap-2 justify-center">
                       <ImageRound
                         name="Edit"
                         src={'/icons/edit-gray.svg'}
-                        className={`w-3.5 h-3.5 hover:cursor-pointer ${editingId == item.uuid ? '' : 'opacity-45'}`}
+                        className={`w-3 h-3 hover:cursor-pointer ${editingId == item.uuid ? '' : 'opacity-30'}`}
                         onClick={() => {
                           if (isEditing || isCreating) return;
                           setIsEditing(true);
@@ -398,7 +401,7 @@ const ListLocation = () => {
                       <ImageRound
                         name="Delete"
                         src={'/icons/delete-gray.svg'}
-                        className="w-[13px] h-[15px] hover:cursor-pointer"
+                        className="w-[12px] h-[14px] hover:cursor-pointer"
                         onMouseDown={(e) => {
                           if (isCreating) {
                             e.preventDefault();

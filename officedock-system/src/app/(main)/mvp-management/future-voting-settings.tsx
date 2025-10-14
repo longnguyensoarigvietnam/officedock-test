@@ -210,13 +210,13 @@ export const FutureVotingSettings = () => {
         });
         setOpenActionsVotingModal(false);
         createVotingLocal(data, VotingManagementType.UPCOMING);
-        setVotingDateTimeErrorMsg(null)
+        setVotingDateTimeErrorMsg(null);
         handleRemoveParam();
       },
       onError: (data: any) => {
         const error = data.response.data;
         if (error && error.endDate) {
-          setVotingDateTimeErrorMsg(ERROR_WRONG_DATE_VOTING)
+          setVotingDateTimeErrorMsg(ERROR_WRONG_DATE_VOTING);
         } else {
           showToast({
             variant: 'error',
@@ -268,13 +268,13 @@ export const FutureVotingSettings = () => {
         updateVotingLocal(data, VotingManagementType.UPCOMING);
         handleRemoveParam();
         setSelectedVotingIdToUpdate(null);
-        setVotingDateTimeErrorMsg(null)
+        setVotingDateTimeErrorMsg(null);
         setDataVotingEdit(null);
       },
       onError: (data: any) => {
         const error = data.response.data;
         if (error && error.endDate) {
-          setVotingDateTimeErrorMsg(ERROR_WRONG_DATE_VOTING)
+          setVotingDateTimeErrorMsg(ERROR_WRONG_DATE_VOTING);
         } else {
           showToast({
             variant: 'error',
@@ -383,7 +383,8 @@ export const FutureVotingSettings = () => {
         <div className="flex items-center justify-between mb-[30px]">
           <p className="text-lg font-semibold">今後の投票設定</p>
           <Button
-            className="w-[100px] h-[34px] !text-sm !text-nowrap !text-white"
+            className="w-[100px] h-[34px] !text-sm !text-nowrap !text-white border-none"
+            style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
             onClick={() => {
               setOpenActionsVotingModal(true);
               handleSetParam({
@@ -427,8 +428,8 @@ export const FutureVotingSettings = () => {
                       <div className="flex items-center gap-2 w-10">
                         <ImageRound
                           name="Edit"
-                          src={`/icons/edit.svg`}
-                          className={`w-[14px] h-[14px] hover:cursor-pointer`}
+                          src={`/icons/${element.id == selectedVotingIdToUpdate ? 'edit-gray' : 'edit'}.svg`}
+                          className={`w-[12px] h-[12px] hover:cursor-pointer`}
                           onClick={() => {
                             setSelectedVotingIdToUpdate(Number(element.id));
                           }}
@@ -436,7 +437,7 @@ export const FutureVotingSettings = () => {
                         <ImageRound
                           name="Delete"
                           src={'/icons/delete.svg'}
-                          className={`w-[13px] h-[15px] hover:cursor-pointer`}
+                          className={`w-[12px] h-[14px] hover:cursor-pointer`}
                           onClick={() =>
                             setSelectedVotingToDelete({
                               id: element.id as number,
@@ -549,7 +550,7 @@ export const FutureVotingSettings = () => {
             handleRemoveParam();
             setDataVotingEdit(null);
             setSelectedVotingIdToUpdate(null);
-            setVotingDateTimeErrorMsg(null)
+            setVotingDateTimeErrorMsg(null);
           }}
           onCreate={(data) => {
             handleConfirmCreateVoting(data);
@@ -564,7 +565,7 @@ export const FutureVotingSettings = () => {
             });
             setDataVotingEdit(null);
             setOpenActionsVotingModal(false);
-            setVotingDateTimeErrorMsg(null)
+            setVotingDateTimeErrorMsg(null);
             handleRemoveParam();
           }}
         />

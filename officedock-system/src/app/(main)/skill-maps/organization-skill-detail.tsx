@@ -423,8 +423,8 @@ export const OrganizationSkillDetail = ({
                 }}
                 style={
                   isActive
-                    ? { backgroundColor: step.color, color: 'white' }
-                    : { color: step.color, backgroundColor: '#EBF1F7' }
+                    ? { background: step.color, color: 'white' }
+                    : { color: step.color, background: '#EBF1F7' }
                 }
                 className="w-[70px] text-center py-[4px] !px-0 border-none !rounded-[20px] text-xs">
                 {step.label}
@@ -438,7 +438,8 @@ export const OrganizationSkillDetail = ({
             PermissionsSystem.SKILL_MAP_MANAGEMENT_ADD,
           ) && (
             <Button
-              className="!py-[4px] !px-3 !h-[30px]"
+              className="w-[100px] h-[34px] !text-sm !text-nowrap !text-white border-none"
+              style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
               onClick={() => {
                 setOpenSkillMapActionsModal(true);
                 handleSetParam({

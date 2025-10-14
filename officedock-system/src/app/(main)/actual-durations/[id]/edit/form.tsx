@@ -1203,6 +1203,7 @@ const EditActualDurationsForm = () => {
       <div className="w-full flex items-center gap-2 mt-0 flex-col mb-3">
         <Button
           className="w-[426px]"
+          style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
           onClick={handleSubmit(handleSubmitEditActualDuration)}>
           保存
         </Button>

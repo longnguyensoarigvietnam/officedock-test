@@ -225,6 +225,7 @@ const EditRoleForm = () => {
           <Button
             variant="primary"
             className="w-[100px] !p-0 !h-[34px]"
+            style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
             onClick={handleConfirmEditRole}>
             保存
           </Button>

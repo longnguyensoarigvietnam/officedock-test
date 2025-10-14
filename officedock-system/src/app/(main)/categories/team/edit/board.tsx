@@ -104,6 +104,7 @@ const EditHierarchyForm = () => {
       get_organization_skills: true,
       get_all_organizations: true,
     },
+    screenName: 'category_hierarchy',
     onSuccess: (data) => {
       if (data.statisticCategories) {
         const options = data.statisticCategories.map((category) => {
@@ -412,7 +413,8 @@ const EditHierarchyForm = () => {
             </Link>
             <Button
               variant="primary"
-              className="w-[100px] !p-0 !h-[34px]"
+              className="w-[100px] !p-0 !h-[34px] border-none"
+              style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
               disabled={isTyping}
               onClick={handleConfirmUpdateOrganizationCategoryHierarchy}>
               保存
