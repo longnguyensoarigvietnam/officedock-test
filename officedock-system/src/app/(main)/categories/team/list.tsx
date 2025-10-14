@@ -145,6 +145,7 @@ const ListHierarchy = () => {
 
   useOrganizationCategoryHierarchyList({
     conditions: [Boolean(selectedOrganizationOption.value == '')],
+    currentScreen: 'all',
     onSuccess: async (data) => {
       const receivedHierarchyList = data.map((result) => ({
         id: result.id,

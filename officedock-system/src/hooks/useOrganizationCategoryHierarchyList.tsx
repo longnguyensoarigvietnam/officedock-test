@@ -14,6 +14,7 @@ import api from '@base/api';
 
 interface UseOrganizationCategoryHierarchyListProps {
   conditions?: boolean[];
+  currentScreen?: string;
   onSuccess?: (success: OrganizationCategoryHierarchyDetail[]) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
@@ -21,6 +22,7 @@ interface UseOrganizationCategoryHierarchyListProps {
 
 const useOrganizationCategoryHierarchyList = ({
   conditions,
+  currentScreen,
   onSuccess,
   onError,
   onSettled,
@@ -34,7 +36,7 @@ const useOrganizationCategoryHierarchyList = ({
   const getOrganizationCategoryHierarchyList = async () => {
     setIsLoading(true);
 
-    const apiUrl = `${apiRouters.ORGANIZATION_CATEGORY_HIERARCHY_LIST}`;
+    const apiUrl = `${apiRouters.ORGANIZATION_CATEGORY_HIERARCHY_LIST}${currentScreen ? `?current_screen=${currentScreen}` : ''}`;
 
     const { data } =
       await api.get<OrganizationCategoryHierarchyDetail[]>(apiUrl);
