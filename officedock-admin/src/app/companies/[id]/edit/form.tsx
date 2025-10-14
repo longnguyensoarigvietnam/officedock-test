@@ -314,8 +314,14 @@ const EditCompanyForm = () => {
           item.value == OTHER_OPTION_VALUE ? item.other || '' : item.value,
         ) as string[],
       },
-      closeDate: data.closeDate?.value as number,
-      editableAfterClosing: data.editableAfterClosing?.value as number,
+      closeDate:
+        companyDetail?.totalUsers && companyDetail?.totalUsers > 0
+          ? undefined
+          : (data.closeDate?.value as number),
+      editableAfterClosing:
+        companyDetail?.totalUsers && companyDetail?.totalUsers > 0
+          ? undefined
+          : (data.editableAfterClosing?.value as number),
     });
   };
 
