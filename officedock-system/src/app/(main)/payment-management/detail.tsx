@@ -107,9 +107,10 @@ const PaymentDetail = () => {
       },
     },
   );
-  const allFailed = paymentList?.results.every(
-    (card) => card.isRetryFailed === true,
-  );
+  const allFailed =
+    paymentList?.results &&
+    paymentList?.results.length > 0 &&
+    paymentList?.results.every((card) => card.isRetryFailed === true);
 
   return (
     <>

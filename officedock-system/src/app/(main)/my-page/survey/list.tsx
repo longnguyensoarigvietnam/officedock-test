@@ -307,15 +307,10 @@ const SurveyListPage = () => {
                         boxShadow: '0px 4px 0px 0px #355AC940',
                       }}
                       className="flex mt-4 w-[194px] h-[52px] cursor-pointer hover:opacity-80 rounded-[10px] text-white items-center justify-center gap-[10px]">
-                      {/* <ImageRound
-                        name="Heart icon"
-                        src={'/icons/heart.svg'}
-                        className={`w-7 h-7 `}
-                      /> */}
                       <ImageRound
                         name="Survey icon"
                         src={'/icons/rounded-survey.svg'}
-                        className={`w-7 h-7`}
+                        className={`!w-fit !h-fit  flex-shrink-0 !rounded-none`}
                       />
                       <p>アンケートを作る</p>
                     </div>
