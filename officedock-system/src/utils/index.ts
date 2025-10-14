@@ -2471,6 +2471,9 @@ export function getRootPSpanData(html: string) {
   return { data: allData };
 }
 export function attachUuidToAllP(html: string, listFiles: string[]): string {
+  if (!html || html.trim() === '') {
+    html = '<p></p>';
+  }
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
 

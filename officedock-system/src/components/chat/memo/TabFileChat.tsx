@@ -16,7 +16,7 @@ import { apiRouters } from '@constants/routers';
 
 import useChatFileMemoChat from '@hooks/useChatFileMemoChat';
 
-import { getTruncatedFileName, handleDownloadFile } from '@utils';
+import { getFileURL, getTruncatedFileName, handleDownloadFile } from '@utils';
 import { ChatMessageResponse, DataChatFileMemo } from '@interfaces/chat';
 import api from '@base/api';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
@@ -163,7 +163,7 @@ const TabFileChat = ({
                 className={`flex gap-[10px] w-full relative group items-center border-b py-[10px] border-[#CED8DE]`}>
                 {isImage ? (
                   <ImageRound
-                    src={originalFile}
+                    src={getFileURL(originalFile || '')}
                     className="w-10 h-10 object-cover rounded border"
                     name={fileName}
                   />
@@ -193,7 +193,10 @@ const TabFileChat = ({
                       onClick={() => {
                         if (initialLoad) return;
                         onGotoMessage({
-                          messageId: file.chatMessageId,
+                          messageId:
+                            file.chatMessages.length > 0
+                              ? file.chatMessages[0].id
+                              : '',
                         });
                       }}
                     />
@@ -204,7 +207,10 @@ const TabFileChat = ({
                       className="w-fit h-fit object-cover cursor-pointer hover:opacity-75"
                       name={fileName}
                       onClick={() =>
-                        handleDownloadFile(file.originalFile, file.fileName)
+                        handleDownloadFile(
+                          getFileURL(originalFile || ''),
+                          file.fileName,
+                        )
                       }
                     />
                   </DynamicTooltip>
@@ -216,7 +222,9 @@ const TabFileChat = ({
                       onClick={() =>
                         handleDeleteFileChart(
                           String(file.uuid),
-                          file.chatMessageUuid,
+                          file.chatMessages.length > 0
+                            ? file.chatMessages[0].uuid
+                            : '',
                         )
                       }
                     />

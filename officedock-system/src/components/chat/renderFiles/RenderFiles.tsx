@@ -47,15 +47,16 @@ const RenderFiles = ({
     <div className="flex flex-col gap-2 !w-[100%]">
       {messageDetail?.chatFiles &&
         messageDetail?.chatFiles.length > 0 &&
-        messageDetail?.chatFiles.map((file, index) => {
+        messageDetail?.chatFiles.map((file) => {
           const uuidArray = uuidList.map((item) => item.uuid);
 
           if (uuidArray.includes(file.uuid)) {
-            const newFile = uuidList.find((data) => data.uuid);
+            const newFile = uuidList.find((data) => data.uuid === file.uuid);
+
             if (!newFile) return null;
             return (
               <div
-                key={index}
+                key={newFile.uuid}
                 className="flex justify-between items-center !w-[100%]">
                 <div className="bg-white border-[#D2DBE1] border-[1px] rounded-[6px] p-[14px] flex gap-2 items-center !w-[calc(100%_-_100px)]">
                   {newFile.fileType.includes('image') && (
@@ -79,7 +80,7 @@ const RenderFiles = ({
                         ? 'max-w-[calc(100%_-_200px)]'
                         : 'max-w-[calc(100%)]'
                     }`}>
-                    {newFile.fileName}
+                    {newFile.fileName}222
                   </p>
                 </div>
                 {(newFile.fileType.includes('image') ||
@@ -112,7 +113,7 @@ const RenderFiles = ({
           if (uuidMain && uuidMain.includes(file.uuid)) {
             return (
               <div
-                key={index}
+                key={file.uuid}
                 className="flex justify-between items-center !w-[100%]">
                 <div className="bg-white border-[#D2DBE1] border-[1px] rounded-[6px] p-[14px] flex gap-2 items-center !w-[calc(100%_-_100px)]">
                   {file.fileType.includes('image') && (

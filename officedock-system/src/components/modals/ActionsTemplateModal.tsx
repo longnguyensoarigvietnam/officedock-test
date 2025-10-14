@@ -794,7 +794,7 @@ const ActionsTemplateModal = ({
                 render={({ field: { value, onChange } }) => {
                   return (
                     <Dropdown
-                      placeholder="大カテゴリー"
+                      placeholder="大カテゴリ"
                       className="h-[34px] !py-1 text-sm !border-[#77858F] rounded-md !shadow-none"
                       classNameTextData="!text-sm"
                       classNameOption="!text-sm"
