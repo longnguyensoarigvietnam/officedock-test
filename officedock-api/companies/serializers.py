@@ -249,6 +249,9 @@ class RetrieveCompanySerializer(CompanySerializer):
     """
 
     payment_method = serializers.SerializerMethodField(read_only=True)
+    stripe_subscription_id = serializers.CharField(
+        read_only=True, source="company_plan.stripe_subscription_id"
+    )
 
     class Meta:
         model = Company
@@ -266,6 +269,7 @@ class RetrieveCompanySerializer(CompanySerializer):
             "responsible_person_name",
             "close_date",
             "editable_after_closing",
+            "stripe_subscription_id",
         ]
 
     def get_payment_method(self, instance):
