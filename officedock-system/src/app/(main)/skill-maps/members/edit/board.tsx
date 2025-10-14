@@ -187,7 +187,8 @@ const EditSkillMapByMemberBoard = () => {
             </Link>
             <Button
               variant="primary"
-              className="w-[100px] !p-0 !h-[34px]"
+              className="w-[100px] !p-0 !h-[34px] !border-none"
+              style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
               onClick={handleConfirmUpdateSkillMapByUsers}>
               保存
             </Button>

@@ -662,7 +662,8 @@ const ListUsers = () => {
               PermissionsSystem.USER_ADD,
             ) && (
               <Button
-                className="w-[120px]"
+                className="w-[100px] h-[34px] !text-sm !text-nowrap border-none"
+                style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
                 onClick={() => {
                   setOpenActionsUserModal(true);
                   handleSetParam({

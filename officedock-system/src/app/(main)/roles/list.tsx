@@ -164,7 +164,9 @@ const ListRoles = () => {
           ) && (
             <div className="flex justify-end">
               <Link href={pageRouters.CREATE_ROLE.href} className={'flex'}>
-                <Button className="w-[100px] !p-0">
+                <Button
+                  className="w-[100px] h-[34px] !text-sm !text-nowrap !text-white border-none"
+                  style={{ boxShadow: '0px 1px 5px 0px #00000033' }}>
                   <ImageRound
                     src="/icons/add-with-background.svg"
                     name="Add icon"
@@ -208,8 +210,8 @@ const ListRoles = () => {
                           href={pageRouters.EDIT_ROLE.href(`${element.id}`)}>
                           <ImageRound
                             name="Edit"
-                            src={'/icons/edit.svg'}
-                            className={`w-3 h-3 hover:cursor-pointer opacity-45`}
+                            src={'/icons/edit-gray.svg'}
+                            className={`w-3 h-3 hover:cursor-pointer opacity-30`}
                           />
                         </Link>
                       ) : (

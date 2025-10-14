@@ -17,6 +17,7 @@ interface useCreationDataCommonHooksProps {
   condition?: boolean[];
   organizationId?: string;
   userId?: string | number;
+  screenName?: string;
   options?: {
     get_all_members?: boolean;
     get_all_organizations?: boolean;
@@ -53,6 +54,7 @@ interface useCreationDataCommonHooksProps {
 const useCreationDataCommon = ({
   organizationId,
   userId,
+  screenName,
   options,
   condition,
   onSuccess,
@@ -68,6 +70,7 @@ const useCreationDataCommon = ({
 
     if (organizationId) params.append('organization_id', organizationId);
     if (userId) params.append('user_id', String(userId));
+    if (screenName) params.append('screen_name', String(screenName));
 
     if (options) {
       Object.entries(options).forEach(([key, value]) => {

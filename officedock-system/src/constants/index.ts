@@ -455,7 +455,7 @@ export const SKILL_MAP_LEVEL_COUNT = 3;
 
 export const SKILL_MAP_STEPS = [
   { label: 'STEP 1', color: '#36ACDE' },
-  { label: 'STEP 2', color: '#0068B6' },
+  { label: 'STEP 2', color: '#228CDB' },
   { label: 'STEP 3', color: '#424EC1' },
 ];
 

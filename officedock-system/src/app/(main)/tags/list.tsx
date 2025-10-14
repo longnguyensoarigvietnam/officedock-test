@@ -584,7 +584,8 @@ const ListTags = () => {
               PermissionsSystem.TAG_ADD,
             ) && (
               <Button
-                className="w-[120px]"
+                className="w-[100px] h-[34px] !text-sm !text-nowrap !text-white border-none"
+                style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
                 onClick={() => {
                   setOpenActionsTagModal(true);
                   handleSetParam({
@@ -625,7 +626,7 @@ const ListTags = () => {
                       <p className="text-left max-w-[350px] truncate text-[16px] font-medium">
                         {element.name}
                       </p>
-                      <div className="flex gap-3 justify-end">
+                      <div className="flex gap-2 justify-end">
                         {element.actions?.update ? (
                           <div
                             onClick={() => {
@@ -634,11 +635,11 @@ const ListTags = () => {
                             <ImageRound
                               name="Edit"
                               src={'/icons/edit-gray.svg'}
-                              className={`w-3.5 h-3.5 hover:cursor-pointer ${selectedTagToUpdate != element.id && 'opacity-45'}`}
+                              className={`w-3 h-3 hover:cursor-pointer ${selectedTagToUpdate != element.id && 'opacity-30'}`}
                             />
                           </div>
                         ) : (
-                          <div className="w-3.5"></div>
+                          <div className="w-3"></div>
                         )}
                         {element.actions?.update ? (
                           <div
@@ -662,11 +663,11 @@ const ListTags = () => {
                           <ImageRound
                             name="Delete"
                             src={'/icons/delete-gray.svg'}
-                            className="w-[13px] h-[15px] hover:cursor-pointer"
+                            className="w-[12px] h-[14px] hover:cursor-pointer"
                             onClick={() => handleOpenDeleteTagModal(element)}
                           />
                         ) : (
-                          <div className="w-[13px]"></div>
+                          <div className="w-[12px]"></div>
                         )}
                       </div>
                     </div>
@@ -772,7 +773,7 @@ const ListTags = () => {
             handleConfirmEditTag(data);
           }}
           onDelete={(data) => {
-            setSelectedTagToUpdate(null)
+            setSelectedTagToUpdate(null);
             handleOpenDeleteTagModal(data);
             setDataTagEdit(null);
             setOpenActionsTagModal(false);

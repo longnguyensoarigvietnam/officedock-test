@@ -358,7 +358,8 @@ const ListCategory = () => {
             PermissionsSystem.CATEGORY_ADD,
           ) && (
             <Button
-              className="w-[100px] !p-0"
+              className="w-[100px] h-[34px] !text-sm !text-nowrap !text-white border-none"
+              style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
               onClick={() => {
                 const hasEmptyCategory = dataCategories.some(
                   (category) => category.name.trim() === '',
@@ -461,12 +462,12 @@ const ListCategory = () => {
                             <ImageRound
                               name="Edit"
                               src={'/icons/edit-gray.svg'}
-                              className={`w-3.5 h-3.5 edit-icon ${
+                              className={`w-3 h-3 edit-icon ${
                                 selectedCategoryToUpdate.uuid != element.uuid &&
                                 selectedCategoryToUpdate.status
                                   ? 'hover:cursor-not-allowed'
                                   : 'hover:cursor-pointer'
-                              } ${(!(selectedCategoryToUpdate.uuid == element.uuid) || selectedCategoryToUpdate.action == ActionsModal.CREATE) && 'opacity-45'}`}
+                              } ${(!(selectedCategoryToUpdate.uuid == element.uuid) || selectedCategoryToUpdate.action == ActionsModal.CREATE) && 'opacity-30'}`}
                               onClick={() => {
                                 if (
                                   selectedCategoryToUpdate.uuid !=
@@ -499,7 +500,7 @@ const ListCategory = () => {
                             />
                           </div>
                         ) : (
-                          <div className="w-3.5"></div>
+                          <div className="w-3"></div>
                         )}
                         {session?.user.permissions &&
                         hasPermissionInArray(
@@ -509,7 +510,7 @@ const ListCategory = () => {
                           <ImageRound
                             name="Delete"
                             src={'/icons/delete-gray.svg'}
-                            className={`w-[13px] h-[15px] delete-icon ${
+                            className={`w-[12px] h-[14px] delete-icon ${
                               selectedCategoryToUpdate.uuid != element.uuid &&
                               selectedCategoryToUpdate.status
                                 ? 'hover:cursor-not-allowed'

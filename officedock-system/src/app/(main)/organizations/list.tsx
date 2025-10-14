@@ -543,7 +543,7 @@ const ListOrganizations = () => {
                               selectedOrganizationToUpdate.status
                                 ? 'hover:cursor-not-allowed'
                                 : 'hover:cursor-pointer'
-                            } ${!(selectedOrganizationToUpdate.uuid == element.uuid) && 'opacity-45'}`}
+                            } ${!(selectedOrganizationToUpdate.uuid == element.uuid) && 'opacity-30'}`}
                             onClick={() => {
                               if (
                                 selectedOrganizationToUpdate.uuid !=
