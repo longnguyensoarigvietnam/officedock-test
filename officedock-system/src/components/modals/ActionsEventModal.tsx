@@ -187,7 +187,7 @@ const ActionsEventModal = ({
               type: EventParticipantType.ORGANIZATION,
               userIds: org.users ? org.users.map((user) => user.id) : [],
               color: org.iconColor || '#228CDB',
-              avatarUrl: org.icon || ''
+              avatarUrl: org.icon || '',
             }))
           : [];
         setDataOptionsOrganizations([
@@ -196,7 +196,7 @@ const ActionsEventModal = ({
             label: org.name,
             userIds: org.users ? org.users.map((user) => user.id) : [],
             iconColor: org.iconColor || '#228CDB',
-            avatarUrl: org.icon || ''
+            avatarUrl: org.icon || '',
           })),
         ]);
       }
@@ -2130,11 +2130,10 @@ const ActionsEventModal = ({
                                   size={30}
                                 />
                               ) : (
-                                <div className="scale-[1.0714]">
-                                  <GroupIconWithDynamicColor
-                                    color={member.color || '#228CDB'}
-                                  />
-                                </div>
+                                <GroupIconWithDynamicColor
+                                  color={member.color || '#228CDB'}
+                                  size={30}
+                                />
                               )}
                             </>
                           )}

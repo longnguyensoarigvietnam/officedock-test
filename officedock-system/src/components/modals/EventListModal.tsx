@@ -148,9 +148,7 @@ export const EventListModal = ({
               size={24}
             />
           ) : (
-            <div className="scale-[0.8571]">
-              <GroupIconWithDynamicColor color={orgInfo?.color || '#228CDB'} />
-            </div>
+            <GroupIconWithDynamicColor color={orgInfo?.color || '#228CDB'} size={24}/>
           )}
         </div>
       </DynamicTooltip>
@@ -249,7 +247,7 @@ export const EventListModal = ({
           position: 'absolute',
           top: `${popoverInfoLoading ? popupPosition.top - 70 : popupPosition.top}px`,
           left: `${popupPosition.left}px`,
-          boxShadow: '0px 2px 8px 0px #0000001A'
+          boxShadow: '0px 2px 8px 0px #0000001A',
         }}>
         <div
           className="absolute right-[6px] top-[6px]"
@@ -274,7 +272,9 @@ export const EventListModal = ({
                       <span className="text-base font-medium mr-2 leading-none">
                         {month}月{day}日
                       </span>
-                      <span className="text-xs font-medium leading-none">({dayOfWeek})</span>
+                      <span className="text-xs font-medium leading-none">
+                        ({dayOfWeek})
+                      </span>
                     </>
                   );
                 })()
@@ -333,7 +333,9 @@ export const EventListModal = ({
                         <div className="flex gap-1">
                           <div className="flex">
                             {event && event.allDay && (
-                              <p className="text-[11px] mr-1 leading-none">終日</p>
+                              <p className="text-[11px] mr-1 leading-none">
+                                終日
+                              </p>
                             )}
                             <p
                               className={`text-[11px] leading-none ${

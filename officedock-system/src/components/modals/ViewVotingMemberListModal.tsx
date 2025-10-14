@@ -70,11 +70,10 @@ const ViewVotingMemberListModal = memo(
                           size={30}
                         />
                       ) : (
-                        <div className="scale-[1.0714]">
-                          <GroupIconWithDynamicColor
-                            color={organization.iconColor || '#228CDB'}
-                          />
-                        </div>
+                        <GroupIconWithDynamicColor
+                          color={organization.iconColor || '#228CDB'}
+                          size={30}
+                        />
                       )}
                     </>
                     <div className="w-[calc(100%_-_50px)]">

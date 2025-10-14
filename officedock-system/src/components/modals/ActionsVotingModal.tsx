@@ -596,7 +596,7 @@ const ActionsVotingModal = ({
                         <>{renderAvatar(String(member.id))}</>
                       )}
                       {member.type == EventParticipantType.ORGANIZATION && (
-                        <>
+                        <div className='w-[30px]'>
                           {member.avatarUrl ? (
                             <CustomUserAvatar
                               avatarUrl={member?.avatarUrl || ''}
@@ -604,13 +604,12 @@ const ActionsVotingModal = ({
                               size={30}
                             />
                           ) : (
-                            <div className="scale-[1.0714]">
-                              <GroupIconWithDynamicColor
-                                color={member.color || '#228CDB'}
-                              />
-                            </div>
+                            <GroupIconWithDynamicColor
+                              color={member.color || '#228CDB'}
+                              size={30}
+                            />
                           )}
-                        </>
+                        </div>
                       )}
                       <div className="!w-full">
                         <p className="line-clamp-3 break-all font-medium text-[15px] text-black">

@@ -146,7 +146,7 @@ export const SearchMessagesModal = ({
         <CustomUserAvatar
           avatarUrl={memberInfo?.avatar || ''}
           avatarColor={memberInfo?.avatarColor || ''}
-          size={33}
+          size={30}
         />
       </div>
     );
@@ -432,23 +432,23 @@ export const SearchMessagesModal = ({
     <Modal
       open={open}
       isOutSideAction={false}
-      className="font-primary !rounded-[20px] text-gray-700 !p-0 !w-[800px] !min-w-[800px] h-[790px]"
+      className="font-primary !rounded-[20px] text-gray-700 !p-0 !w-[1000px] !min-w-[1000px] h-[790px]"
       titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
       headerClassName="bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-6 py-4"
       closeIconClassName="!bg-white !rounded-full !p-2 !hover:cursor-pointer !shadow-sm"
       closeClassName="!mt-0 opacity-70 !w-4 !h-4 !hover:cursor-pointer"
-      contentClass="!w-[800px] !rounded-[20px]"
+      contentClass="!w-[1000px] !rounded-[20px]"
       onClose={() => {
         onClose();
       }}
       title="検索">
       <div className="px-6">
         <div className="flex justify-between items-center mb-5">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-[10px]">
             <InputSearch
               placeholder="チャットルーム内のキーワードを検索"
               className="w-[400px]"
-              inputClassName="!py-1 text-[14px] !border-[#77858F]"
+              inputClassName="!py-1 !h-[36px] !text-[14px] !border-[#77858F] !placeholder-[#BABABA]"
               value={searchChatMsg}
               onChange={(e) => setSearchChatMsg(e.target.value)}
               onKeyDown={(e: any) => {
@@ -486,27 +486,27 @@ export const SearchMessagesModal = ({
               検索
             </Button>
           </div>
-          <div className="flex gap-2 items-center font-medium text-sm">
+          <div className="flex gap-[10px] items-center font-medium text-sm">
             <p className="text-[#77858F]">検索結果</p>
             <p className="text-primary">{searchMessageResults?.count || 0}件</p>
           </div>
         </div>
         <div
           ref={resultsContainerRef}
-          className="overflow-y-auto !max-h-[630px] h-[630px] bg-[#F8FAFC]">
+          className="overflow-y-auto !max-h-[630px] h-[630px] bg-[#F8FAFC] rounded-[6px]">
           {dataSearch.length > 0 ? (
             dataSearch.map((messageDetail) => {
               return (
                 <div
                   key={messageDetail.id}
                   className="flex gap-2 items-start group relative border-b-[1px] hover:bg-white hover:cursor-pointer border-[#D2DBE1] py-5 px-2">
-                  <div className="">
+                  <>
                     {chatRoomType === ChatRoomType.TASK ||
                     (chatRoomType == ChatRoomType.BOOKMARK &&
                       messageDetail.chatRoom?.type == ChatRoomType.TASK) ? (
                       messageDetail.type !== MessageType.MESSAGE ? (
                         <ImageRound
-                          className="w-10 h-10"
+                          className="w-[30px] h-[30px]"
                           src="/icons/document.svg"
                           border="full"
                           name="Task"
@@ -517,9 +517,10 @@ export const SearchMessagesModal = ({
                     ) : (
                       renderAvatar(messageDetail.sender.id)
                     )}
-                  </div>
-                  <div className="flex justify-between !w-full items-baseline">
-                    <div className="w-[88%]">
+                  </>
+
+                  <div className="!w-full">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-baseline gap-2 font-semibold text-sm pb-2 pr-2">
                         <p className="max-w-full break-all line-clamp-3">
                           {chatRoomType === ChatRoomType.TASK ||
@@ -553,235 +554,98 @@ export const SearchMessagesModal = ({
                           />
                         )}
                       </div>
-                      {(chatRoomType === ChatRoomType.PRIVATE ||
-                        chatRoomType === ChatRoomType.GROUP ||
-                        chatRoomType === ChatRoomType.SELF ||
-                        (chatRoomType == ChatRoomType.BOOKMARK &&
-                          messageDetail.chatRoom?.type ==
-                            ChatRoomType.PRIVATE) ||
-                        (chatRoomType == ChatRoomType.BOOKMARK &&
-                          messageDetail.chatRoom?.type == ChatRoomType.GROUP) ||
-                        (chatRoomType == ChatRoomType.BOOKMARK &&
-                          messageDetail.chatRoom?.type ==
-                            ChatRoomType.SELF)) && (
-                        <div className="flex flex-col">
-                          {messageDetail.deletedAt ? (
-                            <p
-                              className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
-                              {MESSAGE_DELETED}
-                            </p>
-                          ) : (
-                            <div>
-                              {messageDetail.type === MessageType.MESSAGE && (
-                                <div className="break-words">
-                                  {processMessage(
-                                    highlightTextSafely(
-                                      messageDetail.message,
-                                      searchChatMsg,
-                                      session?.user.profile.fullName || '',
-                                    ),
-                                    messageDetail.mentions || [],
-                                  )}
-                                  <div className="flex flex-col gap-2 !w-[100%]">
-                                    {messageDetail?.chatFiles &&
-                                      messageDetail?.chatFiles.length > 0 &&
-                                      messageDetail?.chatFiles.map(
-                                        (file, index) => {
-                                          return (
-                                            <div
-                                              key={index}
-                                              className="flex justify-between items-center !w-[100%]">
-                                              <div className="bg-white border-[#D2DBE1] border-[1px] rounded-[6px] p-[14px] flex gap-2 items-center !w-[calc(100%)]">
-                                                {file.fileType.includes(
-                                                  'image',
-                                                ) && (
-                                                  <div>
-                                                    <Image
-                                                      src={getFileURL(
-                                                        file?.compressedFile ||
-                                                          '',
-                                                      )}
-                                                      alt="Image"
-                                                      width={150}
-                                                      height={100}
-                                                    />
-                                                  </div>
-                                                )}
-                                                <p
-                                                  className={`text-primary font-medium text-[14px] break-words break-all max-w-full ${
-                                                    file.fileType.includes(
-                                                      'image',
-                                                    )
-                                                      ? 'max-w-[calc(100%_-_200px)]'
-                                                      : 'max-w-[calc(100%)]'
-                                                  }`}>
-                                                  {file.fileName}
-                                                </p>
-                                              </div>
-                                            </div>
-                                          );
-                                        },
-                                      )}
-                                  </div>
-                                </div>
-                              )}
-                              {messageDetail.type ===
-                                MessageType.REMOVE_SCHEDULE && (
-                                <div className={`w-full flex justify-start`}>
-                                  <div
-                                    className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
-                                    <div
-                                      className={`flex flex-col items-start`}>
-                                      <p className="w-fit font-semibold text-black">
-                                        {messageDetail.sender.fullName}{' '}
-                                        {EVENT_DELETED}
-                                      </p>
-                                      <p className="font-semibold mt-2">日時</p>
-                                      <div className={`text-left`}>
-                                        <p>
-                                          {' '}
-                                          {messageDetail.scheduleChanges?.new &&
-                                            (messageDetail.scheduleChanges?.new
-                                              .repeatType ==
-                                            TaskRepetitiveValue.ONCE
-                                              ? renderEventDatetimeInChat(
-                                                  messageDetail.scheduleChanges
-                                                    ?.new,
-                                                )
-                                              : displayRepetitiveEventTime(
-                                                  messageDetail.scheduleChanges
-                                                    ?.new,
-                                                ))}
-                                        </p>
-                                      </div>
-                                      <p className="font-semibold mt-2">
-                                        参加者
-                                      </p>
-                                      {renderParticipantsContent(messageDetail)}
-                                      <p
-                                        className={`mt-2 text-left`}
-                                        dangerouslySetInnerHTML={{
-                                          __html: formatWithParagraphTags(
-                                            messageDetail.message,
-                                          ),
-                                        }}></p>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                              {messageDetail.type ===
-                                MessageType.EDIT_SCHEDULE && (
-                                <div className={`w-full flex justify-start`}>
-                                  <div
-                                    className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
-                                    <div
-                                      className={`flex flex-col items-start`}>
-                                      <p className="w-fit font-semibold text-black">
-                                        {messageDetail.sender.fullName}{' '}
-                                        {EVENT_EDITED}
-                                      </p>
-                                      <p className="mt-2">
-                                        変更あり:{' '}
-                                        {messageDetail.scheduleChanges?.fieldChanges?.map(
-                                          (field, index) => {
-                                            return (
-                                              <span key={index}>
-                                                {field}
-                                                {messageDetail.scheduleChanges &&
-                                                  messageDetail.scheduleChanges
-                                                    .fieldChanges &&
-                                                  index <
-                                                    messageDetail
-                                                      .scheduleChanges
-                                                      .fieldChanges.length -
-                                                      1 &&
-                                                  '、'}
-                                              </span>
-                                            );
-                                          },
-                                        )}
-                                      </p>
-                                      <p className="font-semibold mt-2">日時</p>
-                                      <div className={`text-left`}>
-                                        <p>
-                                          {' '}
-                                          {messageDetail.scheduleChanges?.new &&
-                                            (messageDetail.scheduleChanges?.new
-                                              .repeatType ==
-                                            TaskRepetitiveValue.ONCE
-                                              ? renderEventDatetimeInChat(
-                                                  messageDetail.scheduleChanges
-                                                    ?.new,
-                                                )
-                                              : displayRepetitiveEventTime(
-                                                  messageDetail.scheduleChanges
-                                                    ?.new,
-                                                ))}
-                                        </p>
-                                        {messageDetail.scheduleChanges?.old && (
-                                          <p>
-                                            {'('}
-                                            {EVENT_BEFORE_EDITED}
-                                            {messageDetail.scheduleChanges
-                                              ?.old &&
-                                              (messageDetail.scheduleChanges
-                                                ?.old.repeatType ==
-                                              TaskRepetitiveValue.ONCE
-                                                ? renderEventDatetimeInChat(
-                                                    messageDetail
-                                                      .scheduleChanges?.old,
+                      <p className="font-medium text-xs text-[#77858F] text-nowrap">
+                        {messageDetail.createdAt &&
+                          formatCheckDate(
+                            getFormattedDateTime(
+                              convertToCurrentTimezone(messageDetail.createdAt),
+                            ),
+                          )}
+                      </p>
+                    </div>
+
+                    {(chatRoomType === ChatRoomType.PRIVATE ||
+                      chatRoomType === ChatRoomType.GROUP ||
+                      chatRoomType === ChatRoomType.SELF ||
+                      (chatRoomType == ChatRoomType.BOOKMARK &&
+                        messageDetail.chatRoom?.type == ChatRoomType.PRIVATE) ||
+                      (chatRoomType == ChatRoomType.BOOKMARK &&
+                        messageDetail.chatRoom?.type == ChatRoomType.GROUP) ||
+                      (chatRoomType == ChatRoomType.BOOKMARK &&
+                        messageDetail.chatRoom?.type == ChatRoomType.SELF)) && (
+                      <div className="flex flex-col">
+                        {messageDetail.deletedAt ? (
+                          <p
+                            className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
+                            {MESSAGE_DELETED}
+                          </p>
+                        ) : (
+                          <div>
+                            {messageDetail.type === MessageType.MESSAGE && (
+                              <div className="break-words">
+                                {processMessage(
+                                  highlightTextSafely(
+                                    messageDetail.message,
+                                    searchChatMsg,
+                                    session?.user.profile.fullName || '',
+                                  ),
+                                  messageDetail.mentions || [],
+                                )}
+                                <div className="flex flex-col gap-2 !w-[100%]">
+                                  {messageDetail?.chatFiles &&
+                                    messageDetail?.chatFiles.length > 0 &&
+                                    messageDetail?.chatFiles.map(
+                                      (file, index) => {
+                                        return (
+                                          <div
+                                            key={index}
+                                            className="flex justify-between items-center !w-[100%]">
+                                            <div className="bg-white border-[#D2DBE1] border-[1px] rounded-[6px] p-[14px] flex gap-2 items-center !w-[calc(100%)]">
+                                              {file.fileType.includes(
+                                                'image',
+                                              ) && (
+                                                <div>
+                                                  <Image
+                                                    src={getFileURL(
+                                                      file?.compressedFile ||
+                                                        '',
+                                                    )}
+                                                    alt="Image"
+                                                    width={150}
+                                                    height={100}
+                                                  />
+                                                </div>
+                                              )}
+                                              <p
+                                                className={`text-primary font-medium text-[14px] break-words break-all max-w-full ${
+                                                  file.fileType.includes(
+                                                    'image',
                                                   )
-                                                : displayRepetitiveEventTime(
-                                                    messageDetail
-                                                      .scheduleChanges?.old,
-                                                  ))}
-                                            {')'}
-                                          </p>
-                                        )}
-                                      </div>
-                                      <p className="font-semibold mt-2">
-                                        参加者
-                                      </p>
-                                      {renderParticipantsContent(messageDetail)}
-                                      {messageDetail.schedule?.id ? (
-                                        <p
-                                          className="hover:cursor-pointer mt-2"
-                                          onClick={() =>
-                                            handleConfirmGetDataDetailEvent(
-                                              `${messageDetail.schedule?.id}`,
-                                            )
-                                          }>
-                                          予定を確認する
-                                        </p>
-                                      ) : (
-                                        <p className="mt-2 italic text-gray-600">
-                                          {messageDetail.sender.fullName}{' '}
-                                          {EVENT_DELETED}
-                                        </p>
-                                      )}
-                                      <p
-                                        className={`mt-2 text-left`}
-                                        dangerouslySetInnerHTML={{
-                                          __html: formatWithParagraphTags(
-                                            messageDetail.message,
-                                          ),
-                                        }}></p>
-                                    </div>
-                                  </div>
+                                                    ? 'max-w-[calc(100%_-_200px)]'
+                                                    : 'max-w-[calc(100%)]'
+                                                }`}>
+                                                {file.fileName}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        );
+                                      },
+                                    )}
                                 </div>
-                              )}
-                              {messageDetail.type ===
-                                MessageType.CREATION_SCHEDULE && (
-                                <div className={`w-full flex justify-start`}>
-                                  <div
-                                    className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
-                                    <div
-                                      className={`flex flex-col items-start`}>
-                                      <p className="max-w-full break-all font-semibold text-black">
-                                        {messageDetail.sender.fullName}{' '}
-                                        {EVENT_CREATED}
-                                      </p>
-                                      <p className="font-semibold mt-2">日時</p>
+                              </div>
+                            )}
+                            {messageDetail.type ===
+                              MessageType.REMOVE_SCHEDULE && (
+                              <div className={`w-full flex justify-start`}>
+                                <div
+                                  className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
+                                  <div className={`flex flex-col items-start`}>
+                                    <p className="w-fit font-semibold text-black">
+                                      {messageDetail.sender.fullName}{' '}
+                                      {EVENT_DELETED}
+                                    </p>
+                                    <p className="font-semibold mt-2">日時</p>
+                                    <div className={`text-left`}>
                                       <p>
                                         {' '}
                                         {messageDetail.scheduleChanges?.new &&
@@ -797,302 +661,423 @@ export const SearchMessagesModal = ({
                                                   ?.new,
                                               ))}
                                       </p>
-                                      <p className="font-semibold mt-2">
-                                        参加者
+                                    </div>
+                                    <p className="font-semibold mt-2">参加者</p>
+                                    {renderParticipantsContent(messageDetail)}
+                                    <p
+                                      className={`mt-2 text-left`}
+                                      dangerouslySetInnerHTML={{
+                                        __html: formatWithParagraphTags(
+                                          messageDetail.message,
+                                        ),
+                                      }}></p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            {messageDetail.type ===
+                              MessageType.EDIT_SCHEDULE && (
+                              <div className={`w-full flex justify-start`}>
+                                <div
+                                  className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
+                                  <div className={`flex flex-col items-start`}>
+                                    <p className="w-fit font-semibold text-black">
+                                      {messageDetail.sender.fullName}{' '}
+                                      {EVENT_EDITED}
+                                    </p>
+                                    <p className="mt-2">
+                                      変更あり:{' '}
+                                      {messageDetail.scheduleChanges?.fieldChanges?.map(
+                                        (field, index) => {
+                                          return (
+                                            <span key={index}>
+                                              {field}
+                                              {messageDetail.scheduleChanges &&
+                                                messageDetail.scheduleChanges
+                                                  .fieldChanges &&
+                                                index <
+                                                  messageDetail.scheduleChanges
+                                                    .fieldChanges.length -
+                                                    1 &&
+                                                '、'}
+                                            </span>
+                                          );
+                                        },
+                                      )}
+                                    </p>
+                                    <p className="font-semibold mt-2">日時</p>
+                                    <div className={`text-left`}>
+                                      <p>
+                                        {' '}
+                                        {messageDetail.scheduleChanges?.new &&
+                                          (messageDetail.scheduleChanges?.new
+                                            .repeatType ==
+                                          TaskRepetitiveValue.ONCE
+                                            ? renderEventDatetimeInChat(
+                                                messageDetail.scheduleChanges
+                                                  ?.new,
+                                              )
+                                            : displayRepetitiveEventTime(
+                                                messageDetail.scheduleChanges
+                                                  ?.new,
+                                              ))}
                                       </p>
-                                      {renderParticipantsContent(messageDetail)}
-                                      {messageDetail.schedule?.id ? (
-                                        <p
-                                          className="hover:cursor-pointer mt-2"
-                                          onClick={() =>
-                                            handleConfirmGetDataDetailEvent(
-                                              `${messageDetail.schedule?.id}`,
-                                            )
-                                          }>
-                                          予定を確認する
+                                      {messageDetail.scheduleChanges?.old && (
+                                        <p>
+                                          {'('}
+                                          {EVENT_BEFORE_EDITED}
+                                          {messageDetail.scheduleChanges?.old &&
+                                            (messageDetail.scheduleChanges?.old
+                                              .repeatType ==
+                                            TaskRepetitiveValue.ONCE
+                                              ? renderEventDatetimeInChat(
+                                                  messageDetail.scheduleChanges
+                                                    ?.old,
+                                                )
+                                              : displayRepetitiveEventTime(
+                                                  messageDetail.scheduleChanges
+                                                    ?.old,
+                                                ))}
+                                          {')'}
                                         </p>
-                                      ) : (
-                                        <p className="mt-2 italic text-gray-600">
-                                          {messageDetail.sender.fullName}{' '}
-                                          {EVENT_DELETED}
+                                      )}
+                                    </div>
+                                    <p className="font-semibold mt-2">参加者</p>
+                                    {renderParticipantsContent(messageDetail)}
+                                    {messageDetail.schedule?.id ? (
+                                      <p
+                                        className="hover:cursor-pointer mt-2"
+                                        onClick={() =>
+                                          handleConfirmGetDataDetailEvent(
+                                            `${messageDetail.schedule?.id}`,
+                                          )
+                                        }>
+                                        予定を確認する
+                                      </p>
+                                    ) : (
+                                      <p className="mt-2 italic text-gray-600">
+                                        {messageDetail.sender.fullName}{' '}
+                                        {EVENT_DELETED}
+                                      </p>
+                                    )}
+                                    <p
+                                      className={`mt-2 text-left`}
+                                      dangerouslySetInnerHTML={{
+                                        __html: formatWithParagraphTags(
+                                          messageDetail.message,
+                                        ),
+                                      }}></p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            {messageDetail.type ===
+                              MessageType.CREATION_SCHEDULE && (
+                              <div className={`w-full flex justify-start`}>
+                                <div
+                                  className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
+                                  <div className={`flex flex-col items-start`}>
+                                    <p className="max-w-full break-all font-semibold text-black">
+                                      {messageDetail.sender.fullName}{' '}
+                                      {EVENT_CREATED}
+                                    </p>
+                                    <p className="font-semibold mt-2">日時</p>
+                                    <p>
+                                      {' '}
+                                      {messageDetail.scheduleChanges?.new &&
+                                        (messageDetail.scheduleChanges?.new
+                                          .repeatType ==
+                                        TaskRepetitiveValue.ONCE
+                                          ? renderEventDatetimeInChat(
+                                              messageDetail.scheduleChanges
+                                                ?.new,
+                                            )
+                                          : displayRepetitiveEventTime(
+                                              messageDetail.scheduleChanges
+                                                ?.new,
+                                            ))}
+                                    </p>
+                                    <p className="font-semibold mt-2">参加者</p>
+                                    {renderParticipantsContent(messageDetail)}
+                                    {messageDetail.schedule?.id ? (
+                                      <p
+                                        className="hover:cursor-pointer mt-2"
+                                        onClick={() =>
+                                          handleConfirmGetDataDetailEvent(
+                                            `${messageDetail.schedule?.id}`,
+                                          )
+                                        }>
+                                        予定を確認する
+                                      </p>
+                                    ) : (
+                                      <p className="mt-2 italic text-gray-600">
+                                        {messageDetail.sender.fullName}{' '}
+                                        {EVENT_DELETED}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            {(messageDetail.type ===
+                              MessageType.CREATION_TASK ||
+                              messageDetail.type ===
+                                MessageType.REMOVE_MEMBER_TASK ||
+                              messageDetail.type ===
+                                MessageType.ADD_MEMBER_TASK) &&
+                              (messageDetail.task ? (
+                                <div className={`w-full flex justify-start`}>
+                                  <div
+                                    className={`text-xs font-normal bg-[#eaf8ff] w-[750px] p-4 `}>
+                                    <div
+                                      className={`flex flex-col items-start`}>
+                                      <h4 className="text-sm w-fit font-medium text-black h-5">
+                                        {messageDetail.type ==
+                                        MessageType.CREATION_TASK
+                                          ? CREATION_TASK_MESSAGE
+                                          : messageDetail.type ==
+                                              MessageType.REMOVE_MEMBER_TASK
+                                            ? REMOVE_MEMBER_TASK_MESSAGE
+                                            : ADD_MEMBER_TASK_MESSAGE}
+                                      </h4>
+                                      <h4 className="text-sm w-fit text-black h-5 truncate max-w-[500px]">
+                                        タスクのタイトル:{' '}
+                                        {highlightTitleBySearchTerm(
+                                          messageDetail.task.title ||
+                                            NO_SETTING,
+                                          searchChatMsg,
+                                        )}
+                                      </h4>
+                                      {messageDetail.type !==
+                                        MessageType.REMOVE_MEMBER_TASK && (
+                                        <p className="w-fit mt-2">
+                                          締切 :{' '}
+                                          {(messageDetail.task.deadline &&
+                                            format(
+                                              messageDetail.task.deadline,
+                                              DATE_FORMAT,
+                                            )) ||
+                                            NO_SETTING}
                                         </p>
                                       )}
                                     </div>
                                   </div>
                                 </div>
-                              )}
-                              {(messageDetail.type ===
-                                MessageType.CREATION_TASK ||
-                                messageDetail.type ===
-                                  MessageType.REMOVE_MEMBER_TASK ||
-                                messageDetail.type ===
-                                  MessageType.ADD_MEMBER_TASK) &&
-                                (messageDetail.task ? (
-                                  <div className={`w-full flex justify-start`}>
-                                    <div
-                                      className={`text-xs font-normal bg-[#eaf8ff] w-[750px] p-4 `}>
-                                      <div
-                                        className={`flex flex-col items-start`}>
-                                        <h4 className="text-sm w-fit font-medium text-black h-5">
-                                          {messageDetail.type ==
-                                          MessageType.CREATION_TASK
-                                            ? CREATION_TASK_MESSAGE
-                                            : messageDetail.type ==
-                                                MessageType.REMOVE_MEMBER_TASK
-                                              ? REMOVE_MEMBER_TASK_MESSAGE
-                                              : ADD_MEMBER_TASK_MESSAGE}
-                                        </h4>
-                                        <h4 className="text-sm w-fit text-black h-5 truncate max-w-[500px]">
-                                          タスクのタイトル:{' '}
-                                          {highlightTitleBySearchTerm(
-                                            messageDetail.task.title ||
-                                              NO_SETTING,
-                                            searchChatMsg,
-                                          )}
-                                        </h4>
-                                        {messageDetail.type !==
-                                          MessageType.REMOVE_MEMBER_TASK && (
-                                          <p className="w-fit mt-2">
-                                            締切 :{' '}
-                                            {(messageDetail.task.deadline &&
-                                              format(
-                                                messageDetail.task.deadline,
-                                                DATE_FORMAT,
-                                              )) ||
-                                              NO_SETTING}
-                                          </p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className={`w-full flex justify-start`}>
-                                    <div
-                                      className={`text-sm font-normal bg-[#eaf8ff] p-1`}>
-                                      <div
-                                        className={`flex flex-col items-start`}>
-                                        <p
-                                          className={`font-normal w-[500px]  text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
-                                          {TASK_DELETED}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {(chatRoomType === ChatRoomType.TASK ||
-                        (chatRoomType == ChatRoomType.BOOKMARK &&
-                          messageDetail.chatRoom?.type ==
-                            ChatRoomType.TASK)) && (
-                        <div className="flex flex-col">
-                          {messageDetail.deletedAt ? (
-                            <p
-                              className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
-                              {MESSAGE_DELETED}
-                            </p>
-                          ) : (
-                            <div>
-                              {messageDetail.type === MessageType.MESSAGE &&
-                                processMessage(
-                                  highlightTextSafely(
-                                    messageDetail.message,
-                                    searchChatMsg,
-                                    session?.user.profile.fullName || '',
-                                  ),
-                                  messageDetail.mentions || [],
-                                )}
-                              {messageDetail.type !== MessageType.MESSAGE &&
-                                (messageDetail.task ? (
-                                  <div className={`w-full flex justify-start`}>
-                                    <div
-                                      className={`text-xs font-normal bg-[#eaf8ff] w-[650px] p-4`}>
-                                      <div
-                                        className={`flex flex-col items-start`}>
-                                        <h4 className="text-sm w-fit font-medium text-black h-5">
-                                          {messageDetail.type ==
-                                          MessageType.CREATION_TASK
-                                            ? CREATION_TASK_MESSAGE
-                                            : messageDetail.type ==
-                                                MessageType.REMOVE_MEMBER_TASK
-                                              ? REMOVE_MEMBER_TASK_MESSAGE
-                                              : ADD_MEMBER_TASK_MESSAGE}
-                                        </h4>
-                                        <h4 className="text-sm w-fit text-black h-5 truncate max-w-[500px]">
-                                          タスクのタイトル:{' '}
-                                          {highlightTitleBySearchTerm(
-                                            messageDetail.task.title ||
-                                              NO_SETTING,
-                                            searchChatMsg,
-                                          )}
-                                        </h4>
-                                        {messageDetail.type !==
-                                          MessageType.REMOVE_MEMBER_TASK && (
-                                          <p className="w-fit mt-2">
-                                            締切 :{' '}
-                                            {(messageDetail.task.deadline &&
-                                              format(
-                                                messageDetail.task.deadline,
-                                                DATE_FORMAT,
-                                              )) ||
-                                              NO_SETTING}
-                                          </p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className={`w-full flex justify-start `}>
-                                    <div
-                                      className={`text-sm font-normal bg-[#eaf8ff] p-1`}>
-                                      <div
-                                        className={`flex flex-col items-end`}>
-                                        <p
-                                          className={`font-normal w-[500px]  text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
-                                          {TASK_DELETED}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {(chatRoomType === ChatRoomType.SKILL ||
-                        (chatRoomType == ChatRoomType.BOOKMARK &&
-                          messageDetail.chatRoom?.type ==
-                            ChatRoomType.SKILL)) && (
-                        <div className="flex flex-col">
-                          {messageDetail.deletedAt ||
-                          (!messageDetail.submitLevel &&
-                            !messageDetail.message) ? (
-                            <p
-                              className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
-                              {messageDetail.type == MessageType.MESSAGE
-                                ? MESSAGE_DELETED
-                                : DELETED_SKILL_UP_MESSAGE}
-                            </p>
-                          ) : (
-                            <div>
-                              {messageDetail.type === MessageType.MESSAGE &&
-                                processMessage(
-                                  highlightTextSafely(
-                                    messageDetail.message,
-                                    searchChatMsg,
-                                    session?.user.profile.fullName || '',
-                                  ),
-                                  messageDetail.mentions || [],
-                                )}
-                              {messageDetail.type !== MessageType.MESSAGE && (
-                                <div className="w-full flex justify-start">
+                              ) : (
+                                <div className={`w-full flex justify-start`}>
                                   <div
-                                    className={`text-xs font-normal !w-[100%] `}>
-                                    <div className={`flex gap-5 items-center`}>
-                                      <h4 className="text-sm w-fit text-black h-5">
-                                        {renderSubmitLevelMessage(
-                                          messageDetail.type,
-                                          messageDetail.submitLevel?.status ||
-                                            '',
-                                          messageDetail.submitLevel?.skill
-                                            ?.name || '',
-                                        )}
-                                      </h4>
-                                      <Button
-                                        variant="outline"
-                                        className="!font-medium !text-xs !rounded-[8px] !w-[86px] !h-[30px] !px-0"
-                                        onClick={() => {
-                                          router.push(
-                                            pageRouters.LEVEL_UP_TEAM.href,
-                                          );
-                                        }}>
-                                        確認する
-                                      </Button>
+                                    className={`text-sm font-normal bg-[#eaf8ff] p-1`}>
+                                    <div
+                                      className={`flex flex-col items-start`}>
+                                      <p
+                                        className={`font-normal w-[500px]  text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
+                                        {TASK_DELETED}
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {(chatRoomType === ChatRoomType.CALENDAR ||
-                        (chatRoomType == ChatRoomType.BOOKMARK &&
-                          messageDetail.chatRoom?.type ==
-                            ChatRoomType.CALENDAR)) && (
-                        <div className="flex flex-col gap-3">
-                          <div
-                            className="flex items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer"
-                            onClick={() => {
-                              messageDetail.schedule?.id &&
-                                handleConfirmGetDataDetailEvent(
-                                  `${messageDetail.schedule?.id}`,
-                                );
-                            }}>
-                            <ImageRound
-                              className={`w-[15px] h-[14px]`}
-                              name="Calendar icon"
-                              src="/icons/calendar-time.svg"
-                            />
-                            <p
-                              className={`${messageDetail.schedule ? 'text-primary' : 'text-gray-300'} text-sm font-medium`}>
-                              {highlightTitleBySearchTerm(
-                                messageDetail.schedule
-                                  ? messageDetail.schedule?.title
-                                  : DELETED_EVENT_TITLE,
-                                searchChatMsg,
-                              )}
-                            </p>
+                              ))}
                           </div>
-                          <div className="flex gap-1 text-sm font-medium">
-                            <p className="text-primary max-w-full break-all">
-                              {messageDetail.sender.fullName}{' '}
-                              <span className="text-black">
-                                {messageDetail.type ===
-                                MessageType.REMOVE_SCHEDULE
-                                  ? EVENT_DELETED
-                                  : messageDetail.type ===
-                                      MessageType.EDIT_SCHEDULE
-                                    ? EVENT_EDITED
-                                    : EVENT_CREATED}
-                              </span>
-                            </p>
-                          </div>
-                          <div className="text-[#5B6770] font-normal text-sm">
-                            <p>
-                              {messageDetail.scheduleChanges?.new &&
-                                (messageDetail.scheduleChanges?.new
-                                  .repeatType == TaskRepetitiveValue.ONCE
-                                  ? renderScheduleChangeInCalendarRoom(
-                                      messageDetail,
-                                    )
-                                  : displayRepetitiveEventTime(
-                                      messageDetail.scheduleChanges?.new,
-                                    ))}
-                            </p>
-                          </div>
-                          {processMessage(
-                            highlightTextSafely(
-                              messageDetail.message,
-                              searchChatMsg,
-                              session?.user.profile.fullName || '',
-                            ),
-                            messageDetail.mentions || [],
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <p className="font-medium text-xs w-[12%] text-[#77858F]">
-                      {messageDetail.createdAt &&
-                        formatCheckDate(
-                          getFormattedDateTime(
-                            convertToCurrentTimezone(messageDetail.createdAt),
-                          ),
                         )}
-                    </p>
+                      </div>
+                    )}
+                    {(chatRoomType === ChatRoomType.TASK ||
+                      (chatRoomType == ChatRoomType.BOOKMARK &&
+                        messageDetail.chatRoom?.type == ChatRoomType.TASK)) && (
+                      <div className="flex flex-col">
+                        {messageDetail.deletedAt ? (
+                          <p
+                            className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
+                            {MESSAGE_DELETED}
+                          </p>
+                        ) : (
+                          <div>
+                            {messageDetail.type === MessageType.MESSAGE &&
+                              processMessage(
+                                highlightTextSafely(
+                                  messageDetail.message,
+                                  searchChatMsg,
+                                  session?.user.profile.fullName || '',
+                                ),
+                                messageDetail.mentions || [],
+                              )}
+                            {messageDetail.type !== MessageType.MESSAGE &&
+                              (messageDetail.task ? (
+                                <div className={`w-full flex justify-start`}>
+                                  <div
+                                    className={`text-xs font-normal bg-[#eaf8ff] w-[650px] p-4`}>
+                                    <div
+                                      className={`flex flex-col items-start`}>
+                                      <h4 className="text-sm w-fit font-medium text-black h-5">
+                                        {messageDetail.type ==
+                                        MessageType.CREATION_TASK
+                                          ? CREATION_TASK_MESSAGE
+                                          : messageDetail.type ==
+                                              MessageType.REMOVE_MEMBER_TASK
+                                            ? REMOVE_MEMBER_TASK_MESSAGE
+                                            : ADD_MEMBER_TASK_MESSAGE}
+                                      </h4>
+                                      <h4 className="text-sm w-fit text-black h-5 truncate max-w-[500px]">
+                                        タスクのタイトル:{' '}
+                                        {highlightTitleBySearchTerm(
+                                          messageDetail.task.title ||
+                                            NO_SETTING,
+                                          searchChatMsg,
+                                        )}
+                                      </h4>
+                                      {messageDetail.type !==
+                                        MessageType.REMOVE_MEMBER_TASK && (
+                                        <p className="w-fit mt-2">
+                                          締切 :{' '}
+                                          {(messageDetail.task.deadline &&
+                                            format(
+                                              messageDetail.task.deadline,
+                                              DATE_FORMAT,
+                                            )) ||
+                                            NO_SETTING}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className={`w-full flex justify-start `}>
+                                  <div
+                                    className={`text-sm font-normal bg-[#eaf8ff] p-1`}>
+                                    <div className={`flex flex-col items-end`}>
+                                      <p
+                                        className={`font-normal w-[500px]  text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
+                                        {TASK_DELETED}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {(chatRoomType === ChatRoomType.SKILL ||
+                      (chatRoomType == ChatRoomType.BOOKMARK &&
+                        messageDetail.chatRoom?.type ==
+                          ChatRoomType.SKILL)) && (
+                      <div className="flex flex-col">
+                        {messageDetail.deletedAt ||
+                        (!messageDetail.submitLevel &&
+                          !messageDetail.message) ? (
+                          <p
+                            className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
+                            {messageDetail.type == MessageType.MESSAGE
+                              ? MESSAGE_DELETED
+                              : DELETED_SKILL_UP_MESSAGE}
+                          </p>
+                        ) : (
+                          <div>
+                            {messageDetail.type === MessageType.MESSAGE &&
+                              processMessage(
+                                highlightTextSafely(
+                                  messageDetail.message,
+                                  searchChatMsg,
+                                  session?.user.profile.fullName || '',
+                                ),
+                                messageDetail.mentions || [],
+                              )}
+                            {messageDetail.type !== MessageType.MESSAGE && (
+                              <div className="w-full flex justify-start">
+                                <div
+                                  className={`text-xs font-normal !w-[100%] `}>
+                                  <div className={`flex gap-5 items-center`}>
+                                    <h4 className="text-sm w-fit text-black h-5">
+                                      {renderSubmitLevelMessage(
+                                        messageDetail.type,
+                                        messageDetail.submitLevel?.status || '',
+                                        messageDetail.submitLevel?.skill
+                                          ?.name || '',
+                                      )}
+                                    </h4>
+                                    <Button
+                                      variant="outline"
+                                      className="!font-medium !text-xs !rounded-[8px] !w-[86px] !h-[30px] !px-0"
+                                      onClick={() => {
+                                        router.push(
+                                          pageRouters.LEVEL_UP_TEAM.href,
+                                        );
+                                      }}>
+                                      確認する
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {(chatRoomType === ChatRoomType.CALENDAR ||
+                      (chatRoomType == ChatRoomType.BOOKMARK &&
+                        messageDetail.chatRoom?.type ==
+                          ChatRoomType.CALENDAR)) && (
+                      <div className="flex flex-col gap-3">
+                        <div
+                          className="flex items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer"
+                          onClick={() => {
+                            messageDetail.schedule?.id &&
+                              handleConfirmGetDataDetailEvent(
+                                `${messageDetail.schedule?.id}`,
+                              );
+                          }}>
+                          <ImageRound
+                            className={`w-[15px] h-[14px]`}
+                            name="Calendar icon"
+                            src="/icons/calendar-time.svg"
+                          />
+                          <p
+                            className={`${messageDetail.schedule ? 'text-primary' : 'text-gray-300'} text-sm font-medium`}>
+                            {highlightTitleBySearchTerm(
+                              messageDetail.schedule
+                                ? messageDetail.schedule?.title
+                                : DELETED_EVENT_TITLE,
+                              searchChatMsg,
+                            )}
+                          </p>
+                        </div>
+                        <div className="flex gap-1 text-sm font-medium">
+                          <p className="text-primary max-w-full break-all">
+                            {messageDetail.sender.fullName}{' '}
+                            <span className="text-black">
+                              {messageDetail.type ===
+                              MessageType.REMOVE_SCHEDULE
+                                ? EVENT_DELETED
+                                : messageDetail.type ===
+                                    MessageType.EDIT_SCHEDULE
+                                  ? EVENT_EDITED
+                                  : EVENT_CREATED}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="text-[#5B6770] font-normal text-sm">
+                          <p>
+                            {messageDetail.scheduleChanges?.new &&
+                              (messageDetail.scheduleChanges?.new.repeatType ==
+                              TaskRepetitiveValue.ONCE
+                                ? renderScheduleChangeInCalendarRoom(
+                                    messageDetail,
+                                  )
+                                : displayRepetitiveEventTime(
+                                    messageDetail.scheduleChanges?.new,
+                                  ))}
+                          </p>
+                        </div>
+                        {processMessage(
+                          highlightTextSafely(
+                            messageDetail.message,
+                            searchChatMsg,
+                            session?.user.profile.fullName || '',
+                          ),
+                          messageDetail.mentions || [],
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="bg-white group-hover:flex hidden rounded-3xl px-3 py-1.5 shadow-md absolute left-1/2 -bottom-4 transform -translate-x-1/2 items-center gap-2">
                     <DynamicTooltip

@@ -738,7 +738,7 @@ const ListUsers = () => {
                               <ImageRound
                                 name="Edit"
                                 src={`/icons/${element.id == userEditId ? 'edit-gray' : 'edit'}.svg`}
-                                className={`w-[14px] h-[14px] hover:cursor-pointer`}
+                                className={`w-[12px] h-[12px] hover:cursor-pointer`}
                               />
                             </div>
                           </>
@@ -748,7 +748,7 @@ const ListUsers = () => {
                             name="Delete"
                             onClick={() => handleOpenDeleteUserModal(element)}
                             src={'/icons/delete.svg'}
-                            className={`w-[13px] h-[15px] hover:cursor-pointer`}
+                            className={`w-[12px] h-[14px] hover:cursor-pointer`}
                           />
                         )}
                       </div>

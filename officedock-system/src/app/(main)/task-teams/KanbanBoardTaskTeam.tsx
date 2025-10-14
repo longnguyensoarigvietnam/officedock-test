@@ -2475,7 +2475,7 @@ const KanbanBoardTaskTeam = () => {
           <div className="flex items-center">
             <div className="flex gap-1 items-center">
               {selectedOrganization?.imgComponent && (
-                <div className="w-[34px] h-[34px] flex justify-center items-center">
+                <div className="w-[34px] h-[34px] scale-[1.4167] flex justify-center items-center">
                   {selectedOrganization.imgComponent}
                 </div>
               )}
