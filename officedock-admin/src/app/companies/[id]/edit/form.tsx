@@ -227,6 +227,16 @@ const EditCompanyForm = () => {
             value: purpose || '',
           }))
         : undefined;
+      value.closeDate = companyDetail.closeDate
+        ? closingDayOptions.find(
+            (date) => date.value == companyDetail.closeDate,
+          )
+        : undefined;
+      value.editableAfterClosing = companyDetail.editableAfterClosing
+        ? editableAfterClosingOptions.find(
+            (date) => date.value == companyDetail.editableAfterClosing,
+          )
+        : undefined;
 
       value.contract.department = companyDetail.contract?.department?.length
         ? companyDetail.contract.department.map((department) => {
