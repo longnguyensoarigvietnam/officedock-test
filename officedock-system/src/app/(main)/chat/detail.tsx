@@ -97,6 +97,7 @@ import {
   extractAndRemoveMsgQuotes,
   getRootPSpanData,
   attachUuidToAllP,
+  mapChatFilesToMemo,
 } from '@utils';
 
 import {
@@ -996,6 +997,21 @@ const ChatDetail = ({
     [setDataChatList, handleRemoveChatRoomParam, chatRoomCode],
   );
 
+  // Update list file if has new data from socket
+  const handleUpdateListFileMemo = (messageDetail: ChatMessageResponse) => {
+    let uuidListMain = [];
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(messageDetail?.message, 'text/html');
+    const pEl = doc.querySelector('p');
+
+    if (pEl) {
+      const raw = pEl.getAttribute('data-uuid');
+      uuidListMain = raw ? JSON.parse(raw) : [];
+    }
+    const dataMap = mapChatFilesToMemo(messageDetail, uuidListMain);
+    setDataFileAddList(dataMap);
+  };
+
   // Socket
   useEffect(() => {
     // Create WebSocket
@@ -1034,7 +1050,11 @@ const ChatDetail = ({
                 roomCode: chatRoomCode,
               });
             }
+            if (isExtendMoreData) {
+              handleUpdateListFileMemo(data.chatMessage);
+            }
           }
+
           break;
         case SocketActions.CREATION_TASK:
           if (data.chatRoom.code === chatRoomCode) {
@@ -1235,14 +1255,6 @@ const ChatDetail = ({
         ...prev,
         [variables.uuid]: { progress: 100 },
       }));
-      setDataFileAddList(
-        data.chatFiles.map((item: any) => ({
-          ...item,
-          chatMessageUuid: data.uuid,
-          chatMessageId: data.id,
-          originalFile: item.compressedFile,
-        })),
-      );
     },
     onError: (error: AxiosError<any>) => {
       setUploadFileStatus({});
