@@ -97,11 +97,11 @@ export const MessageDetailBookmark = ({
     );
 
     return (
-      <div className="h-6 relative top-[-8px]">
+      <div className="h-6 relative top-[-3px]">
         <CustomUserAvatar
           avatarUrl={memberInfo?.avatar || ''}
           avatarColor={memberInfo?.avatarColor || ''}
-          size={36}
+          size={30}
         />
       </div>
     );

@@ -97,14 +97,18 @@ const Modal = ({
                   className={` ${sizePadding} px-4 font-primary ${className}`}>
                   {title && (
                     <header
-                      className={`flex  border-b pb-4  border-solid border-gray-100 justify-between items-center mb-4 ${headerClassName}`}>
+                      className={`flex  border-b pb-4  border-solid border-gray-100 justify-between items-center mb-5 ${headerClassName}`}>
                       <Heading
                         className={`leading-10 !text-[#374151] text-lg truncate ${titleClassName}`}
                         as="h1">
                         {title}
                       </Heading>
                       {showIconClose && (
-                        <div className={`${closeIconClassName}`}>
+                        <div
+                          className={`${closeIconClassName}`}
+                          style={{
+                            boxShadow: '0px 2px 8px 0px #0000000F',
+                          }}>
                           <ImageRound
                             className={`mt-1 w-5 h-5 hover:cursor-pointer ${closeClassName}`}
                             src="/icons/close.svg"

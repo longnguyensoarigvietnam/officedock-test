@@ -31,15 +31,15 @@ const ChatDroppingFileModal = memo(
           }}
           onDrop={onDropFile}>
           <div
-            className="w-full h-full rounded-[6px] flex flex-col justify-center gap-2.5 items-center"
+            className="w-full h-full rounded-[6px] flex flex-col justify-center gap-5 items-center"
             style={{
               backgroundImage: `url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='none' rx='11' ry='11' stroke='%23C2CFD7' stroke-width='2' stroke-dasharray='4' stroke-dashoffset='33' stroke-linecap='square'/%3E%3C/svg%3E")`,
               borderRadius: '11px',
             }}>
-            <p className="text-sm text-[#5B6770] font-medium">
+            <p className="text-sm text-[#5B6770] font-medium leading-none">
               アップロードするファイルをここにドロップ
             </p>
-            <p className="text-sm text-[#5B6770] font-medium">または</p>
+            <p className="text-sm text-[#5B6770] font-medium leading-none">または</p>
             <Button
               variant="secondary"
               className="text-white font-medium !text-xs !bg-[#77858F] !w-[104px] !p-0 !h-[30px] !rounded-[4px]"

@@ -331,31 +331,30 @@ const ActionsAddMembersModal = memo(
         isOutSideAction={false}
         className="font-primary !rounded-[20px] text-gray-700 !p-0 w-[500px]"
         titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
-        headerClassName="bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-6 py-4"
         contentClass="!rounded-[20px]"
-        closeIconClassName="!bg-white !rounded-full !p-2 !hover:cursor-pointer !shadow-sm"
-        closeClassName="!mt-0 opacity-70 !w-4 !h-4 !hover:cursor-pointer"
+        headerClassName="bg-[#EBF1F7] !rounded-t-xl !rounded-b-none px-5 !py-[10px]"
+        closeIconClassName="!bg-white !rounded-full !p-[7px] !hover:cursor-pointer !shadow-sm"
+        closeClassName="!mt-0 !w-4 !h-4 !hover:cursor-pointer"
         onClose={() => {
           onClose();
         }}
         title="グループチャットを新規作成">
-        <div className="mt-2 px-6">
+        <div className="mt-2 px-5">
           {watch('members').length >= 2 || watch('organizations').length ? (
             <div className="text-sm text-gray-700">
-              <div className="flex gap-4 items-center pb-3">
+              <div className="flex gap-5 items-center pb-3">
                 <ImageRound
-                  className="w-20 h-20"
+                  className="w-[70px] h-[70px]"
                   src="/icons/multi-users.svg"
                   border="full"
                   name="Multi users"
                 />
                 <div className="!w-full">
-                  <p className="text-[#77858F] font-medium text-[12px] mb-1.5">
+                  <p className="text-[#77858F] font-medium text-[12px] mb-[10px] leading-none">
                     グループ名
                   </p>
                   <Input
                     className="!py-1.5 !pl-1.5 !w-full !border-[#77858F] text-sm"
-                    placeholder="グループ名を入力してください"
                     register={register('groupName', {
                       maxLength: {
                         value: 255,
@@ -375,19 +374,19 @@ const ActionsAddMembersModal = memo(
             <></>
           )}
         </div>
-        <div className="px-6">
+        <div className="px-5">
           <p className="text-[12px] text-[#77858F] font-medium mb-3">
             メンバーを選択
           </p>
           <InputSearch
             placeholder="名前を検索"
             className="w-full"
-            inputClassName="!py-2 text-[14px]"
+            inputClassName="!py-1 !h-[36px] text-[14px] !border-[#77858F] !placeholder-[#BABABA]"
             onChange={(e) => setSearchName(e.target.value)}
           />
         </div>
-        <div className="px-6 mb-7">
-          <div className="flex gap-4 my-3">
+        <div className="px-5 mb-[30px]">
+          <div className="flex gap-6 my-[10px]">
             <p
               className="text-[#77858F] font-medium text-[12px] hover:cursor-pointer"
               onClick={() => {
@@ -409,7 +408,7 @@ const ActionsAddMembersModal = memo(
               人を選択中
             </p>
           </div>
-          <div className="pt-3 max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
+          <div className="max-h-[276px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
             {dataOptionsParticipants?.filter((member) =>
               member.fullName.toLowerCase().includes(searchName.toLowerCase()),
             ).length === 0 && (
@@ -433,12 +432,12 @@ const ActionsAddMembersModal = memo(
               .map((member) => {
                 return (
                   <div
-                    className={`flex gap-2 items-center p-1.5 hover:cursor-pointer ${
-                      watch('members') &&
-                      watch('members').find(
-                        (participant) => participant == member.id,
-                      ) &&
-                      'bg-[#EBF1F7]'
+                    className={`flex gap-[10px] items-center py-2 px-5 hover:cursor-pointer ${
+                      checkIsParticipantSelected(
+                        member,
+                        watch('members').filter(Boolean) ?? [],
+                        watch('organizations').filter(Boolean) ?? [],
+                      ) && 'bg-[#EBF1F7]'
                     }`}
                     key={member.id}>
                     <div>
@@ -452,6 +451,7 @@ const ActionsAddMembersModal = memo(
                               watch('members').filter(Boolean) ?? [],
                               watch('organizations').filter(Boolean) ?? [],
                             )}
+                            boxLabelClass="!ml-[4px]"
                             onChange={() =>
                               handleSelectChatParticipant(
                                 member,
@@ -484,10 +484,10 @@ const ActionsAddMembersModal = memo(
                     )}
                     <p
                       className={`break-all font-medium text-[15px] max-w-[430px] text-black`}>
-                      <span className="text-sm text-black">
+                      <span className="text-[15px] text-black">
                         {member.fullName}
                       </span>
-                      <span className="text-xs text-[#77858F] ml-2">
+                      <span className="text-xs text-[#77858F] ml-[6px]">
                         {member.type == ChatParticipantType.USER &&
                           member?.mainOrganization}
                       </span>
@@ -497,7 +497,7 @@ const ActionsAddMembersModal = memo(
               })}
           </div>
         </div>
-        <div className="flex justify-center gap-3 my-7 items-center">
+        <div className="flex justify-center gap-[10px] mb-[30px] items-center">
           <Button
             variant="primary"
             className="w-[110px]"

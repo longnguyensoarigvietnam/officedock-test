@@ -101,17 +101,17 @@ export const ChatMentionMembersList = ({
       {openMentionMembersModal && (
         <div
           ref={popoverRef}
-          className={`absolute after:content-[''] after:absolute ${customArrowPosition} after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent p-[10px] ${customModalPosition} w-[280px] h-[300px] rounded-lg bg-white`}
+          className={`absolute after:content-[''] after:absolute ${customArrowPosition} after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent p-[10px] ${customModalPosition} w-[250px] h-[266px] rounded-lg bg-white`}
           style={{
             boxShadow: '0px 4px 8px 0px #0000000F',
           }}>
           <InputSearch
             placeholder="名前を検索"
-            className="w-full mb-3"
-            inputClassName="!py-2 !border-[#77858F]"
+            className="w-full mb-[10px]"
+            inputClassName="!py-1 text-[14px] !border-[#77858F] !placeholder-[#BABABA]"
             onChange={(e) => setSearchMentionMembers(e.target.value)}
           />
-          <div className="max-h-[230px] overflow-x-hidden overflow-y-auto">
+          <div className="max-h-[200px] overflow-x-hidden overflow-y-auto">
             {mentionMemberOptions.length &&
             mentionMemberOptions
               .filter((participant) => participant.id !== session?.user.id)
@@ -132,15 +132,15 @@ export const ChatMentionMembersList = ({
                 .map((participant) => (
                   <div
                     key={participant.id}
-                    className={`flex items-center px-3 ${
+                    className={`flex items-center px-[10px] ${
                       mentionMembers.find(
                         (mentionMember) => mentionMember.id === participant.id,
                       ) && 'bg-[#EBF1F7]'
                     }`}>
-                    <div className="w-5">
+                    <div>
                       <Checkbox
                         label=""
-                        className="mr-2"
+                        boxLabelClass="!ml-[8px]"
                         isChecked={mentionMembers.some(
                           (mentionMember) =>
                             mentionMember.id === participant.id,

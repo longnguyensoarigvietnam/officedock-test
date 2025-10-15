@@ -196,7 +196,7 @@ const ChatSettingModal = memo(
           <InputSearch
             placeholder="名前を検索"
             className="w-full"
-            inputClassName="!py-2 text-[14px] !border-[#77858F]"
+            inputClassName="!py-1 text-[14px] !border-[#77858F] !placeholder-[#BABABA]"
             onChange={(e) => setSearchName(e.target.value)}
           />
         </div>
