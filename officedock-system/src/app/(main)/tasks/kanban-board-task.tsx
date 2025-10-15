@@ -45,6 +45,7 @@ import useTaskBoardList from '@hooks/useTaskBoardList';
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import useTemplateList from '@hooks/useTemplateList';
 import { useErrorToast } from '@hooks/useErrorToast';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -111,7 +112,6 @@ import {
 } from '@utils/date';
 import { compareItems } from '@utils';
 import api from '@base/api';
-import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const createStatusTaskObjectFromArray = (
   array: StatusTask[],

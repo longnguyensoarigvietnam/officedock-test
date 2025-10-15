@@ -122,6 +122,7 @@ const CustomizeItemPage = () => {
           id: dataItemWear?.id as number,
           type: activeTab === TabTypeShopItem.ALL ? '' : activeTab,
           screenName: undefined,
+          itemType: dataItemWear?.itemType || '',
         });
       },
       onError: () => {

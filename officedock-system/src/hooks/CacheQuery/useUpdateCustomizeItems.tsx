@@ -8,10 +8,12 @@ export function useUpdateCusTomizeItemCache() {
     screenName,
     type,
     id,
+    itemType,
   }: {
     screenName: string | undefined;
     type: string;
     id: number;
+    itemType: string;
   }) => {
     queryClient.setQueryData(
       ['getListItemCustomize', screenName, type],
@@ -24,11 +26,15 @@ export function useUpdateCusTomizeItemCache() {
             ...page,
             results: page.results.map((shopItem: ShopItem) => ({
               ...shopItem,
-              items: shopItem.items.map((item: ItemUser) =>
-                item.id === id
-                  ? { ...item, isEquipped: true }
-                  : { ...item, isEquipped: false },
-              ),
+              items: shopItem.items.map((item: ItemUser) => {
+                if (item.id === id) {
+                  return { ...item, isEquipped: true };
+                }
+                if (item.itemType === itemType) {
+                  return { ...item, isEquipped: false };
+                }
+                return item;
+              }),
             })),
           })),
         };

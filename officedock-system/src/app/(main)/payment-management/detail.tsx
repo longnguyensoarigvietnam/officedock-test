@@ -107,10 +107,6 @@ const PaymentDetail = () => {
       },
     },
   );
-  const allFailed =
-    paymentList?.results &&
-    paymentList?.results.length > 0 &&
-    paymentList?.results.every((card) => card.isRetryFailed === true);
 
   return (
     <>
@@ -120,7 +116,7 @@ const PaymentDetail = () => {
         <div className="mt-[30px] bg-[#F8FAFC] rounded-[30px] p-[30px]">
           <div className="flex items-center gap-5">
             <p className="text-[18px] font-medium">契約履歴</p>
-            {allFailed && (
+            {creationDataCommonData?.company?.isPaymentFailed && (
               <div className="p-[14px] bg-[#F75356] rounded-md flex items-center gap-2">
                 <ImageRound
                   src={`/icons/warning-payment.svg`}
