@@ -96,6 +96,8 @@ class UserService:
         if not user:
             return False
         company_status = user.company.status
+        if not company_status:
+            return False
         # Just allow user have permission access to Payment Management page when company suspended
         if company_status == CompanyStatus.SUSPENDED.value:
             return user.roles.filter(
