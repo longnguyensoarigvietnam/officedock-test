@@ -367,7 +367,7 @@ const ActionsChatMembersModal = memo(
         titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
         contentClass="!rounded-[20px]"
         headerClassName="bg-[#EBF1F7] !rounded-t-xl !rounded-b-none px-5 !py-[10px]"
-        closeIconClassName="!bg-white !rounded-full !p-[7px] !hover:cursor-pointer !shadow-sm"
+        closeIconClassName="!bg-white !rounded-full !p-[7px] !hover:cursor-pointer"
         closeClassName="!mt-0 !w-4 !h-4 !hover:cursor-pointer"
         onClose={() => {
           onClose();
@@ -534,7 +534,7 @@ const ActionsChatMembersModal = memo(
               <div className="flex justify-center gap-[10px] my-[30px] items-center">
                 <Button
                   variant="primary"
-                  className="w-[110px]"
+                  className="w-[100px] !h-[36px] !p-0"
                   disabled={watch('members').length == 0}
                   onClick={handleConfirmUpdateMemberList}>
                   招待する
@@ -542,7 +542,7 @@ const ActionsChatMembersModal = memo(
                 <Button
                   variant="outline"
                   onClick={onClose}
-                  className="w-[110px]">
+                  className="w-[100px] !h-[36px] !p-0">
                   キャンセル
                 </Button>
               </div>

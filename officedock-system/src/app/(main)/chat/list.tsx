@@ -1276,11 +1276,8 @@ const ListChatUsers = ({
             ) && (
               <DynamicTooltip
                 content={'チャットルームの新規作成'}
-                placement="top"
-                customOffset={{
-                  top: -8,
-                }}>
-                <div className='w-[36px] h-[36px] flex items-center justify-center'>
+                placement="top">
+                <div className="w-[36px] h-[36px] flex items-center justify-center">
                   <ImageRound
                     src="/icons/add-chat.svg"
                     name="Add icon"

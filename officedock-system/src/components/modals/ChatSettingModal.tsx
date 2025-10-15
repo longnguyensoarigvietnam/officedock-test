@@ -17,6 +17,7 @@ import { apiRouters } from '@constants/routers';
 import { NO_OPTIONS } from '@constants';
 import { ChatRoomType, PermissionsSystem } from '@constants/enums';
 import {
+  ERROR_LONG_FIELD_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
@@ -157,30 +158,34 @@ const ChatSettingModal = memo(
         isOutSideAction={false}
         className="font-primary !rounded-[20px] text-gray-700 !p-0 w-[500px]"
         titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
-        headerClassName="bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-6 py-4"
         contentClass="!rounded-[20px]"
-        closeIconClassName="!bg-white !rounded-full !p-2 !hover:cursor-pointer !shadow-sm"
-        closeClassName="!mt-0 opacity-70 !w-4 !h-4 !hover:cursor-pointer"
+        headerClassName="bg-[#EBF1F7] !rounded-t-xl !rounded-b-none px-5 !py-[10px]"
+        closeIconClassName="!bg-white !rounded-full !p-[7px] !hover:cursor-pointer"
+        closeClassName="!mt-0 !w-4 !h-4 !hover:cursor-pointer"
         onClose={() => {
           onClose();
         }}
         title="グループチャットの編集">
-        <div className="text-sm text-gray-700 px-6">
-          <div className="flex gap-4 items-center pb-3">
+        <div className="text-sm text-gray-700 px-5">
+          <div className="flex gap-5 items-center mb-5">
             <ImageRound
-              className="w-20 h-20"
+              className="w-[70px] h-[70px]"
               src={`${showRoomAvatar(chatRoomDetail?.type || '')}`}
               border="full"
               name="Multi users"
             />
             <div className="!w-full">
-              <p className="text-[#77858F] font-medium text-[12px] mb-1.5">
+              <p className="text-[#77858F] font-medium text-[12px] mb-[10px] leading-none">
                 グループ名
               </p>
               <Input
-                className="!py-1.5 !pl-1.5 !w-full !border-[#77858F]"
+                className="!py-1.5 !pl-1.5 !w-full !border-[#77858F] text-sm"
                 placeholder="グループ名を入力してください"
                 register={register('groupName', {
+                  maxLength: {
+                    value: 255,
+                    message: ERROR_LONG_FIELD_MESSAGE,
+                  },
                   onBlur: (e) => {
                     if (e.target.value === '') {
                       setValue('groupName', '');
@@ -191,16 +196,18 @@ const ChatSettingModal = memo(
             </div>
           </div>
         </div>
-        <p className="text-[12px] my-2 text-[#77858F] px-6">メンバーの編集</p>
-        <div className="px-6">
+        <p className="text-[12px] mb-[10px] text-[#77858F] px-5 leading-none font-medium">
+          メンバーの編集
+        </p>
+        <div className="px-5">
           <InputSearch
             placeholder="名前を検索"
             className="w-full"
-            inputClassName="!py-1 text-[14px] !border-[#77858F] !placeholder-[#BABABA]"
+            inputClassName="!py-1 !h-[36px] text-[14px] !border-[#77858F] !placeholder-[#BABABA]"
             onChange={(e) => setSearchName(e.target.value)}
           />
         </div>
-        <div className="pt-3 px-6 max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
+        <div className="my-[10px] px-5 max-h-[276px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
           {chatRoomDetail?.participants &&
             dashboardMemberList
               ?.filter((member) =>
@@ -230,28 +237,31 @@ const ChatSettingModal = memo(
               .map((member) => {
                 return (
                   <div
-                    className={`flex items-center justify-between gap-2 py-2 px-4 hover:cursor-pointer hover:bg-[#EBF1F7]`}
+                    className={`flex items-center justify-between gap-2 py-2 px-5 hover:cursor-pointer hover:bg-[#EBF1F7]`}
                     key={member.id}>
-                    <div className="flex gap-2 items-center">
+                    <div className="flex gap-[10px] items-center">
                       {renderAvatar(member.id)}
                       <p
                         className={`truncate font-medium text-[15px] max-w-[210px] text-black`}>
                         <span className="font-normal text-sm text-black">
                           {member.fullName}
                         </span>
-                        <span className="font-normal text-xs text-[#77858F] ml-2">
+                        <span className="font-normal text-xs text-[#77858F] ml-[6px]">
                           {member?.organizations?.name}
                         </span>
                       </p>
                     </div>
-                    <div className="flex gap-3 items-center">
+                    <div className="flex gap-5 items-center">
                       <Controller
                         control={control}
                         name="role"
                         render={({ field: { value } }) => (
                           <TableDropdown
                             options={roleOptions}
-                            className="!w-[120px] !h-[30px]"
+                            labelClass="!text-xs !min-h-[15px] font-medium"
+                            labelOptionClass="!text-xs !min-h-[15px] font-medium"
+                            className="!w-[100px] !h-[25px] !rounded-[4px]"
+                            valueClassName="!border-[#77858F]"
                             selectedOption={roleOptions.find(
                               (element) => element.value === value?.value,
                             )}
@@ -264,7 +274,7 @@ const ChatSettingModal = memo(
                           placement="top">
                           <div>
                             <ImageRound
-                              className="w-[18px] h-[18px] opacity-50 hover:cursor-pointer"
+                              className="w-[18px] h-[18px] hover:cursor-pointer"
                               src="/icons/close.svg"
                               name="Close modal"
                               onClick={() => openConfirmRemoveModal(member.id)}
@@ -286,12 +296,12 @@ const ChatSettingModal = memo(
           ) &&
           chatRoomDetail?.type == ChatRoomType.GROUP && (
             <div
-              className="flex justify-center gap-2 my-7 items-center hover:cursor-pointer"
+              className="flex justify-center gap-[6px] mb-[30px] items-center hover:cursor-pointer"
               onClick={openAddMemberModal}>
               <ImageRound
                 src="/icons/add-chat.svg"
                 name="Add icon"
-                className="!w-[20px] !h-[20px] text-gray-400 hover:cursor-pointer cursor-pointer"
+                className="!w-[18px] !h-[18px] text-gray-400 hover:cursor-pointer cursor-pointer"
               />
               <p className="text-[#77858F] text-[14px] font-medium">
                 メンバーを追加
@@ -299,13 +309,16 @@ const ChatSettingModal = memo(
             </div>
           )}
 
-        <div className="flex justify-center gap-3 my-7 items-center">
-          <Button variant="outline" onClick={onClose} className="w-[110px]">
+        <div className="flex justify-center gap-[10px] mb-[30px] items-center">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="w-[100px] !h-[36px] !p-0">
             キャンセル
           </Button>
           <Button
             variant="primary"
-            className="w-[110px]"
+            className="w-[100px] !h-[36px] !p-0"
             disabled={
               (watch('groupName') && !watch('groupName').trim()) ||
               !watch('groupName')
