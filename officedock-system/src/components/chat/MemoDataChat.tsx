@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useState } from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
@@ -71,6 +71,12 @@ const MemoDataChat = ({
     { label: 'ファイル', value: ChatMemoType.FILE },
     { label: 'メンバー', value: ChatMemoType.MEMBER },
   ];
+
+  useEffect(() => {
+    if (dataFileAddList && activeTab !== ChatMemoType.FILE) {
+      setDataFileAddList([]);
+    }
+  }, [activeTab, dataFileAddList, setDataFileAddList]);
 
   return (
     <div className="px-4 pt-5">

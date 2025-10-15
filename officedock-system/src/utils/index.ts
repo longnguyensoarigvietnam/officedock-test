@@ -62,7 +62,11 @@ import {
 } from '@interfaces/task';
 import { ChangeTextAreaProps, OptionDropdownType } from '@interfaces/common';
 import { UserRoleType } from '@interfaces/user';
-import { ChatMessageResponse, ChatParticipant } from '@interfaces/chat';
+import {
+  ChatMessageResponse,
+  ChatParticipant,
+  DataChatFileMemo,
+} from '@interfaces/chat';
 import { ConditionByMap } from '@interfaces/skill-map';
 import { Candidate } from '@interfaces/mvp';
 
@@ -2519,3 +2523,29 @@ export function hasFullPaymentPermissions(permissions: string[]): boolean {
 
   return allMatch;
 }
+
+export const mapChatFilesToMemo = (
+  message: ChatMessageResponse,
+  uuidListMain: string[],
+): DataChatFileMemo[] => {
+  if (!message || !Array.isArray(message.chatFiles)) return [];
+  if (!Array.isArray(uuidListMain) || uuidListMain.length === 0) return [];
+
+  return message.chatFiles
+    .filter((file) => uuidListMain.includes(file.uuid))
+    .map((file) => ({
+      id: file.id as number,
+      createdAt: file.createdAt as string,
+      fileName: file.fileName,
+      fileSize: file.fileSize,
+      fileType: file.fileType,
+      originalFile: file.compressedFile as string,
+      uuid: file.uuid,
+      chatMessages: [
+        {
+          id: message.id as number,
+          uuid: message.uuid,
+        },
+      ],
+    }));
+};

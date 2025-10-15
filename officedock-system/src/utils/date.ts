@@ -1802,8 +1802,14 @@ export const isCheckPermissionWithCloseDate = ({
   dateA: Date | string;
   dateB: Date | string;
 }): boolean => {
+  if (!dateA || !dateB) return false;
+
   const d1 = new Date(dateA);
   const d2 = new Date(dateB);
+
+  if (isNaN(d1.getTime()) || isNaN(d2.getTime())) {
+    return false;
+  }
 
   d1.setHours(0, 0, 0, 0);
   d2.setHours(0, 0, 0, 0);
