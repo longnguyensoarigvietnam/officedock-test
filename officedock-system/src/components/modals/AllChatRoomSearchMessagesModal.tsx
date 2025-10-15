@@ -143,15 +143,15 @@ export const AllChatRoomSearchMessagesModal = ({
       isOutSideAction={false}
       className="font-primary !rounded-[20px] text-gray-700 !p-0 !w-[1000px] !min-w-[1000px] h-[790px]"
       titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
-      headerClassName="bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-6 py-4"
-      closeIconClassName="!bg-white !rounded-full !p-2 !hover:cursor-pointer !shadow-sm"
-      closeClassName="!mt-0 opacity-70 !w-4 !h-4 !hover:cursor-pointer"
+      headerClassName="bg-[#EBF1F7] !rounded-t-xl !rounded-b-none px-5 !py-[10px]"
+      closeIconClassName="!bg-white !rounded-full !p-[7px] !hover:cursor-pointer"
+      closeClassName="!mt-0 !w-4 !h-4 !hover:cursor-pointer"
       contentClass="!w-[1000px] !rounded-[20px]"
       onClose={() => {
         onClose();
       }}
       title="検索">
-      <div className="px-6">
+      <div className="px-5">
         <div className="flex justify-between items-center mb-5">
           <div className="flex items-center gap-2">
             <InputSearch

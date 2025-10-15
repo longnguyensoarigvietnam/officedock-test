@@ -235,21 +235,22 @@ const TaskListStatistic = ({
       }}
       className="p-[30px] bg-[#F8FAFC] my-5 rounded-[30px] mb-10">
       {/* Header & sort */}
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center">
         <div className="flex items-center gap-x-5">
           <div className="flex items-center gap-[10px] ">
             <ImageRound
-              className={`w-5 h-5  hover:cursor-pointer relative top-[2px]`}
+              className={`w-5 h-5  hover:cursor-pointer`}
               name="period icon"
               src={`/icons/task-active.svg`}
             />
-            <span className="text-[18px] w-[90px] flex-shrink-0 text-black font-semibold relative top-[2px]">
+            <span className="text-[18px] w-[90px] flex-shrink-0 text-black font-semibold">
               タスク一覧
             </span>
           </div>
           {/* Filter */}
           <FilterStatistic />
-
+        </div>
+        <div className='flex items-center gap-4'>
           {/* Download button */}
           <Popover className="relative">
             {({ close }) => {
@@ -300,17 +301,17 @@ const TaskListStatistic = ({
               );
             }}
           </Popover>
+          <ImageRound
+            src="/icons/extend-calendar.svg"
+            name="Extend calendar"
+            className={`!w-[14px] !h-[14px] hover:cursor-pointer ${
+              isExtendData ? '-rotate-90' : 'rotate-90'
+            }`}
+            onClick={() => {
+              setIsExtendData(!isExtendData);
+            }}
+          />
         </div>
-        <ImageRound
-          src="/icons/extend-calendar.svg"
-          name="Extend calendar"
-          className={`!w-3 !h-3 hover:cursor-pointer ${
-            isExtendData ? '-rotate-90' : 'rotate-90'
-          }`}
-          onClick={() => {
-            setIsExtendData(!isExtendData);
-          }}
-        />
       </div>
       {isExtendData && (
         <>

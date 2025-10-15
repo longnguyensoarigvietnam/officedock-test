@@ -322,7 +322,7 @@ const ChatUploadingFilesModal = memo(
           <div className="flex justify-center gap-[10px] my-[30px] items-center">
             <Button
               variant="primary"
-              className="w-[110px]"
+              className="w-[100px] !h-[36px] !p-0"
               onClick={onSubmit}
               disabled={
                 trimUnnecessaryLineBreaks(message as string) === '' &&
@@ -330,7 +330,7 @@ const ChatUploadingFilesModal = memo(
               }>
               送信
             </Button>
-            <Button variant="outline" onClick={onClose} className="w-[110px]">
+            <Button variant="outline" onClick={onClose} className="w-[100px] !h-[36px] !p-0">
               キャンセル
             </Button>
           </div>

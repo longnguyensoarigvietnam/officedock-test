@@ -1517,15 +1517,15 @@ const LineChartByTeam = ({
       }}
       className="p-[30px] bg-[#F8FAFC] mt-5 rounded-[30px]">
       {/* Header & sort */}
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center">
         <div className="flex items-center gap-x-5">
           <div className="flex items-center gap-[10px] ">
             <ImageRound
-              className={`w-7 h-4  hover:cursor-pointer relative top-[2px]`}
+              className={`w-7 h-4  hover:cursor-pointer`}
               name="statistic line chart icon"
               src={`/icons/statistic-line-chart.svg`}
             />
-            <span className="text-black w-[210px] flex-shrink-0  font-semibold text-[18px] relative top-[2px]">
+            <span className="text-black w-[210px] flex-shrink-0  font-semibold text-[18px]">
               期間における時間の推移
             </span>
           </div>
@@ -1538,7 +1538,7 @@ const LineChartByTeam = ({
         <ImageRound
           src="/icons/extend-calendar.svg"
           name="Extend calendar"
-          className={`!w-3 !h-3 hover:cursor-pointer ${
+          className={`!w-[14px] !h-[14px] hover:cursor-pointer ${
             isExtendData ? '-rotate-90' : 'rotate-90'
           }`}
           onClick={() => {

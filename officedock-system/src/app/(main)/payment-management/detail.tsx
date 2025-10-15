@@ -40,11 +40,12 @@ const PaymentDetail = () => {
   const { removePaymentCard, updateDefaultCard, addCardPayment } =
     useUpdatePaymentCardCache();
 
-  const { creationDataCommonData } = useCreationDataCommon({
-    options: {
-      get_company: true,
-    },
-  });
+  const { creationDataCommonData, refetchCreationDataCommon } =
+    useCreationDataCommon({
+      options: {
+        get_company: true,
+      },
+    });
 
   const handleRemovePaymentCard = async (id: number) => {
     setIsLoading(true);
@@ -281,6 +282,7 @@ const PaymentDetail = () => {
         onClose={() => setOpenAddCard(false)}
         onCreate={(newCard: PaymentMethod) => {
           addCardPayment(newCard);
+          refetchCreationDataCommon();
         }}
       />
       {openDeleteCardModal && selectedCardId && (

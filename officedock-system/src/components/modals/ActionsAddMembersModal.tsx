@@ -15,6 +15,7 @@ import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
+import { ERROR_LONG_FIELD_MESSAGE } from '@constants/message';
 import { ChatParticipantType } from '@constants/enums';
 import { NO_OPTIONS } from '@constants';
 
@@ -22,7 +23,6 @@ import { Profile } from '@interfaces/user';
 import { ChatParticipant, ChatRoomItem } from '@interfaces/chat';
 
 import { checkIsParticipantSelected, sortChatParticipants } from '@utils';
-import { ERROR_LONG_FIELD_MESSAGE } from '@constants/message';
 
 export type ActionsAddMembersModalProps = {
   open: boolean;
@@ -333,7 +333,7 @@ const ActionsAddMembersModal = memo(
         titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
         contentClass="!rounded-[20px]"
         headerClassName="bg-[#EBF1F7] !rounded-t-xl !rounded-b-none px-5 !py-[10px]"
-        closeIconClassName="!bg-white !rounded-full !p-[7px] !hover:cursor-pointer !shadow-sm"
+        closeIconClassName="!bg-white !rounded-full !p-[7px] !hover:cursor-pointer"
         closeClassName="!mt-0 !w-4 !h-4 !hover:cursor-pointer"
         onClose={() => {
           onClose();
@@ -375,7 +375,7 @@ const ActionsAddMembersModal = memo(
           )}
         </div>
         <div className="px-5">
-          <p className="text-[12px] text-[#77858F] font-medium mb-3">
+          <p className="text-[12px] text-[#77858F] font-medium mb-[10px] leading-none">
             メンバーを選択
           </p>
           <InputSearch
@@ -500,12 +500,12 @@ const ActionsAddMembersModal = memo(
         <div className="flex justify-center gap-[10px] mb-[30px] items-center">
           <Button
             variant="primary"
-            className="w-[110px]"
+            className="w-[100px] !h-[36px] !p-0"
             onClick={handleSave}
             disabled={isSaveButtonDisabled}>
             作成する
           </Button>
-          <Button variant="outline" onClick={onClose} className="w-[110px]">
+          <Button variant="outline" onClick={onClose} className="w-[100px] !h-[36px] !p-0">
             キャンセル
           </Button>
         </div>
