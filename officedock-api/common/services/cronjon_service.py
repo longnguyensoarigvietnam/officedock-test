@@ -49,13 +49,14 @@ class CronJobService:
         usage_month = datetime(start_year, start_month, 1, 0, 0, 0)
         if not companies:
             companies = Company.objects.all()
-
+        companies = companies.filter(
+            contract__next_renewal_at__date=usage_month.date(),
+            contract__cancel_at__isnull=True,
+        ).all()
         if companies:
             tax = Tax.objects.first()
             mail_service = PaymentMailService()
-            for company in companies.filter(
-                contract__next_renewal_at__date=usage_month.date()
-            ):
+            for company in companies:
                 plan = company.company_plan.plan
                 price = plan.monthly_fee + (
                     plan.monthly_fee * tax.percentage / 100

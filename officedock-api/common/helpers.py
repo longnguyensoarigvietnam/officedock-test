@@ -13,6 +13,7 @@ from common.serializers import (
 )
 from common.utils import transform_statistic_categories
 from companies.constants import CompanyStatus
+from companies.serializers import CompanySerializer
 from mvp_votes.constants import MVPVoteTypes
 from mvp_votes.models import MVPVoteManagement
 from organizations.models import Organization
@@ -36,6 +37,16 @@ from users.serializers import (
     SettingSerializer,
     UserBalanceSerializer,
 )
+
+
+def get_company(company):
+    """Get company data"""
+    data = CompanySerializer(company).data
+    data["is_payment_failed"] = company.status in [
+        CompanyStatus.RETRY_PAYMENT.value,
+        CompanyStatus.SUSPENDED.value,
+    ]
+    return data
 
 
 def get_all_organizations(company, organizations):
