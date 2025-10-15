@@ -2768,7 +2768,7 @@ const ChatDetail = ({
                                       mentionMembers={mentionMembers}
                                       dashboardMemberList={dashboardMemberList}
                                       customModalPosition={
-                                        'left-[-125px] top-[-310px]'
+                                        'left-[-110px] top-[-275px]'
                                       }
                                       customArrowPosition={
                                         'after:top-full after:border-t-white'
@@ -2996,7 +2996,7 @@ const ChatDetail = ({
                         </Button>
                       </div>
                     </div>
-                    <div className="mt-5">
+                    <div className="mt-[14px]">
                       <div className="border-[1px] border-[#77858f] rounded-[6px] h-[150px] w-full p-[14px]"></div>
                     </div>
                   </div>

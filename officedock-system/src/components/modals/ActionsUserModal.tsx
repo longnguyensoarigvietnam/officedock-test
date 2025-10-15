@@ -22,6 +22,7 @@ import Drawer from '@components/common/Drawers';
 import Checkbox from '@components/common/Checkbox';
 import Dropdown from '@components/common/Dropdown';
 import ErrorMessage from '@components/common/ErrorMessage';
+import RadioButton from '@components/common/RadioButton';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
@@ -482,12 +483,11 @@ const ActionsUserModal = ({
           <div className="flex gap-5 mt-[38px]">
             <div
               className={`flex items-center gap-2 w-[164px] ${action == ActionsEvent.EDIT && !isOptionEmail && 'opacity-40'}`}>
-              <Checkbox
+              <RadioButton
+                name={`create-option`}
                 isChecked={isOptionEmail}
-                classSize="!rounded-full"
                 label="メールアドレスで登録"
                 classLabel="!text-black text-sm"
-                boxLabelClass="!ml-2"
                 disable={action == ActionsEvent.EDIT}
                 onChange={() => {
                   const currentTitle = getValues('name');
@@ -503,12 +503,11 @@ const ActionsUserModal = ({
             </div>
             <div
               className={`flex items-center gap-2 w-[164px] ${action == ActionsEvent.EDIT && isOptionEmail && 'opacity-40'}`}>
-              <Checkbox
+              <RadioButton
+                name={`create-option`}
                 isChecked={!isOptionEmail}
-                classSize="!rounded-full"
                 label="IDで登録"
                 classLabel="!text-black text-sm"
-                boxLabelClass="!ml-2"
                 disable={action == ActionsEvent.EDIT}
                 onChange={() => {
                   const currentTitle = getValues('name');

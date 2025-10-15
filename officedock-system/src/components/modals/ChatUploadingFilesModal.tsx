@@ -183,9 +183,9 @@ const ChatUploadingFilesModal = memo(
         isOutSideAction={false}
         className="font-primary !rounded-xl text-gray-700 !p-0 w-[600px] "
         titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
-        headerClassName="bg-[#EBF1F7] !rounded-t-xl !rounded-b-none px-6 py-4"
-        closeIconClassName="!bg-white !rounded-full !p-2 !hover:cursor-pointer !shadow-sm"
-        closeClassName="!mt-0 opacity-70 !w-4 !h-4 !hover:cursor-pointer"
+        headerClassName="bg-[#EBF1F7] !rounded-t-xl !rounded-b-none px-5 !py-[10px]"
+        closeIconClassName="!bg-white !rounded-full !p-[7px] !hover:cursor-pointer !shadow-sm"
+        closeClassName="!mt-0 !w-4 !h-4 !hover:cursor-pointer"
         contentClass="!w-[600px]"
         onClose={() => {
           onClose();
@@ -268,19 +268,19 @@ const ChatUploadingFilesModal = memo(
             className="hidden"
             onChange={handleFileChange}
           />
-          <div className="max-h-[200px] overflow-y-auto">
+          <div className="max-h-[200px] mb-3 overflow-y-auto flex flex-col gap-[6px]">
             {[...uploadFiles, ...preserveFiles].map((uploadFile, index) => {
               return (
                 <div
                   key={index}
-                  className="bg-[#EBF1F7] p-[14px] !w-full mb-2 flex justify-between items-center">
+                  className="bg-[#EBF1F7] px-[14px] h-[38px] !w-full rounded-[4px] flex justify-between items-center">
                   <p className="text-black text-sm font-normal max-w-[500px] truncate">
                     {uploadFile.file.name}
                   </p>
                   <DynamicTooltip content={'取り消し'} placement="top">
                     <div>
                       <ImageRound
-                        className={`mt-1 w-5 h-5 hover:cursor-pointer`}
+                        className={`w-5 h-5 hover:cursor-pointer`}
                         src="/icons/close.svg"
                         name="Close modal"
                         onClick={() => {
@@ -306,20 +306,20 @@ const ChatUploadingFilesModal = memo(
           </div>
 
           <div
-            className="flex gap-2 justify-center items-center hover:cursor-pointer"
+            className="flex gap-[6px] justify-center items-center hover:cursor-pointer"
             onClick={() => {
               fileInputRef.current?.click();
             }}>
             <ImageRound
               src="/icons/add-chat.svg"
               name="Add icon"
-              className="!w-[17px] !h-[17px] text-gray-400 hover:cursor-pointer cursor-pointer"
+              className="!w-[18px] !h-[18px] text-gray-400 hover:cursor-pointer cursor-pointer"
             />
             <p className="text-[#77858F] text-[14px] font-medium">
               ファイルを追加
             </p>
           </div>
-          <div className="flex justify-center gap-3 my-7 items-center">
+          <div className="flex justify-center gap-[10px] my-[30px] items-center">
             <Button
               variant="primary"
               className="w-[110px]"

@@ -266,7 +266,7 @@ export const MessageDetail = ({
     );
 
     return (
-      <div className="h-6">
+      <div className="h-6 relative top-[-3px]">
         <CustomUserAvatar
           avatarUrl={memberInfo?.avatar || ''}
           avatarColor={memberInfo?.avatarColor || ''}
