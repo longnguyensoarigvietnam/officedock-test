@@ -318,7 +318,7 @@ class CompanyService:
         # Terminate the contract when the last invoice is paid
         if company.status == CompanyStatus.CANCELLATION_PENDING.value and (
             get_a_day_in_next_month(contract.end_date, target_date=5).date()
-            == to_datetime(invoice.effective_at).date()
+            <= to_datetime(invoice.effective_at).date()
         ):
             # Update company status
             self.change_status_of_company(

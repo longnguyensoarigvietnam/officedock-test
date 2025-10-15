@@ -30,6 +30,7 @@ from common.constants import (
 from common.helpers import (
     get_all_organizations,
     get_balances_of_user,
+    get_company,
     get_company_status,
     get_data_organization_my_statistic,
     get_data_organization_team_statistic,
@@ -61,7 +62,6 @@ from companies.constants import (
     SystemMainPurpose,
     TransactionStatus,
 )
-from companies.serializers import CompanySerializer
 from companies.services import CompanyService
 from dashboard.utils import separate_duration_while_keep_running
 from mvp_votes.constants import DEFAULT_CONTENT_TWEET_END_VOTE, MVPVoteTypes
@@ -183,11 +183,10 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         response_data = {}
         organizations = None
         if "get_company" in request.query_params:
-            response_data["company"] = CompanySerializer(company).data
+            response_data["company"] = get_company(company)
         if "get_all_organizations" in request.query_params:
             organizations = get_all_organizations(company, organizations)
-
-            # Filter oganization by permission with imput screen_name in params
+            # Filter organization by permission with input screen_name in params
             filtered_organizations = self.filter_queryset(organizations)
 
             response_data[
