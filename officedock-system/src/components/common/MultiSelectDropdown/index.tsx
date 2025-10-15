@@ -165,7 +165,7 @@ const MultiSelectDropdown = ({
             if (disabled) {
               setIsOpen(false);
             } else {
-              setIsOpen(true);
+              setIsOpen(!isOpen);
             }
           }}>
           <div className="h-full">

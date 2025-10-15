@@ -15,4 +15,5 @@ export interface Company {
   };
   closeDate?: number;
   startEditableDate?: string;
+  isPaymentFailed?: boolean;
 }

@@ -767,12 +767,12 @@ const ListActualDurations = () => {
                           )}>
                           <ImageRound
                             name="Edit"
-                            src={'/icons/edit-task.svg'}
-                            className={`w-[15px] h-[15px] hover:cursor-pointer opacity-65`}
+                            src={'/icons/edit-gray.svg'}
+                            className={`w-3 h-3 hover:cursor-pointer opacity-65`}
                           />
                         </Link>
                       ) : (
-                        <div className="w-[15px] h-[15px]"></div>
+                        <div className="w-3 h-3 "></div>
                       )}
                       {session?.user.permissions &&
                       hasPermissionInArray(
@@ -782,8 +782,8 @@ const ListActualDurations = () => {
                       element.pausedAt ? (
                         <ImageRound
                           name="Delete"
-                          src={'/icons/delete-task.svg'}
-                          className={`w-[13px] h-[16px] hover:cursor-pointer opacity-85`}
+                          src={'/icons/delete-gray.svg'}
+                          className="w-[12px] h-[14px] hover:cursor-pointer"
                           onClick={() =>
                             handleOpenDeleteActualDurationModal(element)
                           }

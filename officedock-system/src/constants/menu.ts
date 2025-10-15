@@ -182,7 +182,7 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     },
     current: false,
     companyMenu: true,
-    requiredPermission: PermissionsSystem.VIEW_ALL,
+    requiredPermission: PermissionsSystem.CALENDAR_MANAGEMENT_VIEW,
   },
   {
     ...pageRouters.THANK_MESSAGE_MANAGEMENT,
