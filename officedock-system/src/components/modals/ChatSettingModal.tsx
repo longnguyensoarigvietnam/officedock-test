@@ -156,7 +156,7 @@ const ChatSettingModal = memo(
       <Modal
         open={open}
         isOutSideAction={false}
-        className="font-primary !rounded-[20px] text-gray-700 !p-0 w-[500px]"
+        className="font-primary !rounded-[20px] text-black !p-0 w-[500px]"
         titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
         contentClass="!rounded-[20px]"
         headerClassName="bg-[#EBF1F7] !rounded-t-xl !rounded-b-none px-5 !py-[10px]"
@@ -166,7 +166,7 @@ const ChatSettingModal = memo(
           onClose();
         }}
         title="グループチャットの編集">
-        <div className="text-sm text-gray-700 px-5">
+        <div className="text-sm text-black px-5">
           <div className="flex gap-5 items-center mb-5">
             <ImageRound
               className="w-[70px] h-[70px]"

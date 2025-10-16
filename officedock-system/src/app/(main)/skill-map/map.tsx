@@ -71,8 +71,8 @@ const SkillMap = () => {
 
   return (
     <div className="w-full">
-      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#E6F3FB]">
-        <div className="flex gap-2 items-center mb-7 bg-white w-fit p-[6px] rounded-[20px]">
+      <div className="sticky z-[21] top-[0px] px-10 py-[27px] bg-[#E6F3FB]">
+        <div className="flex gap-2 items-center bg-white w-fit p-[6px] rounded-[20px]">
           <Button
             variant="primary"
             className={`w-[90px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px]`}>

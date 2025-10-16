@@ -26,7 +26,7 @@ export const SkillMapBanner = ({
         className=" rounded-[14px]"
       />
 
-      <div className="absolute w-full h-full top-0 left-0 flex items-center justify-between gap-5 pl-[50px] pr-[30px] text-white">
+      <div className="absolute w-full h-full top-0 left-0 flex items-center justify-between gap-5 px-[50px] text-white">
         <div className="h-full flex gap-5 items-center w-[395px]">
           <CustomUserAvatar
             avatarUrl={skillMapInfo?.user?.avatar || ''}
@@ -43,7 +43,7 @@ export const SkillMapBanner = ({
           </div>
         </div>
         <div className="text-xs font-medium w-fit flex-grow flex-shrink-0">
-          <div className="bg-[#FFFFFF40] w-full h-[104px] mt-3 rounded-[10px] px-[30px] py-[25px] flex flex-col gap-2">
+          <div className="bg-[#FFFFFF40] w-full h-[104px] rounded-[10px] px-[30px] py-[25px] flex flex-col gap-2">
             <div className="flex items-center gap-[10px] font-medium text-base">
               <Image
                 src="/icons/completed.svg"

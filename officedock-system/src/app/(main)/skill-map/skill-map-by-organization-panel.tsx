@@ -194,8 +194,14 @@ export const SkillMapByOrganizationPanel = ({
 
     const renderLevelText = () => (
       <div className="flex gap-[2px] items-baseline">
-        <p className="text-[15px] font-medium">Lv.</p>
-        <p className="text-[26px] font-medium">{level}</p>
+        <p
+          className={`${settingSkillAction ? 'text-[15px]' : 'text-sm'} font-medium`}>
+          Lv.
+        </p>
+        <p
+          className={`${settingSkillAction ? 'text-[26px]' : 'text-[30px]'} font-medium`}>
+          {level}
+        </p>
       </div>
     );
 
@@ -350,8 +356,13 @@ export const SkillMapByOrganizationPanel = ({
 
   return (
     <div
-      className={`w-full py-5 ${settingSkillAction ? 'px-4' : 'px-10'} bg-[#F8FAFC]`}>
-      <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
+      className={`w-full py-5 ${settingSkillAction ? 'px-4' : 'px-10 rounded-[30px] mb-5'} bg-[#F8FAFC]`}
+      style={{
+        boxShadow: settingSkillAction
+          ? undefined
+          : '0px 4px 10px 0px #0000000D',
+      }}>
+      <p className={`text-[#77858F] text-[16px] font-medium ${settingSkillAction ? 'mb-4' : 'mb-[30px]'} max-w-[100%] break-all`}>
         {skillMapDetail.organizationName}
       </p>
 
@@ -511,32 +522,32 @@ export const SkillMapByOrganizationPanel = ({
                               ) : (
                                 <>
                                   <TwinklingIcon
-                                    className="absolute top-[-10px] left-[-10px]"
+                                    className="absolute top-[-10px] left-[-10px] w-[10px] h-[10px]"
                                     delay={0}
                                     iconUrl="/icons/blue-star.svg"
                                   />
                                   <TwinklingIcon
-                                    className="absolute top-[5px] right-[-15px]"
+                                    className="absolute top-[5px] right-[-15px] w-[10px] h-[10px]"
                                     delay={0.5}
                                     iconUrl="/icons/blue-star.svg"
                                   />
                                   <TwinklingIcon
-                                    className="absolute top-[-15px] right-[5px]"
+                                    className="absolute top-[-15px] right-[5px] w-[10px] h-[10px]"
                                     delay={0.8}
                                     iconUrl="/icons/blue-star.svg"
                                   />
                                   <TwinklingIcon
-                                    className="absolute bottom-[5px] left-[-15px]"
+                                    className="absolute bottom-[5px] left-[-15px] w-[10px] h-[10px]"
                                     delay={1}
                                     iconUrl="/icons/blue-star.svg"
                                   />
                                   <TwinklingIcon
-                                    className="absolute bottom-[-15px] left-[5px]"
+                                    className="absolute bottom-[-15px] left-[5px] w-[10px] h-[10px]"
                                     delay={1.2}
                                     iconUrl="/icons/blue-star.svg"
                                   />
                                   <TwinklingIcon
-                                    className="absolute bottom-[-10px] right-[-10px]"
+                                    className="absolute bottom-[-10px] right-[-10px] w-[10px] h-[10px]"
                                     delay={1.5}
                                     iconUrl="/icons/blue-star.svg"
                                   />
@@ -547,9 +558,9 @@ export const SkillMapByOrganizationPanel = ({
 
                           <div className="w-[calc(100%_-_49px)]">
                             <div
-                              className={`flex justify-between items-start ${settingSkillAction ? 'mb-1' : 'mb-4'}`}>
+                              className={`flex justify-between items-center ${settingSkillAction ? 'mb-1' : 'mb-4'}`}>
                               <p
-                                className={`text-[15px] font-medium ${settingSkillAction ? 'max-w-[calc(100%_-_5px)]' : 'max-w-[calc(100%_-_20px)]'} line-clamp-1 break-all ${stepCompleted ? 'text-[#B3B3B3]' : 'text-black'}`}>
+                                className={`font-medium ${settingSkillAction ? 'max-w-[calc(100%_-_5px)] text-[15px]' : 'max-w-[calc(100%_-_20px)] text-base'} line-clamp-1 break-all ${stepCompleted ? 'text-[#B3B3B3]' : 'text-black'}`}>
                                 {skill.skill?.name}
                               </p>
                               {!settingSkillAction && hasComment ? (

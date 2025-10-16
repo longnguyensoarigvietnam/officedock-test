@@ -106,7 +106,7 @@ const LevelConditionDetail = ({
   }
   return (
     <div className="flex flex-col gap-3 w-full">
-      <p className="text-sm font-medium text-nowrap">{measureConditionText}</p>
+      <p className="text-xs font-medium text-nowrap">{measureConditionText}</p>
       <div
         className="flex gap-1 hover:cursor-pointer"
         onClick={() => {
@@ -298,14 +298,14 @@ export const OrganizationSkillDetail = ({
     <div
       className="w-full p-5 bg-[#F8FAFC] rounded-[30px]"
       style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
-      <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
+      <p className="text-[#77858F] text-[16px] font-medium mb-[30px] max-w-[100%] break-all">
         {orgSkillDetail.name}
       </p>
 
       {/* Step definitions */}
       {isEditStepDefinitionMode ? (
         <div
-          className="border-[1px] border-[#D2DBE1] bg-white flex w-full py-[10px] px-[20px] mb-7 gap-5 items-center rounded-[6px]"
+          className="border-[1px] border-[#D2DBE1] bg-white flex w-full py-[15px] pl-[14px] pr-[19px] mb-7 gap-5 items-center rounded-[6px]"
           ref={stepDefinitionBoxRef}>
           <div className="flex gap-5 w-[calc(100%_-_34px)]">
             <div className="flex gap-2 items-center w-1/3">
@@ -361,7 +361,7 @@ export const OrganizationSkillDetail = ({
           />
         </div>
       ) : (
-        <div className="border-[1px] border-[#D2DBE1] bg-white flex w-full py-[10px] px-[20px] mb-7 gap-5 items-center rounded-[6px]">
+        <div className="border-[1px] border-[#D2DBE1] bg-white flex w-full py-[15px] pl-[14px] pr-[19px] mb-7 gap-5 items-center rounded-[6px]">
           <div className="flex gap-5 w-[calc(100%_-_34px)]">
             <div className="flex gap-2 items-center max-w-[33.3%] min-w-0">
               <p className="bg-[#36ACDE] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
@@ -405,7 +405,7 @@ export const OrganizationSkillDetail = ({
       )}
 
       {/* Buttons */}
-      <div className="flex gap-5 !w-full mb-5">
+      <div className="flex gap-[30px] !w-full mb-[30px]">
         <div className="flex w-fit rounded-[20px] font-medium bg-[#EBF1F7] px-[6px] py-[4px]">
           {SKILL_MAP_STEPS.map((step, index) => {
             const stepNumber = index + 1;
@@ -438,7 +438,7 @@ export const OrganizationSkillDetail = ({
             PermissionsSystem.SKILL_MAP_MANAGEMENT_ADD,
           ) && (
             <Button
-              className="w-[100px] h-[34px] !text-sm !text-nowrap !text-white border-none"
+              className="w-[100px] h-[30px] !text-sm !text-nowrap !text-white border-none"
               style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
               onClick={() => {
                 setOpenSkillMapActionsModal(true);
@@ -458,7 +458,7 @@ export const OrganizationSkillDetail = ({
       </div>
 
       {/* Step information */}
-      <Table className="w-full h-full bg-white !rounded-[10px]">
+      <Table className="w-full h-full bg-white !rounded-[10px]" classCustom="!p-0">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
@@ -548,7 +548,7 @@ export const OrganizationSkillDetail = ({
                 </td>
                 <td
                   className={`w-[20%] break-all h-full border-r-[1px] border-r-[#D2DBE1]`}>
-                  <p className="text-sm flex justify-left items-center font-medium py-4 px-5">
+                  <p className="text-xs flex justify-left items-center font-medium py-4 px-5">
                     {row.original.description || '-'}
                   </p>
                 </td>

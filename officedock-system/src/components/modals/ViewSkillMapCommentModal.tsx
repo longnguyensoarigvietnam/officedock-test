@@ -39,8 +39,7 @@ const ViewSkillMapCommentModal = memo(
     return (
       <Modal
         open={open}
-        className="font-primary !rounded-[8px] text-gray-700 !p-0 w-[400px] "
-        contentClass="!w-[400px] !rounded-[8px]"
+        className="font-primary !rounded-[20px] text-black !p-0 w-[400px] "
         onClose={onClose}>
         <div className="py-[40px] px-[20px] flex flex-col gap-4 items-center">
           <p className="text-black font-medium text-[18px] max-w-full break-all text-center">
@@ -90,22 +89,22 @@ const ViewSkillMapCommentModal = memo(
               <div className="relative bg-[#EBF1F7] rounded-[6px] w-[62px] h-[62px] flex flex-col items-center justify-center">
                 <div>
                   <TwinklingIcon
-                    className="absolute top-[5px] right-[-15px]"
+                    className="absolute top-[5px] right-[-15px] !w-2 !h-2"
                     delay={0.5}
                     iconUrl='/icons/blue-star.svg'
                   />
                   <TwinklingIcon
-                    className="absolute top-[-15px] right-[5px]"
+                    className="absolute top-[-15px] right-[5px] !w-2 !h-2"
                     delay={0.8}
                     iconUrl='/icons/blue-star.svg'
                   />
                   <TwinklingIcon
-                    className="absolute bottom-[5px] left-[-15px]"
+                    className="absolute bottom-[5px] left-[-15px] !w-2 !h-2"
                     delay={1}
                     iconUrl='/icons/blue-star.svg'
                   />
                   <TwinklingIcon
-                    className="absolute bottom-[-15px] left-[5px]"
+                    className="absolute bottom-[-15px] left-[5px] !w-2 !h-2"
                     delay={1.2}
                     iconUrl='/icons/blue-star.svg'
                   />
@@ -145,10 +144,10 @@ const ViewSkillMapCommentModal = memo(
               <div className="w-5 h-5"></div>
             )}
           </div>
-          <p className="text-primary text-[18px] font-medium">
+          <p className="text-primary text-[18px] font-medium leading-none mt-[10px]">
             レベルアップしました！
           </p>
-          <div className="bg-[#EBF1F7] py-[24px] px-[30px] rounded-[6px] !w-full">
+          <div className="bg-[#EBF1F7] my-[10px] py-[24px] px-[30px] rounded-[10px] !w-full">
             <div className="flex items-center mb-3">
               <CustomUserAvatar
                 avatarUrl={currentComment.approver?.avatar || ''}
@@ -157,17 +156,17 @@ const ViewSkillMapCommentModal = memo(
               />
               <p className="text-sm font-medium ml-2 max-w-full break-all line-clamp-4">
                 {currentComment.approver.profile.fullName}{' '}
-                <span className="text-[#77858F] text-xs font-medium ml-1">
+                <span className="text-[#77858F] text-xs font-medium ml-[2px]">
                   さんからのコメント
                 </span>
               </p>
             </div>
-            <p className="text-sm font-normal max-w-[100%] break-all">
+            <p className="text-sm font-normal max-w-[100%] max-h-[150px] overflow-y-auto break-all">
               {currentComment.comment}
             </p>
           </div>
           <p
-            className="text-primary font-medium text-[13px] hover:cursor-pointer"
+            className="text-primary font-medium text-[13px] mt-[10px] !leading-none hover:cursor-pointer"
             onClick={onClose}>
             閉じる
           </p>

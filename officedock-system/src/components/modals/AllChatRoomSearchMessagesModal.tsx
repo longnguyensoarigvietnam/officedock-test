@@ -141,7 +141,7 @@ export const AllChatRoomSearchMessagesModal = ({
     <Modal
       open={open}
       isOutSideAction={false}
-      className="font-primary !rounded-[20px] text-gray-700 !p-0 !w-[1000px] !min-w-[1000px] h-[790px]"
+      className="font-primary !rounded-[20px] text-black !p-0 !w-[1000px] !min-w-[1000px] h-[790px]"
       titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
       headerClassName="bg-[#EBF1F7] !rounded-t-xl !rounded-b-none px-5 !py-[10px]"
       closeIconClassName="!bg-white !rounded-full !p-[7px] !hover:cursor-pointer"
