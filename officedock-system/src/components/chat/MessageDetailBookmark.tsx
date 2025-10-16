@@ -32,6 +32,7 @@ import {
   TaskRepetitiveValue,
 } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
+import { DELETED_EVENT_TITLE } from '@constants/message';
 
 import { ChatMessageResponse, ChatParticipant } from '@interfaces/chat';
 import { Profile } from '@interfaces/user';
@@ -50,7 +51,6 @@ import {
   getFormattedDateTime,
 } from '@utils/date';
 import { MessageHoverAllRoomsSearch } from './MessageHoverAllRoomsSearch';
-import { DELETED_EVENT_TITLE } from '@constants/message';
 
 export type MessageDetailProps = {
   isLastItem: boolean;
@@ -75,7 +75,6 @@ export type MessageDetailProps = {
 };
 
 export const MessageDetailBookmark = ({
-  isLastItem,
   isSearchingMessages = false,
   allRoomChatMsgSearch,
   messageDetail,
@@ -97,7 +96,7 @@ export const MessageDetailBookmark = ({
     );
 
     return (
-      <div className="h-6 relative top-[-3px]">
+      <div className="h-[30px] relative top-[-3px]">
         <CustomUserAvatar
           avatarUrl={memberInfo?.avatar || ''}
           avatarColor={memberInfo?.avatarColor || ''}
@@ -292,7 +291,7 @@ export const MessageDetailBookmark = ({
             <p className="text-primary font-medium text-sm max-w-full break-all">
               {isSearchingMessages && allRoomChatMsgSearch
                 ? highlightTitleBySearchTerm(skillName, allRoomChatMsgSearch)
-                : skillName} {' '}
+                : skillName}{' '}
               <span className="text-black text-sm font-normal">
                 のスキルがレベルアップしました！
               </span>
@@ -305,7 +304,7 @@ export const MessageDetailBookmark = ({
             <p className="text-primary font-medium text-sm max-w-full break-all">
               {isSearchingMessages && allRoomChatMsgSearch
                 ? highlightTitleBySearchTerm(skillName, allRoomChatMsgSearch)
-                : skillName} {' '}
+                : skillName}{' '}
               <span className="text-black text-sm font-normal">
                 のレベルアップの申請についてコメントが届いています。
               </span>
@@ -353,15 +352,15 @@ export const MessageDetailBookmark = ({
 
   return (
     <Fragment>
-      <div className="group my-2">
+      <div className="group px-4">
         {(chatRoomInfo?.type === ChatRoomType.PRIVATE ||
           chatRoomInfo?.type === ChatRoomType.GROUP ||
           chatRoomInfo?.type === ChatRoomType.SELF) && (
           <div
-            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
+            className={`flex relative !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] p-[14px] group-hover:rounded-md`}>
             {renderAvatar(messageDetail.sender.id)}
             <div className={`ml-[10px] !w-full`}>
-              <div className="flex justify-between items-baseline pb-2">
+              <div className="flex justify-between items-baseline pb-[10px]">
                 <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                   <p className="max-w-full break-all">
                     {messageDetail.sender.fullName}{' '}
@@ -369,11 +368,13 @@ export const MessageDetailBookmark = ({
                       {messageDetail.sender?.organizations?.name}
                     </span>
                   </p>
-                  <ImageRound
-                    name="Save"
-                    src={`/icons/save-active.svg`}
-                    className="w-[10px]  h-[12px] hover:cursor-pointer"
-                  />
+                  {messageDetail.isBookmark && (
+                    <ImageRound
+                      name="Save"
+                      src={`/icons/save-active.svg`}
+                      className="w-[10px] h-[12px] hover:cursor-pointer"
+                    />
+                  )}
                 </div>
                 <div className={`flex items-start`}>
                   <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
@@ -695,30 +696,30 @@ export const MessageDetailBookmark = ({
                       </div>
                     )}
                   </div>
-                  <>
-                    {!messageDetail.deletedAt &&
-                      (isSearchingMessages ? (
-                        <MessageHoverAllRoomsSearch
-                          messageDetail={messageDetail}
-                          onGotoMessage={onGotoMessage}
-                          handleBookmark={handleBookmark}
-                        />
-                      ) : (
-                        <MessageHoverBookmark
-                          uuid={messageDetail.uuid}
-                          onGotoMessage={onGotoMessage}
-                          handleRemoveItemBookmark={handleRemoveItemBookmark}
-                        />
-                      ))}
-                  </>
                 </div>
               </div>
             </div>
+            <>
+              {!messageDetail.deletedAt &&
+                (isSearchingMessages ? (
+                  <MessageHoverAllRoomsSearch
+                    messageDetail={messageDetail}
+                    onGotoMessage={onGotoMessage}
+                    handleBookmark={handleBookmark}
+                  />
+                ) : (
+                  <MessageHoverBookmark
+                    uuid={messageDetail.uuid}
+                    onGotoMessage={onGotoMessage}
+                    handleRemoveItemBookmark={handleRemoveItemBookmark}
+                  />
+                ))}
+            </>
           </div>
         )}
         {chatRoomInfo?.type === ChatRoomType.TASK && (
           <div
-            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
+            className={`flex relative !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] p-[14px] group-hover:rounded-md`}>
             {messageDetail.type !== MessageType.MESSAGE ? (
               <ImageRound
                 className="w-10 h-10"
@@ -730,7 +731,7 @@ export const MessageDetailBookmark = ({
               <div>{renderAvatar(messageDetail.sender.id)}</div>
             )}
             <div className={`ml-[10px] !w-full`}>
-              <div className="flex justify-between items-baseline pb-2">
+              <div className="flex justify-between items-baseline pb-[10px]">
                 <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                   {messageDetail.type !== MessageType.MESSAGE ? (
                     <p className="font-semibold text-sm">タスクカード</p>
@@ -829,33 +830,33 @@ export const MessageDetailBookmark = ({
                       </div>
                     )}
                   </div>
-                  <>
-                    {!messageDetail.deletedAt &&
-                      (isSearchingMessages ? (
-                        <MessageHoverAllRoomsSearch
-                          messageDetail={messageDetail}
-                          onGotoMessage={onGotoMessage}
-                          handleBookmark={handleBookmark}
-                        />
-                      ) : (
-                        <MessageHoverBookmark
-                          uuid={messageDetail.uuid}
-                          onGotoMessage={onGotoMessage}
-                          handleRemoveItemBookmark={handleRemoveItemBookmark}
-                        />
-                      ))}
-                  </>
                 </div>
               </div>
             </div>
+            <>
+              {!messageDetail.deletedAt &&
+                (isSearchingMessages ? (
+                  <MessageHoverAllRoomsSearch
+                    messageDetail={messageDetail}
+                    onGotoMessage={onGotoMessage}
+                    handleBookmark={handleBookmark}
+                  />
+                ) : (
+                  <MessageHoverBookmark
+                    uuid={messageDetail.uuid}
+                    onGotoMessage={onGotoMessage}
+                    handleRemoveItemBookmark={handleRemoveItemBookmark}
+                  />
+                ))}
+            </>
           </div>
         )}
         {chatRoomInfo?.type === ChatRoomType.SKILL && (
           <div
-            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
+            className={`flex relative !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] p-[14px] group-hover:rounded-md`}>
             <div>{renderAvatar(messageDetail.sender.id)}</div>
             <div className={`ml-[10px] w-full`}>
-              <div className="flex justify-between items-baseline pb-2">
+              <div className="flex justify-between items-baseline pb-[10px]">
                 <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                   <p className="max-w-full break-all">
                     {messageDetail.sender.fullName}{' '}
@@ -930,33 +931,33 @@ export const MessageDetailBookmark = ({
                       </div>
                     )}
                   </div>
-                  <>
-                    {!messageDetail.deletedAt &&
-                      (isSearchingMessages ? (
-                        <MessageHoverAllRoomsSearch
-                          messageDetail={messageDetail}
-                          onGotoMessage={onGotoMessage}
-                          handleBookmark={handleBookmark}
-                        />
-                      ) : (
-                        <MessageHoverBookmark
-                          uuid={messageDetail.uuid}
-                          onGotoMessage={onGotoMessage}
-                          handleRemoveItemBookmark={handleRemoveItemBookmark}
-                        />
-                      ))}
-                  </>
                 </div>
               </div>
             </div>
+            <>
+              {!messageDetail.deletedAt &&
+                (isSearchingMessages ? (
+                  <MessageHoverAllRoomsSearch
+                    messageDetail={messageDetail}
+                    onGotoMessage={onGotoMessage}
+                    handleBookmark={handleBookmark}
+                  />
+                ) : (
+                  <MessageHoverBookmark
+                    uuid={messageDetail.uuid}
+                    onGotoMessage={onGotoMessage}
+                    handleRemoveItemBookmark={handleRemoveItemBookmark}
+                  />
+                ))}
+            </>
           </div>
         )}
         {chatRoomInfo?.type === ChatRoomType.CALENDAR && (
           <div
-            className={`flex !box-border ${!isLastItem && 'border-b border-[#D2DBE1]'} group-hover:bg-[#FFFFFF] py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
+            className={`flex relative !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] p-[14px] group-hover:rounded-md`}>
             <div>{renderAvatar(messageDetail.sender.id)}</div>
             <div className={`ml-[10px] w-full`}>
-              <div className="flex justify-between items-baseline pb-2">
+              <div className="flex justify-between items-baseline pb-[10px]">
                 <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                   <p className="max-w-full break-all">
                     {messageDetail.sender.fullName}{' '}
@@ -1036,25 +1037,25 @@ export const MessageDetailBookmark = ({
                       {messageDetail.message}
                     </p>
                   </div>
-                  <>
-                    {!messageDetail.deletedAt &&
-                      (isSearchingMessages ? (
-                        <MessageHoverAllRoomsSearch
-                          messageDetail={messageDetail}
-                          onGotoMessage={onGotoMessage}
-                          handleBookmark={handleBookmark}
-                        />
-                      ) : (
-                        <MessageHoverBookmark
-                          uuid={messageDetail.uuid}
-                          onGotoMessage={onGotoMessage}
-                          handleRemoveItemBookmark={handleRemoveItemBookmark}
-                        />
-                      ))}
-                  </>
                 </div>
               </div>
             </div>
+            <>
+              {!messageDetail.deletedAt &&
+                (isSearchingMessages ? (
+                  <MessageHoverAllRoomsSearch
+                    messageDetail={messageDetail}
+                    onGotoMessage={onGotoMessage}
+                    handleBookmark={handleBookmark}
+                  />
+                ) : (
+                  <MessageHoverBookmark
+                    uuid={messageDetail.uuid}
+                    onGotoMessage={onGotoMessage}
+                    handleRemoveItemBookmark={handleRemoveItemBookmark}
+                  />
+                ))}
+            </>
           </div>
         )}
       </div>

@@ -43,11 +43,12 @@ export const MessageHoverBookmark = ({
 
   return (
     <div
-      className={`bg-white group-hover:flex hidden rounded-3xl px-3 py-1.5 shadow-md absolute left-1/2 transform -translate-x-1/2 items-center gap-2`}>
+      className={`bg-white group-hover:flex hidden rounded-[100px] p-[6px] absolute left-1/2 -bottom-[22px] transform -translate-x-1/2 items-center gap-[6px]`}
+      style={{ boxShadow: '0px 4px 8px 0px #0000000F' }}>
       <DynamicTooltip content={'メッセージに移動'} placement="top">
         <div
           onClick={onGotoMessage}
-          className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full w-[30px] h-[30px] flex items-center justify-center hover:cursor-pointer">
+          className="bg-[#EBF1F7] hover:opacity-90 rounded-full w-[30px] h-[30px] flex items-center justify-center hover:cursor-pointer">
           <ImageRound
             name="go"
             src={'/icons/go.svg'}
@@ -60,7 +61,7 @@ export const MessageHoverBookmark = ({
           onClick={() => {
             bookMarkMsg();
           }}
-          className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full w-[30px] h-[30px] flex items-center justify-center hover:cursor-pointer">
+          className="bg-[#EBF1F7] hover:opacity-90 rounded-full w-[30px] h-[30px] flex items-center justify-center hover:cursor-pointer">
           <ImageRound
             name="Save"
             src={`/icons/save-un-list.svg`}

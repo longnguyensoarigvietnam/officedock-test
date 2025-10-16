@@ -188,7 +188,7 @@ export const AllChatRoomSearchMessagesModal = ({
         </div>
         <div
           ref={resultsContainerRef}
-          className="overflow-y-auto !max-h-[630px] h-[630px] bg-[#F8FAFC]">
+          className="overflow-y-auto !max-h-[630px] h-[630px] bg-[#F8FAFC] rounded-[6px] py-4">
           {dataSearch.length > 0 ? (
             dataSearch.map((messageDetail, index) => {
               return (

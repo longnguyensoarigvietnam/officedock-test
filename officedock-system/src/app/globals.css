@@ -106,7 +106,7 @@ html *::-webkit-scrollbar-track {
   --b: 1.5px;
   --m: 1.9;
 
-  background: #0068b7;
+  background: #228CDB;
   --R: calc(var(--s) * sqrt(var(--m) * var(--m) + 1) + var(--b) / 2);
   height: calc(2 * var(--R));
   width: 44%;

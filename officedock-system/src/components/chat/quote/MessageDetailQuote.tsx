@@ -768,7 +768,7 @@ export const MessageDetailQuote = ({
                 <div>{renderAvatar(messageDetail.sender.id)}</div>
               )}
               <div className={`ml-3 !w-full`}>
-                <div className="flex justify-between items-baseline pb-2">
+                <div className="flex justify-between items-baseline pb-[10px]">
                   <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                     {messageDetail.type !== MessageType.MESSAGE ? (
                       <p className="font-semibold text-sm">タスクカード</p>
