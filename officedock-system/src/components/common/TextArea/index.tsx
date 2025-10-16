@@ -1,7 +1,10 @@
 import React, { ReactNode, HTMLProps } from 'react';
 import { UseFormRegisterReturn } from 'react-hook-form';
+
 import ErrorMessage from '../ErrorMessage';
+
 import { ComponentSize } from '@constants/enums';
+
 export type TextAreaProps = HTMLProps<HTMLTextAreaElement> & {
   label?: ReactNode;
   error?: ReactNode;
@@ -10,6 +13,7 @@ export type TextAreaProps = HTMLProps<HTMLTextAreaElement> & {
   labelClassName?: string;
   register?: UseFormRegisterReturn;
   textareaSize?: string;
+  wrapperClassName?: string;
 };
 const TextArea = ({
   label,
@@ -21,6 +25,7 @@ const TextArea = ({
   labelClassName,
   disabled,
   textareaSize,
+  wrapperClassName,
   ...props
 }: TextAreaProps) => {
   const errorClasses = error ? 'border-danger' : 'border-gray-200';
@@ -38,7 +43,7 @@ const TextArea = ({
         </label>
       )}
       <div
-        className={`relative flex items-center h-full w-full ${label ? 'mt-1' : ''}`}>
+        className={`relative flex items-center h-full w-full ${label ? 'mt-1' : ''} ${wrapperClassName}`}>
         <textarea
           className={`w-full px-3.5 ${textareaSize === ComponentSize.SHORT ? '!min-h-[10px] !py-0' : 'h-32 py-2.5'} leading-5.5 placeholder-gray-300 border rounded-lg focus:outline-none  focus:shadow-none focus:border-focus focus:ring-0 ${disabled && 'opacity-55'} ${errorClasses} ${className}`}
           disabled={disabled}

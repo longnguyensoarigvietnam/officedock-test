@@ -22,6 +22,7 @@ import {
 } from '@interfaces/skills';
 import { OptionDropdownType } from '@interfaces/common';
 
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import useSkillMapUserDetail from '@hooks/useSkillMapUserDetail';
 import useListSkillsInSkillMap from '@hooks/useListSkillsInSkillMap';
 
@@ -30,7 +31,6 @@ import { useToast } from '@providers/ToastProvider';
 import { hasPermissionInArray } from '@utils';
 
 import { SkillListByOrganizationPanel } from './skill-list-by-organization-panel';
-import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const SkillList = () => {
   const { showToast } = useToast();
@@ -109,7 +109,7 @@ const SkillList = () => {
     <div className="w-full">
       <div className="sticky z-[21] top-[0px] px-10 pt-[27px] pb-[30px] bg-[#E6F3FB]">
         <div className="flex justify-between mb-[27px]">
-          <div className="flex gap-2 items-center bg-white w-fit p-[6px] rounded-[20px]">
+          <div className="flex gap-[6px] items-center bg-white w-fit p-[6px] rounded-[20px]">
             <Link href={`${pageRouters.SKILL_MAP.href}?tabId=${tabId || 0}`}>
               <Button
                 variant="outline"

@@ -212,7 +212,7 @@ export const SkillMapDetailByUser = ({
                   placement="top"
                   currentStep={1}
                   stepDefinition={skillMap.steps.step1}>
-                  <div className="w-[calc(33.33333%_+_16px)] rounded-l-[6px] bg-[#36ACDE] relative clip-left  text-center flex items-center justify-center">
+                  <div className="w-[calc(33.33333%_+_16px)] rounded-l-[6px] bg-[#3DC1E2] relative clip-left  text-center flex items-center justify-center">
                     STEP 1
                   </div>
                 </StepInfoTooltip>
@@ -230,7 +230,7 @@ export const SkillMapDetailByUser = ({
                   placement="top"
                   currentStep={3}
                   stepDefinition={skillMap.steps.step3}>
-                  <div className="w-[calc(33.33333%_+_16px)] rounded-r-[6px] ml-[-9px] bg-[#424EC1] relative clip-right text-center flex items-center justify-center">
+                  <div className="w-[calc(33.33333%_+_16px)] rounded-r-[6px] ml-[-9px] bg-[#355AC9] relative clip-right text-center flex items-center justify-center">
                     STEP 3
                   </div>
                 </StepInfoTooltip>
@@ -265,7 +265,7 @@ export const SkillMapDetailByUser = ({
                             strokeColor = '#0068B6';
                             break;
                           case 3:
-                            strokeColor = '#424EC1';
+                            strokeColor = '#355AC9';
                             break;
                         }
                         if (stepCompleted) {
@@ -403,7 +403,7 @@ export const SkillMapDetailByUser = ({
                                       ? '#FFF'
                                       : idx === 0
                                         ? 'linear-gradient(90deg, #36ACDE 0%, #0068B6 100%)'
-                                        : 'linear-gradient(90deg, #0068B6 0%, #424EC1 100%)',
+                                        : 'linear-gradient(90deg, #0068B6 0%, #355AC9 100%)',
                                 }}
                                 className="h-[10px] w-[30px]"></div>
                             )}

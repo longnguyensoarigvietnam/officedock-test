@@ -87,7 +87,7 @@
   align-items: center !important;
   width: 24px;
   height: 24px;
-  background-color: #3CABF3 !important;
+  background-color: #3cabf3 !important;
   color: white !important;
 }
 .calendar-custom.year .fc-daygrid-day-number.current-day {
@@ -328,6 +328,15 @@
   border: 1px solid #a7b7c2 !important;
 }
 /* Month */
+.calendar-custom.month .fc-daygrid-event {
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+  padding-bottom: 2px !important;
+}
+.calendar-custom.month .fc .fc-daygrid-event-harness {
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+}
 .calendar-custom .fc-daygrid-event {
   width: 100%;
 }
@@ -559,4 +568,7 @@
   .fc-resourceTimeGridDay-view
   .fc-timegrid-slot.fc-timegrid-slot-lane::after {
   top: 3px;
+}
+.calendar-custom .fc .fc-daygrid-more-link{
+  margin-left: 10px;
 }

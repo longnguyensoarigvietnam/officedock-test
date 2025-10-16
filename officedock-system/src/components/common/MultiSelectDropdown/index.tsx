@@ -93,7 +93,7 @@ const MultiSelectDropdown = ({
   const renderOptions = () => (
     <div
       ref={dropdownOptionsRef}
-      className={`absolute top-8 w-full left-0 mt-1 z-50 max-h-60 overflow-y-auto overflow-x-hidden rounded bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 ${optionClassName}`}>
+      className={`absolute top-8 w-full left-0 mt-1 z-50 max-h-60 overflow-y-auto overflow-x-hidden rounded-[6px] bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 ${optionClassName}`}>
       {isLoading ? (
         <Spinner className="!h-fit py-3" />
       ) : options?.length ? (
@@ -170,7 +170,7 @@ const MultiSelectDropdown = ({
           }}>
           <div className="h-full">
             <div
-              className={` h-full flex relative w-full cursor-default rounded border bg-white py-2  leading-5.5 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+              className={` h-full flex relative w-full cursor-default rounded-[6px] border bg-white py-2  leading-5.5 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
                 disabled ? 'opacity-50 cursor-not-allowed' : ''
               } ${valueClassName} `}>
               <p

@@ -110,7 +110,7 @@ const DatePicker = ({
         </label>
       )}
       <div
-        className={`relative single-date  flex items-center ${label ? 'mt-1' : ''}`}
+        className={`relative single-date ${label ? 'mt-1' : ''}`}
         onClick={() => {
           setIsOpen(true);
         }}>
@@ -122,17 +122,11 @@ const DatePicker = ({
           onChange={(date) => handleChange(date)}
           locale={customLocale}
           dateFormat={dateFormat}
-          className={`w-full px-3.5 py-2.5 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} leading-5.5 placeholder-gray-300 border rounded-lg focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 ${errorClasses} ${className}`}
+          className={`${isShowInput && `w-full py-2.5 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} leading-5.5 placeholder-gray-300 border rounded-lg focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 ${errorClasses} ${className}`}`}
           placeholderText={placeholder}
           todayButton="今日"
           wrapperClassName="w-full"
-          customInput={
-            isShowInput ? (
-              <CustomInput />
-            ) : (
-              <div className="!w-4 h-4 absolute right-0 top-[-16px] !border-none cursor-pointer"></div>
-            )
-          }
+          customInput={isShowInput ? <CustomInput /> : <div></div>}
           dayClassName={dayClassName}
           renderCustomHeader={({ date, decreaseMonth, increaseMonth }) => {
             const year = format(date, 'yyyy');
@@ -165,13 +159,13 @@ const DatePicker = ({
           placement="top"
           disabled={!tooltipMsg}
           customOffset={{
-            top: -13,
+            top: -20,
           }}>
           <div>
             <ImageRound
-              className={`w-4 h-4 absolute top-1/2 right-0 transform -translate-x-1/2 -translate-y-1/2 hover:cursor-pointer ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} ${className?.includes('hidden') && 'hidden'} ${iconClassName}`}
+              className={`w-[18px] h-[18px] cursor-pointer p-0 border-none bg-transparent absolute top-1/2 right-0 transform -translate-x-1/2 -translate-y-1/2 hover:cursor-pointer ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} ${className?.includes('hidden') && 'hidden'} ${iconClassName}`}
               name="Calendar icon"
-              src={`${isShowInput ? '/icons/calendar-time.svg' : '/icons/calendar-time.svg'}`}
+              src="/icons/calendar-time.svg"
               onClick={(e) => {
                 e.stopPropagation();
                 if (isOpen) {

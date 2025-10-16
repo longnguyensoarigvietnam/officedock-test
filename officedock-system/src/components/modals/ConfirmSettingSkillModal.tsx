@@ -43,13 +43,13 @@ export const ConfirmSettingSkillModal = ({
   let strokeColor = '';
   switch (step) {
     case 1:
-      strokeColor = '#36ACDE';
+      strokeColor = '#3DC1E2';
       break;
     case 2:
-      strokeColor = '#0068B6';
+      strokeColor = '#228CDB';
       break;
     case 3:
-      strokeColor = '#424EC1';
+      strokeColor = '#355AC9';
       break;
   }
   if (stepCompleted) {
