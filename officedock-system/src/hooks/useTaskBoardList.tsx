@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import api from '@base/api';
 import { apiRouters, pageRouters } from '@constants/routers';
-import { ServerStatusCode } from '@constants/enums';
+import { ServerStatusCode, StatusValueTask } from '@constants/enums';
 import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 
 import { KanbanDataResponse, StatusTask } from '@interfaces/task';
@@ -52,7 +52,10 @@ const useTaskBoardList = (
 
     const fetchTasksForStatus = async (statusId: string) => {
       const params = new URLSearchParams({
-        page_size: String(PAGINATION_PAGE_SIZE_KANBAN),
+        page_size:
+          statusId == String(StatusValueTask.COMPLETED)
+            ? `10`
+            : String(PAGINATION_PAGE_SIZE_KANBAN),
         status_id: String(statusId),
         ...(ordering && { ordering }),
         ...(filter?.userId && { user_id: String(filter.userId) }),

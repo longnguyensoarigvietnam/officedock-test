@@ -13,6 +13,7 @@ import { useInView } from 'react-intersection-observer';
 import ImageRound from '@components/common/ImageRound';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import Spinner from '@components/common/Spinner';
+import Button from '@components/common/Button';
 import ListViewItem from './ListViewItem';
 
 import {
@@ -59,6 +60,7 @@ interface ListViewByStatusProps {
     >
   >;
   saveExtendColumn: (data: Record<string, boolean>) => void;
+  handleViewArchive: () => void;
 }
 const ListViewByStatus = ({
   listItems,
@@ -79,6 +81,7 @@ const ListViewByStatus = ({
   setColumnsKanbanData,
   setNumberPagesData,
   saveExtendColumn,
+  handleViewArchive,
 }: ListViewByStatusProps) => {
   const [hasMore, setHasMore] = useState(true);
   const [lastIndex, setLastIndex] = useState<number | null>(null);
@@ -139,6 +142,49 @@ const ListViewByStatus = ({
       setHasMore(false);
     }
   }, [hasNext]);
+  // Remove oldest task complete for column COMPLETE
+  function removeOldestTask(columnId: string | number) {
+    setColumnsKanbanData((prev) => {
+      if (!prev || !prev[columnId]) return prev; // check column existence
+
+      const column = prev[columnId];
+      const items = column.items;
+
+      if (items.length === 0) return prev;
+
+      // Find the item with the oldest completedAt
+      const oldestItem = items.reduce((oldest, current) => {
+        if (!oldest.completedAt) return current;
+        if (!current.completedAt) return oldest;
+        return new Date(current.completedAt) < new Date(oldest.completedAt)
+          ? current
+          : oldest;
+      });
+
+      // Create a new list, remove the oldest item
+      const newItems = items.filter((item) => item.id !== oldestItem.id);
+
+      // Return new state
+      return {
+        ...prev,
+        [columnId]: {
+          ...column,
+          items: newItems,
+        },
+      };
+    });
+  }
+
+  useEffect(() => {
+    if (
+      count >= 10 &&
+      listItems.length > 10 &&
+      listId &&
+      listId == `${StatusValueTask.COMPLETED}`
+    ) {
+      removeOldestTask(listId);
+    }
+  }, [listId, listItems.length, totalCount]);
 
   useEffect(() => {
     if (listItems) {
@@ -267,12 +313,12 @@ const ListViewByStatus = ({
       </div>
       {extendByStatus.find((list) => list.id == listId)?.status &&
         (listId == StatusValueTask.MY_ROUTINE ? (
-          <div className="flex text-[#77858F] text-[12px] mb-4">
+          <div className="flex text-[#77858F] text-[12px] mb-4 px-1">
             <p className="w-[59%] border-r-2">タスク名</p>
             <p className="w-[20%] border-r-2 text-center">予定日時</p>
           </div>
         ) : (
-          <div className="flex text-[#77858F] text-[12px] mb-4">
+          <div className="flex text-[#77858F] text-[12px] mb-4 px-1">
             <p className="w-[59%] border-r-2">タスク名</p>
             <p className="w-[15%] border-r-2 text-center">締切</p>
             <p className="w-[8%] border-r-2 text-center">重要</p>
@@ -285,7 +331,7 @@ const ListViewByStatus = ({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`flex-grow overflow-y-auto rounded-md max-h-[500px] mb-3 overflow-x-hidden scrollbar-gutter-stable ${
+            className={`flex-grow overflow-y-auto rounded-md px-1 max-h-[500px] mb-3 overflow-x-hidden scrollbar-gutter-stable ${
               snapshot.isDraggingOver ? 'bg-gray-200' : ''
             }`}>
             {extendByStatus.find((list) => list.id == listId)?.status &&
@@ -316,6 +362,14 @@ const ListViewByStatus = ({
               </div>
             ) : (
               <div></div>
+            )}
+            {listId == `${StatusValueTask.COMPLETED}` && (
+              <Button
+                onClick={handleViewArchive}
+                variant="secondary"
+                className="w-full !px-0 !bg-[#EBF1F7] !text-[#77858F] font-medium text-sm !border-none">
+                アーカイブタスクを見る
+              </Button>
             )}
           </div>
         )}

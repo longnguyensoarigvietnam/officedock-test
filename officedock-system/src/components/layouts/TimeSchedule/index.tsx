@@ -3819,7 +3819,7 @@ const TimeSchedule = memo(
                   {!isExtendCalendar ? (
                     <div
                       className={`flex relative ${isLoadingSchedule && '!opacity-45'}`}>
-                      <div className="w-[260px] ml-6 z-20 flex gap-[18px] items-center">
+                      <div className="w-[260px] ml-6 z-20 flex gap-4 items-center">
                         <DynamicTooltip content="前日" placement="top">
                           <div>
                             <ImageRound
@@ -3859,7 +3859,7 @@ const TimeSchedule = memo(
                         </DynamicTooltip>
                       </div>
 
-                      <div className="absolute w-7 z-50 right-[50px] top-1/2 transform -translate-y-1/2 time-schedule">
+                      <div className="absolute w-7 z-50 right-[45px] top-1/2 transform -translate-y-1/2 time-schedule">
                         <DatePicker
                           className="h-10 z-50 "
                           isShowInput={false}

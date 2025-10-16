@@ -1391,9 +1391,9 @@ const ActionsTaskModal = ({
                   name={'statusId'}
                   render={({ field: { value, onChange } }) => (
                     <Dropdown
-                      className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F] rounded-md"
-                      classNameTextData="!text-xs"
-                      classNameOption="!text-xs"
+                      className="h-[34px] !py-1 text-sm !border-[1px] !border-[#77858F] rounded-md"
+                      classNameTextData="!text-sm"
+                      classNameOption="!text-sm"
                       classNameError="!text-xs"
                       disabled={isCheckActionPermission}
                       options={

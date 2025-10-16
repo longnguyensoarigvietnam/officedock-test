@@ -54,6 +54,7 @@ interface CardListViewProps {
       }[]
     >
   >;
+  handleViewArchive: () => void;
   orderTaskSave: Task[];
 }
 const CardListView = ({
@@ -69,6 +70,7 @@ const CardListView = ({
   editTaskInline,
   pinItemToTop,
   setNumberPagesData,
+  handleViewArchive,
 }: CardListViewProps) => {
   const { expanded } = useContext(GlobalStateContext);
   const searchParams = useSearchParams();
@@ -123,7 +125,7 @@ const CardListView = ({
 
             return (
               <div
-                className={`${expanded ? 'w-[800px]' : 'w-[950px]'}`}
+                className={`${expanded ? 'min-w-[720px]' : 'min-w-[793px]'}`}
                 key={index}>
                 {isFetchingTaskBoards ? (
                   <>
@@ -195,6 +197,7 @@ const CardListView = ({
                     userId={
                       `${memberSelected}` || `${userIdTask ? userIdTask : ''}`
                     }
+                    handleViewArchive={handleViewArchive}
                     saveExtendColumn={(data: Record<string, boolean>) => {
                       saveExtendColumn(data);
                     }}

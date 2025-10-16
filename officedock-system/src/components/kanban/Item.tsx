@@ -296,7 +296,7 @@ const Item = ({
               style={{
                 ...provided.draggableProps.style,
               }}
-              className={`relative  ${selectedOptionZoom.value !== 50 && 'gap-2'} ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-primary'} bg-white shadow-common rounded-[20px] text-xs flex flex-col  mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
+              className={`relative  ${selectedOptionZoom.value !== 50 && 'gap-2'} ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-primary'} bg-white shadow-common rounded-[20px] text-xs flex flex-col  mb-[14px] ${snapshot.isDragging && 'opacity-100'}`}>
               <div className="relative w-[100%] h-full">
                 {isPermissionUpdate && (
                   <>

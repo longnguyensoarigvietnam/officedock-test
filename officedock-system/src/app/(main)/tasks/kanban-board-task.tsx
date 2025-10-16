@@ -39,6 +39,7 @@ import socketEventEmitter from '@components/socket/socketEventEmitter';
 import BoardKanban from '@components/kanban/Board';
 import ActionFilterTask from '@components/modals/ActionFilterTask';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import ArchiveTaskBoard from '@components/kanban/ArchiveTaskBoard';
 import ConfirmDragModalTask from '@components/modals/ConfirmDropModalTask';
 
 import useTaskBoardList from '@hooks/useTaskBoardList';
@@ -237,6 +238,10 @@ const KanbanBoardTask = () => {
     useState<TaskFormData | null>(null);
 
   const [isListView, setIsListView] = useState<boolean>(false);
+
+  // Archive task
+  const [isArchiveTaskView, setIsArchiveTaskView] = useState(false);
+  const [isSortComplete, setIsSortComplete] = useState(false);
 
   // Data kanban board
   const [dataItemDrop, setDataItemDrop] = useState<DropResult>();
@@ -3183,7 +3188,11 @@ const KanbanBoardTask = () => {
           setDataItemChangeInline={setDataItemChangeInline}
           handleEditShowClockItem={handleEditShowClockItem}
         />
-        <div className="flex-1 pl-10 relative ">
+        <div
+          style={{
+            background: 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)',
+          }}
+          className="flex-1 pl-10 relative ">
           <DragDropContext
             onDragStart={() => {
               setIsInteracting(true);
@@ -3198,7 +3207,7 @@ const KanbanBoardTask = () => {
                     : `calc(${Math.max(viewportWidth, 1280)}px - 700px)`
                   : isExtendCalendar
                     ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 120}px)`
-                    : `calc(${Math.max(viewportWidth, 1280)}px - 600px)`,
+                    : `calc(${Math.max(viewportWidth, 1280)}px - 565px)`,
                 maxWidth: expanded
                   ? widthCalendar < 100
                     ? '100%'
@@ -3211,29 +3220,31 @@ const KanbanBoardTask = () => {
               }}
               className={`h-full overflow-x-auto flex flex-col gap-[14px] py-7 pr-7 pl-1 ${isListView ? 'overflow-y-auto' : 'overflow-y-hidden'}`}
               id="kanbanContainer">
-              <FrequentlyTask
-                templates={templates}
-                showFrequentlyTasks={showFrequentlyTasks}
-                setShowTemplateModal={() => {
-                  handleSetTemplateParam({
-                    id: null,
-                    action: TemplateAction.CREATE,
-                    type: ItemStartType.TEMPLATE,
-                  });
-                  setShowTemplateModal(true);
-                }}
-                setShowFrequentlyTasks={(value: boolean) => {
-                  setShowFrequentlyTasks(value);
-                  saveZoomKanban({
-                    isShowMyTemplate: value,
-                  });
-                }}
-                handleActionEditTemplate={handleActionEditTemplate}
-                handleCreateTaskFromTemplate={handleCreateTaskFromTemplate}
-              />
+              {!isArchiveTaskView && (
+                <FrequentlyTask
+                  templates={templates}
+                  showFrequentlyTasks={showFrequentlyTasks}
+                  setShowTemplateModal={() => {
+                    handleSetTemplateParam({
+                      id: null,
+                      action: TemplateAction.CREATE,
+                      type: ItemStartType.TEMPLATE,
+                    });
+                    setShowTemplateModal(true);
+                  }}
+                  setShowFrequentlyTasks={(value: boolean) => {
+                    setShowFrequentlyTasks(value);
+                    saveZoomKanban({
+                      isShowMyTemplate: value,
+                    });
+                  }}
+                  handleActionEditTemplate={handleActionEditTemplate}
+                  handleCreateTaskFromTemplate={handleCreateTaskFromTemplate}
+                />
+              )}
               <div className="flex-grow flex flex-col gap-2  mb-6 ">
                 <div
-                  className={`flex mb-4 w-full min-w-[300px] gap-[46px] items-center`}>
+                  className={`flex mb-4 w-full min-w-[300px] ${isArchiveTaskView ? '!justify-between' : 'gap-[46px]'} items-center`}>
                   <div className="flex items-center gap-2">
                     {/* Filter option modal */}
                     <Popover className="relative">
@@ -3282,48 +3293,60 @@ const KanbanBoardTask = () => {
                       name="Sort icon"
                       className="w-[18px] h-[14px]"
                     />
-                    <>
-                      <Button
-                        disabled={isFetchingTaskBoards}
-                        onClick={() => {
-                          if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
-                            setIsReadyToFetch(true);
+                    {!isArchiveTaskView ? (
+                      <>
+                        <Button
+                          disabled={isFetchingTaskBoards}
+                          onClick={() => {
+                            if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
+                              setIsReadyToFetch(true);
 
-                            setDataOrderRing(FilterTypeKanban.DEADLINE);
-                            setOrderingRequest(FilterTypeKanban.DEADLINE);
+                              setDataOrderRing(FilterTypeKanban.DEADLINE);
+                              setOrderingRequest(FilterTypeKanban.DEADLINE);
+                            }
+                          }}
+                          variant={
+                            isFetchingTaskBoards
+                              ? 'outline'
+                              : dataOrderRing === FilterTypeKanban.DEADLINE
+                                ? 'option'
+                                : 'outline'
                           }
-                        }}
-                        variant={
-                          isFetchingTaskBoards
-                            ? 'outline'
-                            : dataOrderRing === FilterTypeKanban.DEADLINE
-                              ? 'option'
-                              : 'outline'
-                        }
-                        className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
-                        締切期間
-                      </Button>
-                      <Button
-                        disabled={isFetchingTaskBoards}
-                        onClick={() => {
-                          if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
-                            setIsReadyToFetch(true);
+                          className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
+                          締切期間
+                        </Button>
+                        <Button
+                          disabled={isFetchingTaskBoards}
+                          onClick={() => {
+                            if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
+                              setIsReadyToFetch(true);
 
-                            setDataOrderRing(FilterTypeKanban.IMPORTANT);
-                            setOrderingRequest(FilterTypeKanban.IMPORTANT);
+                              setDataOrderRing(FilterTypeKanban.IMPORTANT);
+                              setOrderingRequest(FilterTypeKanban.IMPORTANT);
+                            }
+                          }}
+                          variant={
+                            isFetchingTaskBoards
+                              ? 'outline'
+                              : dataOrderRing === FilterTypeKanban.IMPORTANT
+                                ? 'option'
+                                : 'outline'
                           }
+                          className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
+                          重要
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        disabled={!isArchiveTaskView}
+                        onClick={() => {
+                          setIsSortComplete(!isSortComplete);
                         }}
-                        variant={
-                          isFetchingTaskBoards
-                            ? 'outline'
-                            : dataOrderRing === FilterTypeKanban.IMPORTANT
-                              ? 'option'
-                              : 'outline'
-                        }
-                        className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isFetchingTaskBoards ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
-                        重要
+                        variant={!isSortComplete ? 'outline' : 'option'}
+                        className={`${isSortComplete ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
+                        完了日
                       </Button>
-                    </>
+                    )}
                     <InputSearch
                       className="w-[300px] h-[34px] py-0 bg-[#EBF1F7] !rounded-[20px]"
                       inputClassName="h-[34px] bg-[#EBF1F7] border-none !rounded-[20px] text-sm placeholder-[#77858F]"
@@ -3331,70 +3354,88 @@ const KanbanBoardTask = () => {
                       placeholder="タスク、キーワードを検索"
                     />
                   </div>
-                  <div className="w-fit min-w-[200px] flex items-center gap-3">
-                    <div>
-                      <DynamicTooltip
-                        content="タスクを新規作成"
-                        placement="top">
-                        <Button
-                          onClick={() => {
-                            setColumnId(String(StatusValueTask.NOT_STARTED));
-                            setShowEditTaskModal(true);
-                            handleSetParam({
-                              id: null,
-                              action: ActionTask.CREATE,
-                              type: ItemStartType.TASK,
-                            });
-                          }}
-                          className="flex gap-2 !h-[34px] !rounded-lg !p-[10px]">
-                          <div
-                            style={{
-                              padding: '4px',
-                            }}
-                            className={`rounded-full cursor-pointer w-fit  bg-white `}>
+                  <div
+                    className={`w-fit min-w-[200px] flex items-center gap-3 ${isArchiveTaskView && 'justify-end'}`}>
+                    {isArchiveTaskView ? (
+                      <Button
+                        onClick={() => {
+                          setIsArchiveTaskView(false);
+                        }}
+                        variant="secondary"
+                        className="w-[140px] h-[34px] !bg-[#EBF1F7] !text-primary font-medium !px-0 !border-none rounded-lg">
+                        タスク一覧に戻る
+                      </Button>
+                    ) : (
+                      <>
+                        <div>
+                          <DynamicTooltip
+                            content="タスクを新規作成"
+                            placement="top">
+                            <Button
+                              onClick={() => {
+                                setColumnId(
+                                  String(StatusValueTask.NOT_STARTED),
+                                );
+                                setShowEditTaskModal(true);
+                                handleSetParam({
+                                  id: null,
+                                  action: ActionTask.CREATE,
+                                  type: ItemStartType.TASK,
+                                });
+                              }}
+                              className="flex gap-2 !h-[34px] !rounded-lg !p-[10px]">
+                              <div
+                                style={{
+                                  padding: '4px',
+                                }}
+                                className={`rounded-full cursor-pointer w-fit  bg-white `}>
+                                <ImageRound
+                                  src={`/icons/add-blue.svg`}
+                                  name="Add"
+                                  style={{
+                                    width: `8px`,
+                                    height: `8px`,
+                                  }}
+                                />
+                              </div>
+                              <p className="text-nowrap"> 新規作成</p>
+                            </Button>
+                          </DynamicTooltip>
+                        </div>
+
+                        <div
+                          className={` hover:cursor-pointer  z-20 flex items-center justify-start`}>
+                          <DynamicTooltip
+                            content={
+                              isListView
+                                ? 'タスクを看板表示'
+                                : 'タスクをリスト表示'
+                            }
+                            placement="left"
+                            customOffset={{
+                              left: -135,
+                            }}>
                             <ImageRound
-                              src={`/icons/add-blue.svg`}
-                              name="Add"
-                              style={{
-                                width: `8px`,
-                                height: `8px`,
+                              src={`${!isListView ? '/icons/list-view.svg' : '/icons/card-view.svg'}`}
+                              name="List view icon"
+                              className="w-12 h-12 hover:cursor-pointer"
+                              onClick={() => {
+                                if (isFetchingTaskBoards) return;
+                                setIsListView(!isListView);
+                                saveZoomKanban({
+                                  isShowListKanban: !isListView,
+                                });
                               }}
                             />
-                          </div>
-                          <p className="text-nowrap"> 新規作成</p>
-                        </Button>
-                      </DynamicTooltip>
-                    </div>
-
-                    <div
-                      className={` hover:cursor-pointer  z-20 flex items-center justify-start`}>
-                      <DynamicTooltip
-                        content={
-                          isListView ? 'タスクを看板表示' : 'タスクをリスト表示'
-                        }
-                        placement="left"
-                        customOffset={{
-                          left: -135,
-                        }}>
-                        <ImageRound
-                          src={`${!isListView ? '/icons/list-view.svg' : '/icons/card-view.svg'}`}
-                          name="List view icon"
-                          className="w-12 h-12 hover:cursor-pointer"
-                          onClick={() => {
-                            if (isFetchingTaskBoards) return;
-                            setIsListView(!isListView);
-                            saveZoomKanban({
-                              isShowListKanban: !isListView,
-                            });
-                          }}
-                        />
-                      </DynamicTooltip>
-                    </div>
+                          </DynamicTooltip>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
                 {/* Data filter */}
                 {allLabels.length > 0 && (
-                  <div className="flex items-center gap-2 mb-6">
+                  <div className="flex items-center gap-2 mb-6 ml-1">
                     {allLabels.length > 6 ? (
                       <>
                         {firstSix.slice(0, 6).map((item, index) => (
@@ -3459,7 +3500,9 @@ const KanbanBoardTask = () => {
                     )}
                   </div>
                 )}
-                {!isListView ? (
+                {isArchiveTaskView ? (
+                  <ArchiveTaskBoard ordering={isSortComplete} />
+                ) : !isListView ? (
                   <div
                     style={{
                       gap: `${(columnWidth / 247) * 12}px`,
@@ -3487,6 +3530,7 @@ const KanbanBoardTask = () => {
                             editTaskInline(data);
                           }
                         }}
+                        handleViewArchive={() => setIsArchiveTaskView(true)}
                         pinItemToTop={pinItemToTop}
                         handleActionEditTask={handleActionEditTask}
                         handleConfirmCopyTask={handleActionCopyTask}
@@ -3520,6 +3564,7 @@ const KanbanBoardTask = () => {
                     handleUpdateItemInline={handleUpdateItemInline}
                     creationDataCommonData={creationDataCommonData}
                     pinItemToTop={pinItemToTop}
+                    handleViewArchive={() => setIsArchiveTaskView(true)}
                     editTaskInline={(data: DataStatusChangeInline) => {
                       if (
                         data.oldIdStatus ===

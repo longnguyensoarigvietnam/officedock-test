@@ -176,6 +176,7 @@ export interface Task {
   planEndDate?: string | null;
   hasActualDuration?: boolean;
   isCrossTeamTask?: boolean;
+  completedAt?: string;
 }
 export interface TaskRunningType {
   id: number;
@@ -462,4 +463,19 @@ export interface DataStatusChangeInline {
   id: string;
   oldIdStatus: string;
   statusId: number;
+}
+
+export interface TaskArchive {
+  id: number;
+  title: string;
+  status?: StatusTask;
+  categories?: {
+    name: string;
+    type: string;
+    id: number;
+    color: string;
+  }[];
+  type: string;
+  isArchived: boolean;
+  completedAt: string;
 }

@@ -515,6 +515,7 @@ export const apiRouters = {
 
   TASK_COPY: (id: string) => `/tasks/${id}/copy/`,
   TASK_PIN: (id: string) => `/tasks/${id}/pin/`,
+  ARCHIVE_LIST: '/tasks/archive/',
 
   // TASK TEAM
   TASK_TEAM_LIST: '/tasks/teamdock/',

@@ -167,7 +167,6 @@ export const MessageDetail = ({
 }: MessageDetailProps) => {
   const { data: session } = useSessionCache();
   const router = useRouter();
-
   let uuidListMain = [];
   const parser = new DOMParser();
   const doc = parser.parseFromString(messageDetail?.message, 'text/html');
@@ -361,7 +360,6 @@ export const MessageDetail = ({
 
         if (child.nodeType === Node.ELEMENT_NODE) {
           const el = child as HTMLElement;
-
           if (el.dataset.taskId) {
             const taskId = el.dataset.taskId;
             const parser = new DOMParser();
