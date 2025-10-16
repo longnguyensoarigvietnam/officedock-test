@@ -17,7 +17,7 @@ from users.models import User
 from tasks.models import Task
 from chat.models import ChatFile, ChunkFile
 from skills.serializers import SkillSerializer
-from common.utils import get_signed_url
+from common.utils import generate_file_name, get_signed_url
 from common.constants import AVATAR_GCS_EXPIRATION_SECONDS
 from users.serializers import BaseUserSerializer
 
@@ -70,13 +70,26 @@ class ChatRoomSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "code",
+            "avatar",
+            "avatar_color",
             "participants",
             "participant_ids",
             "type",
             "select_organizations",
             "is_muted",
         ]
-        read_only_fields = ["id", "code", "type"]
+        read_only_fields = ["id", "code", "type", "avatar_color"]
+
+    def to_representation(self, instance):
+        """Override file URL representation to ensure consistency"""
+        representation = super().to_representation(instance)
+
+        if instance.avatar:
+            representation["avatar"] = get_signed_url(
+                instance.avatar, AVATAR_GCS_EXPIRATION_SECONDS
+            )
+
+        return representation
 
     def get_is_muted(self, obj):
         """
@@ -93,6 +106,12 @@ class ChatRoomSerializer(serializers.ModelSerializer):
         """
         request = self.context.get("request")
         participants = data.get("participant_ids")
+        avatar = data.get("avatar")
+
+        if avatar:
+            # Gen new file name
+            file_name = avatar.name
+            avatar.name = generate_file_name(file_name)
 
         if participants:
             for participant in participants:
@@ -123,6 +142,8 @@ class ChatRoomDetailSerializer(ChatRoomSerializer):
         fields = [
             "id",
             "name",
+            "avatar",
+            "avatar_color",
             "code",
             "participants",
             "memo",
@@ -504,19 +525,11 @@ class ChatMessageBookMarkSerializer(ChatMessageSerializer):
 
     def get_bookmark_at(self, obj):
         """Get bookmark_at"""
-        request = self.context.get("request")
-        if not request:
-            return None
-
-        bookmark = obj.bookmarks.filter(user=request.user).first()
-        return bookmark.bookmark_at if bookmark else None
+        return obj.bookmark_at
 
     def get_is_bookmark(self, obj):
-        request = self.context.get("request")
-        if not request:
-            return False
-
-        return obj.bookmarks.filter(user=request.user).exists()
+        """Get is bookmark"""
+        return obj.is_bookmark
 
 
 class BookMarkSerializer(serializers.Serializer):
@@ -622,6 +635,7 @@ class ChatRoomsParticipantsSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField(read_only=True)
     last_message_at = serializers.SerializerMethodField(read_only=True)
     participants = serializers.SerializerMethodField(read_only=True)
+    chat_room = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ChatRoomsParticipants
@@ -629,6 +643,7 @@ class ChatRoomsParticipantsSerializer(serializers.ModelSerializer):
             "user",
             "code",
             "name",
+            "chat_room",
             "type",
             "unread_messages",
             "pin_at",
@@ -657,6 +672,42 @@ class ChatRoomsParticipantsSerializer(serializers.ModelSerializer):
                 room_name = chat_room.name
 
         return room_name
+
+    def get_chat_room(self, obj):
+        """
+        Get chat room of chat room participants
+        """
+        chat_room = obj.chat_room
+
+        avatar = chat_room.avatar
+        avatar_color = chat_room.avatar_color
+        room_name = chat_room.name
+
+        match chat_room.type:
+            case ChatRoomTypes.SELF.value:
+                room_name = obj.user.profile.full_name
+                avatar = obj.user.avatar
+                avatar_color = obj.user.avatar_color
+            case ChatRoomTypes.PRIVATE.value:
+                receive_user = chat_room.participants.exclude(
+                    id=obj.user.id
+                ).first()
+                room_name = (
+                    receive_user.profile.full_name if receive_user else None
+                )
+                avatar = receive_user.avatar
+                avatar_color = receive_user.avatar_color
+
+        return {
+            "id": chat_room.id,
+            "code": chat_room.code,
+            "type": chat_room.type,
+            "name": room_name,
+            "avatar": get_signed_url(avatar, AVATAR_GCS_EXPIRATION_SECONDS)
+            if avatar
+            else None,
+            "avatar_color": avatar_color,
+        }
 
     def get_last_message_at(self, obj):
         """
@@ -691,6 +742,7 @@ class ChatRoomsParticipantsWebSocketSerializer(ChatRoomsParticipantsSerializer):
             "code",
             "name",
             "type",
+            "chat_room",
             "unread_messages",
             "last_message_at",
             "pin_at",

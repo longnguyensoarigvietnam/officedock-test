@@ -3,11 +3,16 @@ import uuid
 from PIL import Image
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+from django.core.validators import FileExtensionValidator
 from django.db import models, transaction
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from base.models import BaseModel
+from common.constants import (
+    ALLOW_IMAGE_FORMATS,
+    CHAT_AVATAR_FOLDER_UPLOAD,
+)
 from chat.constants import (
     CHAT_FILES_FOLDER_UPLOAD,
     CHUNK_FILES_FOLDER_UPLOAD,
@@ -16,6 +21,7 @@ from chat.constants import (
 )
 from common.utils import delete_file, generate_file_name, generate_unique_code
 from base.messages import ERROR_MESSAGES
+from users.constants import AvatarColors
 
 
 class ChatRoom(BaseModel):
@@ -28,6 +34,15 @@ class ChatRoom(BaseModel):
         related_name="chat_rooms",
         on_delete=models.CASCADE,
     )
+    avatar = models.ImageField(
+        upload_to=CHAT_AVATAR_FOLDER_UPLOAD,
+        validators=[
+            FileExtensionValidator(allowed_extensions=ALLOW_IMAGE_FORMATS),
+        ],
+        null=True,
+        blank=True,
+    )
+    avatar_color = models.CharField(max_length=255, null=True, blank=True)
     code = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=255, null=True, blank=True)
     participants = models.ManyToManyField(
@@ -43,6 +58,10 @@ class ChatRoom(BaseModel):
         # Generate unique code when creating
         if self.id is None:
             self.code = generate_unique_code(ChatRoom, "code", 10)
+
+        if self.avatar_color is None:
+            self.avatar_color = AvatarColors.random()
+
         super().save(*args, **kwargs)
 
 

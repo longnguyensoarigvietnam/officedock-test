@@ -12,6 +12,7 @@ from django.db.models import (
     Q,
     Count,
     Prefetch,
+    Exists,
 )
 from django.db.models.functions import Coalesce
 from django.utils import timezone
@@ -128,6 +129,13 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         company = user.company
         validated_data = serializer.validated_data
         participants = validated_data.pop("participant_ids", [])
+        avatar = validated_data.get("avatar", None)
+
+        if avatar:
+            # Gen new file name
+            file_name = avatar.name
+            avatar.name = generate_file_name(file_name)
+
         # Unique element in list participants
         unique_participants = list(set(participants))
 
@@ -234,6 +242,15 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         validated_data = serializer.validated_data
         participants = validated_data.pop("participant_ids", None)
         name = validated_data.get("name")
+        avatar = validated_data.get("avatar")
+
+        if avatar:
+            # Remove old avatar
+            instance.avatar.delete()
+
+            # Gen new file name
+            file_name = avatar.name
+            avatar.name = generate_file_name(file_name)
 
         if "name" in validated_data and (name is None or name == ""):
             raise ValidationError(
@@ -867,7 +884,6 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         Handle destroy chatroom
         """
-        instance = self.get_object()
         user = self.request.user
         participant = instance.chat_rooms_participants.filter(user=user).first()
 
@@ -944,15 +960,45 @@ class ChatMessageViewSet(
         Get a list of chat rooms.
         """
         user = request.user
-        messages = self.get_queryset().filter(
-            deleted_at__isnull=True, chat_room__participants=user
+        messages = (
+            self.get_queryset()
+            .filter(deleted_at__isnull=True, chat_room__participants=user)
+            .select_related(
+                "chat_room",
+                "task",
+                "schedule",
+                "sender",
+                "submit_level",
+                "reply",
+                "organization",
+            )
+            .prefetch_related(
+                "chat_files",
+                "mentions",
+                "reactions",
+                "bookmark_users",
+                "tasks",
+            )
         )
         is_bookmark = request.query_params.get("is_bookmark")
 
+        # Subquery: get bookmark time and bookmark status
+        user_bookmarks = Bookmark.objects.filter(
+            user=user, chat_message=OuterRef("pk")
+        )
+
+        messages = messages.annotate(
+            is_bookmark=Exists(user_bookmarks),
+            bookmark_at=Subquery(
+                user_bookmarks.values("bookmark_at")[:1],
+                output_field=DateTimeField(),
+            ),
+        )
+
         if is_bookmark:
             messages = (
-                messages.filter(bookmark_users=user)
-                .order_by("-bookmarks__bookmark_at")
+                messages.filter(is_bookmark=True)
+                .order_by("-bookmark_at", "-created_at")
                 .distinct()
             )
         else:
@@ -969,7 +1015,7 @@ class ChatMessageViewSet(
             )
             if is_bookmark:
                 messages = messages.order_by(
-                    "-bookmarks__bookmark_at"
+                    "-bookmark_at", "-created_at"
                 ).distinct()
             else:
                 messages = messages.order_by("-created_at")
