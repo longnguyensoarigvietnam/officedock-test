@@ -266,7 +266,7 @@ export const MessageDetail = ({
     );
 
     return (
-      <div className="h-6 relative top-[-3px]">
+      <div className="h-[30px] relative top-[-3px]">
         <CustomUserAvatar
           avatarUrl={memberInfo?.avatar || ''}
           avatarColor={memberInfo?.avatarColor || ''}
@@ -650,15 +650,15 @@ export const MessageDetail = ({
   return (
     <Fragment>
       {messageDetail && (
-        <div className="group my-2">
+        <div className="group px-4">
           {(chatRoomDetail?.type === ChatRoomType.PRIVATE ||
             chatRoomDetail?.type === ChatRoomType.GROUP ||
             chatRoomDetail?.type === ChatRoomType.SELF) && (
             <div
-              className={`flex !box-border group-hover:bg-[#FFFFFF] ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
+              className={`flex relative !box-border group-hover:bg-[#FFFFFF] ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} p-[14px] group-hover:rounded-md`}>
               {renderAvatar(messageDetail.sender.id)}
               <div className={`ml-[10px] !w-full`}>
-                <div className="flex w-full justify-between items-baseline pb-2">
+                <div className="flex w-full justify-between items-baseline pb-[10px]">
                   <div className="flex flex-grow  gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <div
                       data-id={messageDetail.uuid}
@@ -1030,27 +1030,6 @@ export const MessageDetail = ({
                         </div>
                       )}
                     </div>
-                    <>
-                      {!messageDetail.deletedAt &&
-                        !(
-                          uploadFileStatus[messageDetail.uuid]?.progress >= 0 &&
-                          uploadFileStatus[messageDetail.uuid]?.progress < 100
-                        ) && (
-                          <MessageHoverOptions
-                            messageDetail={messageDetail}
-                            chatRoomDetail={chatRoomDetail}
-                            handleOpenEditForm={handleOpenEditForm}
-                            handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
-                            handleUpdateBookmark={handleUpdateBookmark}
-                            handleReactionClick={handleReactionClickDetail}
-                            handleRemoveReactionClick={
-                              handleRemoveReactionClickDetail
-                            }
-                            handleQuoteMsgIcon={handleQuoteMsgIcon}
-                            handleReplyMsg={handleReplyMsg}
-                          />
-                        )}
-                    </>
                   </div>
                 </div>
                 {/* Data reaction */}
@@ -1067,11 +1046,32 @@ export const MessageDetail = ({
                   </div>
                 )}
               </div>
+              <>
+                {!messageDetail.deletedAt &&
+                  !(
+                    uploadFileStatus[messageDetail.uuid]?.progress >= 0 &&
+                    uploadFileStatus[messageDetail.uuid]?.progress < 100
+                  ) && (
+                    <MessageHoverOptions
+                      messageDetail={messageDetail}
+                      chatRoomDetail={chatRoomDetail}
+                      handleOpenEditForm={handleOpenEditForm}
+                      handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
+                      handleUpdateBookmark={handleUpdateBookmark}
+                      handleReactionClick={handleReactionClickDetail}
+                      handleRemoveReactionClick={
+                        handleRemoveReactionClickDetail
+                      }
+                      handleQuoteMsgIcon={handleQuoteMsgIcon}
+                      handleReplyMsg={handleReplyMsg}
+                    />
+                  )}
+              </>
             </div>
           )}
           {chatRoomDetail?.type === ChatRoomType.TASK && (
             <div
-              className={`flex !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
+              className={`flex relative !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
               <div>
                 {messageDetail?.organization?.icon ? (
                   <CustomUserAvatar
@@ -1088,7 +1088,7 @@ export const MessageDetail = ({
                 )}
               </div>
               <div className={`ml-[10px] mt-[6px] !w-full`}>
-                <div className="flex justify-between items-baseline pb-2">
+                <div className="flex justify-between items-baseline pb-[10px]">
                   <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <p className="max-w-full font-medium break-all">
                       {messageDetail?.organization?.name}
@@ -1248,23 +1248,6 @@ export const MessageDetail = ({
                         </div>
                       )}
                     </div>
-                    <>
-                      {!messageDetail.deletedAt && (
-                        <MessageHoverOptions
-                          messageDetail={messageDetail}
-                          chatRoomDetail={chatRoomDetail}
-                          handleReplyMsg={handleReplyMsg}
-                          handleOpenEditForm={handleOpenEditForm}
-                          handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
-                          handleUpdateBookmark={handleUpdateBookmark}
-                          handleReactionClick={handleReactionClickDetail}
-                          handleRemoveReactionClick={
-                            handleRemoveReactionClickDetail
-                          }
-                          handleQuoteMsgIcon={handleQuoteMsgIcon}
-                        />
-                      )}
-                    </>
                   </div>
                 </div>
                 {/* Data reaction */}
@@ -1281,14 +1264,29 @@ export const MessageDetail = ({
                   </div>
                 )}
               </div>
+              <>
+                {!messageDetail.deletedAt && (
+                  <MessageHoverOptions
+                    messageDetail={messageDetail}
+                    chatRoomDetail={chatRoomDetail}
+                    handleReplyMsg={handleReplyMsg}
+                    handleOpenEditForm={handleOpenEditForm}
+                    handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
+                    handleUpdateBookmark={handleUpdateBookmark}
+                    handleReactionClick={handleReactionClickDetail}
+                    handleRemoveReactionClick={handleRemoveReactionClickDetail}
+                    handleQuoteMsgIcon={handleQuoteMsgIcon}
+                  />
+                )}
+              </>
             </div>
           )}
           {chatRoomDetail?.type === ChatRoomType.SKILL && (
             <div
-              className={`flex !box-border  ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
+              className={`flex relative !box-border  ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
               <div>{renderAvatar(messageDetail.sender.id)}</div>
               <div className={`ml-[10px] w-full`}>
-                <div className="flex justify-between items-baseline pb-2">
+                <div className="flex justify-between items-baseline pb-[10px]">
                   <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <p className="max-w-full break-all">
                       {messageDetail.sender.fullName}{' '}
@@ -1374,23 +1372,6 @@ export const MessageDetail = ({
                         </div>
                       )}
                     </div>
-                    <>
-                      {!messageDetail.deletedAt && (
-                        <MessageHoverOptions
-                          messageDetail={messageDetail}
-                          chatRoomDetail={chatRoomDetail}
-                          handleReplyMsg={handleReplyMsg}
-                          handleOpenEditForm={handleOpenEditForm}
-                          handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
-                          handleUpdateBookmark={handleUpdateBookmark}
-                          handleReactionClick={handleReactionClickDetail}
-                          handleRemoveReactionClick={
-                            handleRemoveReactionClickDetail
-                          }
-                          handleQuoteMsgIcon={handleQuoteMsgIcon}
-                        />
-                      )}
-                    </>
                   </div>
                 </div>
                 {/* Data reaction */}
@@ -1408,14 +1389,29 @@ export const MessageDetail = ({
                   </div>
                 )}
               </div>
+              <>
+                {!messageDetail.deletedAt && (
+                  <MessageHoverOptions
+                    messageDetail={messageDetail}
+                    chatRoomDetail={chatRoomDetail}
+                    handleReplyMsg={handleReplyMsg}
+                    handleOpenEditForm={handleOpenEditForm}
+                    handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
+                    handleUpdateBookmark={handleUpdateBookmark}
+                    handleReactionClick={handleReactionClickDetail}
+                    handleRemoveReactionClick={handleRemoveReactionClickDetail}
+                    handleQuoteMsgIcon={handleQuoteMsgIcon}
+                  />
+                )}
+              </>
             </div>
           )}
           {chatRoomDetail?.type === ChatRoomType.CALENDAR && (
             <div
-              className={`flex !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
+              className={`flex relative !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-[30px] mr-3 group-hover:rounded-md`}>
               <div>{renderAvatar(messageDetail.sender.id)}</div>
               <div className={`ml-[10px] w-full`}>
-                <div className="flex justify-between items-baseline pb-2">
+                <div className="flex justify-between items-baseline pb-[10px]">
                   <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <p className="max-w-full break-all">
                       {messageDetail.sender.fullName}{' '}
@@ -1494,23 +1490,6 @@ export const MessageDetail = ({
                         {messageDetail.message}
                       </p>
                     </div>
-                    <>
-                      {!messageDetail.deletedAt && (
-                        <MessageHoverOptions
-                          messageDetail={messageDetail}
-                          chatRoomDetail={chatRoomDetail}
-                          handleReplyMsg={handleReplyMsg}
-                          handleOpenEditForm={handleOpenEditForm}
-                          handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
-                          handleUpdateBookmark={handleUpdateBookmark}
-                          handleReactionClick={handleReactionClickDetail}
-                          handleRemoveReactionClick={
-                            handleRemoveReactionClickDetail
-                          }
-                          handleQuoteMsgIcon={handleQuoteMsgIcon}
-                        />
-                      )}
-                    </>
                   </div>
                 </div>
                 {/* Data reaction */}
@@ -1527,6 +1506,21 @@ export const MessageDetail = ({
                   </div>
                 )}
               </div>
+              <>
+                {!messageDetail.deletedAt && (
+                  <MessageHoverOptions
+                    messageDetail={messageDetail}
+                    chatRoomDetail={chatRoomDetail}
+                    handleReplyMsg={handleReplyMsg}
+                    handleOpenEditForm={handleOpenEditForm}
+                    handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
+                    handleUpdateBookmark={handleUpdateBookmark}
+                    handleReactionClick={handleReactionClickDetail}
+                    handleRemoveReactionClick={handleRemoveReactionClickDetail}
+                    handleQuoteMsgIcon={handleQuoteMsgIcon}
+                  />
+                )}
+              </>
             </div>
           )}
         </div>

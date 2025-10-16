@@ -765,15 +765,16 @@ const ChatDetail = ({
         setMessage(editor.getHTML());
       },
       editorProps: {
-        handlePaste(_view, event) {
+        handlePaste(view, event) {
           const clipboardData = event.clipboardData;
           const text = clipboardData?.getData('text/plain');
 
-          if (text) {
-            editor && editor.commands.insertContent(text);
-            return true;
+          if (text?.startsWith('custom:')) {
+            editor?.commands.insertContent(`Custom content: ${text}`);
+            return true; // stop default paste
           }
 
+          // Otherwise, allow Tiptap to handle it
           return false;
         },
       },
@@ -2667,7 +2668,7 @@ const ChatDetail = ({
                   !hasMoreDetailOnScrollDown ? (
                     <div className="flex items-center gap-5 justify-center">
                       <div className="wavy-line"></div>
-                      <p className="text-[13px] text-[#0068B6] break-all min-w-[105px]">
+                      <p className="text-[13px] text-[#228CDB] break-all min-w-[105px]">
                         未読のメッセージ
                       </p>
                       <div className="wavy-line"></div>

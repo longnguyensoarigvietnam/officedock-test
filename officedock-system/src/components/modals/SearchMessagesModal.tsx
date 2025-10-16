@@ -13,7 +13,6 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import Image from 'next/image';
 
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
@@ -43,11 +42,13 @@ import {
   TaskRepetitiveValue,
 } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
+import { DELETED_EVENT_TITLE } from '@constants/message';
 
 import { ChatMessageResponse } from '@interfaces/chat';
 import { Profile } from '@interfaces/user';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
+import { LoadingContext } from '@providers/LoadingProvider';
 
 import {
   convertToCurrentTimezone,
@@ -62,8 +63,7 @@ import {
   renderEventDatetimeInChat,
   renderScheduleChangeInCalendarRoom,
 } from '@utils';
-import { DELETED_EVENT_TITLE } from '@constants/message';
-import { LoadingContext } from '@providers/LoadingProvider';
+import { MessageHoverAllRoomsSearch } from '@components/chat/MessageHoverAllRoomsSearch';
 
 interface SearchMessagesModalProps {
   open: boolean;
@@ -142,7 +142,7 @@ export const SearchMessagesModal = ({
     );
 
     return (
-      <div className="h-6">
+      <div className="h-[30px] relative top-[-3px]">
         <CustomUserAvatar
           avatarUrl={memberInfo?.avatar || ''}
           avatarColor={memberInfo?.avatarColor || ''}
@@ -493,13 +493,13 @@ export const SearchMessagesModal = ({
         </div>
         <div
           ref={resultsContainerRef}
-          className="overflow-y-auto !max-h-[630px] h-[630px] bg-[#F8FAFC] rounded-[6px]">
+          className="overflow-y-auto !max-h-[630px] h-[630px] bg-[#F8FAFC] rounded-[6px] p-4">
           {dataSearch.length > 0 ? (
             dataSearch.map((messageDetail) => {
               return (
                 <div
                   key={messageDetail.id}
-                  className="flex gap-2 items-start group relative border-b-[1px] hover:bg-white hover:cursor-pointer border-[#D2DBE1] py-5 px-2">
+                  className="flex gap-[10px] items-start group relative border-b-[1px] hover:bg-white hover:cursor-pointer border-[#D2DBE1] p-[14px]">
                   <>
                     {chatRoomType === ChatRoomType.TASK ||
                     (chatRoomType == ChatRoomType.BOOKMARK &&
@@ -521,7 +521,7 @@ export const SearchMessagesModal = ({
 
                   <div className="!w-full">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-baseline gap-2 font-semibold text-sm pb-2 pr-2">
+                      <div className="flex items-baseline gap-2 font-semibold text-[15px] pb-[10px] pr-2">
                         <p className="max-w-full break-all line-clamp-3">
                           {chatRoomType === ChatRoomType.TASK ||
                           (chatRoomType == ChatRoomType.BOOKMARK &&
@@ -535,7 +535,7 @@ export const SearchMessagesModal = ({
                           ) : (
                             messageDetail.sender.fullName
                           )}{' '}
-                          <span className="font-normal text-[10px] text-[#77858F]">
+                          <span className="font-normal text-xs text-[#77858F]">
                             {chatRoomType != ChatRoomType.TASK &&
                               !(
                                 chatRoomType == ChatRoomType.BOOKMARK &&
@@ -1079,50 +1079,19 @@ export const SearchMessagesModal = ({
                       </div>
                     )}
                   </div>
-                  <div className="bg-white group-hover:flex hidden rounded-3xl px-3 py-1.5 shadow-md absolute left-1/2 -bottom-4 transform -translate-x-1/2 items-center gap-2">
-                    <DynamicTooltip
-                      content={'メッセージに移動'}
-                      placement="top">
-                      <div
-                        className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer"
-                        onClick={() => {
-                          setSearchMessageResults(undefined);
-                          setSearchResultsPage(1);
-                          onGotoMessage({
-                            messageId: Number(messageDetail.id),
-                            chatRoomCode: String(messageDetail.chatRoom?.code),
-                          });
-                        }}>
-                        <ImageRound
-                          name="Go to message"
-                          src={'/icons/go-to-message.svg'}
-                          className="w-[15px] h-[13px] hover:cursor-pointer"
-                        />
-                      </div>
-                    </DynamicTooltip>
-                    <DynamicTooltip
-                      content={
-                        messageDetail.isBookmark
-                          ? 'ブックマークを外す'
-                          : 'ブックマーク'
-                      }
-                      placement="top">
-                      <div
-                        onClick={() => {
-                          handleBookmark({
-                            uuid: messageDetail.uuid,
-                            isBookmark: !messageDetail.isBookmark,
-                          });
-                        }}
-                        className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
-                        <ImageRound
-                          name="Book mark"
-                          src={`/icons/${messageDetail.isBookmark ? 'save-active.svg' : 'save-chat.svg'}`}
-                          className="w-[10px] h-[12px] hover:cursor-pointer"
-                        />
-                      </div>
-                    </DynamicTooltip>
-                  </div>
+
+                  <MessageHoverAllRoomsSearch
+                    messageDetail={messageDetail}
+                    onGotoMessage={() => {
+                      setSearchMessageResults(undefined);
+                      setSearchResultsPage(1);
+                      onGotoMessage({
+                        messageId: Number(messageDetail.id),
+                        chatRoomCode: String(messageDetail.chatRoom?.code),
+                      });
+                    }}
+                    handleBookmark={handleBookmark}
+                  />
                 </div>
               );
             })
