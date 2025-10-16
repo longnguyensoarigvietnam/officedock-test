@@ -73,7 +73,7 @@ interface ColumnProps {
   >;
   pinItemToTop: (itemId: string | number) => void;
   saveExtendColumn: (data: Record<string, boolean>) => void;
-  handleViewArchive: () => void;
+  handleViewArchive?: () => void;
 }
 const Column = ({
   columnId,
@@ -548,7 +548,9 @@ const Column = ({
                 )}
                 {columnId == `${StatusValueTask.COMPLETED}` && (
                   <Button
-                    onClick={handleViewArchive}
+                    onClick={() => {
+                      handleViewArchive && handleViewArchive();
+                    }}
                     variant="secondary"
                     className="w-full !px-0 !bg-[#EBF1F7] !text-[#77858F] font-medium text-sm !border-none">
                     アーカイブタスクを見る
