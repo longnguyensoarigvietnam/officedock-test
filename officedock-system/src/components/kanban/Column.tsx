@@ -17,6 +17,7 @@ import ItemRoutine from './ItemRoutine';
 import ImageRound from '@components/common/ImageRound';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import Spinner from '@components/common/Spinner';
+import Button from '@components/common/Button';
 
 import {
   KanbanType,
@@ -72,6 +73,7 @@ interface ColumnProps {
   >;
   pinItemToTop: (itemId: string | number) => void;
   saveExtendColumn: (data: Record<string, boolean>) => void;
+  handleViewArchive: () => void;
 }
 const Column = ({
   columnId,
@@ -96,6 +98,7 @@ const Column = ({
   handleUpdateItemInline,
   setNumberPagesData,
   saveExtendColumn,
+  handleViewArchive,
 }: ColumnProps) => {
   const { data: session } = useSessionCache();
   const isMyRoutine = columnId === `${StatusValueTask.MY_ROUTINE}`;
@@ -238,6 +241,50 @@ const Column = ({
     setCount(remainingCount + items.length);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalCount, items, items.length, columnsKanbanData]);
+
+  // Remove oldest task complete for column COMPLETE
+  function removeOldestTask(columnId: string | number) {
+    setColumnsKanbanData((prev) => {
+      if (!prev || !prev[columnId]) return prev; // check column existence
+
+      const column = prev[columnId];
+      const items = column.items;
+
+      if (items.length === 0) return prev;
+
+      // Find the item with the oldest completedAt
+      const oldestItem = items.reduce((oldest, current) => {
+        if (!oldest.completedAt) return current;
+        if (!current.completedAt) return oldest;
+        return new Date(current.completedAt) < new Date(oldest.completedAt)
+          ? current
+          : oldest;
+      });
+
+      // Create a new list, remove the oldest item
+      const newItems = items.filter((item) => item.id !== oldestItem.id);
+
+      // Return new state
+      return {
+        ...prev,
+        [columnId]: {
+          ...column,
+          items: newItems,
+        },
+      };
+    });
+  }
+
+  useEffect(() => {
+    if (
+      count >= 10 &&
+      items.length > 10 &&
+      columnId &&
+      columnId == `${StatusValueTask.COMPLETED}`
+    ) {
+      removeOldestTask(columnId);
+    }
+  }, [columnId, items.length, totalCount]);
 
   useEffect(() => {
     if (items) {
@@ -429,7 +476,6 @@ const Column = ({
                 paddingTop: `${(columnWidth / 247) * 14}px`,
                 marginRight: isMyRoutine ? `-${(columnWidth / 247) * 16}px` : 0,
                 paddingRight: isMyRoutine ? paddingRight : '10px',
-                boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 ${!isMyRoutine ? '#f8fafc' : snapshot.isDraggingOver ? '#e5e7eb' : '#EBF1F7'}`,
                 minHeight: showFrequentlyTasks
                   ? isHasOrdering
                     ? 'calc(100vh - 402px)'
@@ -499,6 +545,14 @@ const Column = ({
                   </div>
                 ) : (
                   <div></div>
+                )}
+                {columnId == `${StatusValueTask.COMPLETED}` && (
+                  <Button
+                    onClick={handleViewArchive}
+                    variant="secondary"
+                    className="w-full !px-0 !bg-[#EBF1F7] !text-[#77858F] font-medium text-sm !border-none">
+                    アーカイブタスクを見る
+                  </Button>
                 )}
               </div>
             </div>

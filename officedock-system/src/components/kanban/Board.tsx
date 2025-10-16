@@ -45,6 +45,7 @@ interface BoardKanbanProps {
   handleUpdateItemInline: (data: Task) => void;
   pinItemToTop: (itemId: string | number) => void;
   addTask: (id: string) => void;
+  handleViewArchive: () => void;
   selectedOptionZoom: OptionDropdownType;
 }
 
@@ -63,6 +64,7 @@ const BoardKanban = ({
   handleUpdateItemInline,
   pinItemToTop,
   addTask,
+  handleViewArchive,
   selectedOptionZoom,
 }: BoardKanbanProps) => {
   const { showToast } = useToast();
@@ -163,6 +165,7 @@ const BoardKanban = ({
                           searchValue={searchValue}
                           columnsKanbanData={columnsKanbanData}
                           creationDataCommonData={creationDataCommonData}
+                          handleViewArchive={handleViewArchive}
                           editTask={editTaskInline}
                           handleActionEditTask={handleActionEditTask}
                           handleConfirmCopyTask={handleConfirmCopyTask}

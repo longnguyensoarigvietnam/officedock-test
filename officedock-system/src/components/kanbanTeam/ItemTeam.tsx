@@ -225,7 +225,7 @@ const ItemTeam = ({
       {selectedOptionZoom.value !== 25 ? (
         <div>
           <div
-            className={`relative ${content.status?.id === StatusValueTask.MY_ROUTINE && 'min-h-[81px]'} ${selectedOptionZoom.value !== 50 && 'gap-2'} ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid    bg-white shadow-common rounded-[20px] text-xs flex flex-col  mb-2 `}>
+            className={`relative ${content.status?.id === StatusValueTask.MY_ROUTINE && 'min-h-[81px]'} ${selectedOptionZoom.value !== 50 && 'gap-2'} ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid    bg-white shadow-common rounded-[20px] text-xs flex flex-col  mb-[14px] `}>
             <div className="relative w-[100%] h-full">
               <>
                 <div

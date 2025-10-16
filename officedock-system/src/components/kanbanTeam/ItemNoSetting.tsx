@@ -246,7 +246,7 @@ const ItemNoSetting = ({
                     : `${(columnWidth / 247) * 220}px`,
                 ...provided.draggableProps.style,
               }}
-              className={`relative ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-[20px] text-xs flex flex-col gap-2 mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
+              className={`relative ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-[20px] text-xs flex flex-col gap-2 mb-[14px] ${snapshot.isDragging && 'opacity-100'}`}>
               <div className="relative w-[100%]   h-full">
                 <>
                   <Tippy

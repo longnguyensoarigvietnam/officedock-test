@@ -1816,3 +1816,26 @@ export const isCheckPermissionWithCloseDate = ({
 
   return d1.getTime() >= d2.getTime();
 };
+
+// Handle format show completeAt
+export function formatCompletedAt(completedAt: string): string {
+  const date = new Date(completedAt);
+  const now = new Date();
+
+  const y = date.getFullYear();
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+
+  const isSameDay =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+
+  if (isSameDay) return '今日';
+
+  if (date.getFullYear() === now.getFullYear()) {
+    return `${m}月 ${d}日`;
+  }
+
+  return `${y}年 ${m}月 ${d}日`;
+}
