@@ -102,8 +102,8 @@ const ActionsSkillMapDetailModal = ({
                   disabled={isDisabled}
                   style={
                     isActive
-                      ? { backgroundColor: step.color, color: 'white' }
-                      : { color: step.color, backgroundColor: '#EBF1F7' }
+                      ? { background: step.color, color: 'white' }
+                      : { color: step.color, background: '#EBF1F7' }
                   }
                   className={`w-1/3 text-center py-[4px] border-none !rounded-[20px]`}>
                   {step.label}

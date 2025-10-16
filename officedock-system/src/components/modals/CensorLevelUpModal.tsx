@@ -114,7 +114,7 @@ const CensorLevelUpModal = memo(
               <p className="text-[13px] font-normal">対応タスクを</p>
               <div className="w-[50px]">
                 <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] border-[#77858F] rounded-md`}
+                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] !border-[#77858F] rounded-md`}
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
@@ -136,7 +136,7 @@ const CensorLevelUpModal = memo(
               <p className="text-[13px] font-normal">対応タスクを</p>
               <div className="w-[50px]">
                 <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] border-[#77858F] rounded-md`}
+                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] !border-[#77858F] rounded-md`}
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
@@ -158,7 +158,7 @@ const CensorLevelUpModal = memo(
               <p className="text-[13px] font-normal">振り返りの期間</p>{' '}
               <div className="w-[36px] mr-3">
                 <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] rounded-md ${showLookBackIntervalErr ? 'border-error' : 'border-[#77858F]'}`}
+                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] !border-[#77858F] rounded-md ${showLookBackIntervalErr ? 'border-error' : 'border-[#77858F]'}`}
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
@@ -174,7 +174,7 @@ const CensorLevelUpModal = memo(
               </div>
               <div className="w-[68px]">
                 <Dropdown
-                  className={`h-[34px] !w-[68px] !py-1 !pr-0 text-xs !border-[1px] !rounded-md ${showLookBackTypeErr ? 'border-error' : 'border-[#77858F]'}`}
+                  className={`h-[34px] !w-[68px] !py-1 !pr-0 text-xs !border-[1px] !rounded-md ${showLookBackTypeErr ? '!border-error' : '!border-[#77858F]'}`}
                   classNameTextData="!text-xs"
                   classNameOption="!text-xs"
                   classNameError="!text-xs"
@@ -251,13 +251,12 @@ const CensorLevelUpModal = memo(
     return (
       <Modal
         open={open}
-        className="font-primary !rounded-[8px] text-gray-700 !p-0 w-[400px] "
-        contentClass="!w-[400px] !rounded-[8px]"
+        className="font-primary !rounded-[20px] text-black !p-0 w-[500px]"
         onClose={onClose}>
-        <div className="py-[40px] px-[20px] flex flex-col gap-5 items-center">
+        <div className="py-[40px] px-[30px] flex flex-col gap-5 items-center">
           {/* Header */}
           {currentStep < 3 ? (
-            <div className="flex gap-2 justify-center items-center">
+            <div className="flex gap-[10px] justify-center items-center">
               <CustomUserAvatar
                 avatarUrl={submitLevelUpDetail.staff?.avatar || ''}
                 avatarColor={submitLevelUpDetail.staff?.avatarColor || ''}
@@ -285,7 +284,7 @@ const CensorLevelUpModal = memo(
               </p>
               <div className="flex justify-between items-center w-full">
                 <div className="flex items-center justify-center w-full gap-2">
-                  <div className="bg-[#EBF1F7] rounded-[6px] w-[62px] h-[62px] flex flex-col items-center justify-center">
+                  <div className="bg-[#EBF1F7] rounded-[10px] w-[62px] h-[62px] flex flex-col items-center justify-center">
                     <p
                       className="text-white text-xs font-medium bg-primary rounded-[10px] w-[51px] h-[21px] flex justify-center items-center"
                       style={{
@@ -319,7 +318,7 @@ const CensorLevelUpModal = memo(
                     name="Blue chevron"
                   />
                   <div
-                    className={`bg-[#EBF1F7] rounded-[6px] w-[62px] h-[62px] flex flex-col items-center justify-center ${selectRejectOption && 'opacity-25'}`}>
+                    className={`bg-[#EBF1F7] rounded-[10px] w-[62px] h-[62px] flex flex-col items-center justify-center ${selectRejectOption && 'opacity-25'}`}>
                     <p
                       className="text-white text-xs font-medium rounded-[10px] w-[51px] h-[21px] flex justify-center items-center"
                       style={{
@@ -354,11 +353,9 @@ const CensorLevelUpModal = memo(
           {/* Checkbox to select items */}
           {(currentStep == 1 || (currentStep < 4 && selectRejectOption)) && (
             <>
-              <div className="bg-[#EBF1F7] py-[24px] px-[30px] rounded-[6px] !w-full">
+              <div className="bg-[#EBF1F7] py-[24px] px-[30px] my-[10px] rounded-[6px] !w-full">
                 <p className="text-primary font-medium text-[16px] text-center mb-3">
-                  {currentStep == 1
-                    ? 'チェックリストを確認する'
-                    : '再設定後のチェックリスト'}
+                  チェックリストを確認する
                 </p>
                 <div className="flex flex-col gap-2 justify-start">
                   {submitLevelUpDetail.skillMapSkillLevel.items &&
@@ -400,10 +397,10 @@ const CensorLevelUpModal = memo(
                 </div>
               </div>
               {currentStep == 1 && (
-                <div className="flex gap-2 justify-center mt-5">
+                <div className="flex gap-[10px] justify-center">
                   <Button
                     variant="outline"
-                    className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-primary bg-white"
+                    className="w-[100px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-primary bg-white"
                     onClick={() => {
                       setCurrentStep(2);
                       setSelectRejectOption(true);
@@ -417,7 +414,7 @@ const CensorLevelUpModal = memo(
                       setCurrentStep(2);
                       setSelectRejectOption(false);
                     }}
-                    className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-white">
+                    className="w-[100px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-white">
                     承認する
                   </Button>
                 </div>
@@ -487,7 +484,9 @@ const CensorLevelUpModal = memo(
           {/* Comment box */}
           {currentStep == 2 && (
             <div className="!w-full">
-              <p className="text-sm font-medium mb-3">コメント</p>
+              <p className="text-sm font-medium mb-[14px] mt-[10px]">
+                コメント
+              </p>
               <TextArea
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                   setComment(e.target.value)
@@ -499,7 +498,7 @@ const CensorLevelUpModal = memo(
 
           {/* Comment text */}
           {currentStep == 3 && (
-            <div className="bg-[#EBF1F7] py-[24px] px-[30px] rounded-[6px] !w-full">
+            <div className="bg-[#EBF1F7] mt-[10px] py-[24px] px-[30px] rounded-[10px] !w-full">
               <div className="flex gap-2 justify-start items-center mb-3">
                 <CustomUserAvatar
                   avatarUrl={submitLevelUpDetail.staff?.avatar || ''}
@@ -513,7 +512,9 @@ const CensorLevelUpModal = memo(
                   </span>
                 </p>
               </div>
-              <p className="text-sm max-w-full break-all">{comment}</p>
+              <p className="text-sm max-w-full break-all max-h-[150px] overflow-y-auto">
+                {comment}
+              </p>
             </div>
           )}
 
@@ -523,7 +524,7 @@ const CensorLevelUpModal = memo(
               {selectRejectOption ? (
                 <Button
                   variant="outline"
-                  className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-primary bg-white"
+                  className="w-[100px] h-[36px] mt-[10px] !p-0 text-sm font-medium rounded-[6px] text-primary bg-white"
                   onClick={() => {
                     if (lookBackInterval && !lookBackType) {
                       setShowLookBackTypeErr(true);
@@ -551,7 +552,7 @@ const CensorLevelUpModal = memo(
                       });
                     }
                   }}>
-                 {currentStep == 2 ? '確認する' : '差し戻す'} 
+                  {currentStep == 2 ? '確認する' : '差し戻す'}
                 </Button>
               ) : (
                 <Button
@@ -572,8 +573,8 @@ const CensorLevelUpModal = memo(
                       });
                     }
                   }}
-                  className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-white">
-                 {currentStep == 2 ? '確認する' : '承認する'}
+                  className="w-[100px] h-[36px] mt-[10px] !p-0 text-sm font-medium rounded-[6px] text-white">
+                  {currentStep == 2 ? '確認する' : '承認する'}
                 </Button>
               )}
             </div>

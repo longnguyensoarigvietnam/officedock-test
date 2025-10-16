@@ -70,8 +70,8 @@ const MemberList = () => {
 
   return (
     <>
-      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#E6F3FB]">
-        <div className="flex gap-2 items-center mb-[30px] bg-white w-fit p-[6px] rounded-[20px]">
+      <div className="sticky z-[21] top-[0px] px-10 py-[27px] bg-[#E6F3FB]">
+        <div className="flex gap-2 items-center bg-white w-fit p-[6px] rounded-[20px]">
           <Button
             variant="primary"
             className={`w-[100px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px]`}>
@@ -87,7 +87,7 @@ const MemberList = () => {
         </div>
       </div>
 
-      <div className="flex flex-col gap-6 px-10">
+      <div className="flex flex-col gap-5 px-10">
         {organizationList.length > 0 &&
           organizationList.map((org) => {
             return (
@@ -95,7 +95,7 @@ const MemberList = () => {
                 key={org.orgId}
                 className="p-[30px] bg-[#F8FAFC] rounded-[30px]"
                 style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
-                <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
+                <p className="text-[#77858F] text-[16px] font-medium mb-[30px] max-w-[100%] break-all">
                   {org.orgName}
                 </p>
                 <div className="grid grid-cols-2 gap-2">
@@ -103,9 +103,9 @@ const MemberList = () => {
                     return (
                       <div
                         key={user.id}
-                        className="flex justify-between items-center px-3 h-[70px] bg-white rounded-[14px]"
+                        className="flex justify-between items-center p-5 h-[70px] bg-white rounded-[14px]"
                         style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
-                        <div className="flex gap-3 items-center w-[calc(100%_-_320px)]">
+                        <div className="flex gap-[10px] items-center w-[calc(100%_-_320px)]">
                           <CustomUserAvatar
                             avatarUrl={user?.avatar || ''}
                             avatarColor={user?.avatarColor || ''}
@@ -115,13 +115,13 @@ const MemberList = () => {
                             {user.fullName}
                           </p>
                         </div>
-                        <div className="flex gap-2 items-center w-[320px]">
+                        <div className="flex gap-[10px] items-center">
                           <Button
                             variant="primary"
                             onClick={() =>
                               handleNavigateUserMap(user.id, String(org.orgId))
                             }
-                            className="!p-0 w-[154px] h-[36px] text-white text-sm font-medium">
+                            className="!p-0 w-[150px] h-[34px] text-white text-sm font-medium">
                             スキルマップを見る
                           </Button>
 
@@ -133,7 +133,7 @@ const MemberList = () => {
                               )
                             }
                             variant="primary"
-                            className="!p-0 w-[154px] h-[36px] text-white text-sm font-medium">
+                            className="!p-0 w-[150px] h-[34px] text-white text-sm font-medium">
                             マイスキルを見る
                           </Button>
                         </div>

@@ -278,7 +278,7 @@ const PeopleDropdown = ({
                                   />
                                 )}
                                 <p
-                                  className={` ${!openByDefault ? 'ml-1' : 'text-center w-full'} relative top-[-1px]  block truncate  ${!isStatusDropdown && selected?.value == option.value ? 'text-blue-500' : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px]'}`}>
+                                  className={` ${!openByDefault ? 'ml-2' : 'text-center w-full'} relative top-[-1px]  block truncate  ${!isStatusDropdown && selected?.value == option.value ? 'text-blue-500' : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px]'}`}>
                                   {option.label}
                                 </p>
                                 {isStatusDropdown && (

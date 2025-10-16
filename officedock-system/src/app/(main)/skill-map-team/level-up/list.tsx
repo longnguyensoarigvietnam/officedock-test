@@ -102,8 +102,8 @@ const LevelUpList = () => {
 
   return (
     <div className="w-full">
-      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#E6F3FB]">
-        <div className="flex gap-2 items-center mb-[30px] bg-white w-fit p-[6px] rounded-[20px]">
+      <div className="sticky z-[21] top-[0px] px-10 py-[27px] bg-[#E6F3FB]">
+        <div className="flex gap-2 items-center bg-white w-fit p-[6px] rounded-[20px]">
           <Link href={`${pageRouters.SKILL_MAP_TEAM.href}?tabId=${tabId || 0}`}>
             <Button
               variant="outline"

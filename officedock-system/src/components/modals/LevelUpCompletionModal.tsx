@@ -12,19 +12,18 @@ const LevelUpCompletionModal = memo(
     return (
       <Modal
         open={open}
-        className="font-primary !rounded-[8px] text-gray-700 !p-0 w-[400px] "
-        contentClass="!w-[400px] !rounded-[8px]"
+        className="font-primary !rounded-[20px] text-gray-700 !p-0 w-[400px] "
         onClose={onClose}>
-        <div className="py-[40px] px-[20px] flex flex-col gap-5 items-center">
+        <div className="py-[40px] px-[20px] flex flex-col gap-[30px] items-center">
           <div>
-            <p className="text-sm font-modal">
+            <p className="text-sm font-modal leading-none">
               {selectRejectOption
                 ? 'スキルのレベルアップを差し戻しました。'
                 : 'スキルのレベルアップを承認しました。'}
             </p>
           </div>
           <p
-            className="text-primary text-[13px] font-medium flex justify-center hover:cursor-pointer"
+            className="text-primary text-[13px] leading-none font-medium flex justify-center hover:cursor-pointer"
             onClick={onClose}>
             閉じる
           </p>

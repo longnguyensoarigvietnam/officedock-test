@@ -25,8 +25,9 @@ import {
   SUCCESS_DELETE_MESSAGE,
 } from '@constants/message';
 
-import api from '@base/api';
 import { useToast } from '@providers/ToastProvider';
+
+import api from '@base/api';
 
 export type ViewVotingMemberListProps = {
   reasonList: MVPVotingComment[];

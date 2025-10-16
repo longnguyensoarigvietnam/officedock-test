@@ -107,8 +107,8 @@ const SkillList = () => {
 
   return (
     <div className="w-full">
-      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#E6F3FB]">
-        <div className="flex mb-7 justify-between">
+      <div className="sticky z-[21] top-[0px] px-10 pt-[27px] pb-[30px] bg-[#E6F3FB]">
+        <div className="flex justify-between mb-[27px]">
           <div className="flex gap-2 items-center bg-white w-fit p-[6px] rounded-[20px]">
             <Link href={`${pageRouters.SKILL_MAP.href}?tabId=${tabId || 0}`}>
               <Button
@@ -159,7 +159,7 @@ const SkillList = () => {
         </div>
         <Dropdown
           options={organizationList}
-          className="!w-[220px] !h-[34px] !py-0 !border-[1px] !border-[#77858F] mb-4"
+          className="!w-[220px] !h-[34px] !py-0 !border-[1px] !border-[#77858F]"
           classNameOption="!w-[220px]"
           selectedOption={organizationList.find(
             (element) => element.value == selectedOrganizationOption.value,

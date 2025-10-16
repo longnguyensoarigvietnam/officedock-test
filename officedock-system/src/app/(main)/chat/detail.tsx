@@ -2666,9 +2666,9 @@ const ChatDetail = ({
                   chatRoomNotifications &&
                   chatRoomNotifications.notifications > 0 &&
                   !hasMoreDetailOnScrollDown ? (
-                    <div className="flex items-center gap-5 justify-center">
+                    <div className="flex items-center gap-[14px] justify-center">
                       <div className="wavy-line"></div>
-                      <p className="text-[13px] text-[#228CDB] break-all min-w-[105px]">
+                      <p className="text-[12px] font-medium text-[#228CDB] text-nowrap">
                         未読のメッセージ
                       </p>
                       <div className="wavy-line"></div>

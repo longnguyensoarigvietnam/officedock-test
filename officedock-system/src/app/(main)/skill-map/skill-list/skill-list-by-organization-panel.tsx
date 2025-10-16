@@ -78,15 +78,15 @@ export const SkillListByOrganizationPanel = ({
 
   return (
     <div
-      className="w-full p-7 bg-[#F8FAFC] rounded-[30px] mb-6 overflow-x-auto scrollbar-gutter-stable max-w-full"
+      className="w-full p-7 bg-[#F8FAFC] rounded-[30px] mb-5 overflow-x-auto scrollbar-gutter-stable max-w-full"
       style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
-      <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
+      <p className="text-[#77858F] text-[16px] font-medium mb-[30px] max-w-[100%] break-all">
         {skillMapDetail.organizationName}
       </p>
 
       <div>
         {/* Steps bar */}
-        <div className="flex w-max font-medium text-white text-[16px] mb-5">
+        <div className="flex w-max font-medium text-white text-[16px] mb-[14px]">
           <div className="w-[625px]">
             <StepInfoTooltip
               placement="top"
@@ -96,7 +96,7 @@ export const SkillListByOrganizationPanel = ({
                 STEP 1
               </div>
             </StepInfoTooltip>
-            <div className="flex text-[#77858F] text-xs font-medium mt-8">
+            <div className="flex text-[#77858F] text-xs font-medium mt-[30px]">
               <p className="w-[calc(33.333333%_+_3px)]">スキル名</p>
               <p className="w-2/3 border-l-[1px] border-[#D2DBE1] pl-2">
                 スキルの定義
@@ -113,7 +113,7 @@ export const SkillListByOrganizationPanel = ({
                 STEP 2
               </div>
             </StepInfoTooltip>
-            <div className="flex text-[#77858F] text-xs font-medium mt-8 ml-[-5px]">
+            <div className="flex text-[#77858F] text-xs font-medium mt-[30px] ml-[-5px]">
               <p className="w-[calc(33.333333%_-_3px)]">スキル名</p>
               <p className="w-2/3 border-l-[1px] border-[#D2DBE1] pl-2">
                 スキルの定義
@@ -130,7 +130,7 @@ export const SkillListByOrganizationPanel = ({
                 STEP 3
               </div>
             </StepInfoTooltip>
-            <div className="flex text-[#77858F] text-xs font-medium mt-8 ml-[-25px]">
+            <div className="flex text-[#77858F] text-xs font-medium mt-[30px] ml-[-25px]">
               <p className="w-[calc(33.333333%_-_5px)]">スキル名</p>
               <p className="w-2/3 border-l-[1px] border-[#D2DBE1] pl-2">
                 スキルの定義
@@ -145,7 +145,7 @@ export const SkillListByOrganizationPanel = ({
           return (
             <div
               key={index}
-              className={`flex w-full ${index != normalizeSkillMaps(skillMapDetail.skillMaps).length - 1 && 'mb-5'} gap-2`}>
+              className={`flex w-full ${index != normalizeSkillMaps(skillMapDetail.skillMaps).length - 1 && 'mb-[14px]'} gap-[6px]`}>
               {skillMap.map((skill, idx) => {
                 return (
                   <div key={skill.id ?? `${index}-${idx}`}>
@@ -161,11 +161,11 @@ export const SkillListByOrganizationPanel = ({
                         style={{
                           boxShadow: '0px 2px 8px 0px #0000001A',
                         }}>
-                        <p className="w-1/3 max-w-full max-h-[72px] break-all line-clamp-2 pr-3">
+                        <p className="w-1/3 text-sm font-medium max-w-full max-h-[72px] break-all line-clamp-2 pr-3">
                           {skill.skill.name}
                         </p>
-                        <div className="w-2/3 pl-2 h-[74px] border-l-[1px] border-[#D2DBE1] flex items-center justify-between">
-                          <p className="text-start max-w-[calc(100%_-_52px)] max-h-[72px] break-all line-clamp-2 pr-3">
+                        <div className="w-2/3 pl-2 h-[60px] border-l-[1px] border-[#D2DBE1] flex items-center justify-between">
+                          <p className="text-start text-sm max-w-[calc(100%_-_52px)] max-h-[60px] break-all line-clamp-2 pr-3">
                             {skill.skill.description}
                           </p>
                           <Button
@@ -178,7 +178,7 @@ export const SkillListByOrganizationPanel = ({
                                 stepNumber: stepNumber,
                               });
                             }}
-                            className="text-white font-medium text-sm !p-0 w-[52px] h-[30px]">
+                            className="text-white font-medium text-sm !p-0 w-[50px] h-[30px]">
                             詳細
                           </Button>
                         </div>

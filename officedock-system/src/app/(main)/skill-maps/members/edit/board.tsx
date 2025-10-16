@@ -146,14 +146,14 @@ const EditSkillMapByMemberBoard = () => {
 
   return (
     <Fragment>
-      <div className="sticky z-[21] top-[0px] px-10 py-8 bg-[#E6F3FB]">
-        <div className="flex gap-4 items-center mb-5">
+      <div className="sticky z-[21] top-[0px] px-10 py-[30px] bg-[#E6F3FB]">
+        <div className="flex gap-5 items-center mb-[30px]">
           <p className="text-black font-medium text-[26px]">スキルマップ設定</p>
-          <div className="flex gap-2 bg-white w-fit p-[6px] rounded-[20px]">
+          <div className="flex gap-[6px] bg-white w-fit p-[6px] rounded-[20px]">
             <Link href={pageRouters.SKILL_MAPS_MANAGEMENT.href}>
               <Button
                 variant="outline"
-                className={`w-[100px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
+                className={`w-[120px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
                 スキル編集
               </Button>
             </Link>
@@ -179,7 +179,7 @@ const EditSkillMapByMemberBoard = () => {
               });
             }}
           />
-          <div className="flex justify-center gap-3 items-center">
+          <div className="flex justify-center gap-[10px] items-center">
             <Link href={pageRouters.SKILL_MAPS_MEMBERS_MANAGEMENT.href}>
               <Button variant="outline" className="w-[100px] !p-0 !h-[34px]">
                 キャンセル
@@ -196,7 +196,7 @@ const EditSkillMapByMemberBoard = () => {
         </div>
       </div>
 
-      <div className="px-10 flex flex-col gap-6">
+      <div className="px-10 flex flex-col gap-5">
         {dataSkillMapsByMembers.length > 0 &&
           dataSkillMapsByMembers.map((skillMapByMembers) => {
             return (

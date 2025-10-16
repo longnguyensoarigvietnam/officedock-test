@@ -103,7 +103,7 @@ html *::-webkit-scrollbar-track {
 }
 .wavy-line {
   --s: 4.5px;
-  --b: 1.5px;
+  --b: 1.8px;
   --m: 1.9;
 
   background: #228CDB;
@@ -127,8 +127,8 @@ html *::-webkit-scrollbar-track {
 }
 @media (max-width: 1440px) {
   .wavy-line {
-    --s: 5px;
-    --b: 1.5px;
+    --s: 5.2px;
+    --b: 1.7px;
     --m: 1.5;
     width: 41%;
   }

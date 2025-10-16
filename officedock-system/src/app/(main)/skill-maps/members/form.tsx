@@ -46,13 +46,13 @@ export const SkillMapByMembersDetail = ({
       header: () => <p className="px-4 text-left">名前</p>,
       cell: ({ row }) => {
         return (
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-[6px] items-center">
             <CustomUserAvatar
               avatarUrl={row.original?.avatar || ''}
               avatarColor={row.original?.avatarColor || ''}
-              size={25}
+              size={24}
             />
-            <p className="text-left max-w-[100%] break-all text-black font-medium">
+            <p className="text-left text-base max-w-[100%] break-all text-black font-medium">
               {row.original.fullName}
             </p>
           </div>
@@ -120,12 +120,13 @@ export const SkillMapByMembersDetail = ({
     <div
       className="w-full p-5 bg-[#F8FAFC] rounded-[30px]"
       style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
-      <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
+      <p className="text-[#77858F] text-[16px] font-medium mb-[30px] max-w-[100%] break-all">
         {skillMapByMembers.name}
       </p>
 
       <div className="w-full">
         <Table
+          classCustom='!p-0'
           className={`${expanded ? '!max-w-[calc(100vw_-_350px)]' : '!max-w-[calc(100vw_-_230px)]'} !overflow-x-auto table-auto h-full bg-white !rounded-[10px]`}>
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
