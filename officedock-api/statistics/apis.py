@@ -1166,7 +1166,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
         organization = (
-            Organization.objects.filter(id=pk).only("id", "type").first()
+            Organization.all_objects.filter(id=pk).only("id", "type").first()
         )
         users = split_id_from_string(user_ids)
         if users:
@@ -1559,7 +1559,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
             tags=tag_ids,
         )
         data = {"durations": [], "data": []}
-        if not users:
+        if not users or not main_organization:
             return self.response_ok(data)
         ranges = split_ranges(
             from_date, end_date, trim_whitespace(statistic_by)
