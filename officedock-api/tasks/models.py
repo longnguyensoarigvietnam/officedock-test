@@ -62,6 +62,8 @@ class Task(BaseModel):
         related_name="tasks",
     )
     recurring = models.JSONField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    is_archived = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         """
@@ -70,6 +72,11 @@ class Task(BaseModel):
         if self.status:
             self.status_name = self.status.name
         super().save(*args, **kwargs)
+
+    def update_completed_time(self, time):
+        """"""
+        self.completed_at = time
+        self.save(update_fields=["completed_at"])
 
 
 class TodoList(BaseModel):

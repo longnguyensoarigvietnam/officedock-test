@@ -537,6 +537,13 @@ class UserLoginSerializer(BaseUserSerializer):
         """
         Get unique role permissions for the given object.
         """
+        company_status = obj.company.status
+        is_payment_failed = company_status == CompanyStatus.SUSPENDED.value
+        if company_status == CompanyStatus.RETRY_PAYMENT.value:
+            is_payment_failed = (
+                obj.company.company_plan.stripe_subscription_id == None
+            )
+
         permissions = set()
         for role in obj.roles.all():
             perms = role.permissions.exclude(
@@ -545,8 +552,8 @@ class UserLoginSerializer(BaseUserSerializer):
                 )
                 | Q(role_details__selection_result__isnull=True)
             )
-            # Just allow access to Payment Management page when company suspended
-            if obj.company.status == CompanyStatus.SUSPENDED.value:
+            # Just allow access to Payment Management
+            if is_payment_failed:
                 perms = perms.filter(
                     name__startswith=Screens.PAYMENT_MANAGEMENT.value
                 )

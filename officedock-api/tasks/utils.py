@@ -536,3 +536,16 @@ def apply_filters_to_tasks(tasks_queryset, query_params):
         tasks_queryset = tasks_queryset.filter(title__icontains=search)
 
     return tasks_queryset
+
+
+def update_completed_time_and_archive_old_task(task):
+    """Handle update completed time and handle display list task completed - archived old completed task"""
+    task.update_completed_time(now())
+    for user in task.people_in_charge.all():
+        task_completes = Task.objects.filter(
+            people_in_charge=user, completed_at__isnull=False, is_archived=False
+        ).order_by("completed_at")
+        if task_completes.count() > 10:
+            old_task_completed = task_completes.first()
+            old_task_completed.is_archived = True
+            old_task_completed.save(update_fields=["is_archived"])

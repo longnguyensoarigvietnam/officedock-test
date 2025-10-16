@@ -25,6 +25,7 @@ from rest_framework.exceptions import ValidationError
 
 from base.apis import BaseAPIViewSet
 from base.messages import ERROR_MESSAGES
+from base.paginations import CustomCursorPagination
 from base.permissions import ActionPermission
 from calendars.constants import CalendarTypes
 from chat.constants import (
@@ -67,6 +68,7 @@ from tasks.utils import (
     delete_task_schedules,
     delete_todo_list_for_task,
     annotate_and_order_tasks_by_pin_and_index,
+    update_completed_time_and_archive_old_task,
     update_sorting_setting,
     update_task_schedule,
     update_todo_list_for_task,
@@ -87,22 +89,20 @@ from .models import (
     TaskStatus as TaskStatusModel,
 )
 from .serializers import (
+    TaskArchiveSerializer,
     TaskBoardSerializer,
     TaskCalendarSerializer,
     TaskCommonSerializer,
     TaskIndexForCreationSerializer,
     TaskIndexPinAtSerializer,
     TaskIndexSerializer,
-    TaskScheduleForCreationSerializer,
-    TaskScheduleSerializer,
     TaskSerializer,
     TaskTeamdockSerializer,
     TaskTemplateSerializer,
     TeamTaskIndexSerializer,
     TodoListSerializer,
-    TaskScheduleForCreationMultipleSerializer,
 )
-from .filters import TaskBoardFilter, TaskCalendarFilter, TaskScheduleFilter
+from .filters import TaskBoardFilter, TaskCalendarFilter
 
 
 @extend_schema(tags=["System > Task"])
@@ -327,6 +327,8 @@ class TaskViewSet(
             )
         # Increase measure count if task created have status completed
         if task.status.name == TaskStatus.COMPLETED.value:
+            update_completed_time_and_archive_old_task(task)
+
             for user in task.people_in_charge.all():
                 calculate_progress_skill_map(
                     task,
@@ -1099,6 +1101,18 @@ class TaskViewSet(
                     task, user, is_minus=is_minus, case=case
                 )
 
+        # Handle update completed time and handle display list task completed - archived old completed task
+        if (
+            case
+            == CalculateSkillMapProcessCases.CHANGE_ANOTHER_TO_COMPLETED_STATUS.value
+        ):
+            update_completed_time_and_archive_old_task(task)
+        elif (
+            case
+            == CalculateSkillMapProcessCases.CHANGE_COMPLETED_STATUS_TO_ANOTHER.value
+        ):
+            task.update_completed_time(None)
+
         return self.response_ok(
             self.get_serializer(
                 task,
@@ -1282,7 +1296,7 @@ class TaskViewSet(
                     }
                 old_task_status = task.status.name
                 task.status = task_status
-                task.save()
+                task.save(update_fields=["status"])
                 is_change_another_to_complete_status = (
                     old_task_status != TaskStatus.COMPLETED.value
                     and task_status.name == TaskStatus.COMPLETED.value
@@ -1300,11 +1314,15 @@ class TaskViewSet(
                             CalculateSkillMapProcessCases.CHANGE_ANOTHER_TO_COMPLETED_STATUS.value
                         )
                         minus = False
+                        update_completed_time_and_archive_old_task(task)
+
                     else:
                         case = (
                             CalculateSkillMapProcessCases.CHANGE_COMPLETED_STATUS_TO_ANOTHER.value
                         )
                         minus = True
+                        task.update_completed_time(None)
+
                     for user in task.people_in_charge.all():
                         calculate_progress_skill_map(
                             task, user, is_minus=minus, case=case, is_plus=False
@@ -1478,121 +1496,6 @@ class TaskCalendarViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
 
 @extend_schema(tags=["System > Task"])
-class TaskScheduleViewSet(
-    BaseAPIViewSet,
-    mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
-):
-    """
-    API endpoint to show Tasks to the Calendar.
-    """
-
-    queryset = TaskSchedule.objects.order_by("plan_start_date").all()
-    serializer_class = TaskScheduleSerializer
-    permission_classes = [ActionPermission]
-    filter_backends = [
-        DjangoFilterBackend,
-    ]
-    filterset_class = TaskScheduleFilter
-    pagination_class = None
-    lookup_field = "uuid"
-    screen_name = Screens.MY_TASK.value
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        user_id = self.request.query_params.get("user_id")
-
-        if not user_id:
-            queryset = queryset.filter(
-                task__people_in_charge__id=self.request.user.id
-            )
-
-        if self.action == "list":
-            queryset = queryset.filter(
-                plan_start_date__gte=datetime.combine(
-                    datetime.now().date(), time.min
-                )
-            ).distinct()
-
-        return queryset
-
-    def get_serializer_class(self):
-        if self.action == "create":
-            return TaskScheduleForCreationSerializer
-
-        return super().get_serializer_class()
-
-    def _check_overtime(self, task_schedule):
-        """
-        Check overtime of task schedule
-        """
-        start_of_today = datetime.combine(timezone.now().date(), time.min)
-        task_duration = TaskDuration.objects.filter(
-            started_at__gte=start_of_today,
-            paused_at__isnull=True,
-            task=task_schedule.task,
-        ).first()
-        if task_duration:
-            is_send_sk, is_over_estimate = check_task_overtime(
-                task_schedule.task, task_duration
-            )
-            for user in task_schedule.task.people_in_charge.all():
-                send_web_socket_event(
-                    {
-                        "id": task_schedule.task.id,
-                        "task_duration_running_uuid": str(task_duration.uuid),
-                        "is_over_estimate": is_over_estimate,
-                        "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
-                        "type": CalendarTypes.TASK.value,
-                    },
-                    user=user,
-                )
-
-    def perform_create(self, serializer):
-        """
-        Handle create task schedule
-        """
-        task_schedule = serializer.save()
-        self._check_overtime(task_schedule)
-
-    def perform_update(self, serializer):
-        """
-        Handle update task schedule
-        """
-        task_schedule = serializer.save()
-        self._check_overtime(task_schedule)
-
-    @action(
-        methods=["POST"],
-        detail=False,
-        url_path="multiple",
-        serializer_class=TaskScheduleForCreationMultipleSerializer,
-    )
-    @transaction.atomic()
-    def update_multiple_schedules(self, request):
-        """
-        Handle update multiple task schedules
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer_data = serializer.validated_data
-        task_schedules = serializer_data.get("task_schedules")
-        for data in task_schedules:
-            if uuid := data.get("uuid"):
-                task_schedule, _ = TaskSchedule.objects.update_or_create(
-                    uuid=uuid,
-                    defaults={
-                        "task": data.get("task"),
-                        "plan_start_date": data.get("plan_start_date"),
-                        "plan_end_date": data.get("plan_end_date"),
-                    },
-                )
-                self._check_overtime(task_schedule)
-        return self.response_ok()
-
-
-@extend_schema(tags=["System > Task"])
 class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     """
     API endpoint to show Tasks to the Board.
@@ -1747,14 +1650,15 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         # Task queryset
         queryset = self.filter_queryset(self.get_queryset())
+        task_status = TaskStatusModel.objects.filter(id=status_id).first()
+        if task_status and task_status.name == TaskStatus.COMPLETED.value:
+            queryset = queryset.filter(is_archived=False)
 
         if ordering:
-            task_routine_status = TaskStatusModel.objects.filter(
-                name=TaskStatus.MY_ROUTINE.value
-            ).first()
             if not (
                 "deadline" in ordering
-                and int(status_id) == task_routine_status.id
+                and task_status
+                and task_status.name == TaskStatus.MY_ROUTINE.value
             ):
                 # Ordering by deadline, important for tasks
                 queryset = apply_ordering_to_tasks(queryset, ordering)
@@ -2026,3 +1930,48 @@ class TodoListViewSet(
         user = self.request.user
         queryset = super().get_queryset().filter(company_id=user.company_id)
         return queryset
+
+
+@extend_schema(tags=["System > Task"])
+class TaskArchiveViewSet(BaseAPIViewSet, mixins.ListModelMixin):
+    """
+    API endpoint to show Tasks to the Calendar.
+    """
+
+    queryset = Task.objects.all()
+    serializer_class = TaskArchiveSerializer
+    permission_classes = [ActionPermission]
+    filter_backends = [
+        DjangoFilterBackend,
+    ]
+    screen_name = Screens.MY_TASK.value
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = super().get_queryset().filter(company_id=user.company_id)
+        query_params = self.request.query_params
+        # Apply filter for task queryset
+        queryset = apply_filters_to_tasks(queryset, query_params)
+
+        return queryset.distinct()
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("tag_ids", type=str),
+            OpenApiParameter("category_ids", type=str),
+            OpenApiParameter("organization_ids", type=str),
+            OpenApiParameter("ordering", type=str),
+        ],
+    )
+    def list(self, request, *args, **kwargs):
+        """
+        Handle get list tasks archive
+        """
+        # Task queryset
+        queryset = self.filter_queryset(self.get_queryset()).filter(
+            is_archived=True
+        )
+
+        return self.response_pagination(
+            request, queryset, TaskArchiveSerializer, CustomCursorPagination
+        )

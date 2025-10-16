@@ -944,7 +944,9 @@ class ChatMessageViewSet(
         Get a list of chat rooms.
         """
         user = request.user
-        messages = self.get_queryset().filter(deleted_at__isnull=True)
+        messages = self.get_queryset().filter(
+            deleted_at__isnull=True, chat_room__participants=user
+        )
         is_bookmark = request.query_params.get("is_bookmark")
 
         if is_bookmark:
@@ -957,29 +959,20 @@ class ChatMessageViewSet(
             messages = messages.order_by("-created_at")
 
         if message := request.query_params.get("message"):
+            messages = messages.annotate(
+                clean_message=StripTags(F("message"))
+            ).filter(
+                Q(task__title__icontains=message)
+                | Q(schedule__title__icontains=message)
+                | Q(clean_message__icontains=message)
+                | Q(submit_level__skill__name__icontains=message)
+            )
             if is_bookmark:
-                messages = (
-                    messages.annotate(clean_message=StripTags(F("message")))
-                    .filter(
-                        Q(task__title__icontains=message)
-                        | Q(schedule__title__icontains=message)
-                        | Q(clean_message__icontains=message)
-                        | Q(submit_level__skill__name__icontains=message)
-                    )
-                    .order_by("-bookmarks__bookmark_at")
-                    .distinct()
-                )
+                messages = messages.order_by(
+                    "-bookmarks__bookmark_at"
+                ).distinct()
             else:
-                messages = (
-                    messages.annotate(clean_message=StripTags(F("message")))
-                    .filter(
-                        Q(task__title__icontains=message)
-                        | Q(schedule__title__icontains=message)
-                        | Q(clean_message__icontains=message)
-                        | Q(submit_level__skill__name__icontains=message)
-                    )
-                    .order_by("-created_at")
-                )
+                messages = messages.order_by("-created_at")
 
         return self.response_pagination(
             request, messages, ChatMessageBookMarkSerializer
