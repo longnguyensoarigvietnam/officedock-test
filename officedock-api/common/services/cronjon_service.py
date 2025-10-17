@@ -206,10 +206,7 @@ class CronJobService:
             contract__start_date__month=today.month,
             contract__next_renewal_at__year=today.year
             + 1,  # Since the contract renewal took place before the downgrade, 1 year must be added.
-            status__in=[
-                CompanyStatus.ACTIVE_CONTRACT.value,
-                CompanyStatus.TEMPORARY_USAGE.value,
-            ],
+            contract__cancel_at__isnull=True,
         ).all()
         if companies:
             for company in companies:
